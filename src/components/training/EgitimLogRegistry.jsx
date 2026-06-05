@@ -1,0 +1,384 @@
+import { Fragment, useCallback, useMemo, useState } from 'react'
+import { ChevronDown } from 'lucide-react'
+import TacticalPanel from '../ui/TacticalPanel'
+import {
+  countEgitimLogisticsReady,
+  difficultyToneClass,
+  extractEgitimFocusOptions,
+  filterEgitimPlans,
+  formatEgitimDuration,
+  formatEgitimTargetDateCell,
+  getEgitimDifficultyLevel,
+  getEgitimOperationNote,
+  getEgitimStatus,
+  EMPTY_SANDBOX_BLUEPRINT,
+  extractSandboxBlueprintFromRow,
+  getEgitimPlanKindLabel,
+  getEgitimTrainingFocus,
+  isEgitimPlanUpcoming,
+  isEgitimSandboxPlan,
+  selectEgitimPlans,
+} from '../../lib/egitimLogRegistry'
+import { invStr } from '../../lib/inventoryIlws'
+import RangeLayoutPreviewCanvas from './RangeLayoutPreviewCanvas'
+
+const filterSelectClass =
+  'dossier-blood-select min-w-[8.5rem] flex-1 rounded border border-[#00FF41]/35 bg-[#0A0A0A] py-1.5 pl-2 pr-7 font-mono-technical text-[9px] uppercase text-white outline-none focus:border-[#00FF41]/60'
+
+const FILTER_INITIAL = {
+  trainingFocusKey: 'ALL',
+  scheduleFilter: 'ALL',
+}
+
+/** @param {string} text */
+function cellTitle(text) {
+  const t = String(text || '').trim()
+  return t && t !== '—' ? t : undefined
+}
+
+/**
+ * @typedef {import('../../lib/egitimLogRegistry').SandboxLayoutBlueprint} SandboxLayoutBlueprint
+ */
+
+/**
+ * @typedef {{ planId: string | null } & SandboxLayoutBlueprint} PreviewBlueprintState
+ */
+
+/** @type {PreviewBlueprintState} */
+const EMPTY_PREVIEW = { planId: null, ...EMPTY_SANDBOX_BLUEPRINT }
+
+/**
+ * @param {{
+ *   trainingPlans: Record<string, unknown>[]
+ *   loading?: boolean
+ *   onOpenInSandbox?: (blueprint: SandboxLayoutBlueprint, row: Record<string, unknown>) => void
+ * }} props
+ */
+export default function EgitimLogRegistry({ trainingPlans, loading = false, onOpenInSandbox }) {
+  const [filters, setFilters] = useState(FILTER_INITIAL)
+  const [expandedId, setExpandedId] = useState(/** @type {string | null} */ (null))
+  const [previewBlueprint, setPreviewBlueprint] = useState(/** @type {PreviewBlueprintState} */ (EMPTY_PREVIEW))
+  const [editMode, setEditMode] = useState(false)
+
+  const egitimPlans = useMemo(() => selectEgitimPlans(trainingPlans), [trainingPlans])
+  const focusOptions = useMemo(() => extractEgitimFocusOptions(egitimPlans), [egitimPlans])
+
+  const filtered = useMemo(
+    () =>
+      filterEgitimPlans({
+        plans: egitimPlans,
+        trainingFocusKey: filters.trainingFocusKey,
+        scheduleFilter: filters.scheduleFilter,
+      }),
+    [egitimPlans, filters]
+  )
+
+  const purgePreviewBlueprint = useCallback(() => {
+    setPreviewBlueprint(EMPTY_PREVIEW)
+    setEditMode(false)
+  }, [])
+
+  const loadPreviewBlueprint = useCallback((/** @type {string} */ planId, /** @type {Record<string, unknown>} */ row) => {
+    setPreviewBlueprint({ planId, ...extractSandboxBlueprintFromRow(row) })
+  }, [])
+
+  const handleSelectPlan = useCallback(
+    (/** @type {string} */ planId, /** @type {Record<string, unknown>} */ row) => {
+      if (expandedId === planId) {
+        setExpandedId(null)
+        purgePreviewBlueprint()
+        return
+      }
+      purgePreviewBlueprint()
+      setExpandedId(planId)
+      if (isEgitimSandboxPlan(row)) {
+        loadPreviewBlueprint(planId, row)
+      }
+    },
+    [expandedId, loadPreviewBlueprint, purgePreviewBlueprint]
+  )
+
+  const patchFilter = (/** @type {Partial<typeof FILTER_INITIAL>} */ next) => {
+    setFilters((f) => ({ ...f, ...next }))
+    setExpandedId(null)
+    purgePreviewBlueprint()
+  }
+
+  return (
+    <TacticalPanel className="relative border-[#00FF41]/20 bg-[#0a0a0a]/95 p-0">
+      <span className="pointer-events-none absolute left-2 top-2 z-10 h-3 w-3 border-l border-t border-[#00FF41]/45" />
+      <span className="pointer-events-none absolute right-2 top-2 z-10 h-3 w-3 border-r border-t border-[#00FF41]/45" />
+      <span className="pointer-events-none absolute bottom-2 left-2 z-10 h-3 w-3 border-b border-l border-[#00FF41]/45" />
+      <span className="pointer-events-none absolute bottom-2 right-2 z-10 h-3 w-3 border-b border-r border-[#00FF41]/45" />
+
+      <div className="border-b border-[#00FF41]/15 bg-[#080808] px-4 py-2">
+        <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-[#00FF41]/90">
+          PLANLANAN EĞİTİMLER TAKVİMİ · EĞİTİM PLANLAMA
+        </p>
+        <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-slate-600">
+          trainings · canlı senkron · {filtered.length}/{egitimPlans.length} PLAN
+        </p>
+      </div>
+
+      <div className="border-b border-[#00FF41]/12 bg-[#050805] px-3 py-3">
+        <p className="mb-2 font-mono-technical text-[7px] font-bold uppercase tracking-[0.24em] text-slate-500">
+          FİLTRELEME BARİ
+        </p>
+        <div className="flex flex-wrap gap-3">
+          <label className="flex min-w-[12rem] flex-1 flex-col gap-0.5">
+            <span className="font-mono-technical text-[7px] uppercase text-slate-600">EĞİTİM ODAĞI</span>
+            <select
+              className={filterSelectClass}
+              value={filters.trainingFocusKey}
+              onChange={(e) => patchFilter({ trainingFocusKey: e.target.value })}
+            >
+              <option value="ALL">TÜMÜ</option>
+              {focusOptions.map((o) => (
+                <option key={o.key} value={o.key}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex min-w-[10rem] flex-col gap-0.5">
+            <span className="font-mono-technical text-[7px] uppercase text-slate-600">TAKVİM</span>
+            <select
+              className={filterSelectClass}
+              value={filters.scheduleFilter}
+              onChange={(e) =>
+                patchFilter({
+                  scheduleFilter: /** @type {typeof FILTER_INITIAL.scheduleFilter} */ (
+                    e.target.value
+                  ),
+                })
+              }
+            >
+              <option value="ALL">TÜMÜ</option>
+              <option value="UPCOMING">YAKLAŞAN</option>
+              <option value="PAST">GEÇMİŞ</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div className="ilws-green-scroll max-h-[min(58vh,560px)] overflow-auto">
+        {loading ? (
+          <p className="p-8 text-center font-mono-technical text-[10px] uppercase text-slate-500">SENKRON…</p>
+        ) : filtered.length === 0 ? (
+          <p className="p-8 text-center font-mono-technical text-[10px] uppercase text-slate-600">
+            {egitimPlans.length === 0 ? 'EĞİTİM_PLANI_YOK' : 'FİLTRE_SONUCU_YOK'}
+          </p>
+        ) : (
+          <table className="w-full min-w-[1020px] border-collapse text-left">
+            <thead className="sticky top-0 z-[2] bg-[#0a0a0a]">
+              <tr className="border-b border-[#00FF41]/25 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-[#00FF41]/80">
+                <th className="w-8 px-2 py-2" aria-hidden />
+                <th className="whitespace-nowrap px-3 py-2">HEDEF TARİH</th>
+                <th className="whitespace-nowrap px-3 py-2">TİP</th>
+                <th className="min-w-[10rem] px-3 py-2">EĞİTİM ODAĞI</th>
+                <th className="min-w-[8rem] px-3 py-2">ZORLUK</th>
+                <th className="whitespace-nowrap px-3 py-2">SÜRE</th>
+                <th className="whitespace-nowrap px-3 py-2">LOJİSTİK</th>
+                <th className="whitespace-nowrap px-3 py-2">DURUM</th>
+                <th className="whitespace-nowrap px-3 py-2">TAKVİM</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((row) => {
+                const id = String(row.id)
+                const open = expandedId === id
+                const focus = getEgitimTrainingFocus(row)
+                const difficulty = getEgitimDifficultyLevel(row)
+                const diffKey = invStr(row.difficultyLevelKey).trim()
+                const upcoming = isEgitimPlanUpcoming(row)
+                const logistics = countEgitimLogisticsReady(row)
+                const sandbox = isEgitimSandboxPlan(row)
+                const kindLabel = getEgitimPlanKindLabel(row)
+                const rowLayout = sandbox ? extractSandboxBlueprintFromRow(row) : EMPTY_SANDBOX_BLUEPRINT
+                const isActivePreview = open && previewBlueprint.planId === id
+                const layoutObjects = isActivePreview ? previewBlueprint.objects : []
+                const layoutArrows = isActivePreview ? previewBlueprint.tacticalArrows : []
+                const layoutShapes = isActivePreview ? previewBlueprint.drawnShapes : []
+                const hasLayoutPreview =
+                  isActivePreview &&
+                  (layoutObjects.length > 0 || layoutArrows.length > 0 || layoutShapes.length > 0)
+
+                return (
+                  <Fragment key={id}>
+                    <tr
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => handleSelectPlan(id, row)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          handleSelectPlan(id, row)
+                        }
+                      }}
+                      className={`cursor-pointer border-b border-[#00FF41]/10 font-mono-technical text-[9px] uppercase transition hover:bg-[#00FF41]/[0.04] ${
+                        open ? 'bg-[#00FF41]/[0.06]' : ''
+                      }`}
+                    >
+                      <td className="px-2 py-2 text-[#00FF41]/60">
+                        <ChevronDown
+                          className={`size-3.5 transition-transform ${open ? 'rotate-180' : ''}`}
+                          aria-hidden
+                        />
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-2 tabular-nums text-slate-400">
+                        {formatEgitimTargetDateCell(row)}
+                      </td>
+                      <td
+                        className={`whitespace-nowrap px-3 py-2 font-bold ${sandbox ? 'text-[#00FF41]' : 'text-slate-400'}`}
+                      >
+                        {kindLabel}
+                      </td>
+                      <td
+                        className="max-w-[14rem] break-words px-3 py-2 normal-case leading-snug text-slate-200"
+                        title={cellTitle(focus)}
+                      >
+                        {focus}
+                      </td>
+                      <td
+                        className={`max-w-[10rem] break-words px-3 py-2 normal-case leading-snug ${difficultyToneClass(diffKey)}`}
+                        title={cellTitle(difficulty)}
+                      >
+                        {difficulty}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-2 tabular-nums text-[#5ec8ff]">
+                        {formatEgitimDuration(row)}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-2 tabular-nums text-[#00FF41]">
+                        {sandbox
+                          ? `${rowLayout.objects.length} OBJ`
+                          : `${logistics}/4`}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-2 text-slate-300">
+                        {getEgitimStatus(row)}
+                      </td>
+                      <td
+                        className={`whitespace-nowrap px-3 py-2 font-bold ${
+                          upcoming ? 'text-[#00FF41]' : 'text-slate-500'
+                        }`}
+                      >
+                        {upcoming ? 'YAKLAŞAN' : 'GEÇMİŞ'}
+                      </td>
+                    </tr>
+                    <tr className="border-b border-[#00FF41]/8">
+                      <td colSpan={9} className="p-0">
+                        <div
+                          className={`grid transition-[grid-template-rows] duration-300 ease-out ${
+                            open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+                          }`}
+                        >
+                          <div className="min-h-0 overflow-hidden">
+                            <div className="mx-3 mb-3 mt-1 rounded border border-[#00FF41]/20 bg-black/50 p-3 font-mono-technical text-[8px] uppercase">
+                              <p className="mb-2 font-bold tracking-wider text-[#00FF41]/85">
+                                {sandbox ? 'TAKTİK SANDBOX DETAY · LAYOUT ÖNİZLEME' : 'EĞİTİM PLANI DETAY PANELİ'}
+                              </p>
+                              {open && sandbox ? (
+                                <div className="mb-3">
+                                  {hasLayoutPreview ? (
+                                    <>
+                                      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                                        <p className="font-mono-technical text-[7px] uppercase text-slate-500">
+                                          LAYOUT ÖNİZLEME · {layoutObjects.length} NESNE ·{' '}
+                                          {layoutArrows.length} OK · {layoutShapes.length} ÇİZİM ·{' '}
+                                          {editMode ? 'DÜZENLEME MODU' : 'SALT OKUNUR'}
+                                        </p>
+                                        {onOpenInSandbox ? (
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation()
+                                              const blueprint = extractSandboxBlueprintFromRow(row)
+                                              setEditMode(true)
+                                              onOpenInSandbox(blueprint, row)
+                                            }}
+                                            className="rounded border border-[#ffb400]/50 bg-[#ffb400]/12 px-2 py-1 font-mono-technical text-[7px] font-bold uppercase tracking-wider text-[#ffb400] hover:bg-[#ffb400]/22"
+                                          >
+                                            ARAYÜZÜ DÜZENLE
+                                          </button>
+                                        ) : null}
+                                      </div>
+                                      <RangeLayoutPreviewCanvas
+                                        key={id}
+                                        layoutKey={id}
+                                        objects={layoutObjects}
+                                        tacticalArrows={layoutArrows}
+                                        drawnShapes={layoutShapes}
+                                        readOnly={!editMode}
+                                        height={240}
+                                      />
+                                    </>
+                                  ) : (
+                                    <p className="font-mono-technical text-[7px] uppercase text-slate-600">
+                                      SANDBOX KAYDI · LAYOUT VERİSİ YOK
+                                    </p>
+                                  )}
+                                </div>
+                              ) : null}
+                              <div className="mb-3 grid gap-2 sm:grid-cols-2">
+                                <p
+                                  className="break-words normal-case leading-relaxed text-slate-300"
+                                  title={cellTitle(focus)}
+                                >
+                                  ODAK: <span className="text-slate-100">{focus}</span>
+                                </p>
+                                <p className="text-slate-400">
+                                  ZORLUK:{' '}
+                                  <span className={difficultyToneClass(diffKey)}>{difficulty}</span>
+                                </p>
+                                <p className="text-slate-400">
+                                  HEDEF:{' '}
+                                  <span className="text-slate-200">{formatEgitimTargetDateCell(row)}</span>
+                                </p>
+                                <p className="text-slate-400">
+                                  SÜRE: <span className="text-[#5ec8ff]">{formatEgitimDuration(row)}</span>
+                                </p>
+                              </div>
+                              {!sandbox ? (
+                              <div className="mb-3 grid gap-2 sm:grid-cols-2">
+                                <p className="text-slate-400">
+                                  SİLAH HAZIR:{' '}
+                                  <span className="text-slate-200">
+                                    {row.weaponsReady ? 'EVET' : 'HAYIR'}
+                                  </span>
+                                </p>
+                                <p className="text-slate-400">
+                                  MÜHİMMAT:{' '}
+                                  <span className="text-slate-200">
+                                    {row.ammoAllocated ? 'EVET' : 'HAYIR'}
+                                  </span>
+                                </p>
+                                <p className="text-slate-400">
+                                  PPE:{' '}
+                                  <span className="text-slate-200">{row.ppeChecked ? 'EVET' : 'HAYIR'}</span>
+                                </p>
+                                <p className="text-slate-400">
+                                  TCCC ÇANTASI:{' '}
+                                  <span className="text-slate-200">
+                                    {row.tcccKitReady ? 'EVET' : 'HAYIR'}
+                                  </span>
+                                </p>
+                              </div>
+                              ) : null}
+                              <p className="break-words normal-case leading-relaxed text-slate-400">
+                                {sandbox ? 'TASARIM NOTU: ' : 'EĞİTİM HEDEFLERİ: '}
+                                <span className="text-slate-200">{getEgitimOperationNote(row)}</span>
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  </Fragment>
+                )
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </TacticalPanel>
+  )
+}

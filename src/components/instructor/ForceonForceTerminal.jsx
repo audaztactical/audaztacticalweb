@@ -1,0 +1,446 @@
+import { useCallback, useMemo, useState } from 'react'
+import { AnimatePresence, motion as Motion } from 'framer-motion'
+import {
+  AlertTriangle,
+  Crosshair,
+  Radio,
+  RotateCcw,
+  Shield,
+  ShieldAlert,
+  Target,
+  UserX,
+} from 'lucide-react'
+import TacticalPanel from '../ui/TacticalPanel'
+import {
+  FOF_HIT_STATUS_OPTIONS,
+  FOF_PENALTY_OPTIONS,
+  FOF_SCENARIO_TYPES,
+  computeFofInstructorScore,
+  fofScoreHudTone,
+} from '../../lib/instructorFofAssessment'
+
+/** @typedef {import('../../lib/instructorFofAssessment').FofEvaluationInput} FofEvaluationInput */
+
+/**
+ * @typedef {{
+ *   uid: string
+ *   callsign?: string
+ *   username?: string
+ *   displayName?: string
+ * }} SelectedOperator
+ */
+
+const labelClass = 'font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-slate-500'
+
+const selectClass =
+  'dossier-blood-select w-full rounded border border-[#ffb400]/35 bg-[#0A0A0A] py-2 pl-2 pr-8 font-mono-technical text-[11px] uppercase text-white outline-none focus:border-[#ffb400]/60'
+
+const textareaClass =
+  'w-full min-h-[5.5rem] resize-y rounded border border-[#ffb400]/25 bg-[#0A0A0A] px-3 py-2 font-mono-technical text-sm leading-relaxed text-slate-100 outline-none placeholder:text-slate-600 focus:border-[#ffb400]/55'
+
+/** @returns {FofEvaluationInput} */
+function createInitialForm() {
+  return {
+    scenarioType: FOF_SCENARIO_TYPES[0],
+    oodaCycle: 3,
+    tacticalCommunication: 3,
+    coverManagement: 3,
+    hitStatus: 'TEMİZ',
+    penalties: {
+      muzzleAwarenessViolation: false,
+      collateralDamage: false,
+      panicFreeze: false,
+    },
+    aarNotes: '',
+  }
+}
+
+const METRIC_FIELDS = [
+  {
+    key: 'oodaCycle',
+    label: 'OODA Döngüsü / Karar Mekanizması',
+    hint: 'Tehdidi algılama ve aksiyon hızı',
+    Icon: Target,
+    weight: '×10',
+  },
+  {
+    key: 'tacticalCommunication',
+    label: 'Taktik İletişim / Ekip Entegrasyonu',
+    hint: 'Baskı altında telsiz / sesli koordinasyon',
+    Icon: Radio,
+    weight: '×8',
+  },
+  {
+    key: 'coverManagement',
+    label: 'Siper ve Hat Yönetimi',
+    hint: 'Hareket ve şarjör değişiminde maruziyet',
+    Icon: Shield,
+    weight: '×8',
+  },
+]
+
+const HUD_TONE_STYLES = {
+  green: {
+    ring: 'border-[#00FF41]/55 shadow-[0_0_32px_-8px_rgba(0,255,65,0.45)]',
+    text: 'text-[#00FF41]',
+    bar: 'bg-[#00FF41]',
+    label: 'OPERASYONEL',
+  },
+  amber: {
+    ring: 'border-[#ffb400]/55 shadow-[0_0_32px_-8px_rgba(255,180,0,0.4)]',
+    text: 'text-[#ffb400]',
+    bar: 'bg-[#ffb400]',
+    label: 'GELİŞTİRİLEBİLİR',
+  },
+  red: {
+    ring: 'border-red-500/55 shadow-[0_0_32px_-8px_rgba(239,68,68,0.45)]',
+    text: 'text-red-400',
+    bar: 'bg-red-500',
+    label: 'FAIL / KRİTİK',
+  },
+}
+
+/**
+ * @param {{
+ *   selectedOperator?: SelectedOperator | null
+ *   onSaveEvaluation: (payload: FofEvaluationInput & { finalScore: number; passed: boolean; instantFail: boolean; failReason: string | null; operatorId: string }) => void | Promise<void>
+ *   saving?: boolean
+ * }} props
+ */
+export default function ForceonForceTerminal({ selectedOperator = null, onSaveEvaluation, saving = false }) {
+  const [form, setForm] = useState(createInitialForm)
+  const [saveMsg, setSaveMsg] = useState('')
+
+  const operatorLabel = useMemo(() => {
+    if (!selectedOperator) return null
+    return (
+      selectedOperator.callsign?.trim() ||
+      selectedOperator.username?.trim() ||
+      selectedOperator.displayName?.trim() ||
+      selectedOperator.uid.slice(0, 8).toUpperCase()
+    )
+  }, [selectedOperator])
+
+  const assessment = useMemo(() => computeFofInstructorScore(form), [form])
+  const hudTone = fofScoreHudTone(assessment.finalScore, assessment.instantFail)
+  const hudStyle = HUD_TONE_STYLES[hudTone]
+
+  const patch = useCallback((/** @type {Partial<FofEvaluationInput>} */ next) => {
+    setForm((prev) => ({ ...prev, ...next }))
+    setSaveMsg('')
+  }, [])
+
+  const patchPenalty = useCallback((/** @type {keyof FofEvaluationInput['penalties']} */ key, value) => {
+    setForm((prev) => ({
+      ...prev,
+      penalties: { ...prev.penalties, [key]: value },
+    }))
+    setSaveMsg('')
+  }, [])
+
+  const handleReset = () => {
+    setForm(createInitialForm())
+    setSaveMsg('')
+  }
+
+  const handleSave = async () => {
+    if (!selectedOperator?.uid) return
+    setSaveMsg('')
+    try {
+      await onSaveEvaluation({
+        ...form,
+        finalScore: assessment.finalScore,
+        passed: assessment.passed,
+        instantFail: assessment.instantFail,
+        failReason: assessment.failReason,
+        operatorId: selectedOperator.uid,
+      })
+      setSaveMsg('DEĞERLENDİRME LOGLANDI')
+      setForm(createInitialForm())
+    } catch (err) {
+      setSaveMsg(err instanceof Error ? err.message : 'KAYIT BAŞARISIZ')
+    }
+  }
+
+  if (!selectedOperator) {
+    return (
+      <Motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-lg border border-amber-500/35 bg-amber-950/20 px-4 py-8 text-center"
+      >
+        <UserX className="mx-auto mb-3 size-10 text-amber-500/70" strokeWidth={1.25} aria-hidden />
+        <p className="font-mono-technical text-[11px] font-bold uppercase tracking-[0.28em] text-amber-300">
+          Lütfen operatör seçiniz
+        </p>
+        <p className="mt-2 font-mono-technical text-[9px] uppercase text-slate-500">
+          FoF değerlendirmesi için grup üyesi seçilmelidir
+        </p>
+      </Motion.div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      <TacticalPanel className="relative overflow-hidden border-[#ffb400]/25 bg-[#0a0a0a]/95 p-0">
+        <span className="pointer-events-none absolute left-2 top-2 z-10 h-4 w-4 border-l border-t border-[#ffb400]/40" />
+        <span className="pointer-events-none absolute right-2 top-2 z-10 h-4 w-4 border-r border-t border-[#ffb400]/40" />
+
+        <div className="flex flex-col gap-4 border-b border-[#ffb400]/15 bg-[#080808] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+          <div className="min-w-0">
+            <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.32em] text-[#ffb400]/75">
+              [ FORCE-ON-FORCE · CANLI DEĞERLENDİRME ]
+            </p>
+            <div className="mt-1 flex items-center gap-2">
+              <Crosshair className="size-4 shrink-0 text-[#ffb400]" strokeWidth={1.5} aria-hidden />
+              <h3 className="truncate font-display text-base font-bold tracking-[0.12em] text-white sm:text-lg">
+                {operatorLabel}
+              </h3>
+            </div>
+            <p className="mt-0.5 font-mono-technical text-[9px] uppercase text-slate-500">
+              UID · {selectedOperator.uid.slice(0, 12)}…
+            </p>
+          </div>
+
+          <Motion.div
+            key={`${assessment.finalScore}-${assessment.instantFail}`}
+            initial={{ scale: 0.92, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 24 }}
+            className={`flex min-w-[9rem] flex-col items-center rounded-lg border-2 px-5 py-3 ${hudStyle.ring}`}
+          >
+            <p className="font-mono-technical text-[7px] font-bold uppercase tracking-[0.28em] text-slate-500">
+              HUD SKOR
+            </p>
+            <p className={`font-display text-4xl font-bold tabular-nums leading-none ${hudStyle.text}`}>
+              {assessment.finalScore}
+            </p>
+            <p className={`mt-1 font-mono-technical text-[8px] font-bold uppercase tracking-wider ${hudStyle.text}`}>
+              {hudStyle.label}
+            </p>
+            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+              <Motion.div
+                className={`h-full rounded-full ${hudStyle.bar}`}
+                initial={{ width: 0 }}
+                animate={{ width: `${assessment.finalScore}%` }}
+                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+              />
+            </div>
+          </Motion.div>
+        </div>
+
+        <AnimatePresence mode="wait">
+          {assessment.instantFail && assessment.failReason ? (
+            <Motion.div
+              key={assessment.failReason}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="border-b border-red-500/30 bg-red-950/30 px-4 py-2.5 sm:px-5"
+            >
+              <p className="flex items-center gap-2 font-mono-technical text-[9px] font-bold uppercase text-red-300">
+                <ShieldAlert className="size-3.5 shrink-0" aria-hidden />
+                ANINDA FAIL · {assessment.failReason}
+              </p>
+            </Motion.div>
+          ) : null}
+        </AnimatePresence>
+
+        <div className="space-y-5 p-4 sm:p-5">
+          <label className="block space-y-1.5">
+            <span className={labelClass}>Senaryo Tipi</span>
+            <select
+              className={selectClass}
+              value={form.scenarioType}
+              onChange={(e) => patch({ scenarioType: e.target.value })}
+            >
+              {FOF_SCENARIO_TYPES.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <fieldset className="space-y-3">
+            <legend className={`${labelClass} mb-2 block`}>Performans Metrikleri · 1–5 Puan</legend>
+            <div className="grid gap-3 lg:grid-cols-3">
+              {METRIC_FIELDS.map((field, idx) => {
+                const MetricIcon = field.Icon
+                return (
+                <Motion.div
+                  key={field.key}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.06 }}
+                  className="rounded border border-[#ffb400]/20 bg-black/40 p-3"
+                >
+                  <div className="mb-2 flex items-start gap-2">
+                    <MetricIcon className="mt-0.5 size-4 shrink-0 text-[#ffb400]" strokeWidth={1.5} aria-hidden />
+                    <div className="min-w-0">
+                      <p className="font-mono-technical text-[9px] font-bold uppercase leading-snug text-white">
+                        {field.label}
+                      </p>
+                      <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-slate-600">{field.hint}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="range"
+                      min={1}
+                      max={5}
+                      step={1}
+                      value={form[field.key]}
+                      onChange={(e) => patch({ [field.key]: Number(e.target.value) })}
+                      className="h-1.5 flex-1 cursor-pointer accent-[#ffb400]"
+                      aria-label={field.label}
+                    />
+                    <span className="w-8 text-center font-display text-lg font-bold tabular-nums text-[#ffb400]">
+                      {form[field.key]}
+                    </span>
+                    <span className="font-mono-technical text-[7px] text-slate-600">{field.weight}</span>
+                  </div>
+                </Motion.div>
+                )
+              })}
+            </div>
+          </fieldset>
+
+          <fieldset className="space-y-2">
+            <legend className={`${labelClass} mb-2 block`}>Vuruluş / İsabet Alımı</legend>
+            <div className="grid gap-2 sm:grid-cols-3">
+              {FOF_HIT_STATUS_OPTIONS.map((opt) => {
+                const active = form.hitStatus === opt.id
+                const isCritical = opt.id === 'KRİTİK'
+                return (
+                  <Motion.button
+                    key={opt.id}
+                    type="button"
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => patch({ hitStatus: /** @type {FofEvaluationInput['hitStatus']} */ (opt.id) })}
+                    className={[
+                      'rounded border px-3 py-2.5 text-left transition',
+                      active
+                        ? isCritical
+                          ? 'border-red-500/60 bg-red-950/40 text-red-300'
+                          : opt.id === 'YARALI'
+                            ? 'border-amber-500/50 bg-amber-950/30 text-amber-300'
+                            : 'border-[#00FF41]/50 bg-[#00FF41]/10 text-[#00FF41]'
+                        : 'border-white/10 bg-black/30 text-slate-400 hover:border-[#ffb400]/30 hover:text-slate-200',
+                    ].join(' ')}
+                  >
+                    <p className="font-mono-technical text-[10px] font-bold uppercase tracking-wider">{opt.label}</p>
+                    <p className="mt-0.5 font-mono-technical text-[7px] uppercase leading-snug opacity-80">
+                      {opt.hint}
+                    </p>
+                  </Motion.button>
+                )
+              })}
+            </div>
+          </fieldset>
+
+          <fieldset className="space-y-2">
+            <legend className={`${labelClass} mb-2 flex items-center gap-2`}>
+              <AlertTriangle className="size-3 text-red-400" aria-hidden />
+              Kritik Cezalar · Penalties
+            </legend>
+            <div className="grid gap-2 sm:grid-cols-1">
+              {FOF_PENALTY_OPTIONS.map((pen) => {
+                const active = form.penalties[pen.id] === true
+                return (
+                  <Motion.label
+                    key={pen.id}
+                    whileTap={{ scale: 0.995 }}
+                    className={[
+                      'flex cursor-pointer items-start gap-3 rounded border px-3 py-3 transition',
+                      active
+                        ? pen.instantFail
+                          ? 'border-red-500/55 bg-red-950/35 text-red-300'
+                          : 'border-amber-500/45 bg-amber-950/25 text-amber-200'
+                        : 'border-white/10 bg-black/25 text-slate-400 hover:border-[#ffb400]/25',
+                    ].join(' ')}
+                  >
+                    <input
+                      type="checkbox"
+                      className="mt-1 size-4 shrink-0 accent-[#ffb400]"
+                      checked={active}
+                      onChange={(e) => patchPenalty(pen.id, e.target.checked)}
+                    />
+                    <span>
+                      <span className="block font-mono-technical text-[10px] font-bold uppercase tracking-wide">
+                        {pen.label}
+                        {pen.instantFail ? (
+                          <span className="ml-2 text-red-400">· INSTANT FAIL</span>
+                        ) : pen.deduction ? (
+                          <span className="ml-2 text-slate-500">· −{pen.deduction}</span>
+                        ) : null}
+                      </span>
+                      <span className="mt-0.5 block font-mono-technical text-[8px] uppercase text-slate-500">
+                        {pen.sublabel}
+                      </span>
+                    </span>
+                  </Motion.label>
+                )
+              })}
+            </div>
+          </fieldset>
+
+          <label className="block space-y-1.5">
+            <span className={labelClass}>AAR · After Action Review Notu</span>
+            <textarea
+              className={textareaClass}
+              placeholder="Saha gözlemleri, öğrenilen dersler, iyileştirme noktaları…"
+              value={form.aarNotes}
+              onChange={(e) => patch({ aarNotes: e.target.value })}
+              maxLength={2000}
+              rows={4}
+            />
+          </label>
+        </div>
+      </TacticalPanel>
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <AnimatePresence>
+          {saveMsg ? (
+            <Motion.p
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0 }}
+              className={[
+                'font-mono-technical text-[9px] font-bold uppercase',
+                saveMsg.includes('LOGLANDI') ? 'text-[#00FF41]' : 'text-red-400',
+              ].join(' ')}
+            >
+              {saveMsg}
+            </Motion.p>
+          ) : (
+            <p className="font-mono-technical text-[8px] uppercase text-slate-600">
+              ORS · 100 baz · metrik ağırlıklı · kritik ihlal = 0
+            </p>
+          )}
+        </AnimatePresence>
+
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={handleReset}
+            disabled={saving}
+            className="inline-flex items-center gap-2 rounded border border-white/15 bg-black/40 px-4 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-slate-400 transition hover:border-white/30 hover:text-white disabled:opacity-40"
+          >
+            <RotateCcw className="size-3.5" aria-hidden />
+            Sıfırla
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            className="inline-flex items-center gap-2 rounded border border-[#ffb400]/55 bg-[#ffb400]/12 px-5 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#ffb400] shadow-[0_0_20px_-6px_rgba(255,180,0,0.45)] transition hover:bg-[#ffb400]/22 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Target className="size-3.5" aria-hidden />
+            {saving ? 'AKTARILIYOR…' : 'Değerlendirmeyi Logla'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}

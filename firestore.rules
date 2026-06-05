@@ -1,0 +1,530 @@
+rules_version = '2';
+// NOT: E-posta/şifre veya Google girişi BURADAN açılmaz — Firestore yalnızca veri erişimini kısıtlar.
+// Sign-in method: Firebase Console → Authentication → Sign-in method (veya: npm run open:auth-providers)
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * Yönetici: VITE_ADMIN_EMAIL (.env.local) ile aynı olmalıdır.
+     * Deploy öncesi: npm run deploy-backend veya node scripts/inject-firestore-admin.mjs
+     * %%ADMIN_EMAIL_LOWER%% yerine otomatik yazılır (firestore.deploy.rules).
+     */
+    function isContentAdmin() {
+      return request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email.lower() == '%%ADMIN_EMAIL_LOWER%%';
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwnerUid(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    /** users/{uid}.role === 'instructor' (Eğitmen Paneli) */
+    function isInstructor() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'instructor';
+    }
+
+    function canAccessOperatorData(operatorUid) {
+      return isOwnerUid(operatorUid) || isInstructor() || isContentAdmin();
+    }
+
+    /** users/{uid} — role veya legacy userRole */
+    function userMuhabereRole() {
+      return resource.data.get('role', resource.data.get('userRole', ''));
+    }
+
+    function isMuhabereVisibleUser() {
+      return userMuhabereRole() == 'operator' || userMuhabereRole() == 'instructor';
+    }
+
+    function targetMuhabereRole(targetUid) {
+      let d = get(/databases/$(database)/documents/users/$(targetUid)).data;
+      let r = d.get('role', d.get('userRole', ''));
+      return r == 'operator' || r == 'instructor';
+    }
+
+    match /users/{userId} {
+      allow read: if isOwnerUid(userId)
+        || isContentAdmin()
+        || (isInstructor() && resource.data.role == 'operator')
+        || (isSignedIn() && isMuhabereVisibleUser());
+      allow list: if isContentAdmin()
+        || (isSignedIn() && isMuhabereVisibleUser());
+      allow update: if isOwnerUid(userId)
+        || isMuhaberePeerContactLink(userId)
+        || isMuhaberePeerContactUnlink(userId);
+      allow create: if isOwnerUid(userId);
+      allow delete: if false;
+    }
+
+    /**
+     * usernames/{normalizedKey} — tek alan: uid (kayıt sırasında benzersiz kullanıcı adı).
+     * get: kayıt öncesi müsaitlik kontrolü için herkese açık (yalnızca var/yok).
+     * create: yalnızca kendi uid’si ile; silme: yalnızca sahibi (ileride kullanıcı adı değişiminde).
+     */
+    match /usernames/{uname} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasOnly(['uid'])
+        && request.resource.data.uid == request.auth.uid;
+      allow update: if false;
+      allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    match /inventory/{userId} {
+      allow read, write: if isOwnerUid(userId);
+    }
+
+    match /inventory/{userId}/items/{itemId} {
+      allow read, write: if isOwnerUid(userId);
+    }
+
+    match /health_records/{userId} {
+      allow read, write: if isOwnerUid(userId);
+    }
+
+    match /health_records/{userId}/records/{recordId} {
+      allow read, write: if isOwnerUid(userId);
+    }
+
+    match /casualty_cards/{userId} {
+      allow read, write: if isOwnerUid(userId);
+    }
+
+    match /casualty_cards/{userId}/cards/{cardId} {
+      allow read, write: if isOwnerUid(userId);
+    }
+
+    match /ifak_inventory/{userId} {
+      allow read, write: if isOwnerUid(userId);
+    }
+
+    match /ifak_inventory/{userId}/items/{itemId} {
+      allow read, write: if isOwnerUid(userId);
+    }
+
+    match /medevac_logs/{userId} {
+      allow read, write: if isOwnerUid(userId);
+    }
+
+    match /medevac_logs/{userId}/logs/{logId} {
+      allow read, write: if isOwnerUid(userId);
+    }
+
+    /**
+     * range_logs/{uid}/entries — atış günlüğü (Antrenman).
+     * inventory/{uid}/items ile aynı model: yol üzerinden sahiplik (isOwnerUid).
+     * Not: resource.data.ownerId şartı + orderBy sorgusu Firestore’da permission-denied üretebilir;
+     * ownerId uygulama tarafında injectAudazCreateFields ile yazılmaya devam eder.
+     */
+    match /range_logs/{userId} {
+      allow read, write: if canAccessOperatorData(userId);
+    }
+
+    match /range_logs/{userId}/entries/{entryId} {
+      allow read, write: if canAccessOperatorData(userId);
+    }
+
+    match /armory_audit_trail/{userId} {
+      allow read, write: if isOwnerUid(userId);
+    }
+
+    match /armory_audit_trail/{userId}/entries/{entryId} {
+      allow read, write: if isOwnerUid(userId);
+    }
+
+    match /missions/{missionId} {
+      allow read: if isSignedIn() && (
+        resource.data.ownerId == request.auth.uid ||
+        resource.data.visibility == 'org' ||
+        ('assigneeIds' in resource.data.keys() && request.auth.uid in resource.data.assigneeIds)
+      );
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
+    match /trainings/{trainingId} {
+      allow read: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
+    /**
+     * doktrinler: isPublic == true herkese; aksi halde yalnızca oturum açmış üyeler okur.
+     * Yazma / silme yalnızca isContentAdmin().
+     */
+    match /doktrinler/{docId} {
+      allow read: if resource.data.isPublic == true
+        || (isSignedIn() && resource.data.isPublic != true);
+      allow create, update, delete: if isContentAdmin();
+    }
+
+    match /egitim_videolari/{docId} {
+      allow read: if isSignedIn();
+      allow create, delete: if isContentAdmin();
+      allow update: if isContentAdmin();
+    }
+
+    match /envanter/{itemId} {
+      allow read: if isSignedIn() && (
+        resource.data.ownerId == request.auth.uid || isContentAdmin()
+      );
+      allow create: if isContentAdmin() || (
+        isSignedIn() && request.resource.data.ownerId == request.auth.uid
+      );
+      allow update, delete: if isContentAdmin() || (
+        isSignedIn() && resource.data.ownerId == request.auth.uid
+      );
+    }
+
+    /**
+     * instructor_tokens/{tokenId} — tek kullanımlık eğitmen davetiye kodu.
+     * Belge kimliği = token dizesi (örn. AUDAZ-X97B-42KL).
+     * get: kayıt öncesi doğrulama (kod gizli kalır, tahmin edilmesi zor).
+     * create: yalnızca sistem yöneticisi (Ayarlar paneli).
+     * update: yalnızca yeni kayıt olan kullanıcı kendi uid ile yakma (isUsed).
+     */
+    match /instructor_tokens/{tokenId} {
+      allow get: if true;
+      allow list: if isContentAdmin();
+      allow create: if isContentAdmin()
+        && request.resource.data.token == tokenId
+        && request.resource.data.isUsed == false
+        && request.resource.data.usedBy == null;
+      allow update: if isSignedIn()
+        && resource.data.isUsed == false
+        && request.resource.data.isUsed == true
+        && request.resource.data.usedBy == request.auth.uid
+        && request.resource.data.token == resource.data.token;
+      allow delete: if false;
+    }
+
+    match /instructorLogs/{logId} {
+      allow create: if isInstructor() || isContentAdmin();
+      allow read: if isContentAdmin() || isInstructor();
+      allow update, delete: if false;
+    }
+
+    /**
+     * groups/{groupId} — eğitmen oluşturur; operatör şifre ile members'a arrayUnion.
+     */
+    match /groups/{groupId} {
+      allow read: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn()
+        && (isInstructor() || isContentAdmin())
+        && request.resource.data.instructorId == request.auth.uid
+        && request.resource.data.groupId == groupId
+        && request.resource.data.members is list;
+      allow update: if isSignedIn() && (
+        resource.data.instructorId == request.auth.uid
+        || request.auth.uid in request.resource.data.members
+      );
+      allow delete: if isSignedIn()
+        && (resource.data.instructorId == request.auth.uid || isContentAdmin());
+    }
+
+    function groupDoc(groupId) {
+      return get(/databases/$(database)/documents/groups/$(groupId));
+    }
+
+    function isGroupInstructor(groupId) {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/groups/$(groupId))
+        && groupDoc(groupId).data.instructorId == request.auth.uid;
+    }
+
+    function isGroupMember(groupId) {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/groups/$(groupId))
+        && request.auth.uid in groupDoc(groupId).data.members;
+    }
+
+    function canReadGroupAcademic(groupId) {
+      return isGroupInstructor(groupId) || isGroupMember(groupId) || isContentAdmin();
+    }
+
+    /** Karşı tarafın contacts dizisine yalnızca kendi UID eklenir (tim eşleşmesi). */
+    function isMuhaberePeerContactLink(targetUid) {
+      let prior = resource.data.get('contacts', []);
+      let next = request.resource.data.get('contacts', []);
+      return isSignedIn()
+        && request.auth.uid != targetUid
+        && isMuhabereVisibleUser()
+        && request.writeFields.hasOnly(['contacts'])
+        && next.hasAll(prior)
+        && next.size() == prior.size() + 1
+        && request.auth.uid in next
+        && !(request.auth.uid in prior);
+    }
+
+    /** Karşı tarafın contacts dizisinden yalnızca kendi UID çıkarılır (bağlantı koparma). */
+    function isMuhaberePeerContactUnlink(targetUid) {
+      let prior = resource.data.get('contacts', []);
+      let next = request.resource.data.get('contacts', []);
+      return isSignedIn()
+        && request.auth.uid != targetUid
+        && isMuhabereVisibleUser()
+        && request.writeFields.hasOnly(['contacts'])
+        && prior.hasAll(next)
+        && prior.size() == next.size() + 1
+        && request.auth.uid in prior
+        && !(request.auth.uid in next);
+    }
+
+    /** chats/{uidA}_{uidB} — katılımcı doğrulama */
+    function isChatParticipant(chatId) {
+      return isSignedIn()
+        && (chatId.matches('^' + request.auth.uid + '_.*')
+          || chatId.matches('.*_' + request.auth.uid + '$'));
+    }
+
+    /**
+     * Mesaj okuma: sohbet katılımcısı veya alıcı (collectionGroup unread sorgusu).
+     * Yalnızca isChatParticipant, receiverId+status collectionGroup listesini reddeder.
+     */
+    function canReadMuhabereMessage(chatId) {
+      return isChatParticipant(chatId)
+        || (isSignedIn() && resource.data.receiverId == request.auth.uid);
+    }
+
+    function isChannelMember(channelId) {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/channels/$(channelId))
+        && request.auth.uid in get(/databases/$(database)/documents/channels/$(channelId)).data.members;
+    }
+
+    function muhabereDmMessageType() {
+      return request.resource.data.get('type', 'text');
+    }
+
+    function isValidMuhabereDmMessageCreate() {
+      let t = muhabereDmMessageType();
+      return request.resource.data.senderId == request.auth.uid
+        && request.resource.data.receiverId is string
+        && request.resource.data.status == 'sent'
+        && request.resource.data.read == false
+        && (
+          (t == 'text'
+            && request.resource.data.text is string
+            && request.resource.data.text.size() > 0
+            && request.resource.data.text.size() <= 4000)
+          || (t == 'image'
+            && request.resource.data.imageUrl is string
+            && request.resource.data.imageUrl.size() > 0
+            && request.resource.data.imageUrl.size() <= 2048)
+          || (t == 'location'
+            && request.resource.data.lat is number
+            && request.resource.data.lng is number)
+        );
+    }
+
+    function isValidChannelMessageCreate() {
+      let t = request.resource.data.get('type', 'text');
+      return request.resource.data.senderId == request.auth.uid
+        && request.resource.data.channelId == channelId
+        && (
+          (t == 'text'
+            && request.resource.data.text is string
+            && request.resource.data.text.size() > 0
+            && request.resource.data.text.size() <= 4000)
+          || (t == 'image'
+            && request.resource.data.imageUrl is string
+            && request.resource.data.imageUrl.size() > 0)
+          || (t == 'location'
+            && request.resource.data.lat is number
+            && request.resource.data.lng is number)
+        );
+    }
+
+    /**
+     * group_training_templates — eğitmen tanımlı akademik drill şablonları.
+     */
+    match /group_training_templates/{templateId} {
+      allow read: if canReadGroupAcademic(resource.data.groupId);
+      allow list: if isInstructor() || isContentAdmin();
+      allow create: if isInstructor()
+        && request.resource.data.instructorId == request.auth.uid
+        && isGroupInstructor(request.resource.data.groupId)
+        && request.resource.data.templateId == templateId;
+      allow update, delete: if isInstructor()
+        && resource.data.instructorId == request.auth.uid
+        && isGroupInstructor(resource.data.groupId);
+    }
+
+    /**
+     * group_activity_logs — eğitmen onaylı grup eğitim skorları (range_logs’tan izole).
+     */
+    match /group_activity_logs/{logId} {
+      allow read: if canReadGroupAcademic(resource.data.groupId);
+      allow list: if isInstructor() || isContentAdmin();
+      allow create: if (
+        isInstructor()
+        && request.resource.data.instructorId == request.auth.uid
+        && request.resource.data.type == 'group_drill'
+        && isGroupInstructor(request.resource.data.groupId)
+        && request.resource.data.logId == logId
+      ) || (
+        isSignedIn()
+        && request.resource.data.type == 'operator_group_feed'
+        && request.resource.data.trainingType == 'GROUP'
+        && request.resource.data.operatorId == request.auth.uid
+        && request.resource.data.logId == logId
+        && isGroupMember(request.resource.data.groupId)
+        && request.resource.data.instructorId == groupDoc(request.resource.data.groupId).data.instructorId
+      );
+      allow update, delete: if false;
+    }
+
+    /**
+     * drill_templates — eğitmen atış drill kütüphanesi.
+     */
+    match /drill_templates/{templateId} {
+      allow read: if isSignedIn()
+        && resource.data.instructorId == request.auth.uid;
+      allow list: if isInstructor() || isContentAdmin();
+      allow create: if isInstructor()
+        && request.resource.data.instructorId == request.auth.uid
+        && request.resource.data.id == templateId;
+      allow update, delete: if isInstructor()
+        && resource.data.instructorId == request.auth.uid;
+    }
+
+    /**
+     * group_trainings — eğitmen açtığı canlı grup eğitim oturumları.
+     */
+    match /group_trainings/{trainingId} {
+      allow read: if canReadGroupAcademic(resource.data.groupId);
+      allow list: if isInstructor() || isContentAdmin();
+      allow create: if isInstructor()
+        && request.resource.data.instructorId == request.auth.uid
+        && request.resource.data.id == trainingId
+        && isGroupInstructor(request.resource.data.groupId)
+        && request.resource.data.status == 'active';
+      allow update: if isInstructor()
+        && resource.data.instructorId == request.auth.uid
+        && isGroupInstructor(resource.data.groupId);
+      allow delete: if false;
+    }
+
+    /**
+     * vbss_evaluations — eğitmen gemi operasyonu değerlendirme formu.
+     */
+    match /vbss_evaluations/{evaluationId} {
+      allow read: if canReadGroupAcademic(resource.data.groupId);
+      allow list: if isInstructor() || isContentAdmin()
+        || (isSignedIn()
+          && resource.data.operatorId == request.auth.uid
+          && isGroupMember(resource.data.groupId));
+      allow create: if isInstructor()
+        && request.resource.data.instructorId == request.auth.uid
+        && request.resource.data.id == evaluationId
+        && request.resource.data.type == 'vbss_evaluation'
+        && request.resource.data.discipline == 'vbss'
+        && isGroupInstructor(request.resource.data.groupId)
+        && request.resource.data.operatorId is string
+        && request.resource.data.overallScore is number;
+      allow update, delete: if false;
+    }
+
+    /**
+     * tccc_evaluations — eğitmen MARCH taktik tıbbi değerlendirme formu.
+     */
+    match /tccc_evaluations/{evaluationId} {
+      allow read: if canReadGroupAcademic(resource.data.groupId);
+      allow list: if isInstructor() || isContentAdmin()
+        || (isSignedIn()
+          && resource.data.operatorId == request.auth.uid
+          && isGroupMember(resource.data.groupId));
+      allow create: if isInstructor()
+        && request.resource.data.instructorId == request.auth.uid
+        && request.resource.data.id == evaluationId
+        && request.resource.data.type == 'tccc_evaluation'
+        && request.resource.data.discipline == 'tccc'
+        && isGroupInstructor(request.resource.data.groupId)
+        && request.resource.data.operatorId is string
+        && request.resource.data.overallScore is number;
+      allow update, delete: if false;
+    }
+
+    /**
+     * training_results — operatör vuruş/süre girişleri.
+     */
+    match /training_results/{resultId} {
+      allow read: if canReadGroupAcademic(resource.data.groupId);
+      allow list: if isInstructor() || isContentAdmin();
+      allow create: if isSignedIn()
+        && request.resource.data.id == resultId
+        && request.resource.data.operatorId == request.auth.uid
+        && isGroupMember(request.resource.data.groupId)
+        && request.resource.data.hits is number
+        && request.resource.data.hits >= 0;
+      allow update, delete: if false;
+    }
+
+    /**
+     * contact_requests — Taktik Muhabere tim katılım istekleri.
+     * Oturum açmış kullanıcılar okuyabilir / yazabilir.
+     */
+    match /contact_requests/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+
+    /**
+     * chats/{chatId}/messages — Taktik Muhabere DM (chatId = küçükUID_büyükUID)
+     */
+    match /chats/{chatId} {
+      allow read: if isChatParticipant(chatId);
+      allow create: if isChatParticipant(chatId);
+      allow update: if isChatParticipant(chatId);
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        allow read: if canReadMuhabereMessage(chatId);
+        allow create: if isChatParticipant(chatId) && isValidMuhabereDmMessageCreate();
+        allow update: if isChatParticipant(chatId)
+          && resource.data.receiverId == request.auth.uid
+          && request.resource.data.status == 'read'
+          && request.resource.data.read == true
+          && request.writeFields.hasOnly(['status', 'read']);
+        allow delete: if isChatParticipant(chatId)
+          && resource.data.isBurn == true;
+      }
+    }
+
+    /**
+     * channels — Taktik Muhabere tim kanalları (grup sohbeti).
+     */
+    match /channels/{channelId} {
+      allow read: if isChannelMember(channelId);
+      allow create: if isSignedIn()
+        && isMuhabereVisibleUser()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 64
+        && request.resource.data.members is list
+        && request.auth.uid in request.resource.data.members;
+      allow update: if isChannelMember(channelId)
+        && request.resource.data.createdBy == resource.data.createdBy;
+      allow delete: if isSignedIn() && resource.data.createdBy == request.auth.uid;
+
+      match /messages/{messageId} {
+        allow read: if isChannelMember(channelId);
+        allow create: if isChannelMember(channelId) && isValidChannelMessageCreate();
+        allow update, delete: if false;
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

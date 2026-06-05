@@ -1,0 +1,127 @@
+import { todayIsoDate, weaponDisplayName, weaponStokKodu } from '../../lib/weaponIlws'
+
+const selectClass =
+  'dossier-blood-select w-full rounded border border-[#00FF41]/35 bg-[#0A0A0A] py-2 pl-2 pr-8 font-mono-technical text-[10px] uppercase text-white outline-none'
+
+const dateInputClass =
+  'w-full rounded border border-[#00FF41] bg-[#0A0A0A] px-2 py-1.5 font-mono-technical text-[10px] text-[#00FF41] outline-none [color-scheme:dark] focus:border-[#00FF41]'
+
+/**
+ * @param {{
+ *   open: boolean
+ *   busy: boolean
+ *   mountWeaponId: string
+ *   logDate: string
+ *   idleWeapons: Record<string, unknown>[]
+ *   onMountWeaponIdChange: (value: string) => void
+ *   onLogDateChange: (value: string) => void
+ *   onClose: () => void
+ *   onConfirm: (e: import('react').FormEvent) => void
+ * }} props
+ */
+export default function AccessoryMountModal({
+  open,
+  busy,
+  mountWeaponId,
+  logDate,
+  idleWeapons,
+  onMountWeaponIdChange,
+  onLogDateChange,
+  onClose,
+  onConfirm,
+}) {
+  if (!open) return null
+
+  const disabled = busy
+  const canConfirm = Boolean(mountWeaponId) && idleWeapons.length > 0
+
+  return (
+    <div
+      className="fixed inset-0 z-[110] flex items-center justify-center bg-black/80 p-3 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="accessory-mount-modal-title"
+    >
+      <button type="button" className="absolute inset-0 cursor-default" aria-label="Kapat" onClick={() => !disabled && onClose()} />
+      <div className="relative z-[1] w-full max-w-md border border-[#00FF41] bg-[#0A0A0A] p-0 shadow-[0_0_50px_rgba(0,255,65,0.2)]">
+        <div className="flex items-start justify-between gap-2 border-b border-[#00FF41]/30 bg-[#050805] px-3 py-2 sm:px-4">
+          <div>
+            <p
+              id="accessory-mount-modal-title"
+              className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] text-[#00FF41]"
+            >
+              ⚡ MONTAJ_KONTROL · EYLEM_PENCERESİ
+            </p>
+            <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-slate-600">AKSESUAR · SİLAH_KİLİTLEME</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={disabled}
+            className="shrink-0 rounded border border-white/15 px-2 py-1 font-mono-technical text-[9px] font-bold uppercase text-slate-400 hover:border-[#00FF41]/40 hover:text-[#00FF41] disabled:opacity-40"
+            aria-label="Kapat"
+          >
+            [ X ]
+          </button>
+        </div>
+
+        <form onSubmit={onConfirm} className="space-y-3 px-3 py-3 sm:px-4 sm:py-4">
+          <label className="block">
+            <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-[#00FF41]/90">
+              MONTAJ YAPILACAK SİLAH SEÇİMİ:
+            </span>
+            {idleWeapons.length === 0 ? (
+              <p className="mt-2 rounded border border-amber-500/35 bg-amber-950/20 px-2 py-2 font-mono-technical text-[9px] uppercase text-amber-300">
+                BOŞTA_SİLAH_YOK · ENVANTERDE_MÜSAİT_KAYIT_BULUNAMADI
+              </p>
+            ) : (
+              <select
+                className={`${selectClass} mt-1`}
+                value={mountWeaponId}
+                onChange={(e) => onMountWeaponIdChange(e.target.value)}
+                disabled={disabled}
+                required
+              >
+                <option value="">— SİLAH SEÇ —</option>
+                {idleWeapons.map((w) => (
+                  <option key={String(w.id)} value={String(w.id)}>
+                    [{weaponStokKodu(String(w.id))}] {weaponDisplayName(w)}
+                  </option>
+                ))}
+              </select>
+            )}
+          </label>
+          <label className="block">
+            <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">İŞLEM_TARİHİ (KAYIT)</span>
+            <input
+              type="date"
+              className={`${dateInputClass} mt-1`}
+              value={logDate}
+              max={todayIsoDate()}
+              onChange={(e) => onLogDateChange(e.target.value)}
+              disabled={disabled}
+              required
+            />
+          </label>
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#00FF41]/20 pt-3">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={disabled}
+              className="rounded border border-white/15 px-3 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-slate-400 hover:bg-white/5 disabled:opacity-40"
+            >
+              [ ESC: İPTAL ]
+            </button>
+            <button
+              type="submit"
+              disabled={disabled || !canConfirm}
+              className="rounded border border-[#00FF41]/55 bg-[#00FF41]/15 px-3 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#00FF41] shadow-[0_0_16px_rgba(0,255,65,0.25)] hover:bg-[#00FF41]/25 disabled:opacity-50"
+            >
+              [ MONTAJI_ONAYLA_VE_KİLİTLE ]
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
