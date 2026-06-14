@@ -1,4 +1,5 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useLocation, useSearchParams } from 'react-router-dom'
 import HudFluffDecor from '../components/dashboard/HudFluffDecor'
 import HudTicker from '../components/ui/HudTicker'
 import AtisShootingTerminal from '../components/training/AtisShootingTerminal'
@@ -9,12 +10,44 @@ import TcccTerminal from '../components/training/TcccTerminal'
 import EgitimTerminal from '../components/training/EgitimTerminal'
 import GroupTrainingTerminal from '../components/training/GroupTrainingTerminal'
 import TrainingCategoryHub from '../components/training/TrainingCategoryHub'
+import {
+  countVisibleTrainingChannels,
+  resolveUserGroup,
+  TRAINING_CATEGORIES,
+} from '../components/training/trainingCategories'
 import { TrainingSessionProvider, useTrainingSession } from '../context/TrainingSessionContext'
+import { useAuth } from '../context/AuthContext'
+import { filterIndividualTrainingRecords } from '../lib/trainingGroupFields'
 import { useAudazData } from '../hooks/useAudazData'
 
 /** @typedef {import('../components/training/trainingCategories').TrainingCategory} TrainingCategory */
 
+/**
+ * @param {unknown} state
+ */
+function itemTypeIsTrainingFromState(state) {
+  return Boolean(
+    state &&
+      typeof state === 'object' &&
+      'groupTrainingId' in state &&
+      String(/** @type {{ groupTrainingId?: string }} */ (state).groupTrainingId ?? '').trim(),
+  )
+}
+
 function TrainingInner() {
+  const { role, userData, profileLoading } = useAuth()
+  const userGroup = useMemo(() => resolveUserGroup(userData), [userData])
+  const isInstructor = role === 'instructor'
+  const canAccessGrupEgitimi = Boolean(userGroup) || isInstructor
+  const visibleCategoryCount = useMemo(
+    () =>
+      countVisibleTrainingChannels({
+        role: role ?? 'operator',
+        userGroup,
+      }),
+    [role, userGroup],
+  )
+
   const {
     items: inventory,
     updateItem,
@@ -39,17 +72,95 @@ function TrainingInner() {
     listenError: trainingsListenError,
   } = useAudazData('trainings')
 
-  const { wrapRangeLogPayload, wrapTrainingPayload, afterRangeLogSaved, afterTrainingSaved } =
-    useTrainingSession()
+  const { wrapRangeLogPayload, wrapTrainingPayload } = useTrainingSession()
+
+  const individualRangeLogs = useMemo(
+    () => filterIndividualTrainingRecords(rangeLogs),
+    [rangeLogs],
+  )
+  const individualTrainingPlans = useMemo(
+    () => filterIndividualTrainingRecords(trainingPlans),
+    [trainingPlans],
+  )
 
   const ready = inventoryReady && rangeLogsReady
   const listenError = inventoryListenError ?? rangeLogsListenError
 
-  const [activeCategory, setActiveCategory] = useState(/** @type {TrainingCategory | null} */ (null))
+  const location = useLocation()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const sectorFromUrl = searchParams.get('sector')?.trim() ?? ''
+  const trainingFromUrl = searchParams.get('training')?.trim() ?? ''
+  const navState = /** @type {{ groupTrainingId?: string, trainingSector?: string } | null} */ (location.state)
+  const trainingFromState = String(navState?.groupTrainingId ?? '').trim()
+  const sectorFromState = String(navState?.trainingSector ?? '').trim()
 
-  const handleCategorySelect = useCallback((/** @type {TrainingCategory} */ category) => {
-    setActiveCategory(category)
-  }, [])
+  const [activeCategory, setActiveCategory] = useState(/** @type {TrainingCategory | null} */ (null))
+  const [deepLinkTrainingId, setDeepLinkTrainingId] = useState('')
+
+  useEffect(() => {
+    if (profileLoading) return
+
+    const trainingId = trainingFromUrl || trainingFromState
+    const wantsGroupSector =
+      sectorFromUrl === 'grup-egitimi' ||
+      sectorFromState === 'grup-egitimi' ||
+      Boolean(trainingId) ||
+      itemTypeIsTrainingFromState(location.state)
+
+    if (!sectorFromUrl && !trainingFromUrl && !trainingFromState && !sectorFromState && !wantsGroupSector) {
+      return
+    }
+
+    if (wantsGroupSector && canAccessGrupEgitimi) {
+      const category = TRAINING_CATEGORIES.find((c) => c.id === 'grup-egitimi') ?? null
+      if (category) setActiveCategory(category)
+    } else if (sectorFromUrl && sectorFromUrl !== 'egitmen-komuta') {
+      const category = TRAINING_CATEGORIES.find((c) => c.id === sectorFromUrl) ?? null
+      if (category) setActiveCategory(category)
+    }
+
+    if (trainingId && canAccessGrupEgitimi) setDeepLinkTrainingId(trainingId)
+
+    if (sectorFromUrl || trainingFromUrl) {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev)
+          next.delete('sector')
+          next.delete('training')
+          return next
+        },
+        { replace: true },
+      )
+    }
+  }, [
+    sectorFromUrl,
+    trainingFromUrl,
+    trainingFromState,
+    sectorFromState,
+    location.state,
+    location.key,
+    setSearchParams,
+    profileLoading,
+    canAccessGrupEgitimi,
+  ])
+
+  useEffect(() => {
+    if (profileLoading) return
+    if (activeCategory?.id === 'grup-egitimi' && !canAccessGrupEgitimi) {
+      setActiveCategory(null)
+      setDeepLinkTrainingId('')
+    }
+  }, [activeCategory, canAccessGrupEgitimi, profileLoading])
+
+  const handleCategorySelect = useCallback(
+    (/** @type {TrainingCategory} */ category) => {
+      if (profileLoading) return
+      if (category.id === 'grup-egitimi' && !canAccessGrupEgitimi) return
+      if (category.externalRoute) return
+      setActiveCategory(category)
+    },
+    [profileLoading, canAccessGrupEgitimi],
+  )
 
   const exitCategory = useCallback(() => {
     setActiveCategory(null)
@@ -58,35 +169,17 @@ function TrainingInner() {
   const addRangeLogEntry = useCallback(
     async (payload) => {
       const enriched = wrapRangeLogPayload(payload)
-      const ref = await addRangeLog(enriched)
-      const logId = String(ref?.id ?? '')
-      if (logId) {
-        try {
-          await afterRangeLogSaved({ logId, payload: enriched })
-        } catch (feedErr) {
-          console.error('[Training] group activity feed failed', feedErr)
-        }
-      }
-      return ref
+      return addRangeLog(enriched)
     },
-    [addRangeLog, wrapRangeLogPayload, afterRangeLogSaved],
+    [addRangeLog, wrapRangeLogPayload],
   )
 
   const addTrainingPlanEntry = useCallback(
     async (payload) => {
       const enriched = wrapTrainingPayload(payload)
-      const ref = await addTrainingPlan(enriched)
-      const logId = String(ref?.id ?? '')
-      if (logId) {
-        try {
-          await afterTrainingSaved({ logId, payload: enriched })
-        } catch (feedErr) {
-          console.error('[Training] group training feed failed', feedErr)
-        }
-      }
-      return ref
+      return addTrainingPlan(enriched)
     },
-    [addTrainingPlan, wrapTrainingPayload, afterTrainingSaved],
+    [addTrainingPlan, wrapTrainingPayload],
   )
 
   const showAtis = activeCategory?.id === 'atis'
@@ -95,7 +188,7 @@ function TrainingInner() {
   const showVbss = activeCategory?.id === 'vbss'
   const showTccc = activeCategory?.id === 'tccc'
   const showEgitim = activeCategory?.id === 'egitim'
-  const showGrupEgitimi = activeCategory?.id === 'grup-egitimi'
+  const showGrupEgitimi = activeCategory?.id === 'grup-egitimi' && canAccessGrupEgitimi
 
   const headerTitle = showAtis
     ? 'ATIŞ · RNG-01'
@@ -114,20 +207,20 @@ function TrainingInner() {
                 : 'TAKTİK EĞİTİM TERMINALİ'
 
   const headerSubtitle = showAtis
-    ? 'Silah · mühimmat · atım/isabet · drill — range_logs + ILWS stok senkronu'
+    ? 'Kişisel atış kayıtları — range_logs (bireysel kanal)'
     : showCqb
-      ? 'Oda topolojisi · giriş · kırma · tehdit/etkisiz — range_logs CQB_DRILL'
+      ? 'Kişisel CQB drill kayıtları — range_logs (bireysel kanal)'
       : showFof
-        ? 'Senaryo · simülasyon · muharebe metrikleri — range_logs FOF_DRILL'
+        ? 'Kişisel FOF kayıtları — range_logs (bireysel kanal)'
         : showVbss
-          ? 'Gemi operasyonu görev HUD — eğitmen değerlendirmesi · vbss_evaluations canlı senkron'
+          ? 'Canlı HUD — eğitmen değerlendirmesi ayrı koleksiyon (vbss_evaluations)'
           : showTccc
-            ? 'MARCH taktik tıbbi HUD — eğitmen değerlendirmesi · tccc_evaluations canlı senkron'
+            ? 'Canlı HUD — eğitmen değerlendirmesi ayrı koleksiyon (tccc_evaluations)'
             : showEgitim
-              ? 'Eğitim odağı · takvim · lojistik kontrol listesi — trainings TRAINING_PLAN'
+              ? 'Kişisel eğitim planları — trainings (bireysel kanal)'
               : showGrupEgitimi
-                ? 'Eğitmenin açtığı canlı oturum · vuruş ve süre — training_results'
-                : 'Operasyon kategorisi seçin · kayıt modülleri sektör bazında açılır'
+                ? 'Grup oturumu — group_trainings · training_results'
+                : 'Bireysel antrenman tüm kullanıcılara açık · grup ve komuta panelleri rol bazlı'
 
   const terminalProps = {
     onBack: exitCategory,
@@ -160,7 +253,7 @@ function TrainingInner() {
         {showAtis ? (
           <AtisShootingTerminal
             inventory={inventory}
-            rangeLogs={rangeLogs}
+            rangeLogs={individualRangeLogs}
             addLog={addRangeLogEntry}
             updateInventory={updateItem}
             logsLoading={rangeLogsLoading}
@@ -168,14 +261,14 @@ function TrainingInner() {
           />
         ) : showCqb ? (
           <CqbTerminal
-            rangeLogs={rangeLogs}
+            rangeLogs={individualRangeLogs}
             addLog={addRangeLogEntry}
             logsLoading={rangeLogsLoading}
             {...terminalProps}
           />
         ) : showFof ? (
           <FofTerminal
-            rangeLogs={rangeLogs}
+            rangeLogs={individualRangeLogs}
             addLog={addRangeLogEntry}
             logsLoading={rangeLogsLoading}
             {...terminalProps}
@@ -186,7 +279,7 @@ function TrainingInner() {
           <TcccTerminal {...terminalProps} />
         ) : showEgitim ? (
           <EgitimTerminal
-            trainingPlans={trainingPlans}
+            trainingPlans={individualTrainingPlans}
             addPlan={addTrainingPlanEntry}
             updatePlan={updateTrainingPlan}
             plansLoading={trainingsLoading}
@@ -195,11 +288,11 @@ function TrainingInner() {
             onBack={exitCategory}
           />
         ) : showGrupEgitimi ? (
-          <GroupTrainingTerminal onBack={exitCategory} />
+          <GroupTrainingTerminal onBack={exitCategory} initialTrainingId={deepLinkTrainingId} />
         ) : (
           <section aria-label="Operasyon kategorileri">
             <p className="mb-3 font-mono-technical text-[8px] font-bold uppercase tracking-[0.28em] text-[#00FF41]/70">
-              SEKTÖR_SEÇİMİ · 7 KANAL
+              SEKTÖR_SEÇİMİ · {visibleCategoryCount} KANAL
             </p>
             <TrainingCategoryHub onCategorySelect={handleCategorySelect} />
           </section>

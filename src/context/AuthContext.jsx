@@ -49,6 +49,12 @@ function mergeWithGuest(partial, authUser) {
     drugSensitivity: typeof partial.drugSensitivity === 'string' ? partial.drugSensitivity : '',
     importantNotes: typeof partial.importantNotes === 'string' ? partial.importantNotes : '',
     groupId: typeof partial.groupId === 'string' && partial.groupId.trim() ? partial.groupId.trim() : null,
+    group:
+      typeof partial.group === 'string' && partial.group.trim()
+        ? partial.group.trim()
+        : typeof partial.groupId === 'string' && partial.groupId.trim()
+          ? partial.groupId.trim()
+          : null,
     instructorId:
       typeof partial.instructorId === 'string' && partial.instructorId.trim() ? partial.instructorId.trim() : null,
   }

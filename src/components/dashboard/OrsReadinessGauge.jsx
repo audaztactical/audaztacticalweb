@@ -7,9 +7,9 @@ const COMBAT_RED = '#FF0000'
 
 /**
  * OHP (Operasyonel Hazırlık Puanı) — üst yarım daire + durum + hata kodları.
- * @param {{ score: number, penalties: { code: string, delta: number, detail: string }[], loading?: boolean }} props
+ * @param {{ score: number, penalties: { code: string, delta: number, detail: string }[], loading?: boolean, embedded?: boolean }} props
  */
-export default function OrsReadinessGauge({ score, penalties, loading }) {
+export default function OrsReadinessGauge({ score, penalties, loading, embedded = false }) {
   const gid = useId().replace(/:/g, '')
   const cx = 100
   const cy = 80
@@ -49,8 +49,8 @@ export default function OrsReadinessGauge({ score, penalties, loading }) {
 
   const panelPulse = isCritical ? 'animate-pulse ring-1 ring-[#FF0000]/45' : ''
 
-  return (
-    <TacticalPanel className={`mx-auto w-full max-w-xl px-4 pb-4 pt-5 sm:px-6 ${panelPulse}`}>
+  const inner = (
+    <>
       <div className="pointer-events-none flex flex-col items-center text-center">
         <p className={`font-mono-technical text-[10px] font-bold uppercase tracking-[0.45em] ${titleAccent}`}>OHP</p>
         <p className="mt-1.5 font-mono-technical text-[9px] uppercase tracking-[0.22em] text-slate-600">
@@ -105,7 +105,7 @@ export default function OrsReadinessGauge({ score, penalties, loading }) {
             HATA_KUYRUĞU: TEMİZ · PUAN_KESİNTİSİ_YOK
           </p>
         ) : (
-          penalties.map((pen, i) => (
+          penalties.slice(0, 3).map((pen, i) => (
             <div
               key={`${pen.code}-${i}`}
               className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-1 text-[9px] sm:justify-between"
@@ -117,6 +117,16 @@ export default function OrsReadinessGauge({ score, penalties, loading }) {
           ))
         )}
       </div>
+    </>
+  )
+
+  if (embedded) {
+    return <div className={`cmd-ohp-embedded h-full px-2 py-1 ${panelPulse}`}>{inner}</div>
+  }
+
+  return (
+    <TacticalPanel className={`mx-auto w-full max-w-xl px-4 pb-4 pt-5 sm:px-6 ${panelPulse}`}>
+      {inner}
     </TacticalPanel>
   )
 }

@@ -1,6 +1,10 @@
 import { invNum, invStr } from './inventoryIlws'
+import { formatTcccInterventionSeconds } from './tcccLogPayload'
 import { resolveInjuryTypeValue, resolveTcccSelectValue } from './tcccOptions'
 import { getTcccScoredMarchInterventions } from './trainingSuccessScore'
+import { filterIndividualTrainingRecords } from './trainingGroupFields'
+
+export { formatTcccInterventionSeconds } from './tcccLogPayload'
 
 /**
  * @param {Record<string, unknown>} row
@@ -57,6 +61,63 @@ function getTcccSelectField(row, field) {
 }
 
 /** @param {Record<string, unknown>} row */
+export function getTcccCasualtyType(row) {
+  const label = invStr(row.casualtyType).trim()
+  if (label) return label
+  const key = invStr(row.casualtyTypeKey).trim()
+  return resolveTcccSelectValue(key)
+}
+
+/** @param {Record<string, unknown>} row */
+export function getTcccOutcome(row) {
+  const label = invStr(row.outcome).trim()
+  if (label) return label
+  const key = invStr(row.outcomeKey).trim()
+  return resolveTcccSelectValue(key)
+}
+
+/** @param {Record<string, unknown>} row */
+export function getTcccProcedurePerformed(row) {
+  const label = invStr(row.procedurePerformed).trim()
+  if (label) return label
+  return '—'
+}
+
+/** @param {Record<string, unknown>} row */
+export function formatTcccInterventionTime(row) {
+  const sec = invNum(row.interventionTimeSec ?? row.injuryToTqTimeSec)
+  if (sec >= 0 && Number.isFinite(sec)) return formatTcccInterventionSeconds(sec)
+  const label = invStr(row.interventionTime || row.injuryToTqTime).trim()
+  return label || '—'
+}
+
+/** @param {Record<string, unknown>} row */
+export function getTcccSuccessPercent(row) {
+  const n = invNum(row.successPercent)
+  if (Number.isFinite(n)) return Math.max(0, Math.min(100, Math.round(n * 10) / 10))
+  return 0
+}
+
+/**
+ * @param {Record<string, unknown>[]} dedicatedLogs
+ * @param {Record<string, unknown>[]} rangeLogs
+ */
+export function mergeTcccLogSources(dedicatedLogs = [], rangeLogs = []) {
+  const seen = new Set()
+  const merged = []
+  for (const row of [
+    ...filterIndividualTrainingRecords(dedicatedLogs),
+    ...filterIndividualTrainingRecords(rangeLogs).filter(isTcccLog),
+  ]) {
+    const id = String(row.id || '')
+    if (id && seen.has(id)) continue
+    if (id) seen.add(id)
+    merged.push(row)
+  }
+  return sortTcccLogsDesc(merged)
+}
+
+/** @param {Record<string, unknown>} row */
 export function getTcccPhase(row) {
   return getTcccSelectField(row, 'tcccPhase')
 }
@@ -104,7 +165,7 @@ function formatMetricField(row, field) {
 
 /** @param {Record<string, unknown>} row */
 export function formatTcccInjuryToTqTime(row) {
-  return formatMetricField(row, 'injuryToTqTime')
+  return formatTcccInterventionTime(row)
 }
 
 /** @param {Record<string, unknown>} row */
@@ -183,22 +244,99 @@ export function sortTcccLogsDesc(logs) {
  * @param {Record<string, unknown>[]} rangeLogs
  */
 export function selectTcccLogs(rangeLogs) {
-  return sortTcccLogsDesc(rangeLogs.filter(isTcccLog))
+  return sortTcccLogsDesc(filterIndividualTrainingRecords(rangeLogs).filter(isTcccLog))
 }
 
 /**
  * @param {{
  *   logs: Record<string, unknown>[]
- *   tcccPhaseKey: string
+ *   tcccPhaseKey?: string
+ *   casualtyTypeKey?: string
+ *   outcomeKey?: string
  * }} filters
  */
-export function filterTcccLogs({ logs, tcccPhaseKey }) {
+export function filterTcccLogs({
+  logs,
+  tcccPhaseKey = 'ALL',
+  casualtyTypeKey = 'ALL',
+  outcomeKey = 'ALL',
+}) {
   return logs.filter((row) => {
-    if (tcccPhaseKey === 'ALL') return true
-    const key = invStr(row.tcccPhaseKey || row.tcccPhase).trim()
-    const label = getTcccPhase(row)
-    return key === tcccPhaseKey || label === tcccPhaseKey
+    if (tcccPhaseKey !== 'ALL') {
+      const key = invStr(row.tcccPhaseKey || row.tcccPhase).trim()
+      const label = getTcccPhase(row)
+      if (key !== tcccPhaseKey && label !== tcccPhaseKey) return false
+    }
+    if (casualtyTypeKey !== 'ALL') {
+      const key = invStr(row.casualtyTypeKey || row.casualtyType).trim()
+      const label = getTcccCasualtyType(row)
+      if (key !== casualtyTypeKey && label !== casualtyTypeKey) return false
+    }
+    if (outcomeKey !== 'ALL') {
+      const key = invStr(row.outcomeKey || row.outcome).trim()
+      const label = getTcccOutcome(row)
+      if (key !== outcomeKey && label !== outcomeKey) return false
+    }
+    return true
   })
+}
+
+/**
+ * @param {{ tcccPhaseKey?: string, casualtyTypeKey?: string, outcomeKey?: string }} filters
+ */
+export function isTcccFilterActive(filters) {
+  return (
+    (filters.tcccPhaseKey && filters.tcccPhaseKey !== 'ALL') ||
+    (filters.casualtyTypeKey && filters.casualtyTypeKey !== 'ALL') ||
+    (filters.outcomeKey && filters.outcomeKey !== 'ALL')
+  )
+}
+
+/**
+ * @param {{ tcccPhaseKey?: string, casualtyTypeKey?: string, outcomeKey?: string }} filters
+ */
+export function formatTcccFilterSummary(filters) {
+  const parts = []
+  if (filters.casualtyTypeKey && filters.casualtyTypeKey !== 'ALL') {
+    parts.push(`Yaralı: ${filters.casualtyTypeKey}`)
+  }
+  if (filters.outcomeKey && filters.outcomeKey !== 'ALL') {
+    parts.push(`Sonuç: ${filters.outcomeKey}`)
+  }
+  if (filters.tcccPhaseKey && filters.tcccPhaseKey !== 'ALL') {
+    parts.push(`Faz: ${filters.tcccPhaseKey}`)
+  }
+  return parts.join(' · ')
+}
+
+/**
+ * @param {Record<string, unknown>[]} logs
+ */
+export function extractTcccCasualtyTypeOptions(logs) {
+  const set = new Map()
+  for (const row of logs) {
+    const label = getTcccCasualtyType(row)
+    const key = invStr(row.casualtyTypeKey).trim() || label
+    if (label && label !== '—') set.set(key, label)
+  }
+  return Array.from(set.entries())
+    .map(([key, label]) => ({ key, label }))
+    .sort((a, b) => a.label.localeCompare(b.label, 'tr'))
+}
+
+/**
+ * @param {Record<string, unknown>[]} logs
+ */
+export function extractTcccOutcomeOptions(logs) {
+  const set = new Map()
+  for (const row of logs) {
+    const label = getTcccOutcome(row)
+    const key = invStr(row.outcomeKey).trim() || label
+    if (label && label !== '—') set.set(key, label)
+  }
+  return Array.from(set.entries())
+    .map(([key, label]) => ({ key, label }))
+    .sort((a, b) => a.label.localeCompare(b.label, 'tr'))
 }
 
 /**

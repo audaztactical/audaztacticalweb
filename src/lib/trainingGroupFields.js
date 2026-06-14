@@ -64,5 +64,17 @@ export function injectGroupTrainingFields(payload, fields) {
  * @param {Record<string, unknown>} row
  */
 export function isGroupTrainingLog(row) {
+  if (row?.isGroup === true) return true
+  const type = String(row?.type ?? '').toLowerCase()
+  if (type === 'group' || type === 'group_training') return true
   return String(row?.trainingType ?? '').toUpperCase() === TRAINING_TYPE_GROUP
+}
+
+/**
+ * Bireysel terminallerde listelenecek kayıtlar — grup eğitimi logları hariç.
+ * @param {Record<string, unknown>[] | null | undefined} rows
+ */
+export function filterIndividualTrainingRecords(rows) {
+  if (!Array.isArray(rows)) return []
+  return rows.filter((row) => !isGroupTrainingLog(row))
 }

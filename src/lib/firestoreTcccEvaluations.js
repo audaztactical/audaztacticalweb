@@ -1,5 +1,6 @@
 import { collection, doc, query, serverTimestamp, setDoc, where } from 'firebase/firestore'
 import { db, isFirebaseConfigured } from './firebase'
+import { INSTRUCTOR_EVALUATION_COLLECTIONS } from './firestoreDataDomains'
 import { sanitizeForFirestore } from './firestoreSanitize'
 import { safeOnSnapshot, timestampToMs } from './firestoreSnapshot'
 
@@ -140,7 +141,7 @@ export async function createTcccEvaluation(payload) {
     throw e
   }
 
-  const ref = doc(collection(db, 'tccc_evaluations'))
+  const ref = doc(collection(db, INSTRUCTOR_EVALUATION_COLLECTIONS.TCCC))
   const docPayload = sanitizeForFirestore({
     id: ref.id,
     ...payload,
@@ -166,7 +167,7 @@ export function subscribeGroupTcccEvaluations(groupId, onData, onError) {
     return () => {}
   }
 
-  const q = query(collection(db, 'tccc_evaluations'), where('groupId', '==', gid))
+  const q = query(collection(db, INSTRUCTOR_EVALUATION_COLLECTIONS.TCCC), where('groupId', '==', gid))
 
   return safeOnSnapshot(
     q,
@@ -200,7 +201,7 @@ export function subscribeOperatorTcccEvaluations(groupId, operatorId, onData, on
   }
 
   const q = query(
-    collection(db, 'tccc_evaluations'),
+    collection(db, INSTRUCTOR_EVALUATION_COLLECTIONS.TCCC),
     where('groupId', '==', gid),
     where('operatorId', '==', oid),
   )

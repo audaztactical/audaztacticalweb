@@ -2,8 +2,11 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Lock, Play, Shield } from 'lucide-react'
 import AuthModal from '../components/auth/AuthModal'
+import HeroSlider from '../components/HeroSlider'
+import IntroOverlay from '../components/IntroOverlay'
 import { useAuth } from '../context/AuthContext'
 import { fetchPublicDoctrineTeasers } from '../lib/firestoreDoctrines'
+import { shouldShowIntro } from '../lib/introStorage'
 
 const VIDEO_PLACEHOLDERS = [
   { id: '1', title: 'Temel silah güvenliği', duration: '12:04' },
@@ -21,6 +24,8 @@ export default function LandingPage() {
   const [doctrines, setDoctrines] = useState([])
   const [doctrinesLoading, setDoctrinesLoading] = useState(true)
   const [doctrinesError, setDoctrinesError] = useState(false)
+  const skipIntro = location.state?.skipIntro === true
+  const [showIntro, setShowIntro] = useState(() => shouldShowIntro(skipIntro))
 
   const redirectTo =
     typeof location.state?.from === 'string' && location.state.from !== '/'
@@ -33,6 +38,10 @@ export default function LandingPage() {
     setAuthMode('login')
     navigate(location.pathname, { replace: true, state: { from: location.state?.from } })
   }, [location.key, location.pathname, location.state?.openAuth, navigate])
+
+  useEffect(() => {
+    setShowIntro(shouldShowIntro(location.state?.skipIntro === true))
+  }, [location.key, location.state?.skipIntro])
 
   useEffect(() => {
     let cancelled = false
@@ -56,29 +65,40 @@ export default function LandingPage() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!showIntro) return undefined
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [showIntro])
+
   return (
     <div className="relative min-h-dvh bg-[#0a0b0d] text-slate-100">
+      {showIntro ? <IntroOverlay onFinish={() => setShowIntro(false)} /> : null}
+
       <div className="app-atmosphere" aria-hidden />
 
       <header className="relative z-10 border-b border-white/10 bg-black/40 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <div className="flex items-center gap-3">
-            <div
-              className="relative shrink-0 rounded-lg p-0.5 shadow-[0_0_20px_-4px_rgba(255,180,0,0.45),0_0_36px_-10px_rgba(212,175,55,0.3)] ring-1 ring-[#ffb400]/30"
-              aria-hidden
-            >
-              <img
-                src="/logo.png"
-                alt=""
-                className="h-10 w-auto rounded-md object-contain"
-                decoding="async"
-              />
-            </div>
+          <Link
+            to="/"
+            state={{ skipIntro: true }}
+            className="flex items-center gap-3 transition-opacity hover:opacity-90"
+            aria-label="Ana sayfa"
+          >
+            <img
+              src="/logo.png"
+              alt=""
+              className="h-10 w-auto shrink-0 object-contain"
+              decoding="async"
+            />
             <div>
               <p className="font-display text-lg font-bold tracking-[0.15em] text-white">AUDAZ</p>
               <p className="font-display text-[10px] font-semibold tracking-[0.4em] text-[#d4af37]">TACTICAL</p>
             </div>
-          </div>
+          </Link>
           <nav className="flex items-center gap-2 sm:gap-3">
             {!loading && !googleRedirectResolving && user ? (
               <Link
@@ -199,6 +219,10 @@ export default function LandingPage() {
               </div>
             ) : null}
           </div>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 sm:pb-20">
+          <HeroSlider />
         </section>
 
         <section className="border-t border-white/10 bg-black/20 py-16 sm:py-20">

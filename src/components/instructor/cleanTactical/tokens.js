@@ -53,6 +53,7 @@ export const ctBtnGhost =
   'inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-300'
 
 export const ctStatusOk = 'rounded-md bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-400'
+export const ctStatusWarn = 'rounded-md bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-400'
 export const ctStatusFail = 'rounded-md bg-red-500/15 px-2 py-0.5 text-xs font-medium text-red-400'
 
 export const ctMsgOk = 'text-xs font-medium text-emerald-400'

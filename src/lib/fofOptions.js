@@ -25,9 +25,34 @@ export const SIM_SYSTEM_OPTIONS = [
   { id: FOF_CUSTOM, label: '[+] ÖZEL SİMÜLASYON' },
 ]
 
+/** @type {FofOption[]} */
+export const ENGAGEMENT_TYPE_OPTIONS = [
+  { id: 'one_on_one', label: 'Birebir' },
+  { id: 'team', label: 'Takım' },
+  { id: 'ambush', label: 'Pusu' },
+  { id: 'multi_team', label: 'Çoklu Takım' },
+  { id: 'reactive', label: 'Reaktif Angajman' },
+]
+
+/** @type {Record<string, string>} */
+const ENGAGEMENT_TYPE_LABELS = Object.fromEntries(
+  ENGAGEMENT_TYPE_OPTIONS.map((o) => [o.id, o.label])
+)
+
+/**
+ * @param {string} key
+ */
+export function resolveEngagementTypeLabel(key) {
+  const k = String(key || '').trim()
+  return ENGAGEMENT_TYPE_LABELS[k] ?? (k || '—')
+}
+
 /** @type {Record<string, string>} */
 const LABEL_INDEX = Object.fromEntries(
-  [...SCENARIO_TYPE_OPTIONS, ...SIM_SYSTEM_OPTIONS].map((o) => [o.id, o.label])
+  [...SCENARIO_TYPE_OPTIONS, ...SIM_SYSTEM_OPTIONS, ...ENGAGEMENT_TYPE_OPTIONS].map((o) => [
+    o.id,
+    o.label,
+  ])
 )
 
 /**

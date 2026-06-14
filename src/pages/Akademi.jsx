@@ -1,0 +1,338 @@
+import { useEffect, useState } from 'react'
+import ReactMarkdown from 'react-markdown'
+import { BookOpen, ExternalLink, GraduationCap, Loader2, PlayCircle, X } from 'lucide-react'
+import PageShell from '../components/layout/PageShell'
+import { emitFirebaseError } from '../lib/firebaseErrorBus'
+import {
+  formatAkademiDate,
+  subscribeAkademiDoctrines,
+  subscribeAkademiVideos,
+  toVideoEmbedUrl,
+} from '../lib/firestoreAkademi'
+
+/** @typedef {import('../lib/firestoreAkademi').AkademiDoctrine} AkademiDoctrine */
+/** @typedef {import('../lib/firestoreAkademi').AkademiVideo} AkademiVideo */
+/** @typedef {'doktrinler' | 'videolar'} AkademiTab */
+
+/**
+ * @param {{
+ *   id: AkademiTab
+ *   label: string
+ *   active: boolean
+ *   onSelect: () => void
+ * }} props
+ */
+function AkademiTabButton({ label, active, onSelect }) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={[
+        'rounded border px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-widest transition',
+        active
+          ? 'border-lime-500 text-lime-400 shadow-[0_0_18px_-6px_rgba(132,204,22,0.45)]'
+          : 'border-zinc-700 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300',
+      ].join(' ')}
+    >
+      {label}
+    </button>
+  )
+}
+
+/**
+ * @param {{
+ *   doctrine: AkademiDoctrine | null
+ *   onClose: () => void
+ * }} props
+ */
+function DoctrineReaderModal({ doctrine, onClose }) {
+  if (!doctrine) return null
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 font-mono backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="doctrine-reader-title"
+      onClick={onClose}
+    >
+      <div
+        className="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-lg border border-zinc-700 bg-zinc-950 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-3 border-b border-zinc-800 px-5 py-4">
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-zinc-500">[ SAHA DOKTRİNİ ]</p>
+            <h2 id="doctrine-reader-title" className="mt-1 truncate text-lg font-semibold text-zinc-100">
+              {doctrine.title}
+            </h2>
+            <p className="mt-1 text-xs text-zinc-500">
+              {doctrine.category} · {formatAkademiDate(doctrine.createdAt)}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="shrink-0 rounded p-1.5 text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-200"
+            aria-label="Kapat"
+          >
+            <X className="size-5" strokeWidth={1.75} aria-hidden />
+          </button>
+        </div>
+
+        <div className="overflow-y-auto px-5 py-5">
+          {doctrine.teaser ? (
+            <p className="mb-4 border-l-2 border-lime-500/40 pl-3 text-sm italic text-zinc-400">{doctrine.teaser}</p>
+          ) : null}
+          <div className="prose prose-invert max-w-none text-sm leading-relaxed text-zinc-300 prose-headings:text-zinc-100 prose-a:text-lime-400">
+            <ReactMarkdown>{doctrine.body || '*İçerik henüz eklenmemiş.*'}</ReactMarkdown>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * @param {{
+ *   video: AkademiVideo | null
+ *   onClose: () => void
+ * }} props
+ */
+function VideoPlayerModal({ video, onClose }) {
+  if (!video) return null
+
+  const embedUrl = toVideoEmbedUrl(video.url)
+  const canEmbed = embedUrl.includes('youtube.com/embed') || embedUrl.includes('player.vimeo.com')
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 font-mono backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="video-player-title"
+      onClick={onClose}
+    >
+      <div
+        className="flex w-full max-w-4xl flex-col overflow-hidden rounded-lg border border-zinc-700 bg-zinc-950 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-3 border-b border-zinc-800 px-5 py-4">
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-zinc-500">[ EĞİTİM VİDEOSU ]</p>
+            <h2 id="video-player-title" className="mt-1 truncate text-lg font-semibold text-zinc-100">
+              {video.title}
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="shrink-0 rounded p-1.5 text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-200"
+            aria-label="Kapat"
+          >
+            <X className="size-5" strokeWidth={1.75} aria-hidden />
+          </button>
+        </div>
+
+        <div className="p-5">
+          {canEmbed ? (
+            <div className="aspect-video w-full overflow-hidden rounded border border-zinc-800 bg-black">
+              <iframe
+                src={embedUrl}
+                title={video.title}
+                className="h-full w-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          ) : (
+            <div className="rounded border border-zinc-800 bg-zinc-900/50 px-4 py-8 text-center">
+              <p className="text-sm text-zinc-400">Bu bağlantı gömülü oynatıcıda desteklenmiyor.</p>
+              <a
+                href={video.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 inline-flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-widest text-lime-400 hover:text-lime-300"
+              >
+                <ExternalLink className="size-4" aria-hidden />
+                Yeni sekmede izle
+              </a>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function Akademi() {
+  const [activeTab, setActiveTab] = useState(/** @type {AkademiTab} */ ('doktrinler'))
+
+  const [doctrines, setDoctrines] = useState(/** @type {AkademiDoctrine[]} */ ([]))
+  const [videos, setVideos] = useState(/** @type {AkademiVideo[]} */ ([]))
+  const [doctrinesLoading, setDoctrinesLoading] = useState(true)
+  const [videosLoading, setVideosLoading] = useState(true)
+  const [doctrinesError, setDoctrinesError] = useState(/** @type {string | null} */ (null))
+  const [videosError, setVideosError] = useState(/** @type {string | null} */ (null))
+
+  const [readingDoctrine, setReadingDoctrine] = useState(/** @type {AkademiDoctrine | null} */ (null))
+  const [watchingVideo, setWatchingVideo] = useState(/** @type {AkademiVideo | null} */ (null))
+
+  useEffect(() => {
+    setDoctrinesLoading(true)
+    const unsub = subscribeAkademiDoctrines(
+      (rows) => {
+        setDoctrines(rows)
+        setDoctrinesError(null)
+        setDoctrinesLoading(false)
+      },
+      (err) => {
+        emitFirebaseError(err)
+        setDoctrinesError(err instanceof Error ? err.message : 'Doktrinler yüklenemedi.')
+        setDoctrinesLoading(false)
+      },
+    )
+    return unsub
+  }, [])
+
+  useEffect(() => {
+    setVideosLoading(true)
+    const unsub = subscribeAkademiVideos(
+      (rows) => {
+        setVideos(rows)
+        setVideosError(null)
+        setVideosLoading(false)
+      },
+      (err) => {
+        emitFirebaseError(err)
+        setVideosError(err instanceof Error ? err.message : 'Videolar yüklenemedi.')
+        setVideosLoading(false)
+      },
+    )
+    return unsub
+  }, [])
+
+  return (
+    <PageShell
+      title="Audaz Akademi"
+      subtitle="Saha doktrinleri ve eğitim video kütüphanesi — komuta merkezi içerik akışı."
+      headerAction={
+        <span className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-zinc-500">
+          <GraduationCap className="size-3.5 text-lime-500/70" strokeWidth={1.75} aria-hidden />
+          EDU-07 · KÜTÜPHANE
+        </span>
+      }
+    >
+      <div className="mb-6 flex flex-wrap gap-2">
+        <AkademiTabButton
+          id="doktrinler"
+          label="[ SAHA DOKTRİNLERİ ]"
+          active={activeTab === 'doktrinler'}
+          onSelect={() => setActiveTab('doktrinler')}
+        />
+        <AkademiTabButton
+          id="videolar"
+          label="[ EĞİTİM VİDEOLARI ]"
+          active={activeTab === 'videolar'}
+          onSelect={() => setActiveTab('videolar')}
+        />
+      </div>
+
+      {activeTab === 'doktrinler' ? (
+        <section aria-label="Saha doktrinleri">
+          {doctrinesLoading ? (
+            <div className="flex items-center justify-center gap-2 py-16 font-mono text-xs text-zinc-500">
+              <Loader2 className="size-4 animate-spin text-lime-500/60" aria-hidden />
+              Doktrinler senkronize ediliyor…
+            </div>
+          ) : doctrinesError ? (
+            <p className="rounded border border-red-900/50 bg-red-950/20 px-4 py-3 font-mono text-xs text-red-300">
+              {doctrinesError}
+            </p>
+          ) : doctrines.length === 0 ? (
+            <p className="rounded border border-zinc-800 bg-zinc-950/40 px-4 py-10 text-center font-mono text-xs text-zinc-500">
+              Henüz doktrin yok. Komuta merkezi içerik eklediğinde burada listelenecek.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {doctrines.map((doc) => (
+                <article
+                  key={doc.id}
+                  className="flex flex-col rounded-lg border border-zinc-800 bg-zinc-900/50 p-4 transition-colors hover:border-lime-500"
+                >
+                  <div className="mb-3 flex items-start gap-2">
+                    <BookOpen className="mt-0.5 size-4 shrink-0 text-lime-500/70" strokeWidth={1.75} aria-hidden />
+                    <div className="min-w-0">
+                      <h3 className="font-mono text-sm font-bold uppercase tracking-wide text-zinc-100">{doc.title}</h3>
+                      <p className="mt-1 text-[10px] uppercase tracking-wider text-zinc-500">{doc.category}</p>
+                      <p className="mt-1 font-mono text-[10px] text-zinc-600">{formatAkademiDate(doc.createdAt)}</p>
+                    </div>
+                  </div>
+                  {doc.teaser ? (
+                    <p className="mb-4 line-clamp-3 flex-1 text-xs leading-relaxed text-zinc-400">{doc.teaser}</p>
+                  ) : (
+                    <div className="flex-1" />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setReadingDoctrine(doc)}
+                    className="mt-auto self-start rounded border border-zinc-700 px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-lime-400 transition hover:border-lime-500/50 hover:bg-lime-950/30"
+                  >
+                    [ OKU ]
+                  </button>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      ) : (
+        <section aria-label="Eğitim videoları">
+          {videosLoading ? (
+            <div className="flex items-center justify-center gap-2 py-16 font-mono text-xs text-zinc-500">
+              <Loader2 className="size-4 animate-spin text-lime-500/60" aria-hidden />
+              Videolar senkronize ediliyor…
+            </div>
+          ) : videosError ? (
+            <p className="rounded border border-red-900/50 bg-red-950/20 px-4 py-3 font-mono text-xs text-red-300">
+              {videosError}
+            </p>
+          ) : videos.length === 0 ? (
+            <p className="rounded border border-zinc-800 bg-zinc-950/40 px-4 py-10 text-center font-mono text-xs text-zinc-500">
+              Henüz eğitim videosu yok.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {videos.map((video) => (
+                <article
+                  key={video.id}
+                  className="flex flex-col rounded-lg border border-zinc-800 bg-zinc-900/50 p-4 transition-colors hover:border-lime-500"
+                >
+                  <div className="mb-3 flex items-start gap-2">
+                    <PlayCircle className="mt-0.5 size-4 shrink-0 text-lime-500/70" strokeWidth={1.75} aria-hidden />
+                    <div className="min-w-0">
+                      <h3 className="font-mono text-sm font-bold uppercase tracking-wide text-zinc-100">{video.title}</h3>
+                      <p className="mt-1 text-[10px] uppercase tracking-wider text-zinc-500">
+                        Eğitmen / Kategori · Genel Eğitim
+                      </p>
+                      <p className="mt-1 font-mono text-[10px] text-zinc-600">{formatAkademiDate(video.createdAt)}</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setWatchingVideo(video)}
+                    className="mt-auto self-start rounded border border-zinc-700 px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-lime-400 transition hover:border-lime-500/50 hover:bg-lime-950/30"
+                  >
+                    [ İZLE ]
+                  </button>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      <DoctrineReaderModal doctrine={readingDoctrine} onClose={() => setReadingDoctrine(null)} />
+      <VideoPlayerModal video={watchingVideo} onClose={() => setWatchingVideo(null)} />
+    </PageShell>
+  )
+}

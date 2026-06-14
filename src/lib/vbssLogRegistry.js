@@ -1,5 +1,7 @@
 import { invNum, invStr } from './inventoryIlws'
+import { formatVbssClockSeconds } from './vbssLogPayload'
 import { resolveVbssSelectValue } from './vbssOptions'
+import { filterIndividualTrainingRecords } from './trainingGroupFields'
 
 /**
  * @param {Record<string, unknown>} row
@@ -44,8 +46,7 @@ export function formatVbssDateCell(row) {
  * @param {number | null | undefined} sec
  */
 function formatSec(sec) {
-  if (sec == null || !Number.isFinite(sec) || sec < 0) return '—'
-  return `${sec}s`
+  return formatVbssClockSeconds(sec)
 }
 
 /**
@@ -101,6 +102,55 @@ function getVbssSelectField(row, field) {
 /** @param {Record<string, unknown>} row */
 export function getVbssInsertionMethod(row) {
   return getVbssSelectField(row, 'insertionMethod')
+}
+
+/** @param {Record<string, unknown>} row */
+export function getVbssBoardingPoint(row) {
+  const label = invStr(row.boardingPoint).trim()
+  if (label) return label
+  return getVbssInsertionMethod(row)
+}
+
+/** @param {Record<string, unknown>} row */
+export function getVbssThreatLevel(row) {
+  const label = invStr(row.threatLevel).trim()
+  if (label) return label
+  const key = invStr(row.threatLevelKey).trim()
+  return resolveVbssSelectValue(key)
+}
+
+/** @param {Record<string, unknown>} row */
+export function formatVbssSearchDuration(row) {
+  const sec = invNum(row.searchDurationSec)
+  if (sec >= 0 && Number.isFinite(sec)) return formatVbssClockSeconds(sec)
+  const label = invStr(row.searchDuration).trim()
+  return label || '—'
+}
+
+/** @param {Record<string, unknown>} row */
+export function getVbssSuccessPercent(row) {
+  const n = invNum(row.successPercent)
+  if (Number.isFinite(n)) return Math.max(0, Math.min(100, Math.round(n * 10) / 10))
+  return 0
+}
+
+/**
+ * @param {Record<string, unknown>[]} dedicatedLogs
+ * @param {Record<string, unknown>[]} rangeLogs
+ */
+export function mergeVbssLogSources(dedicatedLogs = [], rangeLogs = []) {
+  const seen = new Set()
+  const merged = []
+  for (const row of [
+    ...filterIndividualTrainingRecords(dedicatedLogs),
+    ...filterIndividualTrainingRecords(rangeLogs).filter(isVbssLog),
+  ]) {
+    const id = String(row.id || '')
+    if (id && seen.has(id)) continue
+    if (id) seen.add(id)
+    merged.push(row)
+  }
+  return sortVbssLogsDesc(merged)
 }
 
 /** @param {Record<string, unknown>} row */
@@ -185,22 +235,125 @@ export function sortVbssLogsDesc(logs) {
  * @param {Record<string, unknown>[]} rangeLogs
  */
 export function selectVbssLogs(rangeLogs) {
-  return sortVbssLogsDesc(rangeLogs.filter(isVbssLog))
+  return sortVbssLogsDesc(filterIndividualTrainingRecords(rangeLogs).filter(isVbssLog))
 }
 
 /**
  * @param {{
  *   logs: Record<string, unknown>[]
- *   seaStateKey: string
+ *   threatLevelKey?: string
+ *   vesselTypeKey?: string
+ *   boardingPointKey?: string
+ *   seaStateKey?: string
  * }} filters
  */
-export function filterVbssLogs({ logs, seaStateKey }) {
+export function filterVbssLogs({
+  logs,
+  threatLevelKey = 'ALL',
+  vesselTypeKey = 'ALL',
+  boardingPointKey = 'ALL',
+  seaStateKey = 'ALL',
+}) {
   return logs.filter((row) => {
-    if (seaStateKey === 'ALL') return true
-    const key = invStr(row.seaStateKey || row.seaState).trim()
-    const label = getVbssSeaState(row)
-    return key === seaStateKey || label === seaStateKey
+    if (threatLevelKey !== 'ALL') {
+      const key = invStr(row.threatLevelKey || row.threatLevel).trim()
+      const label = getVbssThreatLevel(row)
+      if (key !== threatLevelKey && label !== threatLevelKey) return false
+    }
+    if (vesselTypeKey !== 'ALL') {
+      const key = invStr(row.vesselTypeKey || row.vesselType).trim()
+      const label = getVbssVesselType(row)
+      if (key !== vesselTypeKey && label !== vesselTypeKey) return false
+    }
+    if (boardingPointKey !== 'ALL') {
+      const key = invStr(row.boardingPointKey || row.insertionMethodKey).trim()
+      const label = getVbssBoardingPoint(row)
+      if (key !== boardingPointKey && label !== boardingPointKey) return false
+    }
+    if (seaStateKey !== 'ALL') {
+      const key = invStr(row.seaStateKey || row.seaState).trim()
+      const label = getVbssSeaState(row)
+      if (key !== seaStateKey && label !== seaStateKey) return false
+    }
+    return true
   })
+}
+
+/**
+ * @param {{ threatLevelKey?: string, vesselTypeKey?: string, boardingPointKey?: string, seaStateKey?: string }} filters
+ */
+export function isVbssFilterActive(filters) {
+  return (
+    (filters.threatLevelKey && filters.threatLevelKey !== 'ALL') ||
+    (filters.vesselTypeKey && filters.vesselTypeKey !== 'ALL') ||
+    (filters.boardingPointKey && filters.boardingPointKey !== 'ALL') ||
+    (filters.seaStateKey && filters.seaStateKey !== 'ALL')
+  )
+}
+
+/**
+ * @param {{ threatLevelKey?: string, vesselTypeKey?: string, boardingPointKey?: string, seaStateKey?: string }} filters
+ */
+export function formatVbssFilterSummary(filters) {
+  const parts = []
+  if (filters.boardingPointKey && filters.boardingPointKey !== 'ALL') {
+    parts.push(`Giriş: ${filters.boardingPointKey}`)
+  }
+  if (filters.vesselTypeKey && filters.vesselTypeKey !== 'ALL') {
+    parts.push(`Gemi: ${filters.vesselTypeKey}`)
+  }
+  if (filters.threatLevelKey && filters.threatLevelKey !== 'ALL') {
+    parts.push(`Tehdit: ${filters.threatLevelKey}`)
+  }
+  if (filters.seaStateKey && filters.seaStateKey !== 'ALL') {
+    parts.push(`Deniz: ${filters.seaStateKey}`)
+  }
+  return parts.join(' · ')
+}
+
+/**
+ * @param {Record<string, unknown>[]} logs
+ */
+export function extractVbssThreatLevelOptions(logs) {
+  const set = new Map()
+  for (const row of logs) {
+    const label = getVbssThreatLevel(row)
+    const key = invStr(row.threatLevelKey).trim() || label
+    if (label && label !== '—') set.set(key, label)
+  }
+  return Array.from(set.entries())
+    .map(([key, label]) => ({ key, label }))
+    .sort((a, b) => a.label.localeCompare(b.label, 'tr'))
+}
+
+/**
+ * @param {Record<string, unknown>[]} logs
+ */
+export function extractVbssVesselTypeOptions(logs) {
+  const set = new Map()
+  for (const row of logs) {
+    const label = getVbssVesselType(row)
+    const key = invStr(row.vesselTypeKey).trim() || label
+    if (label && label !== '—') set.set(key, label)
+  }
+  return Array.from(set.entries())
+    .map(([key, label]) => ({ key, label }))
+    .sort((a, b) => a.label.localeCompare(b.label, 'tr'))
+}
+
+/**
+ * @param {Record<string, unknown>[]} logs
+ */
+export function extractVbssBoardingPointOptions(logs) {
+  const set = new Map()
+  for (const row of logs) {
+    const label = getVbssBoardingPoint(row)
+    const key = invStr(row.boardingPointKey || row.insertionMethodKey).trim() || label
+    if (label && label !== '—') set.set(key, label)
+  }
+  return Array.from(set.entries())
+    .map(([key, label]) => ({ key, label }))
+    .sort((a, b) => a.label.localeCompare(b.label, 'tr'))
 }
 
 /**

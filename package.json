@@ -4,17 +4,19 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node scripts/inject-firestore-admin.mjs && vite",
-    "build": "vite build",
+    "dev": "node scripts/inject-firestore-admin.mjs && node scripts/inject-fcm-sw.mjs && vite",
+    "build": "node scripts/inject-fcm-sw.mjs && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "deploy-backend": "node scripts/inject-firestore-admin.mjs && firebase deploy --only firestore:rules,firestore:indexes,storage",
+    "deploy-backend": "node scripts/inject-firestore-admin.mjs && firebase deploy --only firestore:rules,firestore:indexes",
     "open:auth-providers": "firebase open auth",
     "sync-firestore-rules": "node scripts/inject-firestore-admin.mjs"
   },
   "dependencies": {
     "firebase": "^12.12.0",
     "framer-motion": "^12.38.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "lucide-react": "^1.8.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",

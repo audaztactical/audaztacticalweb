@@ -22,6 +22,25 @@ export const TCCC_INJURY_THORACIC = 'thoracic_trauma'
 export const TCCC_INJURY_POLYTRAUMA = 'polytrauma'
 
 /** @type {TcccOption[]} */
+export const CASUALTY_TYPE_OPTIONS = [
+  { id: 'combat', label: 'Savaş (Combat)' },
+  { id: 'accident', label: 'Kaza (Accident)' },
+]
+
+/** @type {TcccOption[]} */
+export const PROCEDURE_PERFORMED_OPTIONS = [
+  { id: 'tourniquet', label: 'Turnike' },
+  { id: 'bandage', label: 'Bandaj / Yara Paketleme' },
+  { id: 'airway', label: 'Hava Yolu (NPA)' },
+]
+
+/** @type {TcccOption[]} */
+export const OUTCOME_OPTIONS = [
+  { id: 'successful', label: 'Başarılı' },
+  { id: 'failed', label: 'Başarısız' },
+]
+
+/** @type {TcccOption[]} */
 export const TOURNIQUET_LOCATION_OPTIONS = [
   { id: 'right_arm', label: 'Sağ Kol' },
   { id: 'left_arm', label: 'Sol Kol' },
@@ -33,10 +52,13 @@ export const TOURNIQUET_LOCATION_OPTIONS = [
 
 /** @type {Record<string, string>} */
 const LABEL_INDEX = Object.fromEntries(
-  [...TCCC_PHASE_OPTIONS, ...INJURY_TYPE_OPTIONS, ...TOURNIQUET_LOCATION_OPTIONS].map((o) => [
-    o.id,
-    o.label,
-  ])
+  [
+    ...TCCC_PHASE_OPTIONS,
+    ...INJURY_TYPE_OPTIONS,
+    ...TOURNIQUET_LOCATION_OPTIONS,
+    ...CASUALTY_TYPE_OPTIONS,
+    ...OUTCOME_OPTIONS,
+  ].map((o) => [o.id, o.label])
 )
 
 /**

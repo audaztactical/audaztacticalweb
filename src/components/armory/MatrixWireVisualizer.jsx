@@ -118,6 +118,8 @@ export default function MatrixWireVisualizer({
           <img
             src={imageSrc}
             alt={imageAlt}
+            loading="lazy"
+            decoding="async"
             draggable={false}
             className="matrix-viz-asset max-h-[78%] max-w-[72%] select-none object-contain [transform-style:preserve-3d]"
             style={{ filter: IMG_GLOW }}

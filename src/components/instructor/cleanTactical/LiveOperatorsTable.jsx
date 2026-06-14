@@ -1,8 +1,13 @@
 import { Loader2 } from 'lucide-react'
 import CleanFade from './CleanFade'
 import {
+  computeGroupTrainingAssessment,
+  formatGroupTrainingStatusLabelInstructor,
+} from '../../../lib/groupTrainingAssessment'
+import {
   ctStatusFail,
   ctStatusOk,
+  ctStatusWarn,
   ctTable,
   ctTableWrap,
   ctTd,
@@ -18,12 +23,15 @@ import {
  *     hits: number
  *     time?: number | null
  *     isPassed?: boolean
+ *     statusResult?: string
  *   }[]
  *   loading?: boolean
  *   idle?: boolean
  *   idleMessage?: string
  *   totalAmmo?: number
  *   minPassScore?: number
+ *   isTimed?: boolean
+ *   targetTimeSec?: number | null
  *   hitsLabel?: string
  * }} props
  */
@@ -34,6 +42,8 @@ export default function LiveOperatorsTable({
   idleMessage = 'Canlı oturum başlatıldığında sonuçlar burada görünür.',
   totalAmmo = 0,
   minPassScore = 0,
+  isTimed = false,
+  targetTimeSec = null,
   hitsLabel = 'Vuruş',
 }) {
   return (
@@ -69,7 +79,20 @@ export default function LiveOperatorsTable({
               </tr>
             ) : (
               rows.map((row) => {
-                const passed = row.isPassed ?? row.hits >= minPassScore
+                const assessment = computeGroupTrainingAssessment({
+                  totalAmmo,
+                  minPassScore,
+                  hits: row.hits,
+                  isTimed,
+                  targetTimeSec,
+                  time: row.time,
+                })
+                const statusResult = row.statusResult ?? assessment.statusResult
+                const passed = assessment.isPassed
+                const label = formatGroupTrainingStatusLabelInstructor(statusResult, passed)
+                const statusClass =
+                  passed ? ctStatusOk : statusResult === 'SÜRE İHLALİ' ? ctStatusWarn : ctStatusFail
+
                 return (
                   <tr key={row.id} className={ctTrHover}>
                     <td className={ctTd}>{row.operatorName}</td>
@@ -79,11 +102,12 @@ export default function LiveOperatorsTable({
                     </td>
                     <td className={`${ctTd} tabular-nums text-zinc-500`}>
                       {row.time != null ? `${row.time}s` : '—'}
+                      {isTimed && targetTimeSec != null && targetTimeSec > 0 ? (
+                        <span className="block text-[10px] text-zinc-600">hedef {targetTimeSec}s</span>
+                      ) : null}
                     </td>
                     <td className={ctTd}>
-                      <span className={passed ? ctStatusOk : ctStatusFail}>
-                        {passed ? 'Geçti' : 'Kaldı'}
-                      </span>
+                      <span className={statusClass}>{label}</span>
                     </td>
                   </tr>
                 )

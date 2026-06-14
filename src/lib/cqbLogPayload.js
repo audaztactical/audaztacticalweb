@@ -4,8 +4,30 @@ import {
   labelTacticalError,
   resolveCqbSelectKey,
   resolveCqbSelectValue,
+  resolveTacticalDecisionLabel,
 } from './cqbOptions'
 import { calculateCqbSuccessPercent } from './trainingSuccessScore'
+
+/**
+ * @param {number} sec
+ */
+function formatClearanceSeconds(sec) {
+  if (!Number.isFinite(sec) || sec <= 0) return '—'
+  const rounded = Math.round(sec * 1000) / 1000
+  return `${rounded.toFixed(rounded < 10 ? 2 : 1)}s`
+}
+
+/**
+ * @param {string | number} raw — saniye veya milisaniye (≥1000 ise ms kabul edilir)
+ */
+function parseClearanceTimeMs(raw) {
+  const text = invStr(raw).trim().replace(',', '.')
+  if (!text) return null
+  const n = invNum(text)
+  if (!Number.isFinite(n) || n <= 0) return null
+  const ms = n >= 1000 ? Math.round(n) : Math.round(n * 1000)
+  return ms
+}
 
 /**
  * @param {{
@@ -20,7 +42,10 @@ import { calculateCqbSuccessPercent } from './trainingSuccessScore'
  *   teamSize: string
  *   threatCount: number
  *   neutralizedCount: number
- *   clearingTime: string | number
+ *   clearanceTimeMs: string | number
+ *   accuracyScore: string | number
+ *   safetyViolations: string | number
+ *   tacticalDecision: string
  *   tacticalErrors: string[]
  *   operationNote?: string
  * }} input
@@ -37,7 +62,10 @@ export function buildCqbLogPayload({
   teamSize,
   threatCount,
   neutralizedCount,
-  clearingTime,
+  clearanceTimeMs,
+  accuracyScore,
+  safetyViolations,
+  tacticalDecision,
   tacticalErrors,
   operationNote = '',
 }) {
@@ -53,12 +81,15 @@ export function buildCqbLogPayload({
   const threats = Math.max(0, Math.floor(threatCount))
   const neutralized = Math.min(Math.max(0, Math.floor(neutralizedCount)), threats)
 
-  const clearingRaw = invStr(clearingTime).trim().replace(',', '.')
-  const clearingSec = clearingRaw ? invNum(clearingRaw) : null
+  const clearanceMs = parseClearanceTimeMs(clearanceTimeMs)
   const clearingTimeSec =
-    clearingSec != null && Number.isFinite(clearingSec) && clearingSec >= 0
-      ? Math.round(clearingSec * 1000) / 1000
-      : null
+    clearanceMs != null ? Math.round((clearanceMs / 1000) * 1000) / 1000 : null
+
+  const accuracy = Math.min(100, Math.max(0, Math.round(invNum(accuracyScore) * 10) / 10))
+  const safetyCount = Math.max(0, Math.floor(invNum(safetyViolations)))
+
+  const tacticalDecisionKey = invStr(tacticalDecision).trim()
+  const tacticalDecisionLabel = resolveTacticalDecisionLabel(tacticalDecisionKey)
 
   const errors = Array.isArray(tacticalErrors)
     ? tacticalErrors.map((e) => invStr(e).trim()).filter(Boolean)
@@ -105,8 +136,13 @@ export function buildCqbLogPayload({
     teamSize: teamSizeLabel,
     threatCount: threats,
     neutralizedCount: neutralized,
+    clearanceTimeMs: clearanceMs,
     clearingTimeSec,
-    clearingTime: clearingTimeSec != null ? `${clearingTimeSec}s` : null,
+    clearingTime: clearingTimeSec != null ? formatClearanceSeconds(clearingTimeSec) : null,
+    accuracyScore: accuracy,
+    safetyViolations: safetyCount,
+    tacticalDecision: tacticalDecisionKey,
+    tacticalDecisionLabel,
     tacticalErrors: errors,
     tacticalErrorsLabels,
     operationNote: operationNoteText,

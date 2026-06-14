@@ -6,16 +6,19 @@ import {
   HeartPulse,
   Home,
   KeyRound,
+  Landmark,
   LogOut,
   MessageSquare,
+  Globe,
   MessagesSquare,
   PlayCircle,
-  Rss,
   Settings,
   Shield,
+  ShieldAlert,
   Target,
   User,
 } from 'lucide-react'
+import { isAdminUser } from '../../config/admin'
 import { useAuth } from '../../context/AuthContext'
 import { useMuhabereNotify } from '../../context/MuhabereNotifyContext'
 import { auth } from '../../lib/firebase'
@@ -26,6 +29,7 @@ import { auth } from '../../lib/firebase'
  * @property {string} label
  * @property {import('lucide-react').LucideIcon} icon
  * @property {boolean} [end]
+ * @property {Record<string, unknown>} [state]
  */
 
 /**
@@ -41,6 +45,7 @@ export const NAV_GROUPS = [
     id: 'personal',
     title: '[ KİŞİSEL / MERKEZ ]',
     items: [
+      { to: '/', end: true, label: "Karargâh'a Dön", icon: Landmark, state: { skipIntro: true } },
       { to: '/dashboard', end: true, label: 'Ana Sayfa', icon: Home },
       { to: '/profil', label: 'Profilim', icon: User },
       { to: '/mesajlar', label: 'Taktik Muhabere', icon: MessageSquare },
@@ -50,9 +55,9 @@ export const NAV_GROUPS = [
     id: 'audaz-network',
     title: '[ AUDAZ AĞI ]',
     items: [
-      { to: '/sitrep', label: 'SITREP (Saha Akışı)', icon: Rss },
       { to: '/akademi', label: 'Audaz Akademi', icon: PlayCircle },
       { to: '/forum', label: 'Brifing Odası (Forum)', icon: MessagesSquare },
+      { to: '/istihbarat', label: 'Küresel İstihbarat Ağı', icon: Globe },
     ],
   },
   {
@@ -68,13 +73,13 @@ export const NAV_GROUPS = [
   {
     id: 'command',
     title: '[ KOMUTA VE ANALİTİK ]',
-    items: [{ to: '/basarilar', label: 'Başarı Takibi', icon: BarChart3 }],
+    items: [{ to: '/basarilar', label: 'Kişisel Başarı Takibi', icon: BarChart3 }],
   },
 ]
 
 const instructorNavItem = /** @type {NavItem} */ ({
   to: '/egitmen-komuta',
-  label: 'Eğitmen Paneli',
+  label: 'Eğitmen Kontrol Paneli',
   icon: KeyRound,
 })
 
@@ -92,9 +97,11 @@ const linkBaseClass =
  *   icon: import('lucide-react').LucideIcon
  *   onNavigate?: () => void
  *   badgeCount?: number
+ *   blinkIcon?: boolean
+ *   state?: Record<string, unknown>
  * }} props
  */
-export function SidebarLink({ to, end, label, icon, onNavigate, badgeCount = 0 }) {
+export function SidebarLink({ to, end, label, icon, onNavigate, badgeCount = 0, blinkIcon = false, state }) {
   const Icon = icon
   const showBadge = badgeCount > 0
 
@@ -102,6 +109,7 @@ export function SidebarLink({ to, end, label, icon, onNavigate, badgeCount = 0 }
     <NavLink
       to={to}
       end={end}
+      state={state}
       onClick={onNavigate}
       className={({ isActive }) =>
         [
@@ -118,6 +126,7 @@ export function SidebarLink({ to, end, label, icon, onNavigate, badgeCount = 0 }
             className={[
               'size-[20px] shrink-0 transition-colors duration-200',
               isActive ? 'text-lime-400' : 'text-zinc-500 group-hover:text-zinc-300',
+              blinkIcon ? 'blink text-lime-400' : '',
             ].join(' ')}
             strokeWidth={1.75}
             aria-hidden
@@ -150,12 +159,14 @@ export default function Sidebar({
   userEmail = '',
   loading = false,
 }) {
-  const { isInstructor, role } = useAuth()
-  const { totalNotifications } = useMuhabereNotify()
+  const { user, isInstructor, role } = useAuth()
+  const { totalNotifications, unreadChannelMessageCount } = useMuhabereNotify()
+  const showAdminPanel = isAdminUser(user)
 
   const groups = useMemo(() => {
+    const isInstructorUser = role === 'instructor' || isInstructor
     const next = NAV_GROUPS.map((g) => ({ ...g, items: [...g.items] }))
-    if (role === 'instructor' || isInstructor) {
+    if (isInstructorUser) {
       const command = next.find((g) => g.id === 'command')
       if (command) command.items.push(instructorNavItem)
     }
@@ -178,8 +189,10 @@ export default function Sidebar({
                     end={item.end}
                     label={item.label}
                     icon={item.icon}
+                    state={item.state}
                     onNavigate={onNavigate}
                     badgeCount={item.to === '/mesajlar' ? totalNotifications : 0}
+                    blinkIcon={item.to === '/mesajlar' && unreadChannelMessageCount > 0}
                   />
                 </li>
               ))}
@@ -191,6 +204,36 @@ export default function Sidebar({
       <div className="border-t border-zinc-800/80 px-3 py-4">
         <p className={groupTitleClass}>[ SİSTEM ]</p>
         <ul className="flex flex-col gap-1">
+          {showAdminPanel ? (
+            <li>
+              <NavLink
+                to="/admin"
+                onClick={onNavigate}
+                className={({ isActive }) =>
+                  [
+                    linkBaseClass,
+                    isActive
+                      ? 'bg-zinc-800/60 text-lime-400'
+                      : 'text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200',
+                  ].join(' ')
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <ShieldAlert
+                      className={[
+                        'size-[20px] shrink-0 transition-colors duration-200',
+                        isActive ? 'text-lime-400' : 'text-zinc-500 group-hover:text-zinc-300',
+                      ].join(' ')}
+                      strokeWidth={1.75}
+                      aria-hidden
+                    />
+                    <span className="font-mono text-[12px] tracking-wide">Admin Paneli</span>
+                  </>
+                )}
+              </NavLink>
+            </li>
+          ) : null}
           <li>
             <NavLink
               to="/ayarlar"

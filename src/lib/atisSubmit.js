@@ -1,6 +1,7 @@
 import { applyTrainingAmmoDeduction } from './ammoRangeSync'
 import { getCurrentStock } from './ammoIlws'
 import { buildAtisLogPayload } from './atisLogPayload'
+import { captureMeteoSnapshot } from './meteoDataCapture'
 import { sanitizeForFirestore } from './firestoreSanitize'
 import {
   calculateYivConditionPercent,
@@ -60,6 +61,7 @@ export async function submitAtisRecord({
   const projectedRounds = getEffectiveTotalRoundsFired(weapon, rangeLogs) + totalRoundsFired
   const yivPct = calculateYivConditionPercent(projectedRounds, getMaxBarrelLife(weapon))
   const barrelWear = 100 - yivPct
+  const meteoData = await captureMeteoSnapshot()
 
   const bundle = buildAtisLogPayload({
     userId,
@@ -76,6 +78,7 @@ export async function submitAtisRecord({
     operationNote,
     yivConditionPercentAtShot: yivPct,
     barrelWearPercentAtShot: barrelWear,
+    meteoData,
   })
 
   if (ammo) {

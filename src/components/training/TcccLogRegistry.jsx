@@ -1,18 +1,22 @@
 import { Fragment, useMemo, useState } from 'react'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, FileDown } from 'lucide-react'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
 import TacticalPanel from '../ui/TacticalPanel'
+import logoUrl from '../../assets/logo.png'
 import {
   countTcccScoredMarchInterventions,
-  getTcccInjuryType,
   extractTcccPhaseOptions,
   filterTcccLogs,
   formatTcccBoolTr,
   formatTcccDateCell,
   formatTcccEvacWaitingTime,
-  formatTcccInjuryToTqTime,
+  formatTcccFilterSummary,
+  formatTcccInterventionTime,
   formatTcccSystolicBp,
   getTcccChestSealApplied,
   getTcccHypothermiaBlanket,
+  getTcccInjuryType,
   getTcccNeedleDecompression,
   getTcccNpaInserted,
   getTcccOperationNote,
@@ -20,7 +24,8 @@ import {
   getTcccTourniquetApplied,
   getTcccTourniquetLocation,
   getTcccWoundPacking,
-  selectTcccLogs,
+  isTcccFilterActive,
+  sortTcccLogsDesc,
 } from '../../lib/tcccLogRegistry'
 import { formatSuccessPercentCell } from '../../lib/trainingSuccessScore'
 
@@ -38,23 +43,123 @@ function cellTitle(text) {
 }
 
 /**
- * @param {{ rangeLogs: Record<string, unknown>[]; loading?: boolean }} props
+ * @returns {Promise<string>}
  */
-export default function TcccLogRegistry({ rangeLogs, loading = false }) {
+async function loadLogoDataUrl() {
+  const res = await fetch(logoUrl)
+  if (!res.ok) throw new Error('Logo yüklenemedi')
+  const blob = await res.blob()
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result))
+    reader.onerror = () => reject(new Error('Logo okunamadı'))
+    reader.readAsDataURL(blob)
+  })
+}
+
+/**
+ * @param {Record<string, unknown>[]} rows
+ * @param {{ filterActive?: boolean; filterLabel?: string }} [options]
+ */
+async function generatePDF(rows, options = {}) {
+  const { filterActive = false, filterLabel = '' } = options
+  const logoDataUrl = await loadLogoDataUrl()
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
+
+  doc.addImage(logoDataUrl, 'PNG', 10, 10, 15, 15)
+
+  doc.setFontSize(12)
+  doc.setTextColor(0, 255, 65)
+  doc.text('GEÇMİŞ TCCC KAYITLARI · TAKTİK SAĞLIK', 30, 18)
+
+  doc.setFontSize(8)
+  doc.setTextColor(100, 116, 139)
+  doc.text(`Rapor: ${new Date().toLocaleString('tr-TR')}`, 30, 24)
+  doc.text(
+    filterActive ? `Filtre: ${filterLabel || 'Aktif'} · ${rows.length} kayıt` : `Tüm kayıtlar · ${rows.length} kayıt`,
+    30,
+    29,
+  )
+
+  const head = [
+    [
+      'TARİH',
+      'YARALANMA',
+      'TCCC FAZI',
+      'TURNİKE KONUMU',
+      'TURNİKE SÜRESİ',
+      'TAHLİYE BEKLEME',
+      'SİSTOLİK BP',
+      'MARCH',
+      'BAŞARI %',
+    ],
+  ]
+
+  const body = rows.map((row) => {
+    const marchScore = countTcccScoredMarchInterventions(row)
+    return [
+      formatTcccDateCell(row),
+      getTcccInjuryType(row),
+      getTcccPhase(row),
+      getTcccTourniquetLocation(row),
+      formatTcccInterventionTime(row),
+      formatTcccEvacWaitingTime(row),
+      formatTcccSystolicBp(row),
+      marchScore.total > 0 ? `${marchScore.done}/${marchScore.total}` : '—',
+      formatSuccessPercentCell(row),
+    ]
+  })
+
+  autoTable(doc, {
+    startY: 34,
+    margin: { left: 10, right: 10 },
+    head,
+    body,
+    theme: 'grid',
+    styles: { fontSize: 7, cellPadding: 1.5 },
+    headStyles: { fillColor: [8, 8, 8], textColor: [0, 255, 65], fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: [15, 17, 21] },
+  })
+
+  const stamp = new Date().toISOString().slice(0, 10)
+  doc.save(`tccc-kayitlari-${stamp}.pdf`)
+}
+
+/**
+ * @param {{ logs: Record<string, unknown>[]; loading?: boolean }} props
+ */
+export default function TcccLogRegistry({ logs, loading = false }) {
   const [filters, setFilters] = useState(FILTER_INITIAL)
   const [expandedId, setExpandedId] = useState(/** @type {string | null} */ (null))
+  const [pdfBusy, setPdfBusy] = useState(false)
 
-  const tcccLogs = useMemo(() => selectTcccLogs(rangeLogs), [rangeLogs])
+  const tcccLogs = useMemo(() => sortTcccLogsDesc(logs), [logs])
+  const filterActive = useMemo(() => isTcccFilterActive(filters), [filters])
   const phaseOptions = useMemo(() => extractTcccPhaseOptions(tcccLogs), [tcccLogs])
 
   const filtered = useMemo(
-    () => filterTcccLogs({ logs: tcccLogs, tcccPhaseKey: filters.tcccPhaseKey }),
-    [tcccLogs, filters]
+    () => filterTcccLogs({ logs: tcccLogs, ...filters }),
+    [tcccLogs, filters],
   )
+
+  const exportRows = filterActive ? filtered : tcccLogs
 
   const patchFilter = (/** @type {Partial<typeof FILTER_INITIAL>} */ next) => {
     setFilters((f) => ({ ...f, ...next }))
     setExpandedId(null)
+  }
+
+  const handleDownloadPdf = async () => {
+    if (exportRows.length === 0) return
+    setPdfBusy(true)
+    try {
+      await generatePDF(exportRows, {
+        filterActive,
+        filterLabel: formatTcccFilterSummary(filters),
+      })
+    } finally {
+      setPdfBusy(false)
+    }
   }
 
   return (
@@ -64,12 +169,24 @@ export default function TcccLogRegistry({ rangeLogs, loading = false }) {
       <span className="pointer-events-none absolute bottom-2 left-2 z-10 h-3 w-3 border-b border-l border-[#00FF41]/45" />
       <span className="pointer-events-none absolute bottom-2 right-2 z-10 h-3 w-3 border-b border-r border-[#00FF41]/45" />
 
-      <div className="border-b border-[#00FF41]/15 bg-[#080808] px-4 py-2">
+      <div className="relative border-b border-[#00FF41]/15 bg-[#080808] px-4 py-2 pr-12">
+        {exportRows.length > 0 ? (
+          <button
+            type="button"
+            disabled={pdfBusy}
+            onClick={handleDownloadPdf}
+            title={filterActive ? 'Filtrelenen kayıtları PDF indir' : 'Tüm kayıtları PDF indir'}
+            aria-label="PDF indir"
+            className="absolute right-3 top-1/2 z-[1] inline-flex size-7 -translate-y-1/2 items-center justify-center rounded border border-[#00FF41]/25 text-[#00FF41]/70 transition hover:border-[#00FF41]/45 hover:bg-[#00FF41]/8 hover:text-[#00FF41] disabled:opacity-40"
+          >
+            <FileDown className="size-3.5" strokeWidth={2} aria-hidden />
+          </button>
+        ) : null}
         <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-[#00FF41]/90">
           GEÇMİŞ TCCC KAYITLARI · TAKTİK SAĞLIK
         </p>
         <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-slate-600">
-          range_logs · canlı senkron · {filtered.length}/{tcccLogs.length} KAYIT
+          tccc_logs · canlı senkron · {filtered.length}/{tcccLogs.length} KAYIT
         </p>
       </div>
 
@@ -170,7 +287,7 @@ export default function TcccLogRegistry({ rangeLogs, loading = false }) {
                         {tqLoc}
                       </td>
                       <td className="whitespace-nowrap px-3 py-2 tabular-nums text-[#00FF41]">
-                        {formatTcccInjuryToTqTime(row)}
+                        {formatTcccInterventionTime(row)}
                       </td>
                       <td className="whitespace-nowrap px-3 py-2 tabular-nums text-[#5ec8ff]">
                         {formatTcccEvacWaitingTime(row)}
@@ -224,7 +341,7 @@ export default function TcccLogRegistry({ rangeLogs, loading = false }) {
                                 </p>
                                 <p className="text-slate-400">
                                   TURNİKE SÜRESİ:{' '}
-                                  <span className="text-[#00FF41]">{formatTcccInjuryToTqTime(row)}</span>
+                                  <span className="text-[#00FF41]">{formatTcccInterventionTime(row)}</span>
                                 </p>
                                 <p className="text-slate-400">
                                   TAHLİYE BEKLEME:{' '}

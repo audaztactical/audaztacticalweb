@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { Link, Outlet, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion as Motion } from 'framer-motion'
 import { signOut } from 'firebase/auth'
 import { Bug, Menu, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { auth } from '../lib/firebase'
 import HudTicker from '../components/ui/HudTicker'
+import NotificationDropdown from '../components/notifications/NotificationDropdown'
 import Sidebar from '../components/navigation/Sidebar'
 
 export default function MainLayout() {
@@ -72,25 +73,26 @@ export default function MainLayout() {
         aria-label="Ana navigasyon"
       >
         <div className="flex items-center justify-between gap-2 border-b border-white/10 px-4 py-5">
-          <div className="flex min-w-0 items-center gap-3">
-            <div
-              className="relative shrink-0 rounded-lg p-0.5 shadow-[0_0_28px_-2px_rgba(255,180,0,0.45),0_0_48px_-12px_rgba(212,175,55,0.35)] ring-1 ring-[#ffb400]/30"
-              aria-hidden
-            >
-              <img
-                src="/logo.png"
-                alt=""
-                className="h-12 w-auto rounded-md object-contain"
-                decoding="async"
-              />
-            </div>
+          <Link
+            to="/"
+            state={{ skipIntro: true }}
+            onClick={closeMobileNav}
+            className="flex min-w-0 items-center gap-3 transition-opacity hover:opacity-90"
+            aria-label="Ana sayfa"
+          >
+            <img
+              src="/logo.png"
+              alt="AUDAZ Tactical"
+              className="h-12 w-auto shrink-0 object-contain"
+              decoding="async"
+            />
             <div className="min-w-0">
               <p className="font-mono-technical text-base font-bold leading-none tracking-[0.22em] text-white">AUDAZ</p>
               <p className="font-mono-technical mt-0.5 text-[10px] font-semibold tracking-[0.38em] text-[#d4af37]">
                 TACTICAL
               </p>
             </div>
-          </div>
+          </Link>
           <button
             type="button"
             className="rounded-lg p-2 text-slate-400 transition hover:bg-white/10 hover:text-white lg:hidden"
@@ -122,16 +124,20 @@ export default function MainLayout() {
           >
             <Menu className="size-5" strokeWidth={1.75} aria-hidden />
           </button>
-          <img
-            src="/logo.png"
-            alt=""
-            className="h-9 w-auto object-contain shadow-[0_0_20px_-4px_rgba(255,180,0,0.4)]"
-            decoding="async"
-          />
+          <Link to="/" state={{ skipIntro: true }} className="flex flex-1 justify-center" aria-label="Ana sayfa">
+            <img
+              src="/logo.png"
+              alt="AUDAZ Tactical"
+              className="h-9 w-auto object-contain"
+              decoding="async"
+            />
+          </Link>
+          <NotificationDropdown />
         </header>
 
         <main className="relative flex flex-1 flex-col overflow-auto">
-          <div className="hidden border-b border-white/10 bg-black/20 px-4 py-2 backdrop-blur-md md:flex md:justify-end lg:px-8">
+          <div className="relative z-[110] hidden border-b border-white/10 bg-black/20 px-4 py-2 backdrop-blur-md md:flex md:items-center md:justify-end md:gap-3 lg:px-8">
+            <NotificationDropdown />
             <HudTicker />
           </div>
           <div className="flex-1 p-4 sm:p-6 lg:p-8">

@@ -1,5 +1,6 @@
 import { normalizeCalibreKey } from './ammoIlws'
 import { invNum, invStr } from './inventoryIlws'
+import { filterIndividualTrainingRecords } from './trainingGroupFields'
 
 /** @typedef {'ALL' | 'HANDGUN' | 'RIFLE'} WeaponTypeFilter */
 /** @typedef {'ALL' | 'TIMED' | 'UNTIMED'} TimingFilter */
@@ -111,6 +112,20 @@ export function getAtisAccuracyPercent(row) {
   const { totalRoundsFired, totalHits } = getAtisRoundsAndHits(row)
   if (totalRoundsFired <= 0) return 0
   return Math.round((totalHits / totalRoundsFired) * 1000) / 10
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ */
+export function getAtisShotDistribution(row) {
+  const { totalRoundsFired, totalHits } = getAtisRoundsAndHits(row)
+  const misses = Math.max(0, totalRoundsFired - totalHits)
+  return {
+    hits: totalHits,
+    misses,
+    total: totalRoundsFired,
+    hitRatioPct: totalRoundsFired > 0 ? Math.round((totalHits / totalRoundsFired) * 1000) / 10 : 0,
+  }
 }
 
 /**
@@ -274,8 +289,41 @@ export function filterAtisLogs({ logs, weaponType, caliberKey, drillName, timing
 }
 
 /**
+ * @param {{ weaponType?: string, caliberKey?: string, drillName?: string, timing?: string }} filters
+ */
+export function isAtisFilterActive(filters) {
+  return (
+    (filters.weaponType && filters.weaponType !== 'ALL') ||
+    (filters.caliberKey && filters.caliberKey !== 'ALL') ||
+    (filters.drillName && filters.drillName !== 'ALL') ||
+    (filters.timing && filters.timing !== 'ALL')
+  )
+}
+
+/**
+ * @param {{ weaponType?: string, caliberKey?: string, drillName?: string, timing?: string }} filters
+ */
+export function formatAtisFilterSummary(filters) {
+  const parts = []
+  if (filters.weaponType && filters.weaponType !== 'ALL') {
+    const map = { HANDGUN: 'Tabanca', RIFLE: 'Tüfek' }
+    parts.push(`Silah: ${map[/** @type {keyof typeof map} */ (filters.weaponType)] ?? filters.weaponType}`)
+  }
+  if (filters.caliberKey && filters.caliberKey !== 'ALL') {
+    parts.push(`Kalibre: ${filters.caliberKey}`)
+  }
+  if (filters.drillName && filters.drillName !== 'ALL') {
+    parts.push(`Atış türü: ${filters.drillName}`)
+  }
+  if (filters.timing && filters.timing !== 'ALL') {
+    parts.push(`Süre: ${filters.timing === 'TIMED' ? 'Süreli' : 'Süresiz'}`)
+  }
+  return parts.join(' · ')
+}
+
+/**
  * @param {Record<string, unknown>[]} rangeLogs
  */
 export function selectAtisShootingLogs(rangeLogs) {
-  return sortAtisLogsDesc(rangeLogs.filter(isAtisShootingLog))
+  return sortAtisLogsDesc(filterIndividualTrainingRecords(rangeLogs).filter(isAtisShootingLog))
 }

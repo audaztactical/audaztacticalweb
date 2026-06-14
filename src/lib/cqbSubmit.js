@@ -1,4 +1,5 @@
 import { buildCqbLogPayload } from './cqbLogPayload'
+import { attachMeteoDataToPayload } from './meteoDataCapture'
 import { sanitizeForFirestore } from './firestoreSanitize'
 
 /**
@@ -15,7 +16,10 @@ import { sanitizeForFirestore } from './firestoreSanitize'
  *   teamSize: string
  *   threatCount: number
  *   neutralizedCount: number
- *   clearingTime: string | number
+ *   clearanceTimeMs: string | number
+ *   accuracyScore: string | number
+ *   safetyViolations: string | number
+ *   tacticalDecision: string
  *   tacticalErrors: string[]
  *   operationNote?: string
  * }} p
@@ -33,7 +37,10 @@ export async function submitCqbRecord({
   teamSize,
   threatCount,
   neutralizedCount,
-  clearingTime,
+  clearanceTimeMs,
+  accuracyScore,
+  safetyViolations,
+  tacticalDecision,
   tacticalErrors,
   operationNote = '',
 }) {
@@ -49,12 +56,17 @@ export async function submitCqbRecord({
     teamSize,
     threatCount,
     neutralizedCount,
-    clearingTime,
+    clearanceTimeMs,
+    accuracyScore,
+    safetyViolations,
+    tacticalDecision,
     tacticalErrors,
     operationNote,
   })
 
-  const payload = /** @type {Record<string, unknown>} */ (sanitizeForFirestore(bundle))
+  const payload = /** @type {Record<string, unknown>} */ (
+    sanitizeForFirestore(await attachMeteoDataToPayload(bundle))
+  )
   const ref = await addLog(payload)
   const logId = String(ref?.id ?? '')
 

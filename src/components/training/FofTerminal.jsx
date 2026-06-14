@@ -8,6 +8,7 @@ import { FOF_INITIAL_FORM } from '../../lib/fofLogPayload'
 import { FOF_TACTICAL_ERROR_OPTIONS } from '../../lib/fofTacticalErrors'
 import { submitFofRecord } from '../../lib/fofSubmit'
 import {
+  ENGAGEMENT_TYPE_OPTIONS,
   FOF_CUSTOM,
   SCENARIO_TYPE_OPTIONS,
   SIM_SYSTEM_OPTIONS,
@@ -15,8 +16,9 @@ import {
 import { invNum, invStr } from '../../lib/inventoryIlws'
 import { calculateFofSuccessPercent } from '../../lib/trainingSuccessScore'
 import FofLogRegistry from './FofLogRegistry'
+import OperatorInstructorRecordsEmbed from './OperatorInstructorRecordsEmbed'
 import SuccessScorePreview from './SuccessScorePreview'
-import TrainingSessionHeader from './TrainingSessionHeader'
+import IndividualTrainingSessionHeader from './IndividualTrainingSessionHeader'
 
 const inputClass =
   'w-full rounded border border-[#00FF41]/30 bg-[#0A0A0A] px-2 py-2 font-mono-technical text-sm text-slate-100 outline-none placeholder:text-slate-600 focus:border-[#00FF41]/60'
@@ -131,6 +133,13 @@ export default function FofTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
     if (showCustomSim && !form.customSimSystem.trim()) return 'ÖZEL_SİM_SİSTEMİ_GEREKLİ'
     if (durationSec == null) return 'SİMÜLASYON_SÜRESİ_ZORUNLU · SN > 0'
     if (engagementRoundsNum <= 0) return 'ATIŞ_SAYISI_ZORUNLU · ENGAGEMENT_ROUNDS > 0'
+    if (!form.engagementType) return 'ANGAJMAN_TÜRÜ_GEREKLİ'
+    const accuracyRaw = invStr(form.decisionAccuracy).trim().replace(',', '.')
+    const accuracy = accuracyRaw ? invNum(accuracyRaw) : NaN
+    if (!accuracyRaw || !Number.isFinite(accuracy) || accuracy < 0 || accuracy > 100) {
+      return 'DECISION_ACCURACY_0_100_GEREKLİ'
+    }
+    if (!form.debriefNotes.trim()) return 'DEBRIEF_NOTES_GEREKLİ'
     return null
   }, [
     saving,
@@ -143,9 +152,17 @@ export default function FofTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
     showCustomSim,
     durationSec,
     engagementRoundsNum,
+    form.engagementType,
+    form.decisionAccuracy,
+    form.debriefNotes,
   ])
 
   const canSubmit = submitBlockedReason == null
+
+  const hitTakenPreview = useMemo(() => {
+    const delivered = lethalNum + nonLethalNum
+    return `${delivered}:${hitsTakenNum}`
+  }, [lethalNum, nonLethalNum, hitsTakenNum])
 
   const previewSuccessPercent = useMemo(() => {
     const coverRaw = invStr(form.coverUtilizationPercent).trim().replace(',', '.')
@@ -211,6 +228,7 @@ export default function FofTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
         customScenarioType: form.customScenarioType,
         simSystem: form.simSystem,
         customSimSystem: form.customSimSystem,
+        engagementType: form.engagementType,
         opforCount: opforNum,
         scenarioDuration: form.scenarioDuration,
         engagementRounds: engagementRoundsNum,
@@ -221,9 +239,11 @@ export default function FofTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
         nonLethalHitsDelivered: nonLethalNum,
         timeToFirstEngagement: form.timeToFirstEngagement,
         friendlyCasualties: friendlyCasNum,
+        decisionAccuracy: form.decisionAccuracy,
         blueOnBlue: form.blueOnBlue,
         selfTcccApplied: form.selfTcccApplied,
         operationNote: form.operationNote,
+        debriefNotes: form.debriefNotes,
       })
       setSubmitOk(true)
       setForm({ ...FOF_INITIAL_FORM })
@@ -252,7 +272,7 @@ export default function FofTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
 
   return (
     <div className="space-y-4">
-      <TrainingSessionHeader />
+      <IndividualTrainingSessionHeader />
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <button
           type="button"
@@ -327,12 +347,28 @@ export default function FofTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                 onCustomChange={(v) => patch({ customSimSystem: v })}
                 customPlaceholder="Özel simülasyon sistemi…"
               />
+              <fieldset className="space-y-2">
+                <legend className={labelClass}>ENGAGEMENT TYPE *</legend>
+                <select
+                  className={selectClass}
+                  value={form.engagementType}
+                  onChange={(e) => patch({ engagementType: e.target.value })}
+                  required
+                >
+                  <option value="">— ANGAJMAN SEÇİN —</option>
+                  {ENGAGEMENT_TYPE_OPTIONS.map((o) => (
+                    <option key={o.id} value={o.id}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </fieldset>
 
               <div className="rounded border border-[#00FF41]/20 bg-black/40 p-3">
                 <p className="mb-3 font-mono-technical text-[7px] font-bold uppercase tracking-[0.2em] text-[#00FF41]/80">
                   SAHA METRİKLERİ
                 </p>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                   <label className="block space-y-1">
                     <span className={labelClass}>OPFOR SAYISI</span>
                     <input
@@ -372,20 +408,25 @@ export default function FofTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                     />
                   </label>
                   <label className="block space-y-1">
-                    <span className={labelClass}>SİPER KULLANIMI %</span>
+                    <span className={labelClass}>DECISION ACCURACY (%) *</span>
                     <input
                       type="number"
                       min={0}
                       max={100}
                       step={0.1}
                       inputMode="decimal"
+                      required
                       className={`${inputClass} tabular-nums`}
-                      placeholder="75"
-                      value={form.coverUtilizationPercent}
-                      onChange={(e) => patch({ coverUtilizationPercent: e.target.value })}
+                      placeholder="82"
+                      value={form.decisionAccuracy}
+                      onChange={(e) => patch({ decisionAccuracy: e.target.value })}
                     />
                   </label>
                 </div>
+                <p className="mt-2 font-mono-technical text-[7px] uppercase text-slate-500">
+                  HIT/TAKEN RATIO (VERİLEN:ALINAN):{' '}
+                  <span className="text-[#ffb400]">{hitTakenPreview}</span>
+                </p>
               </div>
 
               <div className="mt-auto hidden border-t border-[#00FF41]/12 pt-3 lg:block">
@@ -454,6 +495,17 @@ export default function FofTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                     />
                   </label>
                   <label className="block space-y-1">
+                    <span className={labelClass}>DOST KAYBI</span>
+                    <input
+                      type="number"
+                      min={0}
+                      step={1}
+                      className={`${inputClass} tabular-nums`}
+                      value={form.friendlyCasualties}
+                      onChange={(e) => patch({ friendlyCasualties: e.target.value })}
+                    />
+                  </label>
+                  <label className="block space-y-1 sm:col-span-2">
                     <span className={labelClass}>İLK ATIŞ SÜRESİ (SN)</span>
                     <input
                       type="number"
@@ -466,15 +518,27 @@ export default function FofTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                       onChange={(e) => patch({ timeToFirstEngagement: e.target.value })}
                     />
                   </label>
-                  <label className="col-span-2 block space-y-1 sm:col-span-1">
-                    <span className={labelClass}>DOST KAYBI</span>
+                  <label className="block space-y-1">
+                    <span className={labelClass}>SİPER KULLANIMI %</span>
                     <input
                       type="number"
                       min={0}
-                      step={1}
+                      max={100}
+                      step={0.1}
+                      inputMode="decimal"
                       className={`${inputClass} tabular-nums`}
-                      value={form.friendlyCasualties}
-                      onChange={(e) => patch({ friendlyCasualties: e.target.value })}
+                      placeholder="75"
+                      value={form.coverUtilizationPercent}
+                      onChange={(e) => patch({ coverUtilizationPercent: e.target.value })}
+                    />
+                  </label>
+                  <label className="col-span-2 block space-y-1 sm:col-span-2">
+                    <span className={labelClass}>HIT/TAKEN RATIO (OTOMATİK)</span>
+                    <input
+                      type="text"
+                      readOnly
+                      className={`${inputClass} tabular-nums text-[#ffb400]`}
+                      value={hitTakenPreview}
                     />
                   </label>
                 </div>
@@ -516,12 +580,24 @@ export default function FofTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
               <label className="mt-auto block shrink-0 space-y-1">
                 <span className={labelClass}>OPERASYON NOTU</span>
                 <textarea
-                  className={`${textareaClass} min-h-[5.5rem]`}
+                  className={`${textareaClass} min-h-[4rem]`}
                   placeholder="Senaryo değerlendirmesi, öğrenilen dersler, #etiketler…"
                   value={form.operationNote}
                   onChange={(e) => patch({ operationNote: e.target.value })}
+                  rows={3}
+                  maxLength={2000}
+                />
+              </label>
+              <label className="block shrink-0 space-y-1">
+                <span className={labelClass}>DEBRIEF NOTES *</span>
+                <textarea
+                  className={`${textareaClass} min-h-[5rem]`}
+                  placeholder="Operasyon sonrası analiz, etik angajman değerlendirmesi, takım iletişimi…"
+                  value={form.debriefNotes}
+                  onChange={(e) => patch({ debriefNotes: e.target.value })}
                   rows={4}
                   maxLength={2000}
+                  required
                 />
               </label>
             </div>
@@ -563,6 +639,8 @@ export default function FofTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
           </div>
         </form>
       )}
+
+      <OperatorInstructorRecordsEmbed discipline="fof" />
     </div>
   )
 }

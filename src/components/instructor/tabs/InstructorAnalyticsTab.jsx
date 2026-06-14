@@ -11,7 +11,14 @@ import {
 } from 'recharts'
 import ProgressHudPanels from '../../progress/ProgressHudPanels'
 import GroupLeaderboard from '../GroupLeaderboard'
+import GroupOperatorSuccessChart from '../GroupOperatorSuccessChart'
+import GroupShooterRecordsTable from '../GroupShooterRecordsTable'
 import { subscribeGroupActivityLogs } from '../../../lib/firestoreGroupTraining'
+import {
+  subscribeGroupTrainingResults,
+  subscribeGroupTrainings,
+} from '../../../lib/firestoreGroupTrainings'
+import { mergeInstructorGroupAnalytics } from '../../../lib/instructorGroupAnalytics'
 import {
   buildGroupAggregateTrend,
   groupLogsToProgressRows,
@@ -23,6 +30,8 @@ import { emitFirebaseError } from '../../../lib/firebaseErrorBus'
 /** @typedef {import('../../../lib/firestoreGroups').TacticalGroup} TacticalGroup */
 /** @typedef {import('../../../lib/firestoreInstructor').OperatorProfile} OperatorProfile */
 /** @typedef {import('../../../lib/firestoreGroupTraining').GroupActivityLog} GroupActivityLog */
+/** @typedef {import('../../../lib/firestoreGroupTrainings').TrainingResult} TrainingResult */
+/** @typedef {import('../../../lib/firestoreGroupTrainings').GroupTraining} GroupTraining */
 
 const selectClass =
   'w-full rounded-sm border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-slate-200 outline-none focus:border-emerald-500/60'
@@ -37,7 +46,9 @@ export default function InstructorAnalyticsTab({ groups, operators }) {
   const [focusMode, setFocusMode] = useState(/** @type {'group' | 'operator'} */ ('group'))
   const [groupId, setGroupId] = useState('')
   const [operatorId, setOperatorId] = useState('')
-  const [logs, setLogs] = useState(/** @type {GroupActivityLog[]} */ ([]))
+  const [activityLogs, setActivityLogs] = useState(/** @type {GroupActivityLog[]} */ ([]))
+  const [trainingResults, setTrainingResults] = useState(/** @type {TrainingResult[]} */ ([]))
+  const [groupTrainings, setGroupTrainings] = useState(/** @type {GroupTraining[]} */ ([]))
   const [logsLoading, setLogsLoading] = useState(false)
   const [hudExpandedPanel, setHudExpandedPanel] = useState(
     /** @type {'MATRIX' | 'RADAR' | 'WAVE' | 'TCCC' | 'TREND' | null} */ (null),
@@ -61,23 +72,67 @@ export default function InstructorAnalyticsTab({ groups, operators }) {
 
   useEffect(() => {
     if (!groupId) {
-      setLogs([])
+      setActivityLogs([])
+      setTrainingResults([])
+      setGroupTrainings([])
       return undefined
     }
+
     setLogsLoading(true)
-    const unsub = subscribeGroupActivityLogs(
+    let pending = 3
+
+    const markReady = () => {
+      pending -= 1
+      if (pending <= 0) setLogsLoading(false)
+    }
+
+    const unsubActivity = subscribeGroupActivityLogs(
       groupId,
       (next) => {
-        setLogs(next)
-        setLogsLoading(false)
+        setActivityLogs(next)
+        markReady()
       },
       (err) => {
         emitFirebaseError(err)
-        setLogsLoading(false)
+        markReady()
       },
     )
-    return unsub
+
+    const unsubResults = subscribeGroupTrainingResults(
+      groupId,
+      (next) => {
+        setTrainingResults(next)
+        markReady()
+      },
+      (err) => {
+        emitFirebaseError(err)
+        markReady()
+      },
+    )
+
+    const unsubTrainings = subscribeGroupTrainings(
+      groupId,
+      (next) => {
+        setGroupTrainings(next)
+        markReady()
+      },
+      (err) => {
+        emitFirebaseError(err)
+        markReady()
+      },
+    )
+
+    return () => {
+      unsubActivity()
+      unsubResults()
+      unsubTrainings()
+    }
   }, [groupId])
+
+  const logs = useMemo(
+    () => mergeInstructorGroupAnalytics(activityLogs, trainingResults, groupTrainings),
+    [activityLogs, trainingResults, groupTrainings],
+  )
 
   const aggregateTrend = useMemo(() => buildGroupAggregateTrend(logs, 16), [logs])
 
@@ -135,6 +190,7 @@ export default function InstructorAnalyticsTab({ groups, operators }) {
       </div>
 
       {focusMode === 'group' ? (
+        <div className="space-y-4">
         <div className="grid gap-4 xl:grid-cols-2">
           <section className="rounded-xl border border-emerald-900/35 bg-slate-950/90 p-4">
             <p className="mb-3 flex items-center gap-2 font-mono text-[10px] font-bold uppercase text-emerald-400">
@@ -181,7 +237,15 @@ export default function InstructorAnalyticsTab({ groups, operators }) {
               </div>
             )}
           </section>
-          <GroupLeaderboard groups={groups.filter((g) => g.groupId === groupId)} operators={operators} />
+          <GroupLeaderboard
+            groups={groups.filter((g) => g.groupId === groupId)}
+            operators={operators}
+            logs={logs}
+            hideGroupSelect
+          />
+        </div>
+        <GroupOperatorSuccessChart group={activeGroup} operators={operators} logs={logs} />
+        <GroupShooterRecordsTable logs={logs} operators={operators} loading={logsLoading} />
         </div>
       ) : (
         <div className="space-y-4">
@@ -209,6 +273,13 @@ export default function InstructorAnalyticsTab({ groups, operators }) {
               </div>
             ))}
           </div>
+
+          <GroupShooterRecordsTable
+            logs={logs.filter((l) => l.operatorId === operatorId)}
+            operators={groupMembers}
+            loading={logsLoading}
+            maxRows={40}
+          />
 
           <div className="min-h-[min(48vh,480px)] rounded-xl border border-emerald-900/30 bg-slate-950/60 p-2">
             {logsLoading ? (

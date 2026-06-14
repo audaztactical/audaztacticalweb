@@ -1,5 +1,16 @@
 import { invNum, invStr } from './inventoryIlws'
-import { resolveFofSelectValue } from './fofOptions'
+import { resolveEngagementTypeLabel, resolveFofSelectValue } from './fofOptions'
+import { FOF_TACTICAL_ERROR_OPTIONS } from './fofTacticalErrors'
+import { filterIndividualTrainingRecords } from './trainingGroupFields'
+
+/**
+ * @param {number} sec
+ */
+function formatFofSeconds(sec) {
+  if (!Number.isFinite(sec) || sec <= 0) return '—'
+  const rounded = Math.round(sec * 1000) / 1000
+  return `${rounded.toFixed(rounded < 10 ? 2 : 1)}s`
+}
 
 /**
  * @param {Record<string, unknown>} row
@@ -74,9 +85,10 @@ export function getFofOpforCount(row) {
  */
 export function formatFofDuration(row) {
   const sec = invNum(row.scenarioDurationSec)
-  if (sec > 0) return `${sec}s`
+  if (sec > 0) return formatFofSeconds(sec)
   const label = invStr(row.scenarioDuration).trim()
-  return label || '—'
+  if (label) return label
+  return '—'
 }
 
 /**
@@ -115,9 +127,106 @@ export function getFofNonLethalHits(row) {
  */
 export function formatFofTimeToFirstEngagement(row) {
   const sec = invNum(row.timeToFirstEngagementSec)
-  if (sec > 0) return `${sec}s`
+  if (sec > 0) return formatFofSeconds(sec)
   const label = invStr(row.timeToFirstEngagement).trim()
   return label || '—'
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ */
+export function getFofEngagementType(row) {
+  const label = invStr(row.engagementTypeLabel).trim()
+  if (label) return label
+  return resolveEngagementTypeLabel(invStr(row.engagementType))
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ */
+export function getFofDecisionAccuracy(row) {
+  const stored = invNum(row.decisionAccuracy)
+  if (stored >= 0 && stored <= 100) return Math.round(stored * 10) / 10
+  return 0
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ */
+export function getFofHitsDelivered(row) {
+  const stored = invNum(row.hitsDelivered)
+  if (stored > 0) return Math.floor(stored)
+  return getFofLethalHits(row) + getFofNonLethalHits(row)
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ */
+export function getFofHitTakenRatioLabel(row) {
+  const label = invStr(row.hitTakenRatioLabel).trim()
+  if (label) return label
+  return `${getFofHitsDelivered(row)}:${getFofHitsTaken(row)}`
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ */
+export function getFofHitTakenRatio(row) {
+  const stored = invNum(row.hitTakenRatio)
+  if (stored >= 0 && Number.isFinite(stored)) return Math.round(stored * 100) / 100
+  const taken = getFofHitsTaken(row)
+  const delivered = getFofHitsDelivered(row)
+  return taken > 0 ? Math.round((delivered / taken) * 100) / 100 : delivered
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ */
+export function getFofEngagementRounds(row) {
+  return Math.max(0, Math.floor(invNum(row.engagementRounds)))
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ */
+export function getFofSuccessPercent(row) {
+  const stored = invNum(row.successPercent)
+  if (stored > 0 && stored <= 100) return Math.round(stored * 10) / 10
+  return 0
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ */
+export function getFofTacticalErrorIds(row) {
+  const ids = row.tacticalErrors
+  if (!Array.isArray(ids)) return []
+  return ids.map((id) => invStr(id).trim()).filter(Boolean)
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ */
+export function getFofTacticalErrors(row) {
+  const ids = getFofTacticalErrorIds(row)
+  const labelMap = Object.fromEntries(FOF_TACTICAL_ERROR_OPTIONS.map((o) => [o.id, o.label]))
+  return ids.map((id) => labelMap[id] ?? id)
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ */
+export function countFofTacticalErrors(row) {
+  return getFofTacticalErrorIds(row).length
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ */
+export function getFofDebriefNotes(row) {
+  const debrief = invStr(row.debriefNotes).trim()
+  if (debrief) return debrief
+  return invStr(row.operationNote ?? row.notes).trim() || 'Debrief notu kayıtlı değil.'
 }
 
 /**
@@ -159,7 +268,7 @@ export function sortFofLogsDesc(logs) {
  * @param {Record<string, unknown>[]} rangeLogs
  */
 export function selectFofLogs(rangeLogs) {
-  return sortFofLogsDesc(rangeLogs.filter(isFofLog))
+  return sortFofLogsDesc(filterIndividualTrainingRecords(rangeLogs).filter(isFofLog))
 }
 
 /**
@@ -167,9 +276,10 @@ export function selectFofLogs(rangeLogs) {
  *   logs: Record<string, unknown>[]
  *   scenarioTypeKey: string
  *   simSystemKey: string
+ *   engagementType: string
  * }} filters
  */
-export function filterFofLogs({ logs, scenarioTypeKey, simSystemKey }) {
+export function filterFofLogs({ logs, scenarioTypeKey, simSystemKey, engagementType }) {
   return logs.filter((row) => {
     if (scenarioTypeKey !== 'ALL') {
       const key = invStr(row.scenarioTypeKey || row.scenarioType).trim()
@@ -180,6 +290,11 @@ export function filterFofLogs({ logs, scenarioTypeKey, simSystemKey }) {
       const key = invStr(row.simSystemKey || row.simSystem).trim()
       const label = getFofSimSystem(row)
       if (key !== simSystemKey && label !== simSystemKey) return false
+    }
+    if (engagementType !== 'ALL') {
+      const key = invStr(row.engagementType).trim()
+      const label = getFofEngagementType(row)
+      if (key !== engagementType && label !== engagementType) return false
     }
     return true
   })
@@ -213,4 +328,47 @@ export function extractFofSimSystemOptions(logs) {
   return Array.from(set.entries())
     .map(([key, label]) => ({ key, label }))
     .sort((a, b) => a.label.localeCompare(b.label, 'tr'))
+}
+
+/**
+ * @param {Record<string, unknown>[]} logs
+ */
+export function extractFofEngagementTypeOptions(logs) {
+  const set = new Map()
+  for (const row of logs) {
+    const label = getFofEngagementType(row)
+    const key = invStr(row.engagementType).trim() || label
+    if (label && label !== '—') set.set(key, label)
+  }
+  return Array.from(set.entries())
+    .map(([key, label]) => ({ key, label }))
+    .sort((a, b) => a.label.localeCompare(b.label, 'tr'))
+}
+
+/**
+ * @param {{ scenarioTypeKey?: string, simSystemKey?: string, engagementType?: string }} filters
+ */
+export function isFofFilterActive(filters) {
+  return (
+    (filters.scenarioTypeKey && filters.scenarioTypeKey !== 'ALL') ||
+    (filters.simSystemKey && filters.simSystemKey !== 'ALL') ||
+    (filters.engagementType && filters.engagementType !== 'ALL')
+  )
+}
+
+/**
+ * @param {{ scenarioTypeKey?: string, simSystemKey?: string, engagementType?: string }} filters
+ */
+export function formatFofFilterSummary(filters) {
+  const parts = []
+  if (filters.scenarioTypeKey && filters.scenarioTypeKey !== 'ALL') {
+    parts.push(`Senaryo: ${filters.scenarioTypeKey}`)
+  }
+  if (filters.simSystemKey && filters.simSystemKey !== 'ALL') {
+    parts.push(`Sim: ${filters.simSystemKey}`)
+  }
+  if (filters.engagementType && filters.engagementType !== 'ALL') {
+    parts.push(`Angajman: ${filters.engagementType}`)
+  }
+  return parts.join(' · ')
 }

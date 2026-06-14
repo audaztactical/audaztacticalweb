@@ -15,6 +15,8 @@ import {
   subscribeChatMessages,
   subscribePendingContactRequestCount,
   subscribeUnreadMessageCount,
+  subscribeUserChannelUnreadCounts,
+  markMuhabereChannelAsRead,
 } from '../lib/firestoreTaktikMuhabere'
 import { safeOnSnapshot } from '../lib/firestoreSnapshot'
 import { playMuhabereTacticalPing } from '../lib/muhabereTacticalPing'
@@ -42,6 +44,10 @@ import { playMuhabereTacticalPing } from '../lib/muhabereTacticalPing'
 /** @type {React.Context<{
  *   totalNotifications: number
  *   unreadMessageCount: number
+ *   unreadChannelMessageCount: number
+ *   channelUnreadById: Record<string, number>
+ *   hasAnyChannelUnread: boolean
+ *   markChannelAsRead: (channelId: string) => void
  *   pendingRequestCount: number
  *   setActivePeerUid: (uid: string | null) => void
  *   registerIncomingListener: (fn: MuhabereIncomingListener) => () => void
@@ -81,6 +87,7 @@ export function MuhabereNotifyProvider({ children }) {
 
   const [toasts, setToasts] = useState(/** @type {MuhabereToastItem[]} */ ([]))
   const [unreadMessageCount, setUnreadMessageCount] = useState(0)
+  const [channelUnreadById, setChannelUnreadById] = useState(/** @type {Record<string, number>} */ ({}))
   const [pendingRequestCount, setPendingRequestCount] = useState(0)
   const [floatingChat, setFloatingChat] = useState(EMPTY_FLOATING)
 
@@ -88,10 +95,16 @@ export function MuhabereNotifyProvider({ children }) {
   const pathnameRef = useRef(location.pathname)
   const callsignByUidRef = useRef(/** @type {Record<string, string>} */ ({}))
   const incomingListenersRef = useRef(/** @type {Set<MuhabereIncomingListener>} */ (new Set()))
+  const optimisticChannelReadMsRef = useRef(/** @type {Record<string, number>} */ ({}))
 
   pathnameRef.current = location.pathname
 
-  const totalNotifications = unreadMessageCount + pendingRequestCount
+  const unreadChannelMessageCount = useMemo(
+    () => Object.values(channelUnreadById).reduce((sum, n) => sum + n, 0),
+    [channelUnreadById],
+  )
+  const hasAnyChannelUnread = unreadChannelMessageCount > 0
+  const totalNotifications = unreadMessageCount + pendingRequestCount + unreadChannelMessageCount
 
   const registerIncomingListener = useCallback((/** @type {MuhabereIncomingListener} */ fn) => {
     incomingListenersRef.current.add(fn)
@@ -103,6 +116,26 @@ export function MuhabereNotifyProvider({ children }) {
   const setActivePeerUid = useCallback((/** @type {string | null} */ peerUid) => {
     activePeerRef.current = peerUid ? String(peerUid) : null
   }, [])
+
+  const markChannelAsRead = useCallback(
+    (/** @type {string} */ channelId) => {
+      const cid = String(channelId ?? '').trim()
+      if (!uid || !cid) return
+
+      const readAtMs = Date.now()
+      optimisticChannelReadMsRef.current[cid] = readAtMs
+
+      setChannelUnreadById((prev) => {
+        if (!prev[cid]) return prev
+        const next = { ...prev }
+        delete next[cid]
+        return next
+      })
+
+      void markMuhabereChannelAsRead(uid, cid, readAtMs)
+    },
+    [uid],
+  )
 
   const dismissToast = useCallback((/** @type {string} */ id) => {
     setToasts((prev) => prev.filter((t) => t.id !== id))
@@ -196,6 +229,7 @@ export function MuhabereNotifyProvider({ children }) {
     if (!uid || !db) {
       setUnreadMessageCount(0)
       setPendingRequestCount(0)
+      setChannelUnreadById({})
       return undefined
     }
 
@@ -205,10 +239,19 @@ export function MuhabereNotifyProvider({ children }) {
     const unsubPending = subscribePendingContactRequestCount(uid, setPendingRequestCount, (err) =>
       emitFirebaseError(err),
     )
+    const unsubChannels = subscribeUserChannelUnreadCounts(
+      uid,
+      setChannelUnreadById,
+      (err) => emitFirebaseError(err),
+      {
+        getExtraReadMs: (channelId) => optimisticChannelReadMsRef.current[channelId] ?? 0,
+      },
+    )
 
     return () => {
       unsubUnread()
       unsubPending()
+      unsubChannels()
     }
   }, [uid])
 
@@ -286,6 +329,10 @@ export function MuhabereNotifyProvider({ children }) {
     () => ({
       totalNotifications,
       unreadMessageCount,
+      unreadChannelMessageCount,
+      channelUnreadById,
+      hasAnyChannelUnread,
+      markChannelAsRead,
       pendingRequestCount,
       setActivePeerUid,
       registerIncomingListener,
@@ -296,6 +343,10 @@ export function MuhabereNotifyProvider({ children }) {
     [
       totalNotifications,
       unreadMessageCount,
+      unreadChannelMessageCount,
+      channelUnreadById,
+      hasAnyChannelUnread,
+      markChannelAsRead,
       pendingRequestCount,
       setActivePeerUid,
       registerIncomingListener,

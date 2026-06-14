@@ -3,7 +3,6 @@ import {
   arrayRemove,
   arrayUnion,
   collection,
-  collectionGroup,
   deleteDoc,
   doc,
   documentId,
@@ -15,10 +14,16 @@ import {
   runTransaction,
   serverTimestamp,
   setDoc,
+  Timestamp,
   updateDoc,
   where,
   writeBatch,
 } from 'firebase/firestore'
+import {
+  buildMuhaberePeerLink,
+  buildMuhabereRequestsLink,
+  sendNotificationSafe,
+} from '../services/notificationService'
 import { db, isFirebaseConfigured } from './firebase'
 import { safeOnSnapshot, timestampToMs } from './firestoreSnapshot'
 
@@ -302,6 +307,8 @@ export async function removeMuhabereContact(currentUid, peerUid) {
   await runTransaction(db, async (tx) => {
     await mutualRemoveContactsInTransaction(tx, me, peer)
   })
+
+  await removePeerFromSharedMuhabereChannels(me, peer)
 }
 
 /**
@@ -384,6 +391,15 @@ export async function sendMuhabereContactRequest(currentUid, peerUid) {
     }
     throw err
   }
+
+  await sendNotificationSafe({
+    recipientId: peer,
+    senderId: me,
+    type: 'FRIEND_REQUEST',
+    title: 'İrtibat isteği',
+    message: 'Yeni tim katılım isteği aldınız.',
+    link: buildMuhabereRequestsLink(),
+  })
 }
 
 /**
@@ -511,13 +527,25 @@ export async function acceptMuhabereContactRequest(currentUid, requestId) {
     tx.delete(reqRef)
   })
 
-  const profiles = await fetchUsersByUids([senderId])
-  const contact = profiles[0]
+  const profiles = await fetchUsersByUids([senderId, me])
+  const contact = profiles.find((p) => p.uid === senderId)
+  const accepter = profiles.find((p) => p.uid === me)
   if (!contact) {
     const e = new Error('Onay sonrası profil okunamadı.')
     e.code = 'not-found'
     throw e
   }
+
+  await sendNotificationSafe({
+    recipientId: senderId,
+    senderId: me,
+    type: 'FRIEND_REQUEST',
+    title: 'İstek onaylandı',
+    message: `${accepter?.callsign ?? 'Operatör'} irtibat isteğinizi kabul etti.`,
+    link: buildMuhaberePeerLink(me),
+    targetId: me,
+  })
+
   return contact
 }
 
@@ -790,17 +818,77 @@ export function subscribeUnreadMessageCount(currentUid, onCount, onError) {
     return () => {}
   }
 
-  const q = query(
-    collectionGroup(db, 'messages'),
-    where('receiverId', '==', me),
-    where('status', '==', 'sent'),
-  )
+  let active = true
+  /** @type {(() => void)[]} */
+  const chatUnsubs = []
+  /** @type {Record<string, number>} */
+  const countsByChat = {}
 
-  return safeOnSnapshot(
-    q,
-    (snap) => onCount(snap.size),
-    (err) => onError?.(err),
-  )
+  const recompute = () => {
+    if (!active) return
+    const total = Object.values(countsByChat).reduce((sum, n) => sum + n, 0)
+    onCount(total)
+  }
+
+  const clearChatUnsubs = () => {
+    chatUnsubs.forEach((fn) => fn())
+    chatUnsubs.length = 0
+    for (const key of Object.keys(countsByChat)) {
+      delete countsByChat[key]
+    }
+  }
+
+  const wireChats = async () => {
+    clearChatUnsubs()
+    if (!active) return
+
+    try {
+      const contacts = await fetchMuhabereContacts(me)
+      if (!active) return
+
+      if (contacts.length === 0) {
+        onCount(0)
+        return
+      }
+
+      for (const contact of contacts) {
+        const chatId = buildChatId(me, contact.uid)
+        if (!chatId) continue
+
+        const q = query(
+          collection(db, 'chats', chatId, 'messages'),
+          where('receiverId', '==', me),
+          where('status', '==', 'sent'),
+        )
+
+        const unsub = safeOnSnapshot(
+          q,
+          (snap) => {
+            countsByChat[chatId] = snap.size
+            recompute()
+          },
+          (err) => onError?.(err),
+        )
+        chatUnsubs.push(unsub)
+      }
+
+      recompute()
+    } catch (err) {
+      if (active) onError?.(err)
+    }
+  }
+
+  void wireChats()
+
+  const userUnsub = safeOnSnapshot(doc(db, 'users', me), () => {
+    void wireChats()
+  })
+
+  return () => {
+    active = false
+    userUnsub()
+    clearChatUnsubs()
+  }
 }
 
 /**
@@ -1022,24 +1110,42 @@ export async function createMuhabereChannel({ name, createdBy, memberUids }) {
   assertDb()
   const creator = String(createdBy ?? '').trim()
   const label = String(name ?? '').trim()
-  if (!creator || !label) {
-    const e = new Error('Kanal adı veya oluşturucu geçersiz.')
-    e.code = 'invalid-argument'
-    throw e
-  }
-
   const members = [
     ...new Set([creator, ...memberUids.map((id) => String(id ?? '').trim()).filter(Boolean)]),
   ]
 
-  const ref = await addDoc(collection(db, 'channels'), {
-    name: label,
-    members,
-    createdBy: creator,
-    createdAt: serverTimestamp(),
-  })
+  const payload = { name: label, createdBy: creator, memberUids: members }
+  console.log('[createMuhabereChannel] Kanal oluşturuluyor:', payload)
 
-  return ref.id
+  if (!creator || !label) {
+    const e = new Error('Kanal adı veya oluşturucu geçersiz.')
+    e.code = 'invalid-argument'
+    console.error('[createMuhabereChannel] Validasyon hatası:', e.message, payload)
+    throw e
+  }
+
+  try {
+    const ref = await addDoc(collection(db, 'channels'), {
+      name: label,
+      members,
+      createdBy: creator,
+      createdAt: serverTimestamp(),
+    })
+    console.log('[createMuhabereChannel] Kanal oluşturuldu:', ref.id)
+    return ref.id
+  } catch (err) {
+    const code = /** @type {{ code?: string }} */ (err)?.code ?? 'unknown'
+    const message =
+      code === 'permission-denied'
+        ? 'Kanal oluşturma izni reddedildi. Rolünüzün operator/instructor olduğundan ve Firestore kurallarının güncel olduğundan emin olun.'
+        : err instanceof Error
+          ? err.message
+          : 'Kanal oluşturulamadı.'
+    console.error('[createMuhabereChannel] Firebase hatası:', { code, message, err, payload })
+    const wrapped = new Error(message)
+    wrapped.code = code
+    throw wrapped
+  }
 }
 
 /**
@@ -1083,6 +1189,65 @@ export function subscribeUserMuhabereChannels(uid, onData, onError) {
     },
     (err) => onError?.(err),
   )
+}
+
+/**
+ * @param {import('firebase/firestore').DocumentSnapshot} docSnap
+ * @returns {MuhabereChannel | null}
+ */
+function mapMuhabereChannelDoc(docSnap) {
+  if (!docSnap.exists()) return null
+  const data = docSnap.data()
+  return {
+    id: docSnap.id,
+    name: String(data.name ?? 'KANAL'),
+    members: Array.isArray(data.members)
+      ? data.members.map((m) => String(m)).filter(Boolean)
+      : [],
+    createdBy: String(data.createdBy ?? ''),
+    createdAt: data.createdAt,
+  }
+}
+
+/**
+ * @param {string} channelId
+ * @returns {Promise<MuhabereChannel | null>}
+ */
+export async function fetchMuhabereChannel(channelId) {
+  assertDb()
+  const cid = String(channelId ?? '').trim()
+  if (!cid) return null
+  const snap = await getDoc(doc(db, 'channels', cid))
+  return mapMuhabereChannelDoc(snap)
+}
+
+/**
+ * Ortak tim kanallarından peer'i çıkarır (rehber kopunca senkron).
+ * @param {string} currentUid
+ * @param {string} peerUid
+ */
+export async function removePeerFromSharedMuhabereChannels(currentUid, peerUid) {
+  assertDb()
+  const me = String(currentUid ?? '').trim()
+  const peer = String(peerUid ?? '').trim()
+  if (!me || !peer || me === peer) return
+
+  const snap = await getDocs(
+    query(collection(db, 'channels'), where('members', 'array-contains', me)),
+  )
+  if (snap.empty) return
+
+  const batch = writeBatch(db)
+  let pending = 0
+  for (const d of snap.docs) {
+    const members = Array.isArray(d.data().members)
+      ? d.data().members.map((m) => String(m)).filter(Boolean)
+      : []
+    if (!members.includes(peer)) continue
+    batch.update(d.ref, { members: arrayRemove(peer) })
+    pending += 1
+  }
+  if (pending > 0) await batch.commit()
 }
 
 /**
@@ -1181,4 +1346,688 @@ export async function sendChannelMessage({
   }
 
   await addDoc(collection(db, 'channels', cid, 'messages'), payload)
+  await markMuhabereChannelAsRead(from, cid, Date.now())
+}
+
+/**
+ * Tek mesajın kullanıcı için okunmamış olup olmadığını döner (kendi mesajları hariç).
+ * @param {{ senderId?: string, timestamp?: unknown, createdAt?: unknown }} message
+ * @param {unknown} lastReadAt
+ * @param {string} currentUid
+ */
+export function isChannelMessageUnreadForUser(message, lastReadAt, currentUid) {
+  const me = String(currentUid ?? '').trim()
+  const senderId = String(message.senderId ?? '').trim()
+  if (!me || !senderId || senderId === me) return false
+  const cutoff = timestampToMs(lastReadAt) || 0
+  const ts = timestampToMs(message.timestamp ?? message.createdAt)
+  return ts > cutoff
+}
+
+/**
+ * Kanal mesajlarında okunmamış sayısı — lastReadAt sonrası ve kendi mesajları hariç.
+ * @param {MuhabereMessage[]} messages
+ * @param {unknown} lastReadAt
+ * @param {string} currentUid
+ */
+export function computeChannelUnreadCount(messages, lastReadAt, currentUid) {
+  return messages.filter((m) => isChannelMessageUnreadForUser(m, lastReadAt, currentUid)).length
+}
+
+/**
+ * Kullanıcının kanaldaki son okuma zamanını günceller (user_channels / lastReadAt).
+ * @param {string} uid
+ * @param {string} channelId
+ * @param {number} [readAtMs] Kanala girildiğinde istemci zamanı (anında sıfırlama)
+ */
+export async function markMuhabereChannelAsRead(uid, channelId, readAtMs) {
+  assertDb()
+  const me = String(uid ?? '').trim()
+  const cid = String(channelId ?? '').trim()
+  if (!me || !cid) return
+
+  const lastReadAt =
+    typeof readAtMs === 'number' && Number.isFinite(readAtMs) && readAtMs > 0
+      ? Timestamp.fromMillis(readAtMs)
+      : serverTimestamp()
+
+  await setDoc(
+    doc(db, 'users', me, 'muhabere_channel_reads', cid),
+    { userId: me, channelId: cid, lastReadAt },
+    { merge: true },
+  )
+}
+
+/**
+ * @param {string} uid
+ * @param {(readMap: Record<string, unknown>) => void} onData
+ * @param {(err: unknown) => void} [onError]
+ */
+export function subscribeMuhabereChannelReads(uid, onData, onError) {
+  if (!isFirebaseConfigured() || !db) {
+    onData({})
+    return () => {}
+  }
+  const me = String(uid ?? '').trim()
+  if (!me) {
+    onData({})
+    return () => {}
+  }
+
+  return safeOnSnapshot(
+    collection(db, 'users', me, 'muhabere_channel_reads'),
+    (snap) => {
+      /** @type {Record<string, unknown>} */
+      const map = {}
+      for (const d of snap.docs) {
+        map[d.id] = d.data().lastReadAt
+      }
+      onData(map)
+    },
+    (err) => onError?.(err),
+  )
+}
+
+/**
+ * Üye olunan tüm kanallar için okunmamış mesaj sayıları (kanalId → count).
+ * @param {string} uid
+ * @param {(counts: Record<string, number>) => void} onCounts
+ * @param {(err: unknown) => void} [onError]
+ * @param {{ getExtraReadMs?: (channelId: string) => number }} [options]
+ */
+export function subscribeUserChannelUnreadCounts(uid, onCounts, onError, options) {
+  if (!isFirebaseConfigured() || !db) {
+    onCounts({})
+    return () => {}
+  }
+  const me = String(uid ?? '').trim()
+  if (!me) {
+    onCounts({})
+    return () => {}
+  }
+
+  const getExtraReadMs = options?.getExtraReadMs ?? (() => 0)
+
+  const resolveLastReadMs = (/** @type {string} */ cid) => {
+    const storedMs = timestampToMs(readMap[cid]) || 0
+    const extraMs = getExtraReadMs(cid) || 0
+    return Math.max(storedMs, extraMs)
+  }
+
+  let active = true
+  /** @type {(() => void)[]} */
+  const channelUnsubs = []
+  /** @type {MuhabereChannel[]} */
+  let channels = []
+  /** @type {Record<string, unknown>} */
+  let readMap = {}
+  /** @type {Record<string, number>} */
+  const countsByChannel = {}
+
+  const clearChannelUnsubs = () => {
+    channelUnsubs.forEach((fn) => fn())
+    channelUnsubs.length = 0
+    for (const key of Object.keys(countsByChannel)) {
+      delete countsByChannel[key]
+    }
+  }
+
+  const emitCounts = () => {
+    if (!active) return
+    /** @type {Record<string, number>} */
+    const next = {}
+    for (const ch of channels) {
+      const count = countsByChannel[ch.id] ?? 0
+      if (count > 0) next[ch.id] = count
+    }
+    onCounts(next)
+  }
+
+  const wireChannelListeners = () => {
+    clearChannelUnsubs()
+    if (!active) return
+
+    if (channels.length === 0) {
+      onCounts({})
+      return
+    }
+
+    for (const ch of channels) {
+      countsByChannel[ch.id] = 0
+    }
+    emitCounts()
+
+    for (const ch of channels) {
+      const cid = ch.id
+      const lastMs = resolveLastReadMs(cid)
+      const col = collection(db, 'channels', cid, 'messages')
+
+      const q =
+        lastMs > 0
+          ? query(
+              col,
+              where('timestamp', '>', Timestamp.fromMillis(lastMs)),
+              orderBy('timestamp', 'asc'),
+            )
+          : query(col, orderBy('timestamp', 'desc'), limit(80))
+
+      const unsub = safeOnSnapshot(
+        q,
+        (snap) => {
+          let count = 0
+          for (const d of snap.docs) {
+            const data = d.data()
+            if (isChannelMessageUnreadForUser(data, lastMs, me)) count += 1
+          }
+          countsByChannel[cid] = count
+          emitCounts()
+        },
+        (err) => onError?.(err),
+      )
+      channelUnsubs.push(unsub)
+    }
+  }
+
+  const unsubChannels = subscribeUserMuhabereChannels(
+    me,
+    (rows) => {
+      channels = rows
+      wireChannelListeners()
+    },
+    onError,
+  )
+
+  const unsubReads = subscribeMuhabereChannelReads(
+    me,
+    (map) => {
+      readMap = map
+      wireChannelListeners()
+    },
+    onError,
+  )
+
+  return () => {
+    active = false
+    unsubChannels()
+    unsubReads()
+    clearChannelUnsubs()
+  }
+}
+
+/**
+ * @param {MuhabereMessage[]} messages
+ * @param {Set<string> | string[]} hiddenIds
+ */
+export function filterVisibleMuhabereMessages(messages, hiddenIds) {
+  const hidden = hiddenIds instanceof Set ? hiddenIds : new Set(hiddenIds)
+  if (hidden.size === 0) return messages
+  return messages.filter((msg) => !hidden.has(msg.id))
+}
+
+/**
+ * Mesajı yalnızca kullanıcının ekranından gizler (Firebase'den silmez).
+ * @param {string} userId
+ * @param {string} messageId
+ */
+export async function hideMuhabereMessageForUser(userId, messageId) {
+  assertDb()
+  const me = String(userId ?? '').trim()
+  const mid = String(messageId ?? '').trim()
+  if (!me || !mid) return
+
+  await setDoc(doc(db, 'users', me, 'hidden_messages', mid), {
+    messageId: mid,
+    hiddenAt: serverTimestamp(),
+  })
+}
+
+/**
+ * Kullanıcının gizlediği mesaj kimlikleri.
+ * @param {string} userId
+ * @param {(hiddenIds: Set<string>) => void} onIds
+ * @param {(err: unknown) => void} [onError]
+ */
+export function subscribeHiddenMuhabereMessageIds(userId, onIds, onError) {
+  if (!isFirebaseConfigured() || !db) {
+    onIds(new Set())
+    return () => {}
+  }
+  const me = String(userId ?? '').trim()
+  if (!me) {
+    onIds(new Set())
+    return () => {}
+  }
+
+  return safeOnSnapshot(
+    collection(db, 'users', me, 'hidden_messages'),
+    (snap) => {
+      const ids = new Set(
+        snap.docs.map((d) => String(d.data().messageId ?? d.id).trim()).filter(Boolean),
+      )
+      onIds(ids)
+    },
+    (err) => onError?.(err),
+  )
+}
+
+/**
+ * @param {MuhabereChannel[]} channels
+ * @param {Set<string> | string[]} archivedIds
+ * @param {Set<string> | string[]} deletedIds
+ */
+export function splitMuhabereChannels(channels, archivedIds, deletedIds) {
+  const archived = archivedIds instanceof Set ? archivedIds : new Set(archivedIds)
+  const deleted = deletedIds instanceof Set ? deletedIds : new Set(deletedIds)
+  /** @type {MuhabereChannel[]} */
+  const active = []
+  /** @type {MuhabereChannel[]} */
+  const archivedList = []
+  for (const ch of channels) {
+    if (deleted.has(ch.id)) continue
+    if (archived.has(ch.id)) archivedList.push(ch)
+    else active.push(ch)
+  }
+  return { active, archived: archivedList }
+}
+
+/**
+ * @param {MuhabereContact[]} contacts
+ * @param {Set<string> | string[]} archivedIds
+ * @param {Set<string> | string[]} deletedIds
+ */
+export function splitMuhabereContacts(contacts, archivedIds, deletedIds) {
+  const archived = archivedIds instanceof Set ? archivedIds : new Set(archivedIds)
+  const deleted = deletedIds instanceof Set ? deletedIds : new Set(deletedIds)
+  /** @type {MuhabereContact[]} */
+  const active = []
+  /** @type {MuhabereContact[]} */
+  const archivedList = []
+  for (const c of contacts) {
+    if (deleted.has(c.uid)) continue
+    if (archived.has(c.uid)) archivedList.push(c)
+    else active.push(c)
+  }
+  return { active, archived: archivedList }
+}
+
+/** @deprecated hidden_channels → archived_channels */
+export function filterVisibleMuhabereChannels(channels, hiddenIds) {
+  const hidden = hiddenIds instanceof Set ? hiddenIds : new Set(hiddenIds)
+  if (hidden.size === 0) return channels
+  return channels.filter((ch) => !hidden.has(ch.id))
+}
+
+/**
+ * Kanalı arşive taşır (Firebase'den silmez).
+ * @param {string} userId
+ * @param {string} channelId
+ */
+export async function archiveMuhabereChannelForUser(userId, channelId) {
+  assertDb()
+  const me = String(userId ?? '').trim()
+  const cid = String(channelId ?? '').trim()
+  if (!me || !cid) return
+
+  await setDoc(doc(db, 'users', me, 'archived_channels', cid), {
+    userId: me,
+    channelId: cid,
+    archivedAt: serverTimestamp(),
+  })
+  try {
+    await deleteDoc(doc(db, 'users', me, 'hidden_channels', cid))
+  } catch {
+    /* legacy */
+  }
+}
+
+/**
+ * Kanalı arşivden çıkarır.
+ * @param {string} userId
+ * @param {string} channelId
+ */
+export async function unarchiveMuhabereChannelForUser(userId, channelId) {
+  assertDb()
+  const me = String(userId ?? '').trim()
+  const cid = String(channelId ?? '').trim()
+  if (!me || !cid) return
+
+  await deleteDoc(doc(db, 'users', me, 'archived_channels', cid))
+  try {
+    await deleteDoc(doc(db, 'users', me, 'hidden_channels', cid))
+  } catch {
+    /* legacy */
+  }
+}
+
+/**
+ * Kanalı kullanıcı listesinden tamamen kaldırır (kişisel silme).
+ * @param {string} userId
+ * @param {string} channelId
+ */
+export async function deleteMuhabereChannelForUser(userId, channelId) {
+  assertDb()
+  const me = String(userId ?? '').trim()
+  const cid = String(channelId ?? '').trim()
+  if (!me || !cid) return
+
+  await setDoc(doc(db, 'users', me, 'deleted_channels', cid), {
+    userId: me,
+    channelId: cid,
+    deletedAt: serverTimestamp(),
+  })
+  await unarchiveMuhabereChannelForUser(me, cid)
+}
+
+/**
+ * Kullanıcıyı tim kanalından çıkarır (gruptan ayrılma).
+ * @param {string} userId
+ * @param {string} channelId
+ */
+export async function leaveMuhabereChannel(userId, channelId) {
+  assertDb()
+  const me = String(userId ?? '').trim()
+  const cid = String(channelId ?? '').trim()
+  if (!me || !cid) return
+
+  const ref = doc(db, 'channels', cid)
+  const snap = await getDoc(ref)
+  if (!snap.exists()) return
+
+  const members = Array.isArray(snap.data().members)
+    ? snap.data().members.map((m) => String(m)).filter(Boolean)
+    : []
+  if (!members.includes(me)) return
+
+  await updateDoc(ref, { members: arrayRemove(me) })
+}
+
+/**
+ * Tim kanalından belirli üyeyi çıkarır.
+ * @param {string} channelId
+ * @param {string} memberUid
+ */
+export async function removeMuhabereChannelMember(channelId, memberUid) {
+  assertDb()
+  const cid = String(channelId ?? '').trim()
+  const target = String(memberUid ?? '').trim()
+  if (!cid || !target) return
+
+  const ref = doc(db, 'channels', cid)
+  const snap = await getDoc(ref)
+  if (!snap.exists()) return
+
+  const members = Array.isArray(snap.data().members)
+    ? snap.data().members.map((m) => String(m)).filter(Boolean)
+    : []
+  if (!members.includes(target)) return
+
+  await updateDoc(ref, { members: arrayRemove(target) })
+}
+
+/**
+ * DM sohbetini arşive taşır.
+ * @param {string} userId
+ * @param {string} peerUid
+ */
+export async function archiveMuhabereDmForUser(userId, peerUid) {
+  assertDb()
+  const me = String(userId ?? '').trim()
+  const peer = String(peerUid ?? '').trim()
+  if (!me || !peer) return
+
+  await setDoc(doc(db, 'users', me, 'archived_dms', peer), {
+    userId: me,
+    peerUid: peer,
+    archivedAt: serverTimestamp(),
+  })
+}
+
+/**
+ * @param {string} userId
+ * @param {string} peerUid
+ */
+export async function unarchiveMuhabereDmForUser(userId, peerUid) {
+  assertDb()
+  const me = String(userId ?? '').trim()
+  const peer = String(peerUid ?? '').trim()
+  if (!me || !peer) return
+
+  await deleteDoc(doc(db, 'users', me, 'archived_dms', peer))
+}
+
+/**
+ * DM sohbetini kullanıcı listesinden tamamen kaldırır.
+ * @param {string} userId
+ * @param {string} peerUid
+ */
+export async function deleteMuhabereDmForUser(userId, peerUid) {
+  assertDb()
+  const me = String(userId ?? '').trim()
+  const peer = String(peerUid ?? '').trim()
+  if (!me || !peer) return
+
+  await setDoc(doc(db, 'users', me, 'deleted_dms', peer), {
+    userId: me,
+    peerUid: peer,
+    deletedAt: serverTimestamp(),
+  })
+  await unarchiveMuhabereDmForUser(me, peer)
+}
+
+/**
+ * @param {string} userId
+ * @param {(ids: Set<string>) => void} onIds
+ * @param {(err: unknown) => void} [onError]
+ */
+export function subscribeArchivedMuhabereChannelIds(userId, onIds, onError) {
+  if (!isFirebaseConfigured() || !db) {
+    onIds(new Set())
+    return () => {}
+  }
+  const me = String(userId ?? '').trim()
+  if (!me) {
+    onIds(new Set())
+    return () => {}
+  }
+
+  let active = true
+  /** @type {Set<string>} */
+  let archived = new Set()
+  /** @type {Set<string>} */
+  let legacy = new Set()
+
+  const emit = () => {
+    if (!active) return
+    onIds(new Set([...archived, ...legacy]))
+  }
+
+  const unsubArchived = safeOnSnapshot(
+    collection(db, 'users', me, 'archived_channels'),
+    (snap) => {
+      archived = new Set(
+        snap.docs.map((d) => String(d.data().channelId ?? d.id).trim()).filter(Boolean),
+      )
+      emit()
+    },
+    (err) => onError?.(err),
+  )
+
+  const unsubLegacy = safeOnSnapshot(
+    collection(db, 'users', me, 'hidden_channels'),
+    (snap) => {
+      legacy = new Set(
+        snap.docs.map((d) => String(d.data().channelId ?? d.id).trim()).filter(Boolean),
+      )
+      emit()
+    },
+    (err) => onError?.(err),
+  )
+
+  return () => {
+    active = false
+    unsubArchived()
+    unsubLegacy()
+  }
+}
+
+/**
+ * @param {string} userId
+ * @param {(ids: Set<string>) => void} onIds
+ * @param {(err: unknown) => void} [onError]
+ */
+export function subscribeDeletedMuhabereChannelIds(userId, onIds, onError) {
+  return subscribeUserMuhaberePreferenceIds(userId, 'deleted_channels', 'channelId', onIds, onError)
+}
+
+/**
+ * @param {string} userId
+ * @param {(ids: Set<string>) => void} onIds
+ * @param {(err: unknown) => void} [onError]
+ */
+export function subscribeArchivedMuhabereDmIds(userId, onIds, onError) {
+  return subscribeUserMuhaberePreferenceIds(userId, 'archived_dms', 'peerUid', onIds, onError)
+}
+
+/**
+ * @param {string} userId
+ * @param {(ids: Set<string>) => void} onIds
+ * @param {(err: unknown) => void} [onError]
+ */
+export function subscribeDeletedMuhabereDmIds(userId, onIds, onError) {
+  return subscribeUserMuhaberePreferenceIds(userId, 'deleted_dms', 'peerUid', onIds, onError)
+}
+
+/**
+ * @param {string} userId
+ * @param {string} subcollection
+ * @param {string} field
+ * @param {(ids: Set<string>) => void} onIds
+ * @param {(err: unknown) => void} [onError]
+ */
+function subscribeUserMuhaberePreferenceIds(userId, subcollection, field, onIds, onError) {
+  if (!isFirebaseConfigured() || !db) {
+    onIds(new Set())
+    return () => {}
+  }
+  const me = String(userId ?? '').trim()
+  if (!me) {
+    onIds(new Set())
+    return () => {}
+  }
+
+  return safeOnSnapshot(
+    collection(db, 'users', me, subcollection),
+    (snap) => {
+      const ids = new Set(
+        snap.docs.map((d) => String(d.data()[field] ?? d.id).trim()).filter(Boolean),
+      )
+      onIds(ids)
+    },
+    (err) => onError?.(err),
+  )
+}
+
+/**
+ * DM okunmamış sayıları — peerUid → count
+ * @param {string} currentUid
+ * @param {(counts: Record<string, number>) => void} onCounts
+ * @param {(err: unknown) => void} [onError]
+ */
+export function subscribeDmUnreadByPeerId(currentUid, onCounts, onError) {
+  if (!isFirebaseConfigured() || !db) {
+    onCounts({})
+    return () => {}
+  }
+  const me = String(currentUid ?? '').trim()
+  if (!me) {
+    onCounts({})
+    return () => {}
+  }
+
+  let active = true
+  /** @type {(() => void)[]} */
+  const chatUnsubs = []
+  /** @type {Record<string, number>} */
+  const countsByPeer = {}
+
+  const recompute = () => {
+    if (!active) return
+    onCounts({ ...countsByPeer })
+  }
+
+  const clearChatUnsubs = () => {
+    chatUnsubs.forEach((fn) => fn())
+    chatUnsubs.length = 0
+    for (const key of Object.keys(countsByPeer)) {
+      delete countsByPeer[key]
+    }
+  }
+
+  const wireChats = async () => {
+    clearChatUnsubs()
+    if (!active) return
+
+    try {
+      const contacts = await fetchMuhabereContacts(me)
+      if (!active) return
+
+      if (contacts.length === 0) {
+        onCounts({})
+        return
+      }
+
+      for (const contact of contacts) {
+        const peer = contact.uid
+        const chatId = buildChatId(me, peer)
+        if (!chatId) continue
+
+        const q = query(
+          collection(db, 'chats', chatId, 'messages'),
+          where('receiverId', '==', me),
+          where('status', '==', 'sent'),
+        )
+
+        const unsub = safeOnSnapshot(
+          q,
+          (snap) => {
+            countsByPeer[peer] = snap.size
+            recompute()
+          },
+          (err) => onError?.(err),
+        )
+        chatUnsubs.push(unsub)
+      }
+
+      recompute()
+    } catch (err) {
+      if (active) onError?.(err)
+    }
+  }
+
+  void wireChats()
+
+  const userUnsub = safeOnSnapshot(doc(db, 'users', me), () => {
+    void wireChats()
+  })
+
+  return () => {
+    active = false
+    userUnsub()
+    clearChatUnsubs()
+  }
+}
+
+/** @deprecated use archiveMuhabereChannelForUser */
+export async function hideMuhabereChannelForUser(userId, channelId) {
+  return archiveMuhabereChannelForUser(userId, channelId)
+}
+
+/** @deprecated use unarchiveMuhabereChannelForUser */
+export async function unhideMuhabereChannelForUser(userId, channelId) {
+  return unarchiveMuhabereChannelForUser(userId, channelId)
+}
+
+/** @deprecated use subscribeArchivedMuhabereChannelIds */
+export function subscribeHiddenMuhabereChannelIds(userId, onIds, onError) {
+  return subscribeArchivedMuhabereChannelIds(userId, onIds, onError)
 }

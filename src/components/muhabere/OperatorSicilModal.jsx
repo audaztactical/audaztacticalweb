@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Loader2, User, X } from 'lucide-react'
+import { Loader2, X } from 'lucide-react'
+import OperatorBadge from '../ui/OperatorBadge'
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
 import { fetchMuhabereOperatorProfile } from '../../lib/firestoreTaktikMuhabere'
 import { timestampToMs } from '../../lib/firestoreSnapshot'
@@ -106,18 +107,13 @@ export default function OperatorSicilModal({ open, operatorUid, onClose }) {
           <p className="px-4 py-16 text-center text-xs text-zinc-600">Profil bulunamadı.</p>
         ) : (
           <div className="px-6 py-6 text-center">
-            <div className="mx-auto flex size-24 items-center justify-center overflow-hidden rounded-lg border border-zinc-700 bg-zinc-950">
-              {profile.photoURL ? (
-                <img
-                  src={profile.photoURL}
-                  alt=""
-                  className="size-full object-cover"
-                  decoding="async"
-                />
-              ) : (
-                <User className="size-12 text-zinc-600" strokeWidth={1.5} aria-hidden />
-              )}
-            </div>
+            <OperatorBadge
+              size="lg"
+              callsign={profile.callsign}
+              username={profile.username}
+              displayName={profile.callsign}
+              className="mx-auto"
+            />
             <h2 className="mt-4 font-mono text-xl font-semibold uppercase tracking-wide text-lime-400">
               {profile.callsign}
             </h2>

@@ -4,6 +4,7 @@ import {
   labelTacticalError,
   resolveCqbSelectValue,
 } from './cqbOptions'
+import { filterIndividualTrainingRecords } from './trainingGroupFields'
 
 /**
  * @param {Record<string, unknown>} row
@@ -103,14 +104,79 @@ export function getCqbThreatNeutralized(row) {
 }
 
 /**
+ * @param {number} sec
+ */
+function formatClearanceSeconds(sec) {
+  if (!Number.isFinite(sec) || sec <= 0) return '—'
+  const rounded = Math.round(sec * 1000) / 1000
+  return `${rounded.toFixed(rounded < 10 ? 2 : 1)}s`
+}
+
+/**
  * @param {Record<string, unknown>} row
  */
-export function formatCqbClearingTime(row) {
+export function formatCqbClearanceTime(row) {
+  const ms = invNum(row.clearanceTimeMs)
+  if (ms > 0) return formatClearanceSeconds(ms / 1000)
+
   const sec = invNum(row.clearingTimeSec)
-  if (sec > 0) return `${sec.toFixed(2)}s`
+  if (sec > 0) return formatClearanceSeconds(sec)
+
   const label = invStr(row.clearingTime).trim()
-  if (label) return label
+  if (label) {
+    if (/ms$/i.test(label)) {
+      const parsed = invNum(label.replace(/ms/i, ''))
+      if (parsed > 0) return formatClearanceSeconds(parsed / 1000)
+    }
+    if (/s$/i.test(label) && !/ms$/i.test(label)) return label
+    const asSec = invNum(label.replace(',', '.'))
+    if (asSec > 0) return formatClearanceSeconds(asSec)
+    return label
+  }
   return '—'
+}
+
+/** @deprecated use formatCqbClearanceTime */
+export function formatCqbClearingTime(row) {
+  return formatCqbClearanceTime(row)
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ */
+export function getCqbAccuracyScore(row) {
+  const stored = invNum(row.accuracyScore)
+  if (stored >= 0 && stored <= 100) return Math.round(stored * 10) / 10
+  return 0
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ */
+export function getCqbSafetyViolations(row) {
+  return Math.max(0, Math.floor(invNum(row.safetyViolations)))
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ */
+export function getCqbTacticalDecision(row) {
+  const label = invStr(row.tacticalDecisionLabel).trim()
+  if (label) return label
+  const key = invStr(row.tacticalDecision).trim()
+  if (key === 'fast') return 'Hızlı'
+  if (key === 'correct') return 'Doğru'
+  if (key === 'hesitant') return 'Tereddütlü'
+  return key || '—'
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ */
+export function getCqbSuccessPercent(row) {
+  const stored = invNum(row.successPercent)
+  if (stored > 0 && stored <= 100) return Math.round(stored * 10) / 10
+  return 0
 }
 
 /**
@@ -177,7 +243,7 @@ export function sortCqbLogsDesc(logs) {
  * @param {Record<string, unknown>[]} rangeLogs
  */
 export function selectCqbLogs(rangeLogs) {
-  return sortCqbLogsDesc(rangeLogs.filter(isCqbLog))
+  return sortCqbLogsDesc(filterIndividualTrainingRecords(rangeLogs).filter(isCqbLog))
 }
 
 /** @typedef {'ALL' | string} TopologyFilter */
@@ -247,4 +313,32 @@ export function extractCqbTeamSizeOptions(logs) {
     if (t && t !== '—') set.add(t)
   }
   return Array.from(set).sort((a, b) => a.localeCompare(b, 'tr'))
+}
+
+/**
+ * @param {{ roomTopologyKey?: string, entryMethodKey?: string, teamSize?: string }} filters
+ */
+export function isCqbFilterActive(filters) {
+  return (
+    (filters.roomTopologyKey && filters.roomTopologyKey !== 'ALL') ||
+    (filters.entryMethodKey && filters.entryMethodKey !== 'ALL') ||
+    (filters.teamSize && filters.teamSize !== 'ALL')
+  )
+}
+
+/**
+ * @param {{ roomTopologyKey?: string, entryMethodKey?: string, teamSize?: string }} filters
+ */
+export function formatCqbFilterSummary(filters) {
+  const parts = []
+  if (filters.roomTopologyKey && filters.roomTopologyKey !== 'ALL') {
+    parts.push(`Topoloji: ${filters.roomTopologyKey}`)
+  }
+  if (filters.entryMethodKey && filters.entryMethodKey !== 'ALL') {
+    parts.push(`Giriş: ${filters.entryMethodKey}`)
+  }
+  if (filters.teamSize && filters.teamSize !== 'ALL') {
+    parts.push(`Takım: ${filters.teamSize}`)
+  }
+  return parts.join(' · ')
 }

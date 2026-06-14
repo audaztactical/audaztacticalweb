@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { MoreHorizontal, Trash2 } from 'lucide-react'
 import { deleteBurnMessage, formatMessageTime, markMessageAsRead } from '../../lib/firestoreTaktikMuhabere'
 
 /** @typedef {import('../../lib/firestoreTaktikMuhabere').MuhabereMessage} MuhabereMessage */
@@ -9,21 +10,33 @@ import { deleteBurnMessage, formatMessageTime, markMessageAsRead } from '../../l
  *   uid: string
  *   chatId: string
  *   onBurnDestroyed: (msg: MuhabereMessage) => void
+ *   onHideMessage?: (messageId: string) => void
+ *   hideBusy?: boolean
  * }} props
  */
-export default function MuhabereMessageRow({ msg, uid, chatId, onBurnDestroyed }) {
+export default function MuhabereMessageRow({
+  msg,
+  uid,
+  chatId,
+  onBurnDestroyed,
+  onHideMessage,
+  hideBusy = false,
+}) {
   const rowRef = useRef(/** @type {HTMLDivElement | null} */ (null))
+  const menuRef = useRef(/** @type {HTMLDivElement | null} */ (null))
   const markedRef = useRef(false)
   const burnDoneRef = useRef(false)
   const [countdown, setCountdown] = useState(/** @type {number | null} */ (null))
   const [localDestroyed, setLocalDestroyed] = useState(msg.destroyed === true)
   const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const outgoing = msg.senderId === uid
   const incoming = !outgoing
   const displayDestroyed = localDestroyed || msg.destroyed
   const isDm = Boolean(msg.receiverId)
   const msgType = msg.type ?? 'text'
+  const canHide = Boolean(onHideMessage) && !displayDestroyed
 
   useEffect(() => {
     markedRef.current = false
@@ -31,7 +44,17 @@ export default function MuhabereMessageRow({ msg, uid, chatId, onBurnDestroyed }
     setCountdown(null)
     setLocalDestroyed(msg.destroyed === true)
     setLightboxOpen(false)
+    setMenuOpen(false)
   }, [msg.id, msg.destroyed])
+
+  useEffect(() => {
+    if (!menuOpen) return undefined
+    const onDoc = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [menuOpen])
 
   useEffect(() => {
     if (!incoming || !isDm || msg.status === 'read' || displayDestroyed || !rowRef.current || !chatId) {
@@ -104,6 +127,16 @@ export default function MuhabereMessageRow({ msg, uid, chatId, onBurnDestroyed }
     }
   }, [countdown, incoming, msg, chatId, displayDestroyed, onBurnDestroyed])
 
+  const handleHide = () => {
+    if (!onHideMessage || hideBusy) return
+    const confirmed = window.confirm(
+      'Bu mesajı benim ekranımdan kaldır\n\nKarşı tarafın mesajı etkilenmez; yalnızca sizin görünümünüzden silinir.',
+    )
+    if (!confirmed) return
+    setMenuOpen(false)
+    onHideMessage(msg.id)
+  }
+
   const receipt =
     outgoing && !displayDestroyed && isDm ? (
       <span
@@ -144,6 +177,8 @@ export default function MuhabereMessageRow({ msg, uid, chatId, onBurnDestroyed }
           <img
             src={msg.imageUrl}
             alt="Taktik görsel"
+            loading="lazy"
+            decoding="async"
             className="max-h-64 max-w-xs object-cover"
           />
         </button>
@@ -175,10 +210,59 @@ export default function MuhabereMessageRow({ msg, uid, chatId, onBurnDestroyed }
       <div
         ref={rowRef}
         className={[
-          'flex max-w-[85%] flex-col gap-1',
+          'group/msg relative flex max-w-[85%] flex-col gap-1',
           outgoing ? 'ml-auto items-end' : 'items-start',
         ].join(' ')}
       >
+        {canHide ? (
+          <div
+            ref={menuRef}
+            className={[
+              'absolute top-0 z-10',
+              outgoing ? 'left-0 -translate-x-full pr-1' : 'right-0 translate-x-full pl-1',
+            ].join(' ')}
+          >
+            <button
+              type="button"
+              disabled={hideBusy}
+              onClick={() => setMenuOpen((v) => !v)}
+              className={[
+                'inline-flex size-7 items-center justify-center rounded-md border transition disabled:opacity-40',
+                'border-zinc-600/80 bg-zinc-900 text-zinc-300',
+                'hover:border-lime-500/50 hover:bg-zinc-800 hover:text-lime-400',
+                menuOpen ? 'border-lime-500/50 text-lime-400' : '',
+              ].join(' ')}
+              aria-label="Mesaj seçenekleri"
+              aria-expanded={menuOpen}
+            >
+              <MoreHorizontal className="size-4" strokeWidth={2.25} aria-hidden />
+            </button>
+            {menuOpen ? (
+              <div
+                className={[
+                  'absolute top-full z-20 mt-1 min-w-[12rem] overflow-hidden rounded-md border border-zinc-700 bg-zinc-950 py-1 shadow-xl',
+                  outgoing ? 'left-0' : 'right-0',
+                ].join(' ')}
+                role="menu"
+              >
+                <button
+                  type="button"
+                  role="menuitem"
+                  disabled={hideBusy}
+                  onClick={handleHide}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-zinc-400 transition hover:bg-zinc-900 hover:text-red-400 disabled:opacity-40"
+                >
+                  <Trash2 className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
+                  Mesajı sil
+                </button>
+                <p className="border-t border-zinc-800 px-3 py-2 text-[9px] leading-relaxed text-zinc-600">
+                  Bu mesajı benim ekranımdan kaldır
+                </p>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
         <div
           className={[
             'rounded-md border px-3 py-2 text-sm leading-relaxed',
@@ -218,6 +302,8 @@ export default function MuhabereMessageRow({ msg, uid, chatId, onBurnDestroyed }
           <img
             src={msg.imageUrl}
             alt="Tam ekran görsel"
+            loading="lazy"
+            decoding="async"
             className="max-h-[90vh] max-w-full rounded-sm border border-zinc-700 object-contain"
             onClick={(e) => e.stopPropagation()}
           />

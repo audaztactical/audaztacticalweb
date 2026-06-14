@@ -519,6 +519,8 @@ export default function InstructorAtisSectorPanel({
               idle={!liveTrainingId}
               totalAmmo={liveTrainingMeta?.totalAmmo ?? 0}
               minPassScore={liveTrainingMeta?.minPassScore ?? 0}
+              isTimed={Boolean(liveTrainingMeta?.isTimed)}
+              targetTimeSec={liveTrainingMeta?.targetTimeSec ?? null}
             />
           </BentoCard>
         </div>

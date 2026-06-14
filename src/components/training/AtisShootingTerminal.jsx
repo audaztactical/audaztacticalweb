@@ -18,7 +18,8 @@ import { submitAtisRecord } from '../../lib/atisSubmit'
 import { invNum, invStr } from '../../lib/inventoryIlws'
 import { filterWeaponRows, getAttachedAccessoryId, weaponDisplayName } from '../../lib/weaponIlws'
 import AtisLogRegistry from './AtisLogRegistry'
-import TrainingSessionHeader from './TrainingSessionHeader'
+import OperatorInstructorRecordsEmbed from './OperatorInstructorRecordsEmbed'
+import IndividualTrainingSessionHeader from './IndividualTrainingSessionHeader'
 
 const inputClass =
   'w-full rounded border border-[#00FF41]/30 bg-[#0A0A0A] px-2 py-2 font-mono-technical text-sm text-slate-100 outline-none placeholder:text-slate-600 focus:border-[#00FF41]/60'
@@ -304,7 +305,7 @@ export default function AtisShootingTerminal({
 
   return (
     <div className="space-y-4">
-      <TrainingSessionHeader />
+      <IndividualTrainingSessionHeader />
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <button
           type="button"
@@ -661,6 +662,8 @@ export default function AtisShootingTerminal({
         </TacticalPanel>
         </div>
       )}
+
+      <OperatorInstructorRecordsEmbed discipline="atis" />
     </div>
   )
 }

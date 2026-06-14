@@ -4,7 +4,8 @@ import { getFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
 import { getAnalytics, isSupported } from 'firebase/analytics'
 
-const firebaseConfig = {
+/** Tek kaynak: tüm Firebase modülleri buradan okur. */
+export const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
@@ -14,7 +15,7 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 }
 
-function isFirebaseConfigured() {
+export function isFirebaseConfigured() {
   const { apiKey, projectId, appId } = firebaseConfig
   return Boolean(
     apiKey &&
@@ -38,15 +39,14 @@ if (isFirebaseConfigured()) {
   app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)
   auth = getAuth(app)
 
-  // Redirect OAuth oturumunun sayfa yenilemesinde korunması (varsayılan local; açıkça set edilir).
   if (typeof window !== 'undefined') {
     setPersistence(auth, browserLocalPersistence).catch((err) => {
       if (import.meta.env.DEV) {
-        console.warn('[AUDAZ HUD · GOOGLE_AUTH · setPersistence]', err?.code ?? err)
+        console.warn('[firebase] setPersistence', err?.code ?? err)
       }
     })
   }
-  /** @type {import('firebase/firestore').Firestore} */
+
   db = getFirestore(app)
   try {
     storage = getStorage(app)
@@ -54,8 +54,6 @@ if (isFirebaseConfigured()) {
     storage = null
   }
 
-  // Geliştirmede getAnalytics → Installations + GA config istekleri 403 üretebilir (API key referrer
-  // kısıtı vb.). Prod’da veya VITE_ENABLE_ANALYTICS=true iken başlat.
   const enableAnalytics =
     typeof window !== 'undefined' &&
     (import.meta.env.PROD || import.meta.env.VITE_ENABLE_ANALYTICS === 'true')
@@ -77,4 +75,4 @@ if (isFirebaseConfigured()) {
   }
 }
 
-export { app, auth, db, storage, analytics, isFirebaseConfigured }
+export { app, auth, db, storage, analytics }

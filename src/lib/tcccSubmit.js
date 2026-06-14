@@ -1,10 +1,15 @@
 import { buildTcccLogPayload } from './tcccLogPayload'
+import { attachMeteoDataToPayload } from './meteoDataCapture'
 import { sanitizeForFirestore } from './firestoreSanitize'
 
 /**
  * @param {{
  *   addLog: (payload: Record<string, unknown>) => Promise<{ id: string }>
  *   userId: string
+ *   casualtyType?: string
+ *   interventionTime?: string | number
+ *   outcome?: string
+ *   procedures?: string[]
  *   tcccPhase: string
  *   customTcccPhase?: string
  *   injuryType: string
@@ -25,10 +30,14 @@ import { sanitizeForFirestore } from './firestoreSanitize'
 export async function submitTcccRecord({
   addLog,
   userId,
+  casualtyType = '',
+  interventionTime = '',
+  outcome = '',
+  procedures = [],
   tcccPhase,
   customTcccPhase = '',
   injuryType,
-  injuryToTqTime,
+  injuryToTqTime = '',
   evacWaitingTime,
   systolicBp,
   tourniquetLocation,
@@ -43,6 +52,10 @@ export async function submitTcccRecord({
 }) {
   const bundle = buildTcccLogPayload({
     userId,
+    casualtyType,
+    interventionTime,
+    outcome,
+    procedures,
     tcccPhase,
     customTcccPhase,
     injuryType,
@@ -60,7 +73,9 @@ export async function submitTcccRecord({
     operationNote,
   })
 
-  const payload = /** @type {Record<string, unknown>} */ (sanitizeForFirestore(bundle))
+  const payload = /** @type {Record<string, unknown>} */ (
+    sanitizeForFirestore(await attachMeteoDataToPayload(bundle))
+  )
   const ref = await addLog(payload)
   const logId = String(ref?.id ?? '')
 

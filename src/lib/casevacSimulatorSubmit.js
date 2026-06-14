@@ -1,4 +1,5 @@
 import { invStr } from './inventoryIlws'
+import { attachMeteoDataToPayload } from './meteoDataCapture'
 import { sanitizeForFirestore } from './firestoreSanitize'
 import { roundSuccessPercent } from './trainingSuccessScore'
 import {
@@ -87,32 +88,34 @@ export async function submitCasevacSimulatorSession({
   const success = !failed && successPercent >= 85
   const mistPayload = casevacFormToPayload(form)
 
-  const rangePayload = sanitizeForFirestore({
-    userId,
-    ownerId: userId,
-    operationCategory: 'tccc',
-    kind: 'TCCC_DRILL',
-    drillName: success
-      ? `CASEVAC MIST SIM · TRANSMISSION OK · ${mistPayload.pickupCallsign.slice(0, 16)}`
-      : 'CASEVAC MIST SIM · HOT ZONE FAILURE',
-    shootType: 'CASEVAC_MIST_RADIO_SIM',
-    tcccPhase: 'CASEVAC · MIST',
-    tcccPhaseKey: 'casevac_mist',
-    timestamp: new Date().toISOString(),
-    status: 'active',
-    successPercent: roundSuccessPercent(successPercent),
-    casevacSim: true,
-    ...timing,
-    medevacTransmissionSuccess: success,
-    tcccSimStatus: hasOvertime || failed ? 'BAŞARISIZ' : success ? 'BAŞARILI' : 'BAŞARISIZ',
-    medevacFailureReason: failureReason ?? (failed ? 'TRANSMISSION FAILURE' : null),
-    simRejectionReasons: debrief,
-    casevacSimForm: form,
-    casevacMist: mistPayload,
-    operationNote: success
-      ? `MIST transmitted in ${Math.round(effectiveElapsed)}s · CASEVAC EN ROUTE`
-      : `CASEVAC FAILURE · ${failureReason ?? 'TIMEOUT / INVALID MIST'}`,
-  })
+  const rangePayload = sanitizeForFirestore(
+    await attachMeteoDataToPayload({
+      userId,
+      ownerId: userId,
+      operationCategory: 'tccc',
+      kind: 'TCCC_DRILL',
+      drillName: success
+        ? `CASEVAC MIST SIM · TRANSMISSION OK · ${mistPayload.pickupCallsign.slice(0, 16)}`
+        : 'CASEVAC MIST SIM · HOT ZONE FAILURE',
+      shootType: 'CASEVAC_MIST_RADIO_SIM',
+      tcccPhase: 'CASEVAC · MIST',
+      tcccPhaseKey: 'casevac_mist',
+      timestamp: new Date().toISOString(),
+      status: 'active',
+      successPercent: roundSuccessPercent(successPercent),
+      casevacSim: true,
+      ...timing,
+      medevacTransmissionSuccess: success,
+      tcccSimStatus: hasOvertime || failed ? 'BAŞARISIZ' : success ? 'BAŞARILI' : 'BAŞARISIZ',
+      medevacFailureReason: failureReason ?? (failed ? 'TRANSMISSION FAILURE' : null),
+      simRejectionReasons: debrief,
+      casevacSimForm: form,
+      casevacMist: mistPayload,
+      operationNote: success
+        ? `MIST transmitted in ${Math.round(effectiveElapsed)}s · CASEVAC EN ROUTE`
+        : `CASEVAC FAILURE · ${failureReason ?? 'TIMEOUT / INVALID MIST'}`,
+    })
+  )
 
   const rangeRef = await addRangeLog(/** @type {Record<string, unknown>} */ (rangePayload))
 

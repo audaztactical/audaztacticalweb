@@ -1,0 +1,27 @@
+{
+  "name": "audaz-functions",
+  "description": "AUDAZ Tactical Web — Firebase Cloud Functions",
+  "private": true,
+  "main": "index.js",
+  "engines": {
+    "node": "20"
+  },
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "deploy": "firebase deploy --only functions",
+    "deploy:intel": "firebase deploy --only functions:fetchTacticalNews",
+    "deploy:alerts": "firebase deploy --only functions:fetchLocalAlerts",
+    "deploy:fcm": "firebase deploy --only functions:subscribeToAlerts",
+    "deploy:manual-alert": "firebase deploy --only functions:sendManualAlert",
+    "deploy:global-intel": "firebase deploy --only functions:subscribeToGlobalIntel",
+    "deploy:video-news": "firebase deploy --only functions:fetchVideoNews",
+    "logs": "firebase functions:log --only fetchTacticalNews",
+    "logs:alerts": "firebase functions:log --only fetchLocalAlerts"
+  },
+  "dependencies": {
+    "@google-cloud/translate": "^9.4.2",
+    "firebase-admin": "^13.4.0",
+    "firebase-functions": "^6.3.2",
+    "rss-parser": "^3.13.0"
+  }
+}

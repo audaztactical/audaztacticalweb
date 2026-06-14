@@ -1,5 +1,10 @@
-import { getDownloadURL, ref as storageRef, uploadBytesResumable } from 'firebase/storage'
-import { isFirebaseConfigured, storage } from './firebase'
+/**
+ * Firebase Storage geçici olarak devre dışı.
+ * Görsel yükleme yeniden açıldığında aşağıdaki import ve gövde geri alınmalı.
+ *
+ * import { getDownloadURL, ref as storageRef, uploadBytesResumable } from 'firebase/storage'
+ * import { isFirebaseConfigured, storage } from './firebase'
+ */
 
 /**
  * @param {string} threadId chatId veya channelId
@@ -8,6 +13,14 @@ import { isFirebaseConfigured, storage } from './firebase'
  * @returns {Promise<string>} downloadURL
  */
 export async function uploadMuhabereChatImage(threadId, file, onProgress) {
+  void threadId
+  void file
+  void onProgress
+  const e = new Error('Firebase Storage geçici olarak devre dışı. Görsel yükleme kullanılamıyor.')
+  e.code = 'failed-precondition'
+  throw e
+
+  /* Storage aktifken:
   if (!isFirebaseConfigured() || !storage) {
     const e = new Error('Firebase Storage yapılandırılmadı.')
     e.code = 'failed-precondition'
@@ -59,4 +72,5 @@ export async function uploadMuhabereChatImage(threadId, file, onProgress) {
       },
     )
   })
+  */
 }

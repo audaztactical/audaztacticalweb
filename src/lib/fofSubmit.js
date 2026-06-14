@@ -1,4 +1,5 @@
 import { buildFofLogPayload } from './fofLogPayload'
+import { attachMeteoDataToPayload } from './meteoDataCapture'
 import { sanitizeForFirestore } from './firestoreSanitize'
 
 /**
@@ -9,6 +10,7 @@ import { sanitizeForFirestore } from './firestoreSanitize'
  *   customScenarioType?: string
  *   simSystem: string
  *   customSimSystem?: string
+ *   engagementType: string
  *   opforCount: number
  *   scenarioDuration: string | number
  *   engagementRounds: string | number
@@ -19,9 +21,11 @@ import { sanitizeForFirestore } from './firestoreSanitize'
  *   nonLethalHitsDelivered: number
  *   timeToFirstEngagement: string | number
  *   friendlyCasualties: number
+ *   decisionAccuracy: string | number
  *   blueOnBlue: boolean
  *   selfTcccApplied: boolean
  *   operationNote?: string
+ *   debriefNotes?: string
  * }} p
  */
 export async function submitFofRecord({
@@ -31,6 +35,7 @@ export async function submitFofRecord({
   customScenarioType = '',
   simSystem,
   customSimSystem = '',
+  engagementType,
   opforCount,
   scenarioDuration,
   engagementRounds,
@@ -41,9 +46,11 @@ export async function submitFofRecord({
   nonLethalHitsDelivered,
   timeToFirstEngagement,
   friendlyCasualties,
+  decisionAccuracy,
   blueOnBlue,
   selfTcccApplied,
   operationNote = '',
+  debriefNotes = '',
 }) {
   const bundle = buildFofLogPayload({
     userId,
@@ -51,6 +58,7 @@ export async function submitFofRecord({
     customScenarioType,
     simSystem,
     customSimSystem,
+    engagementType,
     opforCount,
     scenarioDuration,
     engagementRounds,
@@ -61,12 +69,16 @@ export async function submitFofRecord({
     nonLethalHitsDelivered,
     timeToFirstEngagement,
     friendlyCasualties,
+    decisionAccuracy,
     blueOnBlue,
     selfTcccApplied,
     operationNote,
+    debriefNotes,
   })
 
-  const payload = /** @type {Record<string, unknown>} */ (sanitizeForFirestore(bundle))
+  const payload = /** @type {Record<string, unknown>} */ (
+    sanitizeForFirestore(await attachMeteoDataToPayload(bundle))
+  )
   const ref = await addLog(payload)
   const logId = String(ref?.id ?? '')
 

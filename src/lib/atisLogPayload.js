@@ -44,6 +44,7 @@ export function buildWeaponSpecsSnapshot(weapon, accessory) {
  *   operationNote?: string | null
  *   yivConditionPercentAtShot?: number | null
  *   barrelWearPercentAtShot?: number | null
+ *   meteoData?: Record<string, unknown> | null
  * }} input
  */
 export function buildAtisLogPayload({
@@ -61,6 +62,7 @@ export function buildAtisLogPayload({
   operationNote = '',
   yivConditionPercentAtShot = null,
   barrelWearPercentAtShot = null,
+  meteoData = null,
 }) {
   const weaponId = String(weapon.id)
   const ammoId = ammo ? String(ammo.id) : null
@@ -153,6 +155,7 @@ export function buildAtisLogPayload({
     kind: 'ATIS_DRILL',
     shootType: drillName,
     status: 'active',
+    ...(meteoData ? { meteoData } : {}),
   }
 }
 

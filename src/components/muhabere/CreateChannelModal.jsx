@@ -4,6 +4,13 @@ import { createMuhabereChannel } from '../../lib/firestoreTaktikMuhabere'
 
 /** @typedef {import('../../lib/firestoreTaktikMuhabere').MuhabereContact} MuhabereContact */
 
+function defaultChannelName() {
+  const now = new Date()
+  const hh = String(now.getHours()).padStart(2, '0')
+  const mm = String(now.getMinutes()).padStart(2, '0')
+  return `TIM-${hh}${mm}`
+}
+
 /**
  * @param {{
  *   open: boolean
@@ -20,7 +27,12 @@ export default function CreateChannelModal({ open, uid, contacts, onClose, onCre
   const [error, setError] = useState(/** @type {string | null} */ (null))
 
   useEffect(() => {
-    if (!open) {
+    if (open) {
+      setName(defaultChannelName())
+      setSelected(new Set())
+      setError(null)
+      setBusy(false)
+    } else {
       setName('')
       setSelected(new Set())
       setError(null)
@@ -29,6 +41,9 @@ export default function CreateChannelModal({ open, uid, contacts, onClose, onCre
   }, [open])
 
   if (!open) return null
+
+  const trimmedName = name.trim()
+  const sessionOk = Boolean(uid)
 
   const toggleMember = (/** @type {string} */ memberUid) => {
     setSelected((prev) => {
@@ -41,21 +56,39 @@ export default function CreateChannelModal({ open, uid, contacts, onClose, onCre
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const trimmed = name.trim()
-    if (!trimmed || !uid || busy) return
+    const label = trimmedName || defaultChannelName()
+    const memberUids = [...selected]
+    const payload = { name: label, createdBy: uid, memberUids }
+
+    console.log('[CreateChannelModal] Kanal oluşturuluyor:', payload)
+
+    if (!uid) {
+      const msg = 'Oturum bulunamadı — sayfayı yenileyip tekrar giriş yapın.'
+      setError(msg)
+      console.error('[CreateChannelModal] Validasyon:', msg)
+      return
+    }
+    if (busy) return
 
     setBusy(true)
     setError(null)
     try {
       const channelId = await createMuhabereChannel({
-        name: trimmed,
+        name: label,
         createdBy: uid,
-        memberUids: [...selected],
+        memberUids,
       })
+      console.log('[CreateChannelModal] Kanal açıldı:', channelId)
       onCreated(channelId)
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Kanal oluşturulamadı.')
+      const code = /** @type {{ code?: string }} */ (err)?.code ?? ''
+      const msg = err instanceof Error ? err.message : 'Kanal oluşturulamadı.'
+      console.error('[CreateChannelModal] Kanal oluşturma hatası:', { code, err, payload })
+      setError(msg)
+      if (import.meta.env.DEV) {
+        window.alert(`[Kanal hatası] ${code ? `${code}: ` : ''}${msg}`)
+      }
     } finally {
       setBusy(false)
     }
@@ -94,18 +127,42 @@ export default function CreateChannelModal({ open, uid, contacts, onClose, onCre
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="// Örn: ALFA TIM"
+              placeholder="ALFA TIM"
               maxLength={48}
-              className="mt-1.5 w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-zinc-600 focus:ring-1 focus:ring-lime-500/20"
+              required
+              className="mt-1.5 w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-lime-500/50 focus:ring-1 focus:ring-lime-500/30"
               autoFocus
             />
           </label>
+          <p className="mt-1 text-[9px] text-zinc-600">
+            {trimmedName ? `${trimmedName.length}/48 karakter` : 'Varsayılan isim otomatik atanır'}
+          </p>
 
           <p className="mt-4 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
-            Rehberden üyeler
+            Rehberden üyeler <span className="font-normal text-zinc-600">(isteğe bağlı)</span>
           </p>
+          <div className="mt-2 rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
+            <p className="text-[9px] font-bold uppercase tracking-wider text-zinc-500">Grup üyeleri</p>
+            <ul className="mt-1.5 space-y-1">
+              <li className="flex items-center gap-2 text-xs text-lime-400">
+                <Radio className="size-3 shrink-0" aria-hidden />
+                <span className="truncate">Siz (grup kurucusu)</span>
+              </li>
+              {contacts
+                .filter((c) => selected.has(c.uid))
+                .map((c) => (
+                  <li key={c.uid} className="flex items-center gap-2 text-xs text-zinc-300">
+                    <Radio className="size-3 shrink-0 text-zinc-600" aria-hidden />
+                    <span className="truncate">{c.callsign}</span>
+                  </li>
+                ))}
+            </ul>
+            <p className="mt-2 text-[9px] text-zinc-600">
+              Toplam {selected.size + 1} üye — grup açıldıktan sonra üye listesini sohbet başlığından görebilirsiniz.
+            </p>
+          </div>
           {contacts.length === 0 ? (
-            <p className="mt-2 text-xs text-zinc-600">Tim rehberi boş — önce operatör ekleyin.</p>
+            <p className="mt-2 text-xs text-zinc-600">Tim rehberi boş — kanal yalnızca sizinle açılır.</p>
           ) : (
             <ul className="mt-2 max-h-48 space-y-1 overflow-y-auto rounded-md border border-zinc-800 bg-zinc-900/50 p-2">
               {contacts.map((c) => {
@@ -128,20 +185,30 @@ export default function CreateChannelModal({ open, uid, contacts, onClose, onCre
             </ul>
           )}
 
+          {!sessionOk ? (
+            <p className="mt-3 text-xs text-amber-400/90">Oturum doğrulanamadı — kanal açılamaz.</p>
+          ) : null}
+
           {error ? <p className="mt-3 text-xs text-red-400/90">{error}</p> : null}
 
           <div className="mt-4 flex gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-md border border-zinc-700 px-3 py-2 text-[10px] font-bold uppercase text-zinc-500 hover:bg-zinc-900"
+              disabled={busy}
+              className="flex-1 rounded-md border border-zinc-700 px-3 py-2 text-[10px] font-bold uppercase text-zinc-500 hover:bg-zinc-900 disabled:opacity-40"
             >
               İptal
             </button>
             <button
               type="submit"
-              disabled={!name.trim() || busy}
-              className="flex flex-1 items-center justify-center gap-1 rounded-md border border-lime-500/40 bg-lime-950/40 px-3 py-2 text-[10px] font-bold uppercase text-lime-400 hover:bg-lime-900/50 disabled:opacity-40"
+              disabled={busy || !sessionOk}
+              className={[
+                'flex flex-1 items-center justify-center gap-1 rounded-md border px-3 py-2 text-[10px] font-bold uppercase transition',
+                busy || !sessionOk
+                  ? 'cursor-not-allowed border-zinc-700 bg-zinc-900 text-zinc-600 opacity-50'
+                  : 'border-lime-400/60 bg-lime-500/20 text-lime-300 shadow-[0_0_20px_-6px_rgba(0,255,65,0.45)] hover:bg-lime-500/30',
+              ].join(' ')}
             >
               {busy ? <Loader2 className="size-3.5 animate-spin" aria-hidden /> : 'Kanal aç'}
             </button>

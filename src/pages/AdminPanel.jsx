@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
-import { Pencil, Plus, Save, Shield, Trash2, Video, X } from 'lucide-react'
+import { Globe, Package, Pencil, Plus, Radio, Save, Shield, Trash2, Video, X } from 'lucide-react'
 import { getAdminEmail } from '../config/admin'
 import { useAuth } from '../context/AuthContext'
 import {
@@ -11,6 +11,16 @@ import {
 } from '../lib/firestoreDoctrines'
 import { addTrainingVideo, deleteTrainingVideo, fetchTrainingVideos } from '../lib/firestoreVideos'
 import { bulkAddInventoryItems, parseInventoryBulkText } from '../lib/firestoreInventory'
+import IntelModerationTable from '../components/admin/IntelModerationTable'
+import ManualAlertForm from '../components/admin/ManualAlertForm'
+
+/** @typedef {'icerik' | 'istihbarat' | 'erken-uyari'} AdminTabId */
+
+const ADMIN_TABS = [
+  { id: /** @type {AdminTabId} */ ('icerik'), label: 'İçerik & Envanter', icon: Package },
+  { id: 'istihbarat', label: 'İstihbarat Ağı', icon: Globe },
+  { id: 'erken-uyari', label: 'Erken Uyarı', icon: Radio },
+]
 
 const emptyDoctrineForm = {
   title: '',
@@ -18,6 +28,28 @@ const emptyDoctrineForm = {
   body: '',
   isPublic: false,
   category: 'Genel',
+}
+
+/**
+ * @param {{ active: boolean, onClick: () => void, label: string, icon: import('lucide-react').LucideIcon }} props
+ */
+function AdminTabButton({ active, onClick, label, icon: Icon }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-current={active ? 'page' : undefined}
+      className={[
+        'inline-flex items-center gap-2 border-b-2 px-4 py-3 font-mono-technical text-[11px] font-bold uppercase tracking-wider transition-colors',
+        active
+          ? 'border-[#ffb400] text-[#ffb400]'
+          : 'border-transparent text-slate-500 hover:border-slate-700 hover:text-slate-300',
+      ].join(' ')}
+    >
+      <Icon className="size-4 shrink-0" strokeWidth={1.5} aria-hidden />
+      {label}
+    </button>
+  )
 }
 
 function AdminSection({ title, subtitle, children, icon: Icon }) {
@@ -73,6 +105,7 @@ function TextAreaStyle({ className = '', ...props }) {
 
 export default function AdminPanel() {
   const { user } = useAuth()
+  const [activeTab, setActiveTab] = useState(/** @type {AdminTabId} */ ('icerik'))
   const [doctrines, setDoctrines] = useState([])
   const [videos, setVideos] = useState([])
   const [loadingDoc, setLoadingDoc] = useState(true)
@@ -274,7 +307,7 @@ export default function AdminPanel() {
             </p>
             <h1 className="font-display mt-2 text-3xl font-bold tracking-tight text-white">Admin Panel</h1>
             <p className="mt-2 max-w-2xl text-sm text-slate-500">
-              İçerik, video ve envanter toplu girişi. Yetkili hesap:{' '}
+              Kontrol merkezi — içerik, istihbarat ve erken uyarı modülleri. Yetkili hesap:{' '}
               <span className="font-mono-technical text-[#d4af37]">{getAdminEmail()}</span>
             </p>
           </div>
@@ -298,6 +331,31 @@ export default function AdminPanel() {
         ) : null}
       </header>
 
+      <nav
+        className="-mt-2 flex flex-wrap gap-1 border-b border-gray-800"
+        aria-label="Admin panel sekmeleri"
+      >
+        {ADMIN_TABS.map((tab) => (
+          <AdminTabButton
+            key={tab.id}
+            active={activeTab === tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            label={tab.label}
+            icon={tab.icon}
+          />
+        ))}
+      </nav>
+
+      {activeTab === 'istihbarat' ? (
+        <IntelModerationTable onFeedback={showMsg} />
+      ) : null}
+
+      {activeTab === 'erken-uyari' ? (
+        <ManualAlertForm onFeedback={showMsg} />
+      ) : null}
+
+      {activeTab === 'icerik' ? (
+      <div className="space-y-8">
       <AdminSection
         title="Doktrin yönetimi"
         subtitle="Markdown tam metin; landing yalnızca teaser gösterir."
@@ -537,6 +595,8 @@ export default function AdminPanel() {
           </button>
         </form>
       </AdminSection>
+      </div>
+      ) : null}
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { buildCasualtyCardPayload } from './casualtyCardPayload'
+import { attachMeteoDataToPayload } from './meteoDataCapture'
 import { sanitizeForFirestore } from './firestoreSanitize'
 
 /**
@@ -10,7 +11,9 @@ import { sanitizeForFirestore } from './firestoreSanitize'
  */
 export async function submitCasualtyDd1380Card({ addCard, userId, form }) {
   const bundle = buildCasualtyCardPayload(form, userId)
-  const payload = /** @type {Record<string, unknown>} */ (sanitizeForFirestore(bundle))
+  const payload = /** @type {Record<string, unknown>} */ (
+    sanitizeForFirestore(await attachMeteoDataToPayload(bundle))
+  )
   const ref = await addCard(payload)
   const cardId = String(ref?.id ?? '')
   if (!cardId) {

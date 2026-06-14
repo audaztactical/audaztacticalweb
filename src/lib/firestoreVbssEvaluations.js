@@ -1,5 +1,6 @@
 import { collection, doc, query, serverTimestamp, setDoc, where } from 'firebase/firestore'
 import { db, isFirebaseConfigured } from './firebase'
+import { INSTRUCTOR_EVALUATION_COLLECTIONS } from './firestoreDataDomains'
 import { sanitizeForFirestore } from './firestoreSanitize'
 import { safeOnSnapshot, timestampToMs } from './firestoreSnapshot'
 
@@ -96,7 +97,7 @@ export async function createVbssEvaluation(payload) {
     throw e
   }
 
-  const ref = doc(collection(db, 'vbss_evaluations'))
+  const ref = doc(collection(db, INSTRUCTOR_EVALUATION_COLLECTIONS.VBSS))
   const docPayload = sanitizeForFirestore({
     id: ref.id,
     ...payload,
@@ -122,7 +123,7 @@ export function subscribeGroupVbssEvaluations(groupId, onData, onError) {
     return () => {}
   }
 
-  const q = query(collection(db, 'vbss_evaluations'), where('groupId', '==', gid))
+  const q = query(collection(db, INSTRUCTOR_EVALUATION_COLLECTIONS.VBSS), where('groupId', '==', gid))
 
   return safeOnSnapshot(
     q,
@@ -157,7 +158,7 @@ export function subscribeOperatorVbssEvaluations(groupId, operatorId, onData, on
   }
 
   const q = query(
-    collection(db, 'vbss_evaluations'),
+    collection(db, INSTRUCTOR_EVALUATION_COLLECTIONS.VBSS),
     where('groupId', '==', gid),
     where('operatorId', '==', oid),
   )

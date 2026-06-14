@@ -13,14 +13,16 @@ import {
   ENTRY_METHOD_OPTIONS,
   mergeTacticalErrorsForPayload,
   ROOM_TOPOLOGY_OPTIONS,
+  TACTICAL_DECISION_OPTIONS,
   TACTICAL_ERROR_GROUPS,
   TEAM_SIZE_OPTIONS,
 } from '../../lib/cqbOptions'
 import { invNum, invStr } from '../../lib/inventoryIlws'
 import { calculateCqbSuccessPercent } from '../../lib/trainingSuccessScore'
 import CqbLogRegistry from './CqbLogRegistry'
+import OperatorInstructorRecordsEmbed from './OperatorInstructorRecordsEmbed'
 import SuccessScorePreview from './SuccessScorePreview'
-import TrainingSessionHeader from './TrainingSessionHeader'
+import IndividualTrainingSessionHeader from './IndividualTrainingSessionHeader'
 
 const inputClass =
   'w-full rounded border border-[#00FF41]/30 bg-[#0A0A0A] px-2 py-2 font-mono-technical text-sm text-slate-100 outline-none placeholder:text-slate-600 focus:border-[#00FF41]/60'
@@ -163,11 +165,20 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
     if (!form.doorState) return 'KAPI_DURUMU_GEREKLİ'
     if (!form.teamSize) return 'TAKIM_BOYUTU_GEREKLİ'
     if (neutralizedInvalid) return 'ETKİSİZ_SAYISI_TEHDİTİ_AŞAMAZ'
-    const clearingRaw = invStr(form.clearingTime).trim().replace(',', '.')
-    const clearingSec = clearingRaw ? invNum(clearingRaw) : NaN
-    if (!clearingRaw || !Number.isFinite(clearingSec) || clearingSec <= 0) {
-      return 'TAMAMLAMA_SÜRESİ_SN_GEREKLİ'
+    const clearanceRaw = invStr(form.clearanceTimeMs).trim().replace(',', '.')
+    const clearanceMs = clearanceRaw ? invNum(clearanceRaw) : NaN
+    if (!clearanceRaw || !Number.isFinite(clearanceMs) || clearanceMs <= 0) {
+      return 'CLEARANCE_TIME_SN_GEREKLİ'
     }
+    const accuracyRaw = invStr(form.accuracyScore).trim().replace(',', '.')
+    const accuracy = accuracyRaw ? invNum(accuracyRaw) : NaN
+    if (!accuracyRaw || !Number.isFinite(accuracy) || accuracy < 0 || accuracy > 100) {
+      return 'ACCURACY_SCORE_0_100_GEREKLİ'
+    }
+    const safetyRaw = invStr(form.safetyViolations).trim()
+    const safety = safetyRaw === '' ? NaN : invNum(safetyRaw)
+    if (!Number.isFinite(safety) || safety < 0) return 'GÜVENLİK_İHLALİ_SAYISI_GEREKLİ'
+    if (!form.tacticalDecision) return 'TAKTİK_KARAR_GEREKLİ'
     return null
   }, [
     saving,
@@ -184,7 +195,10 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
     showCustomEntry,
     showCustomBreach,
     neutralizedInvalid,
-    form.clearingTime,
+    form.clearanceTimeMs,
+    form.accuracyScore,
+    form.safetyViolations,
+    form.tacticalDecision,
   ])
 
   const canSubmit = submitBlockedReason == null
@@ -229,10 +243,14 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
   const totalTacticalErrorCount = form.tacticalErrors.length + form.customTacticalErrors.length
 
   const previewSuccessPercent = useMemo(() => {
-    const clearingRaw = invStr(form.clearingTime).trim().replace(',', '.')
-    const clearingSec = clearingRaw ? invNum(clearingRaw) : null
+    const clearanceRaw = invStr(form.clearanceTimeMs).trim().replace(',', '.')
+    const clearanceVal = clearanceRaw ? invNum(clearanceRaw) : null
     const clearingTimeSec =
-      clearingSec != null && Number.isFinite(clearingSec) && clearingSec >= 0 ? clearingSec : null
+      clearanceVal != null && Number.isFinite(clearanceVal) && clearanceVal > 0
+        ? clearanceVal >= 1000
+          ? clearanceVal / 1000
+          : clearanceVal
+        : null
     return calculateCqbSuccessPercent({
       threatCount: threatNum,
       neutralizedCount: neutralizedNum,
@@ -243,7 +261,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
       ),
     })
   }, [
-    form.clearingTime,
+    form.clearanceTimeMs,
     form.tacticalErrors,
     form.customTacticalErrors,
     threatNum,
@@ -291,7 +309,10 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
         teamSize: form.teamSize,
         threatCount: threatNum,
         neutralizedCount: neutralizedNum,
-        clearingTime: form.clearingTime,
+        clearanceTimeMs: form.clearanceTimeMs,
+        accuracyScore: form.accuracyScore,
+        safetyViolations: form.safetyViolations,
+        tacticalDecision: form.tacticalDecision,
         tacticalErrors: mergeTacticalErrorsForPayload(
           form.tacticalErrors,
           form.customTacticalErrors
@@ -326,7 +347,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
 
   return (
     <div className="space-y-4">
-      <TrainingSessionHeader />
+      <IndividualTrainingSessionHeader />
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <button
           type="button"
@@ -444,7 +465,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                 <p className="mb-3 font-mono-technical text-[7px] font-bold uppercase tracking-[0.2em] text-[#00FF41]/80">
                   SAHA METRİKLERİ
                 </p>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                   <label className="block space-y-1">
                     <span className={labelClass}>TEHDİT SAYISI</span>
                     <input
@@ -472,17 +493,58 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                     />
                   </label>
                   <label className="block space-y-1">
-                    <span className={labelClass}>TEMİZLİK SÜRESİ (SN)</span>
+                    <span className={labelClass}>CLEARANCE TIME (SN)</span>
                     <input
                       type="number"
-                      min={0}
+                      min={0.001}
                       step={0.01}
                       inputMode="decimal"
                       className={`${inputClass} tabular-nums`}
-                      placeholder="4.20"
-                      value={form.clearingTime}
-                      onChange={(e) => patch({ clearingTime: e.target.value })}
+                      placeholder="30.00"
+                      value={form.clearanceTimeMs}
+                      onChange={(e) => patch({ clearanceTimeMs: e.target.value })}
                     />
+                  </label>
+                  <label className="block space-y-1">
+                    <span className={labelClass}>ACCURACY SCORE (%)</span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      step={0.1}
+                      inputMode="decimal"
+                      className={`${inputClass} tabular-nums`}
+                      placeholder="85"
+                      value={form.accuracyScore}
+                      onChange={(e) => patch({ accuracyScore: e.target.value })}
+                    />
+                  </label>
+                  <label className="block space-y-1">
+                    <span className={labelClass}>SAFETY VIOLATIONS</span>
+                    <input
+                      type="number"
+                      min={0}
+                      step={1}
+                      className={`${inputClass} tabular-nums`}
+                      value={form.safetyViolations}
+                      onChange={(e) => patch({ safetyViolations: e.target.value })}
+                    />
+                  </label>
+                  <label className="block space-y-1 sm:col-span-1">
+                    <span className={labelClass}>TACTICAL DECISION</span>
+                    <select
+                      className={selectClass}
+                      value={form.tacticalDecision}
+                      onChange={(e) => patch({ tacticalDecision: e.target.value })}
+                      required
+                    >
+                      <option value="">— KARAR SEÇİN —</option>
+                      {TACTICAL_DECISION_OPTIONS.map((o) => (
+                        <option key={o.id} value={o.id}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </select>
                   </label>
                 </div>
                 {countError ? (
@@ -636,6 +698,8 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
           </div>
         </form>
       )}
+
+      <OperatorInstructorRecordsEmbed discipline="cqb" />
     </div>
   )
 }

@@ -39,7 +39,7 @@ export function FirebaseErrorProvider({ children }) {
     <FirebaseErrorContext.Provider value={value}>
       {toast ? (
         <div
-          className="pointer-events-none fixed left-1/2 top-4 z-[300] w-[min(92vw,28rem)] -translate-x-1/2 px-2"
+          className="pointer-events-none fixed left-1/2 top-16 z-[180] w-[min(92vw,28rem)] -translate-x-1/2 px-2 md:top-20"
           role="alert"
         >
           <div className="pointer-events-auto shadow-lg shadow-black/40">

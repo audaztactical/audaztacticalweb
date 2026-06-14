@@ -4,6 +4,7 @@ import {
   formatEgitimStatusLabel,
   resolveEgitimSelectValue,
 } from './egitimOptions'
+import { filterIndividualTrainingRecords } from './trainingGroupFields'
 
 /**
  * @param {Record<string, unknown>} row
@@ -173,7 +174,9 @@ export function sortEgitimPlansByTargetDate(plans) {
  * @param {Record<string, unknown>[]} allPlans
  */
 export function selectEgitimPlans(allPlans) {
-  return sortEgitimPlansByTargetDate(allPlans.filter(isEgitimTrainingPlan))
+  return sortEgitimPlansByTargetDate(
+    filterIndividualTrainingRecords(allPlans).filter(isEgitimTrainingPlan),
+  )
 }
 
 /**

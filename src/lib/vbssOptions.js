@@ -11,6 +11,17 @@ export const INSERTION_METHOD_OPTIONS = [
   { id: VBSS_CUSTOM, label: 'Özel / Diğer (Giriş Alanı)' },
 ]
 
+/** Boarding Point — alias of insertion method options */
+export const BOARDING_POINT_OPTIONS = INSERTION_METHOD_OPTIONS
+
+/** @type {VbssOption[]} */
+export const THREAT_LEVEL_OPTIONS = [
+  { id: 'low', label: 'Düşük (Low)' },
+  { id: 'moderate', label: 'Orta (Moderate)' },
+  { id: 'high', label: 'Yüksek (High)' },
+  { id: 'critical', label: 'Kritik (Critical)' },
+]
+
 /** @type {VbssOption[]} */
 export const VESSEL_TYPE_OPTIONS = [
   { id: 'cargo_container', label: 'Kargo / Konteyner Gemisi' },
@@ -32,10 +43,12 @@ export const SEA_STATE_OPTIONS = [
 
 /** @type {Record<string, string>} */
 const LABEL_INDEX = Object.fromEntries(
-  [...INSERTION_METHOD_OPTIONS, ...VESSEL_TYPE_OPTIONS, ...SEA_STATE_OPTIONS].map((o) => [
-    o.id,
-    o.label,
-  ])
+  [
+    ...INSERTION_METHOD_OPTIONS,
+    ...VESSEL_TYPE_OPTIONS,
+    ...SEA_STATE_OPTIONS,
+    ...THREAT_LEVEL_OPTIONS,
+  ].map((o) => [o.id, o.label])
 )
 
 /**

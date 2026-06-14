@@ -1,4 +1,5 @@
 import { buildVbssLogPayload } from './vbssLogPayload'
+import { attachMeteoDataToPayload } from './meteoDataCapture'
 import { sanitizeForFirestore } from './firestoreSanitize'
 
 /**
@@ -9,7 +10,11 @@ import { sanitizeForFirestore } from './firestoreSanitize'
  *   bridgeControlTime: string | number
  *   engineRoomControlTime: string | number
  *   containmentTime: string | number
- *   insertionMethod: string
+ *   boardingPoint?: string
+ *   customBoardingPoint?: string
+ *   searchDuration?: string | number
+ *   threatLevel?: string
+ *   insertionMethod?: string
  *   customInsertionMethod?: string
  *   vesselType: string
  *   customVesselType?: string
@@ -28,11 +33,15 @@ import { sanitizeForFirestore } from './firestoreSanitize'
 export async function submitVbssRecord({
   addLog,
   userId,
+  boardingPoint = '',
+  customBoardingPoint = '',
+  searchDuration = '',
+  threatLevel = '',
   boardingTime,
   bridgeControlTime,
   engineRoomControlTime,
   containmentTime,
-  insertionMethod,
+  insertionMethod = '',
   customInsertionMethod = '',
   vesselType,
   customVesselType = '',
@@ -49,6 +58,10 @@ export async function submitVbssRecord({
 }) {
   const bundle = buildVbssLogPayload({
     userId,
+    boardingPoint,
+    customBoardingPoint,
+    searchDuration,
+    threatLevel,
     boardingTime,
     bridgeControlTime,
     engineRoomControlTime,
@@ -69,7 +82,9 @@ export async function submitVbssRecord({
     operationNote,
   })
 
-  const payload = /** @type {Record<string, unknown>} */ (sanitizeForFirestore(bundle))
+  const payload = /** @type {Record<string, unknown>} */ (
+    sanitizeForFirestore(await attachMeteoDataToPayload(bundle))
+  )
   const ref = await addLog(payload)
   const logId = String(ref?.id ?? '')
 

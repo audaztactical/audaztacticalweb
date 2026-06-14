@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Loader2, Trophy } from 'lucide-react'
 import { buildGroupLeaderboard } from '../../lib/firestoreGroups'
+import { buildLiveGroupLeaderboard } from '../../lib/instructorGroupAnalytics'
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
 
 /** @typedef {import('../../lib/firestoreGroups').TacticalGroup} TacticalGroup */
 /** @typedef {import('../../lib/firestoreInstructor').OperatorProfile} OperatorProfile */
 /** @typedef {import('../../lib/groupLeaderboard').GroupLeaderboardRow} GroupLeaderboardRow */
+/** @typedef {import('../../lib/firestoreGroupTraining').GroupActivityLog} GroupActivityLog */
 
 const RANK_STYLES = [
   'border-amber-400/70 bg-gradient-to-r from-amber-950/50 to-slate-950/80 shadow-[0_0_20px_-4px_rgba(251,191,36,0.45)]',
@@ -17,9 +19,11 @@ const RANK_STYLES = [
  * @param {{
  *   groups: TacticalGroup[]
  *   operators: OperatorProfile[]
+ *   logs?: GroupActivityLog[]
+ *   hideGroupSelect?: boolean
  * }} props
  */
-export default function GroupLeaderboard({ groups, operators }) {
+export default function GroupLeaderboard({ groups, operators, logs, hideGroupSelect = false }) {
   const [selectedGroupId, setSelectedGroupId] = useState('')
   const [rows, setRows] = useState(/** @type {GroupLeaderboardRow[]} */ ([]))
   const [loading, setLoading] = useState(false)
@@ -29,6 +33,11 @@ export default function GroupLeaderboard({ groups, operators }) {
     [groups, selectedGroupId],
   )
 
+  const liveRows = useMemo(() => {
+    if (!selectedGroup || !logs) return null
+    return buildLiveGroupLeaderboard(selectedGroup, operators, logs)
+  }, [selectedGroup, operators, logs])
+
   useEffect(() => {
     if (groups.length > 0 && !selectedGroupId) {
       setSelectedGroupId(groups[0].groupId)
@@ -36,6 +45,12 @@ export default function GroupLeaderboard({ groups, operators }) {
   }, [groups, selectedGroupId])
 
   useEffect(() => {
+    if (liveRows) {
+      setRows(liveRows)
+      setLoading(false)
+      return undefined
+    }
+
     if (!selectedGroup) {
       setRows([])
       return undefined
@@ -59,34 +74,41 @@ export default function GroupLeaderboard({ groups, operators }) {
     return () => {
       cancelled = true
     }
-  }, [selectedGroup, operators])
+  }, [selectedGroup, operators, liveRows])
 
   return (
     <section className="rounded-xl border border-emerald-900/35 bg-slate-950/90 p-4">
       <p className="mb-3 flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-400">
         <Trophy className="size-4 shrink-0" strokeWidth={1.5} aria-hidden />
         [ GRUP İÇİ SIRALAMA · AKADEMİK LOG ]
+        {logs ? (
+          <span className="ml-auto rounded border border-emerald-800/50 px-1.5 py-0.5 text-[8px] text-emerald-500">
+            CANLI
+          </span>
+        ) : null}
       </p>
 
-      <label className="mb-4 block space-y-1.5">
-        <span className="font-mono text-[9px] font-bold uppercase text-slate-500">Grup Seç</span>
-        <select
-          value={selectedGroupId}
-          onChange={(e) => setSelectedGroupId(e.target.value)}
-          disabled={groups.length === 0}
-          className="w-full rounded-sm border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-slate-200 outline-none focus:border-emerald-500/60"
-        >
-          {groups.length === 0 ? (
-            <option value="">GRUP YOK</option>
-          ) : (
-            groups.map((g) => (
-              <option key={g.groupId} value={g.groupId}>
-                {g.groupName} · {g.members.length} ÜYE
-              </option>
-            ))
-          )}
-        </select>
-      </label>
+      {!hideGroupSelect ? (
+        <label className="mb-4 block space-y-1.5">
+          <span className="font-mono text-[9px] font-bold uppercase text-slate-500">Grup Seç</span>
+          <select
+            value={selectedGroupId}
+            onChange={(e) => setSelectedGroupId(e.target.value)}
+            disabled={groups.length === 0}
+            className="w-full rounded-sm border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-slate-200 outline-none focus:border-emerald-500/60"
+          >
+            {groups.length === 0 ? (
+              <option value="">GRUP YOK</option>
+            ) : (
+              groups.map((g) => (
+                <option key={g.groupId} value={g.groupId}>
+                  {g.groupName} · {g.members.length} ÜYE
+                </option>
+              ))
+            )}
+          </select>
+        </label>
+      ) : null}
 
       {loading ? (
         <p className="flex items-center justify-center gap-2 py-10 font-mono text-[10px] uppercase text-slate-500">

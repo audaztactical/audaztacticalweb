@@ -1,12 +1,15 @@
 import { Fragment, useMemo, useState } from 'react'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, FileDown } from 'lucide-react'
 import TacticalPanel from '../ui/TacticalPanel'
+import { useAuth } from '../../context/AuthContext'
+import { generateAtisShootingReportPdf } from '../../lib/atisShootingReportPdf'
 import {
   extractAtisCaliberOptions,
   extractAtisDrillOptions,
   filterAtisLogs,
   formatAtisDateCell,
   formatAtisDurationCell,
+  formatAtisFilterSummary,
   formatWeaponSpecsBlock,
   getAtisAccuracyPercent,
   getAtisAmmoName,
@@ -17,9 +20,11 @@ import {
   getAtisRoundsAndHits,
   getAtisTimingDetails,
   getAtisWeaponLabel,
+  isAtisFilterActive,
   isAtisTimed,
   selectAtisShootingLogs,
 } from '../../lib/atisLogRegistry'
+import { formatMeteoOverviewRows, getLogMeteoData } from '../../lib/meteoDataCapture'
 import {
   formatAccessoriesAtShotLines,
   getLogBarrelWearPercent,
@@ -41,8 +46,13 @@ const FILTER_INITIAL = {
  * @param {{ rangeLogs: Record<string, unknown>[]; loading?: boolean }} props
  */
 export default function AtisLogRegistry({ rangeLogs, loading = false }) {
+  const { userData } = useAuth()
   const [filters, setFilters] = useState(FILTER_INITIAL)
   const [expandedId, setExpandedId] = useState(/** @type {string | null} */ (null))
+  const [pdfBusyId, setPdfBusyId] = useState(/** @type {string | null} */ (null))
+  const [bulkPdfBusy, setBulkPdfBusy] = useState(false)
+
+  const filterActive = useMemo(() => isAtisFilterActive(filters), [filters])
 
   const atisLogs = useMemo(() => selectAtisShootingLogs(rangeLogs), [rangeLogs])
   const caliberOptions = useMemo(() => extractAtisCaliberOptions(atisLogs), [atisLogs])
@@ -65,6 +75,34 @@ export default function AtisLogRegistry({ rangeLogs, loading = false }) {
     setExpandedId(null)
   }
 
+  const handleDownloadPdf = async (/** @type {Record<string, unknown>} */ row) => {
+    const id = String(row.id)
+    setPdfBusyId(id)
+    try {
+      await generateAtisShootingReportPdf({
+        logs: [row],
+        operator: userData,
+      })
+    } finally {
+      setPdfBusyId(null)
+    }
+  }
+
+  const handleDownloadBulkPdf = async () => {
+    if (filtered.length === 0) return
+    setBulkPdfBusy(true)
+    try {
+      await generateAtisShootingReportPdf({
+        logs: filtered,
+        operator: userData,
+        filterActive,
+        filterLabel: formatAtisFilterSummary(filters),
+      })
+    } finally {
+      setBulkPdfBusy(false)
+    }
+  }
+
   return (
     <TacticalPanel className="relative border-[#00FF41]/20 bg-[#0a0a0a]/95 p-0">
       <span className="pointer-events-none absolute left-2 top-2 z-10 h-3 w-3 border-l border-t border-[#00FF41]/45" />
@@ -73,12 +111,27 @@ export default function AtisLogRegistry({ rangeLogs, loading = false }) {
       <span className="pointer-events-none absolute bottom-2 right-2 z-10 h-3 w-3 border-b border-r border-[#00FF41]/45" />
 
       <div className="border-b border-[#00FF41]/15 bg-[#080808] px-4 py-2">
-        <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-[#00FF41]/90">
-          ATIŞ KAYITLARI VE FİLTRELEME
-        </p>
-        <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-slate-600">
-          range_logs · canlı senkron · {filtered.length}/{atisLogs.length} KAYIT
-        </p>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-[#00FF41]/90">
+              ATIŞ KAYITLARI VE FİLTRELEME
+            </p>
+            <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-slate-600">
+              range_logs · canlı senkron · {filtered.length}/{atisLogs.length} KAYIT
+            </p>
+          </div>
+          {filtered.length > 0 ? (
+            <button
+              type="button"
+              disabled={bulkPdfBusy}
+              onClick={handleDownloadBulkPdf}
+              className="inline-flex items-center gap-2 rounded border border-[#ffb400]/45 bg-[#ffb400]/10 px-3 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-[0.14em] text-[#ffb400] transition hover:border-[#ffb400]/65 hover:bg-[#ffb400]/16 disabled:opacity-50"
+            >
+              <FileDown className="size-3.5" strokeWidth={2} aria-hidden />
+              {bulkPdfBusy ? 'HAZIRLANIYOR…' : 'PDF İNDİR'}
+            </button>
+          ) : null}
+        </div>
       </div>
 
       <div className="border-b border-[#00FF41]/12 bg-[#050805] px-3 py-3">
@@ -162,6 +215,7 @@ export default function AtisLogRegistry({ rangeLogs, loading = false }) {
                 <th className="px-3 py-2">ATIM/İSABET</th>
                 <th className="px-3 py-2">SKOR (%)</th>
                 <th className="px-3 py-2">SÜRE</th>
+                <th className="px-3 py-2 text-right">RAPOR</th>
               </tr>
             </thead>
             <tbody>
@@ -211,9 +265,23 @@ export default function AtisLogRegistry({ rangeLogs, loading = false }) {
                       >
                         {duration.label}
                       </td>
+                      <td className="px-3 py-2 text-right">
+                        <button
+                          type="button"
+                          disabled={pdfBusyId === id}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDownloadPdf(row)
+                          }}
+                          className="inline-flex items-center gap-1.5 rounded border border-[#ffb400]/35 bg-[#ffb400]/8 px-2 py-1 font-mono-technical text-[7px] font-bold uppercase tracking-[0.1em] text-[#ffb400] transition hover:border-[#ffb400]/55 hover:bg-[#ffb400]/14 disabled:opacity-50"
+                        >
+                          <FileDown className="size-3" strokeWidth={2} aria-hidden />
+                          {pdfBusyId === id ? '…' : 'PDF'}
+                        </button>
+                      </td>
                     </tr>
                     <tr className="border-b border-[#00FF41]/8">
-                      <td colSpan={8} className="p-0">
+                      <td colSpan={9} className="p-0">
                         <div
                           className={`grid transition-[grid-template-rows] duration-300 ease-out ${
                             open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
@@ -241,6 +309,24 @@ export default function AtisLogRegistry({ rangeLogs, loading = false }) {
                                 <span className="mx-2 text-white/20">|</span>
                                 KALİBRE: <span className="text-slate-300">{getAtisCaliberLabel(row)}</span>
                               </p>
+                              {(() => {
+                                const meteo = getLogMeteoData(row)
+                                if (!meteo) return null
+                                const rows = formatMeteoOverviewRows(meteo)
+                                return (
+                                  <div className="mb-3 rounded border border-sky-500/25 bg-sky-500/5 px-2 py-2">
+                                    <p className="mb-1 text-[7px] font-bold text-sky-400/85">METEO-DATA (KAYIT ANI)</p>
+                                    <ul className="space-y-0.5 text-slate-300">
+                                      {rows.map(([label, value]) => (
+                                        <li key={label}>
+                                          <span className="text-slate-500">{label}: </span>
+                                          <span className="text-sky-300">{value}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )
+                              })()}
                               <div className="mb-3 rounded border border-[#7ab4ff]/25 bg-[#7ab4ff]/5 px-2 py-2">
                                 <p className="mb-1 text-[7px] font-bold text-[#7ab4ff]/80">OPTİK / AKSESUAR DURUMU</p>
                                 <ul className="space-y-0.5 text-slate-300">

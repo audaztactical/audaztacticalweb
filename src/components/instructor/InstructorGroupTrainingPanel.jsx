@@ -46,6 +46,11 @@ export default function InstructorGroupTrainingPanel({ groups, instructorId, loa
   const [isTimed, setIsTimed] = useState(false)
   const [totalAmmo, setTotalAmmo] = useState('10')
   const [minPassScore, setMinPassScore] = useState('6')
+  const [sessionHours, setSessionHours] = useState('2')
+  const [sessionMinutes, setSessionMinutes] = useState('0')
+  const [expiryMode, setExpiryMode] = useState(/** @type {'duration' | 'datetime'} */ ('duration'))
+  const [expiryDateTime, setExpiryDateTime] = useState('')
+  const [allowedGroupIds, setAllowedGroupIds] = useState(/** @type {string[]} */ ([]))
   const [creating, setCreating] = useState(false)
   const [formMsg, setFormMsg] = useState('')
 
@@ -57,12 +62,21 @@ export default function InstructorGroupTrainingPanel({ groups, instructorId, loa
   useEffect(() => {
     if (!groups.length) {
       setActiveGroupId('')
+      setAllowedGroupIds([])
       return
     }
     if (!activeGroupId || !groups.some((g) => g.groupId === activeGroupId)) {
       setActiveGroupId(groups[0].groupId)
     }
   }, [groups, activeGroupId])
+
+  useEffect(() => {
+    if (!activeGroupId) return
+    setAllowedGroupIds((prev) => {
+      if (prev.includes(activeGroupId)) return prev
+      return [activeGroupId]
+    })
+  }, [activeGroupId])
 
   useEffect(() => {
     if (!activeGroupId || !instructorId) {
@@ -146,6 +160,32 @@ export default function InstructorGroupTrainingPanel({ groups, instructorId, loa
         return
       }
 
+      const hours = Number(sessionHours)
+      const minutes = Number(sessionMinutes)
+      if (expiryMode === 'duration') {
+        if (!Number.isFinite(hours) || hours < 0 || hours > 168) {
+          setFormMsg('Oturum süresi (saat) 0–168 arasında olmalı.')
+          return
+        }
+        if (!Number.isFinite(minutes) || minutes < 0 || minutes > 59) {
+          setFormMsg('Oturum süresi (dakika) 0–59 arasında olmalı.')
+          return
+        }
+        if (hours * 60 + minutes < 1) {
+          setFormMsg('Oturum süresi en az 1 dakika olmalı.')
+          return
+        }
+      } else if (!expiryDateTime.trim()) {
+        setFormMsg('Son giriş tarihi seçin.')
+        return
+      }
+
+      const selectedGroups = allowedGroupIds.filter((id) => groups.some((g) => g.groupId === id))
+      if (!selectedGroups.length) {
+        setFormMsg('En az bir erişilebilir grup seçin.')
+        return
+      }
+
       setCreating(true)
       setFormMsg('')
       try {
@@ -158,6 +198,10 @@ export default function InstructorGroupTrainingPanel({ groups, instructorId, loa
           isTimed,
           totalAmmo: ammo,
           minPassScore: baraj,
+          allowedGroups: selectedGroups,
+          sessionDurationHours: expiryMode === 'duration' ? hours : 0,
+          sessionDurationMinutes: expiryMode === 'duration' ? minutes : 0,
+          expiryDate: expiryMode === 'datetime' ? expiryDateTime : null,
         })
         setLiveTrainingId(created.id)
         setTrainingName('')
@@ -169,8 +213,18 @@ export default function InstructorGroupTrainingPanel({ groups, instructorId, loa
         setCreating(false)
       }
     },
-    [activeGroupId, instructorId, trainingName, isTimed, totalAmmo, minPassScore],
+    [activeGroupId, instructorId, trainingName, isTimed, totalAmmo, minPassScore, sessionHours, sessionMinutes, expiryMode, expiryDateTime, allowedGroupIds, groups],
   )
+
+  const toggleAllowedGroup = useCallback((groupId) => {
+    setAllowedGroupIds((prev) => {
+      if (prev.includes(groupId)) {
+        if (prev.length === 1) return prev
+        return prev.filter((id) => id !== groupId)
+      }
+      return [...prev, groupId]
+    })
+  }, [])
 
   const handleComplete = useCallback(async () => {
     if (!liveTraining?.id) return
@@ -262,6 +316,90 @@ export default function InstructorGroupTrainingPanel({ groups, instructorId, loa
                 </label>
               </div>
 
+              <fieldset className="space-y-3 rounded-lg border border-zinc-800 px-3 py-3">
+                <legend className={ctLabel}>Oturum süresi</legend>
+                <div className="flex flex-wrap gap-3 text-sm text-zinc-400">
+                  <label className="inline-flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="expiry-mode"
+                      checked={expiryMode === 'duration'}
+                      onChange={() => setExpiryMode('duration')}
+                    />
+                    Süre (saat / dakika)
+                  </label>
+                  <label className="inline-flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="expiry-mode"
+                      checked={expiryMode === 'datetime'}
+                      onChange={() => setExpiryMode('datetime')}
+                    />
+                    Son giriş tarihi
+                  </label>
+                </div>
+                {expiryMode === 'duration' ? (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="block space-y-1.5">
+                      <span className={ctLabel}>Saat</span>
+                      <input
+                        type="number"
+                        min={0}
+                        max={168}
+                        value={sessionHours}
+                        onChange={(e) => setSessionHours(e.target.value)}
+                        className={ctInput}
+                      />
+                    </label>
+                    <label className="block space-y-1.5">
+                      <span className={ctLabel}>Dakika</span>
+                      <input
+                        type="number"
+                        min={0}
+                        max={59}
+                        value={sessionMinutes}
+                        onChange={(e) => setSessionMinutes(e.target.value)}
+                        className={ctInput}
+                      />
+                    </label>
+                  </div>
+                ) : (
+                  <label className="block space-y-1.5">
+                    <span className={ctLabel}>Son giriş (expiresAt)</span>
+                    <input
+                      type="datetime-local"
+                      value={expiryDateTime}
+                      onChange={(e) => setExpiryDateTime(e.target.value)}
+                      className={ctInput}
+                      required
+                    />
+                  </label>
+                )}
+              </fieldset>
+
+              <fieldset className="space-y-2 rounded-lg border border-zinc-800 px-3 py-3">
+                <legend className={ctLabel}>Erişebilir gruplar</legend>
+                <div className="flex flex-wrap gap-2">
+                  {groups.map((group) => {
+                    const checked = allowedGroupIds.includes(group.groupId)
+                    return (
+                      <label
+                        key={group.groupId}
+                        className="inline-flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-300"
+                      >
+                        <input
+                          type="checkbox"
+                          className="size-4 rounded accent-zinc-300"
+                          checked={checked}
+                          onChange={() => toggleAllowedGroup(group.groupId)}
+                        />
+                        {group.groupName || group.groupId}
+                      </label>
+                    )
+                  })}
+                </div>
+              </fieldset>
+
               <label className="flex items-center gap-2.5 text-sm text-zinc-400">
                 <input
                   type="checkbox"
@@ -317,6 +455,8 @@ export default function InstructorGroupTrainingPanel({ groups, instructorId, loa
               idle={!liveTraining}
               totalAmmo={liveTraining?.totalAmmo ?? 0}
               minPassScore={liveTraining?.minPassScore ?? 0}
+              isTimed={Boolean(liveTraining?.isTimed)}
+              targetTimeSec={liveTraining?.targetTimeSec ?? null}
             />
           </BentoCard>
         </div>

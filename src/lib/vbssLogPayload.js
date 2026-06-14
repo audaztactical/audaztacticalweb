@@ -3,11 +3,23 @@ import { VBSS_CUSTOM, resolveVbssSelectKey, resolveVbssSelectValue } from './vbs
 import { buildVbssTacticalErrorsForPayload } from './vbssTacticalErrors'
 import { calculateVbssSuccessPercent } from './trainingSuccessScore'
 
+/**
+ * @param {number | null | undefined} sec
+ */
+export function formatVbssClockSeconds(sec) {
+  if (sec == null || !Number.isFinite(sec) || sec < 0) return '—'
+  return `${sec.toFixed(2)}s`
+}
+
 export const VBSS_INITIAL_FORM = {
-  insertionMethod: '',
-  customInsertionMethod: '',
+  boardingPoint: '',
+  customBoardingPoint: '',
   vesselType: '',
   customVesselType: '',
+  searchDuration: '',
+  threatLevel: '',
+  insertionMethod: '',
+  customInsertionMethod: '',
   boardingTime: '',
   bridgeControlTime: '',
   engineRoomControlTime: '',
@@ -45,11 +57,15 @@ function parseCount(raw) {
 /**
  * @param {{
  *   userId: string
+ *   boardingPoint?: string
+ *   customBoardingPoint?: string
+ *   searchDuration?: string | number
+ *   threatLevel?: string
  *   boardingTime: string | number
  *   bridgeControlTime: string | number
  *   engineRoomControlTime: string | number
  *   containmentTime: string | number
- *   insertionMethod: string
+ *   insertionMethod?: string
  *   customInsertionMethod?: string
  *   vesselType: string
  *   customVesselType?: string
@@ -67,11 +83,15 @@ function parseCount(raw) {
  */
 export function buildVbssLogPayload({
   userId,
+  boardingPoint = '',
+  customBoardingPoint = '',
+  searchDuration = '',
+  threatLevel = '',
   boardingTime,
   bridgeControlTime,
   engineRoomControlTime,
   containmentTime,
-  insertionMethod,
+  insertionMethod = '',
   customInsertionMethod = '',
   vesselType,
   customVesselType = '',
@@ -86,17 +106,28 @@ export function buildVbssLogPayload({
   commsBlackoutSuccess,
   operationNote = '',
 }) {
-  const insertionMethodLabel = resolveVbssSelectValue(insertionMethod, customInsertionMethod)
-  const insertionMethodKey = resolveVbssSelectKey(insertionMethod, customInsertionMethod)
+  const boardingPointKey = resolveVbssSelectKey(
+    boardingPoint || insertionMethod,
+    customBoardingPoint || customInsertionMethod
+  )
+  const boardingPointLabel = resolveVbssSelectValue(
+    boardingPoint || insertionMethod,
+    customBoardingPoint || customInsertionMethod
+  )
+  const insertionMethodLabel = boardingPointLabel
+  const insertionMethodKey = boardingPointKey
   const vesselTypeLabel = resolveVbssSelectValue(vesselType, customVesselType)
   const vesselTypeKey = resolveVbssSelectKey(vesselType, customVesselType)
   const seaStateLabel = resolveVbssSelectValue(seaState, customSeaState)
   const seaStateKey = resolveVbssSelectKey(seaState, customSeaState)
+  const threatLevelLabel = resolveVbssSelectValue(threatLevel)
+  const threatLevelKey = resolveVbssSelectKey(threatLevel)
 
   const boardingSec = parseOptionalNonNegativeNumber(boardingTime)
   const bridgeSec = parseOptionalNonNegativeNumber(bridgeControlTime)
   const engineSec = parseOptionalNonNegativeNumber(engineRoomControlTime)
   const containmentSec = parseOptionalNonNegativeNumber(containmentTime)
+  const searchDurationSec = parseOptionalNonNegativeNumber(searchDuration)
   const speedKnots = parseOptionalNonNegativeNumber(vesselSpeed)
 
   const operationNoteText = invStr(operationNote ?? '').trim()
@@ -121,22 +152,34 @@ export function buildVbssLogPayload({
 
   return {
     userId,
+    boardingPoint: boardingPointLabel,
+    boardingPointKey,
+    customBoardingPoint:
+      (boardingPoint || insertionMethod) === VBSS_CUSTOM
+        ? invStr(customBoardingPoint || customInsertionMethod).trim() || null
+        : null,
     insertionMethod: insertionMethodLabel,
     insertionMethodKey,
     customInsertionMethod:
-      insertionMethod === VBSS_CUSTOM ? invStr(customInsertionMethod).trim() || null : null,
+      (boardingPoint || insertionMethod) === VBSS_CUSTOM
+        ? invStr(customBoardingPoint || customInsertionMethod).trim() || null
+        : null,
     vesselType: vesselTypeLabel,
     vesselTypeKey,
     customVesselType:
       vesselType === VBSS_CUSTOM ? invStr(customVesselType).trim() || null : null,
+    searchDurationSec,
+    searchDuration: searchDurationSec != null ? formatVbssClockSeconds(searchDurationSec) : null,
+    threatLevel: threatLevelLabel,
+    threatLevelKey,
     boardingTimeSec: boardingSec,
-    boardingTime: boardingSec != null ? `${boardingSec}s` : null,
+    boardingTime: boardingSec != null ? formatVbssClockSeconds(boardingSec) : null,
     bridgeControlTimeSec: bridgeSec,
-    bridgeControlTime: bridgeSec != null ? `${bridgeSec}s` : null,
+    bridgeControlTime: bridgeSec != null ? formatVbssClockSeconds(bridgeSec) : null,
     engineRoomControlTimeSec: engineSec,
-    engineRoomControlTime: engineSec != null ? `${engineSec}s` : null,
+    engineRoomControlTime: engineSec != null ? formatVbssClockSeconds(engineSec) : null,
     containmentTimeSec: containmentSec,
-    containmentTime: containmentSec != null ? `${containmentSec}s` : null,
+    containmentTime: containmentSec != null ? formatVbssClockSeconds(containmentSec) : null,
     seaState: seaStateLabel,
     seaStateKey,
     customSeaState: seaState === VBSS_CUSTOM ? invStr(customSeaState).trim() || null : null,

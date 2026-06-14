@@ -1,33 +1,68 @@
-import TacticalPanel from '../ui/TacticalPanel'
+import {
+  Activity,
+  AlertTriangle,
+  ClipboardList,
+  Info,
+  ShieldAlert,
+} from 'lucide-react'
 import { utcHms } from '../../lib/dashboardHudData'
+
+/** @param {string} code @param {string} msg */
+function logSeverity(code, msg) {
+  const c = code.toUpperCase()
+  const m = msg.toUpperCase()
+  if (c === 'SHT' || m.includes('OLAY') || m.includes('KRİT') || m.includes('HATA')) return 'critical'
+  if (c === 'CEP' || c === 'CEP_GNC' || m.includes('UYARI') || m.includes('Δ')) return 'warning'
+  if (c === 'OPS' || c === 'EĞT' || c === 'GÜV') return 'active'
+  return 'neutral'
+}
+
+const SEVERITY_META = {
+  critical: { label: 'KRİTİK', Icon: ShieldAlert, className: 'cmd-log-sev--critical' },
+  warning: { label: 'UYARI', Icon: AlertTriangle, className: 'cmd-log-sev--warning' },
+  active: { label: 'AKTİF', Icon: Activity, className: 'cmd-log-sev--active' },
+  neutral: { label: 'BİLGİ', Icon: Info, className: 'cmd-log-sev--neutral' },
+}
 
 /**
  * @param {{ entries: { ms: number, code: string, msg: string }[] }} props
  */
 export default function DashboardSystemLog({ entries }) {
   return (
-    <TacticalPanel className="relative z-10 flex min-h-[320px] flex-col overflow-hidden bg-[#0c0c0e]/96 p-0 backdrop-blur-sm lg:sticky lg:top-6 lg:max-h-[calc(100dvh-6rem)]">
-      <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-[#080808] px-3 py-2.5 sm:px-4 sm:py-3">
-        <p className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.38em] text-[#ffb400]/90">
-          SİSTEM GÜNLÜĞÜ
-        </p>
-        <span className="rounded border border-white/15 bg-black/35 px-1.5 py-0.5 font-mono-technical text-[9px] text-slate-500">
-          RX
-        </span>
+    <section className="cmd-panel cmd-panel--log cmd-glass-panel flex min-h-[300px] flex-col overflow-hidden">
+      <div className="cmd-panel__head shrink-0">
+        <div>
+          <h2 className="cmd-panel__title">Sistem günlüğü</h2>
+          <p className="cmd-panel__subtitle">Renk kodlu operasyon akışı</p>
+        </div>
       </div>
-      <div className="scrollbar-thin custom-log-scroll flex flex-1 flex-col gap-y-2.5 overflow-y-auto px-3 py-3 sm:px-4 sm:py-3.5">
+      <div className="cmd-log-scroll flex flex-1 flex-col gap-4 overflow-y-auto px-5 py-5">
         {entries.length === 0 ? (
-          <p className="font-mono-technical text-[10px] text-slate-600">AKIŞ_YOK · BEKLEMEDE</p>
+          <div className="cmd-empty py-8">
+            <ClipboardList className="size-7 text-slate-600" strokeWidth={1.25} aria-hidden />
+            <p className="cmd-empty__text mt-2">Henüz kayıt yok.</p>
+          </div>
         ) : (
-          entries.map((e, i) => (
-            <div key={`${e.ms}-${i}`} className="flex gap-2 border-l border-[#ffb400]/20 py-0.5 pl-2.5 pr-1 text-[10px] leading-snug sm:pr-0">
-              <span className="shrink-0 font-mono-technical tabular-nums text-slate-600">{utcHms(e.ms)}</span>
-              <span className="shrink-0 font-mono-technical text-[9px] text-[#ffb400]/80">{e.code}</span>
-              <span className="min-w-0 break-words font-mono-technical text-slate-400">{e.msg}</span>
-            </div>
-          ))
+          entries.slice(0, 14).map((e, i) => {
+            const sev = logSeverity(e.code, e.msg)
+            const meta = SEVERITY_META[sev]
+            const SevIcon = meta.Icon
+            return (
+              <div key={`${e.ms}-${i}`} className={['cmd-log-entry-rich', meta.className].join(' ')}>
+                <div className="cmd-log-entry-rich__head">
+                  <span className="cmd-log-entry-rich__icon" aria-hidden>
+                    <SevIcon className="size-3.5" strokeWidth={2} />
+                  </span>
+                  <span className="cmd-log-entry-rich__badge">{meta.label}</span>
+                  <span className="cmd-log-entry-rich__code">{e.code}</span>
+                  <span className="cmd-log-entry-rich__time">{utcHms(e.ms)}</span>
+                </div>
+                <p className="cmd-log-entry-rich__msg">{e.msg}</p>
+              </div>
+            )
+          })
         )}
       </div>
-    </TacticalPanel>
+    </section>
   )
 }

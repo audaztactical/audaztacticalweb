@@ -60,6 +60,12 @@ export function mapUserDocToProfile(d) {
     drugSensitivity: typeof d.drugSensitivity === 'string' ? d.drugSensitivity : '',
     importantNotes: typeof d.importantNotes === 'string' ? d.importantNotes : '',
     groupId: typeof d.groupId === 'string' && d.groupId.trim() ? d.groupId.trim() : null,
+    group:
+      typeof d.group === 'string' && d.group.trim()
+        ? d.group.trim()
+        : typeof d.groupId === 'string' && d.groupId.trim()
+          ? d.groupId.trim()
+          : null,
     instructorId: typeof d.instructorId === 'string' && d.instructorId.trim() ? d.instructorId.trim() : null,
   }
 }

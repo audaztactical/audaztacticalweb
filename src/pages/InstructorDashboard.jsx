@@ -34,14 +34,14 @@ import {
 
 const NAV_ITEMS = [
   { id: /** @type {InstructorTabId} */ ('gruplar'), label: 'Gruplar', icon: Users },
-  { id: 'operatorler', label: 'Operatörler', icon: UserCircle },
+  { id: 'operatorler', label: 'Operatör Raporlama', icon: UserCircle },
   { id: 'egitim', label: 'Eğitim', icon: Target },
   { id: 'basari', label: 'Analitik', icon: BarChart2 },
 ]
 
 export default function InstructorDashboard() {
   const { user, userData } = useAuth()
-  const [activeTab, setActiveTab] = useState(/** @type {InstructorTabId} */ ('egitim'))
+  const [activeTab, setActiveTab] = useState(/** @type {InstructorTabId} */ ('operatorler'))
   const [selectedCategory, setSelectedCategory] = useState(/** @type {string | null} */ (null))
 
   const [groups, setGroups] = useState(/** @type {TacticalGroup[]} */ ([]))
@@ -164,13 +164,13 @@ export default function InstructorDashboard() {
     <div className={ctPage}>
       <CleanFade>
         <header className="mb-8 border-b border-zinc-800 pb-6">
-          <p className={ctHeaderEyebrow}>Eğitmen komuta</p>
+          <p className={ctHeaderEyebrow}>Eğitmen komuta merkezi</p>
           <h1 className={`${ctHeaderTitle} mt-2 flex items-center gap-3`}>
             <GraduationCap className="size-7 text-zinc-400" strokeWidth={1.5} aria-hidden />
-            Eğitmen paneli
+            Eğitmen Kontrol Paneli
           </h1>
           <p className={ctHeaderSubtitle}>
-            Grup yönetimi, sektör eğitimleri ve canlı oturum takibi — {instructorName}
+            Tek giriş noktası — grup yönetimi, canlı eğitim, operatör raporlama ve analitik · {instructorName}
           </p>
         </header>
       </CleanFade>

@@ -10,7 +10,7 @@ import {
 import { db, isFirebaseConfigured } from './firebase'
 import { emitFirebaseError } from './firebaseErrorBus'
 
-/** @typedef {'inventory' | 'health_records' | 'casualty_cards' | 'ifak_inventory' | 'medevac_logs' | 'missions' | 'trainings' | 'range_logs' | 'armory_audit_trail'} AudazDataDomain */
+/** @typedef {'inventory' | 'health_records' | 'casualty_cards' | 'ifak_inventory' | 'medevac_logs' | 'missions' | 'trainings' | 'range_logs' | 'vbss_logs' | 'tccc_logs' | 'armory_audit_trail'} AudazDataDomain */
 
 const DOMAIN_CONFIG = {
   inventory: { kind: 'sub', path: (uid) => ['inventory', uid, 'items'] },
@@ -19,6 +19,8 @@ const DOMAIN_CONFIG = {
   ifak_inventory: { kind: 'sub', path: (uid) => ['ifak_inventory', uid, 'items'] },
   medevac_logs: { kind: 'sub', path: (uid) => ['medevac_logs', uid, 'logs'] },
   range_logs: { kind: 'sub', path: (uid) => ['range_logs', uid, 'entries'] },
+  vbss_logs: { kind: 'sub', path: (uid) => ['vbss_logs', uid, 'entries'] },
+  tccc_logs: { kind: 'sub', path: (uid) => ['tccc_logs', uid, 'entries'] },
   armory_audit_trail: { kind: 'sub', path: (uid) => ['armory_audit_trail', uid, 'entries'] },
   missions: { kind: 'root', name: 'missions' },
   trainings: { kind: 'root', name: 'trainings' },
@@ -49,6 +51,7 @@ function assertUid(uid) {
 export function injectAudazCreateFields(data, uid) {
   const next = { ...data }
   next.ownerId = uid
+  next.userId = uid
   next.updatedAt = serverTimestamp()
   if (next.createdAt === undefined) next.createdAt = serverTimestamp()
   if (next.status === undefined) next.status = 'active'

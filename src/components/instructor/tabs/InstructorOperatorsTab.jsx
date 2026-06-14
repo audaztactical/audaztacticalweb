@@ -39,6 +39,15 @@ export default function InstructorOperatorsTab({ groups, operators, activityLogs
 
   return (
     <div className="space-y-4">
+      <header className="rounded-xl border border-amber-900/25 bg-amber-950/10 px-4 py-3">
+        <p className="font-mono text-[9px] font-bold uppercase tracking-[0.24em] text-amber-500">
+          Operatör Raporlama
+        </p>
+        <p className="mt-1 font-mono text-[10px] uppercase text-slate-500">
+          Eğitmen notları · başarı seviyeleri · grup aktivite feed — tek merkez
+        </p>
+      </header>
+
       <InstructorGroupTrainingFeed logs={activityLogs} operators={operators} loading={loading} />
 
       <div className="relative max-w-md">

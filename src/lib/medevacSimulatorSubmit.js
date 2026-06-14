@@ -1,4 +1,5 @@
 import { invStr } from './inventoryIlws'
+import { attachMeteoDataToPayload } from './meteoDataCapture'
 import { sanitizeForFirestore } from './firestoreSanitize'
 import { buildMedevac9LinePayload } from './medevacPayload'
 import { MEDEVAC_NINE_LINE_INITIAL } from './tcccHealthConstants'
@@ -130,32 +131,34 @@ export async function submitMedevacSimulatorSession({
   const nineLine = simFormToMedevacNineLine(form)
   const grid = invStr(form.line1_mgrs).trim()
 
-  const rangePayload = sanitizeForFirestore({
-    userId,
-    ownerId: userId,
-    operationCategory: 'tccc',
-    kind: 'TCCC_DRILL',
-    drillName: success
-      ? `9-LINE MEDEVAC SIM · TRANSMISSION OK · ${grid.slice(0, 20)}`
-      : '9-LINE MEDEVAC SIM · TRANSMISSION FAILURE / COLD HIT',
-    shootType: 'MEDEVAC_9LINE_RADIO_SIM',
-    tcccPhase: 'MEDEVAC · 9-LINE',
-    tcccPhaseKey: 'medevac_9line',
-    timestamp: new Date().toISOString(),
-    status: 'active',
-    successPercent: roundSuccessPercent(successPercent),
-    medevacSim: true,
-    ...timing,
-    medevacTransmissionSuccess: success,
-    tcccSimStatus: hasOvertime || failed ? 'BAŞARISIZ' : success ? 'BAŞARILI' : 'BAŞARISIZ',
-    medevacFailureReason: failureReason ?? (failed ? 'TRANSMISSION FAILURE' : null),
-    simRejectionReasons: rejectionReasons,
-    medevacSimForm: form,
-    medevacNineLine: nineLine.medevacNineLine ?? nineLine,
-    operationNote: success
-      ? `9-LINE transmitted in ${Math.round(effectiveElapsed)}s · BIRD OUTBOARD`
-      : `MEDEVAC TRANSMISSION FAILURE · ${failureReason ?? 'TIMEOUT / INVALID 9-LINE'}`,
-  })
+  const rangePayload = sanitizeForFirestore(
+    await attachMeteoDataToPayload({
+      userId,
+      ownerId: userId,
+      operationCategory: 'tccc',
+      kind: 'TCCC_DRILL',
+      drillName: success
+        ? `9-LINE MEDEVAC SIM · TRANSMISSION OK · ${grid.slice(0, 20)}`
+        : '9-LINE MEDEVAC SIM · TRANSMISSION FAILURE / COLD HIT',
+      shootType: 'MEDEVAC_9LINE_RADIO_SIM',
+      tcccPhase: 'MEDEVAC · 9-LINE',
+      tcccPhaseKey: 'medevac_9line',
+      timestamp: new Date().toISOString(),
+      status: 'active',
+      successPercent: roundSuccessPercent(successPercent),
+      medevacSim: true,
+      ...timing,
+      medevacTransmissionSuccess: success,
+      tcccSimStatus: hasOvertime || failed ? 'BAŞARISIZ' : success ? 'BAŞARILI' : 'BAŞARISIZ',
+      medevacFailureReason: failureReason ?? (failed ? 'TRANSMISSION FAILURE' : null),
+      simRejectionReasons: rejectionReasons,
+      medevacSimForm: form,
+      medevacNineLine: nineLine.medevacNineLine ?? nineLine,
+      operationNote: success
+        ? `9-LINE transmitted in ${Math.round(effectiveElapsed)}s · BIRD OUTBOARD`
+        : `MEDEVAC TRANSMISSION FAILURE · ${failureReason ?? 'TIMEOUT / INVALID 9-LINE'}`,
+    })
+  )
 
   const rangeRef = await addRangeLog(/** @type {Record<string, unknown>} */ (rangePayload))
 

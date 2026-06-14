@@ -3,6 +3,7 @@ import {
   buildEgitimSandboxLayoutPatch,
   buildEgitimSandboxPayload,
 } from './egitimLogPayload'
+import { attachMeteoDataToPayload } from './meteoDataCapture'
 import { sanitizeForFirestore } from './firestoreSanitize'
 
 /**
@@ -52,7 +53,9 @@ export async function submitEgitimPlan({
     operationNote,
   })
 
-  const payload = /** @type {Record<string, unknown>} */ (sanitizeForFirestore(bundle))
+  const payload = /** @type {Record<string, unknown>} */ (
+    sanitizeForFirestore(await attachMeteoDataToPayload(bundle))
+  )
   const ref = await addPlan(payload)
   const planId = String(ref?.id ?? '')
 
@@ -109,7 +112,9 @@ export async function submitEgitimSandboxPlan({
     status,
   })
 
-  const payload = /** @type {Record<string, unknown>} */ (sanitizeForFirestore(bundle))
+  const payload = /** @type {Record<string, unknown>} */ (
+    sanitizeForFirestore(await attachMeteoDataToPayload(bundle))
+  )
   const ref = await addPlan(payload)
   const planId = String(ref?.id ?? '')
 

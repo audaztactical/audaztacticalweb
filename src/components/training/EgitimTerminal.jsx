@@ -14,7 +14,7 @@ import {
 import { invNum } from '../../lib/inventoryIlws'
 import EgitimLogRegistry from './EgitimLogRegistry'
 import TacticalRangeSandbox from './TacticalRangeSandbox'
-import TrainingSessionHeader from './TrainingSessionHeader'
+import IndividualTrainingSessionHeader from './IndividualTrainingSessionHeader'
 
 const inputClass =
   'w-full rounded border border-[#00FF41]/30 bg-[#0A0A0A] px-2 py-2 font-mono-technical text-sm text-slate-100 outline-none placeholder:text-slate-600 focus:border-[#00FF41]/60'
@@ -213,7 +213,7 @@ export default function EgitimTerminal({
 
   return (
     <div className="space-y-4">
-      <TrainingSessionHeader />
+      <IndividualTrainingSessionHeader />
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <button
           type="button"

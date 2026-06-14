@@ -11,6 +11,7 @@ import MatrixWireVisualizer from '../armory/MatrixWireVisualizer'
  *   onSelect: () => void
  *   disabled?: boolean
  *   disabledHint?: string
+ *   highlightLabel?: string
  * }} props
  */
 export default function TrainingCategoryCard({
@@ -22,6 +23,7 @@ export default function TrainingCategoryCard({
   onSelect,
   disabled = false,
   disabledHint,
+  highlightLabel,
 }) {
   return (
     <button
@@ -36,6 +38,12 @@ export default function TrainingCategoryCard({
           : 'border-[#00FF41]/18 bg-[#0a0a0a] hover:border-[#00FF41]/55 hover:shadow-[0_0_36px_-10px_rgba(0,255,65,0.45)] focus-visible:ring-[#00FF41]/60 active:scale-[0.99]',
       ].join(' ')}
     >
+      {highlightLabel ? (
+        <span className="absolute right-3 top-3 z-30 rounded border border-[#00FF41]/50 bg-[#00FF41]/15 px-2 py-0.5 font-mono-technical text-[7px] font-bold uppercase tracking-[0.2em] text-[#00FF41] shadow-[0_0_18px_-6px_rgba(0,255,65,0.55)]">
+          {highlightLabel}
+        </span>
+      ) : null}
+
       <span className="pointer-events-none absolute left-2 top-2 z-20 h-3 w-3 border-l border-t border-[#00FF41]/35 transition-colors group-hover:border-[#00FF41]/80" />
       <span className="pointer-events-none absolute right-2 top-2 z-20 h-3 w-3 border-r border-t border-[#00FF41]/35 transition-colors group-hover:border-[#00FF41]/80" />
       <span className="pointer-events-none absolute bottom-2 left-2 z-20 h-3 w-3 border-b border-l border-[#00FF41]/35 transition-colors group-hover:border-[#00FF41]/80" />

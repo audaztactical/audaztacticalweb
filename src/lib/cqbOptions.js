@@ -251,6 +251,26 @@ function invStr(s) {
   return s == null ? '' : String(s)
 }
 
+/** @type {CqbOption[]} */
+export const TACTICAL_DECISION_OPTIONS = [
+  { id: 'fast', label: 'Hızlı' },
+  { id: 'correct', label: 'Doğru' },
+  { id: 'hesitant', label: 'Tereddütlü' },
+]
+
+/** @type {Record<string, string>} */
+const TACTICAL_DECISION_LABELS = Object.fromEntries(
+  TACTICAL_DECISION_OPTIONS.map((o) => [o.id, o.label])
+)
+
+/**
+ * @param {string} key
+ */
+export function resolveTacticalDecisionLabel(key) {
+  const k = invStr(key).trim()
+  return TACTICAL_DECISION_LABELS[k] ?? (k || '—')
+}
+
 export const CQB_INITIAL_FORM = {
   roomTopology: '',
   customRoomTopology: '',
@@ -262,7 +282,10 @@ export const CQB_INITIAL_FORM = {
   teamSize: '',
   threatCount: '0',
   neutralizedCount: '0',
-  clearingTime: '',
+  clearanceTimeMs: '',
+  accuracyScore: '',
+  safetyViolations: '0',
+  tacticalDecision: '',
   tacticalErrors: /** @type {string[]} */ ([]),
   customTacticalErrors: /** @type {string[]} */ ([]),
   operationNote: '',
