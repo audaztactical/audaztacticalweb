@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Scale } from 'lucide-react'
+import { Loader2, Scale } from 'lucide-react'
 import Input from '../common/Input'
 import LegalDisclaimer from '../LegalDisclaimer'
 import { useAuth } from '../../context/AuthContext'
@@ -236,7 +236,13 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
     }
   }
 
-  const disabled = busy || checkingUsername
+  const submitBusy = busy || checkingUsername
+
+  const registerButtonLabel = checkingUsername
+    ? 'Kullanıcı adı kontrol ediliyor…'
+    : busy
+      ? 'Kayıt yapılıyor…'
+      : 'Operatörü Kaydet'
 
   return (
     <div
@@ -335,7 +341,9 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
           />
 
           {checkingUsername ? (
-            <p className="font-mono-technical text-[9px] text-app-text/45">Doğrulanıyor…</p>
+            <p className="font-mono-technical text-[9px] text-app-text/45" aria-live="polite">
+              Kullanıcı adı doğrulanıyor…
+            </p>
           ) : null}
 
           <div className="rounded-sm border border-emerald-500/20 bg-black/30 px-3 py-3">
@@ -367,10 +375,17 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
 
           <button
             type="submit"
-            disabled={disabled || !termsAccepted}
-            className="w-full rounded-sm border border-accent/45 bg-accent/10 py-3 font-display text-xs font-bold uppercase tracking-[0.2em] text-accent transition hover:bg-accent/18 disabled:opacity-45"
+            disabled={submitBusy || !termsAccepted}
+            className="flex w-full min-h-[44px] items-center justify-center gap-2 rounded-sm border border-emerald-500/55 bg-emerald-500/15 py-3 font-mono-technical text-xs font-bold uppercase tracking-[0.16em] text-emerald-400 transition hover:bg-emerald-500/22 disabled:cursor-not-allowed disabled:border-white/15 disabled:bg-black/35 disabled:text-app-text/50"
           >
-            {busy ? '…' : 'Operatörü Kaydet'}
+            {submitBusy ? (
+              <>
+                <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
+                <span>{registerButtonLabel}</span>
+              </>
+            ) : (
+              'Operatörü Kaydet'
+            )}
           </button>
           {betaMode ? (
             <p className="font-mono-technical text-[8px] uppercase tracking-wider text-app-text/40">
@@ -426,10 +441,17 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
 
             <button
               type="submit"
-              disabled={disabled}
-              className="w-full rounded-sm border border-emerald-500/40 bg-emerald-500/10 py-3 font-display text-xs font-bold uppercase tracking-[0.2em] text-emerald-400 transition hover:bg-emerald-500/18 disabled:opacity-45"
+              disabled={submitBusy}
+              className="flex w-full min-h-[44px] items-center justify-center gap-2 rounded-sm border border-emerald-500/55 bg-emerald-500/15 py-3 font-mono-technical text-xs font-bold uppercase tracking-[0.16em] text-emerald-400 transition hover:bg-emerald-500/22 disabled:cursor-not-allowed disabled:border-white/15 disabled:bg-black/35 disabled:text-app-text/50"
             >
-              {busy ? '…' : 'Giriş Yap'}
+              {busy ? (
+                <>
+                  <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
+                  <span>Giriş yapılıyor…</span>
+                </>
+              ) : (
+                'Giriş Yap'
+              )}
             </button>
           </form>
 
@@ -444,7 +466,7 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
           <button
             type="button"
             onClick={() => void handleGoogleSignIn()}
-            disabled={disabled || !configured}
+            disabled={submitBusy || !configured}
             className="flex w-full items-center justify-center gap-2.5 rounded-sm border border-white/15 bg-black/30 py-3 font-display text-[10px] font-bold uppercase tracking-[0.18em] text-app-text/90 transition hover:border-emerald-500/35 hover:bg-emerald-950/25 disabled:opacity-45"
           >
             <GoogleMark className="size-4 shrink-0" />
