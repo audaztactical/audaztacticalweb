@@ -82,6 +82,8 @@ async function mapRssItemToFeedDoc(item, sourceLabel) {
     trSummary,
     tags: extractTags(item),
     url,
+    type: 'haber',
+    public: true,
   }
 
   if (item.isoDate || item.pubDate) {

@@ -4,11 +4,13 @@ const { getMessaging } = require('firebase-admin/messaging')
 const { HttpsError } = require('firebase-functions/v2/https')
 const { logger } = require('firebase-functions')
 const { assertContentAdmin } = require('./adminAuth')
-const { COLLECTION } = require('./intelFeed')
 const { FCM_TOPIC } = require('./localAlerts')
 
 const MANUAL_SOURCE = 'AUDAZ KOMUTA MERKEZİ'
-const MANUAL_TAGS = ['SİSTEM İKAZI', 'ACİL']
+/** Eski news_feed etiketleriyle uyumluluk; artık yalnızca export / referans için. */
+const MANUAL_TAGS = Object.freeze(['SİSTEM İKAZI', 'ACİL', 'MANUEL İKAZ'])
+const SYSTEM_ALERTS_COLLECTION = 'system_alerts'
+const BROADCASTS_COLLECTION = 'manual_alert_broadcasts'
 
 /**
  * @param {string} title
@@ -33,10 +35,29 @@ async function sendManualAlertFcm(input) {
   try {
     const messageId = await getMessaging().send({
       topic: FCM_TOPIC,
-      notification: { title, body },
+      notification: {
+        title: `🚨 ${title}`,
+        body,
+      },
       data: {
-        type: 'MANUAL_ALERT',
-        docId: input.docId,
+        type: 'MANDATORY_SYSTEM_ALERT',
+        alertId: input.docId,
+        title,
+        message: body,
+      },
+      android: {
+        priority: 'high',
+      },
+      apns: {
+        headers: {
+          'apns-priority': '10',
+        },
+        payload: {
+          aps: {
+            sound: 'default',
+            contentAvailable: true,
+          },
+        },
       },
     })
     return { sent: true, messageId }
@@ -47,66 +68,133 @@ async function sendManualAlertFcm(input) {
 }
 
 /**
- * Callable: admin manual broadcast → news_feed + asayis_ikaz FCM topic.
+ * Callable: admin manual broadcast → system_alerts + arşiv + FCM.
  * @param {import('firebase-functions/v2/https').CallableRequest} request
  */
 async function sendManualAlertHandler(request) {
-  assertContentAdmin(request)
+  try {
+    assertContentAdmin(request)
 
-  const title = String(request.data?.title ?? '').trim()
-  const message = String(request.data?.message ?? '').trim()
+    const title = String(request.data?.title ?? '').trim()
+    const message = String(request.data?.message ?? '').trim()
+    const skipWrite = Boolean(request.data?.skipWrite)
+    const presetDocId = String(request.data?.docId ?? '').trim()
 
-  if (!title) {
-    throw new HttpsError('invalid-argument', 'İkaz başlığı gerekli.')
-  }
-  if (!message) {
-    throw new HttpsError('invalid-argument', 'İkaz mesajı gerekli.')
-  }
-  if (title.length > 200) {
-    throw new HttpsError('invalid-argument', 'Başlık en fazla 200 karakter olabilir.')
-  }
-  if (message.length > 2000) {
-    throw new HttpsError('invalid-argument', 'Mesaj en fazla 2000 karakter olabilir.')
-  }
+    if (!title) {
+      throw new HttpsError('invalid-argument', 'İkaz başlığı gerekli.')
+    }
+    if (!message) {
+      throw new HttpsError('invalid-argument', 'İkaz mesajı gerekli.')
+    }
+    if (title.length > 200) {
+      throw new HttpsError('invalid-argument', 'Başlık en fazla 200 karakter olabilir.')
+    }
+    if (message.length > 2000) {
+      throw new HttpsError('invalid-argument', 'Mesaj en fazla 2000 karakter olabilir.')
+    }
 
-  const docId = manualAlertDocId(title, message)
-  const db = getFirestore()
-  const ref = db.collection(COLLECTION).doc(docId)
+    const docId = skipWrite && presetDocId ? presetDocId : manualAlertDocId(title, message)
+    const db = getFirestore()
+    const createdBy = String(request.auth?.uid ?? '').trim()
 
-  /** @type {Record<string, unknown>} */
-  const payload = {
-    source: MANUAL_SOURCE,
-    trTitle: title,
-    trSummary: message,
-    tags: MANUAL_TAGS,
-    isAlert: true,
-    timestamp: FieldValue.serverTimestamp(),
-  }
+    if (!skipWrite) {
+      await db.collection(SYSTEM_ALERTS_COLLECTION).doc(docId).set(
+        {
+          title,
+          message,
+          active: true,
+          mandatory: true,
+          source: MANUAL_SOURCE,
+          createdAt: FieldValue.serverTimestamp(),
+          createdBy,
+        },
+        { merge: false },
+      )
+    }
 
-  await ref.set(payload, { merge: false })
+    const fcmResult = await sendManualAlertFcm({ title, message, docId })
 
-  const fcmResult = await sendManualAlertFcm({ title, message, docId })
+    if (!skipWrite) {
+      await db.collection(BROADCASTS_COLLECTION).doc(docId).set(
+        {
+          title,
+          message,
+          publishedAt: FieldValue.serverTimestamp(),
+          publishedAtMs: Date.now(),
+          publishedByUid: createdBy,
+          publishedByEmail: String(request.auth?.token?.email ?? '').trim(),
+          systemAlertId: docId,
+          fcmSent: fcmResult.sent === true,
+          source: MANUAL_SOURCE,
+          kind: 'admin_manual',
+        },
+        { merge: false },
+      )
+    }
 
-  if (!fcmResult.sent) {
-    logger.warn('sendManualAlert: feed written but FCM failed', { docId, fcmResult })
+    if (!fcmResult.sent) {
+      logger.warn('sendManualAlert: FCM başarısız', { docId, skipWrite, fcmResult })
+    }
+
+    return {
+      success: true,
+      docId,
+      topic: FCM_TOPIC,
+      fcmSent: fcmResult.sent === true,
+      messageId: fcmResult.messageId ?? null,
+      mandatoryInApp: true,
+    }
+  } catch (err) {
+    if (err instanceof HttpsError) throw err
+    logger.error('sendManualAlert failed', err)
     throw new HttpsError(
       'internal',
-      'İkaz kaydı oluşturuldu ancak push bildirimi gönderilemedi.',
+      err instanceof Error ? err.message : 'İkaz gönderilemedi.',
     )
   }
+}
 
-  return {
-    success: true,
-    docId,
-    topic: FCM_TOPIC,
-    messageId: fcmResult.messageId,
+/**
+ * Callable: yalnızca FCM push (Firestore yazımı istemci tarafında).
+ * @param {import('firebase-functions/v2/https').CallableRequest} request
+ */
+async function pushManualAlertFcmHandler(request) {
+  try {
+    assertContentAdmin(request)
+
+    const title = String(request.data?.title ?? '').trim()
+    const message = String(request.data?.message ?? '').trim()
+    const docId = String(request.data?.docId ?? '').trim()
+
+    if (!title || !message || !docId) {
+      throw new HttpsError('invalid-argument', 'title, message ve docId gerekli.')
+    }
+
+    const fcmResult = await sendManualAlertFcm({ title, message, docId })
+
+    return {
+      success: true,
+      docId,
+      fcmSent: fcmResult.sent === true,
+      topic: FCM_TOPIC,
+    }
+  } catch (err) {
+    if (err instanceof HttpsError) throw err
+    logger.error('pushManualAlertFcm failed', err)
+    throw new HttpsError(
+      'internal',
+      err instanceof Error ? err.message : 'Push gönderilemedi.',
+    )
   }
 }
 
 module.exports = {
   MANUAL_SOURCE,
   MANUAL_TAGS,
+  SYSTEM_ALERTS_COLLECTION,
+  BROADCASTS_COLLECTION,
   sendManualAlertHandler,
   sendManualAlertFcm,
+  pushManualAlertFcmHandler,
   manualAlertDocId,
 }

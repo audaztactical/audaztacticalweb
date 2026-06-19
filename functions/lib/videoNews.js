@@ -6,7 +6,7 @@ const { docIdFromUrl } = require('./intelFeed')
 /** @typedef {{ name: string, url: string }} VideoNewsChannel */
 
 /** @type {VideoNewsChannel[]} */
-const TARGET_CHANNELS = [
+const FALLBACK_CHANNELS = [
   {
     name: 'TASK & PURPOSE',
     url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCSq3p5NKEtyp5Rjd4ctiEbg',
@@ -32,6 +32,9 @@ const TARGET_CHANNELS = [
     url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UC1gt5hr3hBRMGmkfYJT56Lw',
   },
 ]
+
+/** Geriye dönük uyumluluk */
+const TARGET_CHANNELS = FALLBACK_CHANNELS
 
 const COLLECTION = 'video_news'
 const MAX_ITEMS_PER_CHANNEL = 10
@@ -186,7 +189,7 @@ async function sendGlobalIntelVideoAlert(newVideosCount) {
   try {
     const messageId = await getMessaging().send({
       notification: {
-        title: '⚠️ KÜRESEL İSTİHBARAT AĞI',
+        title: '⚠️ KÜRESEL HABER AĞI',
         body: `Sisteme ${newVideosCount} adet yeni taktiksel video analizi eklendi.`,
       },
       topic: FCM_TOPIC_GLOBAL_INTEL,
@@ -325,13 +328,56 @@ async function ingestChannelFeed(channel, col, maxItems) {
 }
 
 /**
+ * Firestore youtube_channels → RSS hedef listesi.
+ * @param {import('firebase-admin/firestore').Firestore} db
+ * @returns {Promise<VideoNewsChannel[]>}
+ */
+async function loadYoutubeChannelsFromFirestore(db) {
+  try {
+    const snap = await db.collection('youtube_channels').get()
+    if (snap.empty) {
+      console.log('[VIDEO BOT] youtube_channels boş — varsayılan liste kullanılıyor.')
+      return FALLBACK_CHANNELS
+    }
+
+    const rows = snap.docs
+      .map((docSnap) => {
+        const data = docSnap.data() ?? {}
+        if (data.enabled === false) return null
+        const name = String(data.name ?? '').trim()
+        const feedUrl =
+          String(data.feedUrl ?? '').trim() ||
+          (data.channelId
+            ? `https://www.youtube.com/feeds/videos.xml?channel_id=${String(data.channelId).trim()}`
+            : '')
+        if (!name || !feedUrl) return null
+        return { name, url: feedUrl }
+      })
+      .filter(Boolean)
+
+    if (rows.length === 0) {
+      console.log('[VIDEO BOT] Etkin kanal yok — varsayılan liste kullanılıyor.')
+      return FALLBACK_CHANNELS
+    }
+
+    rows.sort((a, b) => a.name.localeCompare(b.name, 'tr'))
+    return rows
+  } catch (err) {
+    console.warn('[VIDEO BOT] youtube_channels okunamadı, varsayılan liste:', err)
+    return FALLBACK_CHANNELS
+  }
+}
+
+/**
  * Fetch all tactical YouTube channel RSS feeds → Firestore video_news.
  * @param {{ maxItemsPerChannel?: number, channels?: VideoNewsChannel[] }} [options]
  */
 async function runVideoNewsIngest(options = {}) {
   console.log('[VIDEO BOT] Operasyon başladı. Hedef RSS taranıyor...')
 
-  const channels = options.channels ?? TARGET_CHANNELS
+  const db = getFirestore()
+  const channels =
+    options.channels ?? (await loadYoutubeChannelsFromFirestore(db))
   const maxItemsPerChannel = Math.min(
     30,
     Math.max(1, Number(options.maxItemsPerChannel) || MAX_ITEMS_PER_CHANNEL),
@@ -341,7 +387,6 @@ async function runVideoNewsIngest(options = {}) {
   console.log('[VIDEO BOT] Kanal başına maksimum kayıt:', maxItemsPerChannel)
 
   try {
-    const db = getFirestore()
     const col = db.collection(COLLECTION)
 
     /** @type {Awaited<ReturnType<typeof ingestChannelFeed>>[]} */

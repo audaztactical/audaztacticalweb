@@ -5,8 +5,13 @@ const { logger } = require('firebase-functions')
 const { subscribeToAlertsHandler, subscribeToGlobalIntelHandler } = require('./lib/fcmTopics')
 const { runIntelFeedIngest } = require('./lib/intelFeed')
 const { runLocalAlertsIngest } = require('./lib/localAlerts')
-const { sendManualAlertHandler } = require('./lib/manualAlerts')
+const { sendManualAlertHandler, pushManualAlertFcmHandler } = require('./lib/manualAlerts')
 const { runVideoNewsIngest } = require('./lib/videoNews')
+const { ensureAdminClaimHandler } = require('./lib/adminClaims')
+const { claimInstructorRoleHandler } = require('./lib/instructorClaim')
+const { syncMuhabereChannelSummary, syncMuhabereDmSummary } = require('./src/muhabereSync')
+const { resolveYoutubeChannelInputHandler } = require('./lib/youtubeChannelResolve')
+const { triggerVideoNewsIngestHandler } = require('./lib/videoNewsTrigger')
 
 initializeApp()
 
@@ -87,8 +92,21 @@ exports.sendManualAlert = onCall(
   {
     memory: '128MiB',
     timeoutSeconds: 30,
+    cors: true,
   },
   sendManualAlertHandler,
+)
+
+/**
+ * Callable: admin — yalnızca manuel ikaz FCM push (Firestore istemci yazar).
+ */
+exports.pushManualAlertFcm = onCall(
+  {
+    memory: '128MiB',
+    timeoutSeconds: 30,
+    cors: true,
+  },
+  pushManualAlertFcmHandler,
 )
 
 /**
@@ -113,3 +131,57 @@ exports.fetchVideoNews = onSchedule(
     }
   },
 )
+
+/**
+ * Callable: admin custom claim (admin: true) — client VITE_ADMIN_EMAIL karşılaştırması gerekmez.
+ */
+exports.ensureAdminClaim = onCall(
+  {
+    memory: '128MiB',
+    timeoutSeconds: 30,
+    cors: true,
+  },
+  ensureAdminClaimHandler,
+)
+
+/**
+ * Callable: eğitmen davet kodu yakma + users.role = instructor (yalnızca Admin SDK).
+ */
+exports.claimInstructorRole = onCall(
+  {
+    memory: '128MiB',
+    timeoutSeconds: 30,
+    cors: true,
+  },
+  claimInstructorRoleHandler,
+)
+
+/**
+ * Callable: @handle veya kanal URL → UC… kimliği (admin).
+ */
+exports.resolveYoutubeChannel = onCall(
+  {
+    memory: '256MiB',
+    timeoutSeconds: 30,
+    cors: true,
+  },
+  resolveYoutubeChannelInputHandler,
+)
+
+/**
+ * Callable: admin — video_news ingest (manuel tetik).
+ */
+exports.triggerVideoNewsIngest = onCall(
+  {
+    memory: '256MiB',
+    timeoutSeconds: 120,
+    cors: true,
+  },
+  triggerVideoNewsIngestHandler,
+)
+
+/**
+ * Firestore trigger: kanal mesajı → users/{uid}/muhabere_summary/latest (batch).
+ */
+exports.syncMuhabereChannelSummary = syncMuhabereChannelSummary
+exports.syncMuhabereDmSummary = syncMuhabereDmSummary

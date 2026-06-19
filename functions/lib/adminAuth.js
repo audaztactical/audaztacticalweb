@@ -20,13 +20,20 @@ function assertContentAdmin(request) {
     throw new HttpsError('unauthenticated', 'Bu işlem için giriş gerekli.')
   }
 
-  const email = String(request.auth.token.email ?? '')
+  const token = request.auth.token
+  if (token.admin === true) {
+    return
+  }
+
+  const email = String(token.email ?? '')
     .trim()
     .toLowerCase()
 
-  if (!email || email !== getAdminEmailLower()) {
-    throw new HttpsError('permission-denied', 'Yalnızca sistem yöneticisi bu işlemi yapabilir.')
+  if (email && email === getAdminEmailLower()) {
+    return
   }
+
+  throw new HttpsError('permission-denied', 'Yalnızca sistem yöneticisi bu işlemi yapabilir.')
 }
 
 module.exports = {
