@@ -34,7 +34,7 @@ import { emitFirebaseError } from '../../../lib/firebaseErrorBus'
 /** @typedef {import('../../../lib/firestoreGroupTrainings').GroupTraining} GroupTraining */
 
 const selectClass =
-  'w-full rounded-sm border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-slate-200 outline-none focus:border-emerald-500/60'
+  'w-full rounded-sm border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-app-text outline-none focus:border-emerald-500/60'
 
 /**
  * @param {{
@@ -162,7 +162,7 @@ export default function InstructorAnalyticsTab({ groups, operators }) {
           'flex-1 rounded border py-2 font-mono text-[9px] font-bold uppercase tracking-wider transition',
           active
             ? 'border-emerald-500/60 bg-emerald-950/40 text-emerald-300'
-            : 'border-slate-800 text-slate-500 hover:border-emerald-800/40',
+            : 'border-slate-800 text-app-text/55 hover:border-emerald-800/40',
         ].join(' ')}
       >
         {label}
@@ -178,7 +178,7 @@ export default function InstructorAnalyticsTab({ groups, operators }) {
           {tabBtn('operator', 'OPERATÖR ODAĞI')}
         </div>
         <label className="w-full space-y-1 sm:max-w-xs">
-          <span className="font-mono text-[9px] font-bold uppercase text-slate-500">Grup</span>
+          <span className="font-mono text-[9px] font-bold uppercase text-app-text/55">Grup</span>
           <select className={selectClass} value={groupId} onChange={(e) => setGroupId(e.target.value)}>
             {groups.map((g) => (
               <option key={g.groupId} value={g.groupId}>
@@ -198,15 +198,21 @@ export default function InstructorAnalyticsTab({ groups, operators }) {
               Grup Performans Eğrisi
             </p>
             {logsLoading ? (
-              <p className="flex items-center gap-2 py-16 font-mono text-[10px] uppercase text-slate-500">
+              <p className="flex items-center gap-2 py-16 font-mono text-[10px] uppercase text-app-text/55">
                 <Loader2 className="size-4 animate-spin text-emerald-400" aria-hidden />
                 Veri akışı…
               </p>
             ) : aggregateTrend.length === 0 ? (
-              <p className="py-16 text-center font-mono text-[10px] uppercase text-slate-600">KAYIT YOK</p>
+              <p className="py-16 text-center font-mono text-[10px] uppercase text-app-text/45">KAYIT YOK</p>
             ) : (
-              <div className="h-[280px] min-h-[280px] w-full min-w-0">
-                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={280}>
+              <div className="relative h-[280px] min-h-[280px] w-full min-w-0">
+                <ResponsiveContainer
+                  width="100%"
+                  height={280}
+                  minWidth={0}
+                  debounce={50}
+                  initialDimension={{ width: 480, height: 280 }}
+                >
                   <AreaChart data={aggregateTrend}>
                     <defs>
                       <linearGradient id="groupPerfFill" x1="0" y1="0" x2="0" y2="1">
@@ -250,7 +256,7 @@ export default function InstructorAnalyticsTab({ groups, operators }) {
       ) : (
         <div className="space-y-4">
           <label className="block max-w-xs space-y-1">
-            <span className="font-mono text-[9px] font-bold uppercase text-slate-500">Operatör</span>
+            <span className="font-mono text-[9px] font-bold uppercase text-app-text/55">Operatör</span>
             <select className={selectClass} value={operatorId} onChange={(e) => setOperatorId(e.target.value)}>
               {groupMembers.map((op) => (
                 <option key={op.uid} value={op.uid}>
@@ -268,7 +274,7 @@ export default function InstructorAnalyticsTab({ groups, operators }) {
               { label: 'FoF', value: `%${hudStats.disciplineSuccess.fof}` },
             ].map((kpi) => (
               <div key={kpi.label} className="rounded border border-slate-800 bg-black/35 px-2.5 py-2">
-                <p className="font-mono text-[8px] uppercase text-slate-500">{kpi.label}</p>
+                <p className="font-mono text-[8px] uppercase text-app-text/55">{kpi.label}</p>
                 <p className="mt-1 font-mono text-lg font-black text-emerald-400">{kpi.value}</p>
               </div>
             ))}
@@ -283,12 +289,12 @@ export default function InstructorAnalyticsTab({ groups, operators }) {
 
           <div className="min-h-[min(48vh,480px)] rounded-xl border border-emerald-900/30 bg-slate-950/60 p-2">
             {logsLoading ? (
-              <p className="flex items-center justify-center gap-2 py-20 font-mono text-[10px] uppercase text-slate-500">
+              <p className="flex items-center justify-center gap-2 py-20 font-mono text-[10px] uppercase text-app-text/55">
                 <Loader2 className="size-4 animate-spin" aria-hidden />
                 HUD senkron…
               </p>
             ) : operatorHudLogs.length === 0 ? (
-              <p className="flex h-40 items-center justify-center font-mono text-[10px] uppercase text-slate-600">
+              <p className="flex h-40 items-center justify-center font-mono text-[10px] uppercase text-app-text/45">
                 AKADEMİK KAYIT YOK
               </p>
             ) : (

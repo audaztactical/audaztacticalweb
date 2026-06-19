@@ -5,7 +5,7 @@ import { emitFirebaseError } from '../../lib/firebaseErrorBus'
 import {
   fetchVideoNewsPage,
   formatVideoNewsDisplayDate,
-  VIDEO_NEWS_CHANNEL_FILTERS,
+  subscribeYoutubeChannelFilters,
   VIDEO_NEWS_PAGE_SIZE,
 } from '../../lib/firestoreVideoNews'
 
@@ -26,7 +26,7 @@ function resolveVideoEmbedUrl(item) {
  * @param {VideoNewsItem} item
  */
 function displayOrigin(item) {
-  return item.origin?.trim() || 'Taktiksel Video İstihbaratı'
+  return item.origin?.trim() || 'Taktiksel Video Haberi'
 }
 
 const cardVariants = {
@@ -43,7 +43,7 @@ const cardVariants = {
  */
 function VideoNewsCard({ item, onOpen }) {
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-sm border border-gray-800 bg-[#1a1a1a] transition-all duration-300 hover:border-[#ffaa00] hover:shadow-[0_0_22px_-6px_rgba(255,170,0,0.3)]">
+    <article className="group flex h-full flex-col overflow-hidden rounded-sm border border-gray-800 bg-app-bg transition-all duration-300 hover:border-[#ffaa00] hover:shadow-[0_0_22px_-6px_rgba(255,170,0,0.3)]">
       <div className="relative aspect-video overflow-hidden border-b border-gray-800 bg-black/60">
         {item.thumbnail ? (
           <img
@@ -132,14 +132,14 @@ function VideoNewsModal({ item, onClose }) {
             <p className="font-mono-technical text-[9px] uppercase tracking-wider text-[#ffaa00]">
               {displayOrigin(item)}
             </p>
-            <h2 id="video-modal-title" className="font-display mt-1 text-sm font-bold uppercase text-white">
+            <h2 id="video-modal-title" className="font-display mt-1 text-sm font-bold uppercase text-app-text">
               {item.title}
             </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="shrink-0 rounded border border-gray-700 p-1.5 text-gray-400 transition hover:border-gray-600 hover:text-white"
+            className="shrink-0 rounded border border-gray-700 p-1.5 text-gray-400 transition hover:border-gray-600 hover:text-app-text"
             aria-label="Kapat"
           >
             <X className="size-4" aria-hidden />
@@ -185,8 +185,19 @@ export default function VideoNewsGrid() {
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState(/** @type {string | null} */ (null))
   const [activeVideo, setActiveVideo] = useState(/** @type {VideoNewsItem | null} */ (null))
+  const [channelFilters, setChannelFilters] = useState(/** @type {string[]} */ (['TÜMÜ']))
 
   const fetchSeq = useRef(0)
+
+  useEffect(() => {
+    return subscribeYoutubeChannelFilters(setChannelFilters, (err) => emitFirebaseError(err))
+  }, [])
+
+  useEffect(() => {
+    if (!channelFilters.includes(selectedFilter)) {
+      setSelectedFilter('TÜMÜ')
+    }
+  }, [channelFilters, selectedFilter])
 
   const loadInitial = useCallback(async (filter) => {
     const seq = ++fetchSeq.current
@@ -269,10 +280,10 @@ export default function VideoNewsGrid() {
             value={selectedFilter}
             onChange={(e) => setSelectedFilter(e.target.value)}
             disabled={loading && videos.length === 0}
-            className="w-full appearance-none rounded border border-gray-700 bg-[#0a0a0a] px-3 py-2.5 pr-10 font-mono-technical text-[10px] font-bold uppercase tracking-wider text-gray-300 outline-none transition focus:border-[#ffaa00] focus:ring-1 focus:ring-[#ffaa00]/30 disabled:opacity-60"
+            className="w-full appearance-none rounded border border-gray-700 bg-app-bg px-3 py-2.5 pr-10 font-mono-technical text-[10px] font-bold uppercase tracking-wider text-gray-300 outline-none transition focus:border-[#ffaa00] focus:ring-1 focus:ring-[#ffaa00]/30 disabled:opacity-60"
           >
-            {VIDEO_NEWS_CHANNEL_FILTERS.map((channel) => (
-              <option key={channel} value={channel} className="bg-[#0a0a0a] text-gray-300">
+            {channelFilters.map((channel) => (
+              <option key={channel} value={channel} className="bg-app-bg text-gray-300">
                 {channel}
               </option>
             ))}
@@ -293,7 +304,7 @@ export default function VideoNewsGrid() {
       ) : null}
 
       {showInitialLoader ? (
-        <p className="flex items-center justify-center gap-2 py-24 font-mono-technical text-[10px] uppercase text-slate-500">
+        <p className="flex items-center justify-center gap-2 py-24 font-mono-technical text-[10px] uppercase text-app-text/55">
           <Loader2 className="size-4 animate-spin text-[#ffaa00]" aria-hidden />
           Video paketleri alınıyor…
         </p>

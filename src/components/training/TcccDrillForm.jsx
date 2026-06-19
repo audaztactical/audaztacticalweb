@@ -17,21 +17,21 @@ import { calculateTcccSuccessPercent } from '../../lib/trainingSuccessScore'
 import SuccessScorePreview from './SuccessScorePreview'
 
 const inputClass =
-  'w-full rounded border border-[#00FF41]/30 bg-[#0A0A0A] px-2 py-2 font-mono-technical text-sm text-slate-100 outline-none placeholder:text-slate-600 focus:border-[#00FF41]/60'
+  'w-full rounded border border-accent/30 bg-app-bg px-2 py-2 font-mono-technical text-sm text-slate-100 outline-none placeholder:text-app-text/45 focus:border-accent/60'
 
 const selectClass =
-  'dossier-blood-select w-full rounded border border-[#00FF41]/35 bg-[#0A0A0A] py-2 pl-2 pr-8 font-mono-technical text-[11px] uppercase text-white outline-none focus:border-[#00FF41]/60'
+  'dossier-blood-select w-full rounded border border-accent/35 bg-app-bg py-2 pl-2 pr-8 font-mono-technical text-[11px] uppercase text-app-text outline-none focus:border-accent/60'
 
 const textareaClass =
-  'w-full min-h-[5rem] resize-y rounded border border-[#00FF41]/30 bg-[#0A0A0A] px-2 py-2 font-mono-technical text-sm leading-relaxed text-slate-100 outline-none placeholder:text-slate-600 focus:border-[#00FF41]/60'
+  'w-full min-h-[5rem] resize-y rounded border border-accent/30 bg-app-bg px-2 py-2 font-mono-technical text-sm leading-relaxed text-slate-100 outline-none placeholder:text-app-text/45 focus:border-accent/60'
 
-const labelClass = 'font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-slate-500'
+const labelClass = 'font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-app-text/55'
 
 const toggleClass = (active) =>
   `flex cursor-pointer items-start gap-2.5 rounded border px-3 py-2.5 transition ${
     active
-      ? 'border-[#00FF41]/50 bg-[#00FF41]/10 text-green-400'
-      : 'border-white/10 text-zinc-300 hover:border-[#00FF41]/25 hover:text-zinc-100'
+      ? 'border-accent/50 bg-accent/10 text-green-400'
+      : 'border-white/10 text-zinc-300 hover:border-accent/25 hover:text-zinc-100'
   }`
 
 /**
@@ -170,8 +170,8 @@ export default function TcccDrillForm({ addLog }) {
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-4 lg:grid-cols-2">
-      <TacticalPanel className="relative border-[#00FF41]/20 bg-[#0a0a0a]/95 p-0">
-        <p className="border-b border-[#00FF41]/15 bg-[#080808] px-4 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-[#00FF41]/90">
+      <TacticalPanel className="relative border-accent/20 bg-app-bg/95 p-0">
+        <p className="border-b border-accent/15 bg-app-bg px-4 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-accent/90">
           TCCC METRİKLERİ · KLİNİK & TAKTİK
         </p>
         <div className="space-y-4 p-4">
@@ -212,7 +212,7 @@ export default function TcccDrillForm({ addLog }) {
               <label key={opt.id} className={toggleClass(form.procedures.includes(opt.id))}>
                 <input
                   type="checkbox"
-                  className="mt-1 size-4 accent-[#00FF41]"
+                  className="mt-1 size-4 accent-accent"
                   checked={form.procedures.includes(opt.id)}
                   onChange={() => toggleProcedure(opt.id)}
                 />
@@ -240,8 +240,8 @@ export default function TcccDrillForm({ addLog }) {
         </div>
       </TacticalPanel>
 
-      <TacticalPanel className="relative border-[#00FF41]/25 bg-[#0a0a0a]/95 p-0">
-        <p className="border-b border-[#00FF41]/15 bg-[#080808] px-4 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-white">
+      <TacticalPanel className="relative border-accent/25 bg-app-bg/95 p-0">
+        <p className="border-b border-accent/15 bg-app-bg px-4 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-app-text">
           MARCH · EK KLİNİK VERİ
         </p>
         <div className="space-y-4 p-4">
@@ -348,7 +348,7 @@ export default function TcccDrillForm({ addLog }) {
               <label key={key} className={toggleClass(form[key])}>
                 <input
                   type="checkbox"
-                  className="size-4 accent-[#00FF41]"
+                  className="size-4 accent-accent"
                   checked={form[key]}
                   onChange={(e) => patch({ [key]: e.target.checked })}
                 />
@@ -372,7 +372,7 @@ export default function TcccDrillForm({ addLog }) {
 
       <div className="space-y-3 lg:col-span-2">
         {submitOk ? (
-          <p className="rounded border border-[#00FF41]/40 bg-[#00FF41]/10 px-3 py-2 text-center font-mono-technical text-[9px] font-bold uppercase text-[#00FF41]">
+          <p className="rounded border border-accent/40 bg-accent/10 px-3 py-2 text-center font-mono-technical text-[9px] font-bold uppercase text-accent">
             TCCC_KAYDI_AKTARILDI · TCCC_LOGS
           </p>
         ) : null}
@@ -381,7 +381,7 @@ export default function TcccDrillForm({ addLog }) {
             {submitError}
           </p>
         ) : null}
-        <div className="flex flex-wrap gap-2 rounded border border-[#00FF41]/15 bg-black/40 p-3">
+        <div className="flex flex-wrap gap-2 rounded border border-accent/15 bg-black/40 p-3">
           <SuccessScorePreview percent={previewSuccessPercent} />
           {submitBlockedReason && !saving ? (
             <p className="w-full rounded border border-amber-500/35 bg-amber-950/20 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase text-amber-300/95">
@@ -391,7 +391,7 @@ export default function TcccDrillForm({ addLog }) {
           <button
             type="submit"
             disabled={saving || !canSubmit}
-            className="w-full rounded border border-[#00FF41]/55 bg-[#00FF41]/12 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#00FF41] hover:bg-[#00FF41]/20 disabled:opacity-40"
+            className="w-full rounded border border-accent/55 bg-accent/12 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent hover:bg-accent/20 disabled:opacity-40"
           >
             {saving ? 'AKTARILIYOR…' : 'TCCC_KAYDINI_ONAYLA'}
           </button>

@@ -1,15 +1,46 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
+
+    // Profil ve operatör görselleri — yalnızca sahip yazabilir
+    match /users/{userId}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.size < 6 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    // Brifing / forum görselleri
+    match /forum/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+        && request.resource.size < 6 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    // Mesaj / muhabere görselleri
+    match /messages/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+        && request.resource.size < 6 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    // Legacy — mevcut muhabere chat_images yolu
     match /chat_images/{chatId}/{fileName} {
       allow read: if request.auth != null;
       allow write: if request.auth != null
         && request.resource.size < 6 * 1024 * 1024
         && request.resource.contentType.matches('image/.*');
     }
+
+    // Legacy — eski avatar yolu
     match /avatars/{userId}/{fileName} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && request.auth.uid == userId
+        && request.resource.size < 6 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
     }
   }
 }

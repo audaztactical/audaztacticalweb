@@ -17,21 +17,21 @@ import TacticalRangeSandbox from './TacticalRangeSandbox'
 import IndividualTrainingSessionHeader from './IndividualTrainingSessionHeader'
 
 const inputClass =
-  'w-full rounded border border-[#00FF41]/30 bg-[#0A0A0A] px-2 py-2 font-mono-technical text-sm text-slate-100 outline-none placeholder:text-slate-600 focus:border-[#00FF41]/60'
+  'w-full rounded border border-accent/30 bg-app-bg px-2 py-2 font-mono-technical text-sm text-slate-100 outline-none placeholder:text-app-text/45 focus:border-accent/60'
 
 const selectClass =
-  'dossier-blood-select w-full rounded border border-[#00FF41]/35 bg-[#0A0A0A] py-2 pl-2 pr-8 font-mono-technical text-[11px] uppercase text-white outline-none focus:border-[#00FF41]/60'
+  'dossier-blood-select w-full rounded border border-accent/35 bg-app-bg py-2 pl-2 pr-8 font-mono-technical text-[11px] uppercase text-app-text outline-none focus:border-accent/60'
 
 const operationNoteTextareaClass =
-  'block h-full min-h-0 w-full resize-none rounded border border-[#00FF41]/30 bg-[#0A0A0A] px-2 py-2 font-mono-technical text-sm leading-relaxed text-slate-100 outline-none placeholder:text-slate-600 focus:border-[#00FF41]/60'
+  'block h-full min-h-0 w-full resize-none rounded border border-accent/30 bg-app-bg px-2 py-2 font-mono-technical text-sm leading-relaxed text-slate-100 outline-none placeholder:text-app-text/45 focus:border-accent/60'
 
-const labelClass = 'font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-slate-500'
+const labelClass = 'font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-app-text/55'
 
 const toggleClass = (active) =>
   `flex cursor-pointer items-start gap-2.5 rounded border px-3 py-2.5 transition ${
     active
-      ? 'border-[#00FF41]/50 bg-[#00FF41]/10 text-green-400'
-      : 'border-white/10 text-zinc-300 hover:border-[#00FF41]/25 hover:text-zinc-100'
+      ? 'border-accent/50 bg-accent/10 text-green-400'
+      : 'border-white/10 text-zinc-300 hover:border-accent/25 hover:text-zinc-100'
   }`
 
 /** @typedef {'form' | 'sandbox' | 'registry'} EgitimViewMode */
@@ -207,8 +207,8 @@ export default function EgitimTerminal({
   const tabBtnClass = (active) =>
     `flex-1 rounded border py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider transition sm:flex-none sm:px-5 ${
       active
-        ? 'border-[#00FF41]/60 bg-[#00FF41]/15 text-[#00FF41] shadow-[0_0_16px_rgba(0,255,65,0.25)]'
-        : 'border-white/15 text-slate-500 hover:border-[#00FF41]/35 hover:text-slate-300'
+        ? 'border-accent/60 bg-accent/15 text-accent shadow-[0_0_24px_-8px_color-mix(in_srgb,var(--accent-color)_35%,transparent)]]'
+        : 'border-white/15 text-app-text/55 hover:border-accent/35 hover:text-app-text/90'
     }`
 
   return (
@@ -218,14 +218,14 @@ export default function EgitimTerminal({
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex w-fit items-center gap-2 rounded border border-[#ffb400]/50 bg-[#ffb400]/12 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#ffb400] transition hover:bg-[#ffb400]/20"
+          className="inline-flex w-fit items-center gap-2 rounded border border-accent/50 bg-accent/12 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent transition hover:bg-accent/20"
         >
           <ChevronLeft className="size-3.5" aria-hidden />
           KATEGORİLERE DÖN
         </button>
 
         <div
-          className="flex w-full gap-2 rounded border border-[#00FF41]/25 bg-black/60 p-1 sm:w-auto"
+          className="flex w-full gap-2 rounded border border-accent/25 bg-black/60 p-1 sm:w-auto"
           role="tablist"
           aria-label="Eğitim terminal görünümü"
         >
@@ -281,7 +281,7 @@ export default function EgitimTerminal({
         />
       ) : viewMode === 'sandbox' ? (
         !ready ? (
-          <p className="font-mono-technical text-[10px] uppercase text-slate-500">OTURUM_GEREKLİ</p>
+          <p className="font-mono-technical text-[10px] uppercase text-app-text/55">OTURUM_GEREKLİ</p>
         ) : listenError ? (
           <p className="rounded border border-red-500/40 bg-red-950/25 px-3 py-2 font-mono-technical text-[10px] text-red-300">
             VERİ_KANALI_KESİLDİ · YENİDEN_DENE
@@ -300,7 +300,7 @@ export default function EgitimTerminal({
           />
         )
       ) : !ready ? (
-        <p className="font-mono-technical text-[10px] uppercase text-slate-500">OTURUM_GEREKLİ</p>
+        <p className="font-mono-technical text-[10px] uppercase text-app-text/55">OTURUM_GEREKLİ</p>
       ) : listenError ? (
         <p className="rounded border border-red-500/40 bg-red-950/25 px-3 py-2 font-mono-technical text-[10px] text-red-300">
           VERİ_KANALI_KESİLDİ · YENİDEN_DENE
@@ -310,10 +310,10 @@ export default function EgitimTerminal({
           onSubmit={handleSubmit}
           className="grid gap-4 lg:grid-cols-2 lg:items-stretch lg:[&>*]:min-h-0"
         >
-          <TacticalPanel className="relative flex h-full min-h-0 flex-col overflow-hidden border-[#00FF41]/20 bg-[#0a0a0a]/95 p-0">
-            <span className="pointer-events-none absolute left-2 top-2 z-10 h-4 w-4 border-l border-t border-[#00FF41]/40" />
-            <span className="pointer-events-none absolute right-2 top-2 z-10 h-4 w-4 border-r border-t border-[#00FF41]/40" />
-            <p className="shrink-0 border-b border-[#00FF41]/15 bg-[#080808] px-4 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-[#00FF41]/90">
+          <TacticalPanel className="relative flex h-full min-h-0 flex-col overflow-hidden border-accent/20 bg-app-bg/95 p-0">
+            <span className="pointer-events-none absolute left-2 top-2 z-10 h-4 w-4 border-l border-t border-accent/40" />
+            <span className="pointer-events-none absolute right-2 top-2 z-10 h-4 w-4 border-r border-t border-accent/40" />
+            <p className="shrink-0 border-b border-accent/15 bg-app-bg px-4 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-accent/90">
               EĞİTİM KURULUM · TAKVİM METRİKLERİ
             </p>
 
@@ -366,27 +366,27 @@ export default function EgitimTerminal({
                 </label>
               </div>
 
-              <div className="flex min-h-0 flex-col justify-end border border-[#00FF41]/20 bg-[#050805] p-3">
-                <p className="mb-2 font-mono-technical text-[7px] font-bold uppercase tracking-[0.22em] text-[#00FF41]/75">
+              <div className="flex min-h-0 flex-col justify-end border border-accent/20 bg-app-bg p-3">
+                <p className="mb-2 font-mono-technical text-[7px] font-bold uppercase tracking-[0.22em] text-accent/75">
                   TAKTİK PLAN ÖZETİ
                 </p>
-                <div className="space-y-1.5 font-mono-technical text-[9px] uppercase leading-relaxed text-slate-400">
+                <div className="space-y-1.5 font-mono-technical text-[9px] uppercase leading-relaxed text-app-text/70">
                   <p>
                     ODAK: <span className="text-slate-100">{focusLabel}</span>
                   </p>
                   <p>
-                    ZORLUK: <span className="text-[#ffb400]">{difficultyLabel}</span>
+                    ZORLUK: <span className="text-accent">{difficultyLabel}</span>
                   </p>
                   <p>
                     SÜRE: <span className="text-[#5ec8ff]">{durationMin > 0 ? `${durationMin} dk` : '—'}</span>
                   </p>
                   <p>
-                    LOJİSTİK: <span className="text-[#00FF41]">{logisticsCount} / 4</span>
+                    LOJİSTİK: <span className="text-accent">{logisticsCount} / 4</span>
                     {' · '}
-                    DURUM: <span className="text-slate-200">PLANLANDI</span>
+                    DURUM: <span className="text-app-text">PLANLANDI</span>
                   </p>
                 </div>
-                <div className="mt-3 border-t border-[#00FF41]/12 pt-3 max-lg:hidden">
+                <div className="mt-3 border-t border-accent/12 pt-3 max-lg:hidden">
                   <MatrixWireVisualizer
                     hubMode
                     variant="cartridge"
@@ -399,10 +399,10 @@ export default function EgitimTerminal({
             </div>
           </TacticalPanel>
 
-          <TacticalPanel className="relative flex h-full min-h-0 flex-col border-[#00FF41]/25 bg-[#0a0a0a]/95 p-0">
-            <span className="pointer-events-none absolute bottom-2 left-2 z-10 h-4 w-4 border-b border-l border-[#00FF41]/40" />
-            <span className="pointer-events-none absolute bottom-2 right-2 z-10 h-4 w-4 border-b border-r border-[#00FF41]/40" />
-            <p className="shrink-0 border-b border-[#00FF41]/15 bg-[#080808] px-4 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-white">
+          <TacticalPanel className="relative flex h-full min-h-0 flex-col border-accent/25 bg-app-bg/95 p-0">
+            <span className="pointer-events-none absolute bottom-2 left-2 z-10 h-4 w-4 border-b border-l border-accent/40" />
+            <span className="pointer-events-none absolute bottom-2 right-2 z-10 h-4 w-4 border-b border-r border-accent/40" />
+            <p className="shrink-0 border-b border-accent/15 bg-app-bg px-4 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-app-text">
               LOJİSTİK · EĞİTİM HEDEFLERİ
             </p>
 
@@ -415,7 +415,7 @@ export default function EgitimTerminal({
                   <label className={toggleClass(form.weaponsReady)}>
                     <input
                       type="checkbox"
-                      className="mt-1 size-4 shrink-0 accent-[#00FF41]"
+                      className="mt-1 size-4 shrink-0 accent-accent"
                       checked={form.weaponsReady}
                       onChange={(e) => patch({ weaponsReady: e.target.checked })}
                     />
@@ -426,7 +426,7 @@ export default function EgitimTerminal({
                   <label className={toggleClass(form.ammoAllocated)}>
                     <input
                       type="checkbox"
-                      className="mt-1 size-4 shrink-0 accent-[#00FF41]"
+                      className="mt-1 size-4 shrink-0 accent-accent"
                       checked={form.ammoAllocated}
                       onChange={(e) => patch({ ammoAllocated: e.target.checked })}
                     />
@@ -437,7 +437,7 @@ export default function EgitimTerminal({
                   <label className={toggleClass(form.ppeChecked)}>
                     <input
                       type="checkbox"
-                      className="mt-1 size-4 shrink-0 accent-[#00FF41]"
+                      className="mt-1 size-4 shrink-0 accent-accent"
                       checked={form.ppeChecked}
                       onChange={(e) => patch({ ppeChecked: e.target.checked })}
                     />
@@ -448,7 +448,7 @@ export default function EgitimTerminal({
                   <label className={toggleClass(form.tcccKitReady)}>
                     <input
                       type="checkbox"
-                      className="mt-1 size-4 shrink-0 accent-[#00FF41]"
+                      className="mt-1 size-4 shrink-0 accent-accent"
                       checked={form.tcccKitReady}
                       onChange={(e) => patch({ tcccKitReady: e.target.checked })}
                     />
@@ -459,7 +459,7 @@ export default function EgitimTerminal({
                 </div>
               </div>
 
-              <div className="grid min-h-0 grid-rows-[auto_1fr] gap-1 border-t border-[#00FF41]/12 pt-2">
+              <div className="grid min-h-0 grid-rows-[auto_1fr] gap-1 border-t border-accent/12 pt-2">
                 <label
                   htmlFor="egitim-operation-note"
                   className="block shrink-0 font-mono text-xs tracking-wider text-green-500/70"
@@ -480,7 +480,7 @@ export default function EgitimTerminal({
 
           <div className="space-y-3 lg:col-span-2">
             {submitOk ? (
-              <p className="rounded border border-[#00FF41]/40 bg-[#00FF41]/10 px-3 py-2 text-center font-mono-technical text-[9px] font-bold uppercase text-[#00FF41]">
+              <p className="rounded border border-accent/40 bg-accent/10 px-3 py-2 text-center font-mono-technical text-[9px] font-bold uppercase text-accent">
                 EĞİTİM_PLANI_AKTARILDI · TRAININGS
               </p>
             ) : null}
@@ -490,7 +490,7 @@ export default function EgitimTerminal({
               </p>
             ) : null}
 
-            <div className="flex flex-wrap gap-2 rounded border border-[#00FF41]/15 bg-black/40 p-3">
+            <div className="flex flex-wrap gap-2 rounded border border-accent/15 bg-black/40 p-3">
               {submitBlockedReason && !saving ? (
                 <p className="w-full rounded border border-amber-500/35 bg-amber-950/20 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase text-amber-300/95">
                   {submitBlockedReason}
@@ -499,7 +499,7 @@ export default function EgitimTerminal({
               <button
                 type="submit"
                 disabled={saving || !canSubmit}
-                className="w-full rounded border border-[#00FF41]/55 bg-[#00FF41]/12 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#00FF41] shadow-[0_0_20px_rgba(0,255,65,0.2)] hover:bg-[#00FF41]/20 disabled:cursor-not-allowed disabled:opacity-40"
+                className="w-full rounded border border-accent/55 bg-accent/12 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent shadow-[0_0_24px_-8px_color-mix(in_srgb,var(--accent-color)_35%,transparent)]] hover:bg-accent/20 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {saving ? 'AKTARILIYOR…' : 'EĞİTİM_PLANINI_ONAYLA'}
               </button>

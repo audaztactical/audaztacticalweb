@@ -39,7 +39,7 @@ export default function DashboardSystemLog({ entries }) {
       <div className="cmd-log-scroll flex flex-1 flex-col gap-4 overflow-y-auto px-5 py-5">
         {entries.length === 0 ? (
           <div className="cmd-empty py-8">
-            <ClipboardList className="size-7 text-slate-600" strokeWidth={1.25} aria-hidden />
+            <ClipboardList className="size-7 text-app-text/45" strokeWidth={1.25} aria-hidden />
             <p className="cmd-empty__text mt-2">Henüz kayıt yok.</p>
           </div>
         ) : (

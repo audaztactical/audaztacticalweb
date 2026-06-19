@@ -37,9 +37,9 @@ import { emitFirebaseError } from '../../lib/firebaseErrorBus'
 /** @typedef {import('../../lib/firestoreGroupTrainings').TrainingResult} TrainingResult */
 
 const hudLabel =
-  'font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-slate-500'
+  'font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-app-text/55'
 const hudReadonly =
-  'rounded border border-[#00FF41]/25 bg-[#0A0A0A] px-3 py-2.5 font-mono-technical text-sm font-semibold tabular-nums text-[#00FF41]'
+  'rounded border border-accent/25 bg-app-bg px-3 py-2.5 font-mono-technical text-sm font-semibold tabular-nums text-accent'
 
 /** @param {unknown} ts */
 function formatTrainingDate(ts) {
@@ -99,7 +99,7 @@ function GroupTrainingDetailPanel({ training, results, currentUid }) {
         </TacticalPanel>
         <TacticalPanel className="p-3">
           <p className={hudLabel}>Tarih</p>
-          <p className="font-mono-technical text-xs text-[#00FF41]">{formatTrainingDate(training.createdAt)}</p>
+          <p className="font-mono-technical text-xs text-accent">{formatTrainingDate(training.createdAt)}</p>
         </TacticalPanel>
       </div>
 
@@ -107,7 +107,7 @@ function GroupTrainingDetailPanel({ training, results, currentUid }) {
         <TacticalPanel className="p-4">
           <p className={hudLabel}>Sizin durumunuz</p>
           <div className="mt-2 flex flex-wrap items-center gap-3">
-            <span className="font-mono-technical text-sm text-white">
+            <span className="font-mono-technical text-sm text-app-text">
               {myResult.hits}/{training.totalAmmo} vuruş
               {training.isTimed && myResult.time != null ? ` · ${myResult.time}s` : ''}
               {training.isTimed && training.targetTimeSec != null ? ` (hedef ${training.targetTimeSec}s)` : ''}
@@ -131,7 +131,7 @@ function GroupTrainingDetailPanel({ training, results, currentUid }) {
             </span>
           </div>
           {!myAssessment.isPassed ? (
-            <p className="mt-2 font-mono-technical text-[9px] uppercase text-slate-500">
+            <p className="mt-2 font-mono-technical text-[9px] uppercase text-app-text/55">
               {myAssessment.statusResult === 'SÜRE İHLALİ'
                 ? 'Vuruş barajı geçildi ancak süre hedefi aşıldı.'
                 : 'Vuruş barajı altında kaldı.'}
@@ -140,26 +140,26 @@ function GroupTrainingDetailPanel({ training, results, currentUid }) {
         </TacticalPanel>
       ) : (
         <TacticalPanel className="p-4">
-          <p className="font-mono-technical text-xs text-slate-500">
+          <p className="font-mono-technical text-xs text-app-text/55">
             {isActive ? 'Henüz sonuç göndermediniz — Canlı Oturum sekmesinden giriş yapabilirsiniz.' : 'Bu eğitime katılım kaydınız yok.'}
           </p>
         </TacticalPanel>
       )}
 
       <TacticalPanel className="overflow-hidden p-0">
-        <div className="border-b border-[#00FF41]/15 px-4 py-2.5">
-          <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-[#00FF41]/80">
+        <div className="border-b border-accent/15 px-4 py-2.5">
+          <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-accent/80">
             [ GRUP SONUÇLARI · SALT OKUNUR ]
           </p>
         </div>
         {trainingResults.length === 0 ? (
-          <p className="px-4 py-6 text-center font-mono-technical text-xs text-slate-500">
+          <p className="px-4 py-6 text-center font-mono-technical text-xs text-app-text/55">
             Henüz sonuç bildirilmedi.
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[28rem] text-left font-mono-technical text-[10px]">
-              <thead className="border-b border-white/10 bg-black/40 text-slate-500">
+              <thead className="border-b border-white/10 bg-black/40 text-app-text/55">
                 <tr>
                   <th className="px-3 py-2 font-bold uppercase tracking-wider">Operatör</th>
                   <th className="px-3 py-2 font-bold uppercase tracking-wider">Vuruş</th>
@@ -178,12 +178,12 @@ function GroupTrainingDetailPanel({ training, results, currentUid }) {
                   return (
                   <tr
                     key={row.id}
-                    className={row.operatorId === currentUid ? 'bg-[#00FF41]/[0.06]' : 'text-slate-300'}
+                    className={row.operatorId === currentUid ? 'bg-accent/[0.06]' : 'text-app-text/90'}
                   >
                     <td className="px-3 py-2.5">
                       {row.operatorName}
                       {row.operatorId === currentUid ? (
-                        <span className="ml-1 text-[#00FF41]/70">(siz)</span>
+                        <span className="ml-1 text-accent/70">(siz)</span>
                       ) : null}
                     </td>
                     <td className="px-3 py-2.5 tabular-nums">
@@ -205,7 +205,7 @@ function GroupTrainingDetailPanel({ training, results, currentUid }) {
                         {rowLabel}
                       </span>
                     </td>
-                    <td className="px-3 py-2.5 text-slate-500">{formatTrainingDate(row.submittedAt)}</td>
+                    <td className="px-3 py-2.5 text-app-text/55">{formatTrainingDate(row.submittedAt)}</td>
                   </tr>
                   )
                 })}
@@ -434,7 +434,7 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
 
   if (groupLoading) {
     return (
-      <div className="flex min-h-[240px] items-center justify-center gap-2 text-[#00FF41]">
+      <div className="flex min-h-[240px] items-center justify-center gap-2 text-accent">
         <Loader2 className="size-5 animate-spin" aria-hidden />
         <span className="font-mono-technical text-xs uppercase tracking-widest">Grup doğrulanıyor…</span>
       </div>
@@ -447,7 +447,7 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-2 font-mono-technical text-[10px] uppercase tracking-widest text-slate-500 hover:text-[#00FF41]"
+          className="inline-flex items-center gap-2 font-mono-technical text-[10px] uppercase tracking-widest text-app-text/55 hover:text-accent"
         >
           <ArrowLeft className="size-4" aria-hidden />
           Kategorilere dön
@@ -468,25 +468,25 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-2 font-mono-technical text-[10px] uppercase tracking-widest text-slate-500 transition hover:text-[#00FF41]"
+          className="inline-flex items-center gap-2 font-mono-technical text-[10px] uppercase tracking-widest text-app-text/55 transition hover:text-accent"
         >
           <ArrowLeft className="size-4" aria-hidden />
           Kategorilere dön
         </button>
-        <p className="flex items-center gap-2 font-mono-technical text-[10px] uppercase tracking-widest text-[#00FF41]/80">
+        <p className="flex items-center gap-2 font-mono-technical text-[10px] uppercase tracking-widest text-accent/80">
           <Users className="size-4" aria-hidden />
           {membership.groupName ?? membership.groupId}
         </p>
       </div>
 
-      <header className="border-b border-[#00FF41]/15 pb-3">
-        <p className="font-mono-technical text-[10px] font-semibold uppercase tracking-[0.32em] text-[#00FF41]/85">
+      <header className="border-b border-accent/15 pb-3">
+        <p className="font-mono-technical text-[10px] font-semibold uppercase tracking-[0.32em] text-accent/85">
           [ GRUP EĞİTİMİ · GRP-07 ]
         </p>
-        <h2 className="font-display mt-1 text-lg font-bold tracking-[0.1em] text-white">
+        <h2 className="font-display mt-1 text-lg font-bold tracking-[0.1em] text-app-text">
           Grup eğitimi — görüntüleme ve canlı giriş
         </h2>
-        <p className="mt-1 font-mono-technical text-[9px] uppercase text-slate-500">
+        <p className="mt-1 font-mono-technical text-[9px] uppercase text-app-text/55">
           Geçmiş kayıtlar salt okunur · yalnızca aktif oturuma skor gönderilebilir
         </p>
       </header>
@@ -498,8 +498,8 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
           className={[
             'inline-flex items-center gap-2 rounded border px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider transition',
             tab === 'live'
-              ? 'border-[#00FF41]/50 bg-[#00FF41]/10 text-[#00FF41]'
-              : 'border-white/10 text-slate-500 hover:border-[#00FF41]/30 hover:text-[#00FF41]',
+              ? 'border-accent/50 bg-accent/10 text-accent'
+              : 'border-white/10 text-app-text/55 hover:border-accent/30 hover:text-accent',
           ].join(' ')}
         >
           <Radio className="size-3.5" aria-hidden />
@@ -516,8 +516,8 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
           className={[
             'inline-flex items-center gap-2 rounded border px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider transition',
             tab === 'history'
-              ? 'border-[#00FF41]/50 bg-[#00FF41]/10 text-[#00FF41]'
-              : 'border-white/10 text-slate-500 hover:border-[#00FF41]/30 hover:text-[#00FF41]',
+              ? 'border-accent/50 bg-accent/10 text-accent'
+              : 'border-white/10 text-app-text/55 hover:border-accent/30 hover:text-accent',
           ].join(' ')}
         >
           <History className="size-3.5" aria-hidden />
@@ -526,8 +526,8 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
       </div>
 
       {loading ? (
-        <p className="flex items-center gap-2 font-mono-technical text-xs text-slate-500">
-          <Loader2 className="size-4 animate-spin text-[#00FF41]" aria-hidden />
+        <p className="flex items-center gap-2 font-mono-technical text-xs text-app-text/55">
+          <Loader2 className="size-4 animate-spin text-accent" aria-hidden />
           Grup eğitim verileri yükleniyor…
         </p>
       ) : tab === 'live' ? (
@@ -561,17 +561,17 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
                           <span
                             className={[
                               'block font-mono-technical text-sm font-semibold',
-                              isClosedForMe ? 'text-zinc-400' : 'text-white',
+                              isClosedForMe ? 'text-zinc-400' : 'text-app-text',
                             ].join(' ')}
                           >
                             {training.trainingName}
                           </span>
-                          <span className="mt-0.5 block font-mono-technical text-[9px] uppercase text-slate-500">
+                          <span className="mt-0.5 block font-mono-technical text-[9px] uppercase text-app-text/55">
                             {training.level && training.level !== '—' ? `${training.level} · ` : ''}
                             {training.isTimed ? 'Zamanlı · ' : ''}
                             {formatTrainingDate(training.createdAt)}
                           </span>
-                          <span className="mt-1 block font-mono-technical text-[8px] uppercase tracking-wide text-slate-600">
+                          <span className="mt-1 block font-mono-technical text-[8px] uppercase tracking-wide text-app-text/45">
                             {sessionStatus.hint}
                           </span>
                         </span>
@@ -616,7 +616,7 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
               ) : selectedSessionStatus?.key === 'open' ? (
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <TacticalPanel className="p-4 sm:p-5">
-                    <div className="flex items-center gap-2 text-[#00FF41]">
+                    <div className="flex items-center gap-2 text-accent">
                       <Crosshair className="size-5" strokeWidth={1.5} aria-hidden />
                       <span className="font-display text-xs font-bold uppercase tracking-widest">Skor girişi</span>
                     </div>
@@ -638,7 +638,7 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
 
                       {selected.isTimed ? (
                         <div className="flex items-start gap-2">
-                          <Timer className="mt-2 size-4 shrink-0 text-[#ffb400]/80" aria-hidden />
+                          <Timer className="mt-2 size-4 shrink-0 text-accent/80" aria-hidden />
                           <Input
                             variant="gold"
                             label="Süre (saniye)"
@@ -657,7 +657,7 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
                     </div>
 
                     {msg ? (
-                      <p className="mt-3 font-mono-technical text-xs text-[#00FF41]/90">{msg}</p>
+                      <p className="mt-3 font-mono-technical text-xs text-accent/90">{msg}</p>
                     ) : null}
 
                     <Button type="submit" variant="primary" className="mt-4 w-full" disabled={busy}>
@@ -673,13 +673,13 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
         <div className="space-y-4">
           {historyTrainings.length === 0 ? (
             <TacticalPanel className="p-6 text-center">
-              <p className="font-mono-technical text-xs text-slate-500">Henüz grup eğitimi kaydı yok.</p>
+              <p className="font-mono-technical text-xs text-app-text/55">Henüz grup eğitimi kaydı yok.</p>
             </TacticalPanel>
           ) : (
             <TacticalPanel className="overflow-hidden p-0">
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[32rem] text-left font-mono-technical text-[10px]">
-                  <thead className="border-b border-white/10 bg-black/40 text-slate-500">
+                  <thead className="border-b border-white/10 bg-black/40 text-app-text/55">
                     <tr>
                       <th className="px-3 py-2 font-bold uppercase tracking-wider">Eğitim</th>
                       <th className="px-3 py-2 font-bold uppercase tracking-wider">Durum</th>
@@ -700,16 +700,16 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
                         <tr
                           key={training.id}
                           className={[
-                            detailId === training.id ? 'bg-[#00FF41]/[0.06]' : '',
+                            detailId === training.id ? 'bg-accent/[0.06]' : '',
                             sessionStatus.key === 'closed_for_me' ? 'bg-zinc-950/45 text-zinc-400' : '',
-                            sessionStatus.key === 'completed' ? 'bg-slate-950/35 text-slate-400' : '',
-                            sessionStatus.key === 'open' ? 'text-slate-300' : '',
+                            sessionStatus.key === 'completed' ? 'bg-slate-950/35 text-app-text/70' : '',
+                            sessionStatus.key === 'open' ? 'text-app-text/90' : '',
                           ].join(' ')}
                         >
                           <td className="px-3 py-2.5">
-                            <span className="font-semibold text-white">{training.trainingName}</span>
+                            <span className="font-semibold text-app-text">{training.trainingName}</span>
                             {training.level && training.level !== '—' ? (
-                              <span className="mt-0.5 block text-slate-500">{training.level}</span>
+                              <span className="mt-0.5 block text-app-text/55">{training.level}</span>
                             ) : null}
                           </td>
                           <td className="px-3 py-2.5">
@@ -722,7 +722,7 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
                               {sessionStatus.label}
                             </span>
                           </td>
-                          <td className="px-3 py-2.5 text-slate-500">{formatTrainingDate(training.createdAt)}</td>
+                          <td className="px-3 py-2.5 text-app-text/55">{formatTrainingDate(training.createdAt)}</td>
                           <td className="px-3 py-2.5">
                             {mine && mineAssessment ? (
                               <span
@@ -741,7 +741,7 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
                                 )}
                               </span>
                             ) : (
-                              <span className="text-slate-600">—</span>
+                              <span className="text-app-text/45">—</span>
                             )}
                           </td>
                           <td className="px-3 py-2.5 tabular-nums">{count} operatör</td>
@@ -749,7 +749,7 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
                             <button
                               type="button"
                               onClick={() => openDetail(training)}
-                              className="inline-flex items-center gap-1 rounded border border-white/10 px-2 py-1 text-[9px] uppercase tracking-wider text-slate-400 transition hover:border-[#00FF41]/40 hover:text-[#00FF41]"
+                              className="inline-flex items-center gap-1 rounded border border-white/10 px-2 py-1 text-[9px] uppercase tracking-wider text-app-text/70 transition hover:border-accent/40 hover:text-accent"
                             >
                               <Eye className="size-3" aria-hidden />
                               Detay
@@ -766,7 +766,7 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
 
           {detailTraining ? (
             <div className="space-y-3">
-              <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-[#00FF41]/75">
+              <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-accent/75">
                 [ DETAY · {detailTraining.trainingName} ]
               </p>
               <GroupTrainingDetailPanel training={detailTraining} results={results} currentUid={uid} />

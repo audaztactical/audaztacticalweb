@@ -1,9 +1,14 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  // COOP başlığı ekleme — Firebase signInWithPopup, Chrome'da window.closed uyarısı üretir.
-  // Google girişi signInWithRedirect ile yapılıyor (GoogleAuthRedirectHandler).
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+
+  return {
+    plugins: [react(), tailwindcss()],
+    define: {
+      'import.meta.env.VITE_ADMIN_EMAIL': JSON.stringify(env.VITE_ADMIN_EMAIL ?? ''),
+    },
+  }
 })

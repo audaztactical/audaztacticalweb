@@ -20,15 +20,15 @@ import { emitFirebaseError } from '../../lib/firebaseErrorBus'
 /** @typedef {import('../../lib/firestoreGroupTraining').GroupActivityLog} GroupActivityLog */
 
 const atisInputClass =
-  'w-full rounded border border-[#00FF41]/30 bg-[#0A0A0A] px-2 py-2 font-mono-technical text-sm text-slate-100 outline-none placeholder:text-slate-600 focus:border-[#00FF41]/60'
+  'w-full rounded border border-accent/30 bg-app-bg px-2 py-2 font-mono-technical text-sm text-slate-100 outline-none placeholder:text-app-text/45 focus:border-accent/60'
 
-const atisLabelClass = 'font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-slate-500'
+const atisLabelClass = 'font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-app-text/55'
 
 const atisSelectClass =
-  'dossier-blood-select w-full rounded border border-[#00FF41]/35 bg-[#0A0A0A] py-2 pl-2 pr-8 font-mono-technical text-[11px] uppercase text-white outline-none focus:border-[#00FF41]/60'
+  'dossier-blood-select w-full rounded border border-accent/35 bg-app-bg py-2 pl-2 pr-8 font-mono-technical text-[11px] uppercase text-app-text outline-none focus:border-accent/60'
 
 const criteriaBoxClass =
-  'rounded border border-[#00FF41]/20 bg-[#00FF41]/[0.04] p-3 font-mono-technical text-[10px] uppercase text-slate-400'
+  'rounded border border-accent/20 bg-accent/[0.04] p-3 font-mono-technical text-[10px] uppercase text-app-text/70'
 
 /**
  * @param {{
@@ -227,18 +227,18 @@ export default function GroupTrainingCommand({ groups, operators, instructorId }
 
   if (!user?.uid) {
     return (
-      <p className="font-mono text-[10px] uppercase text-slate-600">OTURUM GEREKLİ · GRUP EĞİTİM KOMUTASI</p>
+      <p className="font-mono text-[10px] uppercase text-app-text/45">OTURUM GEREKLİ · GRUP EĞİTİM KOMUTASI</p>
     )
   }
 
   return (
-    <section className="space-y-4 rounded-xl border border-[#00FF41]/25 bg-slate-950/95 p-4 shadow-[0_0_40px_-16px_rgba(0,255,65,0.2)]">
-      <header className="flex flex-col gap-3 border-b border-[#00FF41]/15 pb-4 sm:flex-row sm:items-end sm:justify-between">
+    <section className="space-y-4 rounded-xl border border-accent/25 bg-slate-950/95 p-4 shadow-[0_0_24px_-8px_color-mix(in_srgb,var(--accent-color)_35%,transparent)]]">
+      <header className="flex flex-col gap-3 border-b border-accent/15 pb-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
-          <p className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] text-[#00FF41]/90">
+          <p className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] text-accent/90">
             [ GRUP EĞİTİM & EĞİTMEN LOG · AKADEMİK KOMUTA ]
           </p>
-          <p className="max-w-xl font-mono text-[10px] leading-relaxed text-slate-500">
+          <p className="max-w-xl font-mono text-[10px] leading-relaxed text-app-text/55">
             Kişisel antrenman loglarından bağımsız · yalnızca eğitmen onaylı grup metrikleri
           </p>
         </div>
@@ -269,12 +269,12 @@ export default function GroupTrainingCommand({ groups, operators, instructorId }
       </header>
 
       {!activeGroup ? (
-        <p className="py-8 text-center font-mono text-[10px] uppercase text-slate-600">AKTİF GRUP SEÇİN</p>
+        <p className="py-8 text-center font-mono text-[10px] uppercase text-app-text/45">AKTİF GRUP SEÇİN</p>
       ) : (
         <>
           <div className="grid gap-4 xl:grid-cols-2">
-            <div className="rounded-lg border border-[#00FF41]/20 bg-[#0a0a0a]/90 p-4">
-              <p className="mb-3 flex items-center gap-2 border-b border-[#00FF41]/15 pb-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.22em] text-[#00FF41]">
+            <div className="rounded-lg border border-accent/20 bg-app-bg/90 p-4">
+              <p className="mb-3 flex items-center gap-2 border-b border-accent/15 pb-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.22em] text-accent">
                 <ClipboardList className="size-4" strokeWidth={1.5} aria-hidden />
                 [ 📑 AKADEMİ EĞİTİM ŞABLONU OLUŞTUR ]
               </p>
@@ -339,7 +339,7 @@ export default function GroupTrainingCommand({ groups, operators, instructorId }
                 <button
                   type="submit"
                   disabled={tplSaving}
-                  className="w-full rounded border border-[#00FF41]/50 bg-[#00FF41]/10 py-2 font-mono-technical text-[10px] font-bold uppercase tracking-wider text-[#00FF41] transition hover:bg-[#00FF41]/20 disabled:opacity-50"
+                  className="w-full rounded border border-accent/50 bg-accent/10 py-2 font-mono-technical text-[10px] font-bold uppercase tracking-wider text-accent transition hover:bg-accent/20 disabled:opacity-50"
                 >
                   {tplSaving ? '…' : 'ŞABLONU KAYDET'}
                 </button>
@@ -354,21 +354,21 @@ export default function GroupTrainingCommand({ groups, operators, instructorId }
                   </p>
                 ) : null}
                 {templatesLoading ? (
-                  <p className="flex items-center gap-2 font-mono text-[9px] uppercase text-slate-500">
-                    <Loader2 className="size-3 animate-spin text-[#00FF41]" aria-hidden />
+                  <p className="flex items-center gap-2 font-mono text-[9px] uppercase text-app-text/55">
+                    <Loader2 className="size-3 animate-spin text-accent" aria-hidden />
                     Şablonlar yükleniyor…
                   </p>
                 ) : (
-                  <p className="font-mono text-[9px] uppercase text-slate-600">
+                  <p className="font-mono text-[9px] uppercase text-app-text/45">
                     {templates.length} KAYITLI ŞABLON
                   </p>
                 )}
               </form>
             </div>
 
-            <div className="rounded-lg border border-[#00FF41]/25 bg-[#0a0a0a]/90 p-4">
-              <p className="mb-3 flex items-center gap-2 border-b border-[#00FF41]/15 pb-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.22em] text-white">
-                <Zap className="size-4 text-[#ffb400]" strokeWidth={1.5} aria-hidden />
+            <div className="rounded-lg border border-accent/25 bg-app-bg/90 p-4">
+              <p className="mb-3 flex items-center gap-2 border-b border-accent/15 pb-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.22em] text-app-text">
+                <Zap className="size-4 text-accent" strokeWidth={1.5} aria-hidden />
                 [ HIZLI TAKIM LOG KONSOLU · 40-OPERATÖR MATRİS ]
               </p>
               <form onSubmit={handleSubmitLog} className="space-y-3">
@@ -414,12 +414,12 @@ export default function GroupTrainingCommand({ groups, operators, instructorId }
                   )}
                 </select>
 
-                <p className="font-mono text-[8px] font-bold uppercase tracking-wider text-[#00FF41]/80">
+                <p className="font-mono text-[8px] font-bold uppercase tracking-wider text-accent/80">
                   ADIM 3 · OTOMATİK KRİTER (ŞABLONDAN)
                 </p>
                 {selectedTemplate ? (
                   <div className={criteriaBoxClass}>
-                    <p className="text-[#00FF41]">{disciplineLabel} · {selectedTemplate.drillName}</p>
+                    <p className="text-accent">{disciplineLabel} · {selectedTemplate.drillName}</p>
                     <p className="mt-1">
                       Hedef: {selectedTemplate.criticalMetrics.targetType || '—'} · Max{' '}
                       {selectedTemplate.criticalMetrics.maxSeconds}s · {selectedTemplate.criticalMetrics.totalRounds}{' '}
@@ -430,7 +430,7 @@ export default function GroupTrainingCommand({ groups, operators, instructorId }
                   <div className={criteriaBoxClass}>ŞABLON SEÇİN</div>
                 )}
 
-                <p className="font-mono text-[8px] font-bold uppercase tracking-wider text-white/70">
+                <p className="font-mono text-[8px] font-bold uppercase tracking-wider text-app-text/70">
                   ADIM 4 · MANUEL GİRİŞ
                 </p>
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -530,7 +530,7 @@ export default function GroupTrainingCommand({ groups, operators, instructorId }
                   key={kpi.label}
                   className="rounded-lg border border-slate-800/80 bg-black/35 px-2.5 py-2"
                 >
-                  <p className="font-mono text-[8px] uppercase text-slate-500">{kpi.label}</p>
+                  <p className="font-mono text-[8px] uppercase text-app-text/55">{kpi.label}</p>
                   <p className="mt-1 font-mono text-lg font-black tabular-nums text-emerald-400">{kpi.value}</p>
                 </div>
               ))}
@@ -545,7 +545,7 @@ export default function GroupTrainingCommand({ groups, operators, instructorId }
 
             <div className="min-h-[min(42vh,420px)] overflow-hidden rounded-lg border border-emerald-900/30 bg-black/40 p-2">
               {hudProgressLogs.length === 0 ? (
-                <p className="flex h-40 items-center justify-center font-mono text-[10px] uppercase text-slate-600">
+                <p className="flex h-40 items-center justify-center font-mono text-[10px] uppercase text-app-text/45">
                   BU OPERATÖR İÇİN AKADEMİK KAYIT YOK
                 </p>
               ) : (

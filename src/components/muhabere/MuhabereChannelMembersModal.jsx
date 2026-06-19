@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Loader2, Radio, UserMinus, Users, X } from 'lucide-react'
-import OperatorBadge from '../ui/OperatorBadge'
+import OperatorAvatar from '../ui/OperatorAvatar'
+import PresenceIndicator from '../ui/PresenceIndicator'
 import TacticalAlert from './TacticalAlert'
+import { useOperatorsPresenceMap } from '../../hooks/useOperatorsPresenceMap'
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
 import {
   fetchMuhabereChannel,
@@ -58,6 +60,9 @@ export default function MuhabereChannelMembersModal({
   const rosterUidSet = useMemo(() => new Set(contacts.map((c) => c.uid)), [contacts])
 
   const displayChannel = liveChannel ?? channel
+
+  const memberUids = useMemo(() => rows.map((row) => row.uid), [rows])
+  const presenceMap = useOperatorsPresenceMap(memberUids)
 
   useEffect(() => {
     if (!open || !channel) {
@@ -203,6 +208,7 @@ export default function MuhabereChannelMembersModal({
                 {rows.map((member) => {
                   const canRemove = isCreator && !member.isSelf
                   const removing = removingMemberUid === member.uid
+                  const presence = presenceMap[member.uid]
 
                   return (
                     <li key={member.uid} className="flex items-stretch gap-1">
@@ -214,7 +220,14 @@ export default function MuhabereChannelMembersModal({
                           member.isInactive ? 'opacity-70' : '',
                         ].join(' ')}
                       >
-                        <OperatorBadge size="sm" callsign={member.callsign} username={member.username} />
+                        <OperatorAvatar
+                          uid={member.uid}
+                          size="sm"
+                          callsign={member.callsign}
+                          username={member.username}
+                          photoUrl={contactByUid.get(member.uid)?.photoURL ?? undefined}
+                          online={presence?.online}
+                        />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-xs font-semibold uppercase tracking-wide text-zinc-200">
                             {member.callsign}
@@ -222,10 +235,19 @@ export default function MuhabereChannelMembersModal({
                               <span className="ml-1.5 text-[9px] font-bold text-lime-400">(SİZ)</span>
                             ) : null}
                           </p>
-                          <p className="text-[9px] uppercase tracking-wider text-zinc-500">
-                            {member.isCreator ? 'Grup kurucusu · ' : ''}
-                            {member.role === 'instructor' ? 'Eğitmen' : 'Operatör'}
-                            {member.isInactive ? ' · Rehberde değil' : ''}
+                          <p className="flex flex-wrap items-center gap-x-1.5 text-[9px] uppercase tracking-wider text-zinc-500">
+                            {!member.isInactive ? (
+                              <PresenceIndicator
+                                online={presence?.online ?? false}
+                                label={presence?.label}
+                              />
+                            ) : null}
+                            {!member.isInactive ? <span aria-hidden>·</span> : null}
+                            <span>
+                              {member.isCreator ? 'Grup kurucusu · ' : ''}
+                              {member.role === 'instructor' ? 'Eğitmen' : 'Operatör'}
+                              {member.isInactive ? ' · Rehberde değil' : ''}
+                            </span>
                           </p>
                         </div>
                       </button>

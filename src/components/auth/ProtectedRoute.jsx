@@ -1,16 +1,17 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import SystemAlertGate from '../alerts/SystemAlertGate'
 import { useAuth } from '../../context/AuthContext'
 import { userRequiresEmailVerification } from '../../lib/authEmailVerification'
 
 function RouteLoader() {
   return (
     <div
-      className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-[#0a0b0d] text-[#ffb400]"
+      className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-[#0a0b0d] text-accent"
       role="status"
       aria-live="polite"
     >
-      <div className="size-10 animate-pulse rounded-full border-2 border-[#ffb400]/30 border-t-[#ffb400]" />
-      <p className="font-mono-technical text-xs font-semibold uppercase tracking-[0.35em] text-slate-500">
+      <div className="size-10 animate-pulse rounded-full border-2 border-accent/30 border-t-accent" />
+      <p className="font-mono-technical text-xs font-semibold uppercase tracking-[0.35em] text-app-text/55">
         Oturum doğrulanıyor
       </p>
     </div>
@@ -18,10 +19,10 @@ function RouteLoader() {
 }
 
 export default function ProtectedRoute() {
-  const { user, loading, googleRedirectResolving } = useAuth()
+  const { user, userData, loading, profileLoading, googleRedirectResolving } = useAuth()
   const location = useLocation()
 
-  if (loading || googleRedirectResolving) {
+  if (loading || googleRedirectResolving || (user && profileLoading && !userData)) {
     return <RouteLoader />
   }
 
@@ -29,7 +30,8 @@ export default function ProtectedRoute() {
     return <Navigate to="/" replace state={{ openAuth: true, from: location.pathname }} />
   }
 
-  const needsVerify = userRequiresEmailVerification(user)
+  const accountStatus = userData?.accountStatus ?? 'active'
+  const needsVerify = userRequiresEmailVerification(user, accountStatus)
   const onVerifyPage = location.pathname === '/verify-email'
 
   if (needsVerify && !onVerifyPage) {
@@ -40,5 +42,10 @@ export default function ProtectedRoute() {
     return <Navigate to="/dashboard" replace />
   }
 
-  return <Outlet />
+  return (
+    <>
+      <SystemAlertGate />
+      <Outlet />
+    </>
+  )
 }

@@ -43,9 +43,9 @@ import {
 /** @typedef {null | 'weapons' | 'attachments' | 'ammo'} IlwsActiveCategory */
 
 const inputClass =
-  'w-full border-0 border-b border-white/20 bg-transparent py-2 font-mono-technical text-sm text-slate-100 outline-none ring-0 placeholder:text-slate-600 focus:border-[#00FF41]/55'
+  'w-full border-0 border-b border-white/20 bg-transparent py-2 font-mono-technical text-sm text-slate-100 outline-none ring-0 placeholder:text-app-text/45 focus:border-accent/55'
 const selectClass =
-  'dossier-blood-select w-full rounded border border-[#00FF41]/30 bg-[#0A0A0A] py-2 pl-2 pr-1 font-mono-technical text-sm text-white outline-none'
+  'dossier-blood-select w-full rounded border border-accent/30 bg-app-bg py-2 pl-2 pr-1 font-mono-technical text-sm text-app-text outline-none'
 
 /** @param {{ active: boolean, onClick: () => void, icon: import('react').ReactNode, code: string }} p */
 function FilterChip({ active, onClick, icon, code }) {
@@ -55,8 +55,8 @@ function FilterChip({ active, onClick, icon, code }) {
       onClick={onClick}
       className={`inline-flex items-center gap-1.5 rounded border px-2 py-1 font-mono-technical text-[9px] font-bold uppercase tracking-wider transition ${
         active
-          ? 'border-[#ffb400]/55 bg-[#ffb400]/15 text-[#ffb400]'
-          : 'border-white/10 bg-black/30 text-slate-500 hover:border-white/20 hover:text-slate-300'
+          ? 'border-accent/55 bg-accent/15 text-accent'
+          : 'border-white/10 bg-black/30 text-app-text/55 hover:border-white/20 hover:text-app-text/90'
       }`}
     >
       <span className="opacity-90">{icon}</span>
@@ -95,6 +95,7 @@ const AMMO_FORM_INITIAL = {
   caliberName: '',
   calibre: '',
   initialStock: '1000',
+  unitPrice: '',
   criticalThreshold: String(DEFAULT_CRITICAL_THRESHOLD),
 }
 
@@ -217,6 +218,7 @@ export default function Cephanelik() {
     const calibre = ammoForm.calibre.trim() || caliberName
     const initialStock = Math.max(0, Math.floor(invNum(ammoForm.initialStock)))
     const criticalThreshold = Math.max(1, Math.floor(invNum(ammoForm.criticalThreshold) || DEFAULT_CRITICAL_THRESHOLD))
+    const unitPrice = Math.max(0, Math.round(invNum(ammoForm.unitPrice) * 100) / 100)
     const created = todayIsoDate()
     setSaving(true)
     try {
@@ -229,6 +231,7 @@ export default function Cephanelik() {
         quantity: initialStock,
         current_stock: initialStock,
         critical_threshold: criticalThreshold,
+        unitPrice,
         ammo_transaction_logs:
           initialStock > 0
             ? [
@@ -429,11 +432,11 @@ export default function Cephanelik() {
       <div className="relative z-[2] space-y-3">
         <div className="flex flex-wrap items-end justify-between gap-3 border-b border-white/10 pb-3">
           <div className="min-w-0 flex-1">
-            <p className="font-mono-technical text-[10px] font-semibold uppercase tracking-[0.32em] text-[#ffb400]/85">
+            <p className="font-mono-technical text-[10px] font-semibold uppercase tracking-[0.32em] text-accent/85">
               [ ENVANTER VE LOJİSTİK ]
             </p>
-            <h1 className="font-display mt-1 text-lg font-bold tracking-[0.1em] text-white sm:text-xl">ILWS TERMINAL</h1>
-            <p className="mt-0.5 max-w-xl font-mono-technical text-[9px] leading-snug text-slate-500">
+            <h1 className="font-display mt-1 text-lg font-bold tracking-[0.1em] text-app-text sm:text-xl">ILWS TERMINAL</h1>
+            <p className="mt-0.5 max-w-xl font-mono-technical text-[9px] leading-snug text-app-text/55">
               Integrated Logistics &amp; Weapon System · cephanelik ve teçhizat yönetimi
             </p>
           </div>
@@ -444,7 +447,7 @@ export default function Cephanelik() {
                 type="button"
                 onClick={openCreate}
                 disabled={!ready}
-                className="inline-flex items-center gap-2 rounded border border-[#ffb400]/45 bg-[#ffb400]/12 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#ffb400] shadow-[0_0_14px_-4px_rgba(255,180,0,0.35)] hover:bg-[#ffb400]/18 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded border border-accent/45 bg-accent/12 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent shadow-[0_0_14px_-4px_rgba(255,180,0,0.35)] hover:bg-accent/18 disabled:opacity-50"
               >
                 <Plus className="size-3.5" strokeWidth={2} aria-hidden />
                 + YENİ_ENVANTER_KAYDI
@@ -455,8 +458,8 @@ export default function Cephanelik() {
 
         <TacticalPanel className="border-[#004DFF]/20 bg-[#0c0c0e]/96 p-0 backdrop-blur-sm">
           {activeCategory ? (
-            <div className="flex flex-wrap items-center gap-1.5 border-b border-white/10 bg-[#080808] px-3 py-2 sm:px-4">
-              <span className="mr-1 font-mono-technical text-[8px] uppercase tracking-widest text-slate-600">FİLTRE</span>
+            <div className="flex flex-wrap items-center gap-1.5 border-b border-white/10 bg-app-bg px-3 py-2 sm:px-4">
+              <span className="mr-1 font-mono-technical text-[8px] uppercase tracking-widest text-app-text/45">FİLTRE</span>
               {ILWS_FILTERS.filter((f) => {
                 if (f.id === 'ALL') return true
                 if (activeCategory === 'weapons') return f.id === 'P_TFK' || f.id === 'T_TAB' || f.id === 'AV_TFK'
@@ -484,23 +487,23 @@ export default function Cephanelik() {
             ) : null}
             {!ready ? (
               <div className="flex min-h-[30vh] items-center justify-center">
-                <span className="size-8 animate-spin rounded-full border-2 border-[#ffb400] border-t-transparent" aria-hidden />
+                <span className="size-8 animate-spin rounded-full border-2 border-accent border-t-transparent" aria-hidden />
               </div>
             ) : loading && items.length === 0 ? (
               <div className="flex min-h-[30vh] items-center justify-center">
-                <span className="size-8 animate-spin rounded-full border-2 border-[#ffb400] border-t-transparent" aria-hidden />
+                <span className="size-8 animate-spin rounded-full border-2 border-accent border-t-transparent" aria-hidden />
               </div>
             ) : items.length === 0 ? (
               <div className="flex min-h-[32vh] flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-white/12 bg-black/30 py-12">
                 <Lock className="size-12 text-slate-700" strokeWidth={1} aria-hidden />
-                <p className="font-mono-technical text-[10px] uppercase tracking-widest text-slate-600">
+                <p className="font-mono-technical text-[10px] uppercase tracking-widest text-app-text/45">
                   CEPHANELİK_BOŞ · LOJİSTİK_DESTEK_BEKLENİYOR
                 </p>
                 {activeCategory !== 'weapons' && activeCategory !== 'attachments' && activeCategory !== 'ammo' ? (
                   <button
                     type="button"
                     onClick={openCreate}
-                    className="rounded border border-[#ffb400]/40 px-3 py-1.5 font-mono-technical text-[9px] font-bold uppercase text-[#ffb400]"
+                    className="rounded border border-accent/40 px-3 py-1.5 font-mono-technical text-[9px] font-bold uppercase text-accent"
                   >
                     + YENİ_ENVANTER_KAYDI
                   </button>
@@ -605,19 +608,19 @@ export default function Cephanelik() {
             aria-label="Kapat"
             onClick={() => !saving && setModalOpen(false)}
           />
-          <TacticalPanel className="relative z-[1] w-full max-w-lg border-[#004DFF]/25 bg-[#0A0A0A]/98 p-0 shadow-2xl backdrop-blur-md">
-            <div className="border-b border-white/10 bg-[#080808] px-3 py-2 sm:px-4">
-              <p className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] text-[#ffb400]/90">
+          <TacticalPanel className="relative z-[1] w-full max-w-lg border-[#004DFF]/25 bg-app-bg/98 p-0 shadow-2xl backdrop-blur-md">
+            <div className="border-b border-white/10 bg-app-bg px-3 py-2 sm:px-4">
+              <p className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] text-accent/90">
                 {editingId ? 'ENVANTER_DÜZENLE' : 'YENİ_ENVANTER_KAYDI'}
               </p>
             </div>
             <form onSubmit={handleSave} className="space-y-3 px-3 py-3 sm:px-4 sm:py-4">
               <label className="block">
-                <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">ÖĞE_ADI</span>
+                <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">ÖĞE_ADI</span>
                 <input className={inputClass} value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required />
               </label>
               <label className="block">
-                <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">KOD_KATEGORİ</span>
+                <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">KOD_KATEGORİ</span>
                 <select
                   className={`${selectClass} mt-1`}
                   value={form.tacticalCategory}
@@ -631,7 +634,7 @@ export default function Cephanelik() {
                 </select>
               </label>
               <label className="block">
-                <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">TEKNİK_TANIM</span>
+                <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">TEKNİK_TANIM</span>
                 <textarea
                   className={`${inputClass} min-h-[3rem] resize-y border border-white/10 bg-black/30 px-2 py-2`}
                   value={form.technicalDescription}
@@ -641,17 +644,17 @@ export default function Cephanelik() {
               </label>
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="block">
-                  <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">MARKA</span>
+                  <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">MARKA</span>
                   <input className={inputClass} value={form.brand} onChange={(e) => setForm((f) => ({ ...f, brand: e.target.value }))} />
                 </label>
                 <label className="block">
-                  <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">SERİ_NO</span>
+                  <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">SERİ_NO</span>
                   <input className={inputClass} value={form.serialNo} onChange={(e) => setForm((f) => ({ ...f, serialNo: e.target.value }))} />
                 </label>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="block">
-                  <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">ADET</span>
+                  <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">ADET</span>
                   <input
                     className={inputClass}
                     inputMode="numeric"
@@ -661,7 +664,7 @@ export default function Cephanelik() {
                   />
                 </label>
                 <label className="block">
-                  <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">KALİBRE</span>
+                  <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">KALİBRE</span>
                   <input className={inputClass} value={form.calibre} onChange={(e) => setForm((f) => ({ ...f, calibre: e.target.value }))} />
                 </label>
               </div>
@@ -670,7 +673,7 @@ export default function Cephanelik() {
               form.tacticalCategory === 'AV_TFK' ? (
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="block">
-                    <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">KONDİSYON_%</span>
+                    <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">KONDİSYON_%</span>
                     <input
                       className={inputClass}
                       inputMode="numeric"
@@ -681,7 +684,7 @@ export default function Cephanelik() {
                     />
                   </label>
                   <label className="block">
-                    <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">SON_BAKIM</span>
+                    <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">SON_BAKIM</span>
                     <input
                       type="date"
                       className={`${inputClass} rounded border border-white/10 bg-black/25 px-2`}
@@ -693,7 +696,7 @@ export default function Cephanelik() {
               ) : null}
               {form.tacticalCategory === 'OPT' ? (
                 <label className="block">
-                  <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                  <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">
                     BAĞLI_SİLAH (CANIK_YP9 vb.)
                   </span>
                   <input
@@ -706,7 +709,7 @@ export default function Cephanelik() {
               ) : null}
               {form.tacticalCategory === 'MHM' ? (
                 <label className="block">
-                  <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">BALİSTİK_TİP</span>
+                  <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">BALİSTİK_TİP</span>
                   <input
                     className={inputClass}
                     value={form.ballisticType}
@@ -720,14 +723,14 @@ export default function Cephanelik() {
                   type="button"
                   onClick={() => setModalOpen(false)}
                   disabled={saving}
-                  className="rounded border border-white/15 px-3 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-slate-400 hover:bg-white/5"
+                  className="rounded border border-white/15 px-3 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-app-text/70 hover:bg-white/5"
                 >
                   İPTAL
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="rounded border border-[#ffb400]/45 bg-[#ffb400]/12 px-3 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#ffb400] disabled:opacity-50"
+                  className="rounded border border-accent/45 bg-accent/12 px-3 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent disabled:opacity-50"
                 >
                   {saving ? '…' : editingId ? 'GÜNCELLE' : 'KAYDET'}
                 </button>

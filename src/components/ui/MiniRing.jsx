@@ -22,7 +22,7 @@ export default function MiniRing({ percent = 0, size = 36, stroke = 3 }) {
         cy={cy}
         r={r}
         fill="none"
-        stroke="#ffb400"
+        stroke="var(--accent-color)"
         strokeWidth={stroke}
         strokeLinecap="round"
         strokeDasharray={dash}

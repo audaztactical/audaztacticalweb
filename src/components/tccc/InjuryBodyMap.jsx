@@ -1,4 +1,5 @@
 import { useId } from 'react'
+import { getAccentColor } from '../../lib/themeColors'
 
 /**
  * Ön yüz insan silüeti + tıklanabilir yaralanma bölgeleri (kod ile Firestore’a yazılır).
@@ -90,8 +91,9 @@ export function InjuryBodyMap({ selectedId, onSelect }) {
               const w = Math.abs(rect.w)
               const x = rect.w < 0 ? rect.x + rect.w : rect.x
               const active = selectedId === id
-              const fillCold = active ? 'rgba(255,180,0,0.42)' : 'rgba(127,29,29,0.14)'
-              const strokeCold = active ? '#ffb400' : 'rgba(248,113,113,0.45)'
+              const accent = getAccentColor()
+              const fillCold = active ? `color-mix(in srgb, ${accent} 42%, transparent)` : 'rgba(127,29,29,0.14)'
+              const strokeCold = active ? accent : 'rgba(248,113,113,0.45)'
               return (
                 <rect
                   key={`${id}-${i}`}

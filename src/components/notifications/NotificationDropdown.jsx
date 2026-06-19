@@ -141,7 +141,7 @@ export default function NotificationDropdown() {
           width: panelStyle.width,
           zIndex: 500,
         }}
-        className="overflow-hidden rounded-lg border border-zinc-800 bg-[#0a0a0a]/95 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.8)] backdrop-blur-md"
+        className="overflow-hidden rounded-lg border border-zinc-800 bg-app-bg/95 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.8)] backdrop-blur-md"
       >
         <div className="flex items-center justify-between gap-2 border-b border-zinc-800 px-3 py-2.5">
           <p className="font-mono text-[10px] font-bold uppercase tracking-[0.28em] text-amber-500/90">

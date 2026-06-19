@@ -134,7 +134,7 @@ export default function OperatorInstructorRecordsPanel({
     return (
       <article
         key={log.logId}
-        className="rounded-lg border border-[#00FF41]/15 bg-[#050805]/80"
+        className="rounded-lg border border-accent/15 bg-app-bg/80"
       >
         <button
           type="button"
@@ -142,41 +142,41 @@ export default function OperatorInstructorRecordsPanel({
           className="flex w-full items-start justify-between gap-3 px-3 py-3 text-left"
         >
           <div className="min-w-0 flex-1">
-            <p className="font-mono-technical text-[9px] uppercase text-slate-500">
+            <p className="font-mono-technical text-[9px] uppercase text-app-text/55">
               {formatRecordTimestamp(log.timestamp)}
             </p>
             <p className="mt-1 truncate font-mono-technical text-sm font-bold text-amber-300">
               {log.drillName || 'Drill'}
             </p>
-            <p className="mt-0.5 font-mono-technical text-[10px] uppercase text-slate-400">
+            <p className="mt-0.5 font-mono-technical text-[10px] uppercase text-app-text/70">
               {resolveOperatorLabel(log.operatorId)} · {formatInstructorRecordSummary(log)}
               {status !== '—' ? ` · ${status}` : ''}
             </p>
           </div>
           {open ? (
-            <ChevronUp className="size-4 shrink-0 text-slate-500" aria-hidden />
+            <ChevronUp className="size-4 shrink-0 text-app-text/55" aria-hidden />
           ) : (
-            <ChevronDown className="size-4 shrink-0 text-slate-500" aria-hidden />
+            <ChevronDown className="size-4 shrink-0 text-app-text/55" aria-hidden />
           )}
         </button>
 
         {open ? (
-          <div className="space-y-2 border-t border-slate-800/80 px-3 py-3 font-mono-technical text-[10px] uppercase text-slate-400">
+          <div className="space-y-2 border-t border-slate-800/80 px-3 py-3 font-mono-technical text-[10px] uppercase text-app-text/70">
             {log.duration != null && Number.isFinite(Number(log.duration)) ? (
               <p>
-                <span className="text-slate-500">Süre:</span> {Number(log.duration)} sn
+                <span className="text-app-text/55">Süre:</span> {Number(log.duration)} sn
               </p>
             ) : null}
             {log.statusResult ? (
               <p>
-                <span className="text-slate-500">Durum:</span> {log.statusResult}
+                <span className="text-app-text/55">Durum:</span> {log.statusResult}
               </p>
             ) : null}
             {notes.length ? (
               <div>
-                <p className="text-slate-500">Eğitmen notu</p>
+                <p className="text-app-text/55">Eğitmen notu</p>
                 {notes.map((n) => (
-                  <p key={n} className="mt-1 normal-case text-slate-300">
+                  <p key={n} className="mt-1 normal-case text-app-text/90">
                     {n}
                   </p>
                 ))}
@@ -184,7 +184,7 @@ export default function OperatorInstructorRecordsPanel({
             ) : null}
             {infractions.length ? (
               <div>
-                <p className="text-slate-500">İhlal / red gerekçesi</p>
+                <p className="text-app-text/55">İhlal / red gerekçesi</p>
                 <ul className="mt-1 list-inside list-disc normal-case text-rose-300/90">
                   {infractions.map((item) => (
                     <li key={item}>{item}</li>
@@ -193,7 +193,7 @@ export default function OperatorInstructorRecordsPanel({
               </div>
             ) : null}
             {!notes.length && !infractions.length ? (
-              <p className="text-slate-600">Ek not veya ihlal kaydı yok</p>
+              <p className="text-app-text/45">Ek not veya ihlal kaydı yok</p>
             ) : null}
           </div>
         ) : null}
@@ -204,27 +204,27 @@ export default function OperatorInstructorRecordsPanel({
   const renderVbssRecord = (row) => {
     const open = expandedId === row.id
     return (
-      <article key={row.id} className="rounded-lg border border-[#00FF41]/15 bg-[#050805]/80">
+      <article key={row.id} className="rounded-lg border border-accent/15 bg-app-bg/80">
         <button
           type="button"
           onClick={() => setExpandedId(open ? '' : row.id)}
           className="flex w-full items-start justify-between gap-3 px-3 py-3 text-left"
         >
           <div className="min-w-0 flex-1">
-            <p className="font-mono-technical text-[9px] uppercase text-slate-500">
+            <p className="font-mono-technical text-[9px] uppercase text-app-text/55">
               {formatRecordTimestamp(row.createdAt)}
             </p>
             <p className="mt-1 font-mono-technical text-sm font-bold text-amber-300">
               VBSS Değerlendirme
             </p>
-            <p className="mt-0.5 font-mono-technical text-[10px] uppercase text-slate-400">
+            <p className="mt-0.5 font-mono-technical text-[10px] uppercase text-app-text/70">
               {resolveOperatorLabel(row.operatorId, row.operatorName)} · Genel {row.overallScore}/10
             </p>
           </div>
           {open ? (
-            <ChevronUp className="size-4 shrink-0 text-slate-500" aria-hidden />
+            <ChevronUp className="size-4 shrink-0 text-app-text/55" aria-hidden />
           ) : (
-            <ChevronDown className="size-4 shrink-0 text-slate-500" aria-hidden />
+            <ChevronDown className="size-4 shrink-0 text-app-text/55" aria-hidden />
           )}
         </button>
         {open ? (
@@ -238,9 +238,9 @@ export default function OperatorInstructorRecordsPanel({
                     {phase.title ?? phase.label}: {p?.score ?? '—'}/10
                   </p>
                   {obs ? (
-                    <p className="mt-0.5 normal-case text-slate-300">{obs}</p>
+                    <p className="mt-0.5 normal-case text-app-text/90">{obs}</p>
                   ) : (
-                    <p className="mt-0.5 text-slate-600">Gözlem yok</p>
+                    <p className="mt-0.5 text-app-text/45">Gözlem yok</p>
                   )}
                 </div>
               )
@@ -254,28 +254,28 @@ export default function OperatorInstructorRecordsPanel({
   const renderTcccRecord = (row) => {
     const open = expandedId === row.id
     return (
-      <article key={row.id} className="rounded-lg border border-[#00FF41]/15 bg-[#050805]/80">
+      <article key={row.id} className="rounded-lg border border-accent/15 bg-app-bg/80">
         <button
           type="button"
           onClick={() => setExpandedId(open ? '' : row.id)}
           className="flex w-full items-start justify-between gap-3 px-3 py-3 text-left"
         >
           <div className="min-w-0 flex-1">
-            <p className="font-mono-technical text-[9px] uppercase text-slate-500">
+            <p className="font-mono-technical text-[9px] uppercase text-app-text/55">
               {formatRecordTimestamp(row.createdAt)}
             </p>
             <p className="mt-1 font-mono-technical text-sm font-bold text-amber-300">
               MARCH Değerlendirme
             </p>
-            <p className="mt-0.5 font-mono-technical text-[10px] uppercase text-slate-400">
+            <p className="mt-0.5 font-mono-technical text-[10px] uppercase text-app-text/70">
               {resolveOperatorLabel(row.operatorId, row.operatorName)} · Genel {row.overallScore}/10
               {row.casualtyStatus ? ` · ${row.casualtyStatus}` : ''}
             </p>
           </div>
           {open ? (
-            <ChevronUp className="size-4 shrink-0 text-slate-500" aria-hidden />
+            <ChevronUp className="size-4 shrink-0 text-app-text/55" aria-hidden />
           ) : (
-            <ChevronDown className="size-4 shrink-0 text-slate-500" aria-hidden />
+            <ChevronDown className="size-4 shrink-0 text-app-text/55" aria-hidden />
           )}
         </button>
         {open ? (
@@ -291,9 +291,9 @@ export default function OperatorInstructorRecordsPanel({
                     {critical ? ' · KRİTİK HATA' : ''}
                   </p>
                   {obs ? (
-                    <p className="mt-0.5 normal-case text-slate-300">{obs}</p>
+                    <p className="mt-0.5 normal-case text-app-text/90">{obs}</p>
                   ) : (
-                    <p className="mt-0.5 text-slate-600">Gözlem yok</p>
+                    <p className="mt-0.5 text-app-text/45">Gözlem yok</p>
                   )}
                 </div>
               )
@@ -312,28 +312,28 @@ export default function OperatorInstructorRecordsPanel({
         : instructorLogs.length
 
   return (
-    <section className="rounded-xl border border-[#00FF41]/20 bg-[#050805]/90 p-4">
+    <section className="rounded-xl border border-accent/20 bg-app-bg/90 p-4">
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        <p className="flex items-center gap-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.24em] text-[#00FF41]">
+        <p className="flex items-center gap-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.24em] text-accent">
           <BookOpen className="size-4" strokeWidth={1.5} aria-hidden />
           Eğitmen kayıtları · {DISCIPLINE_TITLES[discipline] ?? discipline.toUpperCase()}
         </p>
-        <span className="inline-flex items-center gap-1 rounded border border-slate-700/80 px-2 py-0.5 font-mono-technical text-[8px] uppercase text-slate-500">
+        <span className="inline-flex items-center gap-1 rounded border border-slate-700/80 px-2 py-0.5 font-mono-technical text-[8px] uppercase text-app-text/55">
           <Lock className="size-3" aria-hidden />
           Salt okunur
         </span>
         {groupName ? (
-          <span className="font-mono-technical text-[9px] uppercase text-slate-600">{groupName}</span>
+          <span className="font-mono-technical text-[9px] uppercase text-app-text/45">{groupName}</span>
         ) : null}
       </div>
 
       {loading ? (
-        <p className="flex items-center gap-2 py-8 font-mono-technical text-[10px] uppercase text-slate-500">
-          <Loader2 className="size-4 animate-spin text-[#00FF41]" aria-hidden />
+        <p className="flex items-center gap-2 py-8 font-mono-technical text-[10px] uppercase text-app-text/55">
+          <Loader2 className="size-4 animate-spin text-accent" aria-hidden />
           Eğitmen kayıtları yükleniyor…
         </p>
       ) : recordCount === 0 ? (
-        <p className="py-8 text-center font-mono-technical text-[10px] uppercase text-slate-600">
+        <p className="py-8 text-center font-mono-technical text-[10px] uppercase text-app-text/45">
           Bu sektörde henüz eğitmen kaydı yok
         </p>
       ) : (

@@ -29,10 +29,10 @@ const STEP_ICONS = {
 }
 
 const fieldClass =
-  'w-full rounded-lg border border-white/12 bg-black/50 px-3 py-2 font-mono-technical text-xs text-slate-100 focus:border-[#ffb400]/45 focus:outline-none focus:ring-1 focus:ring-[#ffb400]/25'
+  'w-full rounded-lg border border-white/12 bg-black/50 px-3 py-2 font-mono-technical text-xs text-slate-100 focus:border-accent/45 focus:outline-none focus:ring-1 focus:ring-accent/25'
 
 const selectClass =
-  'dossier-blood-select w-full rounded-lg border border-white/15 bg-black/50 py-2 pl-2 pr-8 font-mono-technical text-xs uppercase text-slate-100 focus:border-[#ffb400]/45'
+  'dossier-blood-select w-full rounded-lg border border-white/15 bg-black/50 py-2 pl-2 pr-8 font-mono-technical text-xs uppercase text-slate-100 focus:border-accent/45'
 
 /**
  * @param {{
@@ -62,8 +62,8 @@ export default function Dd1380MarchWorkspace({
     <div className="space-y-4">
       <section aria-label="M.A.R.C.H. DD-1380">
         <div className="mb-3 flex items-center gap-2">
-          <Shield className="size-5 text-[#ffb400]" strokeWidth={1.5} aria-hidden />
-          <span className="font-mono-technical text-xs font-bold tracking-[0.35em] text-[#ffb400]">
+          <Shield className="size-5 text-accent" strokeWidth={1.5} aria-hidden />
+          <span className="font-mono-technical text-xs font-bold tracking-[0.35em] text-accent">
             M.A.R.C.H. · DD-1380 YARALI KARTI
           </span>
         </div>
@@ -84,7 +84,7 @@ export default function Dd1380MarchWorkspace({
                 className={[
                   'flex min-w-[4.25rem] shrink-0 flex-col items-center rounded-xl border px-2 py-3 transition hover:brightness-110 sm:min-w-0',
                   MARCH_DD1380_BUTTON_STYLES[step.key],
-                  active ? 'ring-2 ring-[#ffb400]/70 brightness-110' : 'opacity-85',
+                  active ? 'ring-2 ring-accent/70 brightness-110' : 'opacity-85',
                 ].join(' ')}
                 aria-pressed={active}
               >
@@ -119,7 +119,7 @@ export default function Dd1380MarchWorkspace({
 
           <MarchStepFields stepKey={form.activeMarchStep} form={form} onPatch={onPatch} disabled={disabled} />
 
-          <p className="mt-4 rounded-lg border border-white/8 bg-black/40 px-3 py-2.5 font-mono-technical text-[10px] leading-relaxed text-slate-400">
+          <p className="mt-4 rounded-lg border border-white/8 bg-black/40 px-3 py-2.5 font-mono-technical text-[10px] leading-relaxed text-app-text/70">
             {activeStep.doctrine}
           </p>
         </div>
@@ -127,20 +127,20 @@ export default function Dd1380MarchWorkspace({
 
       <section
         aria-label="Yaralı kimlik"
-        className="rounded-xl border border-[#ffb400]/20 bg-gradient-to-b from-black/80 to-red-950/[0.12] p-4 sm:p-5"
+        className="rounded-xl border border-accent/20 bg-gradient-to-b from-black/80 to-red-950/[0.12] p-4 sm:p-5"
       >
-        <p className="mb-4 font-mono-technical text-xs tracking-[0.25em] text-[#d4af37]">YARALI KİMLİK</p>
+        <p className="mb-4 font-mono-technical text-xs tracking-[0.25em] text-accent">YARALI KİMLİK</p>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
           <label className="block shrink-0 space-y-2 lg:min-w-[10rem]">
             <span className="font-mono-technical text-[9px] font-bold uppercase tracking-wider text-red-400/90">
               KAN GRUBU (YARALI)
             </span>
-            <div className="rounded-lg border border-[#ffb400]/35 bg-black/50 px-3 py-3 shadow-[0_0_48px_-12px_rgba(255,180,0,0.35)]">
+            <div className="rounded-lg border border-accent/35 bg-black/50 px-3 py-3 shadow-[0_0_48px_-12px_rgba(255,180,0,0.35)]">
               <select
                 value={form.bloodType || ''}
                 onChange={(e) => onPatch({ bloodType: e.target.value })}
                 disabled={disabled}
-                className={`${selectClass} text-center text-lg font-black text-[#ffb400]`}
+                className={`${selectClass} text-center text-lg font-black text-accent`}
                 aria-label="Yaralı kan grubu"
               >
                 <option value="">— SEÇİN —</option>
@@ -154,7 +154,7 @@ export default function Dd1380MarchWorkspace({
           </label>
           <div className="min-w-0 flex-1 space-y-3">
             <label className="block space-y-1">
-              <span className="font-mono-technical text-[9px] font-bold uppercase tracking-wider text-slate-500">
+              <span className="font-mono-technical text-[9px] font-bold uppercase tracking-wider text-app-text/55">
                 YARALI ÇAĞRI KODU / İSİM
               </span>
               <input
@@ -168,7 +168,7 @@ export default function Dd1380MarchWorkspace({
               />
             </label>
             <label className="block space-y-1">
-              <span className="font-mono-technical text-[9px] font-bold uppercase tracking-wider text-slate-500">
+              <span className="font-mono-technical text-[9px] font-bold uppercase tracking-wider text-app-text/55">
                 ALERJİLER (YARALI)
               </span>
               <textarea
@@ -184,12 +184,12 @@ export default function Dd1380MarchWorkspace({
         </div>
       </section>
 
-      <section className="rounded-xl border border-[#00FF41]/20 bg-black/50 p-4 sm:p-5">
-        <p className="mb-3 font-mono-technical text-[10px] font-bold uppercase tracking-[0.22em] text-[#00FF41]">
+      <section className="rounded-xl border border-accent/20 bg-black/50 p-4 sm:p-5">
+        <p className="mb-3 font-mono-technical text-[10px] font-bold uppercase tracking-[0.22em] text-accent">
           DD-1380 · YARALANMA & MÜDAHALE
         </p>
         <label className="mb-3 block space-y-1">
-          <span className="font-mono-technical text-[9px] font-bold uppercase tracking-wider text-slate-500">
+          <span className="font-mono-technical text-[9px] font-bold uppercase tracking-wider text-app-text/55">
             YARALANMA MEKANİZMASI (MOI)
           </span>
           <input
@@ -203,7 +203,7 @@ export default function Dd1380MarchWorkspace({
           />
         </label>
         <label className="mb-3 block space-y-1">
-          <span className="font-mono-technical text-[9px] font-bold uppercase tracking-wider text-slate-500">
+          <span className="font-mono-technical text-[9px] font-bold uppercase tracking-wider text-app-text/55">
             UYGULANAN MÜDAHALELER (ÖZET)
           </span>
           <textarea
@@ -217,7 +217,7 @@ export default function Dd1380MarchWorkspace({
           />
         </label>
         <label className="mb-3 block space-y-1">
-          <span className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.22em] text-[#ffb400]">
+          <span className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.22em] text-accent">
             OPERASYON NOTU / TAHLİYE ÖNCELİĞİ
           </span>
           <textarea
@@ -233,7 +233,7 @@ export default function Dd1380MarchWorkspace({
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-1">
-            <span className="font-mono-technical text-[9px] font-bold uppercase tracking-wider text-slate-500">
+            <span className="font-mono-technical text-[9px] font-bold uppercase tracking-wider text-app-text/55">
               TAHLİYE ÖNCELİĞİ
             </span>
             <div className="flex flex-wrap gap-2" role="group" aria-label="Tahliye önceliği">
@@ -248,8 +248,8 @@ export default function Dd1380MarchWorkspace({
                     className={[
                       'rounded border px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider transition',
                       on
-                        ? 'border-[#ffb400]/70 bg-[#ffb400]/18 text-[#ffb400] shadow-[0_0_12px_rgba(251,191,36,0.3)]'
-                        : 'border-white/15 bg-black/40 text-slate-500 hover:border-[#ffb400]/35',
+                        ? 'border-accent/70 bg-accent/18 text-accent shadow-[0_0_12px_rgba(251,191,36,0.3)]'
+                        : 'border-white/15 bg-black/40 text-app-text/55 hover:border-accent/35',
                     ].join(' ')}
                     aria-pressed={on}
                   >
@@ -264,7 +264,7 @@ export default function Dd1380MarchWorkspace({
             type="button"
             disabled={disabled || saving}
             onClick={onSave}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#ffb400]/55 bg-[#ffb400]/12 px-6 py-3 font-mono-technical text-sm font-bold uppercase tracking-wider text-[#ffb400] shadow-[0_0_20px_rgba(251,191,36,0.25)] transition hover:bg-[#ffb400]/22 disabled:opacity-40"
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-accent/55 bg-accent/12 px-6 py-3 font-mono-technical text-sm font-bold uppercase tracking-wider text-accent shadow-[0_0_20px_rgba(251,191,36,0.25)] transition hover:bg-accent/22 disabled:opacity-40"
           >
             <span className="text-xl leading-none" aria-hidden>
               ✓
@@ -274,7 +274,7 @@ export default function Dd1380MarchWorkspace({
         </div>
 
         {saveOk ? (
-          <p className="mt-3 text-center font-mono-technical text-[10px] font-bold uppercase text-[#00FF41]">
+          <p className="mt-3 text-center font-mono-technical text-[10px] font-bold uppercase text-accent">
             YARALI_KARTI_KAYDEDİLDİ · FIRESTORE
           </p>
         ) : null}
@@ -298,6 +298,9 @@ export default function Dd1380MarchWorkspace({
  */
 function MarchStepFields({ stepKey, form, onPatch, disabled }) {
   if (stepKey === 'M') {
+    const tqActive = Boolean(form.tourniquetApplied)
+    const tqFieldDisabled = disabled || !tqActive
+
     return (
       <div className="grid gap-3 sm:grid-cols-2">
         <CheckRow
@@ -305,23 +308,24 @@ function MarchStepFields({ stepKey, form, onPatch, disabled }) {
           checked={form.tourniquetApplied}
           onChange={(v) => onPatch({ tourniquetApplied: v })}
           disabled={disabled}
+          className="sm:col-span-2"
         />
-        <label className="block space-y-1 sm:col-span-2">
+        <label className={`block space-y-1 sm:col-span-2 ${tqFieldDisabled ? 'opacity-45' : ''}`}>
           <LabelMuted>TURNİKE UYGULAMA SAATİ</LabelMuted>
           <input
             type="time"
             value={form.tqInsertionTime}
             onChange={(e) => onPatch({ tqInsertionTime: e.target.value })}
-            disabled={disabled || !form.tourniquetApplied}
+            disabled={tqFieldDisabled}
             className={fieldClass}
           />
         </label>
-        <label className="block space-y-1">
+        <label className={`block space-y-1 ${tqFieldDisabled ? 'opacity-45' : ''}`}>
           <LabelMuted>TURNİKE BÖLGESİ</LabelMuted>
           <select
             value={form.tqLocation}
             onChange={(e) => onPatch({ tqLocation: e.target.value })}
-            disabled={disabled}
+            disabled={tqFieldDisabled}
             className={selectClass}
           >
             {TQ_LOCATION_DD_OPTIONS.map((o) => (
@@ -332,13 +336,13 @@ function MarchStepFields({ stepKey, form, onPatch, disabled }) {
           </select>
         </label>
         {form.tqLocation === 'custom' ? (
-          <label className="block space-y-1">
+          <label className={`block space-y-1 ${tqFieldDisabled ? 'opacity-45' : ''}`}>
             <LabelMuted>ÖZEL BÖLGE</LabelMuted>
             <input
               type="text"
               value={form.tqLocationCustom}
               onChange={(e) => onPatch({ tqLocationCustom: e.target.value })}
-              disabled={disabled}
+              disabled={tqFieldDisabled}
               className={fieldClass}
             />
           </label>
@@ -554,16 +558,16 @@ function CheckRow({ label, checked, onChange, disabled, className = '' }) {
         checked={checked}
         disabled={disabled}
         onChange={(e) => onChange(e.target.checked)}
-        className="mt-0.5 size-4 shrink-0 accent-[#ffb400]"
+        className="mt-0.5 size-4 shrink-0 accent-accent"
       />
-      <span className="font-mono-technical text-[10px] uppercase leading-snug text-slate-300">{label}</span>
+      <span className="font-mono-technical text-[10px] uppercase leading-snug text-app-text/90">{label}</span>
     </label>
   )
 }
 
 function LabelMuted({ children }) {
   return (
-    <span className="font-mono-technical text-[9px] font-bold uppercase tracking-wider text-slate-500">
+    <span className="font-mono-technical text-[9px] font-bold uppercase tracking-wider text-app-text/55">
       {children}
     </span>
   )

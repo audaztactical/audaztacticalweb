@@ -11,6 +11,7 @@ import {
   limit,
   orderBy,
   query,
+  startAfter,
   runTransaction,
   serverTimestamp,
   setDoc,
@@ -24,14 +25,19 @@ import {
   buildMuhabereRequestsLink,
   sendNotificationSafe,
 } from '../services/notificationService'
+import { assertMuhabereContentAllowed } from './muhabereContentFilter'
+import { buildConversationId, mapConversationSummaryDoc } from './muhabereConversation'
 import { db, isFirebaseConfigured } from './firebase'
 import { safeOnSnapshot, timestampToMs } from './firestoreSnapshot'
+
+export const MUHABERE_MESSAGE_PAGE_SIZE = 20
 
 /** @typedef {{
  *   uid: string
  *   callsign: string
  *   username: string
  *   role: string
+ *   photoURL: string | null
  * }} MuhabereContact */
 
 /** @typedef {'text' | 'image' | 'location'} MuhabereMessageType */
@@ -76,7 +82,7 @@ import { safeOnSnapshot, timestampToMs } from './firestoreSnapshot'
  * }} MuhabereOperatorProfile
  */
 
-const ROSTER_ROLES = ['operator', 'instructor']
+const ROSTER_ROLES = ['member', 'operator', 'premium_member', 'instructor']
 const SEARCH_RESULT_LIMIT = 24
 const CONTACTS_IN_CHUNK = 30
 
@@ -126,6 +132,12 @@ function mapUserDocToContact(docSnap) {
             : docSnap.id.slice(0, 8),
     username: typeof data.username === 'string' ? data.username : '',
     role,
+    photoURL:
+      typeof data.photoURL === 'string' && data.photoURL.trim()
+        ? data.photoURL.trim()
+        : typeof data.avatarUrl === 'string' && data.avatarUrl.trim()
+          ? data.avatarUrl.trim()
+          : null,
   }
 }
 
@@ -1067,6 +1079,8 @@ export async function sendChatMessage({
   if (msgType === 'image') body = body || '[ GÖRSEL ]'
   if (msgType === 'location') body = body || '[ STRATEJİK KOORDİNAT ]'
 
+  if (msgType === 'text') assertMuhabereContentAllowed(body)
+
   await ensureChatChannel(cid)
   await setChatTypingStatus(cid, from, false)
 
@@ -1132,6 +1146,23 @@ export async function createMuhabereChannel({ name, createdBy, memberUids }) {
       createdAt: serverTimestamp(),
     })
     console.log('[createMuhabereChannel] Kanal oluşturuldu:', ref.id)
+
+    const conversationId = buildConversationId('channel', ref.id)
+    if (conversationId) {
+      await setDoc(doc(db, 'conversations', conversationId), {
+        type: 'channel',
+        refId: ref.id,
+        name: label,
+        members,
+        lastMessage: '',
+        lastSender: '',
+        lastSenderId: '',
+        lastMessageAt: serverTimestamp(),
+        unreadByUser: {},
+        updatedAt: serverTimestamp(),
+      })
+    }
+
     return ref.id
   } catch (err) {
     const code = /** @type {{ code?: string }} */ (err)?.code ?? 'unknown'
@@ -1331,6 +1362,8 @@ export async function sendChannelMessage({
   if (msgType === 'image') body = body || '[ GÖRSEL ]'
   if (msgType === 'location') body = body || '[ STRATEJİK KOORDİNAT ]'
 
+  if (msgType === 'text') assertMuhabereContentAllowed(body)
+
   const payload = {
     channelId: cid,
     text: body,
@@ -1396,6 +1429,150 @@ export async function markMuhabereChannelAsRead(uid, channelId, readAtMs) {
     { userId: me, channelId: cid, lastReadAt },
     { merge: true },
   )
+
+  await markConversationAsRead(me, 'channel', cid)
+}
+
+/**
+ * conversations/{conversationId} özetinde kullanıcının okunmamış sayısını sıfırlar.
+ * @param {string} uid
+ * @param {'channel' | 'dm'} type
+ * @param {string} refId
+ */
+export async function markConversationAsRead(uid, type, refId) {
+  assertDb()
+  const me = String(uid ?? '').trim()
+  const conversationId = buildConversationId(type, refId)
+  if (!me || !conversationId) return
+
+  await updateDoc(doc(db, 'conversations', conversationId), {
+    [`unreadByUser.${me}`]: 0,
+  }).catch(() => {
+    /* özet henüz oluşmamış olabilir */
+  })
+}
+
+/**
+ * Kullanıcının üye olduğu konuşma özetlerini dinler (conversations koleksiyonu).
+ * @param {string} uid
+ * @param {(summaries: import('./muhabereConversation').MuhabereConversationSummary[]) => void} onData
+ * @param {(err: unknown) => void} [onError]
+ */
+export function subscribeConversationSummaries(uid, onData, onError) {
+  if (!isFirebaseConfigured() || !db) {
+    onData([])
+    return () => {}
+  }
+  const me = String(uid ?? '').trim()
+  if (!me) {
+    onData([])
+    return () => {}
+  }
+
+  const q = query(
+    collection(db, 'conversations'),
+    where('members', 'array-contains', me),
+    orderBy('lastMessageAt', 'desc'),
+  )
+
+  return safeOnSnapshot(
+    q,
+    (snap) => {
+      onData(snap.docs.map((d) => mapConversationSummaryDoc(d, me)))
+    },
+    (err) => onError?.(err),
+  )
+}
+
+/**
+ * @param {'channel' | 'dm'} mode
+ * @param {string} refId
+ */
+function messagesCollectionForConversation(mode, refId) {
+  const id = String(refId ?? '').trim()
+  if (!id) return null
+  if (mode === 'channel') return collection(db, 'channels', id, 'messages')
+  return collection(db, 'chats', id, 'messages')
+}
+
+/**
+ * Aktif konuşmanın en yeni mesaj sayfasını dinler (limit 20, yalnızca odaklanılan oda).
+ * @param {{
+ *   mode: 'channel' | 'dm'
+ *   refId: string
+ *   pageSize?: number
+ *   onData: (payload: {
+ *     messages: MuhabereMessage[]
+ *     oldestDoc: import('firebase/firestore').QueryDocumentSnapshot | null
+ *     hasMore: boolean
+ *   }) => void
+ *   onError?: (err: unknown) => void
+ * }} input
+ */
+export function subscribeActiveConversationMessages({
+  mode,
+  refId,
+  pageSize = MUHABERE_MESSAGE_PAGE_SIZE,
+  onData,
+  onError,
+}) {
+  if (!isFirebaseConfigured() || !db) {
+    onData({ messages: [], oldestDoc: null, hasMore: false })
+    return () => {}
+  }
+
+  const col = messagesCollectionForConversation(mode, refId)
+  if (!col) {
+    onData({ messages: [], oldestDoc: null, hasMore: false })
+    return () => {}
+  }
+
+  const q = query(col, orderBy('timestamp', 'desc'), limit(pageSize))
+
+  return safeOnSnapshot(
+    q,
+    (snap) => {
+      const threadId = String(refId)
+      const rows = snap.docs.map((d) => mapMessageDoc(d, threadId)).reverse()
+      onData({
+        messages: rows,
+        oldestDoc: snap.docs.length > 0 ? snap.docs[snap.docs.length - 1] : null,
+        hasMore: snap.docs.length === pageSize,
+      })
+    },
+    (err) => onError?.(err),
+  )
+}
+
+/**
+ * startAfter ile daha eski mesaj sayfasını getirir (infinite scroll).
+ * @param {{
+ *   mode: 'channel' | 'dm'
+ *   refId: string
+ *   startAfterDoc: import('firebase/firestore').QueryDocumentSnapshot
+ *   pageSize?: number
+ * }} input
+ */
+export async function fetchOlderConversationMessages({
+  mode,
+  refId,
+  startAfterDoc,
+  pageSize = MUHABERE_MESSAGE_PAGE_SIZE,
+}) {
+  assertDb()
+  const col = messagesCollectionForConversation(mode, refId)
+  if (!col || !startAfterDoc) return { messages: [], oldestDoc: null, hasMore: false }
+
+  const snap = await getDocs(
+    query(col, orderBy('timestamp', 'desc'), startAfter(startAfterDoc), limit(pageSize)),
+  )
+  const threadId = String(refId)
+  const rows = snap.docs.map((d) => mapMessageDoc(d, threadId)).reverse()
+  return {
+    messages: rows,
+    oldestDoc: snap.docs.length > 0 ? snap.docs[snap.docs.length - 1] : null,
+    hasMore: snap.docs.length === pageSize,
+  }
 }
 
 /**

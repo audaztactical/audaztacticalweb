@@ -17,11 +17,11 @@ export default function WeaponMaintenanceCenterAlert({ weapon, onOpenMaintenance
         <AlertTriangle className="size-3.5 shrink-0 animate-pulse" aria-hidden />
         <span>[ ALERT: {MAINTENANCE_ALERT_MESSAGE} ]</span>
       </p>
-      <p className="mt-1 font-mono-technical text-[7px] uppercase text-slate-500">{weaponDisplayName(weapon)}</p>
+      <p className="mt-1 font-mono-technical text-[7px] uppercase text-app-text/55">{weaponDisplayName(weapon)}</p>
       <button
         type="button"
         onClick={onOpenMaintenance}
-        className="mt-2 w-full rounded border border-[#ffb400]/55 bg-[#ffb400]/12 py-1.5 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-[#ffb400] hover:bg-[#ffb400]/18"
+        className="mt-2 w-full rounded border border-accent/55 bg-accent/12 py-1.5 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-accent hover:bg-accent/18"
       >
         BAKIM KAYDI GİR · ALARMI KAPAT
       </button>

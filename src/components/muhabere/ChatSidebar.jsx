@@ -13,6 +13,7 @@ import TacticalAlert from './TacticalAlert'
  *   channelsError: string | null
  *   selectedChannelId: string | null
  *   channelUnreadById: Record<string, number>
+ *   channelPreviewsById?: Record<string, import('../../lib/muhabereSummary').MuhabereChannelSummaryEntry>
  *   archivingChannelId: string | null
  *   deletingChannelId: string | null
  *   onSelectChannel: (channelId: string) => void
@@ -28,6 +29,7 @@ export default function ChatSidebar({
   channelsError,
   selectedChannelId,
   channelUnreadById,
+  channelPreviewsById = {},
   archivingChannelId,
   deletingChannelId,
   onSelectChannel,
@@ -79,6 +81,7 @@ export default function ChatSidebar({
             {channels.map((ch) => {
               const active = ch.id === selectedChannelId
               const unreadCount = channelUnreadById[ch.id] ?? 0
+              const preview = channelPreviewsById[ch.id]
 
               return (
                 <li key={ch.id} className="flex items-stretch gap-1">
@@ -95,13 +98,21 @@ export default function ChatSidebar({
                     ].join(' ')}
                   >
                     <Radio className="size-3 shrink-0 text-lime-500/70" aria-hidden />
-                    <span
-                      className={[
-                        'min-w-0 flex-1 truncate text-xs font-semibold uppercase tracking-wide',
-                        unreadCount > 0 && !active ? 'blink text-lime-300' : '',
-                      ].join(' ')}
-                    >
-                      {ch.name}
+                    <span className="min-w-0 flex-1">
+                      <span
+                        className={[
+                          'block truncate text-xs font-semibold uppercase tracking-wide',
+                          unreadCount > 0 && !active ? 'blink text-lime-300' : '',
+                        ].join(' ')}
+                      >
+                        {ch.name}
+                      </span>
+                      {preview?.lastMessage ? (
+                        <span className="mt-0.5 block truncate text-[9px] normal-case tracking-normal text-zinc-500">
+                          {preview.senderName ? `${preview.senderName}: ` : ''}
+                          {preview.lastMessage}
+                        </span>
+                      ) : null}
                     </span>
                     {unreadCount > 0 && !active ? (
                       <span className="shrink-0 rounded-sm bg-lime-500/20 px-1.5 py-0.5 font-mono text-[9px] font-bold text-lime-400">

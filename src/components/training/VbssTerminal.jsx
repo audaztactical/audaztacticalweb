@@ -20,6 +20,9 @@ import { emitFirebaseError } from '../../lib/firebaseErrorBus'
 import { VBSS_EVALUATION_PHASES } from '../../lib/vbssEvaluationPayload'
 import { useOperatorGroup } from '../../hooks/useOperatorGroup'
 import TrainingSessionHeader from './TrainingSessionHeader'
+import VbssLogRegistry from './VbssLogRegistry'
+
+/** @typedef {'hud' | 'registry'} VbssViewMode */
 
 /** @typedef {import('../../lib/firestoreVbssEvaluations').VbssEvaluation} VbssEvaluation */
 /** @typedef {import('../../lib/vbssEvaluationPayload').VbssPhaseId} VbssPhaseId */
@@ -68,13 +71,27 @@ function getPhaseObservation(evaluation, phaseId) {
  *   onBack: () => void
  *   ready: boolean
  *   listenError: Error | null
+ *   logs?: Record<string, unknown>[]
+ *   logsLoading?: boolean
+ *   logsReady?: boolean
+ *   logsListenError?: Error | null
  * }} props
  */
-export default function VbssTerminal({ onBack, ready, listenError }) {
+export default function VbssTerminal({
+  onBack,
+  ready,
+  listenError,
+  logs = [],
+  logsLoading = false,
+  logsReady = true,
+  logsListenError = null,
+}) {
   const { user } = useAuth()
   const uid = user?.uid ?? ''
   const { trainingType, membership, isMember, groupLoading } = useTrainingSession()
   const { loading: operatorGroupLoading } = useOperatorGroup()
+
+  const [viewMode, setViewMode] = useState(/** @type {VbssViewMode} */ ('hud'))
 
   const isGroupMode = trainingType === TRAINING_TYPE_GROUP
   const groupId = membership?.groupId ?? ''
@@ -150,6 +167,13 @@ export default function VbssTerminal({ onBack, ready, listenError }) {
 
   const combinedError = listenError?.message ?? syncError
 
+  const tabBtnClass = (active) =>
+    `flex-1 rounded border py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider transition sm:flex-none sm:px-5 ${
+      active
+        ? 'border-accent/60 bg-accent/15 text-accent shadow-[0_0_24px_-8px_color-mix(in_srgb,var(--accent-color)_35%,transparent)]]'
+        : 'border-white/15 text-app-text/55 hover:border-accent/35 hover:text-app-text/90'
+    }`
+
   if (!ready) {
     return (
       <div className="space-y-4">
@@ -163,19 +187,56 @@ export default function VbssTerminal({ onBack, ready, listenError }) {
     <div className="space-y-5">
       <TrainingSessionHeader />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <button type="button" onClick={onBack} className={ctBackBtn}>
           <ArrowLeft className="size-3.5" aria-hidden />
           Kategorilere dön
         </button>
+
+        <div
+          className="flex w-full gap-2 rounded border border-accent/25 bg-black/60 p-1 sm:w-auto"
+          role="tablist"
+          aria-label="VBSS terminal görünümü"
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={viewMode === 'hud'}
+            onClick={() => setViewMode('hud')}
+            className={tabBtnClass(viewMode === 'hud')}
+          >
+            CANLI HUD
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={viewMode === 'registry'}
+            onClick={() => setViewMode('registry')}
+            className={tabBtnClass(viewMode === 'registry')}
+          >
+            KAYITLAR
+          </button>
+        </div>
+
         {isGroupMode && membership?.groupName ? (
-          <p className="flex items-center gap-2 text-xs font-medium text-zinc-500">
+          <p className="flex items-center gap-2 text-xs font-medium text-zinc-500 sm:ml-auto">
             <Users className="size-3.5 shrink-0" aria-hidden />
             {membership.groupName}
           </p>
         ) : null}
       </div>
 
+      {viewMode === 'registry' ? (
+        <>
+          {!logsReady ? (
+            <p className="font-mono-technical text-[10px] uppercase text-app-text/55">KAYIT_KANALI_SENKRON…</p>
+          ) : logsListenError ? (
+            <p className={ctMsgErr}>Kayıt kanalı kesildi · {logsListenError.message}</p>
+          ) : null}
+          <VbssLogRegistry logs={logs} loading={logsLoading} />
+        </>
+      ) : (
+        <>
       <header className="border-b border-zinc-800 pb-3">
         <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">[ VBSS · GÖREV HUD ]</p>
         <h2 className="mt-1 text-lg font-semibold tracking-tight text-zinc-100 sm:text-xl">
@@ -361,6 +422,8 @@ export default function VbssTerminal({ onBack, ready, listenError }) {
             Firestore · vbss_evaluations · onSnapshot
             {latestEvaluation ? ` · oturum ${latestEvaluation.id.slice(0, 8)}` : ''}
           </p>
+        </>
+      )}
         </>
       )}
     </div>

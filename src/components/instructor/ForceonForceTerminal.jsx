@@ -30,13 +30,13 @@ import {
  * }} SelectedOperator
  */
 
-const labelClass = 'font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-slate-500'
+const labelClass = 'font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-app-text/55'
 
 const selectClass =
-  'dossier-blood-select w-full rounded border border-[#ffb400]/35 bg-[#0A0A0A] py-2 pl-2 pr-8 font-mono-technical text-[11px] uppercase text-white outline-none focus:border-[#ffb400]/60'
+  'dossier-blood-select w-full rounded border border-accent/35 bg-app-bg py-2 pl-2 pr-8 font-mono-technical text-[11px] uppercase text-app-text outline-none focus:border-accent/60'
 
 const textareaClass =
-  'w-full min-h-[5.5rem] resize-y rounded border border-[#ffb400]/25 bg-[#0A0A0A] px-3 py-2 font-mono-technical text-sm leading-relaxed text-slate-100 outline-none placeholder:text-slate-600 focus:border-[#ffb400]/55'
+  'w-full min-h-[5.5rem] resize-y rounded border border-accent/25 bg-app-bg px-3 py-2 font-mono-technical text-sm leading-relaxed text-slate-100 outline-none placeholder:text-app-text/45 focus:border-accent/55'
 
 /** @returns {FofEvaluationInput} */
 function createInitialForm() {
@@ -81,15 +81,15 @@ const METRIC_FIELDS = [
 
 const HUD_TONE_STYLES = {
   green: {
-    ring: 'border-[#00FF41]/55 shadow-[0_0_32px_-8px_rgba(0,255,65,0.45)]',
-    text: 'text-[#00FF41]',
-    bar: 'bg-[#00FF41]',
+    ring: 'border-accent/55 shadow-[0_0_24px_-8px_color-mix(in_srgb,var(--accent-color)_35%,transparent)]]',
+    text: 'text-accent',
+    bar: 'bg-accent',
     label: 'OPERASYONEL',
   },
   amber: {
-    ring: 'border-[#ffb400]/55 shadow-[0_0_32px_-8px_rgba(255,180,0,0.4)]',
-    text: 'text-[#ffb400]',
-    bar: 'bg-[#ffb400]',
+    ring: 'border-accent/55 shadow-[0_0_32px_-8px_rgba(255,180,0,0.4)]',
+    text: 'text-accent',
+    bar: 'bg-accent',
     label: 'GELİŞTİRİLEBİLİR',
   },
   red: {
@@ -173,7 +173,7 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
         <p className="font-mono-technical text-[11px] font-bold uppercase tracking-[0.28em] text-amber-300">
           Lütfen operatör seçiniz
         </p>
-        <p className="mt-2 font-mono-technical text-[9px] uppercase text-slate-500">
+        <p className="mt-2 font-mono-technical text-[9px] uppercase text-app-text/55">
           FoF değerlendirmesi için grup üyesi seçilmelidir
         </p>
       </Motion.div>
@@ -182,22 +182,22 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
 
   return (
     <div className="space-y-4">
-      <TacticalPanel className="relative overflow-hidden border-[#ffb400]/25 bg-[#0a0a0a]/95 p-0">
-        <span className="pointer-events-none absolute left-2 top-2 z-10 h-4 w-4 border-l border-t border-[#ffb400]/40" />
-        <span className="pointer-events-none absolute right-2 top-2 z-10 h-4 w-4 border-r border-t border-[#ffb400]/40" />
+      <TacticalPanel className="relative overflow-hidden border-accent/25 bg-app-bg/95 p-0">
+        <span className="pointer-events-none absolute left-2 top-2 z-10 h-4 w-4 border-l border-t border-accent/40" />
+        <span className="pointer-events-none absolute right-2 top-2 z-10 h-4 w-4 border-r border-t border-accent/40" />
 
-        <div className="flex flex-col gap-4 border-b border-[#ffb400]/15 bg-[#080808] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <div className="flex flex-col gap-4 border-b border-accent/15 bg-app-bg px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
           <div className="min-w-0">
-            <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.32em] text-[#ffb400]/75">
+            <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.32em] text-accent/75">
               [ FORCE-ON-FORCE · CANLI DEĞERLENDİRME ]
             </p>
             <div className="mt-1 flex items-center gap-2">
-              <Crosshair className="size-4 shrink-0 text-[#ffb400]" strokeWidth={1.5} aria-hidden />
-              <h3 className="truncate font-display text-base font-bold tracking-[0.12em] text-white sm:text-lg">
+              <Crosshair className="size-4 shrink-0 text-accent" strokeWidth={1.5} aria-hidden />
+              <h3 className="truncate font-display text-base font-bold tracking-[0.12em] text-app-text sm:text-lg">
                 {operatorLabel}
               </h3>
             </div>
-            <p className="mt-0.5 font-mono-technical text-[9px] uppercase text-slate-500">
+            <p className="mt-0.5 font-mono-technical text-[9px] uppercase text-app-text/55">
               UID · {selectedOperator.uid.slice(0, 12)}…
             </p>
           </div>
@@ -209,7 +209,7 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
             transition={{ type: 'spring', stiffness: 320, damping: 24 }}
             className={`flex min-w-[9rem] flex-col items-center rounded-lg border-2 px-5 py-3 ${hudStyle.ring}`}
           >
-            <p className="font-mono-technical text-[7px] font-bold uppercase tracking-[0.28em] text-slate-500">
+            <p className="font-mono-technical text-[7px] font-bold uppercase tracking-[0.28em] text-app-text/55">
               HUD SKOR
             </p>
             <p className={`font-display text-4xl font-bold tabular-nums leading-none ${hudStyle.text}`}>
@@ -273,15 +273,15 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.06 }}
-                  className="rounded border border-[#ffb400]/20 bg-black/40 p-3"
+                  className="rounded border border-accent/20 bg-black/40 p-3"
                 >
                   <div className="mb-2 flex items-start gap-2">
-                    <MetricIcon className="mt-0.5 size-4 shrink-0 text-[#ffb400]" strokeWidth={1.5} aria-hidden />
+                    <MetricIcon className="mt-0.5 size-4 shrink-0 text-accent" strokeWidth={1.5} aria-hidden />
                     <div className="min-w-0">
-                      <p className="font-mono-technical text-[9px] font-bold uppercase leading-snug text-white">
+                      <p className="font-mono-technical text-[9px] font-bold uppercase leading-snug text-app-text">
                         {field.label}
                       </p>
-                      <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-slate-600">{field.hint}</p>
+                      <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-app-text/45">{field.hint}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -292,13 +292,13 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
                       step={1}
                       value={form[field.key]}
                       onChange={(e) => patch({ [field.key]: Number(e.target.value) })}
-                      className="h-1.5 flex-1 cursor-pointer accent-[#ffb400]"
+                      className="h-1.5 flex-1 cursor-pointer accent-accent"
                       aria-label={field.label}
                     />
-                    <span className="w-8 text-center font-display text-lg font-bold tabular-nums text-[#ffb400]">
+                    <span className="w-8 text-center font-display text-lg font-bold tabular-nums text-accent">
                       {form[field.key]}
                     </span>
-                    <span className="font-mono-technical text-[7px] text-slate-600">{field.weight}</span>
+                    <span className="font-mono-technical text-[7px] text-app-text/45">{field.weight}</span>
                   </div>
                 </Motion.div>
                 )
@@ -325,8 +325,8 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
                           ? 'border-red-500/60 bg-red-950/40 text-red-300'
                           : opt.id === 'YARALI'
                             ? 'border-amber-500/50 bg-amber-950/30 text-amber-300'
-                            : 'border-[#00FF41]/50 bg-[#00FF41]/10 text-[#00FF41]'
-                        : 'border-white/10 bg-black/30 text-slate-400 hover:border-[#ffb400]/30 hover:text-slate-200',
+                            : 'border-accent/50 bg-accent/10 text-accent'
+                        : 'border-white/10 bg-black/30 text-app-text/70 hover:border-accent/30 hover:text-app-text',
                     ].join(' ')}
                   >
                     <p className="font-mono-technical text-[10px] font-bold uppercase tracking-wider">{opt.label}</p>
@@ -357,12 +357,12 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
                         ? pen.instantFail
                           ? 'border-red-500/55 bg-red-950/35 text-red-300'
                           : 'border-amber-500/45 bg-amber-950/25 text-amber-200'
-                        : 'border-white/10 bg-black/25 text-slate-400 hover:border-[#ffb400]/25',
+                        : 'border-white/10 bg-black/25 text-app-text/70 hover:border-accent/25',
                     ].join(' ')}
                   >
                     <input
                       type="checkbox"
-                      className="mt-1 size-4 shrink-0 accent-[#ffb400]"
+                      className="mt-1 size-4 shrink-0 accent-accent"
                       checked={active}
                       onChange={(e) => patchPenalty(pen.id, e.target.checked)}
                     />
@@ -372,10 +372,10 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
                         {pen.instantFail ? (
                           <span className="ml-2 text-red-400">· INSTANT FAIL</span>
                         ) : pen.deduction ? (
-                          <span className="ml-2 text-slate-500">· −{pen.deduction}</span>
+                          <span className="ml-2 text-app-text/55">· −{pen.deduction}</span>
                         ) : null}
                       </span>
-                      <span className="mt-0.5 block font-mono-technical text-[8px] uppercase text-slate-500">
+                      <span className="mt-0.5 block font-mono-technical text-[8px] uppercase text-app-text/55">
                         {pen.sublabel}
                       </span>
                     </span>
@@ -408,13 +408,13 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
               exit={{ opacity: 0 }}
               className={[
                 'font-mono-technical text-[9px] font-bold uppercase',
-                saveMsg.includes('LOGLANDI') ? 'text-[#00FF41]' : 'text-red-400',
+                saveMsg.includes('LOGLANDI') ? 'text-accent' : 'text-red-400',
               ].join(' ')}
             >
               {saveMsg}
             </Motion.p>
           ) : (
-            <p className="font-mono-technical text-[8px] uppercase text-slate-600">
+            <p className="font-mono-technical text-[8px] uppercase text-app-text/45">
               ORS · 100 baz · metrik ağırlıklı · kritik ihlal = 0
             </p>
           )}
@@ -425,7 +425,7 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
             type="button"
             onClick={handleReset}
             disabled={saving}
-            className="inline-flex items-center gap-2 rounded border border-white/15 bg-black/40 px-4 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-slate-400 transition hover:border-white/30 hover:text-white disabled:opacity-40"
+            className="inline-flex items-center gap-2 rounded border border-white/15 bg-black/40 px-4 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-app-text/70 transition hover:border-white/30 hover:text-app-text disabled:opacity-40"
           >
             <RotateCcw className="size-3.5" aria-hidden />
             Sıfırla
@@ -434,7 +434,7 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="inline-flex items-center gap-2 rounded border border-[#ffb400]/55 bg-[#ffb400]/12 px-5 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#ffb400] shadow-[0_0_20px_-6px_rgba(255,180,0,0.45)] transition hover:bg-[#ffb400]/22 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex items-center gap-2 rounded border border-accent/55 bg-accent/12 px-5 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent shadow-[0_0_20px_-6px_rgba(255,180,0,0.45)] transition hover:bg-accent/22 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Target className="size-3.5" aria-hidden />
             {saving ? 'AKTARILIYOR…' : 'Değerlendirmeyi Logla'}

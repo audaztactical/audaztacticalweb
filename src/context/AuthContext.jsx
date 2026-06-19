@@ -21,9 +21,10 @@ import {
   startGoogleSignIn,
 } from '../lib/googleRedirectAuth'
 import { emitFirebaseError } from '../lib/firebaseErrorBus'
-import { isInstructorRole, normalizeUserRole } from '../lib/authRoles'
+import { callClaimInstructorRole, callEnsureAdminClaim, isCloudFunctionUnavailableError, isEnsureAdminClaimDenied } from '../lib/cloudFunctions'
+import { isPlatformInBetaPeriod } from '../lib/registrationPolicy'
+import { isInstructorRole, isPremiumMemberRole, normalizeAccountStatus, normalizeUserRole } from '../lib/authRoles'
 import {
-  burnInstructorInviteToken,
   INSTRUCTOR_TOKEN_INVALID_MESSAGE,
   validateInstructorInviteToken,
 } from '../lib/firestoreInstructorTokens'
@@ -32,7 +33,16 @@ import {
   fetchUserProfile,
   GUEST_PROFILE,
   subscribeUserProfile,
+  completePremiumUpgrade,
+  updateUserAgreedToTerms,
 } from '../lib/firestoreUsers'
+import { usePresenceHeartbeat } from '../hooks/usePresenceHeartbeat'
+import {
+  emailMatchesConfiguredAdmin,
+  resolveUserIsAdmin,
+  userEmailMatchesConfiguredAdmin,
+  userHasAdminClaim,
+} from '../config/admin'
 
 const AuthContext = createContext(null)
 
@@ -44,7 +54,10 @@ function mergeWithGuest(partial, authUser) {
     status: partial.status?.trim() || GUEST_PROFILE.status,
     email: partial.email?.trim() || authUser?.email || '',
     enrolledAt: partial.enrolledAt ?? null,
-    role: normalizeUserRole(partial?.role ?? 'operator'),
+    role: normalizeUserRole(partial?.role ?? 'member'),
+    accountStatus: normalizeAccountStatus(partial?.accountStatus),
+    premiumPaymentId: typeof partial.premiumPaymentId === 'string' ? partial.premiumPaymentId : '',
+    premiumUpgradedAt: partial.premiumUpgradedAt ?? null,
     allergies: typeof partial.allergies === 'string' ? partial.allergies : '',
     drugSensitivity: typeof partial.drugSensitivity === 'string' ? partial.drugSensitivity : '',
     importantNotes: typeof partial.importantNotes === 'string' ? partial.importantNotes : '',
@@ -57,6 +70,12 @@ function mergeWithGuest(partial, authUser) {
           : null,
     instructorId:
       typeof partial.instructorId === 'string' && partial.instructorId.trim() ? partial.instructorId.trim() : null,
+    agreedToTerms: partial.agreedToTerms === true,
+    termsAgreedAt: partial.termsAgreedAt ?? null,
+    photoURL:
+      typeof partial.photoURL === 'string' && partial.photoURL.trim()
+        ? partial.photoURL.trim()
+        : authUser?.photoURL?.trim() || '',
   }
 }
 
@@ -67,6 +86,66 @@ export function AuthProvider({ children }) {
   const [profileLoading, setProfileLoading] = useState(false)
   const [googleRedirectResolving, setGoogleRedirectResolving] = useState(false)
   const [googleAuthError, setGoogleAuthError] = useState(/** @type {{ code: string, message: string } | null} */ (null))
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  usePresenceHeartbeat(user?.uid)
+
+  const refreshAdminClaimFromToken = useCallback(async (authUser) => {
+    if (!authUser) {
+      setIsAdmin(false)
+      return false
+    }
+    const admin = await resolveUserIsAdmin(authUser)
+    setIsAdmin(admin)
+    return admin
+  }, [])
+
+  /** Callable ensureAdminClaim — yalnızca VITE_SYNC_ADMIN_CLAIM_ON_LOGIN=true ise (opsiyonel). */
+  const syncAdminClaim = useCallback(async (authUser) => {
+    if (!authUser) {
+      setIsAdmin(false)
+      return false
+    }
+
+    if (userEmailMatchesConfiguredAdmin(authUser) || emailMatchesConfiguredAdmin(userData?.email)) {
+      setIsAdmin(true)
+      const shouldSyncClaim = import.meta.env.VITE_SYNC_ADMIN_CLAIM_ON_LOGIN === 'true'
+      if (shouldSyncClaim) {
+        try {
+          await callEnsureAdminClaim()
+          await authUser.getIdTokenResult(true)
+        } catch (err) {
+          if (import.meta.env.DEV && !isCloudFunctionUnavailableError(err) && !isEnsureAdminClaimDenied(err)) {
+            console.warn('[Auth] ensureAdminClaim:', err)
+          }
+        }
+      }
+      return true
+    }
+
+    const shouldSyncClaim = import.meta.env.VITE_SYNC_ADMIN_CLAIM_ON_LOGIN === 'true'
+    if (!shouldSyncClaim) {
+      const admin = await userHasAdminClaim(authUser)
+      setIsAdmin(admin)
+      return admin
+    }
+
+    try {
+      await callEnsureAdminClaim()
+    } catch (err) {
+      if (import.meta.env.DEV && !isCloudFunctionUnavailableError(err) && !isEnsureAdminClaimDenied(err)) {
+        console.warn('[Auth] ensureAdminClaim:', err)
+      }
+    }
+    try {
+      const admin = await userHasAdminClaim(authUser)
+      setIsAdmin(admin)
+      return admin
+    } catch {
+      setIsAdmin(false)
+      return false
+    }
+  }, [userData?.email])
 
   // Google signInWithRedirect dönüşü — StrictMode güvenli tek seferlik getRedirectResult
   useEffect(() => {
@@ -146,10 +225,12 @@ export function AuthProvider({ children }) {
       } finally {
         setProfileLoading(false)
       }
+
+      await refreshAdminClaimFromToken(nextUser)
     })
 
     return unsubscribe
-  }, [])
+  }, [refreshAdminClaimFromToken])
 
   useEffect(() => {
     if (!isFirebaseConfigured() || !db || !user?.uid) return undefined
@@ -223,13 +304,23 @@ export function AuthProvider({ children }) {
   }, [])
 
   const registerWithEmailPassword = useCallback(
-    async ({ email, password, username, callsign, bloodType, status, instructorInviteCode = '' }) => {
+    async ({
+      email,
+      password,
+      username,
+      callsign,
+      bloodType,
+      status,
+      instructorInviteCode = '',
+      role = 'member',
+      accountStatus = 'active',
+      premiumPaymentId = '',
+    }) => {
       if (!isFirebaseConfigured() || !auth) throw new Error('Firebase yapılandırılmadı')
 
       const inviteRaw = typeof instructorInviteCode === 'string' ? instructorInviteCode.trim() : ''
       /** @type {import('firebase/firestore').DocumentReference | null} */
       let tokenRef = null
-      let accountRole = 'operator'
 
       if (inviteRaw) {
         const check = await validateInstructorInviteToken(inviteRaw)
@@ -239,7 +330,6 @@ export function AuthProvider({ children }) {
           throw e
         }
         tokenRef = check.ref
-        accountRole = 'instructor'
       }
 
       let credUser = null
@@ -254,12 +344,16 @@ export function AuthProvider({ children }) {
           callsign: display,
           bloodType,
           status,
-          role: accountRole,
+          role,
+          accountStatus,
+          premiumPaymentId,
         })
         if (tokenRef) {
-          await burnInstructorInviteToken(tokenRef, credUser.uid)
+          await callClaimInstructorRole(tokenRef.id)
         }
-        await sendEmailVerification(credUser)
+        if (!isPlatformInBetaPeriod()) {
+          await sendEmailVerification(credUser)
+        }
         return cred
       } catch (err) {
         if (credUser) {
@@ -299,12 +393,71 @@ export function AuthProvider({ children }) {
     await reload(auth.currentUser)
   }, [])
 
-  const { role, isInstructor } = useMemo(() => {
+  const agreeToTerms = useCallback(async () => {
+    if (!isFirebaseConfigured() || !auth?.currentUser?.uid) {
+      throw new Error('Oturum gerekli')
+    }
+    const uid = auth.currentUser.uid
+    await updateUserAgreedToTerms(uid)
+    setUserData((prev) =>
+      mergeWithGuest(
+        {
+          ...(prev ?? {}),
+          agreedToTerms: true,
+          termsAgreedAt: new Date(),
+        },
+        auth.currentUser,
+      ),
+    )
+  }, [])
+
+  const upgradeToPremium = useCallback(async (paymentIntentId) => {
+    if (!isFirebaseConfigured() || !auth?.currentUser?.uid) {
+      throw new Error('Oturum gerekli')
+    }
+    const uid = auth.currentUser.uid
+    await completePremiumUpgrade(uid, paymentIntentId)
+    setUserData((prev) =>
+      mergeWithGuest(
+        {
+          ...(prev ?? {}),
+          role: 'premium_member',
+          accountStatus: 'active',
+          premiumPaymentId: paymentIntentId,
+          premiumUpgradedAt: new Date(),
+        },
+        auth.currentUser,
+      ),
+    )
+  }, [])
+
+  const { role, isInstructor, isPremiumMember, isAccountLocked } = useMemo(() => {
     const normalizedRole = normalizeUserRole(userData?.role)
     const instructor =
       normalizedRole === 'instructor' || isInstructorRole(userData?.role)
-    return { role: normalizedRole, isInstructor: instructor }
-  }, [userData?.role])
+    return {
+      role: normalizedRole,
+      isInstructor: instructor,
+      isPremiumMember: isPremiumMemberRole(userData?.role),
+      isAccountLocked: normalizeAccountStatus(userData?.accountStatus) === 'locked',
+    }
+  }, [userData?.role, userData?.accountStatus])
+
+  const showAdminPanel = useMemo(() => {
+    if (isAdmin) return true
+    if (userEmailMatchesConfiguredAdmin(user)) return true
+    return emailMatchesConfiguredAdmin(userData?.email)
+  }, [isAdmin, user?.email, userData?.email])
+
+  useEffect(() => {
+    if (!user) {
+      setIsAdmin(false)
+      return
+    }
+    if (userEmailMatchesConfiguredAdmin(user) || emailMatchesConfiguredAdmin(userData?.email)) {
+      setIsAdmin(true)
+    }
+  }, [user?.uid, user?.email, userData?.email])
 
   const value = useMemo(
     () => ({
@@ -314,11 +467,18 @@ export function AuthProvider({ children }) {
       profileLoading,
       isConfigured: isFirebaseConfigured(),
       isInstructor,
+      isPremiumMember,
+      isAccountLocked,
+      isAdmin,
+      showAdminPanel,
       role,
+      syncAdminClaim,
       signInWithGoogle,
       signInWithEmailPassword,
       registerWithEmailPassword,
       linkAccountWithPassword,
+      agreeToTerms,
+      upgradeToPremium,
       refreshUserProfile,
       googleRedirectResolving,
       googleAuthError,
@@ -330,15 +490,22 @@ export function AuthProvider({ children }) {
       userData,
       profileLoading,
       isInstructor,
+      isPremiumMember,
+      isAccountLocked,
+      isAdmin,
+      showAdminPanel,
       role,
+      syncAdminClaim,
       signInWithGoogle,
       signInWithEmailPassword,
       registerWithEmailPassword,
       linkAccountWithPassword,
+      agreeToTerms,
+      upgradeToPremium,
       refreshUserProfile,
       googleRedirectResolving,
       googleAuthError,
-    ]
+    ],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

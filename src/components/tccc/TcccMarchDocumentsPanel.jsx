@@ -36,7 +36,7 @@ const tabBtnClass = (on) =>
     'rounded border px-3 py-2 font-mono text-[9px] font-bold uppercase tracking-wider transition-all duration-200',
     on
       ? 'border-red-600/60 bg-red-950/40 text-red-400'
-      : 'border-slate-800 bg-slate-950 text-slate-500 hover:border-slate-700 hover:text-slate-300',
+      : 'border-slate-800 bg-slate-950 text-app-text/55 hover:border-slate-700 hover:text-app-text/90',
   ].join(' ')
 
 /**
@@ -98,10 +98,10 @@ export default function TcccMarchDocumentsPanel({
   return (
     <div className="space-y-4">
       <div className="rounded-lg border border-slate-800 bg-slate-900/50 px-4 py-3">
-        <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">
+        <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-app-text/70">
           TAKTİK MEDİKAL KILAVUZ & EVRAK ÇANTASI
         </p>
-        <p className="mt-1 font-mono text-xs leading-relaxed text-slate-500">
+        <p className="mt-1 font-mono text-xs leading-relaxed text-app-text/55">
           MARCH DOKTRİNİ · CANLI DD-1380 YARALI KARTI · 9-LINE TAHLİYE · PDF ŞABLON MERKEZİ
         </p>
       </div>
@@ -160,7 +160,7 @@ export default function TcccMarchDocumentsPanel({
 
         {activeDocTab === 'field_templates' ? (
           <section aria-label="Field PDF templates" className="space-y-3">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-slate-500">
+            <p className="font-mono text-[10px] uppercase tracking-wider text-app-text/55">
               BOŞ PDF ŞABLON İNDİRME MERKEZİ
             </p>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -175,7 +175,7 @@ export default function TcccMarchDocumentsPanel({
                       <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-red-500/90">
                         {tpl.title}
                       </p>
-                      <p className="mt-1 font-mono text-[9px] uppercase text-slate-500">{tpl.subtitle}</p>
+                      <p className="mt-1 font-mono text-[9px] uppercase text-app-text/55">{tpl.subtitle}</p>
                     </div>
                     <button
                       type="button"
@@ -185,7 +185,7 @@ export default function TcccMarchDocumentsPanel({
                         'mt-4 w-full rounded border px-2 py-2 font-mono text-[9px] font-bold uppercase tracking-wider transition',
                         pdfReady
                           ? 'border-red-800/60 bg-red-950/40 text-red-300 hover:border-red-600/60 hover:bg-red-950/60'
-                          : 'border-slate-800 bg-slate-900 text-slate-600',
+                          : 'border-slate-800 bg-slate-900 text-app-text/45',
                       ].join(' ')}
                       title={
                         pdfReady

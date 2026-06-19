@@ -67,7 +67,7 @@ function resolveStatusLabel(log) {
 }
 
 const selectClass =
-  'w-full rounded-sm border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-slate-200 outline-none focus:border-emerald-500/60'
+  'w-full rounded-sm border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-app-text outline-none focus:border-emerald-500/60'
 
 /**
  * @param {{
@@ -109,7 +109,7 @@ export default function GroupShooterRecordsTable({ logs, operators, loading = fa
           [ TÜM ATICI KAYITLARI · CANLI ]
         </p>
         <label className="w-full space-y-1 sm:max-w-[220px]">
-          <span className="font-mono text-[9px] font-bold uppercase text-slate-500">Operatör Filtre</span>
+          <span className="font-mono text-[9px] font-bold uppercase text-app-text/55">Operatör Filtre</span>
           <select
             className={selectClass}
             value={operatorFilter}
@@ -126,19 +126,19 @@ export default function GroupShooterRecordsTable({ logs, operators, loading = fa
       </div>
 
       {loading ? (
-        <p className="flex items-center justify-center gap-2 py-12 font-mono text-[10px] uppercase text-slate-500">
+        <p className="flex items-center justify-center gap-2 py-12 font-mono text-[10px] uppercase text-app-text/55">
           <Loader2 className="size-4 animate-spin text-emerald-400" aria-hidden />
           Kayıt akışı senkronize ediliyor…
         </p>
       ) : visibleRows.length === 0 ? (
-        <p className="py-10 text-center font-mono text-[10px] uppercase text-slate-600">
+        <p className="py-10 text-center font-mono text-[10px] uppercase text-app-text/45">
           Bu grupta henüz atıcı kaydı yok
         </p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[880px] border-collapse font-mono text-[10px] uppercase">
             <thead>
-              <tr className="border-b border-slate-800 text-left text-slate-500">
+              <tr className="border-b border-slate-800 text-left text-app-text/55">
                 <th className="px-2 py-2">Zaman</th>
                 <th className="px-2 py-2">Callsign</th>
                 <th className="px-2 py-2">Kayıt</th>
@@ -160,8 +160,8 @@ export default function GroupShooterRecordsTable({ logs, operators, loading = fa
                 const passed = status === 'Geçti' || log.isTargetMet === true
 
                 return (
-                  <tr key={log.logId} className="border-b border-slate-800/60 text-slate-300">
-                    <td className="px-2 py-2 tabular-nums text-slate-500">{formatLogTime(log.timestamp)}</td>
+                  <tr key={log.logId} className="border-b border-slate-800/60 text-app-text/90">
+                    <td className="px-2 py-2 tabular-nums text-app-text/55">{formatLogTime(log.timestamp)}</td>
                     <td className="px-2 py-2 font-bold text-amber-300">{callsign}</td>
                     <td className="max-w-[200px] truncate px-2 py-2" title={log.drillName}>
                       {log.drillName || '—'}
@@ -182,14 +182,14 @@ export default function GroupShooterRecordsTable({ logs, operators, loading = fa
                     >
                       {status}
                     </td>
-                    <td className="px-2 py-2 text-slate-500">{resolveSourceLabel(log)}</td>
+                    <td className="px-2 py-2 text-app-text/55">{resolveSourceLabel(log)}</td>
                   </tr>
                 )
               })}
             </tbody>
           </table>
           {logs.length > maxRows ? (
-            <p className="mt-2 text-center font-mono text-[9px] uppercase text-slate-600">
+            <p className="mt-2 text-center font-mono text-[9px] uppercase text-app-text/45">
               Son {maxRows} kayıt gösteriliyor · Toplam {logs.length}
             </p>
           ) : null}

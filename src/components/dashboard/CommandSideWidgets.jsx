@@ -39,8 +39,9 @@ function MetDataRow({ label, value, detail, icon, loading }) {
  * @param {{ signalSeries?: { t: string, v: number }[] }} props
  */
 export default function CommandSideWidgets({ signalSeries: _legacySignal }) {
-  const { provinceId, setProvinceId, districtName, setDistrictName } = useDefaultLocationSelection()
-  const { location, data, loading, error } = useLocationWeather(provinceId, districtName)
+  const { provinceId, setProvinceId, districtName, setDistrictName, gpsCoords, geoStatus, geoActive, refreshFromGps } =
+    useDefaultLocationSelection()
+  const { location, data, loading, error } = useLocationWeather(provinceId, districtName, gpsCoords)
 
   const [expanded, setExpanded] = useState(/** @type {Record<string, boolean>} */ ({}))
 
@@ -79,6 +80,10 @@ export default function CommandSideWidgets({ signalSeries: _legacySignal }) {
         districtName={districtName}
         onProvinceChange={setProvinceId}
         onDistrictChange={setDistrictName}
+        geoStatus={geoStatus}
+        geoActive={geoActive}
+        gpsCoords={gpsCoords}
+        onRefreshGps={refreshFromGps}
       />
 
       {error ? (
@@ -104,14 +109,14 @@ export default function CommandSideWidgets({ signalSeries: _legacySignal }) {
             >
               <div className="cmd-widget__head">
                 <span className="cmd-widget__icon" aria-hidden>
-                  <Icon className="size-4 text-slate-300" strokeWidth={1.5} />
+                  <Icon className="size-4 text-app-text/90" strokeWidth={1.5} />
                 </span>
                 <div className="min-w-0 flex-1 text-left">
                   <p className="cmd-widget__label">{w.label}</p>
                   <p className="cmd-widget__desc">{w.desc}</p>
                 </div>
                 <ChevronDown
-                  className={['cmd-widget__chevron size-4 text-slate-500', isOpen ? 'cmd-widget__chevron--open' : ''].join(' ')}
+                  className={['cmd-widget__chevron size-4 text-app-text/55', isOpen ? 'cmd-widget__chevron--open' : ''].join(' ')}
                   strokeWidth={2}
                   aria-hidden
                 />
@@ -161,7 +166,7 @@ export default function CommandSideWidgets({ signalSeries: _legacySignal }) {
                         <Line
                           type="monotone"
                           dataKey="v"
-                          stroke="#00FF41"
+                          stroke="var(--accent-color)"
                           strokeWidth={2}
                           dot={false}
                           style={{ filter: 'drop-shadow(0 0 6px rgba(0,255,65,0.45))' }}

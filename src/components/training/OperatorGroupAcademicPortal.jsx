@@ -43,7 +43,7 @@ export default function OperatorGroupAcademicPortal({
 
   if (loading) {
     return (
-      <p className="py-16 text-center font-mono-technical text-[10px] uppercase text-slate-500">
+      <p className="py-16 text-center font-mono-technical text-[10px] uppercase text-app-text/55">
         Grup üyeliği kontrol ediliyor…
       </p>
     )
@@ -52,7 +52,7 @@ export default function OperatorGroupAcademicPortal({
   if (!isMember || !groupId) {
     return (
       <section className="rounded-xl border border-slate-800 bg-slate-950/60 p-8 text-center">
-        <p className="font-mono-technical text-[10px] uppercase text-slate-500">
+        <p className="font-mono-technical text-[10px] uppercase text-app-text/55">
           Eğitmen kayıtlarını görüntülemek için bir taktik grubuna dahil olmalısınız.
         </p>
         <button type="button" onClick={onBack} className={`${ctBackBtn} mx-auto mt-4`}>

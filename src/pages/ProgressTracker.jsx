@@ -53,18 +53,18 @@ const TAG_COLORS = {
   TCCC: 'border-rose-500/40 bg-rose-950/40 text-rose-400',
   FOF: 'border-violet-500/40 bg-violet-950/40 text-violet-400',
   VBSS: 'border-blue-500/40 bg-blue-950/40 text-blue-400',
-  OTHER: 'border-slate-600 bg-slate-900 text-slate-400',
+  OTHER: 'border-slate-600 bg-slate-900 text-app-text/70',
 }
 
 const selectClass =
-  'w-full rounded-sm border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-[11px] font-bold uppercase tracking-wider text-slate-200 outline-none transition-colors focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/20'
+  'w-full rounded-sm border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-[11px] font-bold uppercase tracking-wider text-app-text outline-none transition-colors focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/20'
 
 const selectDisabledClass =
-  'cursor-not-allowed border-slate-800/80 bg-slate-900/60 text-slate-500 opacity-60 focus:border-slate-800 focus:ring-0'
+  'cursor-not-allowed border-slate-800/80 bg-slate-900/60 text-app-text/55 opacity-60 focus:border-slate-800 focus:ring-0'
 
 /** @param {number | null | undefined} score */
 function orsScoreTone(score) {
-  if (score == null) return 'text-slate-500 border-slate-800 bg-slate-900/50'
+  if (score == null) return 'text-app-text/55 border-slate-800 bg-slate-900/50'
   if (score >= 85) return 'text-emerald-400 border-emerald-800/60 bg-emerald-950/40 shadow-[0_0_18px_rgba(52,211,153,0.12)]'
   if (score >= 50) return 'text-amber-400 border-amber-800/60 bg-amber-950/30'
   return 'text-rose-400 border-rose-800/70 bg-rose-950/30 shadow-[0_0_14px_rgba(244,63,94,0.15)]'
@@ -103,7 +103,7 @@ function TacticalFilterSelect({ label, value, options, onChange, disabled = fals
 
   return (
     <div ref={rootRef} className="relative z-30 min-h-[4.75rem] space-y-1.5">
-      <span className="block text-[9px] font-bold uppercase tracking-wider text-slate-500">{label}</span>
+      <span className="block text-[9px] font-bold uppercase tracking-wider text-app-text/55">{label}</span>
       <button
         type="button"
         disabled={disabled}
@@ -116,7 +116,7 @@ function TacticalFilterSelect({ label, value, options, onChange, disabled = fals
           open && !disabled ? 'border-emerald-500/60 ring-1 ring-emerald-500/20' : '',
         ].join(' ')}
       >
-        <span className="min-w-0 truncate text-left text-slate-200">{selected?.label ?? '—'}</span>
+        <span className="min-w-0 truncate text-left text-app-text">{selected?.label ?? '—'}</span>
         <ChevronDown
           className={['size-4 shrink-0 text-emerald-500/80 transition-transform', open ? 'rotate-180' : ''].join(
             ' '
@@ -144,7 +144,7 @@ function TacticalFilterSelect({ label, value, options, onChange, disabled = fals
                     'w-full px-3 py-2 text-left font-mono text-[10px] font-bold uppercase tracking-wider transition-colors',
                     active
                       ? 'bg-emerald-950/90 text-emerald-400'
-                      : 'text-slate-300 hover:bg-slate-900 hover:text-emerald-300',
+                      : 'text-app-text/90 hover:bg-slate-900 hover:text-emerald-300',
                   ].join(' ')}
                 >
                   {opt.label}
@@ -169,11 +169,11 @@ function OrsHudReadout({ score, loading = false, penaltyCount = 0, tcccPenaltyAc
         tcccPenaltyActive ? 'ring-1 ring-rose-500/50 shadow-[0_0_18px_rgba(244,63,94,0.3)]' : '',
       ].join(' ')}
     >
-      <p className="font-mono text-[8px] font-bold uppercase tracking-[0.28em] text-slate-500">
+      <p className="font-mono text-[8px] font-bold uppercase tracking-[0.28em] text-app-text/55">
         ORS · OPERASYONEL HAZIRLIK
       </p>
       {loading ? (
-        <p className="mt-1 font-mono text-lg font-black uppercase tracking-wider text-slate-600 animate-pulse">
+        <p className="mt-1 font-mono text-lg font-black uppercase tracking-wider text-app-text/45 animate-pulse">
           —
         </p>
       ) : (
@@ -181,7 +181,7 @@ function OrsHudReadout({ score, loading = false, penaltyCount = 0, tcccPenaltyAc
           {score != null ? score : '—'}
         </p>
       )}
-      <p className="mt-1 font-mono text-[8px] font-bold uppercase tracking-wider text-slate-600">
+      <p className="mt-1 font-mono text-[8px] font-bold uppercase tracking-wider text-app-text/45">
         {loading
           ? 'MOTOR SENKRON...'
           : score != null
@@ -215,7 +215,7 @@ function KpiCard({ label, value, sub, accent = 'emerald', progress, animate = fa
       : accent === 'rose'
         ? 'text-rose-400'
         : accent === 'slate'
-          ? 'text-slate-200'
+          ? 'text-app-text'
           : 'text-emerald-400'
 
   const barTone =
@@ -232,9 +232,9 @@ function KpiCard({ label, value, sub, accent = 'emerald', progress, animate = fa
         warning ? 'border-rose-800/80 bg-rose-950/20' : 'border-slate-800',
       ].join(' ')}
     >
-      <p className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-slate-500">{label}</p>
+      <p className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-app-text/55">{label}</p>
       <p className={`mt-2 font-mono text-2xl font-black tabular-nums ${valueColor}`}>{value}</p>
-      {sub ? <p className="mt-1 font-mono text-[9px] uppercase tracking-wider text-slate-600">{sub}</p> : null}
+      {sub ? <p className="mt-1 font-mono text-[9px] uppercase tracking-wider text-app-text/45">{sub}</p> : null}
       {progress != null ? (
         <div className="mt-3 h-1.5 overflow-hidden rounded-sm border border-slate-800 bg-slate-900">
           <div
@@ -255,7 +255,7 @@ function KpiCard({ label, value, sub, accent = 'emerald', progress, animate = fa
 function ActivityFeedPanel({ feed, selectedLogId = null, onSelectLog }) {
   if (feed.length === 0) {
     return (
-      <p className="py-8 text-center font-mono text-[10px] uppercase tracking-wider text-slate-600">
+      <p className="py-8 text-center font-mono text-[10px] uppercase tracking-wider text-app-text/45">
         KAYIT AKIŞI BOŞ
       </p>
     )
@@ -293,8 +293,8 @@ function ActivityFeedPanel({ feed, selectedLogId = null, onSelectLog }) {
               [{item.tag}]
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate font-mono text-[11px] font-bold uppercase text-slate-200">{item.title}</p>
-              <p className="mt-0.5 font-mono text-[9px] text-slate-500">{when}</p>
+              <p className="truncate font-mono text-[11px] font-bold uppercase text-app-text">{item.title}</p>
+              <p className="mt-0.5 font-mono text-[9px] text-app-text/55">{when}</p>
             </div>
             {item.success != null ? (
               <span
@@ -538,7 +538,7 @@ export default function ProgressTracker({ onBack }) {
           <button
             type="button"
             onClick={handleBack}
-            className="inline-flex items-center gap-2 rounded-sm border border-slate-800 bg-slate-900/60 px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-400 transition-colors hover:border-emerald-800/50 hover:text-emerald-400"
+            className="inline-flex items-center gap-2 rounded-sm border border-slate-800 bg-slate-900/60 px-4 py-2 text-xs font-bold uppercase tracking-wider text-app-text/70 transition-colors hover:border-emerald-800/50 hover:text-emerald-400"
           >
             <ArrowLeft className="size-4 shrink-0" strokeWidth={2} aria-hidden />
             KOMUTA MERKEZİNE DÖN
@@ -551,8 +551,8 @@ export default function ProgressTracker({ onBack }) {
               tcccPenaltyActive={tcccOrsPenaltyActive}
             />
             <div className="text-right">
-              <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-slate-500">OPERATÖR</p>
-              <p className="text-sm font-bold uppercase tracking-wider text-slate-200">{callsign}</p>
+              <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-app-text/55">OPERATÖR</p>
+              <p className="text-sm font-bold uppercase tracking-wider text-app-text">{callsign}</p>
             </div>
           </div>
         </div>
@@ -610,7 +610,7 @@ export default function ProgressTracker({ onBack }) {
                   onChange={setSubTopic}
                   hint={
                     subTopicDisabled ? (
-                      <p className="font-mono text-[8px] uppercase tracking-wider text-slate-600">
+                      <p className="font-mono text-[8px] uppercase tracking-wider text-app-text/45">
                         TÜM DİSİPLİNLER · GÖREV FİLTRESİ DEVRE DIŞI
                       </p>
                     ) : subTopics.length <= 1 ? (
@@ -626,7 +626,7 @@ export default function ProgressTracker({ onBack }) {
                 />
 
                 <div className="space-y-1.5">
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-app-text/55">
                     ZAMAN ARALIĞI
                   </span>
                   <div className="flex gap-1 rounded-sm border border-slate-800 bg-slate-900 p-1">
@@ -641,7 +641,7 @@ export default function ProgressTracker({ onBack }) {
                             'flex-1 rounded-sm px-2 py-2 font-mono text-[9px] font-bold uppercase tracking-wider transition-all',
                             active
                               ? 'bg-emerald-600 text-slate-950 shadow-[0_0_12px_rgba(52,211,153,0.35)]'
-                              : 'text-slate-500 hover:text-slate-300',
+                              : 'text-app-text/55 hover:text-app-text/90',
                           ].join(' ')}
                         >
                           {tab.label}
@@ -740,18 +740,18 @@ export default function ProgressTracker({ onBack }) {
                 <div className="mb-4 flex items-center justify-between gap-2">
                   <div className="flex min-w-0 items-center gap-2">
                     <TrendingUp className="size-4 shrink-0 text-emerald-500" strokeWidth={1.5} aria-hidden />
-                    <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-200">
+                    <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-app-text">
                       PERFORMANS TRENDİ
                     </h2>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
-                    <span className="font-mono text-[8px] uppercase text-slate-600">
+                    <span className="font-mono text-[8px] uppercase text-app-text/45">
                       SON {trendSeries.length} OTURUM
                     </span>
                     <button
                       type="button"
                       onClick={() => setHudExpandedPanel('TREND')}
-                      className="rounded border border-slate-700 bg-slate-900/80 p-1.5 text-slate-400 transition-colors hover:border-emerald-600/50 hover:text-emerald-400"
+                      className="rounded border border-slate-700 bg-slate-900/80 p-1.5 text-app-text/70 transition-colors hover:border-emerald-600/50 hover:text-emerald-400"
                       aria-label="Performans trendi tam ekran"
                     >
                       <Maximize2 className="size-4" strokeWidth={1.75} aria-hidden />
@@ -765,11 +765,11 @@ export default function ProgressTracker({ onBack }) {
                 <div className="mb-4 flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <Activity className="size-4 text-sky-400" strokeWidth={1.5} aria-hidden />
-                    <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-200">
+                    <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-app-text">
                       CANLI KAYIT AKIŞI
                     </h2>
                   </div>
-                  <Clock className="size-4 text-slate-600" strokeWidth={1.5} aria-hidden />
+                  <Clock className="size-4 text-app-text/45" strokeWidth={1.5} aria-hidden />
                 </div>
                 <ActivityFeedPanel
                   feed={activityFeed}
@@ -790,7 +790,7 @@ export default function ProgressTracker({ onBack }) {
             />
 
             <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-800/80 bg-slate-900/30 px-4 py-3">
-              <div className="flex flex-wrap items-center gap-4 text-[9px] uppercase tracking-wider text-slate-600">
+              <div className="flex flex-wrap items-center gap-4 text-[9px] uppercase tracking-wider text-app-text/45">
                 <span className="inline-flex items-center gap-1.5">
                   <Target className="size-3.5 text-emerald-500" aria-hidden />
                   {isConfigured ? 'FIRESTORE · CANLI' : 'OFFLINE MOD'}

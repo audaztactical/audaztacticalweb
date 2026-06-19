@@ -8,6 +8,8 @@ import { useAuth } from '../../context/AuthContext'
 import { useFirebaseErrorReporter } from '../../context/FirebaseErrorContext'
 import { auth, isFirebaseConfigured } from '../../lib/firebase'
 import { userRequiresEmailVerification } from '../../lib/authEmailVerification'
+import { betaPasswordFromUsername, resolveAuthEmailInput } from '../../lib/betaAuth'
+import { isPlatformInBetaPeriod } from '../../lib/registrationPolicy'
 import Register from './Register'
 
 function formatAuthDebug(err) {
@@ -39,7 +41,7 @@ function GoogleMark({ className }) {
   )
 }
 
-export default function AuthModal({ open, onClose, initialMode = 'login', redirectTo = '/dashboard' }) {
+export default function AuthModal({ open, onClose, initialMode = 'login', redirectTo = '/dashboard', registerTermsPreAccepted = false }) {
   const navigate = useNavigate()
   const {
     signInWithGoogle,
@@ -70,12 +72,21 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
 
   const validateLoginFields = () => {
     const fe = {}
-    if (password.length < 6) {
+    const loginId = email.trim()
+    const betaUsernameLogin = isPlatformInBetaPeriod() && loginId && !loginId.includes('@')
+
+    if (!betaUsernameLogin && password.length < 6) {
       fe.password = 'ERR: Şifre min. 6 karakter (POLICY_AUTH_01)'
     }
-    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
-    if (!emailOk) {
-      fe.email = 'ERR: Geçersiz e-posta formatı (VALIDATION_EMAIL)'
+    if (!loginId) {
+      fe.email = 'ERR: E-posta veya kullanıcı adı gerekli (VALIDATION_LOGIN)'
+    } else if (loginId.includes('@')) {
+      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(loginId)
+      if (!emailOk) {
+        fe.email = 'ERR: Geçersiz e-posta formatı (VALIDATION_EMAIL)'
+      }
+    } else if (loginId.length < 3) {
+      fe.email = 'ERR: Geçersiz kullanıcı adı (VALIDATION_USERNAME)'
     }
     setFieldErrors(fe)
     return Object.keys(fe).length === 0
@@ -179,7 +190,14 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
 
     setBusy(true)
     try {
-      const cred = await signInWithEmailPassword(email.trim(), password)
+      const loginInput = email.trim()
+      const authEmail = resolveAuthEmailInput(loginInput)
+      const authPassword =
+        isPlatformInBetaPeriod() && !loginInput.includes('@')
+          ? betaPasswordFromUsername(loginInput)
+          : password
+
+      const cred = await signInWithEmailPassword(authEmail, authPassword)
       if (userRequiresEmailVerification(cred.user)) {
         onClose()
         resetForm()
@@ -226,10 +244,10 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
   return (
     <AnimatePresence>
       {open ? (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
           <Motion.button
             type="button"
-            className="absolute inset-0 bg-black/75 backdrop-blur-md"
+            className="absolute inset-0 bg-[#050608]/85"
             aria-label="Kapat"
             onClick={onClose}
             initial={{ opacity: 0 }}
@@ -239,7 +257,7 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
           />
 
           <Motion.div
-            className="relative max-h-[min(92vh,720px)] w-full max-w-lg overflow-y-auto overflow-x-hidden rounded-2xl border border-[#ffb400]/25 bg-[#0a0b0d]/95 shadow-[0_0_60px_-12px_rgba(255,180,0,0.35)] backdrop-blur-xl"
+            className="relative max-h-[min(94vh,880px)] w-full max-w-xl overflow-y-auto overflow-x-hidden rounded-2xl border border-accent/35 bg-[#12151c] shadow-[0_24px_80px_-20px_rgba(0,0,0,0.85)] sm:max-w-2xl"
             role="dialog"
             aria-modal="true"
             aria-labelledby="auth-modal-title"
@@ -251,11 +269,11 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
           >
               <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,180,0,0.06)_0%,transparent_50%)]" />
 
-              <Motion.div layout className="relative border-b border-white/10 px-5 pb-4 pt-6">
+              <Motion.div layout className="relative border-b border-white/10 px-6 pb-4 pt-6 sm:px-8">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="absolute right-4 top-4 rounded-lg p-2 text-slate-500 transition hover:bg-white/10 hover:text-white"
+                  className="absolute right-4 top-4 rounded-lg p-2 text-app-text/55 transition hover:bg-white/10 hover:text-app-text"
                   aria-label="Modalı kapat"
                 >
                   <X className="size-5" strokeWidth={1.75} />
@@ -273,13 +291,13 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
                       decoding="async"
                     />
                   </Motion.div>
-                  <h2 id="auth-modal-title" className="font-display text-lg font-bold tracking-wide text-white">
+                  <h2 id="auth-modal-title" className="font-display text-lg font-bold tracking-wide text-app-text">
                     {isRegister ? 'Operatör Kaydı' : 'Operatör Girişi'}
                   </h2>
                 </div>
               </Motion.div>
 
-              <Motion.div layout className="relative px-5 pb-2 pt-4">
+              <Motion.div layout className="relative px-6 pb-2 pt-4 sm:px-8">
                 <div className="mb-5 flex rounded-lg border border-white/10 bg-black/40 p-1">
                   <button
                     type="button"
@@ -292,8 +310,8 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
                     className={[
                       'flex-1 rounded-md py-2 font-display text-sm font-semibold transition',
                       mode === 'login'
-                        ? 'bg-[#ffb400]/20 text-[#ffb400] shadow-[0_0_20px_-8px_rgba(255,180,0,0.5)]'
-                        : 'text-slate-500 hover:text-slate-300',
+                        ? 'bg-accent/20 text-accent shadow-[0_0_20px_-8px_rgba(255,180,0,0.5)]'
+                        : 'text-app-text/55 hover:text-app-text/90',
                     ].join(' ')}
                   >
                     Giriş Yap
@@ -309,8 +327,8 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
                     className={[
                       'flex-1 rounded-md py-2 font-display text-sm font-semibold transition',
                       mode === 'register'
-                        ? 'bg-[#ffb400]/20 text-[#ffb400] shadow-[0_0_20px_-8px_rgba(255,180,0,0.5)]'
-                        : 'text-slate-500 hover:text-slate-300',
+                        ? 'bg-accent/20 text-accent shadow-[0_0_20px_-8px_rgba(255,180,0,0.5)]'
+                        : 'text-app-text/55 hover:text-app-text/90',
                     ].join(' ')}
                   >
                     Kayıt
@@ -334,10 +352,11 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
                       <Register
                         registerWithEmailPassword={registerWithEmailPassword}
                         disabled={busy || !configured}
+                        initialTermsAccepted={registerTermsPreAccepted}
                         onSuccess={() => {
                           onClose()
                           resetForm()
-                          navigate('/verify-email', { replace: true })
+                          navigate('/dashboard', { replace: true })
                         }}
                         onError={(message) => setError(message)}
                       />
@@ -354,14 +373,14 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
                     >
                       <Input
                         variant="gold"
-                        label="E-posta"
+                        label={isPlatformInBetaPeriod() ? 'Kullanıcı adı veya e-posta' : 'E-posta'}
                         id="auth-email"
-                        type="email"
+                        type="text"
                         name="email"
-                        autoComplete="email"
+                        autoComplete="username"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="operatör@kurum.tr"
+                        placeholder={isPlatformInBetaPeriod() ? 'wolf_alpha veya operatör@kurum.tr' : 'operatör@kurum.tr'}
                         error={fieldErrors.email}
                         required
                       />
@@ -375,17 +394,22 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
                         autoComplete="current-password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        placeholder="••••••••"
+                        placeholder={isPlatformInBetaPeriod() ? 'Beta: kullanıcı adı ile otomatik' : '••••••••'}
                         error={fieldErrors.password}
-                        required
+                        required={!isPlatformInBetaPeriod() || email.trim().includes('@')}
                       />
+                      {isPlatformInBetaPeriod() ? (
+                        <p className="font-mono-technical text-[9px] leading-relaxed text-app-text/50">
+                          Beta test: yalnızca kullanıcı adınızı girerek de oturum açabilirsiniz.
+                        </p>
+                      ) : null}
 
                       {error ? <AmberAlert>{error}</AmberAlert> : null}
 
                       <button
                         type="submit"
                         disabled={busy}
-                        className="w-full rounded-lg border border-[#ffb400]/50 bg-gradient-to-r from-[#ffb400]/20 to-[#d4af37]/15 py-3.5 font-display text-sm font-bold uppercase tracking-[0.2em] text-[#ffb400] shadow-[0_0_24px_-8px_rgba(255,180,0,0.45)] transition hover:border-[#ffb400]/80 hover:from-[#ffb400]/30 disabled:opacity-50"
+                        className="w-full rounded-lg border border-accent/50 bg-gradient-to-r from-accent/20 to-[#d4af37]/15 py-3.5 font-display text-sm font-bold uppercase tracking-[0.2em] text-accent shadow-[0_0_24px_-8px_rgba(255,180,0,0.45)] transition hover:border-accent/80 hover:from-accent/30 disabled:opacity-50"
                       >
                         {busy ? (
                           <span className="font-mono-technical tracking-widest">…</span>
@@ -400,7 +424,7 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
                 <Motion.div layout className="space-y-4 pb-6 pt-2">
                   <div className="flex items-center gap-3">
                     <span className="h-px flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-                    <span className="font-mono-technical text-[10px] font-semibold uppercase tracking-[0.35em] text-slate-500">
+                    <span className="font-mono-technical text-[10px] font-semibold uppercase tracking-[0.35em] text-app-text/55">
                       veya
                     </span>
                     <span className="h-px flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
@@ -414,7 +438,7 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
                     type="button"
                     onClick={handleGoogleSignIn}
                     disabled={busy || !configured}
-                    className="glass-card flex w-full items-center justify-center gap-3 rounded-xl border border-[#d4af37]/55 bg-white/[0.04] px-4 py-3.5 font-display text-[11px] font-bold uppercase tracking-[0.28em] text-white shadow-[inset_0_1px_0_rgba(255,180,0,0.12),0_8px_32px_-12px_rgba(0,0,0,0.5)] transition hover:border-[#ffb400]/80 hover:bg-[#ffb400]/[0.08] disabled:cursor-not-allowed disabled:opacity-45"
+                    className="glass-card flex w-full items-center justify-center gap-3 rounded-xl border border-[#d4af37]/55 bg-white/[0.04] px-4 py-3.5 font-display text-[11px] font-bold uppercase tracking-[0.28em] text-app-text shadow-[inset_0_1px_0_rgba(255,180,0,0.12),0_8px_32px_-12px_rgba(0,0,0,0.5)] transition hover:border-accent/80 hover:bg-accent/[0.08] disabled:cursor-not-allowed disabled:opacity-45"
                   >
                     <GoogleMark className="size-5 shrink-0" />
                     <span className="text-[#f0e6d2]">GOOGLE İLE OPERATÖR GİRİŞİ</span>

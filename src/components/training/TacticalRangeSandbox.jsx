@@ -71,15 +71,15 @@ function toDatetimeLocalValue(v) {
 }
 
 const inputClass =
-  'w-full rounded border border-[#00FF41]/30 bg-[#0A0A0A] px-2 py-2 font-mono-technical text-sm text-slate-100 outline-none placeholder:text-slate-600 focus:border-[#00FF41]/60 shadow-[0_0_10px_rgba(34,197,94,0.12)]'
+  'w-full rounded border border-accent/30 bg-app-bg px-2 py-2 font-mono-technical text-sm text-slate-100 outline-none placeholder:text-app-text/45 focus:border-accent/60 shadow-[0_0_10px_rgba(34,197,94,0.12)]'
 
 const selectClass =
-  'dossier-blood-select w-full rounded border border-[#00FF41]/35 bg-[#0A0A0A] py-2 pl-2 pr-8 font-mono-technical text-[11px] uppercase text-white outline-none focus:border-[#00FF41]/60'
+  'dossier-blood-select w-full rounded border border-accent/35 bg-app-bg py-2 pl-2 pr-8 font-mono-technical text-[11px] uppercase text-app-text outline-none focus:border-accent/60'
 
 const operationNoteTextareaClass =
-  'block h-full min-h-0 w-full resize-none rounded border border-[#00FF41]/30 bg-[#0A0A0A] px-2 py-2 font-mono-technical text-sm leading-relaxed text-slate-100 outline-none placeholder:text-slate-600 focus:border-[#00FF41]/60 shadow-[0_0_10px_rgba(34,197,94,0.12)]'
+  'block h-full min-h-0 w-full resize-none rounded border border-accent/30 bg-app-bg px-2 py-2 font-mono-technical text-sm leading-relaxed text-slate-100 outline-none placeholder:text-app-text/45 focus:border-accent/60 shadow-[0_0_10px_rgba(34,197,94,0.12)]'
 
-const labelClass = 'font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-slate-500'
+const labelClass = 'font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-app-text/55'
 
 /** @typedef {import('../../lib/rangeLayoutMetrics').CanvasLayoutObject} CanvasLayoutObject */
 
@@ -1000,21 +1000,21 @@ export default function TacticalRangeSandbox({
 
   return (
     <div className="grid min-h-0 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)] lg:items-stretch">
-      <TacticalPanel className="relative flex min-h-0 flex-col overflow-hidden border-[#00FF41]/25 bg-[#0a0a0a]/95 p-0 shadow-[0_0_10px_rgba(34,197,94,0.15)]">
-        <span className="pointer-events-none absolute left-2 top-2 z-10 h-4 w-4 border-l border-t border-[#00FF41]/40" />
-        <span className="pointer-events-none absolute right-2 top-2 z-10 h-4 w-4 border-r border-t border-[#00FF41]/40" />
-        <div className="shrink-0 border-b border-[#00FF41]/15 bg-[#080808] px-4 py-2">
-          <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-[#00FF41]/90">
+      <TacticalPanel className="relative flex min-h-0 flex-col overflow-hidden border-accent/25 bg-app-bg/95 p-0 shadow-[0_0_10px_rgba(34,197,94,0.15)]">
+        <span className="pointer-events-none absolute left-2 top-2 z-10 h-4 w-4 border-l border-t border-accent/40" />
+        <span className="pointer-events-none absolute right-2 top-2 z-10 h-4 w-4 border-r border-t border-accent/40" />
+        <div className="shrink-0 border-b border-accent/15 bg-app-bg px-4 py-2">
+          <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-accent/90">
             TAKTİK SANDBOX · SINIRSIZ VEKTÖR PLANI
           </p>
           {isEditingExisting ? (
-            <p className="mt-1 font-mono-technical text-[8px] uppercase tracking-wider text-[#ffb400]/90">
+            <p className="mt-1 font-mono-technical text-[8px] uppercase tracking-wider text-accent/90">
               MEVCUT SENARYO DÜZENLENİYOR · KAYDET İLE VERİTABANINA YAZ
             </p>
           ) : null}
         </div>
         <div ref={wrapRef} className="relative min-h-0 flex-1 p-3 sm:p-4">
-          <div className="relative overflow-hidden rounded border border-[#00FF41]/30 bg-[#050805] shadow-[0_0_10px_rgba(34,197,94,0.2)]">
+          <div className="relative overflow-hidden rounded border border-accent/30 bg-app-bg shadow-[0_0_10px_rgba(34,197,94,0.2)]">
             {!readOnly ? (
               <SandboxFloatingToolbar
                 activeTool={activeTool}
@@ -1054,12 +1054,12 @@ export default function TacticalRangeSandbox({
           </div>
           {readOnly ? (
             <div className="pointer-events-none absolute inset-3 z-10 flex items-start justify-end p-3 sm:inset-4">
-              <span className="rounded border border-[#00FF41]/40 bg-black/80 px-2 py-1 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-[#00FF41]">
+              <span className="rounded border border-accent/40 bg-black/80 px-2 py-1 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-accent">
                 SALT OKUNUR ÖNİZLEME · ARAYÜZÜ DÜZENLE İLE DÜZENLE
               </span>
             </div>
           ) : null}
-          <p className="mt-2 font-mono-technical text-[8px] uppercase text-slate-500">
+          <p className="mt-2 font-mono-technical text-[8px] uppercase text-app-text/55">
             {isPrimitiveDrawMode(activeTool)
               ? `ÇİZİM · ${activeTool.toUpperCase()} · KALINLIK ${strokeWidth}px`
               : activeTool === 'arrow'
@@ -1078,10 +1078,10 @@ export default function TacticalRangeSandbox({
       </TacticalPanel>
 
       <div className="grid min-h-0 grid-rows-[1fr_auto] gap-4">
-        <TacticalPanel className="relative flex min-h-0 flex-col border-[#00FF41]/20 bg-[#0a0a0a]/95 p-0">
-          <span className="pointer-events-none absolute bottom-2 left-2 z-10 h-3 w-3 border-b border-l border-[#00FF41]/40" />
-          <span className="pointer-events-none absolute bottom-2 right-2 z-10 h-3 w-3 border-b border-r border-[#00FF41]/40" />
-          <p className="shrink-0 border-b border-[#00FF41]/15 bg-[#080808] px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-white">
+        <TacticalPanel className="relative flex min-h-0 flex-col border-accent/20 bg-app-bg/95 p-0">
+          <span className="pointer-events-none absolute bottom-2 left-2 z-10 h-3 w-3 border-b border-l border-accent/40" />
+          <span className="pointer-events-none absolute bottom-2 right-2 z-10 h-3 w-3 border-b border-r border-accent/40" />
+          <p className="shrink-0 border-b border-accent/15 bg-app-bg px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-app-text">
             TAKTİK VARLIK KÜTÜPHANESİ
           </p>
           <div className="ilws-green-scroll min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
@@ -1090,15 +1090,15 @@ export default function TacticalRangeSandbox({
               return (
                 <div
                   key={group.id}
-                  className="overflow-hidden rounded border border-[#00FF41]/20 bg-black/40 shadow-[0_0_8px_rgba(34,197,94,0.08)]"
+                  className="overflow-hidden rounded border border-accent/20 bg-black/40 shadow-[0_0_8px_rgba(34,197,94,0.08)]"
                 >
                   <button
                     type="button"
                     onClick={() => setOpenGroup(open ? '' : group.id)}
-                    className="flex w-full items-center justify-between border-b border-[#00FF41]/10 bg-[#080808] px-3 py-2 text-left font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#00FF41]/85"
+                    className="flex w-full items-center justify-between border-b border-accent/10 bg-app-bg px-3 py-2 text-left font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent/85"
                   >
                     {group.title}
-                    <span className="text-slate-500">{open ? '−' : '+'}</span>
+                    <span className="text-app-text/55">{open ? '−' : '+'}</span>
                   </button>
                   {open ? (
                     <div className="grid gap-1.5 p-2 sm:grid-cols-2">
@@ -1112,8 +1112,8 @@ export default function TacticalRangeSandbox({
                             onFocus={() => setActiveBrush(item)}
                             className={`rounded border px-2 py-2 text-left transition ${
                               active
-                                ? 'border-[#00FF41]/55 bg-[#00FF41]/12 text-[#00FF41] shadow-[0_0_10px_rgba(34,197,94,0.2)]'
-                                : 'border-white/10 bg-[#0A0A0A] text-zinc-300 hover:border-[#00FF41]/30'
+                                ? 'border-accent/55 bg-accent/12 text-accent shadow-[0_0_10px_rgba(34,197,94,0.2)]'
+                                : 'border-white/10 bg-app-bg text-zinc-300 hover:border-accent/30'
                             }`}
                           >
                             <span
@@ -1134,8 +1134,8 @@ export default function TacticalRangeSandbox({
           </div>
         </TacticalPanel>
 
-        <TacticalPanel className="relative flex min-h-0 flex-col border-[#00FF41]/25 bg-[#0a0a0a]/95 p-0 shadow-[0_0_10px_rgba(34,197,94,0.12)]">
-          <p className="shrink-0 border-b border-[#00FF41]/15 bg-[#080808] px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-[#ffb400]/90">
+        <TacticalPanel className="relative flex min-h-0 flex-col border-accent/25 bg-app-bg/95 p-0 shadow-[0_0_10px_rgba(34,197,94,0.12)]">
+          <p className="shrink-0 border-b border-accent/15 bg-app-bg px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-accent/90">
             CANLI KONTROL · SİMÜLASYON METRİKLERİ
           </p>
           <div className="grid min-h-0 flex-1 grid-rows-[auto_auto_auto_1fr] gap-3 p-3">
@@ -1152,7 +1152,7 @@ export default function TacticalRangeSandbox({
                   type="button"
                   disabled={saving || readOnly}
                   onClick={handleSaveChanges}
-                  className="col-span-2 flex-1 rounded border border-[#ffb400]/70 bg-[#ffb400]/18 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#ffb400] shadow-[0_0_16px_rgba(251,191,36,0.35)] hover:bg-[#ffb400]/28 disabled:opacity-40"
+                  className="col-span-2 flex-1 rounded border border-accent/70 bg-accent/18 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent shadow-[0_0_16px_rgba(251,191,36,0.35)] hover:bg-accent/28 disabled:opacity-40"
                 >
                   {saving ? 'KAYDEDİLİYOR…' : 'DEĞİŞİKLİKLERİ KAYDET'}
                 </button>
@@ -1161,15 +1161,15 @@ export default function TacticalRangeSandbox({
                   type="button"
                   disabled={saving || readOnly}
                   onClick={handleSaveScenario}
-                  className="flex-1 rounded border border-[#00FF41]/60 bg-[#00FF41]/15 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#00FF41] shadow-[0_0_16px_rgba(34,197,94,0.35)] hover:bg-[#00FF41]/25 disabled:opacity-40"
+                  className="flex-1 rounded border border-accent/60 bg-accent/15 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent shadow-[0_0_16px_rgba(34,197,94,0.35)] hover:bg-accent/25 disabled:opacity-40"
                 >
                   {saving ? 'KAYDEDİLİYOR…' : 'SENARYO KAYDET'}
                 </button>
               )}
             </div>
 
-            <div className="space-y-2 rounded border border-[#ffb400]/25 bg-black/40 p-2.5 shadow-[0_0_10px_rgba(251,191,36,0.08)]">
-              <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-[#ffb400]/90">
+            <div className="space-y-2 rounded border border-accent/25 bg-black/40 p-2.5 shadow-[0_0_10px_rgba(251,191,36,0.08)]">
+              <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-accent/90">
                 TASARIM KONTROLLERİ
               </p>
               <div className="space-y-1">
@@ -1183,7 +1183,7 @@ export default function TacticalRangeSandbox({
                   onChange={(e) => setStrokeWidth(Number(e.target.value))}
                   className="h-1.5 w-full cursor-pointer accent-[#22d3ee]"
                 />
-                <div className="flex justify-between font-mono-technical text-[7px] text-slate-600">
+                <div className="flex justify-between font-mono-technical text-[7px] text-app-text/45">
                   {STROKE_WIDTH_OPTIONS.map((w) => (
                     <span key={w} className={strokeWidth === w ? 'text-[#22d3ee]' : ''}>
                       {w}
@@ -1206,7 +1206,7 @@ export default function TacticalRangeSandbox({
                       className={`rounded border px-2 py-1.5 text-left font-mono-technical text-[8px] font-bold uppercase tracking-wider transition ${
                         selectedArrowType === opt.id
                           ? 'shadow-[0_0_10px_rgba(34,211,238,0.2)]'
-                          : 'border-white/10 bg-black/40 text-slate-400'
+                          : 'border-white/10 bg-black/40 text-app-text/70'
                       }`}
                       style={
                         selectedArrowType === opt.id
@@ -1249,12 +1249,12 @@ export default function TacticalRangeSandbox({
                   DİKEY HİZALA
                 </button>
               </div>
-              <p className="font-mono-technical text-[7px] uppercase leading-relaxed text-slate-600">
+              <p className="font-mono-technical text-[7px] uppercase leading-relaxed text-app-text/45">
                 Kutu seçimi · Delete tuşu veya NESNE SİL ile grup silme
               {selectedObjectIds.length > 0 ||
               selectedArrowIds.length > 0 ||
               selectedShapeIds.length > 0 ? (
-                <span className="text-[#00FF41]">
+                <span className="text-accent">
                   {' '}
                   · {selectedObjectIds.length} NESNE · {selectedArrowIds.length} OK ·{' '}
                   {selectedShapeIds.length} ÇİZİM
@@ -1264,7 +1264,7 @@ export default function TacticalRangeSandbox({
             </div>
 
             {saveOk ? (
-              <p className="rounded border border-[#00FF41]/40 bg-[#00FF41]/10 px-2 py-1.5 text-center font-mono-technical text-[8px] font-bold uppercase text-[#00FF41]">
+              <p className="rounded border border-accent/40 bg-accent/10 px-2 py-1.5 text-center font-mono-technical text-[8px] font-bold uppercase text-accent">
                 {isEditingExisting ? 'DEĞİŞİKLİKLER_KAYDEDİLDİ' : 'SENARYO_TRAININGS_AKTARILDI'}
               </p>
             ) : null}
@@ -1274,17 +1274,17 @@ export default function TacticalRangeSandbox({
               </p>
             ) : null}
 
-            <div className="grid grid-cols-2 gap-2 rounded border border-[#00FF41]/20 bg-black/50 p-2.5 font-mono-technical text-[9px] uppercase shadow-[0_0_10px_rgba(34,197,94,0.1)]">
-              <p className="text-slate-500">
+            <div className="grid grid-cols-2 gap-2 rounded border border-accent/20 bg-black/50 p-2.5 font-mono-technical text-[9px] uppercase shadow-[0_0_10px_rgba(34,197,94,0.1)]">
+              <p className="text-app-text/55">
                 TASARLANAN ALAN: <span className="text-slate-100">{metrics.areaLabel}</span>
               </p>
-              <p className="text-slate-500">
+              <p className="text-app-text/55">
                 HEDEF SAYISI: <span className="text-red-400">{metrics.targetCount}</span>
               </p>
-              <p className="text-slate-500">
+              <p className="text-app-text/55">
                 SİPER SAYISI: <span className="text-[#5ec8ff]">{metrics.coverCount}</span>
               </p>
-              <p className="text-slate-500">
+              <p className="text-app-text/55">
                 TAKTİK HATA RİSKİ:{' '}
                 <span className={metrics.riskTone}>{metrics.riskLabel.toUpperCase()}</span>
               </p>
@@ -1326,7 +1326,7 @@ export default function TacticalRangeSandbox({
               </label>
             </div>
 
-            <div className="grid min-h-0 grid-rows-[auto_1fr] gap-1 border-t border-[#00FF41]/12 pt-2">
+            <div className="grid min-h-0 grid-rows-[auto_1fr] gap-1 border-t border-accent/12 pt-2">
               <label
                 htmlFor="sandbox-design-note"
                 className="shrink-0 font-mono text-xs tracking-wider text-green-500/70"

@@ -1,5 +1,6 @@
 import { ATIS_DRILL_CUSTOM, resolveAtisDrillMeta } from './atisDrills'
-import { ammoDisplayLabel } from './ammoIlws'
+import { ammoDisplayLabel, getAmmoUnitPrice } from './ammoIlws'
+import { computeAmmoTotalCost } from './ammoCost'
 import { getTacticalCategory, invNum, invStr } from './inventoryIlws'
 import { weaponDisplayName } from './weaponIlws'
 import { sanitizeShotCounts } from './atisShotCounts'
@@ -124,6 +125,12 @@ export function buildAtisLogPayload({
         ? 100 - yivPct
         : null
 
+  const unitPrice = ammo ? getAmmoUnitPrice(ammo) : null
+  const totalCost =
+    ammo && unitPrice != null && unitPrice > 0 && totalRoundsFired > 0
+      ? computeAmmoTotalCost(totalRoundsFired, unitPrice)
+      : null
+
   return {
     userId,
     weaponId,
@@ -155,6 +162,8 @@ export function buildAtisLogPayload({
     kind: 'ATIS_DRILL',
     shootType: drillName,
     status: 'active',
+    ...(unitPrice != null && unitPrice > 0 ? { unitPrice } : {}),
+    ...(totalCost != null && totalCost > 0 ? { totalCost } : {}),
     ...(meteoData ? { meteoData } : {}),
   }
 }

@@ -19,6 +19,7 @@ import {
 } from './atisLogRegistry'
 import { formatMeteoOverviewRows, getLogMeteoData } from './meteoDataCapture'
 import { PDF_FONT_FAMILY, preparePdfAssets, setPdfFont } from './pdfFontLoader'
+import { formatAmmoCostTry, resolveLogAmmoCost } from './ammoCost'
 
 /** @typedef {{ callsign?: string, username?: string, email?: string, bloodType?: string }} OperatorInfo */
 
@@ -178,29 +179,40 @@ function drawHitRatioChart(doc, x, y, width, height, hits, misses) {
  * @param {number} pageW
  * @param {Record<string, unknown>} log
  * @param {number} startY
+ * @param {Record<string, unknown>[]} [inventory]
  */
-function drawLogDetailSection(doc, margin, pageW, log, startY) {
+function drawLogDetailSection(doc, margin, pageW, log, startY, inventory = []) {
   const accuracy = getAtisAccuracyPercent(log)
   const dist = getAtisShotDistribution(log)
   const duration = formatAtisDurationCell(log)
   const timing = getAtisTimingDetails(log)
   const note = getAtisOperationNote(log)
+  const ammoCost = resolveLogAmmoCost(log, inventory)
+
+  /** @type {[string, string][]} */
+  const detailRows = [
+    ['Tarih', formatAtisDateCell(log)],
+    ['Silah', getAtisWeaponLabel(log)],
+    ['Atış türü', getAtisDrillName(log)],
+    ['Mesafe', `${getAtisDistanceM(log)} m`],
+    ['Atım / İsabet', `${dist.total} / ${dist.hits}`],
+    ['İsabet oranı', `%${accuracy.toLocaleString('tr-TR')}`],
+    ['Süre', duration.label],
+    ['Kalibre', getAtisCaliberLabel(log)],
+    ['Mühimmat', getAtisAmmoName(log)],
+  ]
+  if (ammoCost) {
+    detailRows.push(
+      ['Birim fiyat', formatAmmoCostTry(ammoCost.unitPrice)],
+      ['Toplam maliyet', formatAmmoCostTry(ammoCost.totalCost)]
+    )
+  }
 
   autoTable(doc, {
     startY,
     margin: { left: margin, right: margin },
     head: [['Parametre', 'Değer']],
-    body: [
-      ['Tarih', formatAtisDateCell(log)],
-      ['Silah', getAtisWeaponLabel(log)],
-      ['Atış türü', getAtisDrillName(log)],
-      ['Mesafe', `${getAtisDistanceM(log)} m`],
-      ['Atım / İsabet', `${dist.total} / ${dist.hits}`],
-      ['İsabet oranı', `%${accuracy.toLocaleString('tr-TR')}`],
-      ['Süre', duration.label],
-      ['Kalibre', getAtisCaliberLabel(log)],
-      ['Mühimmat', getAtisAmmoName(log)],
-    ],
+    body: detailRows,
     theme: 'plain',
     styles: TABLE_STYLES,
     headStyles: {
@@ -268,10 +280,12 @@ function drawLogDetailSection(doc, margin, pageW, log, startY) {
  * @param {Record<string, unknown>[]} logs
  * @param {boolean} filterActive
  * @param {string} filterLabel
+ * @param {Record<string, unknown>[]} [inventory]
  */
-function drawBulkSummaryPage(doc, margin, pageW, logs, filterActive, filterLabel) {
+function drawBulkSummaryPage(doc, margin, pageW, logs, filterActive, filterLabel, inventory = []) {
   const totalRounds = logs.reduce((sum, row) => sum + getAtisRoundsAndHits(row).totalRoundsFired, 0)
   const totalHits = logs.reduce((sum, row) => sum + getAtisRoundsAndHits(row).totalHits, 0)
+  const totalCost = logs.reduce((sum, row) => sum + (resolveLogAmmoCost(row, inventory)?.totalCost ?? 0), 0)
   const avgAccuracy =
     logs.length > 0
       ? Math.round(
@@ -290,18 +304,22 @@ function drawBulkSummaryPage(doc, margin, pageW, logs, filterActive, filterLabel
   doc.text(`Kayıt sayısı: ${logs.length}`, margin, 64)
   doc.text(`Toplam atım / isabet: ${totalRounds} / ${totalHits}`, margin, 69)
   doc.text(`Ortalama isabet: %${avgAccuracy.toLocaleString('tr-TR')}`, margin, 74)
+  if (totalCost > 0) {
+    doc.text(`Toplam mühimmat maliyeti: ${formatAmmoCostTry(totalCost)}`, margin, 79)
+  }
   doc.text(
     filterActive ? `Filtre: ${filterLabel}` : 'Filtre: Yok — tüm kayıtlar',
     margin,
-    79
+    totalCost > 0 ? 84 : 79
   )
 
   autoTable(doc, {
-    startY: 86,
+    startY: totalCost > 0 ? 91 : 86,
     margin: { left: margin, right: margin },
-    head: [['Tarih', 'Silah', 'Atış türü', 'Mesafe', 'Atım/İsabet', 'Skor %']],
+    head: [['Tarih', 'Silah', 'Atış türü', 'Mesafe', 'Atım/İsabet', 'Skor %', 'Maliyet']],
     body: logs.map((row) => {
       const { totalRoundsFired, totalHits } = getAtisRoundsAndHits(row)
+      const cost = resolveLogAmmoCost(row, inventory)
       return [
         formatAtisDateCell(row),
         getAtisWeaponLabel(row),
@@ -309,6 +327,7 @@ function drawBulkSummaryPage(doc, margin, pageW, logs, filterActive, filterLabel
         `${getAtisDistanceM(row)} m`,
         `${totalRoundsFired}/${totalHits}`,
         `%${getAtisAccuracyPercent(row).toLocaleString('tr-TR')}`,
+        cost ? formatAmmoCostTry(cost.totalCost) : '—',
       ]
     }),
     theme: 'plain',
@@ -346,6 +365,7 @@ function buildPdfFilename(logs, callsign) {
  *   operator?: OperatorInfo | null,
  *   filterActive?: boolean,
  *   filterLabel?: string,
+ *   inventory?: Record<string, unknown>[],
  * }} params
  */
 export async function generateAtisShootingReportPdf({
@@ -353,6 +373,7 @@ export async function generateAtisShootingReportPdf({
   operator,
   filterActive = false,
   filterLabel = '',
+  inventory = [],
 }) {
   const rows = Array.isArray(logs) ? logs.filter(Boolean) : []
   if (rows.length === 0) return
@@ -370,7 +391,7 @@ export async function generateAtisShootingReportPdf({
   const callsign = drawOperatorBlock(doc, margin, operator)
 
   if (isBulk) {
-    drawBulkSummaryPage(doc, margin, pageW, rows, filterActive, filterLabel)
+    drawBulkSummaryPage(doc, margin, pageW, rows, filterActive, filterLabel, inventory)
   }
 
   rows.forEach((log, index) => {
@@ -387,7 +408,7 @@ export async function generateAtisShootingReportPdf({
 
     const overviewStart = isBulk ? 40 : 56
     let cursorY = drawTacticalOverview(doc, overviewStart, margin, pageW, log)
-    drawLogDetailSection(doc, margin, pageW, log, cursorY)
+    drawLogDetailSection(doc, margin, pageW, log, cursorY, inventory)
   })
 
   doc.save(buildPdfFilename(rows, callsign))

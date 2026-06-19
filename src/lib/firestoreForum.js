@@ -43,6 +43,7 @@ export const FORUM_CATEGORIES = /** @type {const} */ ([
  *   timestamp: unknown
  *   replyCount: number
  *   likes: string[]
+ *   imageUrl: string
  * }} ForumPost */
 
 /** @typedef {{
@@ -51,6 +52,7 @@ export const FORUM_CATEGORIES = /** @type {const} */ ([
  *   username: string
  *   role: string
  *   rank: string
+ *   photoURL: string
  * }} ForumAuthorProfile */
 
 /** @typedef {{
@@ -59,6 +61,7 @@ export const FORUM_CATEGORIES = /** @type {const} */ ([
  *   authorId: string
  *   authorCallsign: string
  *   timestamp: unknown
+ *   imageUrl: string
  * }} ForumReply */
 
 function assertDb() {
@@ -111,6 +114,7 @@ function mapForumPostDoc(snap) {
     timestamp: d.timestamp ?? null,
     replyCount: typeof d.replyCount === 'number' ? d.replyCount : 0,
     likes: Array.isArray(d.likes) ? d.likes.filter((id) => typeof id === 'string') : [],
+    imageUrl: typeof d.imageUrl === 'string' && d.imageUrl.trim() ? d.imageUrl.trim() : '',
   }
 }
 
@@ -126,6 +130,7 @@ function mapForumReplyDoc(snap) {
     authorId: typeof d.authorId === 'string' ? d.authorId : '',
     authorCallsign: typeof d.authorCallsign === 'string' ? d.authorCallsign : 'OPERATÖR',
     timestamp: d.timestamp ?? null,
+    imageUrl: typeof d.imageUrl === 'string' && d.imageUrl.trim() ? d.imageUrl.trim() : '',
   }
 }
 
@@ -172,19 +177,21 @@ export function subscribeForumReplies(postId, onNext, onError) {
  *   category: ForumCategory | string
  *   authorId: string
  *   authorCallsign: string
+ *   imageUrl?: string
  * }} payload
  */
 export async function createForumPost(payload) {
   assertDb()
   const title = payload.title.trim()
   const content = payload.content.trim()
+  const imageUrl = typeof payload.imageUrl === 'string' ? payload.imageUrl.trim() : ''
   if (!title) {
     const e = new Error('Başlık boş olamaz.')
     e.code = 'invalid-argument'
     throw e
   }
-  if (!content) {
-    const e = new Error('İçerik boş olamaz.')
+  if (!content && !imageUrl) {
+    const e = new Error('İçerik veya görsel gerekli.')
     e.code = 'invalid-argument'
     throw e
   }
@@ -205,6 +212,7 @@ export async function createForumPost(payload) {
   const ref = await addDoc(collection(db, 'forum_posts'), {
     title,
     content,
+    imageUrl: imageUrl || null,
     category,
     authorId: payload.authorId,
     authorCallsign: payload.authorCallsign.trim() || 'OPERATÖR',
@@ -221,19 +229,21 @@ export async function createForumPost(payload) {
  *   content: string
  *   authorId: string
  *   authorCallsign: string
+ *   imageUrl?: string
  * }} payload
  */
 export async function createForumReply(postId, payload) {
   assertDb()
   const pid = String(postId ?? '').trim()
   const content = payload.content.trim()
+  const imageUrl = typeof payload.imageUrl === 'string' ? payload.imageUrl.trim() : ''
   if (!pid) {
     const e = new Error('Başlık bulunamadı.')
     e.code = 'invalid-argument'
     throw e
   }
-  if (!content) {
-    const e = new Error('Yanıt boş olamaz.')
+  if (!content && !imageUrl) {
+    const e = new Error('Yanıt veya görsel gerekli.')
     e.code = 'invalid-argument'
     throw e
   }
@@ -261,6 +271,7 @@ export async function createForumReply(postId, payload) {
 
   await addDoc(collection(db, 'forum_posts', pid, 'replies'), {
     content,
+    imageUrl: imageUrl || null,
     authorId: payload.authorId,
     authorCallsign: payload.authorCallsign.trim() || 'OPERATÖR',
     timestamp: serverTimestamp(),
@@ -302,6 +313,7 @@ export async function fetchForumAuthorProfile(authorId) {
       username: '',
       role: 'operator',
       rank: 'OPERATÖR',
+      photoURL: '',
     }
   }
 
@@ -314,6 +326,7 @@ export async function fetchForumAuthorProfile(authorId) {
     username: profile.username ?? '',
     role,
     rank: status || formatForumRoleLabel(role),
+    photoURL: (profile.photoURL || '').trim(),
   }
 }
 

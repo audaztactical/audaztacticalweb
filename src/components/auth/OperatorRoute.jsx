@@ -7,7 +7,7 @@ export default function OperatorRoute({ children }) {
 
   if (loading || profileLoading) {
     return (
-      <div className="flex min-h-[40vh] items-center justify-center font-mono-technical text-sm text-slate-500">
+      <div className="flex min-h-[40vh] items-center justify-center font-mono-technical text-sm text-app-text/55">
         Erişim profili kontrol ediliyor…
       </div>
     )

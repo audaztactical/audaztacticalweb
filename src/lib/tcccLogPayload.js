@@ -163,6 +163,15 @@ export function buildTcccLogPayload({
   })
 
   const operationNoteText = invStr(operationNote ?? '').trim()
+  const autoOperationSummary = [
+    tcccPhaseLabel ? `TCCC fazı: ${tcccPhaseLabel}` : '',
+    injuryTypeLabel ? `Yaralanma: ${injuryTypeLabel}` : '',
+    evacWaitMin != null ? `Tahliye bekleme: ${evacWaitMin} dk` : '',
+    outcomeLabel ? `Sonuç: ${outcomeLabel}` : '',
+  ]
+    .filter(Boolean)
+    .join(' · ')
+
   const timestamp = new Date().toISOString()
 
   const injuryTypeKey = invStr(injuryType).trim()
@@ -220,7 +229,9 @@ export function buildTcccLogPayload({
     chestSealApplied: Boolean(chestSealApplied),
     needleDecompression: Boolean(needleDecompression),
     hypothermiaBlanket: Boolean(hypothermiaBlanket),
-    operationNote: operationNoteText,
+    operationNote: operationNoteText || autoOperationSummary,
+    operationNoteManual: operationNoteText || null,
+    appliedTreatmentsSummary: procedurePerformed !== '—' ? procedurePerformed : null,
     operationCategory: 'tccc',
     kind: 'TCCC_DRILL',
     drillName: summaryLabel,

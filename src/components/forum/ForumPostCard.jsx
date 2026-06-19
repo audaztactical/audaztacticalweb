@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Loader2, MessageSquare, ThumbsUp, UserCheck, UserPlus } from 'lucide-react'
-import OperatorBadge from '../ui/OperatorBadge'
+import OperatorAvatar from '../ui/OperatorAvatar'
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
 import {
   fetchForumAuthorProfile,
@@ -218,9 +218,11 @@ export default function ForumPostCard({ post, currentUid, currentCallsign, onOpe
               <Loader2 className="size-4 animate-spin text-amber-500/60" aria-hidden />
             </div>
           ) : (
-            <OperatorBadge
+            <OperatorAvatar
+              uid={authorUid}
               callsign={authorCallsign}
               username={author?.username}
+              photoUrl={author?.photoURL}
               size="md"
               className="transition group-hover:border-amber-500/60 group-hover:text-amber-400"
             />
@@ -247,6 +249,11 @@ export default function ForumPostCard({ post, currentUid, currentCallsign, onOpe
 
       {post.content ? (
         <p className="mt-2 line-clamp-2 font-mono text-xs leading-relaxed text-zinc-400">{post.content}</p>
+      ) : null}
+      {post.imageUrl ? (
+        <div className="mt-2 overflow-hidden rounded-sm border border-lime-500/20 bg-black/30">
+          <img src={post.imageUrl} alt="" className="max-h-28 w-full object-cover" loading="lazy" decoding="async" />
+        </div>
       ) : null}
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-zinc-800/80 pt-3">

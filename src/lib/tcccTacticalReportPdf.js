@@ -6,8 +6,10 @@ import {
   formatTcccFilterSummary,
   formatTcccInterventionTime,
   formatTcccSystolicBp,
+  getTcccAppliedTreatmentsSummary,
   getTcccCasualtyType,
   getTcccInjuryType,
+  getTcccMarchSectionsForReport,
   getTcccOperationNote,
   getTcccOutcome,
   getTcccPhase,
@@ -149,14 +151,59 @@ function drawClinicalSummary(doc, margin, pageW, log, startY) {
   // @ts-expect-error jspdf-autotable plugin
   let cursorY = (doc.lastAutoTable?.finalY ?? startY) + 8
 
+  const marchSections = getTcccMarchSectionsForReport(log)
+  if (marchSections.length > 0) {
+    setPdfFont(doc, 'bold')
+    doc.setTextColor(...COLORS.accent)
+    doc.text('MARCH müdahale özeti', margin, cursorY)
+    cursorY += 6
+
+    autoTable(doc, {
+      startY: cursorY,
+      margin: { left: margin, right: margin },
+      head: [['Faz', 'Uygulanan müdahaleler']],
+      body: marchSections.map((section) => [section.step, section.items.join(' · ')]),
+      theme: 'plain',
+      styles: { ...TABLE_STYLES, fontSize: 7 },
+      headStyles: {
+        fillColor: [8, 8, 8],
+        textColor: COLORS.green,
+        fontStyle: 'bold',
+        font: PDF_FONT_FAMILY,
+      },
+      alternateRowStyles: { fillColor: [15, 17, 21] },
+      tableLineColor: [51, 65, 85],
+    })
+    // @ts-expect-error jspdf-autotable plugin
+    cursorY = (doc.lastAutoTable?.finalY ?? cursorY) + 8
+  }
+
+  const treatments = getTcccAppliedTreatmentsSummary(log)
+  const note = getTcccOperationNote(log)
+
   setPdfFont(doc, 'bold')
   doc.setTextColor(...COLORS.accent)
-  doc.text('Operasyon Notu', margin, cursorY)
+  doc.text('Tıbbi notlar', margin, cursorY)
   cursorY += 6
   setPdfFont(doc, 'normal')
   doc.setTextColor(...COLORS.text)
 
-  const noteLines = doc.splitTextToSize(getTcccOperationNote(log), pageW - margin * 2)
+  if (treatments !== '—') {
+    doc.setTextColor(...COLORS.muted)
+    doc.text('Uygulanan tedaviler:', margin, cursorY)
+    cursorY += 5
+    doc.setTextColor(...COLORS.text)
+    const treatmentLines = doc.splitTextToSize(treatments, pageW - margin * 2)
+    doc.text(treatmentLines, margin, cursorY)
+    cursorY += treatmentLines.length * 5 + 4
+  }
+
+  doc.setTextColor(...COLORS.muted)
+  doc.text('Operasyon notu:', margin, cursorY)
+  cursorY += 5
+  doc.setTextColor(...COLORS.text)
+
+  const noteLines = doc.splitTextToSize(note, pageW - margin * 2)
   doc.text(noteLines, margin, cursorY)
 
   return cursorY + noteLines.length * 5

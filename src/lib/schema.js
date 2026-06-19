@@ -74,6 +74,8 @@ export const InventoryItemSchema = {
   mountedOnWeaponId: 'string',
   /** { date, rounds_at_maintenance, maintenanceType, note }[] */
   maintenance_logs: 'string',
+  /** Mühimmat birim fiyatı (TRY) */
+  unitPrice: 'number',
   weight: 'string',
   lastMaintenanceAt: 'string',
   /** Silah envanter kayıt tarihi (YYYY-MM-DD), oluşturma anında kilitlenir */
@@ -149,6 +151,9 @@ export const RangeLogEntrySchema = {
   status: 'string',
   weaponInventoryId: 'string',
   weaponLabel: 'string',
+  ammoInventoryId: 'string',
+  unitPrice: 'number',
+  totalCost: 'number',
   distanceM: 'number',
   roundsTotal: 'number',
   hits: 'number',

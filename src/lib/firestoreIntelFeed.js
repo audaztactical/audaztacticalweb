@@ -1,6 +1,8 @@
-import { collection, orderBy, query } from 'firebase/firestore'
+import { collection, getDocs, limit, orderBy, query, where } from 'firebase/firestore'
 import { db, isFirebaseConfigured } from './firebase'
 import { safeOnSnapshot, timestampToMs } from './firestoreSnapshot'
+
+export const INTEL_NEWS_TYPE = 'haber'
 
 /**
  * @typedef {{
@@ -38,6 +40,8 @@ export function mapIntelFeedDoc(raw, docId) {
     trSummary: String(d.trSummary ?? '').trim(),
     tags,
     url: String(d.url ?? '').trim(),
+    type: String(d.type ?? INTEL_NEWS_TYPE).trim() || INTEL_NEWS_TYPE,
+    public: d.public !== false,
   }
 }
 
@@ -68,6 +72,53 @@ export function formatIntelTimestamp(ts) {
 }
 
 /**
+ * Landing — Küresel Haber Ağı (OSINT) haber önizlemesi (limit 3).
+ * @param {number} [max=3]
+ * @returns {Promise<IntelFeedItem[]>}
+ */
+export async function fetchLandingIntelNews(max = 3) {
+  if (!isFirebaseConfigured() || !db) return []
+
+  const cap = Math.max(1, Math.min(max, 6))
+
+  try {
+    const typed = query(
+      collection(db, 'news_feed'),
+      where('type', '==', INTEL_NEWS_TYPE),
+      orderBy('timestamp', 'desc'),
+      limit(cap),
+    )
+    const snap = await getDocs(typed)
+    if (!snap.empty) {
+      return snap.docs
+        .map((d) => mapIntelFeedDoc(d.data(), d.id))
+        .filter((row) => {
+          if (!row) return false
+          const raw = snap.docs.find((docSnap) => docSnap.id === row.id)?.data()
+          if (raw?.isAlert === true) return false
+          if (String(raw?.source ?? '').trim() === 'AUDAZ KOMUTA MERKEZİ') return false
+          return true
+        })
+    }
+  } catch {
+    /* composite index henüz yok — genel sorguya düş */
+  }
+
+  const fallback = query(collection(db, 'news_feed'), orderBy('timestamp', 'desc'), limit(12))
+  const snap = await getDocs(fallback)
+  return snap.docs
+    .map((d) => mapIntelFeedDoc(d.data(), d.id))
+    .filter((row) => {
+      if (!row) return false
+      const raw = snap.docs.find((docSnap) => docSnap.id === row.id)?.data()
+      if (raw?.isAlert === true) return false
+      if (String(raw?.source ?? '').trim() === 'AUDAZ KOMUTA MERKEZİ') return false
+      return row.type === INTEL_NEWS_TYPE || row.public !== false
+    })
+    .slice(0, cap)
+}
+
+/**
  * @param {(items: IntelFeedItem[]) => void} onData
  * @param {(err: unknown) => void} [onError]
  */
@@ -83,6 +134,14 @@ export function subscribeIntelFeed(onData, onError) {
     q,
     (snap) => {
       const rows = snap.docs
+        .filter((docSnap) => {
+          const data = docSnap.data()
+          if (data.isAlert === true) return false
+          if (String(data.source ?? '').trim() === 'AUDAZ KOMUTA MERKEZİ') return false
+          const tags = Array.isArray(data.tags) ? data.tags : []
+          if (tags.some((t) => String(t).includes('SİSTEM İKAZI'))) return false
+          return true
+        })
         .map((d) => mapIntelFeedDoc(d.data(), d.id))
         .filter(Boolean)
         .sort((a, b) => timestampToMs(b.timestamp) - timestampToMs(a.timestamp))

@@ -43,12 +43,15 @@ function assertDb() {
   }
 }
 
+/** Operatör listesi — member / legacy operator / premium_member */
+const OPERATOR_ROLES = ['member', 'operator', 'premium_member']
+
 /**
  * @returns {Promise<OperatorProfile[]>}
  */
 export async function fetchOperatorProfiles() {
   assertDb()
-  const snap = await getDocs(query(collection(db, 'users'), where('role', '==', 'operator')))
+  const snap = await getDocs(query(collection(db, 'users'), where('role', 'in', OPERATOR_ROLES)))
   return snap.docs.map((d) => {
     const data = d.data()
     return {
@@ -62,7 +65,7 @@ export async function fetchOperatorProfiles() {
             : '',
       email: typeof data.email === 'string' ? data.email : '',
       status: typeof data.status === 'string' ? data.status : '',
-      role: typeof data.role === 'string' ? data.role : 'operator',
+      role: typeof data.role === 'string' ? data.role : 'member',
     }
   })
 }

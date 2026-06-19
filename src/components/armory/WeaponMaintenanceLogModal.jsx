@@ -5,13 +5,13 @@ import { MAINTENANCE_ALERT_MESSAGE } from '../../lib/weaponMaintenanceAlarm'
 import TacticalPanel from '../ui/TacticalPanel'
 
 const inputClass =
-  'w-full rounded border border-[#00FF41]/30 bg-[#0A0A0A] px-2 py-2 font-mono-technical text-sm text-slate-100 outline-none focus:border-[#00FF41]/60'
+  'w-full rounded border border-accent/30 bg-app-bg px-2 py-2 font-mono-technical text-sm text-slate-100 outline-none focus:border-accent/60'
 
 const selectClass =
-  'dossier-blood-select w-full rounded border border-[#00FF41]/35 bg-[#0A0A0A] py-2 pl-2 pr-8 font-mono-technical text-[10px] uppercase text-white outline-none'
+  'dossier-blood-select w-full rounded border border-accent/35 bg-app-bg py-2 pl-2 pr-8 font-mono-technical text-[10px] uppercase text-app-text outline-none'
 
 const dateClass =
-  'w-full rounded border border-[#00FF41]/40 bg-[#0A0A0A] px-2 py-1.5 font-mono-technical text-[10px] text-[#00FF41] outline-none [color-scheme:dark]'
+  'w-full rounded border border-accent/40 bg-app-bg px-2 py-1.5 font-mono-technical text-[10px] text-accent outline-none [color-scheme:dark]'
 
 /**
  * @param {{
@@ -81,21 +81,21 @@ export default function WeaponMaintenanceLogModal({
       ) : (
         <div className="absolute inset-0" aria-hidden />
       )}
-      <TacticalPanel className="weapon-maint-alarm relative z-[1] w-full max-w-lg border-red-500/50 bg-[#0A0A0A]/98 p-0 shadow-[0_0_40px_rgba(239,68,68,0.25)]">
+      <TacticalPanel className="weapon-maint-alarm relative z-[1] w-full max-w-lg border-red-500/50 bg-app-bg/98 p-0 shadow-[0_0_40px_rgba(239,68,68,0.25)]">
         <div className="border-b border-red-500/40 bg-red-950/30 px-4 py-3">
           <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.2em] text-red-400">
             [ ALERT: {MAINTENANCE_ALERT_MESSAGE} ]
           </p>
-          <p className="mt-2 font-mono-technical text-[10px] uppercase text-[#ffb400]">
+          <p className="mt-2 font-mono-technical text-[10px] uppercase text-accent">
             [{weaponStokKodu(String(weapon.id))}] {weaponDisplayName(weapon)}
           </p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-3 px-4 py-4">
-          <p className="font-mono-technical text-[8px] uppercase text-slate-500">
+          <p className="font-mono-technical text-[8px] uppercase text-app-text/55">
             Bakım kaydı girilmeden alarm kapanmaz.
           </p>
           <label className="block space-y-1">
-            <span className="font-mono-technical text-[8px] font-bold uppercase text-slate-500">BAKIM TÜRÜ</span>
+            <span className="font-mono-technical text-[8px] font-bold uppercase text-app-text/55">BAKIM TÜRÜ</span>
             <select className={selectClass} value={maintType} onChange={(e) => setMaintType(e.target.value)} required>
               {MAINTENANCE_TYPES.map((t) => (
                 <option key={t} value={t}>
@@ -106,7 +106,7 @@ export default function WeaponMaintenanceLogModal({
           </label>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block space-y-1">
-              <span className="font-mono-technical text-[8px] font-bold uppercase text-slate-500">TARİH</span>
+              <span className="font-mono-technical text-[8px] font-bold uppercase text-app-text/55">TARİH</span>
               <input
                 type="date"
                 className={dateClass}
@@ -117,7 +117,7 @@ export default function WeaponMaintenanceLogModal({
               />
             </label>
             <label className="block space-y-1">
-              <span className="font-mono-technical text-[8px] font-bold uppercase text-slate-500">TEMİZLEYEN / OPERATÖR</span>
+              <span className="font-mono-technical text-[8px] font-bold uppercase text-app-text/55">TEMİZLEYEN / OPERATÖR</span>
               <input
                 className={inputClass}
                 value={cleanedBy}
@@ -127,7 +127,7 @@ export default function WeaponMaintenanceLogModal({
             </label>
           </div>
           <label className="block space-y-1">
-            <span className="font-mono-technical text-[8px] font-bold uppercase text-slate-500">NOT</span>
+            <span className="font-mono-technical text-[8px] font-bold uppercase text-app-text/55">NOT</span>
             <textarea
               className={`${inputClass} min-h-[4rem] resize-y`}
               value={maintNote}
@@ -141,7 +141,7 @@ export default function WeaponMaintenanceLogModal({
           <button
             type="submit"
             disabled={saving}
-            className="w-full rounded border border-[#00FF41]/55 bg-[#00FF41]/12 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#00FF41] disabled:opacity-40"
+            className="w-full rounded border border-accent/55 bg-accent/12 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent disabled:opacity-40"
           >
             {saving ? '…' : 'BAKIM KAYDINI ONAYLA · ALARMI KAPAT'}
           </button>

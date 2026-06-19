@@ -8,6 +8,11 @@ import {
   where,
 } from 'firebase/firestore'
 import { db, isFirebaseConfigured } from './firebase'
+import {
+  buildVideoNewsFilterOptions,
+  DEFAULT_YOUTUBE_CHANNELS,
+  subscribeYoutubeChannels,
+} from './firestoreYoutubeChannels'
 
 /**
  * @typedef {{
@@ -25,7 +30,7 @@ import { db, isFirebaseConfigured } from './firebase'
 
 export const VIDEO_NEWS_PAGE_SIZE = 20
 
-/** @type {readonly string[]} */
+/** @deprecated Canlı liste için subscribeYoutubeChannelFilters kullanın. */
 export const VIDEO_NEWS_CHANNEL_FILTERS = [
   'TÜMÜ',
   'TASK & PURPOSE',
@@ -140,4 +145,34 @@ export async function fetchVideoNewsPage(options = {}) {
     lastDoc: nextLastDoc,
     hasMore: snap.docs.length === pageSize,
   }
+}
+
+/**
+ * @param {(filters: string[]) => void} onFilters
+ * @param {(err: unknown) => void} [onError]
+ */
+export function subscribeYoutubeChannelFilters(onFilters, onError) {
+  const fallback = [
+    'TÜMÜ',
+    ...DEFAULT_YOUTUBE_CHANNELS.map((row) => row.name),
+  ]
+
+  if (!isFirebaseConfigured() || !db) {
+    onFilters(fallback)
+    return () => {}
+  }
+
+  return subscribeYoutubeChannels(
+    (rows) => {
+      if (rows.length === 0) {
+        onFilters(fallback)
+        return
+      }
+      onFilters(buildVideoNewsFilterOptions(rows))
+    },
+    (err) => {
+      onError?.(err)
+      onFilters(fallback)
+    },
+  )
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Loader2, X } from 'lucide-react'
-import OperatorBadge from '../ui/OperatorBadge'
+import OperatorAvatar from '../ui/OperatorAvatar'
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
 import { fetchMuhabereOperatorProfile } from '../../lib/firestoreTaktikMuhabere'
 import { timestampToMs } from '../../lib/firestoreSnapshot'
@@ -25,7 +25,8 @@ function formatEnrolled(ts) {
  */
 function roleLabel(role) {
   if (role === 'instructor') return 'Eğitmen'
-  if (role === 'operator') return 'Operatör'
+  if (role === 'premium_member') return 'Premium Operatör'
+  if (role === 'member' || role === 'operator') return 'Operatör'
   return role || '—'
 }
 
@@ -107,11 +108,13 @@ export default function OperatorSicilModal({ open, operatorUid, onClose }) {
           <p className="px-4 py-16 text-center text-xs text-zinc-600">Profil bulunamadı.</p>
         ) : (
           <div className="px-6 py-6 text-center">
-            <OperatorBadge
+            <OperatorAvatar
+              uid={profile.uid}
               size="lg"
               callsign={profile.callsign}
               username={profile.username}
               displayName={profile.callsign}
+              photoUrl={profile.photoURL ?? undefined}
               className="mx-auto"
             />
             <h2 className="mt-4 font-mono text-xl font-semibold uppercase tracking-wide text-lime-400">

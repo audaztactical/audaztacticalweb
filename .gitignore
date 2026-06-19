@@ -17,6 +17,11 @@ dist-ssr
 # inject-firestore-admin.mjs çıktısı (VITE_ADMIN_EMAIL ile üretilir)
 firestore.deploy.rules
 
+# Capacitor — native projeler web kaynağından (src/) ayrı tutulur
+# Yeniden üretim: npm run build && npx cap add android && npx cap add ios
+android/
+ios/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

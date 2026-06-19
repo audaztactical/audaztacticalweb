@@ -72,6 +72,20 @@ function TrainingInner() {
     listenError: trainingsListenError,
   } = useAudazData('trainings')
 
+  const {
+    items: vbssLogs,
+    ready: vbssLogsReady,
+    loading: vbssLogsLoading,
+    listenError: vbssLogsListenError,
+  } = useAudazData('vbss_logs')
+
+  const {
+    items: tcccLogs,
+    ready: tcccLogsReady,
+    loading: tcccLogsLoading,
+    listenError: tcccLogsListenError,
+  } = useAudazData('tccc_logs')
+
   const { wrapRangeLogPayload, wrapTrainingPayload } = useTrainingSession()
 
   const individualRangeLogs = useMemo(
@@ -213,9 +227,9 @@ function TrainingInner() {
       : showFof
         ? 'Kişisel FOF kayıtları — range_logs (bireysel kanal)'
         : showVbss
-          ? 'Canlı HUD — eğitmen değerlendirmesi ayrı koleksiyon (vbss_evaluations)'
+          ? 'Canlı HUD (vbss_evaluations) · kişisel kayıtlar (vbss_logs)'
           : showTccc
-            ? 'Canlı HUD — eğitmen değerlendirmesi ayrı koleksiyon (tccc_evaluations)'
+            ? 'Canlı HUD (tccc_evaluations) · kişisel kayıtlar (tccc_logs)'
             : showEgitim
               ? 'Kişisel eğitim planları — trainings (bireysel kanal)'
               : showGrupEgitimi
@@ -237,13 +251,13 @@ function TrainingInner() {
       <div className="relative z-[2] space-y-5">
         <header className="flex flex-wrap items-end justify-between gap-3 border-b border-white/10 pb-3">
           <div className="min-w-0 flex-1">
-            <p className="font-mono-technical text-[10px] font-semibold uppercase tracking-[0.32em] text-[#ffb400]/85">
+            <p className="font-mono-technical text-[10px] font-semibold uppercase tracking-[0.32em] text-accent/85">
               [ ANTRENMAN VE OPERASYON ]
             </p>
-            <h1 className="font-display mt-1 text-lg font-bold tracking-[0.1em] text-white sm:text-xl">
+            <h1 className="font-display mt-1 text-lg font-bold tracking-[0.1em] text-app-text sm:text-xl">
               {headerTitle}
             </h1>
-            <p className="mt-0.5 max-w-xl font-mono-technical text-[9px] leading-snug text-slate-500">
+            <p className="mt-0.5 max-w-xl font-mono-technical text-[9px] leading-snug text-app-text/55">
               {headerSubtitle}
             </p>
           </div>
@@ -274,9 +288,21 @@ function TrainingInner() {
             {...terminalProps}
           />
         ) : showVbss ? (
-          <VbssTerminal {...terminalProps} />
+          <VbssTerminal
+            {...terminalProps}
+            logs={vbssLogs}
+            logsLoading={vbssLogsLoading}
+            logsReady={vbssLogsReady}
+            logsListenError={vbssLogsListenError}
+          />
         ) : showTccc ? (
-          <TcccTerminal {...terminalProps} />
+          <TcccTerminal
+            {...terminalProps}
+            logs={tcccLogs}
+            logsLoading={tcccLogsLoading}
+            logsReady={tcccLogsReady}
+            logsListenError={tcccLogsListenError}
+          />
         ) : showEgitim ? (
           <EgitimTerminal
             trainingPlans={individualTrainingPlans}
@@ -291,7 +317,7 @@ function TrainingInner() {
           <GroupTrainingTerminal onBack={exitCategory} initialTrainingId={deepLinkTrainingId} />
         ) : (
           <section aria-label="Operasyon kategorileri">
-            <p className="mb-3 font-mono-technical text-[8px] font-bold uppercase tracking-[0.28em] text-[#00FF41]/70">
+            <p className="mb-3 font-mono-technical text-[8px] font-bold uppercase tracking-[0.28em] text-accent/70">
               SEKTÖR_SEÇİMİ · {visibleCategoryCount} KANAL
             </p>
             <TrainingCategoryHub onCategorySelect={handleCategorySelect} />

@@ -1,0 +1,13 @@
+{
+  "appId": "com.audaz.tactical",
+  "appName": "audaz.tactical.app",
+  "webDir": "dist",
+  "assets": {
+    "ios": {
+      "path": "assets"
+    },
+    "android": {
+      "path": "assets"
+    }
+  }
+}

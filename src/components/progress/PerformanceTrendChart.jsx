@@ -93,7 +93,7 @@ export default function PerformanceTrendChart({ series, barsAnimate, variant = '
 
   if (series.length === 0) {
     return (
-      <p className="py-8 text-center font-mono text-[10px] uppercase tracking-wider text-slate-600">
+      <p className="py-8 text-center font-mono text-[10px] uppercase tracking-wider text-app-text/45">
         TREND VERİSİ YOK
       </p>
     )

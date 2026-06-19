@@ -14,7 +14,7 @@ function pointsFromSeed(seed, len = 10) {
 /**
  * @param {{ seed: number, trend?: 'up'|'down'|'neutral', accentClass?: string }} props
  */
-export default function MiniTrendSpark({ seed, trend = 'neutral', accentClass = 'stroke-[#ffb400]/90' }) {
+export default function MiniTrendSpark({ seed, trend = 'neutral', accentClass = 'stroke-accent/90' }) {
   const pts = useMemo(() => pointsFromSeed(seed), [seed])
   const bias = trend === 'up' ? -0.14 : trend === 'down' ? 0.14 : 0
   const xs = pts.length
@@ -36,7 +36,7 @@ export default function MiniTrendSpark({ seed, trend = 'neutral', accentClass = 
     <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="overflow-visible opacity-95" aria-hidden>
       <polyline
         fill="none"
-        className={`${accentClass} drop-shadow-[0_0_8px_rgba(255,180,0,0.4)]`}
+        className={`${accentClass} drop-shadow-[0_0_8px_color-mix(in_srgb,var(--accent-color)_40%,transparent)]`}
         strokeWidth="1.4"
         strokeLinecap="round"
         strokeLinejoin="round"

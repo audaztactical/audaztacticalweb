@@ -134,7 +134,7 @@ export const RANGE_ASSET_GROUPS = [
         category: 'special',
         label: 'Kronometre Sensörü',
         shortLabel: 'LZR',
-        color: '#00FF41',
+        color: 'var(--accent-color)',
       },
       {
         type: 'smoke_generator',

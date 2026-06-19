@@ -90,12 +90,12 @@ export default function GroupLeaderboard({ groups, operators, logs, hideGroupSel
 
       {!hideGroupSelect ? (
         <label className="mb-4 block space-y-1.5">
-          <span className="font-mono text-[9px] font-bold uppercase text-slate-500">Grup Seç</span>
+          <span className="font-mono text-[9px] font-bold uppercase text-app-text/55">Grup Seç</span>
           <select
             value={selectedGroupId}
             onChange={(e) => setSelectedGroupId(e.target.value)}
             disabled={groups.length === 0}
-            className="w-full rounded-sm border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-slate-200 outline-none focus:border-emerald-500/60"
+            className="w-full rounded-sm border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-app-text outline-none focus:border-emerald-500/60"
           >
             {groups.length === 0 ? (
               <option value="">GRUP YOK</option>
@@ -111,12 +111,12 @@ export default function GroupLeaderboard({ groups, operators, logs, hideGroupSel
       ) : null}
 
       {loading ? (
-        <p className="flex items-center justify-center gap-2 py-10 font-mono text-[10px] uppercase text-slate-500">
+        <p className="flex items-center justify-center gap-2 py-10 font-mono text-[10px] uppercase text-app-text/55">
           <Loader2 className="size-4 animate-spin text-emerald-400" aria-hidden />
           SIRALAMA HESAPLANIYOR…
         </p>
       ) : rows.length === 0 ? (
-        <p className="py-8 text-center font-mono text-[10px] uppercase text-slate-600">
+        <p className="py-8 text-center font-mono text-[10px] uppercase text-app-text/45">
           {selectedGroup?.members.length
             ? 'ÜYE METRİKLERİ YÜKLENEMEDİ VEYA KAYIT YOK'
             : 'BU GRUPTA HENÜZ OPERATÖR YOK'}
@@ -125,7 +125,7 @@ export default function GroupLeaderboard({ groups, operators, logs, hideGroupSel
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] border-collapse font-mono text-[10px] uppercase">
             <thead>
-              <tr className="border-b border-slate-800 text-left text-slate-500">
+              <tr className="border-b border-slate-800 text-left text-app-text/55">
                 <th className="px-2 py-2">#</th>
                 <th className="px-2 py-2">Callsign</th>
                 <th className="px-2 py-2">Toplam Drill</th>
@@ -141,8 +141,8 @@ export default function GroupLeaderboard({ groups, operators, logs, hideGroupSel
                 return (
                   <tr key={row.uid} className={`border ${podium}`}>
                     <td className="px-2 py-2.5 font-black tabular-nums text-amber-300">{rank}</td>
-                    <td className="px-2 py-2.5 font-bold text-slate-200">{row.callsign}</td>
-                    <td className="px-2 py-2.5 tabular-nums text-slate-400">{row.totalDrills}</td>
+                    <td className="px-2 py-2.5 font-bold text-app-text">{row.callsign}</td>
+                    <td className="px-2 py-2.5 tabular-nums text-app-text/70">{row.totalDrills}</td>
                     <td className="px-2 py-2.5 tabular-nums text-sky-400">%{row.atisAverage}</td>
                     <td className="px-2 py-2.5 tabular-nums text-amber-400/90">
                       {row.cqbSpeedSec != null ? row.cqbSpeedSec : '—'}

@@ -7,9 +7,9 @@ const WEAPON_CATEGORIES = [
 ]
 
 const inputClass =
-  'w-full border-0 border-b border-white/20 bg-transparent py-2 font-mono-technical text-sm text-slate-100 outline-none ring-0 placeholder:text-slate-600 focus:border-[#00FF41]/55'
+  'w-full border-0 border-b border-white/20 bg-transparent py-2 font-mono-technical text-sm text-slate-100 outline-none ring-0 placeholder:text-app-text/45 focus:border-accent/55'
 const selectClass =
-  'dossier-blood-select w-full rounded border border-[#00FF41]/30 bg-[#0A0A0A] py-2 pl-2 pr-1 font-mono-technical text-sm text-white outline-none'
+  'dossier-blood-select w-full rounded border border-accent/30 bg-app-bg py-2 pl-2 pr-1 font-mono-technical text-sm text-app-text outline-none'
 
 /**
  * @param {{
@@ -34,16 +34,16 @@ export default function WeaponCreateModal({ open, saving, form, onClose, onChang
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-3 backdrop-blur-sm">
       <button type="button" className="absolute inset-0 cursor-default" aria-label="Kapat" onClick={() => !saving && onClose()} />
-      <TacticalPanel className="relative z-[1] w-full max-w-lg border-[#00FF41]/20 bg-[#0A0A0A]/98 p-0 shadow-2xl backdrop-blur-md">
-        <div className="border-b border-white/10 bg-[#080808] px-3 py-2 sm:px-4">
-          <p className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] text-[#00FF41]/90">
+      <TacticalPanel className="relative z-[1] w-full max-w-lg border-accent/20 bg-app-bg/98 p-0 shadow-2xl backdrop-blur-md">
+        <div className="border-b border-white/10 bg-app-bg px-3 py-2 sm:px-4">
+          <p className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] text-accent/90">
             + YENİ_SİLAH_KAYDI
           </p>
-          <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-slate-600">P_TFK · T_TAB · AV_TFK · SİLAH_RAFI</p>
+          <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-app-text/45">P_TFK · T_TAB · AV_TFK · SİLAH_RAFI</p>
         </div>
         <form onSubmit={onSubmit} className="space-y-3 px-3 py-3 sm:px-4 sm:py-4">
           <label className="block">
-            <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">SİLAH_TİPİ</span>
+            <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">SİLAH_TİPİ</span>
             <select
               className={`${selectClass} mt-1`}
               value={form.tacticalCategory}
@@ -58,11 +58,11 @@ export default function WeaponCreateModal({ open, saving, form, onClose, onChang
             </select>
           </label>
           <label className="block">
-            <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">ÖĞE_ADI</span>
+            <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">ÖĞE_ADI</span>
             <input className={inputClass} value={form.name} onChange={(e) => onChange({ name: e.target.value })} required />
           </label>
           <label className="block">
-            <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">TEKNİK_TANIM</span>
+            <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">TEKNİK_TANIM</span>
             <textarea
               className={`${inputClass} min-h-[3rem] resize-y border border-white/10 bg-black/30 px-2 py-2`}
               value={form.technicalDescription}
@@ -72,16 +72,16 @@ export default function WeaponCreateModal({ open, saving, form, onClose, onChang
           </label>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block">
-              <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">MARKA</span>
+              <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">MARKA</span>
               <input className={inputClass} value={form.brand} onChange={(e) => onChange({ brand: e.target.value })} />
             </label>
             <label className="block">
-              <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">SERİ_NO</span>
+              <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">SERİ_NO</span>
               <input className={inputClass} value={form.serialNo} onChange={(e) => onChange({ serialNo: e.target.value })} />
             </label>
           </div>
           <label className="block">
-            <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">KALİBRE</span>
+            <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">KALİBRE</span>
             <input className={inputClass} value={form.calibre} onChange={(e) => onChange({ calibre: e.target.value })} placeholder="9×19" />
           </label>
           <div className="flex flex-wrap justify-end gap-2 border-t border-white/10 pt-3">
@@ -89,14 +89,14 @@ export default function WeaponCreateModal({ open, saving, form, onClose, onChang
               type="button"
               onClick={onClose}
               disabled={saving}
-              className="rounded border border-white/15 px-3 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-slate-400 hover:bg-white/5"
+              className="rounded border border-white/15 px-3 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-app-text/70 hover:bg-white/5"
             >
               İPTAL
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="rounded border border-[#00FF41]/45 bg-[#00FF41]/12 px-3 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#00FF41] disabled:opacity-50"
+              className="rounded border border-accent/45 bg-accent/12 px-3 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent disabled:opacity-50"
             >
               {saving ? '…' : 'KAYDET'}
             </button>

@@ -196,13 +196,13 @@ export default function IntroOverlay({ onFinish }) {
           <div className="entry-gate__scan pointer-events-none absolute inset-0" aria-hidden />
 
           <div className="entry-gate__content relative z-10 max-w-xl text-center">
-            <p className="entry-gate__title font-display text-2xl font-semibold leading-snug tracking-wide text-white transition duration-500 group-hover:text-[#ffb400] sm:text-3xl md:text-4xl">
+            <p className="entry-gate__title font-display text-2xl font-semibold leading-snug tracking-wide text-app-text transition duration-500 group-hover:text-accent sm:text-3xl md:text-4xl">
               Hoş Geldin.
             </p>
-            <p className="entry-gate__subtitle mt-4 font-display text-sm font-medium tracking-[0.12em] text-slate-400 transition duration-500 group-hover:text-slate-200 sm:text-base">
+            <p className="entry-gate__subtitle mt-4 font-display text-sm font-medium tracking-[0.12em] text-app-text/70 transition duration-500 group-hover:text-app-text sm:text-base">
               devam etmek için giriş yap
             </p>
-            <div className="entry-gate__pulse mx-auto mt-10 h-px w-24 bg-gradient-to-r from-transparent via-[#ffb400]/80 to-transparent" aria-hidden />
+            <div className="entry-gate__pulse mx-auto mt-10 h-px w-24 bg-gradient-to-r from-transparent via-accent/80 to-transparent" aria-hidden />
           </div>
         </button>
       ) : null}
@@ -214,8 +214,8 @@ export default function IntroOverlay({ onFinish }) {
           className={[
             'fixed right-4 top-4 z-[10000] inline-flex size-9 items-center justify-center rounded-sm border bg-black/50 backdrop-blur-md transition',
             isMuted
-              ? 'intro-sound-btn--muted border-[#ffb400]/45 text-[#ffb400] hover:border-[#ffb400]/70 hover:bg-[#ffb400]/10'
-              : 'border-white/20 text-slate-300 hover:border-white/35 hover:text-white',
+              ? 'intro-sound-btn--muted border-accent/45 text-accent hover:border-accent/70 hover:bg-accent/10'
+              : 'border-white/20 text-app-text/90 hover:border-white/35 hover:text-app-text',
           ].join(' ')}
           aria-label={isMuted ? 'Sesi aç' : 'Sesi kapat'}
           title={isMuted ? 'Sesi aç' : 'Sesi kapat'}
@@ -236,7 +236,7 @@ export default function IntroOverlay({ onFinish }) {
               type="button"
               onClick={handleEnter}
               disabled={phase === 'exiting'}
-              className="intro-overlay__cta pointer-events-auto rounded-sm border border-white/25 bg-black/35 px-11 py-3 font-display text-xs font-semibold uppercase tracking-[0.32em] text-slate-100 backdrop-blur-md transition duration-300 hover:border-[#ffb400]/55 hover:bg-[#ffb400]/[0.07] hover:text-[#ffb400] hover:shadow-[0_0_32px_-14px_rgba(255,180,0,0.55)] disabled:pointer-events-none disabled:opacity-50 sm:px-12 sm:py-3.5 sm:text-sm"
+              className="intro-overlay__cta pointer-events-auto rounded-sm border border-white/25 bg-black/35 px-11 py-3 font-display text-xs font-semibold uppercase tracking-[0.32em] text-slate-100 backdrop-blur-md transition duration-300 hover:border-accent/55 hover:bg-accent/[0.07] hover:text-accent hover:shadow-[0_0_32px_-14px_rgba(255,180,0,0.55)] disabled:pointer-events-none disabled:opacity-50 sm:px-12 sm:py-3.5 sm:text-sm"
             >
               Sisteme giriş
             </button>

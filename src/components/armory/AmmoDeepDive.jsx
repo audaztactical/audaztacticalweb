@@ -19,10 +19,10 @@ import { processUnsyncedRangeLogsForAmmo } from '../../lib/ammoRangeSync'
 import { matchesIsoDateRange, matchesTypeFilter } from '../../lib/logSummaryFilters'
 import { todayIsoDate } from '../../lib/weaponIlws'
 const filterSelectClass =
-  'dossier-blood-select mt-0.5 w-full rounded border border-[#00FF41]/35 bg-[#0A0A0A] py-1 pl-1.5 pr-6 font-mono-technical text-[8px] uppercase text-white outline-none'
+  'dossier-blood-select mt-0.5 w-full rounded border border-accent/35 bg-app-bg py-1 pl-1.5 pr-6 font-mono-technical text-[8px] uppercase text-app-text outline-none'
 
 const filterDateClass =
-  'mt-0.5 w-full rounded border border-[#00FF41]/50 bg-[#0A0A0A] px-1.5 py-1 font-mono-technical text-[8px] text-[#00FF41] outline-none [color-scheme:dark]'
+  'mt-0.5 w-full rounded border border-accent/50 bg-app-bg px-1.5 py-1 font-mono-technical text-[8px] text-accent outline-none [color-scheme:dark]'
 
 const TX_FILTERS = [
   { value: 'ALL', label: 'TÜM İŞLEMLER' },
@@ -110,6 +110,10 @@ export default function AmmoDeepDive({
   }, [ammo, weapons, rangeLogs, updateItem])
 
   const stock = selected ? getCurrentStock(selected) : 0
+  const totalStock = useMemo(
+    () => ammo.reduce((sum, row) => sum + getCurrentStock(row), 0),
+    [ammo]
+  )
   const threshold = selected ? getCriticalThreshold(selected) : 500
   const safetyPct = getSafetyMarginPercent(stock, threshold)
   const safetyBar = getSafetyMarginBar(stock, threshold)
@@ -158,7 +162,7 @@ export default function AmmoDeepDive({
       <button
         type="button"
         onClick={onBack}
-        className="inline-flex items-center gap-2 rounded border border-[#ffb400]/50 bg-[#ffb400]/12 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#ffb400] shadow-[0_0_12px_-4px_rgba(255,180,0,0.4)] transition hover:bg-[#ffb400]/20"
+        className="inline-flex items-center gap-2 rounded border border-accent/50 bg-accent/12 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent shadow-[0_0_12px_-4px_rgba(255,180,0,0.4)] transition hover:bg-accent/20"
       >
         <span aria-hidden>↩️</span>
         GERİ DÖN / RETURN
@@ -167,12 +171,12 @@ export default function AmmoDeepDive({
       <div className={terminalGrid}>
         <div className="flex min-h-0 flex-col gap-2">
           <TacticalPanel className="flex min-h-0 flex-1 flex-col overflow-hidden border-white/10 bg-black/40 p-0">
-            <p className="shrink-0 border-b border-white/10 bg-[#080808] px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-[#ffb400]/85">
+            <p className="shrink-0 border-b border-white/10 bg-app-bg px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-accent/85">
               MÜHİMMAT_RAFI
             </p>
             <ul className={`min-h-0 flex-1 space-y-1 p-2 ${panelScroll}`}>
               {ammo.length === 0 ? (
-                <li className="py-8 text-center font-mono-technical text-[9px] uppercase text-slate-600">MHM_KAYDI_YOK</li>
+                <li className="py-8 text-center font-mono-technical text-[9px] uppercase text-app-text/45">MHM_KAYDI_YOK</li>
               ) : (
                 ammo.map((row) => {
                   const id = String(row.id)
@@ -186,16 +190,16 @@ export default function AmmoDeepDive({
                         onClick={() => setSelectedId(id)}
                         className={`min-w-0 flex-1 rounded border px-2 py-2 text-left font-mono-technical text-[9px] transition ${
                           active
-                            ? 'border-[#00FF41]/50 bg-[#00FF41]/10 text-[#00FF41]'
+                            ? 'border-accent/50 bg-accent/10 text-accent'
                             : crit
                               ? 'border-red-500/40 bg-red-950/20 text-red-300'
-                              : 'border-white/8 bg-black/30 text-slate-400 hover:border-white/20 hover:text-slate-200'
+                              : 'border-white/8 bg-black/30 text-app-text/70 hover:border-white/20 hover:text-app-text'
                         }`}
                       >
-                        {active ? <span className="mb-1 block animate-pulse text-[#00FF41]">[ ➔ ]</span> : null}
-                        <span className="block text-[8px] text-slate-500">[{ammoStokKodu(id)}]</span>
+                        {active ? <span className="mb-1 block animate-pulse text-accent">[ ➔ ]</span> : null}
+                        <span className="block text-[8px] text-app-text/55">[{ammoStokKodu(id)}]</span>
                         <span className="block truncate text-[10px] font-bold uppercase">{getCaliberName(row)}</span>
-                        <span className="mt-0.5 block text-[8px] tabular-nums text-slate-500">{qty} ADET</span>
+                        <span className="mt-0.5 block text-[8px] tabular-nums text-app-text/55">{qty} ADET</span>
                       </button>
                       <button
                         type="button"
@@ -214,7 +218,7 @@ export default function AmmoDeepDive({
               <button
                 type="button"
                 onClick={onAddAmmo}
-                className="flex w-full items-center justify-center gap-1.5 rounded border border-[#ffb400]/40 bg-[#ffb400]/10 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-[#ffb400] hover:bg-[#ffb400]/16"
+                className="flex w-full items-center justify-center gap-1.5 rounded border border-accent/40 bg-accent/10 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-accent hover:bg-accent/16"
               >
                 <Plus className="size-3" aria-hidden />
                 + YENİ_MÜHİMMAT_KAYDI
@@ -222,17 +226,17 @@ export default function AmmoDeepDive({
             </div>
           </TacticalPanel>
 
-          <TacticalPanel className="shrink-0 border border-[#00FF41]/25 bg-black/50 p-0">
-            <p className="border-b border-[#00FF41]/30 bg-[#080808] px-3 py-1.5 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-[#00FF41]/90">
+          <TacticalPanel className="shrink-0 border border-accent/25 bg-black/50 p-0">
+            <p className="border-b border-accent/30 bg-app-bg px-3 py-1.5 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-accent/90">
               [ DEPO_ÖZETİ ]
             </p>
             <div className="grid grid-cols-2 gap-2 p-2 font-mono-technical text-[9px] uppercase">
               <p className="rounded border border-white/10 bg-black/40 px-2 py-1.5 text-center">
-                <span className="block text-[7px] text-slate-500">KALİBRE</span>
-                <span className="text-[#00FF41]">{inventoryStats.total}</span>
+                <span className="block text-[7px] text-app-text/55">KALİBRE</span>
+                <span className="text-accent">{inventoryStats.total}</span>
               </p>
               <p className="rounded border border-red-500/30 bg-red-950/15 px-2 py-1.5 text-center">
-                <span className="block text-[7px] text-slate-500">KRİTİK</span>
+                <span className="block text-[7px] text-app-text/55">KRİTİK</span>
                 <span className="text-red-400">{inventoryStats.critical}</span>
               </p>
             </div>
@@ -240,7 +244,7 @@ export default function AmmoDeepDive({
         </div>
 
         <TacticalPanel className="flex min-h-0 flex-col overflow-hidden border-white/10 bg-black/40 p-0">
-          <p className="shrink-0 border-b border-white/10 bg-[#080808] px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-[#00FF41]/80">
+          <p className="shrink-0 border-b border-white/10 bg-app-bg px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-accent/80">
             {isViewingLogs ? 'TAKTİK_MONİTÖR · HARCAMA_DEFTERİ' : 'TAKTİK_MONİTÖR · 3D_ANALİTİK'}
           </p>
           {selected ? (
@@ -252,7 +256,7 @@ export default function AmmoDeepDive({
                       <p className="font-mono-technical text-[8px] font-bold uppercase tracking-wider text-[#5ec8ff]">
                         MÜHİMMAT HARCAMA / İKMAL KAYIT DEFTERİ
                       </p>
-                      <p className="mt-0.5 font-mono-technical text-[7px] tabular-nums text-slate-500">
+                      <p className="mt-0.5 font-mono-technical text-[7px] tabular-nums text-app-text/55">
                         {filteredTransactions.length}/{transactionLogs.length} KAYIT
                       </p>
                     </div>
@@ -269,7 +273,7 @@ export default function AmmoDeepDive({
                       <p className="font-mono-technical text-[7px] font-bold uppercase text-[#5ec8ff]/80">FİLTRE</p>
                       <div className="grid gap-1.5 sm:grid-cols-3">
                         <label className="block">
-                          <span className="font-mono-technical text-[7px] uppercase text-slate-500">İŞLEM TÜRÜ</span>
+                          <span className="font-mono-technical text-[7px] uppercase text-app-text/55">İŞLEM TÜRÜ</span>
                           <select className={filterSelectClass} value={txTypeFilter} onChange={(e) => setTxTypeFilter(e.target.value)}>
                             {TX_FILTERS.map((f) => (
                               <option key={f.value} value={f.value}>
@@ -279,7 +283,7 @@ export default function AmmoDeepDive({
                           </select>
                         </label>
                         <label className="block">
-                          <span className="font-mono-technical text-[7px] uppercase text-slate-500">TARİH BAŞ</span>
+                          <span className="font-mono-technical text-[7px] uppercase text-app-text/55">TARİH BAŞ</span>
                           <input
                             type="date"
                             className={filterDateClass}
@@ -289,7 +293,7 @@ export default function AmmoDeepDive({
                           />
                         </label>
                         <label className="block">
-                          <span className="font-mono-technical text-[7px] uppercase text-slate-500">TARİH BİT</span>
+                          <span className="font-mono-technical text-[7px] uppercase text-app-text/55">TARİH BİT</span>
                           <input
                             type="date"
                             className={filterDateClass}
@@ -303,26 +307,26 @@ export default function AmmoDeepDive({
                     </div>
                     <ul className="space-y-1.5 rounded border border-[#00b4ff]/30 bg-black/30 p-2">
                       {transactionLogs.length === 0 ? (
-                        <li className="font-mono-technical text-[9px] uppercase text-slate-600">KAYIT_YOK</li>
+                        <li className="font-mono-technical text-[9px] uppercase text-app-text/45">KAYIT_YOK</li>
                       ) : filteredTransactions.length === 0 ? (
-                        <li className="font-mono-technical text-[9px] uppercase text-slate-600">FİLTRE_SONUCU_YOK</li>
+                        <li className="font-mono-technical text-[9px] uppercase text-app-text/45">FİLTRE_SONUCU_YOK</li>
                       ) : (
                         filteredTransactions.map((log, i) => (
                           <li
                             key={`${log.date}-${log.type}-${log.rangeLogId ?? i}`}
                             className="rounded border border-white/8 bg-black/50 px-2 py-1.5 font-mono-technical text-[8px] uppercase"
                           >
-                            <span className="text-slate-500">{log.date}</span>
-                            <span className={`ml-2 ${log.type === AMMO_TX_TYPES.SUPPLY ? 'text-[#00FF41]' : 'text-amber-400'}`}>
+                            <span className="text-app-text/55">{log.date}</span>
+                            <span className={`ml-2 ${log.type === AMMO_TX_TYPES.SUPPLY ? 'text-accent' : 'text-amber-400'}`}>
                               {log.type}
                             </span>
-                            <span className={`ml-2 tabular-nums ${log.amount >= 0 ? 'text-[#00FF41]' : 'text-red-400'}`}>
+                            <span className={`ml-2 tabular-nums ${log.amount >= 0 ? 'text-accent' : 'text-red-400'}`}>
                               {log.amount >= 0 ? '+' : ''}
                               {log.amount}
                             </span>
-                            <p className="mt-0.5 normal-case text-slate-300">{log.note || '—'}</p>
+                            <p className="mt-0.5 normal-case text-app-text/90">{log.note || '—'}</p>
                             {log.balanceAfter != null ? (
-                              <p className="mt-0.5 text-[7px] text-slate-500">BAKİYE: {log.balanceAfter}</p>
+                              <p className="mt-0.5 text-[7px] text-app-text/55">BAKİYE: {log.balanceAfter}</p>
                             ) : null}
                           </li>
                         ))
@@ -339,19 +343,24 @@ export default function AmmoDeepDive({
                     label={ammoStokKodu(String(selected.id))}
                   />
                   <div className="shrink-0 space-y-3 border-t border-white/10 px-3 py-3">
-                    <p className="font-mono-technical text-[9px] uppercase text-slate-500">
-                      KALİBRE: <span className="text-[#00FF41]">{getCaliberName(selected)}</span>
+                    <p className="font-mono-technical text-[9px] uppercase text-app-text/55">
+                      KALİBRE: <span className="text-accent">{getCaliberName(selected)}</span>
                     </p>
-                    <p className="font-mono-technical text-[9px] uppercase tracking-[0.12em] text-[#00FF41]">
+                    <p className="font-mono-technical text-[9px] uppercase tracking-[0.12em] text-accent">
                       ENVANTERE GİRİŞ: <span className="tabular-nums">{entryDate}</span>
                     </p>
-                    <p className="font-mono-technical text-2xl font-bold tabular-nums tracking-wider text-[#00FF41] sm:text-3xl">
-                      MEVCUT STOK: <span className="text-white">{stock.toLocaleString('tr-TR')}</span>{' '}
-                      <span className="text-lg text-slate-400">ADET</span>
+                    <p className="font-mono-technical text-2xl font-bold tabular-nums tracking-wider text-accent sm:text-3xl">
+                      MEVCUT STOK: <span className="text-app-text">{totalStock.toLocaleString('tr-TR')}</span>{' '}
+                      <span className="text-lg text-app-text/70">ADET</span>
                     </p>
-                    <div className="rounded border border-[#00FF41]/25 bg-black/40 px-2 py-2">
-                      <p className="font-mono-technical text-[8px] uppercase text-slate-500">
-                        EMNİYET SINIRI: <span className="text-[#00FF41]">{safetyBar}</span>{' '}
+                    <p className="font-mono-technical text-sm font-bold tabular-nums uppercase tracking-wider text-app-text/55">
+                      SEÇİLİ MÜHİMMAT:{' '}
+                      <span className="text-accent">{stock.toLocaleString('tr-TR')}</span>{' '}
+                      <span className="text-xs text-app-text/70">ADET</span>
+                    </p>
+                    <div className="rounded border border-accent/25 bg-black/40 px-2 py-2">
+                      <p className="font-mono-technical text-[8px] uppercase text-app-text/55">
+                        EMNİYET SINIRI: <span className="text-accent">{safetyBar}</span>{' '}
                         <span className="tabular-nums">%{safetyPct}</span>
                       </p>
                     </div>
@@ -365,25 +374,25 @@ export default function AmmoDeepDive({
               )}
             </div>
           ) : (
-            <p className="flex flex-1 items-center justify-center p-6 font-mono-technical text-[9px] uppercase text-slate-600">
+            <p className="flex flex-1 items-center justify-center p-6 font-mono-technical text-[9px] uppercase text-app-text/45">
               KALİBRE_SEÇİN
             </p>
           )}
         </TacticalPanel>
 
         <TacticalPanel className="flex min-h-0 flex-col overflow-hidden border-white/10 bg-black/40 p-0">
-          <p className="shrink-0 border-b border-white/10 bg-[#080808] px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-[#00FF41]/80">
+          <p className="shrink-0 border-b border-white/10 bg-app-bg px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-accent/80">
             ANALİTİK_HUB
           </p>
           {selected ? (
             <div className={`min-h-0 flex-1 space-y-3 p-3 ${panelScroll}`}>
-<div className="rounded border border-[#00FF41]/30 bg-black/50 p-3">
-                <p className="font-mono-technical text-[8px] font-bold uppercase tracking-wider text-slate-500">
+<div className="rounded border border-accent/30 bg-black/50 p-3">
+                <p className="font-mono-technical text-[8px] font-bold uppercase tracking-wider text-app-text/55">
                   KRİTİK_EŞİK (ADET)
                 </p>
-                <p className="mt-1 font-mono-technical text-xl font-bold tabular-nums text-[#ffb400]">{threshold.toLocaleString('tr-TR')}</p>
-                <p className="mt-2 font-mono-technical text-[8px] uppercase text-slate-600">
-                  Mevcut: <span className="text-[#00FF41]">{stock}</span> · Emniyet: %{safetyPct}
+                <p className="mt-1 font-mono-technical text-xl font-bold tabular-nums text-accent">{threshold.toLocaleString('tr-TR')}</p>
+                <p className="mt-2 font-mono-technical text-[8px] uppercase text-app-text/45">
+                  Mevcut: <span className="text-accent">{stock}</span> · Emniyet: %{safetyPct}
                 </p>
               </div>
               <button
@@ -396,7 +405,7 @@ export default function AmmoDeepDive({
               </button>
             </div>
           ) : (
-            <p className="flex flex-1 items-center justify-center p-6 font-mono-technical text-[9px] uppercase text-slate-600">
+            <p className="flex flex-1 items-center justify-center p-6 font-mono-technical text-[9px] uppercase text-app-text/45">
               KALİBRE_SEÇİN
             </p>
           )}

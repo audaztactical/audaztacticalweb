@@ -39,10 +39,16 @@ export default function GroupOperatorSuccessChart({ group, operators, logs }) {
         Operatör Başarı Karşılaştırması · Canlı
       </p>
       {chartData.length === 0 ? (
-        <p className="py-12 text-center font-mono text-[10px] uppercase text-slate-600">KAYIT YOK</p>
+        <p className="py-12 text-center font-mono text-[10px] uppercase text-app-text/45">KAYIT YOK</p>
       ) : (
-        <div className="h-[240px] min-h-[240px] w-full min-w-0">
-          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={240}>
+        <div className="relative h-[240px] min-h-[240px] w-full min-w-0">
+          <ResponsiveContainer
+            width="100%"
+            height={240}
+            minWidth={0}
+            debounce={50}
+            initialDimension={{ width: 400, height: 240 }}
+          >
             <BarChart data={chartData} layout="vertical" margin={{ left: 4, right: 12 }}>
               <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" horizontal={false} />
               <XAxis type="number" domain={[0, 100]} tick={{ fill: '#64748b', fontSize: 10 }} />

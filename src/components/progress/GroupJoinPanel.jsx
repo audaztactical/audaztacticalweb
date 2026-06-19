@@ -5,7 +5,7 @@ import { joinGroupByPassword, normalizeGroupPassword } from '../../lib/firestore
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
 
 const inputClass =
-  'w-full rounded-sm border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-slate-200 outline-none transition-colors focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/25'
+  'w-full rounded-sm border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-app-text outline-none transition-colors focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/25'
 
 export default function GroupJoinPanel() {
   const { user } = useAuth()
@@ -62,7 +62,7 @@ export default function GroupJoinPanel() {
       </p>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <label className="min-w-0 flex-1 space-y-1.5">
-          <span className="font-mono text-[9px] font-bold uppercase text-slate-500">Grup Şifresi</span>
+          <span className="font-mono text-[9px] font-bold uppercase text-app-text/55">Grup Şifresi</span>
           <input
             type="text"
             value={password}

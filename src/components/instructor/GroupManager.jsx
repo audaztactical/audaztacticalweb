@@ -6,7 +6,7 @@ import { createTacticalGroup, subscribeInstructorGroups } from '../../lib/firest
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
 
 const inputClass =
-  'w-full rounded-sm border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-slate-200 outline-none transition-colors focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/25'
+  'w-full rounded-sm border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-app-text outline-none transition-colors focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/25'
 
 /**
  * @param {{ onGroupsChange?: (groups: import('../../lib/firestoreGroups').TacticalGroup[]) => void }} props
@@ -75,7 +75,7 @@ export default function GroupManager({ onGroupsChange }) {
 
       <form onSubmit={handleCreate} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto]">
         <label className="space-y-1.5">
-          <span className="font-mono text-[9px] font-bold uppercase text-slate-500">Grup Adı</span>
+          <span className="font-mono text-[9px] font-bold uppercase text-app-text/55">Grup Adı</span>
           <input
             type="text"
             value={groupName}
@@ -86,7 +86,7 @@ export default function GroupManager({ onGroupsChange }) {
           />
         </label>
         <label className="space-y-1.5">
-          <span className="font-mono text-[9px] font-bold uppercase text-slate-500">Grup Katılım Şifresi</span>
+          <span className="font-mono text-[9px] font-bold uppercase text-app-text/55">Grup Katılım Şifresi</span>
           <input
             type="text"
             value={groupPassword}

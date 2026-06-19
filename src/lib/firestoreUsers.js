@@ -1,7 +1,7 @@
 import { doc, getDoc, serverTimestamp, runTransaction, setDoc } from 'firebase/firestore'
 import { safeOnSnapshot } from './firestoreSnapshot'
 import { db, isFirebaseConfigured } from './firebase'
-import { normalizeUserRole } from './authRoles'
+import { normalizeUserRole, normalizeAccountStatus } from './authRoles'
 
 /** Firestore'da kayıt yoksa veya hata durumunda AuthContext varsayılanları */
 export const GUEST_PROFILE = {
@@ -47,7 +47,7 @@ export function mapUserDocToProfile(d) {
       ? d.role
       : typeof d.userRole === 'string'
         ? d.userRole
-        : 'operator'
+        : 'member'
   return {
     username: typeof d.username === 'string' ? d.username : '',
     callsign: typeof d.callsign === 'string' ? d.callsign : d.displayName ?? '',
@@ -56,6 +56,9 @@ export function mapUserDocToProfile(d) {
     email: typeof d.email === 'string' ? d.email : '',
     enrolledAt: d.enrolledAt ?? null,
     role: normalizeUserRole(roleRaw),
+    accountStatus: normalizeAccountStatus(d.accountStatus),
+    premiumPaymentId: typeof d.premiumPaymentId === 'string' ? d.premiumPaymentId : '',
+    premiumUpgradedAt: d.premiumUpgradedAt ?? null,
     allergies: typeof d.allergies === 'string' ? d.allergies : '',
     drugSensitivity: typeof d.drugSensitivity === 'string' ? d.drugSensitivity : '',
     importantNotes: typeof d.importantNotes === 'string' ? d.importantNotes : '',
@@ -67,6 +70,14 @@ export function mapUserDocToProfile(d) {
           ? d.groupId.trim()
           : null,
     instructorId: typeof d.instructorId === 'string' && d.instructorId.trim() ? d.instructorId.trim() : null,
+    agreedToTerms: d.agreedToTerms === true,
+    termsAgreedAt: d.termsAgreedAt ?? null,
+    photoURL:
+      typeof d.photoURL === 'string' && d.photoURL.trim()
+        ? d.photoURL.trim()
+        : typeof d.avatarUrl === 'string' && d.avatarUrl.trim()
+          ? d.avatarUrl.trim()
+          : '',
   }
 }
 
@@ -105,9 +116,21 @@ export function subscribeUserProfile(uid, onProfile, onError) {
 /**
  * Operatör profili — users/{uid} + usernames/{key} (transaction)
  * @param {string} uid
- * @param {{ email?: string, callsign: string, username: string, bloodType: string, status: string, role?: string }} payload
+ * @param {{ email?: string, callsign: string, username: string, bloodType: string, status: string, role?: string, accountStatus?: string, premiumPaymentId?: string }} payload
  */
-export async function createOperatorProfile(uid, { email, callsign, username, bloodType, status, role = 'operator' }) {
+export async function createOperatorProfile(
+  uid,
+  {
+    email,
+    callsign,
+    username,
+    bloodType,
+    status,
+    role = 'member',
+    accountStatus = 'active',
+    premiumPaymentId = '',
+  },
+) {
   if (!isFirebaseConfigured() || !db) throw new Error('Firebase yapılandırılmadı')
   if (!uid) throw new Error('Kullanıcı yok')
 
@@ -129,21 +152,25 @@ export async function createOperatorProfile(uid, { email, callsign, username, bl
         throw e
       }
       tx.set(nameRef, { uid })
-      tx.set(
-        userRef,
-        {
-          email: email ?? null,
-          username: key,
-          callsign: callsign ?? '',
-          displayName: callsign ?? '',
-          bloodType: bloodType ?? '',
-          status: status ?? 'Sivil',
-          role: typeof role === 'string' && role.trim() ? role.trim() : 'operator',
-          enrolledAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        },
-        { merge: true }
-      )
+      const normalizedRole = normalizeUserRole(role)
+      const docPayload = {
+        email: email ?? null,
+        username: key,
+        callsign: callsign ?? '',
+        displayName: callsign ?? '',
+        bloodType: bloodType ?? '',
+        status: status ?? 'Sivil',
+        role: normalizedRole,
+        accountStatus: normalizeAccountStatus(accountStatus),
+        enrolledAt: serverTimestamp(),
+        agreedToTerms: false,
+        updatedAt: serverTimestamp(),
+      }
+      if (premiumPaymentId) {
+        docPayload.premiumPaymentId = premiumPaymentId
+        docPayload.premiumUpgradedAt = serverTimestamp()
+      }
+      tx.set(userRef, docPayload, { merge: true })
     })
   } catch (error) {
     console.error('Firestore Yazma Hatası:', error)
@@ -205,11 +232,13 @@ export async function createGoogleOperatorProfile(user) {
             displayName: name,
             bloodType: 'BELİRTİLMEDİ',
             status: 'Sivil',
-            role: 'operator',
+            role: 'member',
+            accountStatus: 'active',
             enrolledAt: serverTimestamp(),
+            agreedToTerms: false,
             updatedAt: serverTimestamp(),
           },
-          { merge: true }
+          { merge: true },
         )
       })
       return
@@ -286,6 +315,76 @@ export async function updateUserBloodType(uid, bloodType) {
       bloodType: typeof bloodType === 'string' ? bloodType.trim().slice(0, 16) : '',
       updatedAt: serverTimestamp(),
     },
-    { merge: true }
+    { merge: true },
+  )
+}
+
+/**
+ * Profil görseli — users/{uid} + Auth photoURL ile uyumlu alanlar
+ * @param {string} uid
+ * @param {string} photoURL
+ */
+export async function updateUserAvatarUrl(uid, photoURL) {
+  if (!isFirebaseConfigured() || !db) throw new Error('Firebase yapılandırılmadı')
+  if (!uid) throw new Error('Oturum gerekli')
+
+  const url = typeof photoURL === 'string' ? photoURL.trim() : ''
+  if (!url) throw new Error('Geçersiz görsel URL.')
+
+  const ref = doc(db, 'users', uid)
+  await setDoc(
+    ref,
+    {
+      photoURL: url,
+      avatarUrl: url,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  )
+}
+
+/**
+ * Operasyonel ve Hukuki Protokol onayı — users/{uid}.agreedToTerms
+ * @param {string} uid
+ */
+export async function updateUserAgreedToTerms(uid) {
+  if (!isFirebaseConfigured() || !db) throw new Error('Firebase yapılandırılmadı')
+  if (!uid) throw new Error('Oturum gerekli')
+
+  const ref = doc(db, 'users', uid)
+  await setDoc(
+    ref,
+    {
+      agreedToTerms: true,
+      termsAgreedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  )
+}
+
+/**
+ * Mock / Stripe ödeme sonrası premium yükseltme — users/{uid}
+ * @param {string} uid
+ * @param {string} paymentIntentId
+ */
+export async function completePremiumUpgrade(uid, paymentIntentId) {
+  if (!isFirebaseConfigured() || !db) throw new Error('Firebase yapılandırılmadı')
+  if (!uid) throw new Error('Oturum gerekli')
+  if (typeof paymentIntentId !== 'string' || !paymentIntentId.startsWith('pi_mock_')) {
+    throw new Error('Geçersiz ödeme referansı')
+  }
+
+  const ref = doc(db, 'users', uid)
+  await setDoc(
+    ref,
+    {
+      role: 'premium_member',
+      accountStatus: 'active',
+      premiumPaymentId: paymentIntentId,
+      premiumUpgradedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
   )
 }

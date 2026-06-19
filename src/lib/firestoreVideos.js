@@ -32,7 +32,7 @@ export async function fetchTrainingVideos() {
 
 export async function addTrainingVideo({ title, url }) {
   if (!isFirebaseConfigured() || !db) throw new Error('Firebase yapılandırılmadı')
-  assertCanManageAdminContent(auth?.currentUser ?? null)
+  await assertCanManageAdminContent(auth?.currentUser ?? null)
   await addDoc(collection(db, 'egitim_videolari'), {
     title: title.trim(),
     url: url.trim(),
@@ -42,6 +42,6 @@ export async function addTrainingVideo({ title, url }) {
 
 export async function deleteTrainingVideo(id) {
   if (!isFirebaseConfigured() || !db) throw new Error('Firebase yapılandırılmadı')
-  assertCanManageAdminContent(auth?.currentUser ?? null)
+  await assertCanManageAdminContent(auth?.currentUser ?? null)
   await deleteDoc(doc(db, 'egitim_videolari', id))
 }

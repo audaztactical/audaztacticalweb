@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   EmailAuthProvider,
   GoogleAuthProvider,
@@ -7,19 +7,24 @@ import {
   updatePassword,
   updateProfile,
 } from 'firebase/auth'
-import { KeyRound, Link2, Phone, Shield } from 'lucide-react'
+import { Camera, KeyRound, Link2, Phone, Shield } from 'lucide-react'
 import HudFluffDecor from '../components/dashboard/HudFluffDecor'
 import AmberAlert from '../components/common/AmberAlert'
-import OperatorBadge from '../components/ui/OperatorBadge'
+import TacticalUploadProgress from '../components/common/TacticalUploadProgress'
+import OperatorAvatar from '../components/ui/OperatorAvatar'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../contexts/ThemeContext'
 import { useFirebaseErrorReporter } from '../context/FirebaseErrorContext'
 import { useAudazData } from '../hooks/useAudazData'
+import { useStorage } from '../hooks/useStorage'
 import { auth } from '../lib/firebase'
 import { buildSystemLogEntries } from '../lib/dashboardHudData'
 import { computeORS } from '../lib/orsEngine'
-import { updateUserBloodType, updateUserCallsign } from '../lib/firestoreUsers'
+import { updateUserBloodType, updateUserCallsign, updateUserAvatarUrl } from '../lib/firestoreUsers'
+import { userStoragePath } from '../services/storageService'
 
-const CYBER_GREEN = '#00FF41'
+import { getAccentColor } from '../lib/themeColors'
+
 const TACTIC_AMBER = '#f59e0b'
 const COMBAT_RED = '#FF0000'
 
@@ -115,12 +120,14 @@ function ohpAccent(score) {
       sweepMid: 'rgba(245,158,11,0.12)',
       ring: 'rgba(245,158,11,0.35)',
     }
-  if (score >= 85)
+  if (score >= 85) {
+    const accent = getAccentColor()
     return {
-      rgb: CYBER_GREEN,
-      sweepMid: 'rgba(0,255,65,0.14)',
-      ring: 'rgba(0,255,65,0.45)',
+      rgb: accent,
+      sweepMid: `color-mix(in srgb, ${accent} 14%, transparent)`,
+      ring: `color-mix(in srgb, ${accent} 45%, transparent)`,
     }
+  }
   if (score >= 50)
     return {
       rgb: TACTIC_AMBER,
@@ -159,7 +166,7 @@ function DataLoadingScreen() {
           aria-hidden
         />
       </div>
-      <p className="font-mono-technical text-[10px] font-semibold tracking-[0.3em] text-slate-500">KİMLİK_VERİSİ_YÜKLENİYOR</p>
+      <p className="font-mono-technical text-[10px] font-semibold tracking-[0.3em] text-app-text/55">KİMLİK_VERİSİ_YÜKLENİYOR</p>
     </div>
   )
 }
@@ -167,9 +174,9 @@ function DataLoadingScreen() {
 function TechLine({ k, v, accentRgb }) {
   return (
     <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 border-b border-white/[0.06] py-1.5 last:border-0">
-      <dt className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">{k}</dt>
+      <dt className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">{k}</dt>
       <dd
-        className="max-w-[min(100%,14rem)] truncate text-right font-mono-technical text-[10px] text-slate-200"
+        className="max-w-[min(100%,14rem)] truncate text-right font-mono-technical text-[10px] text-app-text"
         style={{ textShadow: `0 0 10px ${accentRgb}33` }}
       >
         {v}
@@ -181,7 +188,7 @@ function TechLine({ k, v, accentRgb }) {
 function DossierField({ label, children }) {
   return (
     <label className="block">
-      <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.18em] text-slate-500">{label}</span>
+      <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.18em] text-app-text/55">{label}</span>
       <div className="mt-0.5">{children}</div>
     </label>
   )
@@ -252,6 +259,7 @@ function statFillPct(n, max) {
 
 export default function Profile() {
   const { user, userData, profileLoading, refreshUserProfile, linkAccountWithPassword } = useAuth()
+  const { themeClass } = useTheme()
   const { reportFirebaseError } = useFirebaseErrorReporter()
   const [authProvidersTick, setAuthProvidersTick] = useState(0)
   const [sessionOpenedMs] = useState(() => Date.now())
@@ -292,7 +300,7 @@ export default function Profile() {
   ])
 
   const ohpScore = orsResult?.score ?? null
-  const accent = ohpAccent(ohpScore)
+  const accent = useMemo(() => ohpAccent(ohpScore), [ohpScore, themeClass])
 
   const incidentCount = useMemo(
     () => h.items.filter((row) => String(row?.kind ?? '') === 'incident').length,
@@ -333,6 +341,15 @@ export default function Profile() {
   const [changeBusy, setChangeBusy] = useState(false)
   const [changeError, setChangeError] = useState('')
   const [securityOpen, setSecurityOpen] = useState(false)
+  const [avatarMsg, setAvatarMsg] = useState(null)
+  const avatarInputRef = useRef(/** @type {HTMLInputElement | null} */ (null))
+  const {
+    replace: replaceAvatar,
+    loading: avatarUploading,
+    progress: avatarProgress,
+    error: avatarUploadError,
+    reset: resetAvatarUpload,
+  } = useStorage()
 
   useEffect(() => {
     if (!userData?.callsign && !user?.displayName) {
@@ -364,6 +381,7 @@ export default function Profile() {
   const rawUsername = (userData?.username || '').trim()
   const status = userData?.status ?? 'GUEST'
   const enrolled = formatEnrolled(userData?.enrolledAt)
+  const photoUrl = (user?.photoURL || userData?.photoURL || '').trim()
 
   const sessionUser = auth?.currentUser ?? user
   void authProvidersTick
@@ -371,9 +389,45 @@ export default function Profile() {
   const googleLinked = hasGoogleProvider(sessionUser)
 
   const inputTactical =
-    'w-full border-0 border-b border-white/20 bg-transparent py-1.5 font-mono-technical text-[13px] text-slate-100 outline-none ring-0 transition placeholder:text-slate-600 focus:border-b'
+    'w-full border-0 border-b border-white/20 bg-transparent py-1.5 font-mono-technical text-[13px] text-slate-100 outline-none ring-0 transition placeholder:text-app-text/45 focus:border-b'
 
   const secPanelClass = 'rounded-md border border-[#004DFF]/28 bg-[#2A2D34]/88'
+
+  const handleAvatarPick = () => {
+    resetAvatarUpload()
+    setAvatarMsg(null)
+    avatarInputRef.current?.click()
+  }
+
+  const handleAvatarFile = async (/** @type {import('react').ChangeEvent<HTMLInputElement>} */ e) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file || !user?.uid || !auth?.currentUser) return
+
+    if (!file.type.startsWith('image/')) {
+      setAvatarMsg({ type: 'err', text: 'Yalnızca görsel dosyaları desteklenir.' })
+      return
+    }
+
+    setAvatarMsg(null)
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+      const safeExt = ['jpg', 'jpeg', 'png', 'webp'].includes(ext) ? ext : 'jpg'
+      const fileName = `avatar_${Date.now()}.${safeExt}`
+      const url = await replaceAvatar(file, photoUrl || null, userStoragePath(user.uid), fileName)
+      await updateProfile(auth.currentUser, { photoURL: url })
+      await updateUserAvatarUrl(user.uid, url)
+      await auth.currentUser.reload()
+      await refreshUserProfile()
+      setAvatarMsg({ type: 'ok', text: '✓ GÖRSEL SENKRONLANDI' })
+    } catch (err) {
+      reportFirebaseError(err)
+      setAvatarMsg({
+        type: 'err',
+        text: err instanceof Error ? err.message : 'Yükleme başarısız.',
+      })
+    }
+  }
 
   const saveCallsign = async () => {
     if (!auth?.currentUser || !user?.uid) return
@@ -507,13 +561,13 @@ export default function Profile() {
 
       <div className="relative z-[2] mb-4 flex flex-wrap items-end justify-between gap-3 border-b border-white/10 pb-3">
         <div>
-          <p className="font-mono-technical text-[9px] font-semibold uppercase tracking-[0.34em] text-slate-500">[ OPERATÖR_TAKTİK_EKRANI ]</p>
+          <p className="font-mono-technical text-[9px] font-semibold uppercase tracking-[0.34em] text-app-text/55">[ OPERATÖR_TAKTİK_EKRANI ]</p>
           <h1 className="op-terminal-title mt-1 text-sm tracking-[0.2em]">TAKTİK VERİ TERMİNALİ</h1>
         </div>
-        <div className="font-mono-technical text-[9px] uppercase tracking-wider text-slate-600">
+        <div className="font-mono-technical text-[9px] uppercase tracking-wider text-app-text/45">
           OHP{' '}
           <span style={{ color: accent.rgb, textShadow: `0 0 8px ${accent.rgb}55` }}>{ohpScore != null ? `${ohpScore}` : '—'}</span>
-          <span className="text-slate-600">/100</span>
+          <span className="text-app-text/45">/100</span>
         </div>
       </div>
 
@@ -532,7 +586,8 @@ export default function Profile() {
                   <span className="op-avatar-frame__corner op-avatar-frame__corner--bl" aria-hidden />
                   <span className="op-avatar-frame__corner op-avatar-frame__corner--br" aria-hidden />
                   <span className="op-avatar-frame__scan" aria-hidden />
-                  <OperatorBadge
+                  <OperatorAvatar
+                    uid={user?.uid}
                     size="lg"
                     callsign={callsign}
                     username={rawUsername}
@@ -540,20 +595,55 @@ export default function Profile() {
                     className="size-full max-h-full max-w-full rounded-none border-0 bg-transparent text-[2.5rem]"
                   />
                 </div>
-                <p className="mt-1.5 text-center font-mono-technical text-[7px] uppercase tracking-[0.22em] text-[#00FF41]/75 lg:text-left">
-                  ROZET_AKTİF · OTOMATİK
+                <p className="mt-1.5 text-center font-mono-technical text-[7px] uppercase tracking-[0.22em] text-accent/75 lg:text-left">
+                  ROZET_AKTİF · {photoUrl ? 'GÖRSEL' : 'OTOMATİK'}
                 </p>
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="sr-only"
+                  onChange={handleAvatarFile}
+                  disabled={avatarUploading}
+                />
+                <button
+                  type="button"
+                  onClick={handleAvatarPick}
+                  disabled={avatarUploading}
+                  className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-sm border border-emerald-500/35 bg-emerald-950/25 px-2 py-1.5 font-mono-technical text-[8px] font-bold uppercase tracking-[0.16em] text-emerald-400 transition hover:border-emerald-400/55 hover:bg-emerald-950/40 disabled:cursor-not-allowed disabled:opacity-45"
+                >
+                  <Camera className="size-3" strokeWidth={1.75} aria-hidden />
+                  {avatarUploading ? 'YÜKLENİYOR…' : 'PROFİL GÖRSELİ YÜKLE'}
+                </button>
+                {avatarUploading ? (
+                  <TacticalUploadProgress
+                    progress={avatarProgress}
+                    label="GÖRSEL_SYNC"
+                    error={avatarUploadError}
+                    className="mt-2"
+                  />
+                ) : null}
+                {!avatarUploading && avatarUploadError ? (
+                  <p className="mt-1 font-mono-technical text-[8px] text-amber-400/90">[ {avatarUploadError} ]</p>
+                ) : null}
+                {avatarMsg ? (
+                  <p
+                    className={`mt-1 font-mono-technical text-[8px] ${avatarMsg.type === 'ok' ? 'text-emerald-400/90' : 'text-amber-400/90'}`}
+                  >
+                    {avatarMsg.text}
+                  </p>
+                ) : null}
               </div>
 
               <div className="space-y-0.5 border-t border-white/10 pt-2">
-                <p className="font-mono-technical text-[8px] uppercase tracking-[0.28em] text-slate-500">ÇAĞRI_ADI</p>
+                <p className="font-mono-technical text-[8px] uppercase tracking-[0.28em] text-app-text/55">ÇAĞRI_ADI</p>
                 <p
                   className="font-mono-technical text-lg font-bold uppercase leading-tight tracking-tight"
                   style={{ color: accent.rgb, textShadow: `0 0 14px ${accent.rgb}55` }}
                 >
                   {callsign}
                 </p>
-                <p className="font-mono-technical text-[10px] font-semibold uppercase tracking-widest text-slate-400">{roleLabel(userData?.role)}</p>
+                <p className="font-mono-technical text-[10px] font-semibold uppercase tracking-widest text-app-text/70">{roleLabel(userData?.role)}</p>
               </div>
 
               <dl className="space-y-0 border-t border-white/10 pt-2">
@@ -572,13 +662,13 @@ export default function Profile() {
               <DataStat label="EĞİTİM_SAYISI" value={trainN} accentRgb={accent.rgb} fillPct={statFillPct(trainN, statMax)} />
               <DataStat label="SIHHİ_OLAY" value={sihhiN} accentRgb={accent.rgb} fillPct={statFillPct(sihhiN, statMax)} />
             </div>
-            <div className="mt-3 rounded-sm border border-[#00FF41]/22 bg-[#0A0A0A]/80 p-2.5">
-              <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.18em] text-[#00FF41]/85">KAN_GRUBU</p>
+            <div className="mt-3 rounded-sm border border-accent/22 bg-app-bg/80 p-2.5">
+              <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.18em] text-accent/85">KAN_GRUBU</p>
               <div className="mt-2 flex flex-wrap items-end gap-2">
                 <select
                   value={bloodOptions.includes(bloodDraft) ? bloodDraft : 'BELİRTİLMEDİ'}
                   onChange={(e) => setBloodDraft(e.target.value)}
-                  className="dossier-blood-select min-w-0 flex-1 rounded-sm border border-[#00FF41]/35 py-1.5 pl-2 pr-1 font-mono-technical text-[11px] font-medium text-white outline-none"
+                  className="dossier-blood-select min-w-0 flex-1 rounded-sm border border-accent/35 py-1.5 pl-2 pr-1 font-mono-technical text-[11px] font-medium text-app-text outline-none"
                 >
                   {bloodOptions.map((opt) => (
                     <option key={opt} value={opt}>
@@ -604,12 +694,12 @@ export default function Profile() {
           <OpTacticalCard title="AKTİVİTE AKIŞI" code="LIVE_FEED">
             <ul className="space-y-1.5">
               {activityTop3.length === 0 ? (
-                <li className="font-mono-technical text-[9px] text-slate-600">AKTİVİTE_BEKLENİYOR · VERİ_YOK</li>
+                <li className="font-mono-technical text-[9px] text-app-text/45">AKTİVİTE_BEKLENİYOR · VERİ_YOK</li>
               ) : (
                 activityTop3.map((row, i) => (
                   <li key={`${row.ms}-${i}-${row.line.slice(0, 12)}`} className="flex flex-col gap-0.5 border-b border-white/[0.06] pb-1.5 last:border-0 last:pb-0">
                     <span className="font-mono-technical text-[8px] tabular-nums text-[#004DFF]/80">{fmtActivityTs(row.ms)}</span>
-                    <span className="font-mono-technical text-[10px] leading-snug text-slate-300">{row.line}</span>
+                    <span className="font-mono-technical text-[10px] leading-snug text-app-text/90">{row.line}</span>
                   </li>
                 ))
               )}
@@ -617,22 +707,22 @@ export default function Profile() {
           </OpTacticalCard>
 
           <OpTacticalCard title="HESAP KAYDI" code="REGISTRY">
-            <dl className="grid gap-0 font-mono-technical text-[10px] text-slate-400">
+            <dl className="grid gap-0 font-mono-technical text-[10px] text-app-text/70">
               <div className="flex justify-between gap-2 border-b border-white/[0.05] py-1.5">
-                <dt className="text-slate-600">@HANDLE</dt>
-                <dd className="truncate text-slate-300">{rawUsername ? `@${rawUsername}` : '—'}</dd>
+                <dt className="text-app-text/45">@HANDLE</dt>
+                <dd className="truncate text-app-text/90">{rawUsername ? `@${rawUsername}` : '—'}</dd>
               </div>
               <div className="flex justify-between gap-2 border-b border-white/[0.05] py-1.5">
-                <dt className="text-slate-600">E_POSTA</dt>
-                <dd className="truncate text-slate-300">{email || '—'}</dd>
+                <dt className="text-app-text/45">E_POSTA</dt>
+                <dd className="truncate text-app-text/90">{email || '—'}</dd>
               </div>
               <div className="flex justify-between gap-2 border-b border-white/[0.05] py-1.5">
-                <dt className="text-slate-600">KAYIT</dt>
-                <dd className="text-slate-300">{enrolled}</dd>
+                <dt className="text-app-text/45">KAYIT</dt>
+                <dd className="text-app-text/90">{enrolled}</dd>
               </div>
               <div className="flex justify-between gap-2 py-1.5">
-                <dt className="text-slate-600">STATÜ</dt>
-                <dd className="text-slate-300">{status}</dd>
+                <dt className="text-app-text/45">STATÜ</dt>
+                <dd className="text-app-text/90">{status}</dd>
               </div>
             </dl>
 
@@ -681,17 +771,17 @@ export default function Profile() {
                 <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.2em] text-[#8eb7ff]">
                   {securityOpen ? 'GÜVENLİK_PANELİ_AÇIK' : 'GÜVENLİK_PANELİ_KAPALI'}
                 </p>
-                <p className="mt-0.5 font-mono-technical text-[8px] uppercase tracking-wider text-slate-500">
+                <p className="mt-0.5 font-mono-technical text-[8px] uppercase tracking-wider text-app-text/55">
                   Şifre değiştir · hesap bağla · MFA
                 </p>
               </div>
-              <span className="font-mono-technical text-[10px] text-[#ffb400]">{securityOpen ? '▲' : '▼'}</span>
+              <span className="font-mono-technical text-[10px] text-accent">{securityOpen ? '▲' : '▼'}</span>
             </button>
 
             <div className="mt-2 flex flex-wrap gap-1.5">
               <span
                 className={`inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 font-mono-technical text-[8px] font-bold uppercase tracking-widest ${
-                  googleLinked ? 'border-emerald-500/40 text-emerald-300/90' : 'border-[#2A2D34] bg-[#2A2D34]/80 text-slate-500'
+                  googleLinked ? 'border-emerald-500/40 text-emerald-300/90' : 'border-[#2A2D34] bg-[#2A2D34]/80 text-app-text/55'
                 }`}
               >
                 Google {googleLinked ? '●' : '○'}
@@ -775,7 +865,7 @@ export default function Profile() {
                             />
                           </DossierField>
                         ) : (
-                          <p className="font-mono-technical text-[8px] text-slate-500">Google ile yeniden doğrulama penceresi açılabilir.</p>
+                          <p className="font-mono-technical text-[8px] text-app-text/55">Google ile yeniden doğrulama penceresi açılabilir.</p>
                         )}
                         <DossierField label="YENİ_ŞİFRE">
                           <input type="password" autoComplete="new-password" value={newPass} onChange={(e) => setNewPass(e.target.value)} className={inputTactical} style={{ borderBottomColor: 'rgba(0,77,255,0.35)' }} />
@@ -809,9 +899,9 @@ export default function Profile() {
                       <Phone className="mt-0.5 size-3.5 shrink-0 text-[#5b8cff]" strokeWidth={1.5} aria-hidden />
                       <div className="min-w-0 flex-1">
                         <p className="font-mono-technical text-[9px] font-bold uppercase text-[#b8ccff]">TELEFON_KANALI</p>
-                        <p className="mt-0.5 font-mono-technical text-[8px] uppercase leading-snug text-slate-500">İleride SMS / kurtarma.</p>
+                        <p className="mt-0.5 font-mono-technical text-[8px] uppercase leading-snug text-app-text/55">İleride SMS / kurtarma.</p>
                         <input type="tel" readOnly disabled placeholder="+90 …" className={`${inputTactical} mt-1 cursor-not-allowed opacity-45`} aria-label="Telefon (pasif)" />
-                        <button type="button" disabled className="mt-1 rounded-sm border border-[#2A2D34] px-1.5 py-0.5 font-mono-technical text-[8px] uppercase text-slate-600">
+                        <button type="button" disabled className="mt-1 rounded-sm border border-[#2A2D34] px-1.5 py-0.5 font-mono-technical text-[8px] uppercase text-app-text/45">
                           Kilitli
                         </button>
                       </div>
@@ -823,10 +913,10 @@ export default function Profile() {
                       <Shield className="mt-0.5 size-3.5 shrink-0 text-[#5b8cff]" strokeWidth={1.5} aria-hidden />
                       <div className="min-w-0 flex-1">
                         <p className="font-mono-technical text-[9px] font-bold uppercase text-[#b8ccff]">TELEFON_VE_SMS_MFA</p>
-                        <p className="mt-0.5 font-mono-technical text-[8px] uppercase leading-snug text-slate-500">Firebase Phone Auth · ücretli katman.</p>
+                        <p className="mt-0.5 font-mono-technical text-[8px] uppercase leading-snug text-app-text/55">Firebase Phone Auth · ücretli katman.</p>
                         <label className="mt-2 flex cursor-not-allowed items-center gap-1.5 opacity-65">
                           <input type="checkbox" disabled className="size-3 rounded-sm border-white/20" />
-                          <span className="font-mono-technical text-[8px] uppercase leading-snug tracking-wide text-slate-500">
+                          <span className="font-mono-technical text-[8px] uppercase leading-snug tracking-wide text-app-text/55">
                             DURUM: PASİF · OPERASYONEL_GEREKLİLİK
                           </span>
                         </label>

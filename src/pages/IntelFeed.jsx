@@ -52,7 +52,7 @@ function IntelCard({ item }) {
   )
 
   return (
-    <article className="group relative h-full overflow-hidden rounded-sm border border-gray-800 bg-[#1a1a1a] p-4 transition-all duration-300 hover:scale-[1.0001] hover:border-[#ffaa00] hover:shadow-[0_0_22px_-6px_rgba(255,170,0,0.35)]">
+    <article className="group relative h-full overflow-hidden rounded-sm border border-gray-800 bg-app-bg p-4 transition-all duration-300 hover:scale-[1.0001] hover:border-[#ffaa00] hover:shadow-[0_0_22px_-6px_rgba(255,170,0,0.35)]">
       <span
         aria-hidden
         className="pointer-events-none absolute left-2 top-2 h-3 w-3 border-l border-t border-transparent transition-colors duration-300 group-hover:border-[#ffaa00]/80"
@@ -160,7 +160,7 @@ export default function IntelFeed() {
       },
       (err) => {
         emitFirebaseError(err)
-        setError('İstihbarat akışı senkronize edilemedi.')
+        setError('Haber akışı senkronize edilemedi.')
         setLoading(false)
       },
     )
@@ -186,16 +186,16 @@ export default function IntelFeed() {
         <header className="flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0 space-y-2">
             <p className="font-mono-technical text-[10px] font-semibold uppercase tracking-[0.35em] text-[#ffaa00]">
-              <span className="text-white/35">[ </span>
+              <span className="text-app-text/35">[ </span>
               SİSTEM MERKEZİ
-              <span className="text-white/35"> ]</span>
+              <span className="text-app-text/35"> ]</span>
             </p>
-            <h1 className="font-display flex items-center gap-3 text-2xl font-bold tracking-[0.14em] text-white sm:text-3xl">
+            <h1 className="font-display flex items-center gap-3 text-2xl font-bold tracking-[0.14em] text-app-text sm:text-3xl">
               <Globe className="size-7 shrink-0 text-[#ffaa00]" strokeWidth={1.5} aria-hidden />
-              KÜRESEL İSTİHBARAT AĞI
+              KÜRESEL HABER AĞI
             </h1>
-            <p className="max-w-2xl font-mono-technical text-[10px] leading-relaxed text-slate-500">
-              Küresel taktik ve askeri kaynaklardan canlı haber akışı · yazılı istihbarat ve video haberler
+            <p className="max-w-2xl font-mono-technical text-[10px] leading-relaxed text-app-text/55">
+              Küresel taktik ve askeri kaynaklardan canlı haber akışı · yazılı ve video haberler
             </p>
           </div>
 
@@ -212,12 +212,12 @@ export default function IntelFeed() {
 
         <nav
           className="flex flex-wrap gap-1 border-b border-gray-800"
-          aria-label="İstihbarat alt sekmeleri"
+          aria-label="Haber alt sekmeleri"
         >
           <IntelFeedTabButton
             active={feedTab === 'written'}
             onClick={() => setFeedTab('written')}
-            label="[ YAZILI İSTİHBARAT ]"
+            label="[ YAZILI HABERLER ]"
           />
           <IntelFeedTabButton
             active={feedTab === 'video'}
@@ -229,9 +229,9 @@ export default function IntelFeed() {
         {feedTab === 'video' ? (
           <VideoNewsGrid />
         ) : loading ? (
-          <p className="flex items-center justify-center gap-2 py-24 font-mono-technical text-[10px] uppercase text-slate-500">
+          <p className="flex items-center justify-center gap-2 py-24 font-mono-technical text-[10px] uppercase text-app-text/55">
             <Loader2 className="size-4 animate-spin text-[#ffaa00]" aria-hidden />
-            İstihbarat paketleri alınıyor…
+            Haber paketleri alınıyor…
           </p>
         ) : error ? (
           <p className="rounded border border-red-500/35 bg-red-950/20 px-4 py-8 text-center font-mono-technical text-[10px] uppercase text-red-300">
@@ -241,7 +241,7 @@ export default function IntelFeed() {
           <div className="rounded border border-gray-800 bg-[#111]/80 px-6 py-16 text-center">
             <Radio className="mx-auto size-8 text-gray-600" aria-hidden />
             <p className="mt-4 font-mono-technical text-[10px] uppercase tracking-wider text-gray-500">
-              HENÜZ İSTİHBARAT KAYDI YOK
+              HENÜZ HABER KAYDI YOK
             </p>
             <p className="mt-2 font-mono-technical text-[9px] text-gray-600">
               news_feed koleksiyonuna kayıt eklendiğinde akış burada görünür.

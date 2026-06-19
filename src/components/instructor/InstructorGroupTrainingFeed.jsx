@@ -44,26 +44,26 @@ export default function InstructorGroupTrainingFeed({ logs, operators, loading =
   const groupLogs = useMemo(() => filterOperatorGroupTrainingLogs(logs).slice(0, maxRows), [logs, maxRows])
 
   return (
-    <section className="rounded-xl border border-[#00FF41]/20 bg-[#050805]/90 p-4">
-      <p className="mb-3 flex items-center gap-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.24em] text-[#00FF41]">
+    <section className="rounded-xl border border-accent/20 bg-app-bg/90 p-4">
+      <p className="mb-3 flex items-center gap-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.24em] text-accent">
         <Activity className="size-4" strokeWidth={1.5} aria-hidden />
         Grup Eğitimi Aktivite Feed · GROUP · Canlı
       </p>
 
       {loading ? (
-        <p className="flex items-center gap-2 py-6 font-mono text-[10px] uppercase text-slate-500">
-          <Loader2 className="size-4 animate-spin text-[#00FF41]" aria-hidden />
+        <p className="flex items-center gap-2 py-6 font-mono text-[10px] uppercase text-app-text/55">
+          <Loader2 className="size-4 animate-spin text-accent" aria-hidden />
           Feed senkronize ediliyor…
         </p>
       ) : groupLogs.length === 0 ? (
-        <p className="py-6 text-center font-mono text-[10px] uppercase text-slate-600">
+        <p className="py-6 text-center font-mono text-[10px] uppercase text-app-text/45">
           Henüz grup eğitimi kaydı yok · Operatörler antrenman modülünden &quot;Grup Eğitimi&quot; seçerek loglayabilir
         </p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] border-collapse font-mono text-[10px] uppercase">
             <thead>
-              <tr className="border-b border-slate-800 text-left text-slate-500">
+              <tr className="border-b border-slate-800 text-left text-app-text/55">
                 <th className="px-2 py-2">Zaman</th>
                 <th className="px-2 py-2">Operatör</th>
                 <th className="px-2 py-2">Disiplin</th>
@@ -87,15 +87,15 @@ export default function InstructorGroupTrainingFeed({ logs, operators, loading =
                         : 'EĞİTMEN'
 
                 return (
-                  <tr key={log.logId} className="border-b border-slate-800/60 text-slate-300">
-                    <td className="px-2 py-2 tabular-nums text-slate-500">{formatLogTime(log.timestamp)}</td>
-                    <td className="px-2 py-2 font-bold text-[#ffb400]">{callsign}</td>
-                    <td className="px-2 py-2 text-[#00FF41]">{discipline}</td>
+                  <tr key={log.logId} className="border-b border-slate-800/60 text-app-text/90">
+                    <td className="px-2 py-2 tabular-nums text-app-text/55">{formatLogTime(log.timestamp)}</td>
+                    <td className="px-2 py-2 font-bold text-accent">{callsign}</td>
+                    <td className="px-2 py-2 text-accent">{discipline}</td>
                     <td className="max-w-[180px] truncate px-2 py-2" title={log.drillName}>
                       {log.drillName || '—'}
                     </td>
                     <td className="px-2 py-2 tabular-nums text-emerald-400">{log.score}%</td>
-                    <td className="px-2 py-2 text-slate-500">{source}</td>
+                    <td className="px-2 py-2 text-app-text/55">{source}</td>
                   </tr>
                 )
               })}

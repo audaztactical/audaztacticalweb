@@ -1,5 +1,6 @@
-import { getFunctions, httpsCallable } from 'firebase/functions'
 import { getMessaging, getToken, isSupported } from 'firebase/messaging'
+import { getAudazFunctions } from './cloudFunctions'
+import { httpsCallable } from 'firebase/functions'
 import { app, firebaseConfig, isFirebaseConfigured } from './firebase'
 
 export const EARLY_WARNINGS_STORAGE_KEY = 'audaz_early_warnings_active'
@@ -150,7 +151,8 @@ async function subscribeFcmTopic(callableName, setActive) {
       return { ok: false, reason: tokenResult.reason ?? 'no_token' }
     }
 
-    const functions = getFunctions(app)
+    const functions = getAudazFunctions()
+    if (!functions) return { ok: false, reason: 'firebase_not_configured' }
     const subscribe = httpsCallable(functions, callableName)
     const result = await subscribe({ token: tokenResult.token })
 

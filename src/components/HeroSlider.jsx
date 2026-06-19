@@ -248,7 +248,7 @@ function DataBox({ box }) {
         {box.title}
       </p>
       {box.lines.map((line) => (
-        <p key={line} className="font-mono-technical text-[8px] tabular-nums text-slate-400">
+        <p key={line} className="font-mono-technical text-[8px] tabular-nums text-app-text/70">
           {line}
         </p>
       ))}
@@ -289,7 +289,7 @@ function SidePanel({ slide }) {
           {slide.missionMap.label}
         </p>
         {slide.missionMap.coords.map((c) => (
-          <p key={c} className="mt-1 font-mono-technical text-[8px] tabular-nums text-slate-400">
+          <p key={c} className="mt-1 font-mono-technical text-[8px] tabular-nums text-app-text/70">
             {c}
           </p>
         ))}
@@ -301,7 +301,7 @@ function SidePanel({ slide }) {
         <ul className="mt-2 space-y-2">
           {slide.resources.map((r) => (
             <li key={r.label} className="flex items-center justify-between gap-1">
-              <span className="font-mono-technical text-[8px] text-slate-500">{r.label}</span>
+              <span className="font-mono-technical text-[8px] text-app-text/55">{r.label}</span>
               <span className="font-mono-technical text-[8px] font-bold tabular-nums text-emerald-400/90">
                 {r.value}
               </span>
@@ -310,7 +310,7 @@ function SidePanel({ slide }) {
         </ul>
       </div>
       <div className="border-t border-[#ffaa00]/15 p-2">
-        <p className="font-mono-technical text-[7px] uppercase text-slate-600">CANLI · SIM</p>
+        <p className="font-mono-technical text-[7px] uppercase text-app-text/45">CANLI · SIM</p>
       </div>
     </div>
   )
@@ -404,7 +404,7 @@ export default function HeroSlider() {
         <TacticalArrow direction="right" onClick={goNext} label="Sonraki slayt" />
 
         <div className="absolute bottom-0 left-0 right-0 z-20 flex items-end justify-between gap-3 px-4 pb-3 pt-6">
-          <p className="max-w-[45%] font-mono-technical text-[8px] uppercase leading-snug tracking-wider text-slate-500">
+          <p className="max-w-[45%] font-mono-technical text-[8px] uppercase leading-snug tracking-wider text-app-text/55">
             {slide.alt}
           </p>
           <div className="flex shrink-0 items-end gap-2" role="tablist" aria-label="Slayt veri hatları">
@@ -431,7 +431,7 @@ export default function HeroSlider() {
                   <span
                     className={[
                       'font-mono-technical text-[6px] uppercase tracking-widest',
-                      active ? 'text-[#ffaa00]' : 'text-slate-600',
+                      active ? 'text-[#ffaa00]' : 'text-app-text/45',
                     ].join(' ')}
                   >
                     {active ? 'AKTİF' : 'BEKLE'}

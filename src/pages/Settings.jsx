@@ -1,21 +1,18 @@
 import { useState } from 'react'
-import { Copy, KeyRound, Moon, Settings2, Sun, User } from 'lucide-react'
+import { Copy, KeyRound, Settings2 } from 'lucide-react'
 import PageShell from '../components/layout/PageShell'
+import SettingsPanel from '../components/SettingsPanel'
+import FeedbackForm from '../components/FeedbackForm'
 import { useAuth } from '../context/AuthContext'
-import { isAdminUser } from '../config/admin'
 import { createInstructorInviteToken } from '../lib/firestoreInstructorTokens'
 import { emitFirebaseError } from '../lib/firebaseErrorBus'
 
 export default function Settings() {
-  const { user } = useAuth()
-  const [theme, setTheme] = useState('dark')
-  const [usernameDraft, setUsernameDraft] = useState('')
+  const { isAdmin } = useAuth()
   const [generatedToken, setGeneratedToken] = useState('')
   const [tokenBusy, setTokenBusy] = useState(false)
   const [tokenMsg, setTokenMsg] = useState('')
   const [copied, setCopied] = useState(false)
-
-  const isAdmin = isAdminUser(user)
 
   const handleGenerateInstructorToken = async () => {
     setTokenBusy(true)
@@ -49,56 +46,12 @@ export default function Settings() {
     <PageShell
       title="Ayarlar"
       subtitle=""
-      headerAction={<Settings2 className="size-6 text-[#ffb400]/50" strokeWidth={1.25} aria-hidden />}
+      headerAction={<Settings2 className="size-6 text-accent/50" strokeWidth={1.25} aria-hidden />}
     >
       <div className="mx-auto flex max-w-lg flex-col gap-10">
-        <form className="flex flex-col gap-10" onSubmit={(e) => e.preventDefault()}>
-          <div className="flex items-center gap-4">
-            <User className="size-5 shrink-0 text-[#ffb400]" strokeWidth={1.5} aria-hidden />
-            <input
-              type="text"
-              value={usernameDraft}
-              onChange={(e) => setUsernameDraft(e.target.value)}
-              autoComplete="username"
-              aria-label="Operatör adı"
-              className="h-11 w-full rounded-lg border border-white/15 bg-black/40 px-3 text-sm text-white outline-none ring-0 transition placeholder:text-slate-600 focus:border-[#ffb400]/50 focus:ring-2 focus:ring-[#ffb400]/20"
-              placeholder=""
-            />
-          </div>
+        <SettingsPanel />
 
-          <div>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setTheme('light')}
-                aria-pressed={theme === 'light'}
-                className={[
-                  'flex size-14 items-center justify-center rounded-xl border transition',
-                  theme === 'light'
-                    ? 'border-[#ffb400]/60 bg-[#ffb400]/15 text-[#ffb400]'
-                    : 'border-white/10 bg-black/30 text-slate-500 hover:border-white/20',
-                ].join(' ')}
-                aria-label="Açık tema"
-              >
-                <Sun className="size-7" strokeWidth={1.5} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setTheme('dark')}
-                aria-pressed={theme === 'dark'}
-                className={[
-                  'flex size-14 items-center justify-center rounded-xl border transition',
-                  theme === 'dark'
-                    ? 'border-[#ffb400]/60 bg-[#ffb400]/15 text-[#ffb400]'
-                    : 'border-white/10 bg-black/30 text-slate-500 hover:border-white/20',
-                ].join(' ')}
-                aria-label="Koyu tema"
-              >
-                <Moon className="size-7" strokeWidth={1.5} />
-              </button>
-            </div>
-          </div>
-        </form>
+        <FeedbackForm />
 
         {isAdmin ? (
           <section className="rounded-xl border border-amber-900/40 bg-slate-950/80 p-4 shadow-[0_0_32px_-12px_rgba(255,180,0,0.2)]">
@@ -106,7 +59,7 @@ export default function Settings() {
               <KeyRound className="size-4 shrink-0" strokeWidth={1.5} aria-hidden />
               [ 🔐 EĞİTMEN DAVETİYE KODU SİSTEM YÖNETİMİ ]
             </p>
-            <p className="mb-4 font-mono text-[9px] uppercase leading-relaxed text-slate-500">
+            <p className="mb-4 font-mono text-[9px] uppercase leading-relaxed text-app-text/55">
               Tek kullanımlık eğitmen kayıt kodu üretin. Kod yalnızca bir kez, kayıt sırasında
               yakılır (isUsed · usedBy).
             </p>
@@ -142,11 +95,11 @@ export default function Settings() {
             ) : null}
 
             {tokenMsg ? (
-              <p className="mt-3 font-mono text-[9px] uppercase text-slate-500">{tokenMsg}</p>
+              <p className="mt-3 font-mono text-[9px] uppercase text-app-text/55">{tokenMsg}</p>
             ) : null}
           </section>
         ) : (
-          <p className="font-mono text-[9px] uppercase text-slate-600">
+          <p className="font-mono text-[9px] uppercase text-app-text/45">
             Eğitmen davetiye yönetimi yalnızca sistem yöneticisi hesabı içindir.
           </p>
         )}

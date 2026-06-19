@@ -38,7 +38,7 @@ export default function CircularProgress({
         cy={cy}
         r={r}
         fill="none"
-        stroke="#ffb400"
+        stroke="var(--accent-color)"
         strokeWidth={stroke}
         strokeLinecap="round"
         strokeDasharray={dashed ? '3 7' : solidDash}

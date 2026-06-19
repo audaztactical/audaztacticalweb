@@ -211,9 +211,109 @@ export function getTcccHypothermiaBlanket(row) {
   return Boolean(row.hypothermiaBlanket)
 }
 
+/** @type {{ field: string; label: string }[]} */
+const TCCC_MARCH_INTERVENTION_FIELDS = [
+  { field: 'tourniquetApplied', label: 'Turnike' },
+  { field: 'woundPacking', label: 'Hemostatik tampon / Bandaj' },
+  { field: 'npaInserted', label: 'NPA / Hava yolu' },
+  { field: 'chestSealApplied', label: 'Ventilli göğüs mührü' },
+  { field: 'needleDecompression', label: 'İğne dekompresyonu (NDC)' },
+  { field: 'hypothermiaBlanket', label: 'Hipotermi battaniyesi' },
+]
+
+/** @param {Record<string, unknown>} row */
+export function getTcccMarchInterventionLabels(row) {
+  /** @type {string[]} */
+  const labels = []
+  for (const { field, label } of TCCC_MARCH_INTERVENTION_FIELDS) {
+    if (row[field]) labels.push(label)
+  }
+  return labels
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ * @returns {{ step: string; items: string[] }[]}
+ */
+export function getTcccMarchSectionsForReport(row) {
+  const tqLoc = getTcccTourniquetLocation(row)
+  /** @type {{ step: string; items: string[] }[]} */
+  const sections = []
+
+  /** @type {string[]} */
+  const mItems = []
+  if (getTcccTourniquetApplied(row)) {
+    mItems.push(`Turnike${tqLoc && tqLoc !== '—' ? ` · ${tqLoc}` : ''}`)
+  }
+  if (getTcccWoundPacking(row)) mItems.push('Hemostatik tampon / Bandaj')
+  if (mItems.length) sections.push({ step: 'M', items: mItems })
+
+  /** @type {string[]} */
+  const aItems = []
+  if (getTcccNpaInserted(row)) aItems.push('NPA / Hava yolu')
+  if (aItems.length) sections.push({ step: 'A', items: aItems })
+
+  /** @type {string[]} */
+  const rItems = []
+  if (getTcccChestSealApplied(row)) rItems.push('Ventilli göğüs mührü')
+  if (getTcccNeedleDecompression(row)) rItems.push('İğne dekompresyonu (NDC)')
+  if (rItems.length) sections.push({ step: 'R', items: rItems })
+
+  /** @type {string[]} */
+  const hItems = []
+  if (getTcccHypothermiaBlanket(row)) hItems.push('Hipotermi battaniyesi')
+  if (hItems.length) sections.push({ step: 'H', items: hItems })
+
+  return sections
+}
+
+/** @param {Record<string, unknown>} row */
+export function getTcccAppliedTreatmentsSummary(row) {
+  const summary = invStr(row.appliedTreatmentsSummary).trim()
+  if (summary) return summary
+
+  const marchLabels = getTcccMarchInterventionLabels(row)
+  const procedureStr = invStr(row.procedurePerformed).trim()
+  const procedureParts =
+    procedureStr && procedureStr !== '—'
+      ? procedureStr.split(' · ').map((part) => part.trim()).filter(Boolean)
+      : []
+  const merged = [...new Set([...procedureParts, ...marchLabels])]
+  return merged.length > 0 ? merged.join(' · ') : '—'
+}
+
+/** @param {string} text */
+function isLikelyAccidentalNumericTcccNote(text) {
+  return /^\d{4,}$/.test(invStr(text).trim())
+}
+
+/** @param {Record<string, unknown>} row */
+export function buildTcccAutoOperationSummary(row) {
+  /** @type {string[]} */
+  const parts = []
+  const phase = getTcccPhase(row)
+  if (phase && phase !== '—') parts.push(`TCCC fazı: ${phase}`)
+  const injury = getTcccInjuryType(row)
+  if (injury && injury !== '—') parts.push(`Yaralanma: ${injury}`)
+  const evac = formatTcccEvacWaitingTime(row)
+  if (evac && evac !== '—') parts.push(`Tahliye bekleme: ${evac}`)
+  const outcome = getTcccOutcome(row)
+  if (outcome && outcome !== '—') parts.push(`Sonuç: ${outcome}`)
+  return parts.join(' · ')
+}
+
 /** @param {Record<string, unknown>} row */
 export function getTcccOperationNote(row) {
-  return invStr(row.operationNote ?? row.notes).trim() || 'Operasyon notu kayıtlı değil.'
+  const manual = invStr(row.operationNote ?? row.notes).trim()
+  const auto = buildTcccAutoOperationSummary(row)
+
+  if (manual && !isLikelyAccidentalNumericTcccNote(manual)) {
+    return manual
+  }
+  if (manual && isLikelyAccidentalNumericTcccNote(manual) && auto) {
+    return `${auto} · (Kayıtlı not: ${manual})`
+  }
+  return auto || manual || 'Operasyon notu kayıtlı değil.'
 }
 
 /** @param {boolean} value */

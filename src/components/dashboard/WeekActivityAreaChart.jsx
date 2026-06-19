@@ -10,7 +10,7 @@ export default function WeekActivityAreaChart({ data, loading }) {
   return (
     <div className="relative mt-3 h-[188px] min-h-[188px] w-full min-w-0 md:h-[200px] md:min-h-[200px]">
       {loading ? (
-        <div className="pointer-events-none absolute inset-0 z-[1] flex items-center justify-center bg-black/20 font-mono-technical text-[10px] uppercase tracking-widest text-slate-500">
+        <div className="pointer-events-none absolute inset-0 z-[1] flex items-center justify-center bg-black/20 font-mono-technical text-[10px] uppercase tracking-widest text-app-text/55">
           TOPLANIYOR...
         </div>
       ) : null}
@@ -27,9 +27,9 @@ export default function WeekActivityAreaChart({ data, loading }) {
         <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -16 }}>
           <defs>
             <linearGradient id={`actFill-${gid}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#00FF41" stopOpacity={0.28} />
-              <stop offset="55%" stopColor="#00FF41" stopOpacity={0.08} />
-              <stop offset="100%" stopColor="#ffb400" stopOpacity={0} />
+              <stop offset="0%" stopColor="var(--accent-color)" stopOpacity={0.28} />
+              <stop offset="55%" stopColor="var(--accent-color)" stopOpacity={0.08} />
+              <stop offset="100%" stopColor="var(--accent-color)" stopOpacity={0} />
             </linearGradient>
           </defs>
           <XAxis
@@ -56,17 +56,17 @@ export default function WeekActivityAreaChart({ data, loading }) {
               const ev = row?.events ?? 0
               return (
                 <div
-                  className="rounded-md border border-white/12 px-2.5 py-1.5 font-mono-technical text-[10px] text-slate-200"
+                  className="rounded-md border border-white/12 px-2.5 py-1.5 font-mono-technical text-[10px] text-app-text"
                   style={{
                     backgroundColor: '#0a0a0a',
                     boxShadow: '0 0 0 1px rgba(0,255,65,0.12)',
                   }}
                 >
-                  <p className="text-[#00FF41]/90">
+                  <p className="text-accent/90">
                     GÜN {g} · {d}
                   </p>
-                  <p className="mt-0.5 tabular-nums text-slate-400">
-                    OLAY: <span className="text-white">{ev}</span>
+                  <p className="mt-0.5 tabular-nums text-app-text/70">
+                    OLAY: <span className="text-app-text">{ev}</span>
                   </p>
                 </div>
               )
@@ -75,17 +75,17 @@ export default function WeekActivityAreaChart({ data, loading }) {
           <Area
             type="monotone"
             dataKey="events"
-            stroke="#00FF41"
+            stroke="var(--accent-color)"
             strokeWidth={1.35}
             fill={`url(#actFill-${gid})`}
             dot={false}
-            activeDot={{ r: 3, fill: '#ffb400', stroke: '#00FF41' }}
+            activeDot={{ r: 3, fill: 'var(--accent-color)', stroke: 'var(--accent-color)' }}
           />
         </AreaChart>
       </ResponsiveContainer>
       </div>
       ) : !loading ? (
-        <div className="flex h-full items-center justify-center font-mono-technical text-[10px] uppercase text-slate-600">
+        <div className="flex h-full items-center justify-center font-mono-technical text-[10px] uppercase text-app-text/45">
           VERİ_YOK
         </div>
       ) : null}

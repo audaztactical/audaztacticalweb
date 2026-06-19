@@ -22,12 +22,12 @@ const TACEVAC_FIRE_IDS = ['cold_lz', 'hot_lz']
 const TACEVAC_CAS_IDS = ['cas', 'indirect_fire']
 
 const fieldClass =
-  'w-full rounded border border-[#00FF41]/20 bg-black/60 px-3 py-2 font-mono-technical text-xs text-[#00FF41] placeholder:text-slate-600 focus:border-[#00FF41]/50 focus:outline-none focus:ring-1 focus:ring-[#00FF41]/20'
+  'w-full rounded border border-accent/20 bg-black/60 px-3 py-2 font-mono-technical text-xs text-accent placeholder:text-app-text/45 focus:border-accent/50 focus:outline-none focus:ring-1 focus:ring-accent/20'
 
 const tacevacFieldClass =
-  'w-full rounded border border-[#ffb400]/20 bg-black/60 px-3 py-2 font-mono-technical text-xs text-[#ffb400] placeholder:text-slate-600 focus:border-[#ffb400]/50 focus:outline-none focus:ring-1 focus:ring-[#ffb400]/20'
+  'w-full rounded border border-accent/20 bg-black/60 px-3 py-2 font-mono-technical text-xs text-accent placeholder:text-app-text/45 focus:border-accent/50 focus:outline-none focus:ring-1 focus:ring-accent/20'
 
-const labelClass = 'font-mono-technical text-[9px] font-bold uppercase tracking-[0.2em] text-slate-500'
+const labelClass = 'font-mono-technical text-[9px] font-bold uppercase tracking-[0.2em] text-app-text/55'
 
 /** @typedef {'medevac' | 'tacevac'} EvacMode */
 /** @typedef {import('../../lib/tcccEvacLocales').TcccEvacLocale} TcccEvacLocale */
@@ -45,8 +45,8 @@ const labelClass = 'font-mono-technical text-[9px] font-bold uppercase tracking-
 function TokenRow({ options, value, onSelect, name, disabled = false, accent = 'green' }) {
   const onCls =
     accent === 'amber'
-      ? 'border-[#ffb400]/55 bg-[#ffb400]/12 text-[#ffb400]'
-      : 'border-[#00FF41]/55 bg-[#00FF41]/12 text-[#00FF41]'
+      ? 'border-accent/55 bg-accent/12 text-accent'
+      : 'border-accent/55 bg-accent/12 text-accent'
   return (
     <div className="flex flex-wrap gap-1.5" role="group" aria-label={name}>
       {options.map((opt) => {
@@ -59,7 +59,7 @@ function TokenRow({ options, value, onSelect, name, disabled = false, accent = '
             onClick={() => onSelect(opt.id)}
             className={[
               'rounded border px-2 py-1 font-mono-technical text-[8px] font-bold uppercase tracking-wider transition',
-              on ? onCls : 'border-white/12 bg-black/40 text-slate-500',
+              on ? onCls : 'border-white/12 bg-black/40 text-app-text/55',
             ].join(' ')}
             aria-pressed={on}
           >
@@ -126,7 +126,7 @@ function MedevacNineLinePanel({ L, form, patch, disabled = false }) {
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <p className="lg:col-span-2 font-mono-technical text-[10px] font-bold uppercase tracking-[0.22em] text-[#00FF41]">
+      <p className="lg:col-span-2 font-mono-technical text-[10px] font-bold uppercase tracking-[0.22em] text-accent">
         {m.panelTitle}
       </p>
 
@@ -152,7 +152,7 @@ function MedevacNineLinePanel({ L, form, patch, disabled = false }) {
         />
       </label>
 
-      <fieldset className="space-y-2 rounded-lg border border-[#00FF41]/15 bg-black/40 p-3 lg:col-span-2">
+      <fieldset className="space-y-2 rounded-lg border border-accent/15 bg-black/40 p-3 lg:col-span-2">
         <legend className={labelClass}>{m.line3}</legend>
         <div className="grid grid-cols-3 gap-2">
           {[
@@ -161,7 +161,7 @@ function MedevacNineLinePanel({ L, form, patch, disabled = false }) {
             ['routine', m.line3Routine],
           ].map(([key, label]) => (
             <label key={key} className="space-y-1">
-              <span className="text-[8px] text-slate-600">{label}</span>
+              <span className="text-[8px] text-app-text/45">{label}</span>
               <input
                 type="number"
                 min={0}
@@ -182,10 +182,10 @@ function MedevacNineLinePanel({ L, form, patch, disabled = false }) {
         </div>
       </fieldset>
 
-      <fieldset className="space-y-2 rounded-lg border border-[#00FF41]/15 bg-black/40 p-3 lg:col-span-2">
+      <fieldset className="space-y-2 rounded-lg border border-accent/15 bg-black/40 p-3 lg:col-span-2">
         <legend className={labelClass}>{m.line4}</legend>
         {!hasEquipment ? (
-          <p className="font-mono-technical text-[8px] text-slate-600">{m.line4NoneHint}</p>
+          <p className="font-mono-technical text-[8px] text-app-text/45">{m.line4NoneHint}</p>
         ) : null}
         <div className="flex flex-wrap gap-2" role="group" aria-label={m.line4Aria}>
           {equipmentOptions.map((opt) => {
@@ -200,8 +200,8 @@ function MedevacNineLinePanel({ L, form, patch, disabled = false }) {
                 className={[
                   'rounded border px-2 py-1 font-mono-technical text-[8px] font-bold uppercase',
                   on
-                    ? 'border-[#00FF41]/55 bg-[#00FF41]/12 text-[#00FF41]'
-                    : 'border-white/12 text-slate-500',
+                    ? 'border-accent/55 bg-accent/12 text-accent'
+                    : 'border-white/12 text-app-text/55',
                 ].join(' ')}
                 aria-pressed={on}
               >
@@ -212,11 +212,11 @@ function MedevacNineLinePanel({ L, form, patch, disabled = false }) {
         </div>
       </fieldset>
 
-      <fieldset className="space-y-2 rounded-lg border border-[#00FF41]/15 bg-black/40 p-3 lg:col-span-2">
+      <fieldset className="space-y-2 rounded-lg border border-accent/15 bg-black/40 p-3 lg:col-span-2">
         <legend className={labelClass}>{m.line5}</legend>
         <div className="grid grid-cols-2 gap-2">
           <label className="space-y-1">
-            <span className="text-[8px] text-slate-600">{m.line5Litter}</span>
+            <span className="text-[8px] text-app-text/45">{m.line5Litter}</span>
             <input
               type="number"
               min={0}
@@ -231,7 +231,7 @@ function MedevacNineLinePanel({ L, form, patch, disabled = false }) {
             />
           </label>
           <label className="space-y-1">
-            <span className="text-[8px] text-slate-600">{m.line5Ambulatory}</span>
+            <span className="text-[8px] text-app-text/45">{m.line5Ambulatory}</span>
             <input
               type="number"
               min={0}
@@ -248,7 +248,7 @@ function MedevacNineLinePanel({ L, form, patch, disabled = false }) {
         </div>
       </fieldset>
 
-      <fieldset className="space-y-2 rounded-lg border border-[#00FF41]/15 bg-black/40 p-3 lg:col-span-2">
+      <fieldset className="space-y-2 rounded-lg border border-accent/15 bg-black/40 p-3 lg:col-span-2">
         <legend className={labelClass}>{m.line6}</legend>
         <TokenRow
           name={m.line6Aria}
@@ -259,7 +259,7 @@ function MedevacNineLinePanel({ L, form, patch, disabled = false }) {
         />
       </fieldset>
 
-      <fieldset className="space-y-2 rounded-lg border border-[#00FF41]/15 bg-black/40 p-3 lg:col-span-2">
+      <fieldset className="space-y-2 rounded-lg border border-accent/15 bg-black/40 p-3 lg:col-span-2">
         <legend className={labelClass}>{m.line7}</legend>
         <TokenRow
           name={m.line7Aria}
@@ -274,7 +274,7 @@ function MedevacNineLinePanel({ L, form, patch, disabled = false }) {
         />
         {form.line7_lzMarking.method === 'smoke' ? (
           <div className="mt-2 space-y-1">
-            <span className="text-[8px] uppercase text-slate-600">{m.line7SmokeColor}</span>
+            <span className="text-[8px] uppercase text-app-text/45">{m.line7SmokeColor}</span>
             <TokenRow
               name={m.line7SmokeColorAria}
               options={smokeColorOptions}
@@ -290,7 +290,7 @@ function MedevacNineLinePanel({ L, form, patch, disabled = false }) {
         ) : null}
       </fieldset>
 
-      <fieldset className="space-y-2 rounded-lg border border-[#00FF41]/15 bg-black/40 p-3 lg:col-span-2">
+      <fieldset className="space-y-2 rounded-lg border border-accent/15 bg-black/40 p-3 lg:col-span-2">
         <legend className={labelClass}>{m.line8}</legend>
         <TokenRow
           name={m.line8Aria}
@@ -308,7 +308,7 @@ function MedevacNineLinePanel({ L, form, patch, disabled = false }) {
         />
       </fieldset>
 
-      <fieldset className="space-y-2 rounded-lg border border-[#00FF41]/15 bg-black/40 p-3 lg:col-span-2">
+      <fieldset className="space-y-2 rounded-lg border border-accent/15 bg-black/40 p-3 lg:col-span-2">
         <legend className={labelClass}>{m.line9}</legend>
         <TokenRow
           name="KBRN"
@@ -365,7 +365,7 @@ function TacevacExtractionPanel({ L, form, patch, disabled = false }) {
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <p className="lg:col-span-2 font-mono-technical text-[10px] font-bold uppercase tracking-[0.22em] text-[#ffb400]">
+      <p className="lg:col-span-2 font-mono-technical text-[10px] font-bold uppercase tracking-[0.22em] text-accent">
         {t.panelTitle}
       </p>
 
@@ -391,7 +391,7 @@ function TacevacExtractionPanel({ L, form, patch, disabled = false }) {
         />
       </label>
 
-      <fieldset className="space-y-2 rounded-lg border border-[#ffb400]/20 bg-black/40 p-3 lg:col-span-2">
+      <fieldset className="space-y-2 rounded-lg border border-accent/20 bg-black/40 p-3 lg:col-span-2">
         <legend className={labelClass}>{t.fireStatus}</legend>
         <TokenRow
           name={t.fireStatusAria}
@@ -414,7 +414,7 @@ function TacevacExtractionPanel({ L, form, patch, disabled = false }) {
         />
       </label>
 
-      <fieldset className="space-y-2 rounded-lg border border-[#ffb400]/20 bg-black/40 p-3 lg:col-span-2">
+      <fieldset className="space-y-2 rounded-lg border border-accent/20 bg-black/40 p-3 lg:col-span-2">
         <legend className={labelClass}>{t.weaponsLegend}</legend>
         <div className="flex flex-wrap gap-2" role="group" aria-label={t.weaponsAria}>
           {weaponOptions.map((opt) => {
@@ -428,8 +428,8 @@ function TacevacExtractionPanel({ L, form, patch, disabled = false }) {
                 className={[
                   'rounded border px-2 py-1 font-mono-technical text-[8px] font-bold uppercase',
                   on
-                    ? 'border-[#ffb400]/55 bg-[#ffb400]/12 text-[#ffb400]'
-                    : 'border-white/12 text-slate-500',
+                    ? 'border-accent/55 bg-accent/12 text-accent'
+                    : 'border-white/12 text-app-text/55',
                 ].join(' ')}
                 aria-pressed={on}
               >
@@ -447,7 +447,7 @@ function TacevacExtractionPanel({ L, form, patch, disabled = false }) {
         />
       </fieldset>
 
-      <fieldset className="space-y-2 rounded-lg border border-[#ffb400]/20 bg-black/40 p-3 lg:col-span-2">
+      <fieldset className="space-y-2 rounded-lg border border-accent/20 bg-black/40 p-3 lg:col-span-2">
         <legend className={labelClass}>{t.suppressiveLegend}</legend>
         <label className="flex cursor-pointer items-center gap-2">
           <input
@@ -460,9 +460,9 @@ function TacevacExtractionPanel({ L, form, patch, disabled = false }) {
               })
             }
             disabled={disabled}
-            className="size-4 rounded border-[#ffb400]/40 accent-[#ffb400]"
+            className="size-4 rounded border-accent/40 accent-accent"
           />
-          <span className="font-mono-technical text-[10px] uppercase text-slate-300">{t.suppressiveCheckbox}</span>
+          <span className="font-mono-technical text-[10px] uppercase text-app-text/90">{t.suppressiveCheckbox}</span>
         </label>
         {form.suppressiveFireRequest ? (
           <TokenRow
@@ -476,13 +476,13 @@ function TacevacExtractionPanel({ L, form, patch, disabled = false }) {
         ) : null}
       </fieldset>
 
-      <fieldset className="space-y-2 rounded-lg border border-[#ffb400]/20 bg-black/40 p-3 lg:col-span-2">
+      <fieldset className="space-y-2 rounded-lg border border-accent/20 bg-black/40 p-3 lg:col-span-2">
         <legend className={labelClass}>{t.vehicleLegend}</legend>
         <select
           value={form.extractionVehicle}
           onChange={(e) => patch({ extractionVehicle: e.target.value })}
           disabled={disabled}
-          className="dossier-blood-select w-full rounded-lg border border-[#ffb400]/25 bg-black/50 py-2 pl-2 pr-8 font-mono-technical text-xs uppercase text-[#ffb400] focus:border-[#ffb400]/50"
+          className="dossier-blood-select w-full rounded-lg border border-accent/25 bg-black/50 py-2 pl-2 pr-8 font-mono-technical text-xs uppercase text-accent focus:border-accent/50"
         >
           {vehicleOptions.map((v) => (
             <option key={v.id} value={v.id}>
@@ -567,20 +567,20 @@ export default function TcccMedevacTab({ disabled = false, userId, addLog }) {
       onSubmit={handleSubmit}
       className={[
         'space-y-4 rounded-xl border bg-black/55 p-4 font-mono-technical shadow-[inset_0_0_32px_rgba(0,0,0,0.2)] sm:p-5',
-        isMedevac ? 'border-[#00FF41]/20' : 'border-[#ffb400]/25',
+        isMedevac ? 'border-accent/20' : 'border-accent/25',
       ].join(' ')}
     >
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
         <div className="flex items-center gap-2">
           {isMedevac ? (
-            <Radio className="size-5 text-[#00FF41]" strokeWidth={1.5} aria-hidden />
+            <Radio className="size-5 text-accent" strokeWidth={1.5} aria-hidden />
           ) : (
-            <Shield className="size-5 text-[#ffb400]" strokeWidth={1.5} aria-hidden />
+            <Shield className="size-5 text-accent" strokeWidth={1.5} aria-hidden />
           )}
           <span
             className={[
               'text-xs font-bold uppercase tracking-[0.28em]',
-              isMedevac ? 'text-[#00FF41]' : 'text-[#ffb400]',
+              isMedevac ? 'text-accent' : 'text-accent',
             ].join(' ')}
           >
             {isMedevac ? L.medevacHeader : L.tacevacHeader}
@@ -603,10 +603,10 @@ export default function TcccMedevacTab({ disabled = false, userId, addLog }) {
                 className={[
                   'rounded border px-3 py-1.5 text-[8px] font-bold uppercase tracking-wider transition',
                   on && id === 'medevac'
-                    ? 'border-[#00FF41]/60 bg-[#00FF41]/12 text-[#00FF41]'
+                    ? 'border-accent/60 bg-accent/12 text-accent'
                     : on && id === 'tacevac'
-                      ? 'border-[#ffb400]/60 bg-[#ffb400]/12 text-[#ffb400]'
-                      : 'border-white/10 text-slate-600 hover:text-slate-400',
+                      ? 'border-accent/60 bg-accent/12 text-accent'
+                      : 'border-white/10 text-app-text/45 hover:text-app-text/70',
                 ].join(' ')}
                 aria-pressed={on}
               >
@@ -629,8 +629,8 @@ export default function TcccMedevacTab({ disabled = false, userId, addLog }) {
         className={[
           'inline-flex w-full items-center justify-center gap-2 rounded-lg border py-3 text-sm font-bold uppercase disabled:opacity-40',
           isMedevac
-            ? 'border-[#00FF41]/50 bg-[#00FF41]/10 text-[#00FF41]'
-            : 'border-[#ffb400]/50 bg-[#ffb400]/10 text-[#ffb400]',
+            ? 'border-accent/50 bg-accent/10 text-accent'
+            : 'border-accent/50 bg-accent/10 text-accent',
         ].join(' ')}
       >
         <Send className="size-4" aria-hidden />
@@ -641,7 +641,7 @@ export default function TcccMedevacTab({ disabled = false, userId, addLog }) {
         <p
           className={[
             'text-center text-[10px] font-bold uppercase',
-            isMedevac ? 'text-[#00FF41]' : 'text-[#ffb400]',
+            isMedevac ? 'text-accent' : 'text-accent',
           ].join(' ')}
         >
           {isMedevac ? L.savedMedevac : L.savedTacevac}

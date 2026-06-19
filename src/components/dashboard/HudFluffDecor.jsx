@@ -25,20 +25,20 @@ export default function HudFluffDecor({ className = '' }) {
   const bus = jitter(54 + ((coordTick * 3) % 29), 6)
 
   const box =
-    'pointer-events-none font-mono-technical tabular-nums text-[9px] leading-snug tracking-tight text-slate-500'
+    'pointer-events-none font-mono-technical tabular-nums text-[9px] leading-snug tracking-tight text-app-text/55'
 
   return (
     <div className={`pointer-events-none absolute inset-0 z-0 ${className}`.trim()}>
       <div className={`${box} absolute left-0 top-0 z-0 max-w-[11rem]`} aria-hidden>
-        <p className="text-[#ffb400]/65">IZGARA_A</p>
+        <p className="text-accent/65">IZGARA_A</p>
         <p>
           KONUM {lat}°N {lon}°E
         </p>
         <p>
-          <span className="text-[#00FF41]/70">SAAT:</span> {formatTacticalLocalTime(currentTime)}
+          <span className="text-accent/70">SAAT:</span> {formatTacticalLocalTime(currentTime)}
         </p>
         <p>
-          <span className="text-[#ffb400]/60">TARİH:</span> {formatTacticalOperationalDate(currentTime)}
+          <span className="text-accent/60">TARİH:</span> {formatTacticalOperationalDate(currentTime)}
         </p>
       </div>
       <div className={`${box} absolute right-0 top-0 z-0 max-w-[10rem] text-right`} aria-hidden>
@@ -48,7 +48,7 @@ export default function HudFluffDecor({ className = '' }) {
         <p>I/O {bus}%</p>
       </div>
       <div className={`${box} absolute bottom-0 left-0 z-0`} aria-hidden>
-        <p className="text-slate-600">
+        <p className="text-app-text/45">
           LAT_ms ~{(((coordTick % 17) + 8) * 3)
             .toString()
             .padStart(2, '0')}

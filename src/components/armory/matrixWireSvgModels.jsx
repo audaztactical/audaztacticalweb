@@ -2,7 +2,7 @@
 
 const WIRE = {
   fill: 'none',
-  stroke: '#00FF41',
+  stroke: 'var(--accent-color)',
   strokeWidth: 1.5,
   strokeLinecap: 'round',
   strokeLinejoin: 'round',

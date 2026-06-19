@@ -98,7 +98,7 @@ function HudPanelHeader({ title, accentClass, icon, badge, trailing, onExpand, v
           <button
             type="button"
             onClick={onExpand}
-            className="rounded border border-slate-700 bg-slate-900/80 p-1.5 text-slate-400 transition-colors hover:border-emerald-600/50 hover:text-emerald-400"
+            className="rounded border border-slate-700 bg-slate-900/80 p-1.5 text-app-text/70 transition-colors hover:border-emerald-600/50 hover:text-emerald-400"
             aria-label={`${title} tam ekran`}
           >
             <Maximize2 className="size-4" strokeWidth={1.75} aria-hidden />
@@ -129,7 +129,7 @@ export function TcccHudTooltipContent({ logRow }) {
   if (!logRow) {
     return (
       <div className={TACTICAL_TOOLTIP_CLASS} role="tooltip">
-        <p className="font-mono text-xs uppercase text-slate-500">VERİ BULUNAMADI</p>
+        <p className="font-mono text-xs uppercase text-app-text/55">VERİ BULUNAMADI</p>
       </div>
     )
   }
@@ -154,7 +154,7 @@ export function TcccHudTooltipContent({ logRow }) {
           • GECİKME SÜRESİ: {model.overtimeLabel}
         </p>
         <p className="text-amber-300/90">• TELSİZ MODU: {model.simulationMode}</p>
-        <p className="text-slate-400">• REAKSİYON VERİMLİLİĞİ: %{model.efficiency}</p>
+        <p className="text-app-text/70">• REAKSİYON VERİMLİLİĞİ: %{model.efficiency}</p>
 
         {model.failed ? (
           <div className="mt-2 border-t border-red-900/50 pt-2">
@@ -218,7 +218,7 @@ function TcccSimulationDebriefSidebar({ logs }) {
         <p className="font-mono text-[9px] font-bold uppercase tracking-wider text-amber-500/80">
           [ SON 8 OTURUM · DEBRİEF ]
         </p>
-        <p className="mt-4 font-mono text-[10px] uppercase text-slate-600">KAYIT YOK</p>
+        <p className="mt-4 font-mono text-[10px] uppercase text-app-text/45">KAYIT YOK</p>
       </aside>
     )
   }
@@ -358,21 +358,21 @@ export function TacticalCharacterMatrix({
             AGRESİF
           </li>
           <li
-            className={`border-r border-emerald-900/25 p-1 font-bold uppercase text-slate-500 ${cornerText}`}
+            className={`border-r border-emerald-900/25 p-1 font-bold uppercase text-app-text/55 ${cornerText}`}
           >
             TEREDDÜTLÜ
           </li>
           <li className={`p-1 text-right font-bold uppercase text-rose-500/80 ${cornerText}`}>PERVASIZ</li>
         </ul>
-        <p className={`absolute bottom-8 left-3 m-0 uppercase text-slate-600 ${axisText}`}>REAKSİYON SN →</p>
+        <p className={`absolute bottom-8 left-3 m-0 uppercase text-app-text/45 ${axisText}`}>REAKSİYON SN →</p>
         <p
-          className={`absolute left-3 top-10 m-0 origin-left -rotate-90 uppercase text-slate-600 ${axisText}`}
+          className={`absolute left-3 top-10 m-0 origin-left -rotate-90 uppercase text-app-text/45 ${axisText}`}
         >
           İSABET % ↑
         </p>
         {visiblePoints.length === 0 ? (
           <p
-            className={`absolute inset-0 m-0 flex items-center justify-center uppercase text-slate-600 ${emptyText}`}
+            className={`absolute inset-0 m-0 flex items-center justify-center uppercase text-app-text/45 ${emptyText}`}
           >
             {focusedLogId ? 'LOCK_ON · OTURUM MATRİS VERİSİ YOK' : 'MATRİS VERİSİ YOK'}
           </p>
@@ -462,7 +462,7 @@ export function ChronicErrorRadar({
 
       {items.length === 0 ? (
         <p
-          className={`text-center uppercase text-slate-600 ${embeddedInOverlay ? 'flex flex-1 items-center justify-center text-xs' : expanded ? 'py-6 text-xs' : 'py-6 text-[9px]'}`}
+          className={`text-center uppercase text-app-text/45 ${embeddedInOverlay ? 'flex flex-1 items-center justify-center text-xs' : expanded ? 'py-6 text-xs' : 'py-6 text-[9px]'}`}
         >
           {focusedLogId ? 'BU OTURUMDA KRİTİK HATA YOK' : 'HATA KAYDI YOK · TEMİZ HAT'}
         </p>
@@ -504,12 +504,12 @@ export function ChronicErrorRadar({
               >
                 <p className="mb-1 flex items-center justify-between gap-2">
                   <span
-                    className={`font-bold uppercase text-slate-500 ${expanded ? 'text-[10px]' : 'text-[8px]'}`}
+                    className={`font-bold uppercase text-app-text/55 ${expanded ? 'text-[10px]' : 'text-[8px]'}`}
                   >
                     {item.code}
                   </span>
                   <span
-                    className={`tabular-nums text-slate-600 ${expanded ? 'text-[10px]' : 'text-[8px]'}`}
+                    className={`tabular-nums text-app-text/45 ${expanded ? 'text-[10px]' : 'text-[8px]'}`}
                   >
                     FLAG_FREQ_{item.count}
                   </span>
@@ -541,7 +541,7 @@ export function ChronicErrorRadar({
                   </span>
                 </p>
                 <p
-                  className={`mt-1 font-bold uppercase ${critical ? 'text-rose-400' : 'text-slate-400'} ${expanded ? 'text-[11px]' : 'text-[9px]'}`}
+                  className={`mt-1 font-bold uppercase ${critical ? 'text-rose-400' : 'text-app-text/70'} ${expanded ? 'text-[11px]' : 'text-[9px]'}`}
                 >
                   {item.label}
                 </p>
@@ -640,7 +640,7 @@ export function StressPerformanceWave({
             ) : null
           }
           trailing={
-            <span className={`uppercase text-slate-600 ${expanded ? 'text-[10px]' : 'text-[8px]'}`}>
+            <span className={`uppercase text-app-text/45 ${expanded ? 'text-[10px]' : 'text-[8px]'}`}>
               {wave.dayLabel || '—'}
             </span>
           }
@@ -664,7 +664,7 @@ export function StressPerformanceWave({
         </div>
       ) : sessions.length < 2 ? (
         <p
-          className={`text-center uppercase text-slate-600 ${embeddedInOverlay ? 'flex flex-1 items-center justify-center text-xs' : expanded ? 'py-8 text-xs' : 'py-8 text-[9px]'}`}
+          className={`text-center uppercase text-app-text/45 ${embeddedInOverlay ? 'flex flex-1 items-center justify-center text-xs' : expanded ? 'py-8 text-xs' : 'py-8 text-[9px]'}`}
         >
           {wave.source === 'tccc_sim' ? '≥2 TCCC SİMÜLASYON KAYDI GEREKLİ' : 'AYNI GÜN İÇİNDE ≥2 OTURUM GEREKLİ'}
         </p>
@@ -720,7 +720,7 @@ export function StressPerformanceWave({
                       expanded ? 'py-2 text-[10px]' : 'py-1 text-[7px]',
                       isFocus
                         ? 'border-amber-500/60 bg-amber-950/30 font-bold text-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.35)]'
-                        : 'border-transparent text-slate-600 hover:border-emerald-800/50 hover:text-emerald-400',
+                        : 'border-transparent text-app-text/45 hover:border-emerald-800/50 hover:text-emerald-400',
                       focusedLogId && !isFocus ? 'opacity-40' : '',
                     ].join(' ')}
                     onMouseEnter={() => setHoverIdx(i)}
@@ -917,7 +917,7 @@ function HudPanelExpandOverlay({
         </div>
       </div>
 
-      <p className="relative z-10 shrink-0 text-center text-[8px] uppercase tracking-widest text-slate-600">
+      <p className="relative z-10 shrink-0 text-center text-[8px] uppercase tracking-widest text-app-text/45">
         ESC · TAM EKRAN MODU
       </p>
     </div>

@@ -145,8 +145,8 @@ export function getOperatorSessionStatusStyles(key) {
   return {
     row: 'border-slate-700/45 bg-slate-950/45 hover:border-slate-600/55',
     rowSelected: 'border-slate-600/60 bg-slate-900/55 ring-1 ring-slate-600/35',
-    badge: 'border-slate-600/45 bg-slate-900/60 text-slate-500',
-    text: 'text-slate-500',
+    badge: 'border-slate-600/45 bg-slate-900/60 text-app-text/55',
+    text: 'text-app-text/55',
   }
 }
 

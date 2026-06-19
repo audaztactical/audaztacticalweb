@@ -60,11 +60,11 @@ export default function TrainingCategoryHub({ onCategorySelect }) {
   return (
     <div className="space-y-4">
       {canSeeGroupTraining && hasLiveGroupTraining ? (
-        <div className="rounded-lg border border-[#00FF41]/30 bg-[#00FF41]/[0.06] px-4 py-3">
-          <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.3em] text-[#00FF41]/85">
+        <div className="rounded-lg border border-accent/30 bg-accent/[0.06] px-4 py-3">
+          <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.3em] text-accent/85">
             [ EĞİTMEN OTURUMU AKTİF ]
           </p>
-          <p className="mt-1 font-mono-technical text-xs text-slate-300">
+          <p className="mt-1 font-mono-technical text-xs text-app-text/90">
             {activeGroupTrainings.length === 1
               ? `"${activeGroupTrainings[0].trainingName}" canlı — Grup Eğitimi sektöründen katılın.`
               : `${activeGroupTrainings.length} aktif grup eğitimi — Grup Eğitimi sektöründen katılın.`}
@@ -86,13 +86,13 @@ export default function TrainingCategoryHub({ onCategorySelect }) {
       </div>
 
       {profileLoading ? (
-        <p className="font-mono-technical text-[9px] uppercase tracking-wider text-slate-600">
+        <p className="font-mono-technical text-[9px] uppercase tracking-wider text-app-text/45">
           Erişim profili doğrulanıyor…
         </p>
       ) : null}
 
       {!profileLoading && visibleCategories.length < TRAINING_CATEGORIES.length && !isInstructor ? (
-        <p className="font-mono-technical text-[8px] uppercase tracking-[0.2em] text-slate-600">
+        <p className="font-mono-technical text-[8px] uppercase tracking-[0.2em] text-app-text/45">
           Kişisel sektörler açık · grup eğitimi için gruba katılın
         </p>
       ) : null}

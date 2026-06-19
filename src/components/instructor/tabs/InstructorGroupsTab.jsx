@@ -10,7 +10,7 @@ import { emitFirebaseError } from '../../../lib/firebaseErrorBus'
 /** @typedef {import('../../../lib/firestoreGroups').TacticalGroup} TacticalGroup */
 
 const inputClass =
-  'w-full rounded-sm border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-slate-200 outline-none transition-colors focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/25'
+  'w-full rounded-sm border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-app-text outline-none transition-colors focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/25'
 
 /**
  * @param {{
@@ -108,7 +108,7 @@ export default function InstructorGroupsTab({ groups, loading, instructorId }) {
         </p>
         <form onSubmit={handleCreate} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto]">
           <label className="space-y-1.5">
-            <span className="font-mono text-[9px] font-bold uppercase text-slate-500">Grup Adı</span>
+            <span className="font-mono text-[9px] font-bold uppercase text-app-text/55">Grup Adı</span>
             <input
               type="text"
               value={groupName}
@@ -119,7 +119,7 @@ export default function InstructorGroupsTab({ groups, loading, instructorId }) {
             />
           </label>
           <label className="space-y-1.5">
-            <span className="font-mono text-[9px] font-bold uppercase text-slate-500">Katılım Şifresi</span>
+            <span className="font-mono text-[9px] font-bold uppercase text-app-text/55">Katılım Şifresi</span>
             <input
               type="text"
               value={groupPassword}
@@ -153,16 +153,16 @@ export default function InstructorGroupsTab({ groups, loading, instructorId }) {
       </section>
 
       <section className="rounded-xl border border-amber-900/25 bg-slate-950/60 p-4">
-        <p className="mb-4 font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">
+        <p className="mb-4 font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-app-text/70">
           GRUP LİSTESİ · {groups.length} KAYIT
         </p>
         {loading ? (
-          <p className="flex items-center gap-2 py-12 font-mono text-[10px] uppercase text-slate-500">
+          <p className="flex items-center gap-2 py-12 font-mono text-[10px] uppercase text-app-text/55">
             <Loader2 className="size-4 animate-spin text-amber-400" aria-hidden />
             Yükleniyor…
           </p>
         ) : groups.length === 0 ? (
-          <p className="py-10 text-center font-mono text-[10px] uppercase text-slate-600">HENÜZ GRUP YOK</p>
+          <p className="py-10 text-center font-mono text-[10px] uppercase text-app-text/45">HENÜZ GRUP YOK</p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {groups.map((g) => {
@@ -197,7 +197,7 @@ export default function InstructorGroupsTab({ groups, loading, instructorId }) {
                         <button
                           type="button"
                           onClick={cancelEdit}
-                          className="rounded border border-slate-700 px-3 py-1.5 font-mono text-[9px] uppercase text-slate-400"
+                          className="rounded border border-slate-700 px-3 py-1.5 font-mono text-[9px] uppercase text-app-text/70"
                         >
                           İptal
                         </button>
@@ -206,7 +206,7 @@ export default function InstructorGroupsTab({ groups, loading, instructorId }) {
                   ) : (
                     <>
                       <p className="truncate font-mono text-sm font-bold uppercase text-amber-200">{g.groupName}</p>
-                      <p className="mt-1 flex items-center gap-1.5 font-mono text-[9px] text-slate-500">
+                      <p className="mt-1 flex items-center gap-1.5 font-mono text-[9px] text-app-text/55">
                         <Users className="size-3" aria-hidden />
                         {g.members.length} ÜYE
                       </p>
@@ -231,7 +231,7 @@ export default function InstructorGroupsTab({ groups, loading, instructorId }) {
                         <button
                           type="button"
                           onClick={() => startEdit(g)}
-                          className="inline-flex items-center gap-1 rounded border border-slate-700 px-2 py-1 font-mono text-[9px] uppercase text-slate-300 hover:border-amber-700/50"
+                          className="inline-flex items-center gap-1 rounded border border-slate-700 px-2 py-1 font-mono text-[9px] uppercase text-app-text/90 hover:border-amber-700/50"
                           aria-label="Düzenle"
                         >
                           <Edit2 className="size-3.5 text-amber-400" aria-hidden />

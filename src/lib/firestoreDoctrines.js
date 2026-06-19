@@ -103,7 +103,7 @@ export async function fetchAllDoctrinesForAdmin() {
  */
 export async function addDoctrine(data) {
   if (!isFirebaseConfigured() || !db) throw new Error('Firebase yapılandırılmadı')
-  assertCanManageAdminContent(auth?.currentUser ?? null)
+  await assertCanManageAdminContent(auth?.currentUser ?? null)
 
   const payload = {
     title: data.title.trim(),
@@ -130,7 +130,7 @@ export async function addDoctrine(data) {
  */
 export async function updateDoctrine(id, data) {
   if (!isFirebaseConfigured() || !db) throw new Error('Firebase yapılandırılmadı')
-  assertCanManageAdminContent(auth?.currentUser ?? null)
+  await assertCanManageAdminContent(auth?.currentUser ?? null)
 
   const existingSnap = await getDoc(doc(db, 'doktrinler', id))
   const wasPublic = existingSnap.exists() && existingSnap.data()?.isPublic === true
@@ -153,6 +153,6 @@ export async function updateDoctrine(id, data) {
 
 export async function deleteDoctrine(id) {
   if (!isFirebaseConfigured() || !db) throw new Error('Firebase yapılandırılmadı')
-  assertCanManageAdminContent(auth?.currentUser ?? null)
+  await assertCanManageAdminContent(auth?.currentUser ?? null)
   await deleteDoc(doc(db, 'doktrinler', id))
 }

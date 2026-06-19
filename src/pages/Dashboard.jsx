@@ -247,7 +247,7 @@ export default function Dashboard() {
                 <RowSkeleton rows={4} />
               ) : displayMissions.length === 0 ? (
                 <div className="cmd-empty">
-                  <ClipboardList className="size-8 text-slate-600" strokeWidth={1.25} aria-hidden />
+                  <ClipboardList className="size-8 text-app-text/45" strokeWidth={1.25} aria-hidden />
                   <p className="cmd-empty__title">Aktif görev kaydı yok</p>
                   <p className="cmd-empty__text">Yeni operasyon oluşturduğunuzda burada görünecek.</p>
                   <Link to="/gorevler" className="cmd-action-btn cmd-action-btn--inline mt-2">

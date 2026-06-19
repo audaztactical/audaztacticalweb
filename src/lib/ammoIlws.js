@@ -52,6 +52,13 @@ export function getCriticalThreshold(row) {
   return t > 0 ? Math.floor(t) : DEFAULT_CRITICAL_THRESHOLD
 }
 
+/** @param {Record<string, unknown>} row */
+export function getAmmoUnitPrice(row) {
+  const price = invNum(row.unitPrice ?? row.unit_price ?? row.birimFiyat)
+  if (!Number.isFinite(price) || price < 0) return 0
+  return Math.round(price * 100) / 100
+}
+
 /** @param {number} stock @param {number} threshold */
 export function getSafetyMarginPercent(stock, threshold) {
   const denom = threshold * 3
@@ -78,14 +85,17 @@ export function getAmmoTransactionLogs(row) {
   for (const entry of raw) {
     if (!entry || typeof entry !== 'object') continue
     const o = /** @type {Record<string, unknown>} */ (entry)
-    logs.push({
+    /** @type {AmmoTransactionLogEntry} */
+    const parsed = {
       date: invStr(o.date).slice(0, 10) || '—',
       type: invStr(o.type ?? o.transactionType).trim() || AMMO_TX_TYPES.SUPPLY,
       amount: Math.floor(invNum(o.amount ?? o.quantity ?? o.delta)),
       note: invStr(o.note ?? o.supplier ?? o.description).trim(),
-      rangeLogId: invStr(o.rangeLogId).trim() || undefined,
-      balanceAfter: o.balanceAfter != null ? Math.floor(invNum(o.balanceAfter)) : undefined,
-    })
+    }
+    const rangeLogId = invStr(o.rangeLogId).trim()
+    if (rangeLogId) parsed.rangeLogId = rangeLogId
+    if (o.balanceAfter != null) parsed.balanceAfter = Math.floor(invNum(o.balanceAfter))
+    logs.push(parsed)
   }
   return logs.sort((a, b) => invStr(b.date).localeCompare(invStr(a.date)))
 }

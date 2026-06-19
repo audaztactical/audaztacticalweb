@@ -9,7 +9,7 @@ import InstructorGroupTrainingFeed from '../InstructorGroupTrainingFeed'
 /** @typedef {import('../../../lib/instructorRoster').SquadRosterRow} SquadRosterRow */
 
 const inputClass =
-  'w-full rounded-sm border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-slate-200 outline-none focus:border-amber-500/60'
+  'w-full rounded-sm border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-app-text outline-none focus:border-amber-500/60'
 
 /**
  * @param {{
@@ -43,7 +43,7 @@ export default function InstructorOperatorsTab({ groups, operators, activityLogs
         <p className="font-mono text-[9px] font-bold uppercase tracking-[0.24em] text-amber-500">
           Operatör Raporlama
         </p>
-        <p className="mt-1 font-mono text-[10px] uppercase text-slate-500">
+        <p className="mt-1 font-mono text-[10px] uppercase text-app-text/55">
           Eğitmen notları · başarı seviyeleri · grup aktivite feed — tek merkez
         </p>
       </header>
@@ -62,19 +62,19 @@ export default function InstructorOperatorsTab({ groups, operators, activityLogs
       </div>
 
       {loading ? (
-        <p className="flex items-center gap-2 py-12 font-mono text-[10px] uppercase text-slate-500">
+        <p className="flex items-center gap-2 py-12 font-mono text-[10px] uppercase text-app-text/55">
           <Loader2 className="size-4 animate-spin text-amber-400" aria-hidden />
           Kadro yükleniyor…
         </p>
       ) : filtered.length === 0 ? (
-        <p className="py-12 text-center font-mono text-[10px] uppercase text-slate-600">
+        <p className="py-12 text-center font-mono text-[10px] uppercase text-app-text/45">
           {roster.length === 0 ? 'GRUPLARA KATILMIŞ OPERATÖR YOK' : 'EŞLEŞEN OPERATÖR YOK'}
         </p>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-amber-900/25">
           <table className="w-full min-w-[640px] border-collapse font-mono text-[10px] uppercase">
             <thead>
-              <tr className="border-b border-slate-800 bg-black/40 text-left text-slate-500">
+              <tr className="border-b border-slate-800 bg-black/40 text-left text-app-text/55">
                 <th className="px-3 py-2">Callsign</th>
                 <th className="px-3 py-2">Kullanıcı</th>
                 <th className="px-3 py-2">Gruplar</th>
@@ -90,8 +90,8 @@ export default function InstructorOperatorsTab({ groups, operators, activityLogs
                   onClick={() => setSelected(row)}
                 >
                   <td className="px-3 py-2.5 font-bold text-amber-200">{row.callsign}</td>
-                  <td className="px-3 py-2.5 text-slate-400">@{row.username || row.uid.slice(0, 8)}</td>
-                  <td className="max-w-[200px] truncate px-3 py-2.5 text-slate-500">{row.groupNames.join(' · ')}</td>
+                  <td className="px-3 py-2.5 text-app-text/70">@{row.username || row.uid.slice(0, 8)}</td>
+                  <td className="max-w-[200px] truncate px-3 py-2.5 text-app-text/55">{row.groupNames.join(' · ')}</td>
                   <td className="px-3 py-2.5 tabular-nums text-sky-400">{row.totalSessions}</td>
                   <td className="px-3 py-2.5 font-bold tabular-nums text-emerald-400">%{row.overallSuccess}</td>
                 </tr>
@@ -115,13 +115,13 @@ export default function InstructorOperatorsTab({ groups, operators, activityLogs
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
                 <p className="font-mono text-[9px] uppercase tracking-wider text-amber-500">TAKTİK PROFİL</p>
-                <h3 className="mt-1 font-mono text-lg font-bold uppercase text-white">{selected.callsign}</h3>
-                <p className="font-mono text-[10px] text-slate-500">@{selected.username}</p>
+                <h3 className="mt-1 font-mono text-lg font-bold uppercase text-app-text">{selected.callsign}</h3>
+                <p className="font-mono text-[10px] text-app-text/55">@{selected.username}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setSelected(null)}
-                className="rounded border border-slate-700 p-1 text-slate-400 hover:text-white"
+                className="rounded border border-slate-700 p-1 text-app-text/70 hover:text-app-text"
                 aria-label="Kapat"
               >
                 <X className="size-4" aria-hidden />
@@ -130,11 +130,11 @@ export default function InstructorOperatorsTab({ groups, operators, activityLogs
 
             <div className="grid grid-cols-2 gap-2">
               <div className="rounded border border-slate-800 bg-black/40 p-3">
-                <p className="font-mono text-[8px] uppercase text-slate-500">Toplam Oturum</p>
+                <p className="font-mono text-[8px] uppercase text-app-text/55">Toplam Oturum</p>
                 <p className="mt-1 font-mono text-xl font-black text-sky-400">{selected.totalSessions}</p>
               </div>
               <div className="rounded border border-slate-800 bg-black/40 p-3">
-                <p className="font-mono text-[8px] uppercase text-slate-500">Genel Başarı</p>
+                <p className="font-mono text-[8px] uppercase text-app-text/55">Genel Başarı</p>
                 <p className="mt-1 font-mono text-xl font-black text-emerald-400">%{selected.overallSuccess}</p>
               </div>
             </div>
@@ -144,13 +144,13 @@ export default function InstructorOperatorsTab({ groups, operators, activityLogs
                 <User className="size-3.5" aria-hidden />
                 Aktif Gruplar
               </p>
-              <ul className="space-y-1 font-mono text-[10px] uppercase text-slate-300">
+              <ul className="space-y-1 font-mono text-[10px] uppercase text-app-text/90">
                 {selected.groupNames.map((name) => (
                   <li key={name}>• {name}</li>
                 ))}
               </ul>
             </div>
-            <p className="mt-3 font-mono text-[8px] uppercase text-slate-600">
+            <p className="mt-3 font-mono text-[8px] uppercase text-app-text/45">
               Metrikler yalnızca group_activity_logs akademik kayıtlarından türetilir.
             </p>
           </div>

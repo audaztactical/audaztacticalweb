@@ -218,7 +218,7 @@ export function extractEgitimFocusOptions(plans) {
 export function difficultyToneClass(difficultyKey) {
   const k = String(difficultyKey || '').trim()
   if (k === 'red_hardcore') return 'text-red-400'
-  if (k === 'amber_medium') return 'text-[#ffb400]'
-  if (k === 'green_low') return 'text-[#00FF41]'
-  return 'text-slate-300'
+  if (k === 'amber_medium') return 'text-accent'
+  if (k === 'green_low') return 'text-accent'
+  return 'text-app-text/90'
 }

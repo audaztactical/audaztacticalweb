@@ -6,7 +6,22 @@ import {
   hasProcessedRangeLog,
 } from './ammoIlws'
 import { invNum, invStr } from './inventoryIlws'
+import { sanitizeForFirestore } from './firestoreSanitize'
 import { todayIsoDate, weaponDisplayName } from './weaponIlws'
+
+/** @param {import('./ammoIlws').AmmoTransactionLogEntry} entry */
+function serializeAmmoTransactionLog(entry) {
+  /** @type {Record<string, unknown>} */
+  const out = {
+    date: entry.date,
+    type: entry.type,
+    amount: entry.amount,
+    note: entry.note,
+  }
+  if (entry.rangeLogId) out.rangeLogId = entry.rangeLogId
+  if (entry.balanceAfter != null) out.balanceAfter = entry.balanceAfter
+  return out
+}
 
 /** @param {unknown} ts */
 function logDateFromRow(ts) {
@@ -48,13 +63,18 @@ export async function applyTrainingAmmoDeduction({ updateItem, ammo, rounds, ran
   }
   const prevLogs = getAmmoTransactionLogs(ammo)
 
-  await updateItem(id, {
-    current_stock: nextStock,
-    quantity: nextStock,
-    ammo_transaction_logs: [entry, ...prevLogs],
-    auditLogCode: 'CEP_GNC',
-    auditLogMsg: `MHM_HARCAMA · −${deduct} · ${weaponLabel}`,
-  })
+  await updateItem(
+    id,
+    /** @type {Record<string, unknown>} */ (
+      sanitizeForFirestore({
+        current_stock: nextStock,
+        quantity: nextStock,
+        ammo_transaction_logs: [serializeAmmoTransactionLog(entry), ...prevLogs.map(serializeAmmoTransactionLog)],
+        auditLogCode: 'CEP_GNC',
+        auditLogMsg: `MHM_HARCAMA · −${deduct} · ${weaponLabel}`,
+      })
+    )
+  )
 }
 
 /**
@@ -120,11 +140,16 @@ export async function applyAmmoSupply({ updateItem, ammo, amount, note, date }) 
   }
   const prevLogs = getAmmoTransactionLogs(ammo)
 
-  await updateItem(id, {
-    current_stock: nextStock,
-    quantity: nextStock,
-    ammo_transaction_logs: [entry, ...prevLogs],
-    auditLogCode: 'CEP_GNC',
-    auditLogMsg: `MHM_İKMAL · +${add}`,
-  })
+  await updateItem(
+    id,
+    /** @type {Record<string, unknown>} */ (
+      sanitizeForFirestore({
+        current_stock: nextStock,
+        quantity: nextStock,
+        ammo_transaction_logs: [serializeAmmoTransactionLog(entry), ...prevLogs.map(serializeAmmoTransactionLog)],
+        auditLogCode: 'CEP_GNC',
+        auditLogMsg: `MHM_İKMAL · +${add}`,
+      })
+    )
+  )
 }

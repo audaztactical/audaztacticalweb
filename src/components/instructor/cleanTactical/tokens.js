@@ -19,7 +19,7 @@ export const ctNavBtn = (active) =>
 
 export const ctMainPanel = 'min-w-0 flex-1 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 sm:p-6'
 
-export const ctBentoGrid = 'grid gap-4 lg:grid-cols-12 lg:gap-5'
+export const ctBentoGrid = 'grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-5'
 export const ctBentoSpan7 = 'lg:col-span-7'
 export const ctBentoSpan5 = 'lg:col-span-5'
 export const ctBentoSpan12 = 'lg:col-span-12'

@@ -137,7 +137,7 @@ function OperationTimingLine({ status, elapsedTime, remainingTime, overtime, tim
   const isTimeoutFailure = status === 'BAŞARISIZ' && (timedOut || overtimeSec > 0)
 
   return (
-    <p className="font-mono text-xs uppercase text-slate-400">
+    <p className="font-mono text-xs uppercase text-app-text/70">
       <span className="text-amber-600/90">HAT 10 - OPERASYON SÜRESİ:</span>
       {status === 'BAŞARILI' ? (
         <span className="ml-2 font-mono text-xs text-emerald-400">
@@ -244,7 +244,7 @@ function SimulationDetailPanel({ log }) {
   }
 
   return (
-    <div className="border-t border-emerald-500/20 bg-slate-950/80 px-4 py-4 font-mono text-[10px] leading-relaxed text-slate-300">
+    <div className="border-t border-emerald-500/20 bg-slate-950/80 px-4 py-4 font-mono text-[10px] leading-relaxed text-app-text/90">
       <p className="mb-3 font-bold uppercase tracking-wider text-emerald-500/90">[ TÜM DETAYLAR / GÖNDERİLEN YÜK ]</p>
 
       <div className="min-w-0 space-y-3 overflow-hidden">
@@ -258,7 +258,7 @@ function SimulationDetailPanel({ log }) {
                 {...timingProps}
               />
             ) : (
-              <p className="text-slate-500">Kayıtlı 9-Line yükü yok.</p>
+              <p className="text-app-text/55">Kayıtlı 9-Line yükü yok.</p>
             )}
             <SimulationDebriefLog
               status={log.status}
@@ -274,7 +274,7 @@ function SimulationDetailPanel({ log }) {
             {mist && typeof mist === 'object' ? (
               <MistDetail mist={/** @type {Record<string, unknown>} */ (mist)} {...timingProps} />
             ) : (
-              <p className="text-slate-500">Kayıtlı MIST yükü yok.</p>
+              <p className="text-app-text/55">Kayıtlı MIST yükü yok.</p>
             )}
             <SimulationDebriefLog
               status={log.status}
@@ -287,8 +287,8 @@ function SimulationDetailPanel({ log }) {
       )}
 
       {toStr(row.operationNote) ? (
-        <p className="text-slate-500">
-          <span className="text-slate-600">OPERASYON NOTU: </span>
+        <p className="text-app-text/55">
+          <span className="text-app-text/45">OPERASYON NOTU: </span>
           {toStr(row.operationNote)}
         </p>
       ) : null}
@@ -303,7 +303,7 @@ function SimulationDetailPanel({ log }) {
 function DetailBlock({ title, children }) {
   return (
     <div>
-      <p className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-500">{title}</p>
+      <p className="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-app-text/55">{title}</p>
       {children}
     </div>
   )
@@ -567,7 +567,7 @@ function parseHat9CbrnTerrain(cbrnTerrainRaw, simForm) {
  */
 function NineLineReadoutRow({ label, value }) {
   return (
-    <li className="text-slate-400">
+    <li className="text-app-text/70">
       <span className="text-amber-600/90">{label}</span>
       <span className="ml-2 font-mono text-xs text-amber-400">{value}</span>
     </li>
@@ -645,7 +645,7 @@ function NineLineDetail({ rawNineLine, simForm, ...timingProps }) {
 function MistDetail({ mist, ...timingProps }) {
   const m = mist.mist && typeof mist.mist === 'object' ? mist.mist : mist
   return (
-    <ul className="list-none space-y-1 text-slate-400">
+    <ul className="list-none space-y-1 text-app-text/70">
       <li>
         <span className="text-red-500/90">YARALI SAYISI:</span> {toStr(mist.casualtyCount) || '—'}
       </li>
@@ -693,7 +693,7 @@ export default function SimulationHistory({ rangeLogs, loading = false }) {
 
   if (loading && tableRows.length === 0) {
     return (
-      <p className="py-12 text-center font-mono text-[10px] uppercase tracking-wider text-slate-600">
+      <p className="py-12 text-center font-mono text-[10px] uppercase tracking-wider text-app-text/45">
         SİMÜLASYON ARŞİVİ YÜKLENİYOR…
       </p>
     )
@@ -703,7 +703,7 @@ export default function SimulationHistory({ rangeLogs, loading = false }) {
     return (
       <div className="flex min-h-[220px] flex-col items-center justify-center rounded-xl border border-dashed border-emerald-500/25 bg-slate-950/60">
         <History className="size-10 text-emerald-500/25" aria-hidden />
-        <p className="mt-3 font-mono text-[10px] uppercase tracking-wider text-slate-600">
+        <p className="mt-3 font-mono text-[10px] uppercase tracking-wider text-app-text/45">
           SİMÜLASYON GEÇMİŞ KAYDI YOK
         </p>
         <p className="mt-1 max-w-md text-center font-mono text-[9px] uppercase text-slate-700">
@@ -715,7 +715,7 @@ export default function SimulationHistory({ rangeLogs, loading = false }) {
 
   return (
     <section aria-label="Simülasyon geçmiş kayıtları" className="space-y-3">
-      <p className="font-mono text-[10px] uppercase tracking-wider text-slate-500">
+      <p className="font-mono text-[10px] uppercase tracking-wider text-app-text/55">
         TAKTİK DEBRİEF LOG · {tableRows.length} KAYIT
       </p>
 
@@ -748,14 +748,14 @@ export default function SimulationHistory({ rangeLogs, loading = false }) {
                     <td className="px-3 py-3 align-middle">
                       <ModBadge mode={log.mode} />
                     </td>
-                    <td className="px-3 py-3 align-middle text-slate-400">{log.timestampLabel}</td>
+                    <td className="px-3 py-3 align-middle text-app-text/70">{log.timestampLabel}</td>
                     <td className="px-3 py-3 align-middle">
                       <StatusBadge status={log.status} />
                     </td>
                     <td className="px-3 py-3 align-middle">
                       <ReactionPerformanceCell status={log.status} efficiency={log.efficiency} />
                     </td>
-                    <td className="px-3 py-3 align-middle text-center text-slate-500">
+                    <td className="px-3 py-3 align-middle text-center text-app-text/55">
                       <span className="inline-flex items-center justify-center gap-1 font-mono text-[9px] uppercase tracking-wider">
                         {open ? (
                           <>

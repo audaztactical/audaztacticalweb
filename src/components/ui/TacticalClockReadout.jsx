@@ -25,20 +25,20 @@ export default function TacticalClockReadout({ className = '', showCoords = fals
       aria-atomic="true"
     >
       <span className="text-emerald-500/55">YEREL</span>{' '}
-      <span className="text-[#00FF41]/80">SAAT:</span>{' '}
-      <span className="font-semibold text-white/90">{localHms}</span>
-      <span className="mx-2 text-white/20" aria-hidden>
+      <span className="text-accent/80">SAAT:</span>{' '}
+      <span className="font-semibold text-app-text/90">{localHms}</span>
+      <span className="mx-2 text-app-text/20" aria-hidden>
         │
       </span>
-      <span className="text-[#ffb400]/65">TARİH:</span>{' '}
-      <span className="text-white/80">{opDate}</span>
+      <span className="text-accent/65">TARİH:</span>{' '}
+      <span className="text-app-text/80">{opDate}</span>
       {showCoords ? (
         <>
-          <span className="mx-2 text-white/20" aria-hidden>
+          <span className="mx-2 text-app-text/20" aria-hidden>
             │
           </span>
           <span className="text-red-400/45">KONUM</span>{' '}
-          <span className="text-slate-500">
+          <span className="text-app-text/55">
             {lat}°N {lon}°E
           </span>
         </>

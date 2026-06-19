@@ -1,7 +1,8 @@
-import { useId } from 'react'
+import { useId, useMemo } from 'react'
 import TacticalPanel from '../ui/TacticalPanel'
+import { useTheme } from '../../contexts/ThemeContext'
+import { getAccentColor } from '../../lib/themeColors'
 
-const CYBER_GREEN = '#00FF41'
 const TACTIC_AMBER = '#f59e0b'
 const COMBAT_RED = '#FF0000'
 
@@ -11,6 +12,8 @@ const COMBAT_RED = '#FF0000'
  */
 export default function OrsReadinessGauge({ score, penalties, loading, embedded = false }) {
   const gid = useId().replace(/:/g, '')
+  const { themeClass } = useTheme()
+  const accentColor = useMemo(() => getAccentColor(), [themeClass])
   const cx = 100
   const cy = 80
   const r = 68
@@ -26,18 +29,18 @@ export default function OrsReadinessGauge({ score, penalties, loading, embedded 
   const isCritical = score < 50
 
   const strokeTrack = 'rgba(255,255,255,0.1)'
-  let glow = `drop-shadow(0 0 16px ${CYBER_GREEN}99)`
+  let glow = `drop-shadow(0 0 16px color-mix(in srgb, ${accentColor} 60%, transparent))`
   let statusLine = 'DURUM: GÖREVE HAZIR'
-  let titleAccent = 'text-[#00FF41]/90'
-  let scoreColor = 'text-[#00FF41]'
-  let fillStart = CYBER_GREEN
+  let titleAccent = 'text-accent/90'
+  let scoreColor = 'text-accent'
+  let fillStart = accentColor
 
   if (isMarginal) {
     fillStart = TACTIC_AMBER
     glow = 'drop-shadow(0 0 14px rgba(245,158,11,0.55))'
     statusLine = 'DURUM: DİKKAT - SINIRDA HAZIR'
-    titleAccent = 'text-[#ffb400]/90'
-    scoreColor = 'text-[#ffb400]'
+    titleAccent = 'text-accent/90'
+    scoreColor = 'text-accent'
   }
   if (isCritical) {
     fillStart = COMBAT_RED
@@ -53,14 +56,14 @@ export default function OrsReadinessGauge({ score, penalties, loading, embedded 
     <>
       <div className="pointer-events-none flex flex-col items-center text-center">
         <p className={`font-mono-technical text-[10px] font-bold uppercase tracking-[0.45em] ${titleAccent}`}>OHP</p>
-        <p className="mt-1.5 font-mono-technical text-[9px] uppercase tracking-[0.22em] text-slate-600">
+        <p className="mt-1.5 font-mono-technical text-[9px] uppercase tracking-[0.22em] text-app-text/45">
           OPERASYONEL_HAZIRLIK_PUANI
         </p>
       </div>
 
       <div className="relative mx-auto mt-1 flex h-[148px] w-full max-w-[300px] items-start justify-center">
         {loading ? (
-          <div className="absolute inset-0 z-[2] flex items-center justify-center rounded-lg bg-black/35 font-mono-technical text-[10px] uppercase tracking-widest text-slate-500 backdrop-blur-[1px]">
+          <div className="absolute inset-0 z-[2] flex items-center justify-center rounded-lg bg-black/35 font-mono-technical text-[10px] uppercase tracking-widest text-app-text/55 backdrop-blur-[1px]">
             HESAPLANIYOR...
           </div>
         ) : null}
@@ -89,19 +92,19 @@ export default function OrsReadinessGauge({ score, penalties, loading, embedded 
         </svg>
         <div className="pointer-events-none absolute bottom-2 left-1/2 flex -translate-x-1/2 flex-col items-center">
           <span className={`font-mono-technical text-5xl font-black tabular-nums leading-none tracking-tight ${scoreColor}`}>{score}</span>
-          <span className="mt-1 font-mono-technical text-[10px] text-slate-600">/ 100</span>
+          <span className="mt-1 font-mono-technical text-[10px] text-app-text/45">/ 100</span>
         </div>
       </div>
 
       <p
-        className={`mt-3 text-center font-mono-technical text-[10px] font-bold uppercase leading-snug tracking-[0.06em] ${isReady ? 'text-[#00FF41]' : ''} ${isMarginal ? 'text-amber-400' : ''} ${isCritical ? 'text-[#FF0000]' : ''}`}
+        className={`mt-3 text-center font-mono-technical text-[10px] font-bold uppercase leading-snug tracking-[0.06em] ${isReady ? 'text-accent' : ''} ${isMarginal ? 'text-amber-400' : ''} ${isCritical ? 'text-[#FF0000]' : ''}`}
       >
         {statusLine}
       </p>
 
       <div className="mt-4 space-y-1 border-t border-white/10 pt-3">
         {penalties.length === 0 ? (
-          <p className="text-center font-mono-technical text-[9px] uppercase tracking-wider text-[#00FF41]/75">
+          <p className="text-center font-mono-technical text-[9px] uppercase tracking-wider text-accent/75">
             HATA_KUYRUĞU: TEMİZ · PUAN_KESİNTİSİ_YOK
           </p>
         ) : (
@@ -111,8 +114,8 @@ export default function OrsReadinessGauge({ score, penalties, loading, embedded 
               className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-1 text-[9px] sm:justify-between"
             >
               <span className="font-mono-technical text-[#FF0000]/95">{pen.code}</span>
-              <span className="font-mono-technical tabular-nums text-slate-500">{pen.detail}</span>
-              <span className="font-mono-technical tabular-nums text-slate-600">{pen.delta} PUAN</span>
+              <span className="font-mono-technical tabular-nums text-app-text/55">{pen.detail}</span>
+              <span className="font-mono-technical tabular-nums text-app-text/45">{pen.delta} PUAN</span>
             </div>
           ))
         )}

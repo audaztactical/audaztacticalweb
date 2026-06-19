@@ -13,11 +13,11 @@ export default function Input({
   const inputId = id ?? props.name
 
   const goldBase = [
-    'h-10 w-full rounded-lg border bg-black/50 px-3 text-sm text-white placeholder:text-slate-600',
+    'h-10 w-full rounded-lg border bg-black/50 px-3 text-sm text-app-text placeholder:text-app-text/45',
     'ring-0 transition-colors focus:outline-none focus:ring-2',
     error
       ? 'border-amber-500/70 focus:border-amber-400 focus:ring-amber-500/25'
-      : 'border-white/15 focus:border-[#ffb400]/60 focus:ring-[#ffb400]/20',
+      : 'border-white/15 focus:border-accent/60 focus:ring-accent/20',
   ]
   if (select) {
     goldBase.push(
@@ -27,7 +27,7 @@ export default function Input({
   }
 
   const defaultBase = [
-    'h-10 w-full rounded-lg border border-slate-700/90 bg-slate-900 px-3 text-sm text-slate-100 placeholder:text-slate-500',
+    'h-10 w-full rounded-lg border border-slate-700/90 bg-slate-900 px-3 text-sm text-slate-100 placeholder:text-app-text/55',
     'ring-0 transition-colors',
     'focus:border-emerald-500/70 focus:outline-none focus:ring-2 focus:ring-emerald-500/35',
     error && 'border-orange-500/80 focus:border-orange-500 focus:ring-orange-500/30',
@@ -41,8 +41,8 @@ export default function Input({
 
   const labelClass =
     variant === 'gold'
-      ? 'text-[10px] font-bold uppercase tracking-widest text-[#d4af37]/90'
-      : 'text-xs font-semibold uppercase tracking-wide text-slate-500'
+      ? 'text-[10px] font-bold uppercase tracking-widest text-accent/90'
+      : 'text-xs font-semibold uppercase tracking-wide text-app-text/55'
 
   const errorClass =
     variant === 'gold'
@@ -67,7 +67,7 @@ export default function Input({
         </label>
       )}
       {field}
-      {hint && !error && <p className="text-xs text-slate-500">{hint}</p>}
+      {hint && !error && <p className="text-xs text-app-text/55">{hint}</p>}
       {error && <p className={errorClass}>{error}</p>}
     </div>
   )

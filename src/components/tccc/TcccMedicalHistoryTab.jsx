@@ -1,47 +1,73 @@
 import { useMemo, useState } from 'react'
-import { Archive, ChevronDown, ChevronUp } from 'lucide-react'
+import { Archive, ChevronDown, ChevronUp, FileDown, Stethoscope } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
+import {
+  countCasualtyMarchInterventions,
+  evacPriorityTone,
+  formatCasualtyCardDate,
+  getCasualtyAllergies,
+  getCasualtyAppliedTreatmentsNote,
+  getCasualtyEvacPriority,
+  getCasualtyEvacPriorityLabel,
+  getCasualtyMarchSections,
+  getCasualtyMarchStep,
+  getCasualtyMarchStepMeta,
+  getCasualtyMechanismOfInjury,
+  getCasualtyOperationNote,
+  getCasualtyPatientName,
+  getCasualtyBloodTypeLabel,
+  sortCasualtyCardsDesc,
+} from '../../lib/casualtyCardRegistry'
+import { generateCasualtyCardReportPdf } from '../../lib/casualtyCardReportPdf'
 
-/** @param {unknown} v */
-function toStr(v) {
-  return typeof v === 'string' ? v : v == null ? '' : String(v)
+const EVAC_BADGE = {
+  urgent: 'border-red-500/50 bg-red-950/50 text-red-400 shadow-[0_0_12px_-4px_rgba(239,68,68,0.5)]',
+  priority: 'border-accent/45 bg-accent/10 text-accent shadow-[0_0_12px_-4px_rgba(255,180,0,0.35)]',
+  routine: 'border-accent/30 bg-accent/8 text-accent/80',
 }
 
-/** @param {unknown} row */
-function entrySortMs(row) {
-  const u = row.updatedAt ?? row.createdAt ?? row.timestamp
-  if (u && typeof u.toMillis === 'function') return u.toMillis()
-  if (typeof u === 'string') {
-    const t = Date.parse(u)
-    return Number.isNaN(t) ? 0 : t
-  }
-  return 0
-}
-
-/** @param {unknown} ts */
-function formatTs(ts) {
-  if (ts && typeof ts.toDate === 'function') {
-    return ts.toDate().toLocaleString('tr-TR')
-  }
-  const s = toStr(ts)
-  if (!s) return '—'
-  const d = new Date(s)
-  return Number.isNaN(d.getTime()) ? s : d.toLocaleString('tr-TR')
+const MARCH_STEP_BADGE = {
+  M: 'border-red-500/40 bg-red-950/40 text-red-400',
+  A: 'border-amber-500/35 bg-amber-950/35 text-amber-400',
+  R: 'border-sky-500/40 bg-sky-950/40 text-sky-400',
+  C: 'border-emerald-500/35 bg-emerald-950/35 text-emerald-400',
+  H: 'border-cyan-500/35 bg-cyan-950/35 text-cyan-400',
 }
 
 /**
  * @param {{ cards: Record<string, unknown>[]; loading: boolean }} props
  */
 export default function TcccMedicalHistoryTab({ cards, loading }) {
+  const { user, userData } = useAuth()
   const [expandedId, setExpandedId] = useState(/** @type {string | null} */ (null))
+  const [pdfBusyId, setPdfBusyId] = useState(/** @type {string | null} */ (null))
 
-  const sorted = useMemo(
-    () => [...cards].sort((a, b) => entrySortMs(b) - entrySortMs(a)),
-    [cards]
+  const sorted = useMemo(() => sortCasualtyCardsDesc(cards), [cards])
+
+  const operator = useMemo(
+    () => ({
+      callsign: (userData?.callsign || user?.displayName || 'Operatör').trim(),
+      username: userData?.username,
+      email: user?.email ?? undefined,
+      bloodType: userData?.bloodType,
+    }),
+    [user, userData],
   )
+
+  /** @param {Record<string, unknown>} row */
+  const handleDownloadPdf = async (row) => {
+    if (!row?.id || pdfBusyId) return
+    setPdfBusyId(String(row.id))
+    try {
+      await generateCasualtyCardReportPdf({ cards: [row], operator })
+    } finally {
+      setPdfBusyId(null)
+    }
+  }
 
   if (loading && sorted.length === 0) {
     return (
-      <p className="py-12 text-center font-mono-technical text-[10px] uppercase text-slate-600">
+      <p className="py-12 text-center font-mono-technical text-[10px] uppercase text-app-text/45">
         ARŞİV YÜKLENİYOR…
       </p>
     )
@@ -49,9 +75,9 @@ export default function TcccMedicalHistoryTab({ cards, loading }) {
 
   if (sorted.length === 0) {
     return (
-      <div className="flex min-h-[200px] flex-col items-center justify-center rounded-xl border border-dashed border-[#ffb400]/25 bg-black/40">
-        <Archive className="size-12 text-[#ffb400]/30" aria-hidden />
-        <p className="mt-3 font-mono-technical text-[10px] uppercase text-slate-600">
+      <div className="flex min-h-[200px] flex-col items-center justify-center rounded-xl border border-dashed border-accent/25 bg-black/40">
+        <Archive className="size-12 text-accent/30" aria-hidden />
+        <p className="mt-3 font-mono-technical text-[10px] uppercase text-app-text/45">
           KAYITLI YARALI KARTI YOK
         </p>
       </div>
@@ -59,58 +85,188 @@ export default function TcccMedicalHistoryTab({ cards, loading }) {
   }
 
   return (
-    <ul className="space-y-2">
-      {sorted.map((row) => {
-        const open = expandedId === row.id
-        const march = row.march && typeof row.march === 'object' ? row.march : null
-        return (
-          <li
-            key={row.id}
-            className="rounded-xl border border-[#00FF41]/20 bg-black/50 font-mono-technical text-xs"
-          >
-            <button
-              type="button"
-              onClick={() => setExpandedId(open ? null : row.id)}
-              className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-3 border-b border-accent/12 pb-2">
+        <div>
+          <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-accent/90">
+            YARALI ARŞİVİ · OPERASYONEL KAYIT
+          </p>
+          <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-app-text/45">
+            casualty_cards · {sorted.length} kayıt · DD-1380
+          </p>
+        </div>
+      </div>
+
+      <ul className="space-y-2">
+        {sorted.map((row) => {
+          const id = String(row.id ?? '')
+          const open = expandedId === id
+          const evac = getCasualtyEvacPriority(row)
+          const evacTone = evacPriorityTone(evac)
+          const marchStep = getCasualtyMarchStep(row)
+          const marchMeta = getCasualtyMarchStepMeta(row)
+          const marchCount = countCasualtyMarchInterventions(row)
+          const sections = getCasualtyMarchSections(row)
+          const treatments = getCasualtyAppliedTreatmentsNote(row)
+          const opNote = getCasualtyOperationNote(row)
+          const hasNotes = treatments !== '—' || opNote !== '—'
+          const pdfBusy = pdfBusyId === id
+
+          return (
+            <li
+              key={id}
+              className="overflow-hidden rounded-xl border border-accent/15 bg-gradient-to-br from-[#0a0a0a] to-black/80 font-mono-technical shadow-[inset_0_1px_0_rgba(0,255,65,0.06)]"
             >
-              <div className="min-w-0">
-                <p className="truncate font-bold uppercase text-[#ffb400]">
-                  {toStr(row.patientName || row.title) || 'YARALI'}
-                </p>
-                <p className="mt-0.5 text-[9px] text-slate-500">
-                  {toStr(row.activeMarchStep)} · {toStr(row.evacPriority)} · {formatTs(row.timestamp ?? row.updatedAt)}
-                </p>
+              <div className="flex items-stretch">
+                <button
+                  type="button"
+                  onClick={() => setExpandedId(open ? null : id)}
+                  className="flex min-w-0 flex-1 items-center gap-3 px-4 py-3 text-left transition hover:bg-white/[0.02]"
+                >
+                  <div className="hidden shrink-0 flex-col items-start gap-1 sm:flex">
+                    <span className="font-mono-technical text-[8px] uppercase tracking-wider text-app-text/55">
+                      {formatCasualtyCardDate(row).split(' ')[0]}
+                    </span>
+                    <span className="font-mono-technical text-[10px] font-bold tabular-nums text-app-text/90">
+                      {formatCasualtyCardDate(row).split(' ').slice(1).join(' ') || '—'}
+                    </span>
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={`inline-flex rounded border px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider ${EVAC_BADGE[evacTone]}`}
+                      >
+                        {getCasualtyEvacPriorityLabel(row)}
+                      </span>
+                      <span
+                        className={`inline-flex rounded border px-2 py-0.5 text-[8px] font-bold uppercase ${MARCH_STEP_BADGE[marchStep]}`}
+                      >
+                        {marchStep} · {marchMeta.subtitle}
+                      </span>
+                      {marchCount.done > 0 ? (
+                        <span className="text-[8px] uppercase text-app-text/45">
+                          {marchCount.done} müdahale
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="mt-1.5 truncate text-sm font-bold uppercase tracking-wide text-accent">
+                      {getCasualtyPatientName(row)}
+                    </p>
+                    <p className="mt-0.5 truncate text-[9px] uppercase text-app-text/55 sm:hidden">
+                      {formatCasualtyCardDate(row)}
+                    </p>
+                  </div>
+
+                  {open ? (
+                    <ChevronUp className="size-4 shrink-0 text-app-text/55" aria-hidden />
+                  ) : (
+                    <ChevronDown className="size-4 shrink-0 text-app-text/55" aria-hidden />
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  disabled={pdfBusy}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    void handleDownloadPdf(row)
+                  }}
+                  title="Bu kayıt için PDF indir"
+                  aria-label="PDF indir"
+                  className="inline-flex w-11 shrink-0 items-center justify-center border-l border-accent/12 text-accent/60 transition hover:bg-accent/8 hover:text-accent disabled:opacity-40"
+                >
+                  <FileDown className={`size-4 ${pdfBusy ? 'animate-pulse' : ''}`} strokeWidth={2} aria-hidden />
+                </button>
               </div>
+
               {open ? (
-                <ChevronUp className="size-4 shrink-0 text-slate-500" aria-hidden />
-              ) : (
-                <ChevronDown className="size-4 shrink-0 text-slate-500" aria-hidden />
-              )}
-            </button>
-            {open ? (
-              <div className="border-t border-white/8 px-4 py-3 text-[10px] leading-relaxed text-slate-400">
-                <p>
-                  <span className="text-slate-600">MOI: </span>
-                  {toStr(row.mechanismOfInjury) || '—'}
-                </p>
-                <p className="mt-2">
-                  <span className="text-slate-600">Tedavi: </span>
-                  {toStr(row.appliedTreatmentsNote) || '—'}
-                </p>
-                <p className="mt-2">
-                  <span className="text-slate-600">Not: </span>
-                  {toStr(row.operationNote) || '—'}
-                </p>
-                {march ? (
-                  <pre className="mt-3 max-h-40 overflow-auto rounded border border-white/8 bg-black/60 p-2 text-[9px] text-[#00FF41]/80">
-                    {JSON.stringify(march, null, 2)}
-                  </pre>
-                ) : null}
-              </div>
-            ) : null}
-          </li>
-        )
-      })}
-    </ul>
+                <div className="border-t border-white/8 px-4 py-4">
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <MetaCell label="Kan grubu" value={getCasualtyBloodTypeLabel(row)} />
+                    <MetaCell label="Alerjiler" value={getCasualtyAllergies(row)} />
+                    <MetaCell label="MOI" value={getCasualtyMechanismOfInjury(row)} />
+                  </div>
+
+                  {sections.length > 0 ? (
+                    <div className="mt-4">
+                      <p className="mb-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-accent/70">
+                        MARCH · Müdahaleler
+                      </p>
+                      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                        {sections.map((section) => (
+                          <div
+                            key={section.step}
+                            className={`rounded-lg border p-3 ${MARCH_STEP_BADGE[section.step]} border-opacity-40 bg-black/40`}
+                          >
+                            <p className="text-[9px] font-bold uppercase tracking-wider">
+                              {section.step} · {section.title}
+                            </p>
+                            <ul className="mt-2 space-y-1">
+                              {section.items.map((item) => (
+                                <li key={item} className="text-[10px] leading-snug text-app-text/90">
+                                  {item}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="mt-4 font-mono-technical text-[9px] uppercase text-app-text/45">
+                      Kayıtlı MARCH müdahalesi yok
+                    </p>
+                  )}
+
+                  {hasNotes ? (
+                    <div className="mt-4 rounded-xl border border-white/8 bg-black/50 p-4">
+                      <header className="mb-3 flex items-center gap-2 border-b border-white/6 pb-2">
+                        <Stethoscope className="size-3.5 text-accent/70" strokeWidth={1.5} aria-hidden />
+                        <h4 className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.22em] text-app-text/70">
+                          Tıbbi Notlar
+                        </h4>
+                      </header>
+                      <div className="space-y-3">
+                        {treatments !== '—' ? (
+                          <NoteBlock label="Uygulanan tedaviler" body={treatments} />
+                        ) : null}
+                        {opNote !== '—' ? (
+                          <NoteBlock label="Operasyon notu" body={opNote} />
+                        ) : null}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
+/** @param {{ label: string; value: string }} props */
+function MetaCell({ label, value }) {
+  return (
+    <div className="rounded-lg border border-white/6 bg-black/30 px-3 py-2">
+      <p className="font-mono-technical text-[7px] font-bold uppercase tracking-[0.18em] text-app-text/45">
+        {label}
+      </p>
+      <p className="mt-1 text-[11px] leading-snug text-app-text/90">{value}</p>
+    </div>
+  )
+}
+
+/** @param {{ label: string; body: string }} props */
+function NoteBlock({ label, body }) {
+  return (
+    <div>
+      <p className="font-mono-technical text-[8px] font-bold uppercase tracking-wider text-app-text/55">
+        {label}
+      </p>
+      <p className="mt-1.5 text-sm leading-relaxed tracking-wide text-app-text">{body}</p>
+    </div>
   )
 }

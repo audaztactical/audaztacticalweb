@@ -28,7 +28,7 @@ export default function OperationalRadarChart({ data, loading }) {
       </div>
       <div className="relative h-[220px] w-full min-w-0">
         {loading ? (
-          <div className="absolute inset-0 z-[2] flex items-center justify-center font-mono-technical text-xs uppercase tracking-widest text-slate-500">
+          <div className="absolute inset-0 z-[2] flex items-center justify-center font-mono-technical text-xs uppercase tracking-widest text-app-text/55">
             Hesaplanıyor…
           </div>
         ) : null}
@@ -36,7 +36,7 @@ export default function OperationalRadarChart({ data, loading }) {
           <RadarChart data={chartData} cx="50%" cy="52%" outerRadius="72%">
             <defs>
               <linearGradient id={`radarFill-${gid}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#00FF41" stopOpacity={0.45} />
+                <stop offset="0%" stopColor="var(--accent-color)" stopOpacity={0.45} />
                 <stop offset="100%" stopColor="#004DFF" stopOpacity={0.12} />
               </linearGradient>
             </defs>
@@ -55,7 +55,7 @@ export default function OperationalRadarChart({ data, loading }) {
             <Radar
               name="Hazırlık"
               dataKey="value"
-              stroke="#00FF41"
+              stroke="var(--accent-color)"
               fill={`url(#radarFill-${gid})`}
               fillOpacity={0.55}
               strokeWidth={2}

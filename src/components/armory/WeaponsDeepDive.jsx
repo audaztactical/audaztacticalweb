@@ -30,10 +30,10 @@ import { syncDetachAccessory, syncMountAccessory } from '../../lib/armoryMountSy
 import { invStr } from '../../lib/inventoryIlws'
 
 const selectClass =
-  'dossier-blood-select w-full rounded border border-[#00FF41]/35 bg-[#0A0A0A] py-2 pl-2 pr-8 font-mono-technical text-[10px] uppercase text-white outline-none'
+  'dossier-blood-select w-full rounded border border-accent/35 bg-app-bg py-2 pl-2 pr-8 font-mono-technical text-[10px] uppercase text-app-text outline-none'
 
 const dateInputClass =
-  'w-full rounded border border-[#00FF41]/40 bg-[#0A0A0A] px-2 py-1.5 font-mono-technical text-[10px] text-[#00FF41] outline-none [color-scheme:dark] focus:border-[#00FF41]'
+  'w-full rounded border border-accent/40 bg-app-bg px-2 py-1.5 font-mono-technical text-[10px] text-accent outline-none [color-scheme:dark] focus:border-accent'
 
 /**
  * @param {{
@@ -246,14 +246,14 @@ export default function WeaponsDeepDive({
   )
 
   const btnMini =
-    'rounded border border-white/15 px-1.5 py-0.5 font-mono text-[11px] text-slate-400 hover:border-[#ffb400]/40 hover:text-[#ffb400] disabled:opacity-40'
+    'rounded border border-white/15 px-1.5 py-0.5 font-mono text-[11px] text-app-text/70 hover:border-accent/40 hover:text-accent disabled:opacity-40'
 
   return (
     <div className="space-y-3">
       <button
         type="button"
         onClick={onBack}
-        className="inline-flex items-center gap-2 rounded border border-[#ffb400]/50 bg-[#ffb400]/12 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#ffb400] shadow-[0_0_12px_-4px_rgba(255,180,0,0.4)] transition hover:bg-[#ffb400]/20"
+        className="inline-flex items-center gap-2 rounded border border-accent/50 bg-accent/12 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent shadow-[0_0_12px_-4px_rgba(255,180,0,0.4)] transition hover:bg-accent/20"
       >
         <span aria-hidden>↩️</span>
         GERİ DÖN / RETURN
@@ -269,12 +269,12 @@ export default function WeaponsDeepDive({
       <div className="grid min-h-[32rem] gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)_minmax(0,1.4fr)]">
         {/* Sol — silah rafı */}
         <TacticalPanel className="flex min-h-0 flex-col border-white/10 bg-black/40 p-0">
-          <p className="border-b border-white/10 bg-[#080808] px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-[#ffb400]/85">
+          <p className="border-b border-white/10 bg-app-bg px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-accent/85">
             SİLAH_RAFI
           </p>
           <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2 op-detay-col-scroll">
             {weapons.length === 0 ? (
-              <li className="py-8 text-center font-mono-technical text-[9px] uppercase text-slate-600">SİLAH_KAYDI_YOK</li>
+              <li className="py-8 text-center font-mono-technical text-[9px] uppercase text-app-text/45">SİLAH_KAYDI_YOK</li>
             ) : (
               weapons.map((w) => {
                 const id = String(w.id)
@@ -286,14 +286,14 @@ export default function WeaponsDeepDive({
                       onClick={() => setSelectedId(id)}
                       className={`min-w-0 flex-1 rounded border px-2 py-2 text-left font-mono-technical text-[9px] transition ${
                         active
-                          ? 'border-[#00FF41]/50 bg-[#00FF41]/10 text-[#00FF41]'
-                          : 'border-white/8 bg-black/30 text-slate-400 hover:border-white/20 hover:text-slate-200'
+                          ? 'border-accent/50 bg-accent/10 text-accent'
+                          : 'border-white/8 bg-black/30 text-app-text/70 hover:border-white/20 hover:text-app-text'
                       }`}
                     >
                       {active ? (
-                        <span className="mb-1 block animate-pulse text-[#00FF41]">[ ➔ ]</span>
+                        <span className="mb-1 block animate-pulse text-accent">[ ➔ ]</span>
                       ) : null}
-                      <span className="block text-[8px] text-slate-500">[{weaponStokKodu(id)}]</span>
+                      <span className="block text-[8px] text-app-text/55">[{weaponStokKodu(id)}]</span>
                       <span className="block truncate text-[10px] font-bold uppercase text-inherit">{weaponDisplayName(w)}</span>
                     </button>
                     <button
@@ -314,7 +314,7 @@ export default function WeaponsDeepDive({
             <button
               type="button"
               onClick={onAddWeapon}
-              className="flex w-full items-center justify-center gap-1.5 rounded border border-[#ffb400]/40 bg-[#ffb400]/10 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-[#ffb400] hover:bg-[#ffb400]/16"
+              className="flex w-full items-center justify-center gap-1.5 rounded border border-accent/40 bg-accent/10 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-accent hover:bg-accent/16"
             >
               <Plus className="size-3" aria-hidden />
               + YENİ_SİLAH_KAYDI
@@ -324,7 +324,7 @@ export default function WeaponsDeepDive({
 
         {/* Orta — monitör */}
         <TacticalPanel className="flex min-h-0 flex-col border-white/10 bg-black/40 p-0">
-          <p className="border-b border-white/10 bg-[#080808] px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-[#00FF41]/80">
+          <p className="border-b border-white/10 bg-app-bg px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-accent/80">
             TAKTİK_MONİTÖR · 3D_ANALİTİK
           </p>
           {selected ? (
@@ -338,14 +338,14 @@ export default function WeaponsDeepDive({
               />
               <div className="space-y-3 border-t border-white/10 p-3 font-mono-technical text-[9px] uppercase">
                 <div>
-                  <p className="mb-1 text-slate-500">Yiv-Set Kondisyonu</p>
-                  <p className="text-[#00FF41]">
+                  <p className="mb-1 text-app-text/55">Yiv-Set Kondisyonu</p>
+                  <p className="text-accent">
                     KONDİSYON: [{formatConditionBar(yivPercent)}] %{yivPercent}
                   </p>
                 </div>
-                <div className="flex flex-wrap items-center justify-between gap-2 text-slate-500">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-app-text/55">
                   <span>
-                    TOPLAM ATIM SAYISI: <span className="tabular-nums text-slate-200">{totalRounds.toLocaleString('tr-TR')}</span>
+                    TOPLAM ATIM SAYISI: <span className="tabular-nums text-app-text">{totalRounds.toLocaleString('tr-TR')}</span>
                   </span>
                   <div className="flex gap-1">
                     <button type="button" className={btnMini} disabled={busy} onClick={() => bumpRounds(-50)}>
@@ -356,17 +356,17 @@ export default function WeaponsDeepDive({
                     </button>
                   </div>
                 </div>
-                <p className="font-mono-technical text-[9px] uppercase tracking-[0.12em] text-[#00FF41]">
+                <p className="font-mono-technical text-[9px] uppercase tracking-[0.12em] text-accent">
                   ENVANTERE GİRİŞ TARİHİ: <span className="tabular-nums">{inventoryEntryDate}</span>
                 </p>
-                <p className="text-[7px] text-slate-600">
+                <p className="text-[7px] text-app-text/45">
                   MAX_NAMLU_ÖMÜR: {maxBarrel.toLocaleString('tr-TR')} · ATIŞ_GÜNLÜĞÜ: {rangeLogRounds.toLocaleString('tr-TR')} ·
                   FORMÜL: 100−((ATIM/ÖMÜR)×100)
                 </p>
               </div>
             </>
           ) : (
-            <p className="flex flex-1 items-center justify-center p-6 font-mono-technical text-[9px] uppercase text-slate-600">
+            <p className="flex flex-1 items-center justify-center p-6 font-mono-technical text-[9px] uppercase text-app-text/45">
               SİLAH_SEÇİN
             </p>
           )}
@@ -374,11 +374,11 @@ export default function WeaponsDeepDive({
 
         {/* Sağ — lojistik */}
         <TacticalPanel className="flex min-h-0 flex-col border-white/10 bg-black/40 p-0">
-          <p className="border-b border-white/10 bg-[#080808] px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-[#7ab4ff]/85">
+          <p className="border-b border-white/10 bg-app-bg px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-[#7ab4ff]/85">
             LOJİSTİK · BAKIM_TERMİNALİ
           </p>
           {!selected ? (
-            <p className="p-6 font-mono-technical text-[9px] uppercase text-slate-600">TERMİNAL_BEKLEMEDE</p>
+            <p className="p-6 font-mono-technical text-[9px] uppercase text-app-text/45">TERMİNAL_BEKLEMEDE</p>
           ) : (
             <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3 op-detay-col-scroll">
               {periodicAlert ? (
@@ -393,7 +393,7 @@ export default function WeaponsDeepDive({
               ) : null}
 
               <div className="space-y-2 border-b border-white/10 pb-3">
-                <p className="font-mono-technical text-[8px] font-bold uppercase text-slate-500">AKSESUAR:</p>
+                <p className="font-mono-technical text-[8px] font-bold uppercase text-app-text/55">AKSESUAR:</p>
                 {attachedOptic ? (
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="font-mono text-[10px] text-[#7ab4ff]">{invStr(attachedOptic.name) || '—'}</span>
@@ -425,7 +425,7 @@ export default function WeaponsDeepDive({
                       type="button"
                       disabled={busy || !attachId}
                       onClick={attachAccessory}
-                      className="shrink-0 rounded border border-[#00FF41]/40 px-2 py-2 font-mono-technical text-[8px] uppercase text-[#00FF41] hover:bg-[#00FF41]/10 disabled:opacity-40"
+                      className="shrink-0 rounded border border-accent/40 px-2 py-2 font-mono-technical text-[8px] uppercase text-accent hover:bg-accent/10 disabled:opacity-40"
                     >
                       MONTAJ
                     </button>
@@ -434,20 +434,20 @@ export default function WeaponsDeepDive({
               </div>
 
               <div ref={maintFormRef} className="space-y-2">
-                <p className="font-mono-technical text-[8px] font-bold uppercase tracking-wider text-slate-500">
+                <p className="font-mono-technical text-[8px] font-bold uppercase tracking-wider text-app-text/55">
                   SİLAH BAKIM GÜNLÜĞÜ
                 </p>
-                <p className="font-mono text-[8px] text-slate-600">
-                  SON_BAKIMDAN_ATIM: <span className="text-[#00FF41]">{roundsSinceMaint.toLocaleString('tr-TR')}</span>
+                <p className="font-mono text-[8px] text-app-text/45">
+                  SON_BAKIMDAN_ATIM: <span className="text-accent">{roundsSinceMaint.toLocaleString('tr-TR')}</span>
                 </p>
 
                 <form onSubmit={submitMaintenance} className="space-y-2 rounded border border-white/10 bg-black/50 p-2">
-                  <p className="font-mono-technical text-[7px] font-bold uppercase text-[#ffb400]/80">+ YENİ BAKIM KAYDI</p>
-                  <p className="font-mono text-[7px] text-slate-600">
+                  <p className="font-mono-technical text-[7px] font-bold uppercase text-accent/80">+ YENİ BAKIM KAYDI</p>
+                  <p className="font-mono text-[7px] text-app-text/45">
                     KİLİTLİ_ATIM: {totalRounds.toLocaleString('tr-TR')} (mevcut toplam)
                   </p>
                   <label className="block">
-                    <span className="font-mono-technical text-[7px] font-bold uppercase tracking-wider text-slate-500">
+                    <span className="font-mono-technical text-[7px] font-bold uppercase tracking-wider text-app-text/55">
                       BAKIM TARİHİ:
                     </span>
                     <input
@@ -473,7 +473,7 @@ export default function WeaponsDeepDive({
                     ))}
                   </select>
                   <input
-                    className="w-full border border-white/15 bg-transparent px-2 py-1.5 font-mono text-[10px] text-slate-200 outline-none focus:border-[#00FF41]/40"
+                    className="w-full border border-white/15 bg-transparent px-2 py-1.5 font-mono text-[10px] text-app-text outline-none focus:border-accent/40"
                     placeholder="Bakım notu"
                     value={maintNote}
                     onChange={(e) => setMaintNote(e.target.value)}
@@ -482,7 +482,7 @@ export default function WeaponsDeepDive({
                   <button
                     type="submit"
                     disabled={maintSaving}
-                    className="w-full rounded border border-[#00FF41]/35 py-1.5 font-mono-technical text-[8px] font-bold uppercase text-[#00FF41] hover:bg-[#00FF41]/10 disabled:opacity-50"
+                    className="w-full rounded border border-accent/35 py-1.5 font-mono-technical text-[8px] font-bold uppercase text-accent hover:bg-accent/10 disabled:opacity-50"
                   >
                     {maintSaving ? '…' : 'KAYDET'}
                   </button>
@@ -494,11 +494,11 @@ export default function WeaponsDeepDive({
 
                 <ul className="space-y-2">
                   {maintenanceLogs.length === 0 ? (
-                    <li className="font-mono text-[9px] text-slate-600">BAKIM_KAYDI_YOK</li>
+                    <li className="font-mono text-[9px] text-app-text/45">BAKIM_KAYDI_YOK</li>
                   ) : (
                     maintenanceLogs.map((log, i) => (
-                      <li key={`${log.date}-${i}`} className="border-b border-dashed border-white/[0.06] pb-2 font-mono text-[9px] leading-snug text-[#00FF41]/85">
-                        <span className="text-slate-500">[{log.date}]</span> · ATIM:{log.rounds_at_maintenance} ·{' '}
+                      <li key={`${log.date}-${i}`} className="border-b border-dashed border-white/[0.06] pb-2 font-mono text-[9px] leading-snug text-accent/85">
+                        <span className="text-app-text/55">[{log.date}]</span> · ATIM:{log.rounds_at_maintenance} ·{' '}
                         {log.maintenanceType}
                         {log.note ? ` · ${log.note}` : ''}
                       </li>

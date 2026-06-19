@@ -85,17 +85,17 @@ export default function IntelModerationTable({ onFeedback }) {
       <div className="border-b border-white/10 bg-black/30 px-5 py-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <ShieldAlert className="size-5 text-[#ffb400]" strokeWidth={1.5} aria-hidden />
+            <ShieldAlert className="size-5 text-accent" strokeWidth={1.5} aria-hidden />
             <div>
-              <h2 className="font-display text-base font-bold uppercase tracking-wider text-[#ffb400]">
+              <h2 className="font-display text-base font-bold uppercase tracking-wider text-accent">
                 İstihbarat Moderasyonu
               </h2>
-              <p className="mt-0.5 text-xs text-slate-500">
+              <p className="mt-0.5 text-xs text-app-text/55">
                 Son {FEED_LIMIT} kayıt — canlı akış. Yanlış pozitifleri doğrudan imha edin.
               </p>
             </div>
           </div>
-          <span className="font-mono-technical text-[10px] uppercase tracking-wider text-slate-500">
+          <span className="font-mono-technical text-[10px] uppercase tracking-wider text-app-text/55">
             {loading ? 'SENKRON…' : `${rows.length} KAYIT`}
           </span>
         </div>
@@ -105,14 +105,14 @@ export default function IntelModerationTable({ onFeedback }) {
         {error ? (
           <p className="p-5 font-mono-technical text-sm text-orange-300">{error}</p>
         ) : loading ? (
-          <div className="flex items-center justify-center gap-2 p-10 text-slate-500">
-            <Loader2 className="size-5 animate-spin text-[#ffb400]" aria-hidden />
+          <div className="flex items-center justify-center gap-2 p-10 text-app-text/55">
+            <Loader2 className="size-5 animate-spin text-accent" aria-hidden />
             <span className="font-mono-technical text-xs uppercase tracking-wider">Veri akışı kuruluyor…</span>
           </div>
         ) : (
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead className="border-b border-gray-800 bg-black/40">
-              <tr className="font-mono-technical text-[10px] uppercase tracking-wider text-slate-500">
+              <tr className="font-mono-technical text-[10px] uppercase tracking-wider text-app-text/55">
                 <th className="px-4 py-3">Tarih</th>
                 <th className="px-4 py-3">Kaynak</th>
                 <th className="px-4 py-3">Başlık</th>
@@ -129,13 +129,13 @@ export default function IntelModerationTable({ onFeedback }) {
                     key={row.id}
                     className="border-b border-gray-800 transition-colors hover:bg-white/[0.03]"
                   >
-                    <td className="whitespace-nowrap px-4 py-3 font-mono-technical text-[11px] tabular-nums text-slate-400">
+                    <td className="whitespace-nowrap px-4 py-3 font-mono-technical text-[11px] tabular-nums text-app-text/70">
                       {formatIntelTimestamp(row.timestamp)}
                     </td>
-                    <td className="max-w-[140px] truncate px-4 py-3 text-xs text-slate-400" title={row.source}>
+                    <td className="max-w-[140px] truncate px-4 py-3 text-xs text-app-text/70" title={row.source}>
                       {row.source}
                     </td>
-                    <td className="max-w-[280px] truncate px-4 py-3 font-medium text-slate-200" title={title}>
+                    <td className="max-w-[280px] truncate px-4 py-3 font-medium text-app-text" title={title}>
                       {title}
                     </td>
                     <td className="px-4 py-3">
@@ -148,13 +148,13 @@ export default function IntelModerationTable({ onFeedback }) {
                         {(row.tags ?? []).slice(0, 3).map((tag) => (
                           <span
                             key={tag}
-                            className="rounded border border-[#ffb400]/25 bg-[#ffb400]/10 px-1.5 py-0.5 font-mono-technical text-[9px] uppercase tracking-wider text-[#ffb400]/90"
+                            className="rounded border border-accent/25 bg-accent/10 px-1.5 py-0.5 font-mono-technical text-[9px] uppercase tracking-wider text-accent/90"
                           >
                             {tag}
                           </span>
                         ))}
                         {!row.isAlert && !(row.tags ?? []).length ? (
-                          <span className="text-[10px] text-slate-600">—</span>
+                          <span className="text-[10px] text-app-text/45">—</span>
                         ) : null}
                       </div>
                     </td>
@@ -181,7 +181,7 @@ export default function IntelModerationTable({ onFeedback }) {
           </table>
         )}
         {!loading && !error && rows.length === 0 ? (
-          <p className="p-6 text-center font-mono-technical text-xs uppercase tracking-wider text-slate-500">
+          <p className="p-6 text-center font-mono-technical text-xs uppercase tracking-wider text-app-text/55">
             news_feed koleksiyonunda kayıt yok.
           </p>
         ) : null}

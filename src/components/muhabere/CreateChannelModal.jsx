@@ -207,7 +207,7 @@ export default function CreateChannelModal({ open, uid, contacts, onClose, onCre
                 'flex flex-1 items-center justify-center gap-1 rounded-md border px-3 py-2 text-[10px] font-bold uppercase transition',
                 busy || !sessionOk
                   ? 'cursor-not-allowed border-zinc-700 bg-zinc-900 text-zinc-600 opacity-50'
-                  : 'border-lime-400/60 bg-lime-500/20 text-lime-300 shadow-[0_0_20px_-6px_rgba(0,255,65,0.45)] hover:bg-lime-500/30',
+                  : 'border-lime-400/60 bg-lime-500/20 text-lime-300 shadow-[0_0_24px_-8px_color-mix(in_srgb,var(--accent-color)_35%,transparent)]] hover:bg-lime-500/30',
               ].join(' ')}
             >
               {busy ? <Loader2 className="size-3.5 animate-spin" aria-hidden /> : 'Kanal aç'}

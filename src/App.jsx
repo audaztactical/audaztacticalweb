@@ -1,17 +1,25 @@
 import { lazy, Suspense } from 'react'
+import { Capacitor } from '@capacitor/core'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import LandingPage from './pages/LandingPage'
 import { AuthProvider } from './context/AuthContext'
+import { ThemeProvider } from './contexts/ThemeContext'
 import { FirebaseErrorProvider } from './context/FirebaseErrorContext'
 import { TcccAlertProvider } from './context/TcccAlertContext'
 import { MuhabereNotifyProvider } from './context/MuhabereNotifyContext'
 import { NotificationProvider } from './context/NotificationContext'
 import AdminRoute from './components/auth/AdminRoute'
+import AccessGuard from './components/auth/AccessGuard'
 import InstructorRoute from './components/auth/InstructorRoute'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import MainLayout from './layouts/MainLayout'
+import MobileLayout from './mobile/MobileLayout'
 import TacticalLoader from './components/TacticalLoader'
 import GoogleAuthRedirectHandler from './components/auth/GoogleAuthRedirectHandler'
+import ScrollToTop from './components/navigation/ScrollToTop'
+
+const isNativePlatform = Capacitor.isNativePlatform()
+const AppLayout = isNativePlatform ? MobileLayout : MainLayout
 
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
@@ -22,6 +30,7 @@ const ModulePlaceholder = lazy(() => import('./pages/ModulePlaceholder'))
 const Akademi = lazy(() => import('./pages/Akademi'))
 const Forum = lazy(() => import('./pages/Forum'))
 const IntelFeed = lazy(() => import('./pages/IntelFeed'))
+const AcilDurumBildirimleri = lazy(() => import('./pages/AcilDurumBildirimleri'))
 const Missions = lazy(() => import('./pages/Missions'))
 const Cephanelik = lazy(() => import('./pages/Cephanelik'))
 const Training = lazy(() => import('./pages/Training'))
@@ -30,14 +39,18 @@ const ProgressTracker = lazy(() => import('./pages/ProgressTracker'))
 const InstructorDashboard = lazy(() => import('./pages/InstructorDashboard'))
 const Settings = lazy(() => import('./pages/Settings'))
 const AdminPanel = lazy(() => import('./pages/AdminPanel'))
+const PremiumTransition = lazy(() => import('./pages/PremiumTransition'))
+const SiteMaintenance = lazy(() => import('./pages/SiteMaintenance'))
 
 export default function App() {
   return (
     <AuthProvider>
+      <ThemeProvider>
       <NotificationProvider>
       <TcccAlertProvider>
         <FirebaseErrorProvider>
           <BrowserRouter>
+          <ScrollToTop />
           <MuhabereNotifyProvider>
           <GoogleAuthRedirectHandler />
           <Suspense fallback={<TacticalLoader />}>
@@ -46,36 +59,42 @@ export default function App() {
 
             <Route element={<ProtectedRoute />}>
               <Route path="verify-email" element={<VerifyEmail />} />
-              <Route element={<MainLayout />}>
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="profil" element={<Profile />} />
-                <Route path="profil/:operatorUid" element={<OperatorProfile />} />
-                <Route path="mesajlar" element={<TaktikMuhabere />} />
-                <Route path="akademi" element={<Akademi />} />
-                <Route path="forum" element={<Forum />} />
-                <Route path="istihbarat" element={<IntelFeed />} />
-                <Route path="gorevler" element={<Missions />} />
-                <Route path="cephanelik" element={<Cephanelik />} />
-                <Route path="antrenman" element={<Training />} />
-                <Route path="tccc" element={<TcccSuite />} />
-                <Route path="basarilar" element={<ProgressTracker />} />
-                <Route
-                  path="egitmen-komuta"
-                  element={
-                    <InstructorRoute>
-                      <InstructorDashboard />
-                    </InstructorRoute>
-                  }
-                />
-                <Route path="ayarlar" element={<Settings />} />
-                <Route
-                  path="admin"
-                  element={
-                    <AdminRoute>
-                      <AdminPanel />
-                    </AdminRoute>
-                  }
-                />
+              <Route element={<AccessGuard />}>
+                <Route element={<AppLayout />}>
+                  <Route path="dashboard" element={<Dashboard />} />
+                  <Route path="profil" element={<Profile />} />
+                  <Route path="profil/:operatorUid" element={<OperatorProfile />} />
+                  <Route path="mesajlar" element={<TaktikMuhabere />} />
+                  <Route path="akademi" element={<Akademi />} />
+                  <Route path="forum" element={<Forum />} />
+                  <Route path="istihbarat" element={<IntelFeed />} />
+                  <Route path="acil-durum" element={<AcilDurumBildirimleri />} />
+                  <Route path="gorevler" element={<Missions />} />
+                  <Route path="cephanelik" element={<Cephanelik />} />
+                  <Route path="antrenman" element={<Training />} />
+                  <Route path="tccc" element={<TcccSuite />} />
+                  <Route path="basarilar" element={<ProgressTracker />} />
+                  <Route
+                    path="egitmen-komuta"
+                    element={
+                      <InstructorRoute>
+                        <InstructorDashboard />
+                      </InstructorRoute>
+                    }
+                  />
+                  <Route path="ayarlar" element={<Settings />} />
+                  {/* Beta: lansman öncesi premium-gecis → Dashboard yönlendirmesi */}
+                  <Route path="premium-gecis" element={<PremiumTransition />} />
+                  <Route path="site-bakimda" element={<SiteMaintenance />} />
+                  <Route
+                    path="admin"
+                    element={
+                      <AdminRoute>
+                        <AdminPanel />
+                      </AdminRoute>
+                    }
+                  />
+                </Route>
               </Route>
             </Route>
           </Routes>
@@ -85,6 +104,7 @@ export default function App() {
         </FirebaseErrorProvider>
       </TcccAlertProvider>
       </NotificationProvider>
+      </ThemeProvider>
     </AuthProvider>
   )
 }

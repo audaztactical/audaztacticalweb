@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
-import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { HeartPulse, Pencil, Shield, X } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
-import { db, isFirebaseConfigured } from '../../lib/firebase'
-
-const COLLECTION = 'health_profiles'
+import { isFirebaseConfigured } from '../../lib/firebase'
+import {
+  loadHealthOperatorProfile,
+  mapHealthProfileFields,
+  saveHealthOperatorProfile,
+} from '../../lib/personalHealthRecord'
 
 const TIBBI_ROL_OPTIONS = [
   { value: 'operator', label: 'Operatör (Kişisel İlk Yardım Düzeyi)' },
@@ -24,26 +26,14 @@ const EMPTY_FORM = {
 }
 
 const inputClass =
-  'w-full rounded border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-200 placeholder:text-slate-600 transition focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500/30 disabled:cursor-not-allowed disabled:border-slate-800/80 disabled:bg-slate-900/60 disabled:text-slate-500'
+  'w-full rounded border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-sm text-app-text placeholder:text-app-text/45 transition focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500/30 disabled:cursor-not-allowed disabled:border-slate-800/80 disabled:bg-slate-900/60 disabled:text-app-text/55'
 
-const labelClass = 'font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400'
+const labelClass = 'font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-app-text/70'
 
-/** @param {unknown} v */
-function toStr(v) {
-  return typeof v === 'string' ? v : v == null ? '' : String(v)
-}
-
-/** @param {Record<string, unknown> | undefined} data */
+/** @param {Record<string, unknown> | undefined | null} data */
 function mapDocToForm(data) {
-  if (!data) return { ...EMPTY_FORM }
-  return {
-    tıbbiRol: toStr(data.tıbbiRol),
-    alerjiler: toStr(data.alerjiler),
-    kronikHastalik: toStr(data.kronikHastalik),
-    duzenliIlaclar: toStr(data.duzenliIlaclar),
-    sonTetanozAşısı: toStr(data.sonTetanozAşısı).slice(0, 10),
-    boyKilo: toStr(data.boyKilo),
-  }
+  const mapped = mapHealthProfileFields(data ?? undefined)
+  return mapped ? { ...EMPTY_FORM, ...mapped } : { ...EMPTY_FORM }
 }
 
 /**
@@ -84,7 +74,7 @@ export default function PersonalHealthCard() {
   }, [])
 
   useEffect(() => {
-    if (!user?.uid || !isFirebaseConfigured() || !db) {
+    if (!user?.uid || !isFirebaseConfigured()) {
       setDocLoading(false)
       return
     }
@@ -94,9 +84,9 @@ export default function PersonalHealthCard() {
 
     ;(async () => {
       try {
-        const snap = await getDoc(doc(db, COLLECTION, user.uid))
+        const profile = await loadHealthOperatorProfile(user.uid)
         if (cancelled) return
-        const mapped = mapDocToForm(snap.exists() ? snap.data() : undefined)
+        const mapped = mapDocToForm(profile)
         setForm(mapped)
         setSavedForm(mapped)
       } catch {
@@ -126,22 +116,20 @@ export default function PersonalHealthCard() {
   }
 
   const handleSave = async () => {
-    if (!user?.uid || !db || !isFirebaseConfigured()) return
+    if (!user?.uid || !isFirebaseConfigured()) return
     setSaving(true)
     setSaveMsg(null)
     try {
-      const payload = {
+      const fields = {
         tıbbiRol: form.tıbbiRol.trim(),
         alerjiler: form.alerjiler.trim(),
         kronikHastalik: form.kronikHastalik.trim(),
         duzenliIlaclar: form.duzenliIlaclar.trim(),
         sonTetanozAşısı: form.sonTetanozAşısı.trim(),
         boyKilo: form.boyKilo.trim(),
-        ownerId: user.uid,
-        updatedAt: serverTimestamp(),
       }
-      await setDoc(doc(db, COLLECTION, user.uid), payload, { merge: true })
-      const next = mapDocToForm(payload)
+      await saveHealthOperatorProfile(user.uid, fields)
+      const next = mapDocToForm(fields)
       setSavedForm(next)
       setForm(next)
       setIsEditing(false)
@@ -166,7 +154,7 @@ export default function PersonalHealthCard() {
         <p className="mt-6 font-mono text-xs font-bold uppercase tracking-[0.35em] text-red-500/90 animate-pulse">
           YÜKLENİYOR…
         </p>
-        <p className="mt-2 font-mono text-[10px] uppercase tracking-wider text-slate-500">
+        <p className="mt-2 font-mono text-[10px] uppercase tracking-wider text-app-text/55">
           SAĞLIK_KÜNYESİ · VERİ_KANALI
         </p>
       </section>
@@ -187,7 +175,7 @@ export default function PersonalHealthCard() {
             <h2 className="font-mono text-xs font-bold uppercase tracking-[0.28em] text-red-500">
               KİŞİSEL SAĞLIK KÜNYESİ
             </h2>
-            <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-slate-500">
+            <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-app-text/55">
               TCCC · OPERATÖR MEDİKAL PROFİL
             </p>
           </div>
@@ -209,7 +197,7 @@ export default function PersonalHealthCard() {
                 type="button"
                 onClick={handleCancel}
                 disabled={saving}
-                className="inline-flex items-center gap-2 rounded border border-slate-700 bg-slate-900 px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-wider text-slate-400 transition hover:border-slate-600 hover:text-slate-200 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded border border-slate-700 bg-slate-900 px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-wider text-app-text/70 transition hover:border-slate-600 hover:text-app-text disabled:opacity-50"
               >
                 <X className="size-3.5" aria-hidden />
                 İPTAL
@@ -237,8 +225,8 @@ export default function PersonalHealthCard() {
           >
             {bloodType}
           </p>
-          <p className="mt-2 font-mono text-[9px] uppercase tracking-wider text-slate-500">
-            SALT OKUNUR · PROFİLİM / users · bloodType
+          <p className="mt-2 font-mono text-[9px] uppercase tracking-wider text-app-text/55">
+            SALT OKUNUR · PROFİLİM / users · bloodType · health_records/{'{uid}'}
           </p>
         </div>
 

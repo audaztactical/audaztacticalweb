@@ -1,63 +1,50 @@
 import { useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { auth, isFirebaseConfigured } from '../../lib/firebase'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { userRequiresEmailVerification } from '../../lib/authEmailVerification'
 import { useAuth } from '../../context/AuthContext'
 import {
   consumeGoogleAuthRedirectPath,
   hasPendingGoogleAuthRedirectPath,
 } from '../../lib/googleAuth'
-import {
-  getGoogleRedirectResultOnce,
-  isBenignGoogleRedirectError,
-  logGoogleAuthHud,
-} from '../../lib/googleRedirectAuth'
-import { emitFirebaseError } from '../../lib/firebaseErrorBus'
+import { shouldShowIntro } from '../../lib/introStorage'
 
 /**
  * Google signInWithRedirect dönüşünde hedef rotaya yönlendirir.
- * Yönlendirme, AuthContext'teki user state hazır olduktan sonra yapılır (redirect yarışı önlenir).
- * Profil oluşturma AuthContext.resolveGoogleRedirectReturn içinde yapılır.
+ * getRedirectResult bazen null döner; oturum yine de açık kalabilir — bu yüzden
+ * pending path + user state ile yönlendirme yapılır.
  */
 export default function GoogleAuthRedirectHandler() {
   const navigate = useNavigate()
-  const { user, googleRedirectResolving } = useAuth()
+  const location = useLocation()
+  const { user, userData, googleRedirectResolving } = useAuth()
   const navigatedRef = useRef(false)
 
   useEffect(() => {
-    if (!isFirebaseConfigured() || !auth || navigatedRef.current) return undefined
-    if (!user || googleRedirectResolving) return undefined
-    if (!hasPendingGoogleAuthRedirectPath()) return undefined
+    if (navigatedRef.current || googleRedirectResolving || !user) return undefined
 
-    let cancelled = false
+    const pendingGoogle = hasPendingGoogleAuthRedirectPath()
+    const onLanding = location.pathname === '/'
+    const skipIntro = location.state?.skipIntro === true
 
-    getGoogleRedirectResultOnce(auth)
-      .then((result) => {
-        if (cancelled || navigatedRef.current || !result?.user) return
-        if (result.user.uid !== user.uid) return
+    if (onLanding && shouldShowIntro(skipIntro) && !pendingGoogle) return undefined
 
-        navigatedRef.current = true
-        const target = consumeGoogleAuthRedirectPath()
+    // Karargâh / landing bilinçli ziyareti — dashboard'a zorla gönderme
+    if (onLanding && skipIntro) return undefined
 
-        if (userRequiresEmailVerification(result.user)) {
-          navigate('/verify-email', { replace: true })
-        } else {
-          navigate(target, { replace: true })
-        }
-      })
-      .catch((err) => {
-        if (cancelled || isBenignGoogleRedirectError(err)) {
-          consumeGoogleAuthRedirectPath()
-          return
-        }
-        logGoogleAuthHud('GoogleAuthRedirectHandler.navigate', err)
-        emitFirebaseError(err)
-      })
+    if (!pendingGoogle && !onLanding) return undefined
 
-    return () => {
-      cancelled = true
+    navigatedRef.current = true
+    const target = pendingGoogle ? consumeGoogleAuthRedirectPath() : '/dashboard'
+    const accountStatus = userData?.accountStatus ?? 'active'
+
+    if (userRequiresEmailVerification(user, accountStatus)) {
+      navigate('/verify-email', { replace: true })
+    } else {
+      navigate(target.startsWith('/') ? target : '/dashboard', { replace: true })
     }
-  }, [navigate, user, googleRedirectResolving])
+
+    return undefined
+  }, [googleRedirectResolving, location.pathname, location.state?.skipIntro, navigate, user, userData?.accountStatus])
 
   return null
 }

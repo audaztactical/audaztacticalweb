@@ -1,10 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { MapPin, Paperclip, Plus } from 'lucide-react'
+import { Image, MapPin, Paperclip, Plus } from 'lucide-react'
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
+import { uploadMuhabereChatImage } from '../../lib/muhabereChatMedia'
 import { sendChannelMessage, sendChatMessage } from '../../lib/firestoreTaktikMuhabere'
-
-/** Firebase Storage geçici olarak devre dışı — görsel yükleme kapalı */
-const MUHABERE_IMAGE_UPLOAD_ENABLED = false
 
 /**
  * @param {{
@@ -23,12 +21,13 @@ export default function MuhabereAttachMenu({
   uid,
   receiverId = '',
   disabled = false,
-  onUploadProgress: _onUploadProgress,
+  onUploadProgress,
   onMessageSent,
 }) {
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const menuRef = useRef(/** @type {HTMLDivElement | null} */ (null))
+  const fileInputRef = useRef(/** @type {HTMLInputElement | null} */ (null))
 
   useEffect(() => {
     if (!open) return undefined
@@ -61,15 +60,36 @@ export default function MuhabereAttachMenu({
   const dispatch = (/** @type {Record<string, unknown>} */ payload) =>
     mode === 'channel' ? dispatchChannel(payload) : dispatchDm(payload)
 
-  /*
-   * Storage devre dışı — görsel yükleme geçici olarak kapatıldı.
-   *
-   * const handleImagePick = () => { ... }
-   * const handleFileChange = async (e) => {
-   *   const imageUrl = await uploadMuhabereChatImage(threadId, file, onUploadProgress)
-   *   await dispatch({ type: 'image', text: '[ GÖRSEL ]', imageUrl })
-   * }
-   */
+  const handleImagePick = () => {
+    setOpen(false)
+    if (busy || disabled || !threadId) return
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = async (/** @type {import('react').ChangeEvent<HTMLInputElement>} */ e) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file || busy || disabled) return
+
+    if (!file.type.startsWith('image/')) {
+      emitFirebaseError(new Error('Yalnızca görsel dosyaları desteklenir.'))
+      return
+    }
+
+    setBusy(true)
+    onUploadProgress(0)
+
+    try {
+      const imageUrl = await uploadMuhabereChatImage(threadId, file, (pct) => onUploadProgress(pct))
+      await dispatch({ type: 'image', text: '[ GÖRSEL ]', imageUrl })
+      onMessageSent?.()
+    } catch (err) {
+      emitFirebaseError(err)
+    } finally {
+      onUploadProgress(null)
+      setBusy(false)
+    }
+  }
 
   const handleLocation = () => {
     setOpen(false)
@@ -105,6 +125,14 @@ export default function MuhabereAttachMenu({
 
   return (
     <div ref={menuRef} className="relative shrink-0">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        className="sr-only"
+        onChange={handleFileChange}
+        disabled={disabled || busy}
+      />
       <button
         type="button"
         disabled={disabled || busy || !threadId}
@@ -121,11 +149,15 @@ export default function MuhabereAttachMenu({
           className="absolute bottom-full left-0 z-20 mb-2 min-w-[11rem] overflow-hidden rounded-md border border-zinc-700 bg-zinc-950 py-1 shadow-xl"
           role="menu"
         >
-          {MUHABERE_IMAGE_UPLOAD_ENABLED ? null : (
-            <p className="hidden px-3 py-2 text-[10px] uppercase tracking-wider text-zinc-600" aria-hidden>
-              Görsel yükle — Storage devre dışı
-            </p>
-          )}
+          <button
+            type="button"
+            role="menuitem"
+            onClick={handleImagePick}
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-zinc-400 transition hover:bg-zinc-900 hover:text-lime-400"
+          >
+            <Image className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
+            Görsel paylaş
+          </button>
           <button
             type="button"
             role="menuitem"

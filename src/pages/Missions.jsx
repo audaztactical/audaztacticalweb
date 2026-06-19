@@ -16,7 +16,9 @@ import HudFluffDecor from '../components/dashboard/HudFluffDecor'
 import TacticalPanel from '../components/ui/TacticalPanel'
 import { MissionGridSkeleton } from '../components/ui/DataSkeleton'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../contexts/ThemeContext'
 import { useAudazData } from '../hooks/useAudazData'
+import { getAccentColor } from '../lib/themeColors'
 
 /** @param {unknown} v */
 function str(v) {
@@ -37,7 +39,7 @@ const MISSION_TYPES = [
 ]
 
 const OUTCOMES = [
-  { value: 'success', label: 'Başarılı', tag: 'GÖREV_BAŞARILI', rgb: '#00FF41' },
+  { value: 'success', label: 'Başarılı', tag: 'GÖREV_BAŞARILI' },
   { value: 'partial', label: 'Kısmi', tag: 'KISMİ_BAŞARI', rgb: '#f59e0b' },
   { value: 'failure', label: 'Başarısız', tag: 'GÖREV_BAŞARISIZ', rgb: '#FF0000' },
   { value: 'planning', label: 'Planlama', tag: 'PLANLAMA', rgb: '#004DFF' },
@@ -161,7 +163,9 @@ function computeMEffectiveness(hits, casualties) {
 }
 
 function outcomeMeta(code) {
-  return OUTCOMES.find((o) => o.value === code) ?? OUTCOMES[3]
+  const meta = OUTCOMES.find((o) => o.value === code) ?? OUTCOMES[3]
+  if (meta.value === 'success') return { ...meta, rgb: getAccentColor() }
+  return meta
 }
 
 function typeLabel(code) {
@@ -251,10 +255,10 @@ function buildOperationAuditTrail(row) {
 }
 
 const inputClass =
-  'w-full border-0 border-b border-white/20 bg-transparent py-2 font-mono-technical text-sm text-slate-100 outline-none ring-0 placeholder:text-slate-600 focus:border-[#00FF41]/55'
-const selectClass = 'dossier-blood-select w-full rounded border border-[#00FF41]/30 py-2 pl-2 pr-1 font-mono-technical text-sm text-white outline-none'
+  'w-full border-0 border-b border-white/20 bg-transparent py-2 font-mono-technical text-sm text-slate-100 outline-none ring-0 placeholder:text-app-text/45 focus:border-accent/55'
+const selectClass = 'dossier-blood-select w-full rounded border border-accent/30 py-2 pl-2 pr-1 font-mono-technical text-sm text-app-text outline-none'
 const dateInputClass =
-  'min-w-0 flex-1 border-0 border-b border-white/20 bg-transparent py-1 font-mono-technical text-[11px] text-slate-100 outline-none ring-0 focus:border-[#00FF41]/55 [color-scheme:dark]'
+  'min-w-0 flex-1 border-0 border-b border-white/20 bg-transparent py-1 font-mono-technical text-[11px] text-slate-100 outline-none ring-0 focus:border-accent/55 [color-scheme:dark]'
 
 /** Split konsol sütun kaydırması — bağımsız dikey scroll */
 const opDetayColScroll = 'op-detay-col-scroll min-h-0 overflow-y-auto overscroll-y-contain'
@@ -267,8 +271,8 @@ function FilterChip({ active, onClick, icon, code }) {
       onClick={onClick}
       className={`inline-flex items-center gap-1.5 rounded border px-2 py-1 font-mono-technical text-[9px] font-bold uppercase tracking-wider transition ${
         active
-          ? 'border-[#ffb400]/55 bg-[#ffb400]/15 text-[#ffb400]'
-          : 'border-white/10 bg-black/30 text-slate-500 hover:border-white/20 hover:text-slate-300'
+          ? 'border-accent/55 bg-accent/15 text-accent'
+          : 'border-white/10 bg-black/30 text-app-text/55 hover:border-white/20 hover:text-app-text/90'
       }`}
     >
       <span className="opacity-90">{icon}</span>
@@ -382,14 +386,14 @@ function AarRecordModal({ open, mode, initial, onClose, onSubmit, busy }) {
     >
       <button type="button" className="absolute inset-0 cursor-default" aria-label="Kapat" onClick={onClose} />
       <TacticalPanel className="relative z-[1] w-full max-w-lg border-[#004DFF]/25 bg-[#0c0c0e]/98 p-0 shadow-2xl backdrop-blur-md">
-        <div className="flex items-center justify-between border-b border-white/10 bg-[#080808] px-3 py-2 sm:px-4">
-          <p id="aar-modal-title" className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] text-[#ffb400]/90">
+        <div className="flex items-center justify-between border-b border-white/10 bg-app-bg px-3 py-2 sm:px-4">
+          <p id="aar-modal-title" className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] text-accent/90">
             {mode === 'edit' ? 'AAR_DÜZENLE · KAYIT_TERMINALİ' : 'YENİ_AAR · KAYIT_TERMINALİ'}
           </p>
           <button
             type="button"
             onClick={onClose}
-            className="rounded border border-white/15 p-1 text-slate-400 hover:text-white"
+            className="rounded border border-white/15 p-1 text-app-text/70 hover:text-app-text"
             aria-label="Kapat"
           >
             <X className="size-4" strokeWidth={1.5} />
@@ -397,11 +401,11 @@ function AarRecordModal({ open, mode, initial, onClose, onSubmit, busy }) {
         </div>
         <form onSubmit={handleSubmit} className="space-y-3 px-3 py-3 sm:px-4 sm:py-4">
           <label className="block">
-            <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">OP_ADI</span>
+            <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">OP_ADI</span>
             <input className={inputClass} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="ÖRN: GECE_SIZMA_07" />
           </label>
           <label className="block">
-            <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">DEBRİFİNG_NOTLARI</span>
+            <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">DEBRİFİNG_NOTLARI</span>
             <textarea
               className={`${inputClass} min-h-[4.5rem] resize-y border border-white/10 bg-black/30 px-2 py-2`}
               value={debrief}
@@ -412,7 +416,7 @@ function AarRecordModal({ open, mode, initial, onClose, onSubmit, busy }) {
           </label>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block">
-              <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">GÖREV_TÜRÜ</span>
+              <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">GÖREV_TÜRÜ</span>
               <select className={`${selectClass} mt-1`} value={missionType} onChange={(e) => setMissionType(e.target.value)}>
                 {MISSION_TYPES.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -422,7 +426,7 @@ function AarRecordModal({ open, mode, initial, onClose, onSubmit, busy }) {
               </select>
             </label>
             <label className="block">
-              <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">GÖREV_SONUCU</span>
+              <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">GÖREV_SONUCU</span>
               <select className={`${selectClass} mt-1`} value={aarOutcome} onChange={(e) => setAarOutcome(e.target.value)}>
                 {OUTCOMES.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -434,21 +438,21 @@ function AarRecordModal({ open, mode, initial, onClose, onSubmit, busy }) {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
-              <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">VURMA_SAYISI</span>
+              <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">VURMA_SAYISI</span>
               <input className={inputClass} inputMode="numeric" value={hits} onChange={(e) => setHits(e.target.value)} />
             </label>
             <label className="block">
-              <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">ZAYİAT_SAYISI</span>
+              <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">ZAYİAT_SAYISI</span>
               <input className={inputClass} inputMode="numeric" value={casualties} onChange={(e) => setCasualties(e.target.value)} />
             </label>
           </div>
           <label className="block">
-            <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">ARAZİ_BÖLGESİ</span>
+            <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">ARAZİ_BÖLGESİ</span>
             <input className={inputClass} value={region} onChange={(e) => setRegion(e.target.value)} placeholder="ÖRN: KUZey_ORMAN_IZ" />
           </label>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block">
-              <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">BAŞLANGIÇ_TARİHİ (startedAt)</span>
+              <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">BAŞLANGIÇ_TARİHİ (startedAt)</span>
               <input
                 type="datetime-local"
                 className={`${inputClass} mt-0.5 rounded border border-white/10 bg-black/25 px-2`}
@@ -457,7 +461,7 @@ function AarRecordModal({ open, mode, initial, onClose, onSubmit, busy }) {
               />
             </label>
             <label className="block">
-              <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">BİTİŞ_TARİHİ (endedAt)</span>
+              <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">BİTİŞ_TARİHİ (endedAt)</span>
               <input
                 type="datetime-local"
                 className={`${inputClass} mt-0.5 rounded border border-white/10 bg-black/25 px-2`}
@@ -472,14 +476,14 @@ function AarRecordModal({ open, mode, initial, onClose, onSubmit, busy }) {
             <button
               type="button"
               onClick={onClose}
-              className="rounded border border-white/15 px-3 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-slate-400 hover:bg-white/5"
+              className="rounded border border-white/15 px-3 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-app-text/70 hover:bg-white/5"
             >
               İPTAL
             </button>
             <button
               type="submit"
               disabled={busy}
-              className="rounded border border-[#ffb400]/45 bg-[#ffb400]/12 px-3 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#ffb400] disabled:opacity-50"
+              className="rounded border border-accent/45 bg-accent/12 px-3 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent disabled:opacity-50"
             >
               {busy ? '…' : mode === 'edit' ? 'GÜNCELLE' : 'KAYDET'}
             </button>
@@ -530,29 +534,29 @@ function OpDetayKonsolu({ row, onClose, onEdit }) {
         onClick={onClose}
       />
       <TacticalPanel
-        className="relative z-[1] w-full max-w-5xl overflow-hidden border-[#004DFF]/25 bg-[#0A0A0A]/98 p-0 shadow-2xl backdrop-blur-md"
+        className="relative z-[1] w-full max-w-5xl overflow-hidden border-[#004DFF]/25 bg-app-bg/98 p-0 shadow-2xl backdrop-blur-md"
         role="dialog"
         aria-modal="true"
         aria-labelledby="op-detay-title"
       >
         <div className="flex max-h-[90vh] flex-col overflow-hidden">
-        <div className="relative shrink-0 border-b border-white/10 bg-[#080808] px-4 py-3 pr-[7.5rem] sm:pr-28">
+        <div className="relative shrink-0 border-b border-white/10 bg-app-bg px-4 py-3 pr-[7.5rem] sm:pr-28">
           <button
             type="button"
             onClick={onClose}
-            className="absolute right-3 top-3 z-10 rounded border border-white/20 px-2 py-1 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-slate-400 transition hover:border-white/35 hover:text-white sm:right-4"
+            className="absolute right-3 top-3 z-10 rounded border border-white/20 px-2 py-1 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-app-text/70 transition hover:border-white/35 hover:text-app-text sm:right-4"
           >
             [ X_KAPAT ]
           </button>
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="min-w-0 flex-1 space-y-0.5">
-              <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.32em] text-[#ffb400]/80">
+              <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.32em] text-accent/80">
                 MÜŞTEREK HAREKAT KONSOLU
               </p>
-              <p id="op-detay-title" className="font-mono-technical text-[10px] font-bold uppercase leading-tight tracking-[0.12em] text-slate-300">
+              <p id="op-detay-title" className="font-mono-technical text-[10px] font-bold uppercase leading-tight tracking-[0.12em] text-app-text/90">
                 [ HAREKAT_KODU: {opKodu(row.id)} ]
               </p>
-              <p className="font-display text-lg font-bold tracking-wide text-white">{str(row.title) || '—'}</p>
+              <p className="font-display text-lg font-bold tracking-wide text-app-text">{str(row.title) || '—'}</p>
             </div>
             <span
               className="mt-1 shrink-0 rounded border px-2 py-1 font-mono-technical text-[8px] font-bold uppercase leading-tight tracking-wide"
@@ -566,17 +570,17 @@ function OpDetayKonsolu({ row, onClose, onEdit }) {
         <div className="grid min-h-0 max-h-[calc(90vh-5.25rem)] grid-cols-1 overflow-hidden md:grid-cols-[minmax(0,0.95fr)_1px_minmax(0,1.35fr)] md:h-[calc(90vh-5.25rem)]">
           <section className="flex min-h-0 min-w-0 max-h-[min(42vh,calc(90vh-5.25rem))] flex-col border-b border-white/10 bg-black/50 md:max-h-full md:h-full md:border-b-0">
             <div className="shrink-0 border-b border-white/[0.06] px-3 py-2">
-              <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.28em] text-[#00FF41]/90">
+              <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.28em] text-accent/90">
                 DİNAMİK OPERASYON KAYDI
               </p>
-              <p className="mt-0.5 font-mono-technical text-[7px] uppercase tracking-wider text-slate-600">Operation Audit Trail</p>
+              <p className="mt-0.5 font-mono-technical text-[7px] uppercase tracking-wider text-app-text/45">Operation Audit Trail</p>
             </div>
             <div className={`${opDetayColScroll} min-h-0 flex-1 px-3 py-3`}>
-              <ul className="space-y-2 font-mono text-[10px] leading-relaxed text-[#00FF41]">
+              <ul className="space-y-2 font-mono text-[10px] leading-relaxed text-accent">
                 {auditLines.map((entry, i) => (
                   <li key={`${entry.clock}-${entry.tag}-${i}`} className="break-words">
-                    <span className="text-[#00FF41]/55">[{entry.clock}]</span>{' '}
-                    <span className="text-[#00FF41]/75">[{entry.tag}]</span>{' '}
+                    <span className="text-accent/55">[{entry.clock}]</span>{' '}
+                    <span className="text-accent/75">[{entry.tag}]</span>{' '}
                     <span>{entry.msg}</span>
                   </li>
                 ))}
@@ -587,55 +591,55 @@ function OpDetayKonsolu({ row, onClose, onEdit }) {
           <div className="hidden bg-white/10 md:block" aria-hidden />
 
           <section className={`${opDetayColScroll} min-h-0 min-w-0 max-h-[min(48vh,calc(90vh-5.25rem))] px-4 py-4 md:max-h-[calc(90vh-5.25rem)] md:h-full`}>
-            <p className="mb-3 font-mono-technical text-[8px] font-bold uppercase tracking-[0.28em] text-[#ffb400]/75">
+            <p className="mb-3 font-mono-technical text-[8px] font-bold uppercase tracking-[0.28em] text-accent/75">
               OPERASYONEL ANALİTİK
             </p>
-            <p className="mb-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-slate-600">ZAMAN_ÇİZELGESİ</p>
+            <p className="mb-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-app-text/45">ZAMAN_ÇİZELGESİ</p>
           <div className="grid min-w-0 grid-cols-1 gap-3 border border-white/[0.08] bg-black/40 p-3 sm:grid-cols-3">
             <div className="flex min-w-0 items-start gap-2">
-              <Calendar className="mt-0.5 size-4 shrink-0 text-slate-500" strokeWidth={1.25} aria-hidden />
+              <Calendar className="mt-0.5 size-4 shrink-0 text-app-text/55" strokeWidth={1.25} aria-hidden />
               <div className="min-w-0">
-                <p className="font-mono-technical text-[7px] font-bold uppercase tracking-wider text-slate-600">BAŞLANGIÇ</p>
-                <p className="break-words font-mono text-[11px] leading-tight text-slate-200">{formatDisplayDatetime(tStart)}</p>
+                <p className="font-mono-technical text-[7px] font-bold uppercase tracking-wider text-app-text/45">BAŞLANGIÇ</p>
+                <p className="break-words font-mono text-[11px] leading-tight text-app-text">{formatDisplayDatetime(tStart)}</p>
               </div>
             </div>
             <div className="flex min-w-0 items-start gap-2">
-              <Calendar className="mt-0.5 size-4 shrink-0 text-slate-500" strokeWidth={1.25} aria-hidden />
+              <Calendar className="mt-0.5 size-4 shrink-0 text-app-text/55" strokeWidth={1.25} aria-hidden />
               <div className="min-w-0">
-                <p className="font-mono-technical text-[7px] font-bold uppercase tracking-wider text-slate-600">BİTİŞ</p>
-                <p className="break-words font-mono text-[11px] leading-tight text-slate-200">{formatDisplayDatetime(tEnd)}</p>
+                <p className="font-mono-technical text-[7px] font-bold uppercase tracking-wider text-app-text/45">BİTİŞ</p>
+                <p className="break-words font-mono text-[11px] leading-tight text-app-text">{formatDisplayDatetime(tEnd)}</p>
               </div>
             </div>
             <div className="flex items-start gap-2">
-              <Clock className="mt-0.5 size-4 shrink-0 text-slate-500" strokeWidth={1.25} aria-hidden />
+              <Clock className="mt-0.5 size-4 shrink-0 text-app-text/55" strokeWidth={1.25} aria-hidden />
               <div className="min-w-0">
-                <p className="font-mono-technical text-[7px] font-bold uppercase tracking-wider text-slate-600">TOPLAM_SÜRE</p>
-                <p className="font-mono text-[11px] leading-tight text-[#00FF41]/90">{formatToplamSure(row)}</p>
+                <p className="font-mono-technical text-[7px] font-bold uppercase tracking-wider text-app-text/45">TOPLAM_SÜRE</p>
+                <p className="font-mono text-[11px] leading-tight text-accent/90">{formatToplamSure(row)}</p>
               </div>
             </div>
           </div>
 
-          <p className="mb-2 mt-5 font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-slate-600">MUHAREBE_ANALİTİĞİ</p>
+          <p className="mb-2 mt-5 font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-app-text/45">MUHAREBE_ANALİTİĞİ</p>
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded border border-white/10 bg-black/50 px-3 py-3">
-              <p className="font-mono-technical text-[7px] font-bold uppercase tracking-wider text-slate-600">VURMA_SAYISI (HITS)</p>
-              <p className="mt-1 font-mono text-2xl font-semibold tabular-nums text-white">{hits}</p>
+              <p className="font-mono-technical text-[7px] font-bold uppercase tracking-wider text-app-text/45">VURMA_SAYISI (HITS)</p>
+              <p className="mt-1 font-mono text-2xl font-semibold tabular-nums text-app-text">{hits}</p>
             </div>
             <div className="rounded border border-white/10 bg-black/50 px-3 py-3">
-              <p className="font-mono-technical text-[7px] font-bold uppercase tracking-wider text-slate-600">ZAYİAT_DURUMU (CASUALTIES)</p>
-              <p className="mt-1 font-mono text-2xl font-semibold tabular-nums text-white">{cas}</p>
+              <p className="font-mono-technical text-[7px] font-bold uppercase tracking-wider text-app-text/45">ZAYİAT_DURUMU (CASUALTIES)</p>
+              <p className="mt-1 font-mono text-2xl font-semibold tabular-nums text-app-text">{cas}</p>
             </div>
           </div>
-          <div className="mt-4 rounded border border-[#00FF41]/25 bg-[#00FF41]/5 px-4 py-4 text-center">
-            <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-slate-500">MUHAREBE_ETKİNLİĞİ (M_ETKİNLİK)</p>
-            <p className="mt-2 font-mono text-4xl font-bold tabular-nums tracking-tight text-[#00FF41] drop-shadow-[0_0_18px_rgba(0,255,65,0.45)]">
+          <div className="mt-4 rounded border border-accent/25 bg-accent/5 px-4 py-4 text-center">
+            <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">MUHAREBE_ETKİNLİĞİ (M_ETKİNLİK)</p>
+            <p className="mt-2 font-mono text-4xl font-bold tabular-nums tracking-tight text-accent drop-shadow-[0_0_24px_-8px_color-mix(in_srgb,var(--accent-color)_35%,transparent)]]">
               {mEff}
             </p>
           </div>
 
-          <p className="mb-2 mt-5 font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-slate-600">ARAZİ_VE_KONSEPT</p>
+          <p className="mb-2 mt-5 font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-app-text/45">ARAZİ_VE_KONSEPT</p>
           <div className="flex flex-wrap gap-2">
-            <span className="rounded border border-white/15 bg-white/[0.04] px-2 py-1 font-mono-technical text-[8px] font-bold uppercase tracking-wide text-slate-400">
+            <span className="rounded border border-white/15 bg-white/[0.04] px-2 py-1 font-mono-technical text-[8px] font-bold uppercase tracking-wide text-app-text/70">
               ARAZİ: {str(row.terrainRegion).trim() || '—'}
             </span>
             <span className="rounded border border-[#004DFF]/35 bg-[#004DFF]/10 px-2 py-1 font-mono-technical text-[8px] font-bold uppercase tracking-wide text-[#7ab4ff]">
@@ -643,9 +647,9 @@ function OpDetayKonsolu({ row, onClose, onEdit }) {
             </span>
           </div>
 
-          <p className="mb-2 mt-5 font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-slate-600">DEBRİFİNG_GÜNLÜĞÜ</p>
+          <p className="mb-2 mt-5 font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-app-text/45">DEBRİFİNG_GÜNLÜĞÜ</p>
           <div className="min-h-[6rem] min-w-0 rounded border border-white/[0.08] bg-black/45 px-3 py-3">
-            <pre className="max-w-full whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-slate-300">
+            <pre className="max-w-full whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-app-text/90">
               {debrief}
             </pre>
           </div>
@@ -654,7 +658,7 @@ function OpDetayKonsolu({ row, onClose, onEdit }) {
             <button
               type="button"
               onClick={() => onEdit(row)}
-              className="w-full rounded border border-[#ffb400]/45 bg-[#ffb400]/10 py-2.5 font-mono-technical text-[10px] font-bold uppercase tracking-[0.2em] text-[#ffb400] transition hover:bg-[#ffb400]/18"
+              className="w-full rounded border border-accent/45 bg-accent/10 py-2.5 font-mono-technical text-[10px] font-bold uppercase tracking-[0.2em] text-accent transition hover:bg-accent/18"
             >
               [ GÖREVİ_DÜZENLE ]
             </button>
@@ -688,7 +692,7 @@ function AarCard({ row, onEdit, onOpenDetail }) {
       className="relative flex cursor-pointer flex-col gap-2 rounded-lg border border-white/10 bg-black/35 p-3 pt-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition hover:border-white/18 hover:bg-black/40"
     >
       <div className="flex items-start justify-between gap-2 pr-7">
-        <span className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.22em] text-slate-500">{opKodu(row.id)}</span>
+        <span className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.22em] text-app-text/55">{opKodu(row.id)}</span>
         <div className="flex shrink-0 items-start gap-1">
           <button
             type="button"
@@ -696,7 +700,7 @@ function AarCard({ row, onEdit, onOpenDetail }) {
               e.stopPropagation()
               onEdit(row)
             }}
-            className="rounded border border-white/10 p-0.5 text-slate-500 hover:border-[#ffb400]/35 hover:text-[#ffb400]"
+            className="rounded border border-white/10 p-0.5 text-app-text/55 hover:border-accent/35 hover:text-accent"
             aria-label="Düzenle"
           >
             <Pencil className="size-3" strokeWidth={1.5} />
@@ -710,23 +714,23 @@ function AarCard({ row, onEdit, onOpenDetail }) {
         </div>
       </div>
       <div className="min-w-0">
-        <h2 className="font-display text-base font-bold leading-tight tracking-wide text-white sm:text-lg">{str(row.title) || '—'}</h2>
-        <p className="mt-1 line-clamp-3 font-mono-technical text-[10px] leading-snug text-slate-500">{getDebriefing(row)}</p>
+        <h2 className="font-display text-base font-bold leading-tight tracking-wide text-app-text sm:text-lg">{str(row.title) || '—'}</h2>
+        <p className="mt-1 line-clamp-3 font-mono-technical text-[10px] leading-snug text-app-text/55">{getDebriefing(row)}</p>
       </div>
       <div className="flex flex-col gap-1 border-t border-white/[0.08] pt-2">
-        <div className="flex flex-wrap gap-x-3 gap-y-1 font-mono-technical text-[8px] uppercase tracking-wide text-slate-600">
+        <div className="flex flex-wrap gap-x-3 gap-y-1 font-mono-technical text-[8px] uppercase tracking-wide text-app-text/45">
           <span>
-            TÜR: <span className="text-slate-300">{typeLabel(mt)}</span>
+            TÜR: <span className="text-app-text/90">{typeLabel(mt)}</span>
           </span>
           <span>
-            BÖLGE: <span className="text-slate-300">{str(row.terrainRegion) || '—'}</span>
+            BÖLGE: <span className="text-app-text/90">{str(row.terrainRegion) || '—'}</span>
           </span>
           <span>
-            M_ETKİNLİK: <span className="tabular-nums text-[#00FF41]/90">{mEff}</span>
+            M_ETKİNLİK: <span className="tabular-nums text-accent/90">{mEff}</span>
           </span>
         </div>
-        <p className="font-mono text-[8px] uppercase tracking-wide text-slate-600">
-          SÜRE: <span className="text-[9px] normal-case tracking-normal text-slate-300">{formatToplamSure(row)}</span>
+        <p className="font-mono text-[8px] uppercase tracking-wide text-app-text/45">
+          SÜRE: <span className="text-[9px] normal-case tracking-normal text-app-text/90">{formatToplamSure(row)}</span>
         </p>
       </div>
     </article>
@@ -735,6 +739,7 @@ function AarCard({ row, onEdit, onOpenDetail }) {
 
 export default function Missions() {
   const { user } = useAuth()
+  const { themeClass } = useTheme()
   const { items, loading, ready, listenError, addItem, updateItem } = useAudazData('missions')
   const [strip, setStrip] = useState(/** @type {'all' | 'milsim' | 'cqb' | 'success'} */ ('all'))
   const [dateFrom, setDateFrom] = useState('')
@@ -824,7 +829,7 @@ export default function Missions() {
   )
 
   return (
-    <div className="missions-aar-shell relative mx-auto max-w-[1480px] px-3 py-5 pt-12 sm:px-4 sm:pt-14 md:px-6">
+    <div className="missions-aar-shell relative mx-auto max-w-[1480px] px-3 py-5 pt-12 sm:px-4 sm:pt-14 md:px-6" data-theme={themeClass}>
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden>
         <HudFluffDecor />
       </div>
@@ -832,24 +837,24 @@ export default function Missions() {
       <div className="relative z-[2] space-y-3">
         <div className="flex flex-wrap items-end justify-between gap-3 border-b border-white/10 pb-3">
           <div>
-            <p className="font-mono-technical text-[10px] font-semibold uppercase tracking-[0.32em] text-[#ffb400]/85">[ OPERASYON_GÜNLÜĞÜ ]</p>
-            <h1 className="font-display mt-1 text-lg font-bold tracking-[0.1em] text-white sm:text-xl">AAR TERMINAL</h1>
-            <p className="mt-0.5 max-w-xl font-mono-technical text-[9px] leading-snug text-slate-500">
+            <p className="font-mono-technical text-[10px] font-semibold uppercase tracking-[0.32em] text-accent/85">[ OPERASYON_GÜNLÜĞÜ ]</p>
+            <h1 className="font-display mt-1 text-lg font-bold tracking-[0.1em] text-app-text sm:text-xl">AAR TERMINAL</h1>
+            <p className="mt-0.5 max-w-xl font-mono-technical text-[9px] leading-snug text-app-text/55">
               Airsoft / CQB / milsim ve gerçek operasyon kayıtları · görev sonu raporu (AAR)
             </p>
           </div>
           <button
             type="button"
             onClick={openCreate}
-            className="inline-flex items-center gap-2 rounded border border-[#ffb400]/45 bg-[#ffb400]/12 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#ffb400] shadow-[0_0_14px_-4px_rgba(255,180,0,0.35)] hover:bg-[#ffb400]/18"
+            className="inline-flex items-center gap-2 rounded border border-accent/45 bg-accent/12 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent shadow-[0_0_14px_-4px_rgba(255,180,0,0.35)] hover:bg-accent/18"
           >
             <Plus className="size-3.5" strokeWidth={2} aria-hidden />+ YENİ_RAPOR_GİR
           </button>
         </div>
 
         <TacticalPanel className="border-[#004DFF]/20 bg-[#0c0c0e]/96 p-0 backdrop-blur-sm">
-          <div className="flex flex-wrap items-center gap-1.5 border-b border-white/10 bg-[#080808] px-3 py-2 sm:px-4">
-            <span className="mr-1 font-mono-technical text-[8px] uppercase tracking-widest text-slate-600">FİLTRE</span>
+          <div className="flex flex-wrap items-center gap-1.5 border-b border-white/10 bg-app-bg px-3 py-2 sm:px-4">
+            <span className="mr-1 font-mono-technical text-[8px] uppercase tracking-widest text-app-text/45">FİLTRE</span>
             <FilterChip
               active={strip === 'all'}
               onClick={() => setStrip('all')}
@@ -877,11 +882,11 @@ export default function Missions() {
           </div>
           <div className="flex flex-wrap items-end gap-3 border-b border-white/10 bg-[#060606] px-3 py-2 sm:px-4">
             <label className="flex min-w-[8.5rem] flex-1 items-end gap-2 sm:min-w-0 sm:max-w-[11rem]">
-              <span className="shrink-0 pb-1 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-slate-600">BAŞ_TAR:</span>
+              <span className="shrink-0 pb-1 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-app-text/45">BAŞ_TAR:</span>
               <input type="date" className={dateInputClass} value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
             </label>
             <label className="flex min-w-[8.5rem] flex-1 items-end gap-2 sm:min-w-0 sm:max-w-[11rem]">
-              <span className="shrink-0 pb-1 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-slate-600">BİT_TAR:</span>
+              <span className="shrink-0 pb-1 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-app-text/45">BİT_TAR:</span>
               <input type="date" className={dateInputClass} value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
             </label>
             <button
@@ -890,7 +895,7 @@ export default function Missions() {
                 setDateFrom('')
                 setDateTo('')
               }}
-              className="shrink-0 rounded border border-white/15 px-2 py-1 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-slate-500 hover:border-[#ffb400]/35 hover:text-[#ffb400]"
+              className="shrink-0 rounded border border-white/15 px-2 py-1 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-app-text/55 hover:border-accent/35 hover:text-accent"
             >
               [ TEMİZLE ]
             </button>
@@ -905,18 +910,18 @@ export default function Missions() {
             ) : null}
             {!ready ? (
               <div className="flex min-h-[30vh] items-center justify-center">
-                <span className="size-8 animate-spin rounded-full border-2 border-[#ffb400] border-t-transparent" aria-hidden />
+                <span className="size-8 animate-spin rounded-full border-2 border-accent border-t-transparent" aria-hidden />
               </div>
             ) : loading ? (
               <MissionGridSkeleton n={4} />
             ) : filtered.length === 0 ? (
               <div className="flex min-h-[32vh] flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-white/12 bg-black/30 py-12">
                 <Target className="size-12 text-slate-700" strokeWidth={1} aria-hidden />
-                <p className="font-mono-technical text-[10px] uppercase tracking-widest text-slate-600">KAYIT_YOK · FİLTRE_VEYA_YENİ_RAPOR</p>
+                <p className="font-mono-technical text-[10px] uppercase tracking-widest text-app-text/45">KAYIT_YOK · FİLTRE_VEYA_YENİ_RAPOR</p>
                 <button
                   type="button"
                   onClick={openCreate}
-                  className="rounded border border-[#ffb400]/40 px-3 py-1.5 font-mono-technical text-[9px] font-bold uppercase text-[#ffb400]"
+                  className="rounded border border-accent/40 px-3 py-1.5 font-mono-technical text-[9px] font-bold uppercase text-accent"
                 >
                   + YENİ_RAPOR
                 </button>

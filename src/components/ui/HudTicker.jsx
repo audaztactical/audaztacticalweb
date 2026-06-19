@@ -5,7 +5,7 @@ export default function HudTicker({ className = '' }) {
   return (
     <TacticalClockReadout
       showCoords
-      className={`pointer-events-none select-none text-slate-500 ${className}`.trim()}
+      className={`pointer-events-none select-none text-app-text/55 ${className}`.trim()}
     />
   )
 }

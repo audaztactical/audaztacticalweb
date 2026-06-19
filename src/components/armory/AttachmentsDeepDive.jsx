@@ -26,13 +26,13 @@ import {
 import { matchesIsoDateRange, matchesTypeFilter } from '../../lib/logSummaryFilters'
 
 const dateInputClass =
-  'w-full rounded border border-[#00FF41] bg-[#0A0A0A] px-2 py-1.5 font-mono-technical text-[10px] text-[#00FF41] outline-none [color-scheme:dark] focus:border-[#00FF41]'
+  'w-full rounded border border-accent bg-app-bg px-2 py-1.5 font-mono-technical text-[10px] text-accent outline-none [color-scheme:dark] focus:border-accent'
 
 const filterSelectClass =
-  'dossier-blood-select mt-0.5 w-full rounded border border-[#00FF41]/35 bg-[#0A0A0A] py-1 pl-1.5 pr-6 font-mono-technical text-[8px] uppercase text-white outline-none'
+  'dossier-blood-select mt-0.5 w-full rounded border border-accent/35 bg-app-bg py-1 pl-1.5 pr-6 font-mono-technical text-[8px] uppercase text-app-text outline-none'
 
 const filterDateClass =
-  'mt-0.5 w-full rounded border border-[#00FF41]/50 bg-[#0A0A0A] px-1.5 py-1 font-mono-technical text-[8px] text-[#00FF41] outline-none [color-scheme:dark]'
+  'mt-0.5 w-full rounded border border-accent/50 bg-app-bg px-1.5 py-1 font-mono-technical text-[8px] text-accent outline-none [color-scheme:dark]'
 
 const DEPLOY_ACTION_FILTERS = [
   { value: 'ALL', label: 'TÜM İŞLEMLER' },
@@ -327,7 +327,7 @@ export default function AttachmentsDeepDive({
       <button
         type="button"
         onClick={onBack}
-        className="inline-flex items-center gap-2 rounded border border-[#ffb400]/50 bg-[#ffb400]/12 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#ffb400] shadow-[0_0_12px_-4px_rgba(255,180,0,0.4)] transition hover:bg-[#ffb400]/20"
+        className="inline-flex items-center gap-2 rounded border border-accent/50 bg-accent/12 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent shadow-[0_0_12px_-4px_rgba(255,180,0,0.4)] transition hover:bg-accent/20"
       >
         <span aria-hidden>↩️</span>
         GERİ DÖN / RETURN
@@ -336,12 +336,12 @@ export default function AttachmentsDeepDive({
       <div className={terminalGrid}>
         <div className="flex min-h-0 flex-col gap-2">
           <TacticalPanel className="flex min-h-0 flex-1 flex-col overflow-hidden border-white/10 bg-black/40 p-0">
-            <p className="shrink-0 border-b border-white/10 bg-[#080808] px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-[#ffb400]/85">
+            <p className="shrink-0 border-b border-white/10 bg-app-bg px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-accent/85">
               AKSESUAR_RAFI
             </p>
             <ul className={`min-h-0 flex-1 space-y-1 p-2 ${panelScroll}`}>
             {accessories.length === 0 ? (
-              <li className="py-8 text-center font-mono-technical text-[9px] uppercase text-slate-600">AKSESUAR_KAYDI_YOK</li>
+              <li className="py-8 text-center font-mono-technical text-[9px] uppercase text-app-text/45">AKSESUAR_KAYDI_YOK</li>
             ) : (
               accessories.map((a) => {
                 const id = String(a.id)
@@ -353,12 +353,12 @@ export default function AttachmentsDeepDive({
                       onClick={() => setSelectedId(id)}
                       className={`min-w-0 flex-1 rounded border px-2 py-2 text-left font-mono-technical text-[9px] transition ${
                         active
-                          ? 'border-[#00FF41]/50 bg-[#00FF41]/10 text-[#00FF41]'
-                          : 'border-white/8 bg-black/30 text-slate-400 hover:border-white/20 hover:text-slate-200'
+                          ? 'border-accent/50 bg-accent/10 text-accent'
+                          : 'border-white/8 bg-black/30 text-app-text/70 hover:border-white/20 hover:text-app-text'
                       }`}
                     >
-                      {active ? <span className="mb-1 block animate-pulse text-[#00FF41]">[ ➔ ]</span> : null}
-                      <span className="block text-[8px] text-slate-500">[{accessoryStokKodu(id)}]</span>
+                      {active ? <span className="mb-1 block animate-pulse text-accent">[ ➔ ]</span> : null}
+                      <span className="block text-[8px] text-app-text/55">[{accessoryStokKodu(id)}]</span>
                       <span className="block truncate text-[10px] font-bold uppercase">{accessoryDisplayName(a)}</span>
                     </button>
                     <button
@@ -378,7 +378,7 @@ export default function AttachmentsDeepDive({
             <button
               type="button"
               onClick={onAddAccessory}
-              className="flex w-full items-center justify-center gap-1.5 rounded border border-[#ffb400]/40 bg-[#ffb400]/10 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-[#ffb400] hover:bg-[#ffb400]/16"
+              className="flex w-full items-center justify-center gap-1.5 rounded border border-accent/40 bg-accent/10 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-accent hover:bg-accent/16"
             >
               <Plus className="size-3" aria-hidden />
               + YENİ_AKSESUAR_KAYDI
@@ -386,29 +386,29 @@ export default function AttachmentsDeepDive({
           </div>
           </TacticalPanel>
 
-          <TacticalPanel className="shrink-0 border border-[#00FF41]/25 bg-black/50 p-0">
-            <p className="border-b border-[#00FF41]/30 bg-[#080808] px-3 py-1.5 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-[#00FF41]/90">
+          <TacticalPanel className="shrink-0 border border-accent/25 bg-black/50 p-0">
+            <p className="border-b border-accent/30 bg-app-bg px-3 py-1.5 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-accent/90">
               [ ENVANTER_ÖZETİ ]
             </p>
             <div className="grid grid-cols-3 gap-2 p-2 font-mono-technical text-[9px] uppercase">
               <p className="rounded border border-white/10 bg-black/40 px-2 py-1.5 text-center">
-                <span className="block text-[7px] text-slate-500">TOPLAM</span>
-                <span className="text-[#00FF41]">{inventoryStats.total}</span>
+                <span className="block text-[7px] text-app-text/55">TOPLAM</span>
+                <span className="text-accent">{inventoryStats.total}</span>
               </p>
-              <p className="rounded border border-[#00FF41]/25 bg-[#00FF41]/5 px-2 py-1.5 text-center">
-                <span className="block text-[7px] text-slate-500">MONTAJLI</span>
-                <span className="text-[#00FF41]">{inventoryStats.mounted}</span>
+              <p className="rounded border border-accent/25 bg-accent/5 px-2 py-1.5 text-center">
+                <span className="block text-[7px] text-app-text/55">MONTAJLI</span>
+                <span className="text-accent">{inventoryStats.mounted}</span>
               </p>
-              <p className="rounded border border-[#ffb400]/25 bg-[#ffb400]/5 px-2 py-1.5 text-center">
-                <span className="block text-[7px] text-slate-500">BOŞTA</span>
-                <span className="text-[#ffb400]">{inventoryStats.idle}</span>
+              <p className="rounded border border-accent/25 bg-accent/5 px-2 py-1.5 text-center">
+                <span className="block text-[7px] text-app-text/55">BOŞTA</span>
+                <span className="text-accent">{inventoryStats.idle}</span>
               </p>
             </div>
           </TacticalPanel>
         </div>
 
         <TacticalPanel className="flex min-h-0 flex-col overflow-hidden border-white/10 bg-black/40 p-0">
-          <p className="shrink-0 border-b border-white/10 bg-[#080808] px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-[#00FF41]/80">
+          <p className="shrink-0 border-b border-white/10 bg-app-bg px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-accent/80">
             {isViewingLogs ? 'TAKTİK_MONİTÖR · KAYIT_DEFTERİ' : 'TAKTİK_MONİTÖR · 3D_ANALİTİK'}
           </p>
           {selected ? (
@@ -422,7 +422,7 @@ export default function AttachmentsDeepDive({
                           ? 'AKSESUAR MONTAJ / SÖKME KAYIT DEFTERİ'
                           : 'TEKNİK BAKIM VE ONARIM GÜNLÜĞÜ'}
                       </p>
-                      <p className="mt-0.5 font-mono-technical text-[7px] tabular-nums text-slate-500">
+                      <p className="mt-0.5 font-mono-technical text-[7px] tabular-nums text-app-text/55">
                         {centerLogStream === 'deploy'
                           ? `${filteredDeploymentHistory.length}/${deploymentHistory.length} KAYIT`
                           : `${filteredTechnicalLogs.length}/${technicalMaintenanceLogs.length} KAYIT`}
@@ -443,7 +443,7 @@ export default function AttachmentsDeepDive({
                           <p className="font-mono-technical text-[7px] font-bold uppercase text-[#5ec8ff]/80">FİLTRE</p>
                           <div className="grid gap-1.5 sm:grid-cols-3">
                             <label className="block">
-                              <span className="font-mono-technical text-[7px] uppercase text-slate-500">İŞLEM TÜRÜ</span>
+                              <span className="font-mono-technical text-[7px] uppercase text-app-text/55">İŞLEM TÜRÜ</span>
                               <select className={filterSelectClass} value={deployActionFilter} onChange={(e) => setDeployActionFilter(e.target.value)}>
                                 {DEPLOY_ACTION_FILTERS.map((f) => (
                                   <option key={f.value} value={f.value}>{f.label}</option>
@@ -451,11 +451,11 @@ export default function AttachmentsDeepDive({
                               </select>
                             </label>
                             <label className="block">
-                              <span className="font-mono-technical text-[7px] uppercase text-slate-500">TARİH BAŞ</span>
+                              <span className="font-mono-technical text-[7px] uppercase text-app-text/55">TARİH BAŞ</span>
                               <input type="date" className={filterDateClass} value={deployDateFrom} max={deployDateTo || todayIsoDate()} onChange={(e) => setDeployDateFrom(e.target.value)} />
                             </label>
                             <label className="block">
-                              <span className="font-mono-technical text-[7px] uppercase text-slate-500">TARİH BİT</span>
+                              <span className="font-mono-technical text-[7px] uppercase text-app-text/55">TARİH BİT</span>
                               <input type="date" className={filterDateClass} value={deployDateTo} min={deployDateFrom || undefined} max={todayIsoDate()} onChange={(e) => setDeployDateTo(e.target.value)} />
                             </label>
                           </div>
@@ -465,15 +465,15 @@ export default function AttachmentsDeepDive({
                         </div>
                         <ul className="space-y-1.5 rounded border border-[#00b4ff]/30 bg-black/30 p-2">
                           {deploymentHistory.length === 0 ? (
-                            <li className="font-mono-technical text-[9px] uppercase text-slate-600">KAYIT_YOK</li>
+                            <li className="font-mono-technical text-[9px] uppercase text-app-text/45">KAYIT_YOK</li>
                           ) : filteredDeploymentHistory.length === 0 ? (
-                            <li className="font-mono-technical text-[9px] uppercase text-slate-600">FİLTRE_SONUCU_YOK</li>
+                            <li className="font-mono-technical text-[9px] uppercase text-app-text/45">FİLTRE_SONUCU_YOK</li>
                           ) : (
                             filteredDeploymentHistory.map((log, i) => (
                               <li key={`${log.date}-${log.action_type}-${i}`} className="rounded border border-[#00b4ff]/20 bg-black/50 px-2 py-1.5 font-mono-technical text-[8px] uppercase">
-                                <span className="text-slate-500">{log.date}</span>
-                                <span className={`ml-2 ${log.action_type === 'MONTAJ' ? 'text-[#00FF41]' : 'text-amber-400'}`}>{log.action_type}</span>
-                                <p className="mt-0.5 text-slate-300">{log.target_weapon}</p>
+                                <span className="text-app-text/55">{log.date}</span>
+                                <span className={`ml-2 ${log.action_type === 'MONTAJ' ? 'text-accent' : 'text-amber-400'}`}>{log.action_type}</span>
+                                <p className="mt-0.5 text-app-text/90">{log.target_weapon}</p>
                               </li>
                             ))
                           )}
@@ -481,11 +481,11 @@ export default function AttachmentsDeepDive({
                       </>
                     ) : (
                       <>
-                        <div className="grid gap-1.5 rounded border border-[#ffb400]/25 bg-[#ffb400]/5 p-2">
-                          <p className="font-mono-technical text-[7px] font-bold uppercase text-[#ffb400]/80">FİLTRE</p>
+                        <div className="grid gap-1.5 rounded border border-accent/25 bg-accent/5 p-2">
+                          <p className="font-mono-technical text-[7px] font-bold uppercase text-accent/80">FİLTRE</p>
                           <div className="grid gap-1.5 sm:grid-cols-3">
                             <label className="block">
-                              <span className="font-mono-technical text-[7px] uppercase text-slate-500">BAKIM TÜRÜ</span>
+                              <span className="font-mono-technical text-[7px] uppercase text-app-text/55">BAKIM TÜRÜ</span>
                               <select className={filterSelectClass} value={techTypeFilter} onChange={(e) => setTechTypeFilter(e.target.value)}>
                                 <option value="ALL">TÜM TÜRLER</option>
                                 {ACCESSORY_MAINTENANCE_TYPES.map((t) => (
@@ -494,30 +494,30 @@ export default function AttachmentsDeepDive({
                               </select>
                             </label>
                             <label className="block">
-                              <span className="font-mono-technical text-[7px] uppercase text-slate-500">TARİH BAŞ</span>
+                              <span className="font-mono-technical text-[7px] uppercase text-app-text/55">TARİH BAŞ</span>
                               <input type="date" className={filterDateClass} value={techDateFrom} max={techDateTo || todayIsoDate()} onChange={(e) => setTechDateFrom(e.target.value)} />
                             </label>
                             <label className="block">
-                              <span className="font-mono-technical text-[7px] uppercase text-slate-500">TARİH BİT</span>
+                              <span className="font-mono-technical text-[7px] uppercase text-app-text/55">TARİH BİT</span>
                               <input type="date" className={filterDateClass} value={techDateTo} min={techDateFrom || undefined} max={todayIsoDate()} onChange={(e) => setTechDateTo(e.target.value)} />
                             </label>
                           </div>
                           {(techTypeFilter !== 'ALL' || techDateFrom || techDateTo) && (
-                            <button type="button" onClick={() => { setTechTypeFilter('ALL'); setTechDateFrom(''); setTechDateTo('') }} className="font-mono-technical text-[7px] uppercase text-[#ffb400]/80 hover:text-[#ffb400]">FİLTREYİ SIFIRLA</button>
+                            <button type="button" onClick={() => { setTechTypeFilter('ALL'); setTechDateFrom(''); setTechDateTo('') }} className="font-mono-technical text-[7px] uppercase text-accent/80 hover:text-accent">FİLTREYİ SIFIRLA</button>
                           )}
                         </div>
-                        <ul className="space-y-0 rounded border border-[#ffb400]/25 bg-black/30 p-2">
+                        <ul className="space-y-0 rounded border border-accent/25 bg-black/30 p-2">
                           {technicalMaintenanceLogs.length === 0 ? (
-                            <li className="font-mono-technical text-[9px] uppercase text-slate-600">TEKNİK_KAYIT_YOK</li>
+                            <li className="font-mono-technical text-[9px] uppercase text-app-text/45">TEKNİK_KAYIT_YOK</li>
                           ) : filteredTechnicalLogs.length === 0 ? (
-                            <li className="font-mono-technical text-[9px] uppercase text-slate-600">FİLTRE_SONUCU_YOK</li>
+                            <li className="font-mono-technical text-[9px] uppercase text-app-text/45">FİLTRE_SONUCU_YOK</li>
                           ) : (
                             filteredTechnicalLogs.map((log, i) => (
                               <li key={`${log.date}-${log.maintenanceType}-${i}`}>
-                                {i > 0 ? <div className="my-2 font-mono-technical text-[8px] text-slate-600" aria-hidden>-------------------------</div> : null}
-                                <p className="font-mono-technical text-[9px] tabular-nums text-slate-500">{log.date}</p>
-                                <span className="mt-0.5 inline-block rounded border border-[#ffb400]/40 bg-[#ffb400]/10 px-1.5 py-0.5 font-mono-technical text-[7px] font-bold uppercase text-[#ffb400]">{log.maintenanceType}</span>
-                                <p className="mt-1 font-mono-technical text-[9px] normal-case leading-snug text-slate-300">{log.note || '—'}</p>
+                                {i > 0 ? <div className="my-2 font-mono-technical text-[8px] text-app-text/45" aria-hidden>-------------------------</div> : null}
+                                <p className="font-mono-technical text-[9px] tabular-nums text-app-text/55">{log.date}</p>
+                                <span className="mt-0.5 inline-block rounded border border-accent/40 bg-accent/10 px-1.5 py-0.5 font-mono-technical text-[7px] font-bold uppercase text-accent">{log.maintenanceType}</span>
+                                <p className="mt-1 font-mono-technical text-[9px] normal-case leading-snug text-app-text/90">{log.note || '—'}</p>
                               </li>
                             ))
                           )}
@@ -530,11 +530,11 @@ export default function AttachmentsDeepDive({
                 <>
                   <MatrixWireVisualizer variant="reddot" imageSrc={imageSrc} imageAlt={accessoryDisplayName(selected)} label={accessoryStokKodu(String(selected.id))} />
                   <div className="shrink-0 space-y-1 border-t border-white/10 px-3 py-2 font-mono-technical text-[9px] uppercase">
-                    <p className="text-slate-500">AKSESUAR TÜRÜ: <span className="text-[#00FF41]">{typeLabel}</span></p>
-                    <p className="font-mono-technical text-[9px] uppercase tracking-[0.12em] text-[#00FF41]">ENVANTERE GİRİŞ TARİHİ: <span className="tabular-nums">{entryDate}</span></p>
+                    <p className="text-app-text/55">AKSESUAR TÜRÜ: <span className="text-accent">{typeLabel}</span></p>
+                    <p className="font-mono-technical text-[9px] uppercase tracking-[0.12em] text-accent">ENVANTERE GİRİŞ TARİHİ: <span className="tabular-nums">{entryDate}</span></p>
                   </div>
-                  <div className="mt-auto shrink-0 border-t border-[#00FF41]/25 bg-[#050805] px-3 py-2">
-                    <p className={`font-mono-technical text-[9px] font-bold uppercase ${mounted ? 'text-[#00FF41]' : 'animate-pulse text-[#ffb400]'}`}>
+                  <div className="mt-auto shrink-0 border-t border-accent/25 bg-app-bg px-3 py-2">
+                    <p className={`font-mono-technical text-[9px] font-bold uppercase ${mounted ? 'text-accent' : 'animate-pulse text-accent'}`}>
                       DURUM: {mounted ? statusLabel : 'BOŞTA · ENSTALASYONA HAZIR'}
                     </p>
                   </div>
@@ -542,19 +542,19 @@ export default function AttachmentsDeepDive({
               )}
             </div>
           ) : (
-            <p className="flex flex-1 items-center justify-center p-6 font-mono-technical text-[9px] uppercase text-slate-600">AKSESUAR_SEÇİN</p>
+            <p className="flex flex-1 items-center justify-center p-6 font-mono-technical text-[9px] uppercase text-app-text/45">AKSESUAR_SEÇİN</p>
           )}
         </TacticalPanel>
 
         <TacticalPanel className="flex min-h-0 flex-col overflow-hidden border-white/10 bg-black/40 p-0">
-          <p className="shrink-0 border-b border-white/10 bg-[#080808] px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-[#00FF41]/80">
+          <p className="shrink-0 border-b border-white/10 bg-app-bg px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-accent/80">
             EYLEM · DENETİM_HUB
           </p>
           {selected ? (
             <div className="flex min-h-0 flex-1 flex-col">
-              <div className="flex shrink-0 gap-1 border-b border-white/10 bg-[#080808] p-1">
-                <button type="button" onClick={() => setRightTab('deploy')} className={`flex-1 rounded px-2 py-1.5 font-mono-technical text-[7px] font-bold uppercase tracking-wide ${rightTab === 'deploy' ? 'border border-[#00FF41]/50 bg-[#00FF41]/15 text-[#00FF41]' : 'text-slate-500 hover:text-slate-300'}`}>[ 📑 MONTAJ KAYITLARI ]</button>
-                <button type="button" onClick={() => setRightTab('maint')} className={`flex-1 rounded px-2 py-1.5 font-mono-technical text-[7px] font-bold uppercase tracking-wide ${rightTab === 'maint' ? 'border border-[#ffb400]/50 bg-[#ffb400]/15 text-[#ffb400]' : 'text-slate-500 hover:text-slate-300'}`}>[ 🛠️ TEKNİK BAKIM ]</button>
+              <div className="flex shrink-0 gap-1 border-b border-white/10 bg-app-bg p-1">
+                <button type="button" onClick={() => setRightTab('deploy')} className={`flex-1 rounded px-2 py-1.5 font-mono-technical text-[7px] font-bold uppercase tracking-wide ${rightTab === 'deploy' ? 'border border-accent/50 bg-accent/15 text-accent' : 'text-app-text/55 hover:text-app-text/90'}`}>[ 📑 MONTAJ KAYITLARI ]</button>
+                <button type="button" onClick={() => setRightTab('maint')} className={`flex-1 rounded px-2 py-1.5 font-mono-technical text-[7px] font-bold uppercase tracking-wide ${rightTab === 'maint' ? 'border border-accent/50 bg-accent/15 text-accent' : 'text-app-text/55 hover:text-app-text/90'}`}>[ 🛠️ TEKNİK BAKIM ]</button>
               </div>
 
               <div className={`min-h-0 flex-1 p-3 ${panelScroll}`}>
@@ -567,24 +567,24 @@ export default function AttachmentsDeepDive({
                       <p className="font-mono-technical text-[8px] font-bold uppercase tracking-wider text-red-400/90">MONTAJ_KONTROL · EYLEM</p>
                       {mounted ? (
                         <>
-                          <p className="rounded border border-[#00FF41]/40 bg-[#00FF41]/10 px-2 py-1.5 font-mono-technical text-[9px] font-bold uppercase text-[#00FF41]">DURUM: {statusLabel}</p>
+                          <p className="rounded border border-accent/40 bg-accent/10 px-2 py-1.5 font-mono-technical text-[9px] font-bold uppercase text-accent">DURUM: {statusLabel}</p>
                           <label className="block">
-                            <span className="font-mono-technical text-[7px] uppercase text-slate-500">İŞLEM_TARİHİ (KAYIT)</span>
+                            <span className="font-mono-technical text-[7px] uppercase text-app-text/55">İŞLEM_TARİHİ (KAYIT)</span>
                             <input type="date" className={`${dateInputClass} mt-1`} value={logDate} max={todayIsoDate()} onChange={(e) => setLogDate(e.target.value)} disabled={busy} />
                           </label>
                           <button type="button" disabled={busy} onClick={detachAccessory} className="w-full rounded border border-amber-500/45 bg-amber-950/25 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.15)] transition hover:bg-amber-950/45 disabled:opacity-40">[ ⌧ AKSESUARI SÖK / DETACH ]</button>
                         </>
                       ) : (
                         <>
-                          <p className="animate-pulse font-mono-technical text-[9px] font-bold uppercase text-[#ffb400]">DURUM: BOŞTA · ENSTALASYONA HAZIR</p>
-                          <button type="button" onClick={() => setIsMountModalOpen(true)} disabled={busy} className="w-full rounded border border-[#00FF41]/60 bg-[#00FF41]/15 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#00FF41] shadow-[0_0_20px_rgba(0,255,65,0.35)] transition hover:bg-[#00FF41]/25 hover:shadow-[0_0_28px_rgba(0,255,65,0.5)] disabled:opacity-40">[ ⚡ YENİ MONTAJ İŞLEMİ BAŞLAT ]</button>
+                          <p className="animate-pulse font-mono-technical text-[9px] font-bold uppercase text-accent">DURUM: BOŞTA · ENSTALASYONA HAZIR</p>
+                          <button type="button" onClick={() => setIsMountModalOpen(true)} disabled={busy} className="w-full rounded border border-accent/60 bg-accent/15 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent shadow-[0_0_24px_-8px_color-mix(in_srgb,var(--accent-color)_35%,transparent)]] transition hover:bg-accent/25 hover:shadow-[0_0_24px_-8px_color-mix(in_srgb,var(--accent-color)_35%,transparent)]] disabled:opacity-40">[ ⚡ YENİ MONTAJ İŞLEMİ BAŞLAT ]</button>
                         </>
                       )}
                     </div>
                   </section>
                 ) : (
                   <section className="space-y-3">
-                    <button type="button" onClick={() => setIsMaintenanceModalOpen(true)} disabled={busy || techMaintSaving} className="w-full rounded border border-[#00FF41]/60 bg-[#00FF41]/15 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#00FF41] shadow-[0_0_20px_rgba(0,255,65,0.35)] transition hover:bg-[#00FF41]/25 hover:shadow-[0_0_28px_rgba(0,255,65,0.5)] disabled:opacity-40">[ + YENİ TEKNİK KAYIT GİRİŞİ ]</button>
+                    <button type="button" onClick={() => setIsMaintenanceModalOpen(true)} disabled={busy || techMaintSaving} className="w-full rounded border border-accent/60 bg-accent/15 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent shadow-[0_0_24px_-8px_color-mix(in_srgb,var(--accent-color)_35%,transparent)]] transition hover:bg-accent/25 hover:shadow-[0_0_24px_-8px_color-mix(in_srgb,var(--accent-color)_35%,transparent)]] disabled:opacity-40">[ + YENİ TEKNİK KAYIT GİRİŞİ ]</button>
                     <button type="button" onClick={() => openCenterLogs('maint')} disabled={!selected} className="w-full rounded border border-[#00b4ff]/55 bg-[#00b4ff]/12 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#5ec8ff] shadow-[0_0_18px_rgba(0,180,255,0.28)] transition hover:bg-[#00b4ff]/20 hover:shadow-[0_0_24px_rgba(0,180,255,0.4)] disabled:opacity-40">
                       [ 🔍 İŞLEM KAYITLARINI GÖRÜNTÜLE ]
                     </button>
@@ -593,7 +593,7 @@ export default function AttachmentsDeepDive({
               </div>
             </div>
           ) : (
-            <p className="flex flex-1 items-center justify-center p-6 font-mono-technical text-[9px] uppercase text-slate-600">AKSESUAR_SEÇİN</p>
+            <p className="flex flex-1 items-center justify-center p-6 font-mono-technical text-[9px] uppercase text-app-text/45">AKSESUAR_SEÇİN</p>
           )}
         </TacticalPanel>
       </div>

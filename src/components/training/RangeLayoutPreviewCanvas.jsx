@@ -62,7 +62,7 @@ export default function RangeLayoutPreviewCanvas({
 
   return (
     <div
-      className={`relative overflow-hidden rounded border border-[#00FF41]/25 bg-[#050805] shadow-[0_0_10px_rgba(34,197,94,0.2)] ${className}`}
+      className={`relative overflow-hidden rounded border border-accent/25 bg-app-bg shadow-[0_0_10px_rgba(34,197,94,0.2)] ${className}`}
     >
       <canvas
         ref={canvasRef}
@@ -70,7 +70,7 @@ export default function RangeLayoutPreviewCanvas({
         aria-label={readOnly ? 'Taktik layout salt okunur önizleme' : 'Taktik layout önizleme'}
       />
       {readOnly ? (
-        <span className="pointer-events-none absolute right-2 top-2 rounded border border-[#00FF41]/35 bg-black/70 px-2 py-0.5 font-mono-technical text-[7px] font-bold uppercase tracking-wider text-[#00FF41]/90">
+        <span className="pointer-events-none absolute right-2 top-2 rounded border border-accent/35 bg-black/70 px-2 py-0.5 font-mono-technical text-[7px] font-bold uppercase tracking-wider text-accent/90">
           SALT OKUNUR
         </span>
       ) : null}

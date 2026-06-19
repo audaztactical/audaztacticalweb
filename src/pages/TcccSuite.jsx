@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import {
   AlertTriangle,
   ClipboardList,
@@ -76,22 +77,23 @@ function CategoryCard({ title, description, preview, alert, accent, icon, onClic
       {alert}
       <div className="mb-4 flex items-start justify-between gap-3">
         <CardIcon
-          className={`size-6 shrink-0 ${accent === 'red' ? 'text-red-500' : accent === 'amber' ? 'text-amber-500' : 'text-slate-400'} transition-colors group-hover:text-red-400`}
+          className={`size-6 shrink-0 ${accent === 'red' ? 'text-red-500' : accent === 'amber' ? 'text-amber-500' : 'text-app-text/70'} transition-colors group-hover:text-red-400`}
           strokeWidth={1.5}
           aria-hidden
         />
-        <span className="rounded border border-slate-800 bg-slate-900 px-2 py-0.5 font-mono text-[8px] font-bold uppercase tracking-widest text-slate-500 group-hover:border-slate-700 group-hover:text-slate-300">
+        <span className="rounded border border-slate-800 bg-slate-900 px-2 py-0.5 font-mono text-[8px] font-bold uppercase tracking-widest text-app-text/55 group-hover:border-slate-700 group-hover:text-app-text/90">
           GİRİŞ
         </span>
       </div>
       <h3 className="font-mono text-sm font-bold uppercase leading-snug tracking-wide text-slate-100">{title}</h3>
-      <p className="mt-2 font-mono text-[11px] leading-relaxed text-slate-500">{description}</p>
+      <p className="mt-2 font-mono text-[11px] leading-relaxed text-app-text/55">{description}</p>
       <div className="mt-5">{preview}</div>
     </button>
   )
 }
 
 export default function TcccSuite() {
+  const location = useLocation()
   const { user, userData, isConfigured } = useAuth()
   const { hasCriticalExpiry, criticalCount } = useTcccAlerts()
 
@@ -120,6 +122,24 @@ export default function TcccSuite() {
 
   const [activeSection, setActiveSection] = useState(/** @type {ActiveSection} */ ('menu'))
 
+  useEffect(() => {
+    setActiveSection('menu')
+  }, [location.pathname, location.key])
+
+  useEffect(() => {
+    /** @param {Event} event */
+    const onReenter = (event) => {
+      const detail = /** @type {{ to?: string } | undefined} */ (
+        /** @type {CustomEvent} */ (event).detail
+      )
+      if (detail?.to === '/tccc') {
+        setActiveSection('menu')
+      }
+    }
+    window.addEventListener('audaz:route-reenter', onReenter)
+    return () => window.removeEventListener('audaz:route-reenter', onReenter)
+  }, [])
+
   const bloodType = (userData?.bloodType || '').trim() || 'BELİRTİLMEDİ'
   const callsign = (userData?.callsign || user?.displayName || '').trim() || '—'
 
@@ -128,7 +148,7 @@ export default function TcccSuite() {
 
   const statusBanner =
     !isConfigured || !readyData ? (
-      <p className="font-mono text-[10px] uppercase text-slate-500">OTURUM / VERİ KANALI</p>
+      <p className="font-mono text-[10px] uppercase text-app-text/55">OTURUM / VERİ KANALI</p>
     ) : ifakListenError ? (
       <div className="flex rounded-lg border border-red-500/30 bg-red-950/30 px-3 py-2 text-red-300">
         <AlertTriangle className="size-5" aria-hidden />
@@ -148,9 +168,9 @@ export default function TcccSuite() {
         preview={
           <div className="rounded-lg border border-red-800/50 bg-red-950/25 px-4 py-3">
             <p className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-red-500/80">ASKERİ KÜNYE · DURUM</p>
-            <p className="mt-2 font-mono text-[10px] uppercase text-slate-500">TELSİZ KODU</p>
-            <p className="font-mono text-sm font-bold uppercase tracking-wider text-slate-200">{callsign}</p>
-            <p className="mt-3 font-mono text-[10px] uppercase text-slate-500">KAN GRUBU</p>
+            <p className="mt-2 font-mono text-[10px] uppercase text-app-text/55">TELSİZ KODU</p>
+            <p className="font-mono text-sm font-bold uppercase tracking-wider text-app-text">{callsign}</p>
+            <p className="mt-3 font-mono text-[10px] uppercase text-app-text/55">KAN GRUBU</p>
             <p className="font-mono text-2xl font-black uppercase tracking-[0.1em] text-red-500">{bloodType}</p>
           </div>
         }
@@ -164,7 +184,7 @@ export default function TcccSuite() {
         description={MENU_CARDS[1].description}
         onClick={() => setActiveSection('march_documents')}
         preview={
-          <p className="font-mono text-[10px] font-bold uppercase leading-relaxed tracking-wide text-slate-400">
+          <p className="font-mono text-[10px] font-bold uppercase leading-relaxed tracking-wide text-app-text/70">
             MARCH DOKTRİNİ, CANLI DD-1380 YARALI KARTI, 9-LINE MEDEVAC VE BOŞ PDF ŞABLON İNDİRME MERKEZİ
           </p>
         }
@@ -188,7 +208,7 @@ export default function TcccSuite() {
           ) : null
         }
         preview={
-          <p className="font-mono text-[10px] font-bold uppercase leading-relaxed tracking-wide text-slate-400">
+          <p className="font-mono text-[10px] font-bold uppercase leading-relaxed tracking-wide text-app-text/70">
             KİŞİSEL IFAK MALZEME YÖNETİMİ & KRİTİK SON KULLANMA TARİHİ (SKT) TAKİBİ
           </p>
         }
@@ -201,7 +221,7 @@ export default function TcccSuite() {
       <button
         type="button"
         onClick={() => setActiveSection('menu')}
-        className="mb-4 inline-flex items-center gap-2 rounded-sm border border-slate-800 bg-slate-900/50 px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider text-slate-400 transition-colors hover:border-red-900/50 hover:text-red-500"
+        className="mb-4 inline-flex items-center gap-2 rounded-sm border border-slate-800 bg-slate-900/50 px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider text-app-text/70 transition-colors hover:border-red-900/50 hover:text-red-500"
       >
         <span aria-hidden>⬅</span>
         TAKTİK MENÜYE DÖN
@@ -251,7 +271,7 @@ export default function TcccSuite() {
 
   return (
     <PageShell title="TCCC" subtitle="TACTICAL MEDICAL SUITE">
-      <div className="space-y-5 text-slate-200">
+      <div className="space-y-5 text-app-text">
         {statusBanner}
 
         {activeSection === 'menu' ? (

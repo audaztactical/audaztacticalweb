@@ -12,6 +12,7 @@ import { deleteBurnMessage, formatMessageTime, markMessageAsRead } from '../../l
  *   onBurnDestroyed: (msg: MuhabereMessage) => void
  *   onHideMessage?: (messageId: string) => void
  *   hideBusy?: boolean
+ *   onMediaLoaded?: () => void
  * }} props
  */
 export default function MuhabereMessageRow({
@@ -21,6 +22,7 @@ export default function MuhabereMessageRow({
   onBurnDestroyed,
   onHideMessage,
   hideBusy = false,
+  onMediaLoaded,
 }) {
   const rowRef = useRef(/** @type {HTMLDivElement | null} */ (null))
   const menuRef = useRef(/** @type {HTMLDivElement | null} */ (null))
@@ -177,8 +179,9 @@ export default function MuhabereMessageRow({
           <img
             src={msg.imageUrl}
             alt="Taktik görsel"
-            loading="lazy"
+            loading="eager"
             decoding="async"
+            onLoad={() => onMediaLoaded?.()}
             className="max-h-64 max-w-xs object-cover"
           />
         </button>

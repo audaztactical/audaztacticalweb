@@ -34,13 +34,13 @@ export default function WeaponMaintenanceAlarmPanel({ weapons, rangeLogs, update
               key={String(w.id)}
               className="flex flex-wrap items-center justify-between gap-2 rounded border border-red-500/30 bg-black/40 px-2 py-1.5"
             >
-              <span className="font-mono-technical text-[8px] uppercase text-slate-300">
+              <span className="font-mono-technical text-[8px] uppercase text-app-text/90">
                 <span className="text-red-400/90">[{weaponStokKodu(String(w.id))}]</span> {weaponDisplayName(w)}
               </span>
               <button
                 type="button"
                 onClick={() => setModalWeapon(w)}
-                className="shrink-0 rounded border border-[#ffb400]/50 bg-[#ffb400]/10 px-2 py-1 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-[#ffb400] hover:bg-[#ffb400]/20"
+                className="shrink-0 rounded border border-accent/50 bg-accent/10 px-2 py-1 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-accent hover:bg-accent/20"
               >
                 BAKIM KAYDI GİR
               </button>

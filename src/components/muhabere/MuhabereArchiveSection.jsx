@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Archive, ArchiveRestore, ChevronDown, ChevronRight, Loader2, Radio } from 'lucide-react'
-import OperatorBadge from '../ui/OperatorBadge'
+import OperatorAvatar from '../ui/OperatorAvatar'
+import PresenceIndicator from '../ui/PresenceIndicator'
 
 /** @typedef {import('../../lib/firestoreTaktikMuhabere').MuhabereChannel} MuhabereChannel */
 /** @typedef {import('../../lib/firestoreTaktikMuhabere').MuhabereContact} MuhabereContact */
@@ -13,6 +14,7 @@ import OperatorBadge from '../ui/OperatorBadge'
  *   selectedUid: string | null
  *   channelUnreadById: Record<string, number>
  *   dmUnreadByPeerId: Record<string, number>
+ *   presenceMap?: Record<string, { online: boolean; label: string }>
  *   onSelectChannel: (channelId: string) => void
  *   onSelectContact: (uid: string) => void
  *   onUnarchiveChannel: (channel: MuhabereChannel) => void | Promise<void>
@@ -28,6 +30,7 @@ export default function MuhabereArchiveSection({
   selectedUid,
   channelUnreadById,
   dmUnreadByPeerId,
+  presenceMap = {},
   onSelectChannel,
   onSelectContact,
   onUnarchiveChannel,
@@ -122,6 +125,7 @@ export default function MuhabereArchiveSection({
           {archivedContacts.map((contact) => {
             const active = contact.uid === selectedUid
             const unread = dmUnreadByPeerId[contact.uid] ?? 0
+            const presence = presenceMap[contact.uid]
             return (
               <li key={`dm-${contact.uid}`} className="flex items-stretch gap-1">
                 <button
@@ -136,14 +140,28 @@ export default function MuhabereArchiveSection({
                       : 'border-l-transparent text-zinc-500 hover:bg-zinc-800/70',
                   ].join(' ')}
                 >
-                  <OperatorBadge size="sm" callsign={contact.callsign} username={contact.username} />
-                  <span
-                    className={[
-                      'min-w-0 flex-1 truncate text-xs font-semibold uppercase tracking-wide',
-                      unread > 0 && !active ? 'blink text-lime-300' : '',
-                    ].join(' ')}
-                  >
-                    {contact.callsign}
+                  <OperatorAvatar
+                    uid={contact.uid}
+                    size="sm"
+                    callsign={contact.callsign}
+                    username={contact.username}
+                    photoUrl={contact.photoURL ?? undefined}
+                    online={presence?.online}
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span
+                      className={[
+                        'block truncate text-xs font-semibold uppercase tracking-wide',
+                        unread > 0 && !active ? 'blink text-lime-300' : '',
+                      ].join(' ')}
+                    >
+                      {contact.callsign}
+                    </span>
+                    <PresenceIndicator
+                      online={presence?.online ?? false}
+                      label={presence?.label}
+                      className="mt-0.5"
+                    />
                   </span>
                   {unread > 0 ? (
                     <span className="shrink-0 rounded-sm bg-lime-500/25 px-1.5 py-0.5 font-mono text-[9px] font-bold text-lime-400">

@@ -78,7 +78,7 @@ export default function MatrixWireVisualizer({
   return (
     <div
       ref={wrapRef}
-      className={`matrix-viz-stage relative w-full overflow-hidden border-b border-[#00FF41]/20 bg-black/80 ${heightClass} ${
+      className={`matrix-viz-stage relative w-full overflow-hidden border-b border-accent/20 bg-black/80 ${heightClass} ${
         hubMode ? 'cursor-pointer' : 'cursor-crosshair'
       } ${className}`.trim()}
       aria-hidden={hubMode ? undefined : true}
@@ -90,14 +90,14 @@ export default function MatrixWireVisualizer({
       <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_center,rgba(0,255,65,0.04)_0%,transparent_72%)]" />
 
       <div className="pointer-events-none absolute inset-0 z-[1]">
-        <div className="matrix-viz-stream matrix-viz-stream--left font-mono text-[7px] leading-tight text-[#00FF41]/30">
+        <div className="matrix-viz-stream matrix-viz-stream--left font-mono text-[7px] leading-tight text-accent/30">
           {Array.from({ length: STREAM_LINES }, (_, i) => (
             <p key={`l-${i}`}>
               {glyphs[(i + tick) % glyphs.length]} · {((tick * 997 + i * 137) % 0xffff).toString(16).toUpperCase()}
             </p>
           ))}
         </div>
-        <div className="matrix-viz-stream matrix-viz-stream--right font-mono text-[7px] leading-tight text-[#00FF41]/30">
+        <div className="matrix-viz-stream matrix-viz-stream--right font-mono text-[7px] leading-tight text-accent/30">
           {Array.from({ length: STREAM_LINES }, (_, i) => (
             <p key={`r-${i}`}>
               {glyphs[(i + tick + 2) % glyphs.length]} · {((tick * 431 + i * 89) % 0xffff).toString(16).toUpperCase()}
@@ -128,7 +128,7 @@ export default function MatrixWireVisualizer({
       </div>
 
       {!hubMode && label ? (
-        <div className="pointer-events-none absolute inset-x-0 top-2 z-[3] flex justify-between px-2 font-mono-technical text-[7px] uppercase tracking-widest text-[#00FF41]/75">
+        <div className="pointer-events-none absolute inset-x-0 top-2 z-[3] flex justify-between px-2 font-mono-technical text-[7px] uppercase tracking-widest text-accent/75">
           <span>{label}</span>
           <span className="max-w-[55%] truncate text-right tabular-nums">{hud}</span>
         </div>
@@ -136,14 +136,14 @@ export default function MatrixWireVisualizer({
 
       {!hubMode ? (
         <>
-          <div className="pointer-events-none absolute bottom-2 left-2 right-2 z-[3] flex justify-between font-mono text-[6px] text-[#00FF41]/50">
+          <div className="pointer-events-none absolute bottom-2 left-2 right-2 z-[3] flex justify-between font-mono text-[6px] text-accent/50">
             <span>MATRIX_IX · HD_ASSET</span>
             <span className="tabular-nums">01001100 · İNTERAKTİF</span>
           </div>
-          <div className="pointer-events-none absolute right-2 top-8 z-[3] hidden w-[4.5rem] border border-[#00FF41]/15 bg-black/50 p-1.5 font-mono text-[6px] text-[#00FF41]/45 sm:block">
-            <p className="mb-1 text-[#00FF41]/65">GEO_ANALİZ</p>
+          <div className="pointer-events-none absolute right-2 top-8 z-[3] hidden w-[4.5rem] border border-accent/15 bg-black/50 p-1.5 font-mono text-[6px] text-accent/45 sm:block">
+            <p className="mb-1 text-accent/65">GEO_ANALİZ</p>
             {lines.slice(0, 4).map((line, i) => (
-              <p key={line} className={i === tick % 4 ? 'text-[#00FF41]' : ''}>
+              <p key={line} className={i === tick % 4 ? 'text-accent' : ''}>
                 {i === tick % 4 ? '▸' : '·'} {line}
               </p>
             ))}

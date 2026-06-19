@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronLeft, Loader2, MessagesSquare, Plus, Send } from 'lucide-react'
+import ForumImageBlock from '../components/common/ForumImageBlock'
+import TacticalImageAttachField from '../components/common/TacticalImageAttachField'
 import ForumPostCard from '../components/forum/ForumPostCard'
+import OperatorAvatar from '../components/ui/OperatorAvatar'
 import PageShell from '../components/layout/PageShell'
 import { useAuth } from '../context/AuthContext'
+import { useStorage } from '../hooks/useStorage'
 import { emitFirebaseError } from '../lib/firebaseErrorBus'
 import {
   FORUM_CATEGORIES,
@@ -14,10 +18,17 @@ import {
   subscribeForumPosts,
   subscribeForumReplies,
 } from '../lib/firestoreForum'
+import { forumStoragePath } from '../services/storageService'
 
 /** @typedef {import('../lib/firestoreForum').ForumPost} ForumPost */
 /** @typedef {import('../lib/firestoreForum').ForumReply} ForumReply */
 /** @typedef {import('../lib/firestoreForum').ForumCategory} ForumCategory */
+
+/** @param {string} fileName */
+function safeImageExt(fileName) {
+  const ext = fileName.split('.').pop()?.toLowerCase() || 'jpg'
+  return ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext) ? ext : 'jpg'
+}
 
 /** @param {string} title */
 function normalizeForumTitle(title) {
@@ -73,7 +84,15 @@ function ForumThreadView({ post, uid, callsign, onBack }) {
   const [replies, setReplies] = useState(/** @type {ForumReply[]} */ ([]))
   const [loading, setLoading] = useState(true)
   const [replyDraft, setReplyDraft] = useState('')
+  const [replyImageUrl, setReplyImageUrl] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const {
+    upload: uploadReplyImage,
+    loading: replyImgLoading,
+    progress: replyImgProgress,
+    error: replyImgError,
+    reset: resetReplyImg,
+  } = useStorage()
 
   useEffect(() => {
     setLoading(true)
@@ -91,18 +110,35 @@ function ForumThreadView({ post, uid, callsign, onBack }) {
     return unsub
   }, [post.id])
 
+  const handleReplyImagePick = async (/** @type {File} */ file) => {
+    if (!uid || !file.type.startsWith('image/')) return
+    resetReplyImg()
+    try {
+      const fileName = `reply_${Date.now()}.${safeImageExt(file.name)}`
+      const url = await uploadReplyImage(file, forumStoragePath(post.id), fileName)
+      setReplyImageUrl(url)
+    } catch (err) {
+      emitFirebaseError(err)
+    }
+  }
+
   const handleReply = async (e) => {
     e.preventDefault()
-    if (!uid || !replyDraft.trim() || submitting) return
+    const text = replyDraft.trim()
+    if (!uid || submitting || replyImgLoading) return
+    if (!text && !replyImageUrl) return
 
     setSubmitting(true)
     try {
       await createForumReply(post.id, {
-        content: replyDraft.trim(),
+        content: text,
+        imageUrl: replyImageUrl,
         authorId: uid,
         authorCallsign: callsign,
       })
       setReplyDraft('')
+      setReplyImageUrl('')
+      resetReplyImg()
     } catch (err) {
       emitFirebaseError(err)
     } finally {
@@ -122,13 +158,21 @@ function ForumThreadView({ post, uid, callsign, onBack }) {
       </button>
 
       <article className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-5">
+        <div className="mb-3 flex flex-wrap items-center gap-3">
+          <OperatorAvatar uid={post.authorId} callsign={post.authorCallsign} size="sm" />
+          <div className="min-w-0">
+            <p className="font-mono text-xs font-bold uppercase tracking-wide text-lime-400">{post.authorCallsign}</p>
+            <span className="font-mono text-[10px] text-zinc-500">{formatForumTimestamp(post.timestamp)}</span>
+          </div>
+        </div>
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <CategoryBadge category={post.category} />
-          <span className="font-mono text-[10px] text-zinc-500">{formatForumTimestamp(post.timestamp)}</span>
         </div>
         <h2 className="font-mono text-lg font-bold uppercase tracking-wide text-zinc-100">{post.title}</h2>
-        <p className="mt-2 font-mono text-xs text-lime-500">{post.authorCallsign}</p>
-        <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-zinc-300">{post.content}</p>
+        {post.content ? (
+          <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-zinc-300">{post.content}</p>
+        ) : null}
+        <ForumImageBlock url={post.imageUrl} alt={post.title} />
       </article>
 
       <section className="mt-6" aria-label="Yanıtlar">
@@ -149,11 +193,17 @@ function ForumThreadView({ post, uid, callsign, onBack }) {
           <ul className="space-y-3">
             {replies.map((reply) => (
               <li key={reply.id} className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-4">
-                <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10px] uppercase tracking-wider">
-                  <span className="font-bold text-lime-400">{reply.authorCallsign}</span>
-                  <span className="text-zinc-500">{formatForumTimestamp(reply.timestamp)}</span>
+                <div className="mb-2 flex flex-wrap items-center gap-3">
+                  <OperatorAvatar uid={reply.authorId} callsign={reply.authorCallsign} size="sm" />
+                  <div className="font-mono text-[10px] uppercase tracking-wider">
+                    <span className="font-bold text-lime-400">{reply.authorCallsign}</span>
+                    <span className="ml-2 text-zinc-500">{formatForumTimestamp(reply.timestamp)}</span>
+                  </div>
                 </div>
-                <p className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-300">{reply.content}</p>
+                {reply.content ? (
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-300">{reply.content}</p>
+                ) : null}
+                <ForumImageBlock url={reply.imageUrl} />
               </li>
             ))}
           </ul>
@@ -167,14 +217,28 @@ function ForumThreadView({ post, uid, callsign, onBack }) {
           onChange={(e) => setReplyDraft(e.target.value)}
           rows={3}
           maxLength={2000}
-          disabled={!uid || submitting}
+          disabled={!uid || submitting || replyImgLoading}
           placeholder="Brifing notunu yaz…"
           className="w-full resize-y rounded border border-zinc-800 bg-zinc-950 px-3 py-2.5 font-mono text-sm text-zinc-300 placeholder:text-zinc-600 focus:border-lime-500/40 focus:outline-none focus:ring-1 focus:ring-lime-500/30 disabled:opacity-40"
+        />
+        <TacticalImageAttachField
+          className="mt-3"
+          label="GÖRSEL EKLE"
+          previewUrl={replyImageUrl}
+          uploading={replyImgLoading}
+          progress={replyImgProgress}
+          error={replyImgError}
+          disabled={!uid || submitting}
+          onPick={handleReplyImagePick}
+          onClear={() => {
+            setReplyImageUrl('')
+            resetReplyImg()
+          }}
         />
         <div className="mt-3 flex justify-end">
           <button
             type="submit"
-            disabled={!uid || !replyDraft.trim() || submitting}
+            disabled={!uid || (!replyDraft.trim() && !replyImageUrl) || submitting || replyImgLoading}
             className="inline-flex items-center gap-2 rounded border border-lime-500/40 bg-lime-950/20 px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-lime-400 transition hover:border-lime-500 hover:bg-lime-950/40 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {submitting ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Send className="size-4" strokeWidth={1.75} aria-hidden />}
@@ -209,6 +273,14 @@ export default function Forum() {
   const [content, setContent] = useState('')
   const [category, setCategory] = useState(/** @type {ForumCategory} */ ('GENEL OPERASYON'))
   const [submitting, setSubmitting] = useState(false)
+  const [postImageUrl, setPostImageUrl] = useState('')
+  const {
+    upload: uploadPostImage,
+    loading: postImgLoading,
+    progress: postImgProgress,
+    error: postImgError,
+    reset: resetPostImg,
+  } = useStorage()
 
   useEffect(() => {
     setLoading(true)
@@ -244,15 +316,20 @@ export default function Forum() {
 
   const openPostById = useCallback(
     (/** @type {ForumPost} */ post) => {
-      setActivePost(post)
-      setSearchParams({ post: post.id }, { replace: true })
+      setActivePost((prev) => (prev?.id === post.id ? prev : post))
+      if (postIdFromUrl !== post.id) {
+        setSearchParams({ post: post.id }, { replace: true })
+      }
       clearForumDeepLinkState(post.id)
     },
-    [setSearchParams, clearForumDeepLinkState],
+    [setSearchParams, clearForumDeepLinkState, postIdFromUrl],
   )
 
   useEffect(() => {
-    if (!postTargetId && !postTitleFromState) return
+    if (!postTargetId && !postTitleFromState) {
+      setActivePost((prev) => (prev ? null : prev))
+      return undefined
+    }
 
     const openByTitle = () => {
       if (!postTitleFromState || loading) return false
@@ -265,7 +342,10 @@ export default function Forum() {
     if (postTargetId) {
       const found = posts.find((p) => p.id === postTargetId)
       if (found) {
-        openPostById(found)
+        setActivePost((prev) => (prev?.id === found.id ? prev : found))
+        if (postIdFromState || postTitleFromState) {
+          clearForumDeepLinkState(found.id)
+        }
         return undefined
       }
 
@@ -296,7 +376,15 @@ export default function Forum() {
 
     openByTitle()
     return undefined
-  }, [postTargetId, postTitleFromState, posts, loading, openPostById, location.key])
+  }, [
+    postTargetId,
+    postTitleFromState,
+    postIdFromState,
+    posts,
+    loading,
+    openPostById,
+    clearForumDeepLinkState,
+  ])
 
   const openPost = useCallback(
     (/** @type {ForumPost} */ post) => {
@@ -307,20 +395,21 @@ export default function Forum() {
 
   const closePost = useCallback(() => {
     setActivePost(null)
-    setSearchParams({}, { replace: true })
-    navigate('/forum', { replace: true, state: {} })
-  }, [setSearchParams, navigate])
+    navigate({ pathname: '/forum', search: '' }, { replace: true, state: {} })
+  }, [navigate])
 
   const handleCreatePost = useCallback(
     async (e) => {
       e.preventDefault()
-      if (!uid || !title.trim() || !content.trim() || submitting) return
+      if (!uid || !title.trim() || submitting || postImgLoading) return
+      if (!content.trim() && !postImageUrl) return
 
       setSubmitting(true)
       try {
         await createForumPost({
           title: title.trim(),
           content: content.trim(),
+          imageUrl: postImageUrl,
           category,
           authorId: uid,
           authorCallsign: callsign,
@@ -328,6 +417,8 @@ export default function Forum() {
         setTitle('')
         setContent('')
         setCategory('GENEL OPERASYON')
+        setPostImageUrl('')
+        resetPostImg()
         setShowNewForm(false)
       } catch (err) {
         emitFirebaseError(err)
@@ -335,8 +426,20 @@ export default function Forum() {
         setSubmitting(false)
       }
     },
-    [uid, title, content, category, callsign, submitting],
+    [uid, title, content, category, callsign, submitting, postImgLoading, postImageUrl, resetPostImg],
   )
+
+  const handlePostImagePick = async (/** @type {File} */ file) => {
+    if (!uid || !file.type.startsWith('image/')) return
+    resetPostImg()
+    try {
+      const fileName = `brief_${Date.now()}.${safeImageExt(file.name)}`
+      const url = await uploadPostImage(file, forumStoragePath(uid), fileName)
+      setPostImageUrl(url)
+    } catch (err) {
+      emitFirebaseError(err)
+    }
+  }
 
   return (
     <PageShell
@@ -409,14 +512,36 @@ export default function Forum() {
                 onChange={(e) => setContent(e.target.value)}
                 rows={5}
                 maxLength={4000}
+                disabled={postImgLoading}
                 placeholder="[ BRİFİNG İÇERİĞİ ] — Tartışma konusunu detaylandır…"
-                className="w-full resize-y rounded border border-zinc-800 bg-zinc-950 px-3 py-2.5 font-mono text-sm text-zinc-300 placeholder:text-zinc-600 focus:border-lime-500/40 focus:outline-none focus:ring-1 focus:ring-lime-500/30"
+                className="w-full resize-y rounded border border-zinc-800 bg-zinc-950 px-3 py-2.5 font-mono text-sm text-zinc-300 placeholder:text-zinc-600 focus:border-lime-500/40 focus:outline-none focus:ring-1 focus:ring-lime-500/30 disabled:opacity-40"
+              />
+
+              <TacticalImageAttachField
+                className="mt-3"
+                label="GÖRSEL EKLE"
+                previewUrl={postImageUrl}
+                uploading={postImgLoading}
+                progress={postImgProgress}
+                error={postImgError}
+                disabled={!uid || submitting}
+                onPick={handlePostImagePick}
+                onClear={() => {
+                  setPostImageUrl('')
+                  resetPostImg()
+                }}
               />
 
               <div className="mt-3 flex justify-end">
                 <button
                   type="submit"
-                  disabled={!uid || !title.trim() || !content.trim() || submitting}
+                  disabled={
+                    !uid ||
+                    !title.trim() ||
+                    (!content.trim() && !postImageUrl) ||
+                    submitting ||
+                    postImgLoading
+                  }
                   className="inline-flex items-center gap-2 rounded border border-lime-500/40 bg-lime-950/20 px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-lime-400 transition hover:border-lime-500 hover:bg-lime-950/40 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {submitting ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Send className="size-4" strokeWidth={1.75} aria-hidden />}

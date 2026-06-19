@@ -13,12 +13,6 @@ export function resetGoogleRedirectResultCache() {
   redirectResultPromise = null
 }
 
-function isLocalDevHost() {
-  if (typeof window === 'undefined') return false
-  const host = window.location.hostname
-  return import.meta.env.DEV && (host === 'localhost' || host === '127.0.0.1')
-}
-
 /** Redirect sonucu yalnızca bir kez tüketilir (React StrictMode çift mount uyumu). */
 const BENIGN_REDIRECT_CODES = new Set([
   'auth/no-auth-event',
@@ -54,7 +48,7 @@ export function logGoogleAuthHud(context, err) {
         : code === 'auth/operation-not-allowed'
           ? 'Firebase Console → Authentication → Sign-in method → Google etkinleştirin'
           : code === 'auth/popup-blocked'
-            ? 'Tarayıcı popup engelliyor — redirect veya izin gerekli'
+            ? 'Tarayıcı popup engelliyor — izin verin veya npm run deploy:hosting ile Hosting deploy edin'
             : undefined,
     raw: err,
   })
@@ -108,7 +102,27 @@ function buildGoogleProvider() {
   return provider
 }
 
+/** Redirect handler (firebaseapp.com/__/auth/handler) Firebase Hosting + init.json gerektirir. */
+function isLocalDevAuthEnvironment() {
+  if (typeof window === 'undefined') return false
+  const host = window.location.hostname
+  return host === 'localhost' || host === '127.0.0.1'
+}
+
+async function completePopupSignIn(auth, provider) {
+  const credential = await signInWithPopup(auth, provider)
+  try {
+    sessionStorage.removeItem('audaz_google_auth_redirect')
+  } catch {
+    /* ignore */
+  }
+  await ensureGoogleOperatorProfile(credential)
+  return credential
+}
+
 /**
+ * Google OAuth — localhost'ta popup (COOP yok); prod'da redirect.
+ * Redirect için: npm run deploy:hosting
  * @param {import('firebase/auth').Auth} auth
  * @param {string} [redirectPath='/dashboard']
  * @returns {Promise<{ mode: 'redirect' } | { mode: 'popup', credential: import('firebase/auth').UserCredential }>}
@@ -124,27 +138,13 @@ export async function startGoogleSignIn(auth, redirectPath = '/dashboard') {
   stashGoogleAuthRedirectPath(redirectPath)
   const provider = buildGoogleProvider()
 
-  // localhost: popup daha güvenilir (redirect → getRedirectResult yarışı ve üçüncü taraf çerez sorunları)
-  if (isLocalDevHost()) {
+  if (isLocalDevAuthEnvironment()) {
     try {
-      const credential = await signInWithPopup(auth, provider)
-      clearGoogleAuthRedirectPath()
-      await ensureGoogleOperatorProfile(credential)
+      const credential = await completePopupSignIn(auth, provider)
       return { mode: 'popup', credential }
     } catch (popupErr) {
-      logGoogleAuthHud('signInWithPopup(dev)', popupErr)
-      const popupCode =
-        popupErr && typeof popupErr === 'object' && 'code' in popupErr ? String(popupErr.code) : ''
-      if (
-        popupCode === 'auth/popup-closed-by-user' ||
-        popupCode === 'auth/cancelled-popup-request' ||
-        popupCode === 'auth/redirect-cancelled-by-user'
-      ) {
-        throw popupErr
-      }
-      if (!shouldUseGooglePopupFallback(popupErr)) {
-        throw popupErr
-      }
+      logGoogleAuthHud('signInWithPopup(localhost)', popupErr)
+      throw popupErr
     }
   }
 
@@ -156,13 +156,7 @@ export async function startGoogleSignIn(auth, redirectPath = '/dashboard') {
 
     if (shouldUseGooglePopupFallback(err)) {
       try {
-        const credential = await signInWithPopup(auth, provider)
-        try {
-          sessionStorage.removeItem('audaz_google_auth_redirect')
-        } catch {
-          /* ignore */
-        }
-        await ensureGoogleOperatorProfile(credential)
+        const credential = await completePopupSignIn(auth, provider)
         return { mode: 'popup', credential }
       } catch (popupErr) {
         logGoogleAuthHud('signInWithPopup(fallback)', popupErr)

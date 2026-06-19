@@ -191,17 +191,6 @@ async function fetchOpenMeteo(lat, lon, coastal) {
   const cur = data.current ?? {}
   const hourly = data.hourly ?? {}
 
-  if (import.meta.env.DEV) {
-    console.log('[Open-Meteo] API yanıtı', data)
-    console.log('[Open-Meteo] current.precipitation (mm)', cur.precipitation)
-    console.log(
-      '[Open-Meteo] hourly[0] precipitation_probability (%)',
-      hourly.precipitation_probability?.[0],
-      '| precipitation (mm/h)',
-      hourly.precipitation?.[0]
-    )
-  }
-
   const weatherCode = Number(cur.weather_code ?? -1)
   const currentPrecipMm = Number(cur.precipitation ?? 0)
   const hourlyPrecip = analyzeHourlyPrecipitation(hourly)

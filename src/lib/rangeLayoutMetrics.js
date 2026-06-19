@@ -84,7 +84,7 @@ export function computeLayoutMetrics(objects) {
 
   let riskLevel = 'green_low'
   let riskLabel = 'Düşük'
-  let riskTone = 'text-[#00FF41]'
+  let riskTone = 'text-accent'
 
   if (targetCount > 8) {
     riskLevel = 'red_hardcore'
@@ -93,7 +93,7 @@ export function computeLayoutMetrics(objects) {
   } else if (targetCount > 5) {
     riskLevel = 'amber_medium'
     riskLabel = 'Orta'
-    riskTone = 'text-[#ffb400]'
+    riskTone = 'text-accent'
   }
 
   const areaLabel = hasBounds

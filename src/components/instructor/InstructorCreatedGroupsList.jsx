@@ -21,16 +21,16 @@ export default function InstructorCreatedGroupsList({ groups, loading = false })
 
   return (
     <div className="mt-4 border-t border-amber-900/25 pt-4">
-      <p className="mb-2 font-mono text-[9px] font-bold uppercase tracking-wider text-slate-500">
+      <p className="mb-2 font-mono text-[9px] font-bold uppercase tracking-wider text-app-text/55">
         EĞİTMEN GRUPLARINIZ
       </p>
       {loading ? (
-        <p className="flex items-center gap-2 font-mono text-[10px] uppercase text-slate-500">
+        <p className="flex items-center gap-2 font-mono text-[10px] uppercase text-app-text/55">
           <Loader2 className="size-4 animate-spin text-amber-400" aria-hidden />
           GRUPLAR YÜKLENİYOR…
         </p>
       ) : groups.length === 0 ? (
-        <p className="font-mono text-[10px] uppercase text-slate-600">HENÜZ GRUP YOK</p>
+        <p className="font-mono text-[10px] uppercase text-app-text/45">HENÜZ GRUP YOK</p>
       ) : (
         <ul className="space-y-2">
           {groups.map((g) => {
@@ -42,7 +42,7 @@ export default function InstructorCreatedGroupsList({ groups, loading = false })
               >
                 <div className="min-w-0">
                   <p className="truncate font-mono text-xs font-bold uppercase text-amber-200">{g.groupName}</p>
-                  <p className="mt-0.5 flex items-center gap-1.5 font-mono text-[9px] text-slate-500">
+                  <p className="mt-0.5 flex items-center gap-1.5 font-mono text-[9px] text-app-text/55">
                     <Users className="size-3 shrink-0" aria-hidden />
                     {g.members.length} ÜYE
                   </p>

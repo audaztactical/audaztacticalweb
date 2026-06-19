@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ChevronLeft, Loader2 } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
-import OperatorBadge from '../components/ui/OperatorBadge'
+import OperatorAvatar from '../components/ui/OperatorAvatar'
 import PageShell from '../components/layout/PageShell'
 import { useAuth } from '../context/AuthContext'
 import { emitFirebaseError } from '../lib/firebaseErrorBus'
@@ -69,7 +69,13 @@ export default function OperatorProfile() {
       ) : (
         <article className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-6">
           <div className="flex flex-wrap items-center gap-4">
-            <OperatorBadge callsign={profile.callsign} username={profile.username} size="lg" />
+            <OperatorAvatar
+              uid={profile.uid}
+              callsign={profile.callsign}
+              username={profile.username}
+              photoUrl={profile.photoURL}
+              size="lg"
+            />
             <div>
               <h2 className="font-mono text-lg font-bold uppercase tracking-wide text-lime-400">
                 {profile.callsign}

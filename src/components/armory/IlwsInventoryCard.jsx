@@ -15,7 +15,7 @@ import {
 } from '../../lib/inventoryIlws'
 
 const btnMini =
-  'rounded border border-white/15 px-1.5 py-0.5 font-mono text-[11px] text-slate-400 hover:border-[#ffb400]/40 hover:text-[#ffb400]'
+  'rounded border border-white/15 px-1.5 py-0.5 font-mono text-[11px] text-app-text/70 hover:border-accent/40 hover:text-accent'
 
 /**
  * @param {{
@@ -56,10 +56,10 @@ export default function IlwsInventoryCard({
           onOpen(row)
         }
       }}
-      className="ilws-card-brackets relative flex cursor-pointer flex-col gap-2 rounded-lg border border-white/10 bg-black/40 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition hover:border-[#00FF41]/25 hover:bg-black/50"
+      className="ilws-card-brackets relative flex cursor-pointer flex-col gap-2 rounded-lg border border-white/10 bg-black/40 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition hover:border-accent/25 hover:bg-black/50"
     >
       <div className="flex items-start justify-between gap-2">
-        <span className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.2em] text-slate-500">
+        <span className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.2em] text-app-text/55">
           STOK_KODU: {stokKodu(id)}
         </span>
         <div className="flex shrink-0 flex-col items-end gap-1">
@@ -69,7 +69,7 @@ export default function IlwsInventoryCard({
             </span>
           ) : null}
           {weapon ? (
-            <span className="rounded border border-[#00FF41]/35 bg-[#00FF41]/8 px-1.5 py-0.5 font-mono-technical text-[7px] font-bold uppercase tracking-wide text-[#00FF41]/90">
+            <span className="rounded border border-accent/35 bg-accent/8 px-1.5 py-0.5 font-mono-technical text-[7px] font-bold uppercase tracking-wide text-accent/90">
               [ %{cond}_YİV_SET ]
             </span>
           ) : null}
@@ -77,10 +77,10 @@ export default function IlwsInventoryCard({
       </div>
 
       <div className="min-w-0 px-1">
-        <p className="font-mono-technical text-[7px] uppercase tracking-wider text-slate-600">ÖĞE_ADI</p>
-        <h2 className="font-display text-base font-bold leading-tight tracking-wide text-white">{invStr(row.name) || '—'}</h2>
-        <p className="mt-1 font-mono-technical text-[7px] uppercase tracking-wider text-slate-600">TEKNİK_TANIM</p>
-        <p className="line-clamp-2 font-mono-technical text-[10px] leading-snug text-slate-500">{getTechnicalDescription(row)}</p>
+        <p className="font-mono-technical text-[7px] uppercase tracking-wider text-app-text/45">ÖĞE_ADI</p>
+        <h2 className="font-display text-base font-bold leading-tight tracking-wide text-app-text">{invStr(row.name) || '—'}</h2>
+        <p className="mt-1 font-mono-technical text-[7px] uppercase tracking-wider text-app-text/45">TEKNİK_TANIM</p>
+        <p className="line-clamp-2 font-mono-technical text-[10px] leading-snug text-app-text/55">{getTechnicalDescription(row)}</p>
       </div>
 
       {weapon ? (
@@ -89,9 +89,9 @@ export default function IlwsInventoryCard({
           onClick={(e) => e.stopPropagation()}
           onKeyDown={(e) => e.stopPropagation()}
         >
-          <div className="flex flex-wrap items-center justify-between gap-2 font-mono-technical text-[8px] uppercase text-slate-600">
+          <div className="flex flex-wrap items-center justify-between gap-2 font-mono-technical text-[8px] uppercase text-app-text/45">
             <span>
-              KONDİSYON: <span className="text-[#00FF41]/90">{cond}%</span>
+              KONDİSYON: <span className="text-accent/90">{cond}%</span>
             </span>
             {onBumpCondition ? (
               <div className="flex gap-1">
@@ -105,8 +105,8 @@ export default function IlwsInventoryCard({
             ) : null}
           </div>
           <div>
-            <p className="mb-1 font-mono-technical text-[7px] font-bold uppercase tracking-wider text-slate-600">SİLAH_BAKIM_GÜNLÜĞÜ</p>
-            <ul className="space-y-1 font-mono text-[9px] leading-snug text-[#00FF41]/80">
+            <p className="mb-1 font-mono-technical text-[7px] font-bold uppercase tracking-wider text-app-text/45">SİLAH_BAKIM_GÜNLÜĞÜ</p>
+            <ul className="space-y-1 font-mono text-[9px] leading-snug text-accent/80">
               {maintPreview.map((log, i) => (
                 <li key={`${log.date}-${i}`} className="break-words">
                   [{log.date}] {log.text} · DURUM: {log.status}
@@ -125,7 +125,7 @@ export default function IlwsInventoryCard({
         >
           <p className="text-[#7ab4ff]/90">{getOpticStatusLabel(row)}</p>
           {onBumpAttachmentHistory ? (
-            <div className="flex items-center justify-between text-slate-600">
+            <div className="flex items-center justify-between text-app-text/45">
               <span>EKLENTİ_KAYIT: {getAttachmentHistoryCount(row)}</span>
               <div className="flex gap-1">
                 <button type="button" className={btnMini} onClick={(e) => onBumpAttachmentHistory(id, -1, e)}>
@@ -141,26 +141,26 @@ export default function IlwsInventoryCard({
       ) : null}
 
       {ammo ? (
-        <div className="space-y-1 border-t border-white/[0.06] pt-2 font-mono-technical text-[8px] uppercase tracking-wide text-slate-600">
+        <div className="space-y-1 border-t border-white/[0.06] pt-2 font-mono-technical text-[8px] uppercase tracking-wide text-app-text/45">
           <p>
-            BALİSTİK_TİP: <span className="text-slate-300">{getBallisticType(row)}</span>
+            BALİSTİK_TİP: <span className="text-app-text/90">{getBallisticType(row)}</span>
           </p>
           <p>
-            MHM_TÜRÜ: <span className="text-slate-300">{getAmmoMunitionType(row)}</span>
+            MHM_TÜRÜ: <span className="text-app-text/90">{getAmmoMunitionType(row)}</span>
           </p>
         </div>
       ) : null}
 
       <div
-        className="flex flex-wrap items-center justify-between gap-2 border-t border-white/[0.08] pt-2 font-mono-technical text-[8px] uppercase tracking-wide text-slate-600"
+        className="flex flex-wrap items-center justify-between gap-2 border-t border-white/[0.08] pt-2 font-mono-technical text-[8px] uppercase tracking-wide text-app-text/45"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
       >
         <span>
-          ADET: <span className="tabular-nums text-slate-300">{qty.toLocaleString('tr-TR')}</span>
+          ADET: <span className="tabular-nums text-app-text/90">{qty.toLocaleString('tr-TR')}</span>
         </span>
         <span>
-          KATEGORİ: <span className="text-slate-300">{categoryRibbonLabel(cat)}</span>
+          KATEGORİ: <span className="text-app-text/90">{categoryRibbonLabel(cat)}</span>
         </span>
         <div className="ml-auto flex items-center gap-1">
           <button type="button" onClick={(e) => onBumpQty(id, -1, e)} className={btnMini} aria-label="Adet azalt">

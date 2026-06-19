@@ -46,7 +46,7 @@ export default function InventoryDrawer({ row, onClose, needsMaintenance }) {
             onClick={onClose}
           />
           <Motion.aside
-            className="absolute right-0 top-0 flex h-full w-full max-w-md flex-col border-l border-white/10 bg-[#0a0a0a]/95 shadow-[-24px_0_48px_-12px_rgba(0,0,0,0.7)] backdrop-blur-md"
+            className="absolute right-0 top-0 flex h-full w-full max-w-md flex-col border-l border-white/10 bg-app-bg/95 shadow-[-24px_0_48px_-12px_rgba(0,0,0,0.7)] backdrop-blur-md"
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
@@ -71,14 +71,14 @@ function DrawerContent({ row, onClose, needsMaintenance }) {
   return (
     <>
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-        <div className="flex items-center gap-2 text-[#ffb400]">
+        <div className="flex items-center gap-2 text-accent">
           <Warehouse className="size-5" strokeWidth={1.5} aria-hidden />
           <span className="font-mono-technical text-xl font-bold tabular-nums">{drawerToNum(row.quantity)}</span>
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="rounded-lg p-2 text-slate-400 transition hover:bg-white/10 hover:text-white"
+          className="rounded-lg p-2 text-app-text/70 transition hover:bg-white/10 hover:text-app-text"
           aria-label="Kapat"
         >
           <X className="size-5" strokeWidth={1.75} />
@@ -95,9 +95,9 @@ function DrawerContent({ row, onClose, needsMaintenance }) {
         {isWeapon ? (
           <div className="border-t border-white/10 px-4 py-3">
             <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2 text-slate-400">
+              <div className="flex items-center gap-2 text-app-text/70">
                 <Calendar className="size-4" strokeWidth={1.25} aria-hidden />
-                <span className="font-mono-technical text-sm tabular-nums text-white">
+                <span className="font-mono-technical text-sm tabular-nums text-app-text">
                   {iso ? iso.slice(0, 10).replace(/-/g, '.') : '—'}
                 </span>
               </div>
@@ -107,8 +107,8 @@ function DrawerContent({ row, onClose, needsMaintenance }) {
         ) : (
           <div className="border-t border-white/10 px-4 py-4">
             <div className="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-black/30 py-6">
-              <Package className="size-10 text-[#ffb400]/50" strokeWidth={1} aria-hidden />
-              <span className="font-mono-technical text-4xl font-bold tabular-nums text-[#ffb400]">
+              <Package className="size-10 text-accent/50" strokeWidth={1} aria-hidden />
+              <span className="font-mono-technical text-4xl font-bold tabular-nums text-accent">
                 {drawerToNum(row.quantity)}
               </span>
             </div>
@@ -125,11 +125,11 @@ function SpecRow(props) {
   const { value, accent, mono } = props
   return (
     <div className="flex items-center gap-4 border-b border-white/10 px-4 py-3.5">
-      <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-[#ffb400]/20 bg-[#ffb400]/5">
-        <Icon className="size-5 text-[#ffb400]/90" strokeWidth={1.4} aria-hidden />
+      <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-accent/20 bg-accent/5">
+        <Icon className="size-5 text-accent/90" strokeWidth={1.4} aria-hidden />
       </div>
       <p
-        className={`min-w-0 flex-1 truncate text-sm ${accent ? 'font-display font-bold text-white' : 'text-slate-300'} ${mono ? 'font-mono-technical tabular-nums' : ''}`}
+        className={`min-w-0 flex-1 truncate text-sm ${accent ? 'font-display font-bold text-app-text' : 'text-app-text/90'} ${mono ? 'font-mono-technical tabular-nums' : ''}`}
       >
         {value || '—'}
       </p>

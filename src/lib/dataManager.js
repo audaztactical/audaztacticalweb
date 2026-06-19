@@ -9,6 +9,7 @@ import {
 } from 'firebase/firestore'
 import { db, isFirebaseConfigured } from './firebase'
 import { emitFirebaseError } from './firebaseErrorBus'
+import { prepareAudazPatchPayload, prepareAudazWritePayload } from './audazFirestoreWrite'
 
 /** @typedef {'inventory' | 'health_records' | 'casualty_cards' | 'ifak_inventory' | 'medevac_logs' | 'missions' | 'trainings' | 'range_logs' | 'vbss_logs' | 'tccc_logs' | 'armory_audit_trail'} AudazDataDomain */
 
@@ -82,7 +83,7 @@ export async function audazCreate(domain, uid, data) {
   if (!cfg) throw new Error(`Bilinmeyen domain: ${domain}`)
 
   // range_logs / inventory / health_records: ownerId her zaman oturum uid (kurallarla uyumlu).
-  const payload = injectAudazCreateFields(data, uid)
+  const payload = injectAudazCreateFields(prepareAudazWritePayload(data), uid)
 
   if (cfg.kind === 'sub') {
     const ref = collection(db, ...cfg.path(uid))
@@ -105,7 +106,7 @@ export async function audazUpdate(domain, uid, docId, patch) {
   const cfg = DOMAIN_CONFIG[domain]
   if (!cfg) throw new Error(`Bilinmeyen domain: ${domain}`)
 
-  const payload = injectAudazUpdateFields(patch)
+  const payload = injectAudazUpdateFields(prepareAudazPatchPayload(patch))
 
   let ref
   if (cfg.kind === 'sub') {
@@ -140,12 +141,12 @@ export async function audazCommitDeploymentBatch(uid, batchOps) {
   const batch = writeBatch(db)
   for (const u of inventoryUpdates) {
     const ref = doc(db, 'inventory', uid, 'items', u.docId)
-    batch.update(ref, injectAudazUpdateFields(u.patch))
+    batch.update(ref, injectAudazUpdateFields(prepareAudazPatchPayload(u.patch)))
   }
   const auditCol = collection(db, 'armory_audit_trail', uid, 'entries')
   for (const audit of auditEntries) {
     const ref = doc(auditCol)
-    batch.set(ref, injectAudazCreateFields(audit, uid))
+    batch.set(ref, injectAudazCreateFields(prepareAudazWritePayload(audit), uid))
   }
   await batch.commit()
 }

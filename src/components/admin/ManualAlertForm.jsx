@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Loader2, Megaphone, Radio } from 'lucide-react'
-import { sendManualAlert } from '../../lib/manualAlertCallable'
+import { publishManualSystemAlert } from '../../lib/manualAlertCallable'
+import ManualAlertBroadcastLog from './ManualAlertBroadcastLog'
 
 /**
  * @param {{
@@ -24,16 +25,16 @@ export default function ManualAlertForm({ onFeedback }) {
 
     setSending(true)
     try {
-      const result = await sendManualAlert({
+      const result = await publishManualSystemAlert({
         title: trimmedTitle,
         message: trimmedMessage,
       })
       setTitle('')
       setMessage('')
-      onFeedback(
-        'ok',
-        `İkaz yayınlandı — ${result.topic ?? 'asayis_ikaz'} konusuna iletildi.`,
-      )
+      const fcmNote = result.fcmSent
+        ? 'Tam ekran ikaz + push bildirimi yayınlandı.'
+        : 'Tam ekran ikaz yayınlandı (push isteğe bağlı — uygulama içi ikaz aktif).'
+      onFeedback('ok', fcmNote)
     } catch (err) {
       const code = /** @type {{ code?: string, message?: string }} */ (err)?.code
       const fallback =
@@ -51,16 +52,17 @@ export default function ManualAlertForm({ onFeedback }) {
   }
 
   return (
+    <div className="space-y-6">
     <section className="glass-card overflow-hidden">
       <div className="border-b border-white/10 bg-black/30 px-5 py-4">
         <div className="flex items-center gap-3">
-          <Radio className="size-5 text-[#ffb400]" strokeWidth={1.5} aria-hidden />
+          <Radio className="size-5 text-accent" strokeWidth={1.5} aria-hidden />
           <div>
-            <h2 className="font-display text-base font-bold uppercase tracking-wider text-[#ffb400]">
+            <h2 className="font-display text-base font-bold uppercase tracking-wider text-accent">
               Manuel İkaz Yayını
             </h2>
-            <p className="mt-0.5 text-xs text-slate-500">
-              Küresel İstihbarat Ağı ve tüm erken uyarı abonelerine anlık bildirim gönderir.
+            <p className="mt-0.5 text-xs text-app-text/55">
+              Tüm oturum açmış operatörlere zorunlu tam ekran ikaz + push bildirimi gönderir.
             </p>
           </div>
         </div>
@@ -70,7 +72,7 @@ export default function ManualAlertForm({ onFeedback }) {
         <div>
           <label
             htmlFor="manual-alert-title"
-            className="mb-1.5 block font-mono-technical text-[10px] font-bold uppercase tracking-widest text-[#d4af37]/90"
+            className="mb-1.5 block font-mono-technical text-[10px] font-bold uppercase tracking-widest text-accent/90"
           >
             İkaz Başlığı
           </label>
@@ -82,14 +84,14 @@ export default function ManualAlertForm({ onFeedback }) {
             placeholder="[ SİSTEM UYARISI ] Eğitim İptali"
             maxLength={200}
             disabled={sending}
-            className="w-full rounded-lg border border-white/15 bg-black/50 px-3 py-2.5 text-sm text-white placeholder:text-slate-600 focus:border-[#ffb400]/50 focus:outline-none focus:ring-2 focus:ring-[#ffb400]/20 disabled:opacity-60"
+            className="w-full rounded-lg border border-white/15 bg-black/50 px-3 py-2.5 text-sm text-app-text placeholder:text-app-text/45 focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/20 disabled:opacity-60"
           />
         </div>
 
         <div>
           <label
             htmlFor="manual-alert-message"
-            className="mb-1.5 block font-mono-technical text-[10px] font-bold uppercase tracking-widest text-[#d4af37]/90"
+            className="mb-1.5 block font-mono-technical text-[10px] font-bold uppercase tracking-widest text-accent/90"
           >
             İkaz Detayı / Mesajı
           </label>
@@ -101,14 +103,14 @@ export default function ManualAlertForm({ onFeedback }) {
             placeholder="Tüm birliklere iletilecek operasyonel ikaz metni…"
             maxLength={2000}
             disabled={sending}
-            className="w-full rounded-lg border border-white/15 bg-black/50 px-3 py-2.5 font-mono-technical text-sm text-white placeholder:text-slate-600 focus:border-[#ffb400]/50 focus:outline-none focus:ring-2 focus:ring-[#ffb400]/20 disabled:opacity-60"
+            className="w-full rounded-lg border border-white/15 bg-black/50 px-3 py-2.5 font-mono-technical text-sm text-app-text placeholder:text-app-text/45 focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/20 disabled:opacity-60"
           />
         </div>
 
         <button
           type="submit"
           disabled={sending}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#ffb400]/50 bg-[#ffb400]/15 px-5 py-3 font-display text-sm font-bold uppercase tracking-wider text-[#ffb400] transition hover:bg-[#ffb400]/25 disabled:opacity-50 sm:w-auto"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-accent/50 bg-accent/15 px-5 py-3 font-display text-sm font-bold uppercase tracking-wider text-accent transition hover:bg-accent/25 disabled:opacity-50 sm:w-auto"
         >
           {sending ? (
             <Loader2 className="size-4 animate-spin" aria-hidden />
@@ -119,5 +121,7 @@ export default function ManualAlertForm({ onFeedback }) {
         </button>
       </form>
     </section>
+    <ManualAlertBroadcastLog />
+    </div>
   )
 }

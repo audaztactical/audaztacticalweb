@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import {
   BarChart3,
   Crosshair,
@@ -18,10 +18,11 @@ import {
   Target,
   User,
 } from 'lucide-react'
-import { isAdminUser } from '../../config/admin'
 import { useAuth } from '../../context/AuthContext'
+import { emailMatchesConfiguredAdmin, userEmailMatchesConfiguredAdmin } from '../../config/admin'
 import { useMuhabereNotify } from '../../context/MuhabereNotifyContext'
 import { auth } from '../../lib/firebase'
+import { scheduleScrollAppToTop } from '../../lib/scrollAppToTop'
 
 /**
  * @typedef {Object} NavItem
@@ -57,7 +58,8 @@ export const NAV_GROUPS = [
     items: [
       { to: '/akademi', label: 'Audaz Akademi', icon: PlayCircle },
       { to: '/forum', label: 'Brifing Odası (Forum)', icon: MessagesSquare },
-      { to: '/istihbarat', label: 'Küresel İstihbarat Ağı', icon: Globe },
+      { to: '/istihbarat', label: 'Küresel Haber Ağı', icon: Globe },
+      { to: '/acil-durum', label: 'Acil Durum Bildirimleri', icon: ShieldAlert },
     ],
   },
   {
@@ -104,13 +106,25 @@ const linkBaseClass =
 export function SidebarLink({ to, end, label, icon, onNavigate, badgeCount = 0, blinkIcon = false, state }) {
   const Icon = icon
   const showBadge = badgeCount > 0
+  const location = useLocation()
+
+  const handleClick = () => {
+    scheduleScrollAppToTop()
+    onNavigate?.()
+    const isSameRoute = end
+      ? location.pathname === to
+      : location.pathname === to || location.pathname.startsWith(`${to}/`)
+    if (isSameRoute) {
+      window.dispatchEvent(new CustomEvent('audaz:route-reenter', { detail: { to } }))
+    }
+  }
 
   return (
     <NavLink
       to={to}
       end={end}
       state={state}
-      onClick={onNavigate}
+      onClick={handleClick}
       className={({ isActive }) =>
         [
           linkBaseClass,
@@ -159,9 +173,10 @@ export default function Sidebar({
   userEmail = '',
   loading = false,
 }) {
-  const { user, isInstructor, role } = useAuth()
-  const { totalNotifications, unreadChannelMessageCount } = useMuhabereNotify()
-  const showAdminPanel = isAdminUser(user)
+  const { user, isInstructor, role, showAdminPanel } = useAuth()
+  const { sidebarMuhabereBadgeCount } = useMuhabereNotify()
+  const showAdminLink =
+    showAdminPanel || userEmailMatchesConfiguredAdmin(user) || emailMatchesConfiguredAdmin(userEmail)
 
   const groups = useMemo(() => {
     const isInstructorUser = role === 'instructor' || isInstructor
@@ -191,8 +206,8 @@ export default function Sidebar({
                     icon={item.icon}
                     state={item.state}
                     onNavigate={onNavigate}
-                    badgeCount={item.to === '/mesajlar' ? totalNotifications : 0}
-                    blinkIcon={item.to === '/mesajlar' && unreadChannelMessageCount > 0}
+                    badgeCount={item.to === '/mesajlar' ? sidebarMuhabereBadgeCount : 0}
+                    blinkIcon={item.to === '/mesajlar' && sidebarMuhabereBadgeCount > 0}
                   />
                 </li>
               ))}
@@ -204,7 +219,7 @@ export default function Sidebar({
       <div className="border-t border-zinc-800/80 px-3 py-4">
         <p className={groupTitleClass}>[ SİSTEM ]</p>
         <ul className="flex flex-col gap-1">
-          {showAdminPanel ? (
+          {showAdminLink ? (
             <li>
               <NavLink
                 to="/admin"

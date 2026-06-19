@@ -41,7 +41,7 @@ export default function MainLayout() {
   }
 
   return (
-    <div className="relative z-[1] flex min-h-dvh text-slate-100" style={{ backgroundColor: '#0a0a0a' }}>
+    <div className="relative z-[1] flex h-dvh min-h-0 overflow-hidden text-slate-100" style={{ backgroundColor: '#0a0a0a' }}>
       <div className="app-atmosphere" aria-hidden />
 
       <Bug
@@ -87,15 +87,15 @@ export default function MainLayout() {
               decoding="async"
             />
             <div className="min-w-0">
-              <p className="font-mono-technical text-base font-bold leading-none tracking-[0.22em] text-white">AUDAZ</p>
-              <p className="font-mono-technical mt-0.5 text-[10px] font-semibold tracking-[0.38em] text-[#d4af37]">
+              <p className="font-mono-technical text-base font-bold leading-none tracking-[0.22em] text-app-text">AUDAZ</p>
+              <p className="font-mono-technical mt-0.5 text-[10px] font-semibold tracking-[0.38em] text-accent">
                 TACTICAL
               </p>
             </div>
           </Link>
           <button
             type="button"
-            className="rounded-lg p-2 text-slate-400 transition hover:bg-white/10 hover:text-white lg:hidden"
+            className="rounded-lg p-2 text-app-text/70 transition hover:bg-white/10 hover:text-app-text lg:hidden"
             aria-label="Menüyü kapat"
             onClick={closeMobileNav}
           >
@@ -112,11 +112,11 @@ export default function MainLayout() {
         />
       </aside>
 
-      <div className="relative z-[1] flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-white/10 bg-[#0a0a0a]/85 px-4 backdrop-blur-md lg:hidden">
+      <div className="relative z-[1] flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-white/10 bg-app-bg/85 px-4 backdrop-blur-md lg:hidden">
           <button
             type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-[#ffb400]"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-accent"
             aria-expanded={mobileNavOpen}
             aria-controls="sidebar-nav"
             aria-label="Menüyü aç"
@@ -135,7 +135,10 @@ export default function MainLayout() {
           <NotificationDropdown />
         </header>
 
-        <main className="relative flex flex-1 flex-col overflow-auto">
+        <main
+          className="relative flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto"
+          data-app-scroll-root
+        >
           <div className="relative z-[110] hidden border-b border-white/10 bg-black/20 px-4 py-2 backdrop-blur-md md:flex md:items-center md:justify-end md:gap-3 lg:px-8">
             <NotificationDropdown />
             <HudTicker />
