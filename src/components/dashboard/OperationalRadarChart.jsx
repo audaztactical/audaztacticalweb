@@ -16,9 +16,12 @@ export default function OperationalRadarChart({ data, loading }) {
   const gid = useId().replace(/:/g, '')
 
   const chartData = useMemo(
-    () => data.map((row) => ({ ...row, subject: row.axis })),
-    [data]
+    () => data.map((row) => ({ ...row, subject: row.axis, value: Math.round(row.value) })),
+    [data],
   )
+
+  const hasSignal = chartData.some((row) => row.value > 0)
+  const maxValue = Math.max(0, ...chartData.map((row) => row.value))
 
   return (
     <div className="cmd-radar relative flex h-full min-h-[280px] flex-col">
@@ -32,7 +35,12 @@ export default function OperationalRadarChart({ data, loading }) {
             Hesaplanıyor…
           </div>
         ) : null}
-        <ResponsiveContainer width="100%" height={220} minWidth={0} debounce={40}>
+        {!loading && !hasSignal ? (
+          <div className="pointer-events-none absolute inset-x-0 bottom-2 z-[2] px-2 text-center font-mono-technical text-[9px] uppercase leading-relaxed tracking-wide text-app-text/45">
+            Henüz kapasite verisi yok — antrenman, cephanelik ve sağlık kayıtları radarı doldurur.
+          </div>
+        ) : null}
+        <ResponsiveContainer width="100%" height={220} minWidth={200} debounce={200}>
           <RadarChart data={chartData} cx="50%" cy="52%" outerRadius="72%">
             <defs>
               <linearGradient id={`radarFill-${gid}`} x1="0" y1="0" x2="0" y2="1">
@@ -50,15 +58,16 @@ export default function OperationalRadarChart({ data, loading }) {
               domain={[0, 100]}
               tick={{ fill: '#64748b', fontSize: 9 }}
               axisLine={false}
-              tickCount={4}
+              tickCount={5}
             />
             <Radar
               name="Hazırlık"
               dataKey="value"
               stroke="var(--accent-color)"
               fill={`url(#radarFill-${gid})`}
-              fillOpacity={0.55}
+              fillOpacity={maxValue < 15 ? 0.35 : 0.55}
               strokeWidth={2}
+              isAnimationActive={false}
               style={{ filter: 'drop-shadow(0 0 10px rgba(0,255,65,0.35))' }}
             />
             <Tooltip
@@ -74,6 +83,16 @@ export default function OperationalRadarChart({ data, loading }) {
           </RadarChart>
         </ResponsiveContainer>
       </div>
+      {!loading && hasSignal ? (
+        <ul className="mt-2 flex flex-wrap justify-center gap-x-3 gap-y-1 font-mono-technical text-[9px] uppercase tracking-wide text-app-text/50">
+          {chartData.map((row) => (
+            <li key={row.axis}>
+              {row.axis}{' '}
+              <span className="tabular-nums text-accent/80">{row.value}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </div>
   )
 }
