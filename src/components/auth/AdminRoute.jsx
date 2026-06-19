@@ -1,18 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { emailMatchesConfiguredAdmin, userEmailMatchesConfiguredAdmin } from '../../config/admin'
 
 export default function AdminRoute({ children }) {
   const { user, loading, isAdmin, showAdminPanel, syncAdminClaim } = useAuth()
   const [claimSyncing, setClaimSyncing] = useState(false)
   const [syncDone, setSyncDone] = useState(false)
 
-  const canAccess =
-    showAdminPanel ||
-    isAdmin ||
-    userEmailMatchesConfiguredAdmin(user) ||
-    emailMatchesConfiguredAdmin(user?.email)
+  const canAccess = showAdminPanel || isAdmin
 
   useEffect(() => {
     if (loading) return undefined

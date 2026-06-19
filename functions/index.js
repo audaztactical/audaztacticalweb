@@ -9,6 +9,8 @@ const { sendManualAlertHandler, pushManualAlertFcmHandler } = require('./lib/man
 const { runVideoNewsIngest } = require('./lib/videoNews')
 const { ensureAdminClaimHandler } = require('./lib/adminClaims')
 const { claimInstructorRoleHandler } = require('./lib/instructorClaim')
+const { joinGroupByPasswordHandler } = require('./lib/joinGroup')
+const { completePremiumUpgradeHandler } = require('./lib/premiumUpgrade')
 const { syncMuhabereChannelSummary, syncMuhabereDmSummary } = require('./src/muhabereSync')
 const { resolveYoutubeChannelInputHandler } = require('./lib/youtubeChannelResolve')
 const { triggerVideoNewsIngestHandler } = require('./lib/videoNewsTrigger')
@@ -154,6 +156,30 @@ exports.claimInstructorRole = onCall(
     cors: true,
   },
   claimInstructorRoleHandler,
+)
+
+/**
+ * Callable: grup şifresi doğrulama + members arrayUnion (Admin SDK).
+ */
+exports.joinGroupByPassword = onCall(
+  {
+    memory: '128MiB',
+    timeoutSeconds: 30,
+    cors: true,
+  },
+  joinGroupByPasswordHandler,
+)
+
+/**
+ * Callable: mock ödeme sonrası premium_member yükseltme (Admin SDK).
+ */
+exports.completePremiumUpgrade = onCall(
+  {
+    memory: '128MiB',
+    timeoutSeconds: 30,
+    cors: true,
+  },
+  completePremiumUpgradeHandler,
 )
 
 /**

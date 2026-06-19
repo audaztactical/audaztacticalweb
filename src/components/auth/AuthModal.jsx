@@ -8,7 +8,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useFirebaseErrorReporter } from '../../context/FirebaseErrorContext'
 import { auth, isFirebaseConfigured } from '../../lib/firebase'
 import { userRequiresEmailVerification } from '../../lib/authEmailVerification'
-import { betaPasswordFromUsername, resolveAuthEmailInput } from '../../lib/betaAuth'
+import { resolveAuthEmailInput, validateBetaPassword } from '../../lib/betaAuth'
 import { isPlatformInBetaPeriod } from '../../lib/registrationPolicy'
 import Register from './Register'
 
@@ -73,11 +73,6 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
   const validateLoginFields = () => {
     const fe = {}
     const loginId = email.trim()
-    const betaUsernameLogin = isPlatformInBetaPeriod() && loginId && !loginId.includes('@')
-
-    if (!betaUsernameLogin && password.length < 6) {
-      fe.password = 'ERR: Şifre min. 6 karakter (POLICY_AUTH_01)'
-    }
     if (!loginId) {
       fe.email = 'ERR: E-posta veya kullanıcı adı gerekli (VALIDATION_LOGIN)'
     } else if (loginId.includes('@')) {
@@ -87,6 +82,11 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
       }
     } else if (loginId.length < 3) {
       fe.email = 'ERR: Geçersiz kullanıcı adı (VALIDATION_USERNAME)'
+    }
+
+    const passwordCheck = validateBetaPassword(password)
+    if (!passwordCheck.ok) {
+      fe.password = `ERR: ${passwordCheck.message} (POLICY_AUTH_01)`
     }
     setFieldErrors(fe)
     return Object.keys(fe).length === 0
@@ -192,12 +192,7 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
     try {
       const loginInput = email.trim()
       const authEmail = resolveAuthEmailInput(loginInput)
-      const authPassword =
-        isPlatformInBetaPeriod() && !loginInput.includes('@')
-          ? betaPasswordFromUsername(loginInput)
-          : password
-
-      const cred = await signInWithEmailPassword(authEmail, authPassword)
+      const cred = await signInWithEmailPassword(authEmail, password)
       if (userRequiresEmailVerification(cred.user)) {
         onClose()
         resetForm()
@@ -394,9 +389,9 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
                         autoComplete="current-password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        placeholder={isPlatformInBetaPeriod() ? 'Beta: kullanıcı adı ile otomatik' : '••••••••'}
+                        placeholder="En az 6 karakter"
                         error={fieldErrors.password}
-                        required={!isPlatformInBetaPeriod() || email.trim().includes('@')}
+                        required
                       />
                       {isPlatformInBetaPeriod() ? (
                         <p className="font-mono-technical text-[9px] leading-relaxed text-app-text/50">

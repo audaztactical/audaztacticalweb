@@ -50,7 +50,7 @@ export function isCloudFunctionUnavailableError(err) {
   )
 }
 
-/** ensureAdminClaim — sunucu ADMIN_EMAIL uyuşmazlığı (istemci VITE_ADMIN_EMAIL yeterli). */
+/** ensureAdminClaim — sunucu ADMIN_EMAIL doğrular; istemci yalnızca admin claim / role kullanır. */
 export function isEnsureAdminClaimDenied(err) {
   const code = String(/** @type {{ code?: string }} */ (err)?.code ?? '')
   const message = String(/** @type {{ message?: string }} */ (err)?.message ?? err ?? '')
@@ -148,6 +148,20 @@ export function callEnsureAdminClaim() {
  */
 export function callClaimInstructorRole(tokenId) {
   return callFunction('claimInstructorRole', { tokenId })
+}
+
+/**
+ * @param {string} password
+ */
+export function callJoinGroupByPassword(password) {
+  return callFunction('joinGroupByPassword', { password })
+}
+
+/**
+ * @param {string} paymentIntentId
+ */
+export function callCompletePremiumUpgrade(paymentIntentId) {
+  return callFunction('completePremiumUpgrade', { paymentIntentId })
 }
 
 /**

@@ -4,7 +4,7 @@ import { Scale } from 'lucide-react'
 import Input from '../common/Input'
 import LegalDisclaimer from '../LegalDisclaimer'
 import { useAuth } from '../../context/AuthContext'
-import { betaPasswordFromUsername, resolveAuthEmailInput } from '../../lib/betaAuth'
+import { resolveAuthEmailInput, validateBetaPassword } from '../../lib/betaAuth'
 import { auth, isFirebaseConfigured } from '../../lib/firebase'
 import { isPlatformInBetaPeriod } from '../../lib/registrationPolicy'
 import {
@@ -122,6 +122,10 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
       }
     }
 
+    if (!validateBetaPassword(password).ok) {
+      fe.password = 'Şifre min. 6 karakter'
+    }
+
     if (!termsAccepted) {
       setFormError('Kayıt için 46 maddelik protokolü okuyup onaylayın')
     }
@@ -135,8 +139,8 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
     setFormError('')
     const id = loginId.trim()
     if (!id) fe.loginId = 'E-posta veya kullanıcı adı gerekli'
-    if (!betaMode || id.includes('@')) {
-      if (!password || password.length < 6) fe.password = 'Şifre min. 6 karakter'
+    if (!password || !validateBetaPassword(password).ok) {
+      fe.password = 'Şifre min. 6 karakter'
     }
     setFieldErrors(fe)
     return Object.keys(fe).length === 0
@@ -157,9 +161,7 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
     try {
       const normalizedUsername = normalizeUsername(usernameDraft)
       const authEmail = email.trim()
-      const authPassword = betaMode
-        ? betaPasswordFromUsername(normalizedUsername)
-        : password || betaPasswordFromUsername(normalizedUsername)
+      const authPassword = password
 
       await registerWithEmailPassword({
         email: authEmail,
@@ -199,10 +201,8 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
     try {
       const id = loginId.trim()
       const authEmail = resolveAuthEmailInput(id)
-      const authPassword =
-        betaMode && !id.includes('@') ? betaPasswordFromUsername(id) : password
 
-      await signInWithEmailPassword(authEmail, authPassword)
+      await signInWithEmailPassword(authEmail, password)
       navigate('/dashboard', { replace: true })
     } catch {
       setFormError('Kimlik doğrulanamadı — bilgileri kontrol edin')
@@ -315,6 +315,18 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
             }
             placeholder="wolf_alpha"
             error={fieldErrors.usernameDraft}
+            required
+          />
+          <Input
+            variant="gold"
+            label="Şifre"
+            name="password"
+            type="password"
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="En az 6 karakter"
+            error={fieldErrors.password}
             required
           />
 

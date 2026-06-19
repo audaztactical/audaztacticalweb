@@ -38,10 +38,7 @@ import {
 } from '../lib/firestoreUsers'
 import { usePresenceHeartbeat } from '../hooks/usePresenceHeartbeat'
 import {
-  emailMatchesConfiguredAdmin,
   resolveUserIsAdmin,
-  userEmailMatchesConfiguredAdmin,
-  userHasAdminClaim,
 } from '../config/admin'
 
 const AuthContext = createContext(null)
@@ -90,62 +87,39 @@ export function AuthProvider({ children }) {
 
   usePresenceHeartbeat(user?.uid)
 
-  const refreshAdminClaimFromToken = useCallback(async (authUser) => {
+  const refreshAdminClaimFromToken = useCallback(async (authUser, profile) => {
     if (!authUser) {
       setIsAdmin(false)
       return false
     }
-    const admin = await resolveUserIsAdmin(authUser)
+    const admin = await resolveUserIsAdmin(authUser, profile ?? userData)
     setIsAdmin(admin)
     return admin
-  }, [])
+  }, [userData])
 
   /** Callable ensureAdminClaim — yalnızca VITE_SYNC_ADMIN_CLAIM_ON_LOGIN=true ise (opsiyonel). */
-  const syncAdminClaim = useCallback(async (authUser) => {
+  const syncAdminClaim = useCallback(async (authUser, profile) => {
     if (!authUser) {
       setIsAdmin(false)
       return false
-    }
-
-    if (userEmailMatchesConfiguredAdmin(authUser) || emailMatchesConfiguredAdmin(userData?.email)) {
-      setIsAdmin(true)
-      const shouldSyncClaim = import.meta.env.VITE_SYNC_ADMIN_CLAIM_ON_LOGIN === 'true'
-      if (shouldSyncClaim) {
-        try {
-          await callEnsureAdminClaim()
-          await authUser.getIdTokenResult(true)
-        } catch (err) {
-          if (import.meta.env.DEV && !isCloudFunctionUnavailableError(err) && !isEnsureAdminClaimDenied(err)) {
-            console.warn('[Auth] ensureAdminClaim:', err)
-          }
-        }
-      }
-      return true
     }
 
     const shouldSyncClaim = import.meta.env.VITE_SYNC_ADMIN_CLAIM_ON_LOGIN === 'true'
-    if (!shouldSyncClaim) {
-      const admin = await userHasAdminClaim(authUser)
-      setIsAdmin(admin)
-      return admin
-    }
-
-    try {
-      await callEnsureAdminClaim()
-    } catch (err) {
-      if (import.meta.env.DEV && !isCloudFunctionUnavailableError(err) && !isEnsureAdminClaimDenied(err)) {
-        console.warn('[Auth] ensureAdminClaim:', err)
+    if (shouldSyncClaim) {
+      try {
+        await callEnsureAdminClaim()
+        await authUser.getIdTokenResult(true)
+      } catch (err) {
+        if (import.meta.env.DEV && !isCloudFunctionUnavailableError(err) && !isEnsureAdminClaimDenied(err)) {
+          console.warn('[Auth] ensureAdminClaim:', err)
+        }
       }
     }
-    try {
-      const admin = await userHasAdminClaim(authUser)
-      setIsAdmin(admin)
-      return admin
-    } catch {
-      setIsAdmin(false)
-      return false
-    }
-  }, [userData?.email])
+
+    const admin = await resolveUserIsAdmin(authUser, profile ?? userData)
+    setIsAdmin(admin)
+    return admin
+  }, [userData])
 
   // Google signInWithRedirect dönüşü — StrictMode güvenli tek seferlik getRedirectResult
   useEffect(() => {
@@ -443,21 +417,15 @@ export function AuthProvider({ children }) {
     }
   }, [userData?.role, userData?.accountStatus])
 
-  const showAdminPanel = useMemo(() => {
-    if (isAdmin) return true
-    if (userEmailMatchesConfiguredAdmin(user)) return true
-    return emailMatchesConfiguredAdmin(userData?.email)
-  }, [isAdmin, user?.email, userData?.email])
+  const showAdminPanel = isAdmin
 
   useEffect(() => {
     if (!user) {
       setIsAdmin(false)
       return
     }
-    if (userEmailMatchesConfiguredAdmin(user) || emailMatchesConfiguredAdmin(userData?.email)) {
-      setIsAdmin(true)
-    }
-  }, [user?.uid, user?.email, userData?.email])
+    void resolveUserIsAdmin(user, userData).then(setIsAdmin)
+  }, [user, userData])
 
   const value = useMemo(
     () => ({

@@ -5,8 +5,6 @@ import { normalizeUsername } from './firestoreUsers'
 export const BETA_AUTH_EMAIL_DOMAIN =
   import.meta.env.VITE_BETA_AUTH_EMAIL_DOMAIN || 'beta.audaztactical.local'
 
-const BETA_AUTH_SALT = import.meta.env.VITE_BETA_AUTH_SALT || 'audaz-beta-2026'
-
 /** Lansman tarihine kadar beta test dönemi */
 export function isPlatformInBetaPeriod() {
   const launch = getPlatformLaunchMs()
@@ -34,14 +32,22 @@ export function betaEmailFromUsername(rawUsername) {
   return `${key}@${BETA_AUTH_EMAIL_DOMAIN}`
 }
 
+/** Firebase Auth minimum şifre uzunluğu */
+export const BETA_MIN_PASSWORD_LENGTH = 6
+
 /**
- * Beta oturumu için deterministik şifre (min. 6 karakter — Firebase kuralı).
- * @param {string} rawUsername
+ * @param {string} password
+ * @returns {{ ok: boolean, message?: string }}
  */
-export function betaPasswordFromUsername(rawUsername) {
-  const key = normalizeUsername(rawUsername)
-  if (!key) return ''
-  return `${key}.${BETA_AUTH_SALT}.beta`
+export function validateBetaPassword(password) {
+  const value = String(password ?? '')
+  if (value.length < BETA_MIN_PASSWORD_LENGTH) {
+    return {
+      ok: false,
+      message: `Şifre en az ${BETA_MIN_PASSWORD_LENGTH} karakter olmalı.`,
+    }
+  }
+  return { ok: true }
 }
 
 /**

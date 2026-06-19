@@ -7,7 +7,8 @@ const root = path.join(__dirname, '..')
 const envPath = path.join(root, '.env.local')
 const outPath = path.join(root, 'public', 'firebase-messaging-sw.js')
 
-const FIREBASE_CDN = '11.2.0'
+const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'))
+const FIREBASE_CDN = String(pkg.dependencies?.firebase ?? '12.12.0').replace(/^[\^~]/, '')
 
 /** @param {string} key */
 function readEnv(key) {

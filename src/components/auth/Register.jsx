@@ -4,7 +4,7 @@ import Input from '../common/Input'
 import LegalDisclaimer from '../LegalDisclaimer'
 import { useAuth } from '../../context/AuthContext'
 import { isPlatformInBetaPeriod } from '../../lib/registrationPolicy'
-import { betaPasswordFromUsername } from '../../lib/betaAuth'
+import { validateBetaPassword } from '../../lib/betaAuth'
 import {
   normalizeUsername,
   isUsernameAvailable,
@@ -41,6 +41,7 @@ export default function Register({
   const [email, setEmail] = useState('')
   const [usernameDraft, setUsernameDraft] = useState('')
   const [callsign, setCallsign] = useState('')
+  const [password, setPassword] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
   const [busy, setBusy] = useState(false)
   const [checkingUsername, setCheckingUsername] = useState(false)
@@ -85,6 +86,10 @@ export default function Register({
       }
     }
 
+    if (!validateBetaPassword(password).ok) {
+      fe.password = 'ERR: Şifre min. 6 karakter (POLICY_AUTH_01)'
+    }
+
     setFieldErrors(fe)
     return Object.keys(fe).length === 0
   }
@@ -105,7 +110,6 @@ export default function Register({
     try {
       const normalizedUsername = normalizeUsername(usernameDraft)
       const authEmail = email.trim()
-      const password = betaPasswordFromUsername(normalizedUsername)
 
       await registerWithEmailPassword({
         email: authEmail,
@@ -163,7 +167,7 @@ export default function Register({
             Beta Test — Operatör kaydı
           </p>
           <p className="mt-1.5 font-sans text-sm leading-relaxed text-zinc-300">
-            Callsign, e-posta ve kullanıcı adı ile kayıt olun. Beta döneminde e-posta doğrulaması
+            Callsign, e-posta, kullanıcı adı ve şifre ile kayıt olun. Beta döneminde e-posta doğrulaması
             zorunlu değildir; kayıt sonrası doğrudan Dashboard&apos;a yönlendirilirsiniz.
           </p>
         </div>
@@ -202,6 +206,19 @@ export default function Register({
         placeholder="örn: wolf_alpha"
         hint="İngilizce harf ve rakamlar; boşluk alt çizgiye döner."
         error={fieldErrors.usernameDraft}
+        required
+      />
+
+      <Input
+        variant="gold"
+        label="Şifre"
+        name="password"
+        type="password"
+        autoComplete="new-password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        placeholder="En az 6 karakter"
+        error={fieldErrors.password}
         required
       />
 

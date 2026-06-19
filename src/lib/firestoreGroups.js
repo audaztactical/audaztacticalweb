@@ -1,6 +1,7 @@
-import { arrayUnion, collection, deleteDoc, doc, getDoc, getDocs, limit, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore'
+import { collection, deleteDoc, doc, getDoc, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore'
 import { safeOnSnapshot } from './firestoreSnapshot'
 import { db, isFirebaseConfigured } from './firebase'
+import { callJoinGroupByPassword } from './cloudFunctions'
 import { fetchGroupActivityLogsByGroup } from './firestoreGroupTraining'
 import { buildGroupLeaderboardRowFromActivity, sortGroupLeaderboardRows } from './groupLeaderboard'
 import { syncUserGroupFields } from './operatorGroupMembership'
@@ -98,21 +99,6 @@ export function subscribeInstructorGroups(instructorId, onGroups, onError) {
 }
 
 /**
- * @param {string} password
- * @returns {Promise<TacticalGroup | null>}
- */
-export async function findGroupByPassword(password) {
-  assertDb()
-  const normalized = normalizeGroupPassword(password)
-  if (!normalized) return null
-
-  const q = query(collection(db, 'groups'), where('groupPassword', '==', normalized), limit(1))
-  const snap = await getDocs(q)
-  if (snap.empty) return null
-  return mapGroupDoc(snap.docs[0])
-}
-
-/**
  * @param {string} operatorUid
  * @param {string} password
  */
@@ -120,26 +106,30 @@ export async function joinGroupByPassword(operatorUid, password) {
   assertDb()
   if (!operatorUid) throw new Error('Oturum gerekli')
 
-  const group = await findGroupByPassword(password)
-  if (!group) {
-    const e = new Error('Grup bulunamadı')
-    e.code = 'group-not-found'
-    throw e
-  }
+  try {
+    const result = await callJoinGroupByPassword(password)
 
-  if (group.members.includes(operatorUid)) {
+    const group = {
+      groupId: result.group.groupId,
+      groupName: result.group.groupName,
+      groupPassword: '',
+      instructorId: result.group.instructorId,
+      members: result.group.members,
+      createdAt: null,
+    }
+
     await syncUserGroupFields(operatorUid, group.groupId, group.instructorId)
-    return { group, alreadyMember: true }
+
+    return { group, alreadyMember: result.alreadyMember === true }
+  } catch (err) {
+    const code = String(/** @type {{ code?: string }} */ (err)?.code ?? '')
+    if (code.includes('not-found')) {
+      const e = new Error('Grup bulunamadı')
+      e.code = 'group-not-found'
+      throw e
+    }
+    throw err
   }
-
-  const ref = doc(db, 'groups', group.groupId)
-  await updateDoc(ref, {
-    members: arrayUnion(operatorUid),
-  })
-
-  await syncUserGroupFields(operatorUid, group.groupId, group.instructorId)
-
-  return { group, alreadyMember: false }
 }
 
 /**

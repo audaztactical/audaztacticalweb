@@ -19,7 +19,6 @@ import {
   User,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
-import { emailMatchesConfiguredAdmin, userEmailMatchesConfiguredAdmin } from '../../config/admin'
 import { useMuhabereNotify } from '../../context/MuhabereNotifyContext'
 import { auth } from '../../lib/firebase'
 import { scheduleScrollAppToTop } from '../../lib/scrollAppToTop'
@@ -173,10 +172,9 @@ export default function Sidebar({
   userEmail = '',
   loading = false,
 }) {
-  const { user, isInstructor, role, showAdminPanel } = useAuth()
+  const { isInstructor, role, showAdminPanel, isAdmin } = useAuth()
   const { sidebarMuhabereBadgeCount } = useMuhabereNotify()
-  const showAdminLink =
-    showAdminPanel || userEmailMatchesConfiguredAdmin(user) || emailMatchesConfiguredAdmin(userEmail)
+  const showAdminLink = showAdminPanel || isAdmin
 
   const groups = useMemo(() => {
     const isInstructorUser = role === 'instructor' || isInstructor

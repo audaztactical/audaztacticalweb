@@ -1,6 +1,7 @@
 import { doc, getDoc, serverTimestamp, runTransaction, setDoc } from 'firebase/firestore'
 import { safeOnSnapshot } from './firestoreSnapshot'
 import { db, isFirebaseConfigured } from './firebase'
+import { callCompletePremiumUpgrade } from './cloudFunctions'
 import { normalizeUserRole, normalizeAccountStatus } from './authRoles'
 
 /** Firestore'da kayıt yoksa veya hata durumunda AuthContext varsayılanları */
@@ -369,22 +370,11 @@ export async function updateUserAgreedToTerms(uid) {
  * @param {string} paymentIntentId
  */
 export async function completePremiumUpgrade(uid, paymentIntentId) {
-  if (!isFirebaseConfigured() || !db) throw new Error('Firebase yapılandırılmadı')
+  if (!isFirebaseConfigured()) throw new Error('Firebase yapılandırılmadı')
   if (!uid) throw new Error('Oturum gerekli')
   if (typeof paymentIntentId !== 'string' || !paymentIntentId.startsWith('pi_mock_')) {
     throw new Error('Geçersiz ödeme referansı')
   }
 
-  const ref = doc(db, 'users', uid)
-  await setDoc(
-    ref,
-    {
-      role: 'premium_member',
-      accountStatus: 'active',
-      premiumPaymentId: paymentIntentId,
-      premiumUpgradedAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    },
-    { merge: true },
-  )
+  await callCompletePremiumUpgrade(paymentIntentId)
 }
