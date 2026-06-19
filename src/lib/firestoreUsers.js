@@ -1,6 +1,6 @@
 import { doc, getDoc, serverTimestamp, runTransaction, setDoc } from 'firebase/firestore'
 import { safeOnSnapshot } from './firestoreSnapshot'
-import { db, isFirebaseConfigured } from './firebase'
+import { auth, db, isFirebaseConfigured } from './firebase'
 import { callCompletePremiumUpgrade } from './cloudFunctions'
 import { normalizeUserRole, normalizeAccountStatus } from './authRoles'
 
@@ -142,7 +142,10 @@ export async function createOperatorProfile(
     throw e
   }
 
-  try {
+  const writeProfile = async () => {
+    if (auth?.currentUser?.uid === uid) {
+      await auth.currentUser.getIdToken(true)
+    }
     await runTransaction(db, async (tx) => {
       const nameRef = doc(db, 'usernames', key)
       const userRef = doc(db, 'users', uid)
@@ -173,6 +176,23 @@ export async function createOperatorProfile(
       }
       tx.set(userRef, docPayload)
     })
+  }
+
+  try {
+    const maxAttempts = 3
+    let lastErr = null
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        await writeProfile()
+        return
+      } catch (err) {
+        lastErr = err
+        const code = err?.code ?? ''
+        if (code !== 'permission-denied' || attempt >= maxAttempts - 1) throw err
+        await new Promise((resolve) => setTimeout(resolve, 120 * (attempt + 1)))
+      }
+    }
+    throw lastErr
   } catch (error) {
     console.error('Firestore Yazma Hatası:', error)
     throw error

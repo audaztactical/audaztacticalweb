@@ -315,6 +315,7 @@ export function AuthProvider({ children }) {
         credUser = cred.user
         const display = callsign.trim()
         await updateProfile(credUser, { displayName: display })
+        await credUser.getIdToken(true)
         await createOperatorProfile(credUser.uid, {
           email: email.trim(),
           username,
