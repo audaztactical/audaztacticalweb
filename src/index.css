@@ -1448,17 +1448,7 @@
   font-family: 'Roboto Mono', var(--font-hud);
   font-size: 10px;
   color: rgb(100 116 139);
-  animation: cmd-met-pulse 1.2s ease-in-out infinite;
-}
-
-@keyframes cmd-met-pulse {
-  0%,
-  100% {
-    opacity: 0.45;
-  }
-  50% {
-    opacity: 1;
-  }
+  opacity: 0.75;
 }
 
 .cmd-met-icon {
