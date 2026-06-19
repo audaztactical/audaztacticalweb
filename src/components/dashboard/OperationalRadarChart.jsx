@@ -1,11 +1,10 @@
-import { useId, useMemo } from 'react'
+import { memo, useId, useMemo } from 'react'
 import {
   PolarAngleAxis,
   PolarGrid,
   PolarRadiusAxis,
   Radar,
   RadarChart,
-  ResponsiveContainer,
   Tooltip,
 } from 'recharts'
 import { useTheme } from '../../contexts/ThemeContext'
@@ -14,6 +13,20 @@ import { getAccentColor } from '../../lib/themeColors'
 const CHART_MAX = 100
 const MIN_DISPLAY_VALUE = 8
 const NEON_FALLBACK = '#00ff88'
+
+/** Sabit sahne — ResponsiveContainer resize döngüsünü engeller */
+const STAGE_W = 300
+const STAGE_H = 248
+const CHART_CX = STAGE_W / 2
+const CHART_CY = STAGE_H / 2
+const OUTER_R = 68
+
+/** @type {Record<string, string>} */
+const LABEL_SLOT = {
+  Personel: 'cmd-radar__label--n',
+  Lojistik: 'cmd-radar__label--sw',
+  Ekipman: 'cmd-radar__label--se',
+}
 
 /**
  * Sıfır değerler merkeze çökmesin; tooltip gerçek skoru gösterir.
@@ -25,34 +38,16 @@ function toDisplayValue(raw) {
   return Math.max(n, MIN_DISPLAY_VALUE * 0.65)
 }
 
-/**
- * @param {{ x: number, y: number, payload: { value: string }; cx: number; cy: number }} props
- */
-function HudAxisTick({ x, y, payload, cx, cy }) {
-  const label = payload?.value ?? ''
-  const dx = x - cx
-  const dy = y - cy
-  const dist = Math.hypot(dx, dy) || 1
-  const pad = 10
-  const tx = x + (dx / dist) * pad
-  const ty = y + (dy / dist) * pad
-  const anchor = Math.abs(dx) < 8 ? 'middle' : dx > 0 ? 'start' : 'end'
-
+/** Arka plan sonar — grafikten bağımsız compositor katmanı */
+function RadarSonarLayer() {
   return (
-    <text
-      x={tx}
-      y={ty}
-      textAnchor={anchor}
-      dominantBaseline="central"
-      fill="rgba(148, 163, 184, 0.88)"
-      fontSize={10}
-      fontWeight={600}
-      fontFamily="'JetBrains Mono', 'Roboto Mono', monospace"
-      letterSpacing="0.12em"
-      style={{ textTransform: 'uppercase' }}
-    >
-      {label}
-    </text>
+    <div className="cmd-radar__sonar-layer" aria-hidden>
+      <div className="cmd-radar__sonar-ring cmd-radar__sonar-ring--outer" />
+      <div className="cmd-radar__sonar-ring cmd-radar__sonar-ring--mid" />
+      <div className="cmd-radar__sonar-sweep">
+        <div className="cmd-radar__sonar-sweep-arm" />
+      </div>
+    </div>
   )
 }
 
@@ -82,6 +77,98 @@ function HudRadarTooltip({ active, payload, accent }) {
     </div>
   )
 }
+
+/**
+ * @param {{
+ *   chartData: { subject: string; rawValue: number; value: number; fullMark: number }[]
+ *   accent: string
+ *   gid: string
+ * }} props
+ */
+const RadarChartLayer = memo(function RadarChartLayer({ chartData, accent, gid }) {
+  return (
+    <RadarChart
+      width={STAGE_W}
+      height={STAGE_H}
+      cx={CHART_CX}
+      cy={CHART_CY}
+      outerRadius={OUTER_R}
+      data={chartData}
+      margin={{ top: 16, right: 16, bottom: 16, left: 16 }}
+    >
+      <defs>
+        <linearGradient id={`radarFill-${gid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={accent} stopOpacity={0.42} />
+          <stop offset="55%" stopColor={accent} stopOpacity={0.22} />
+          <stop offset="100%" stopColor="#004dff" stopOpacity={0.08} />
+        </linearGradient>
+        <filter id={`radarGlow-${gid}`} x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="2.5" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      <PolarGrid
+        gridType="polygon"
+        stroke="rgba(0, 255, 136, 0.16)"
+        strokeWidth={1}
+        radialLines
+      />
+
+      {/* Eksen etiketleri HTML katmanında — SVG re-render titremesini önler */}
+      <PolarAngleAxis dataKey="subject" tick={false} tickLine={false} axisLine={false} />
+
+      <PolarRadiusAxis
+        angle={90}
+        domain={[0, CHART_MAX]}
+        scale="linear"
+        allowDataOverflow
+        tickCount={5}
+        axisLine={false}
+        tickLine={false}
+        tick={{
+          fill: 'rgba(100, 116, 139, 0.55)',
+          fontSize: 8,
+          fontFamily: "'JetBrains Mono', monospace",
+        }}
+      />
+
+      <Radar
+        name="Hazırlık"
+        dataKey="value"
+        stroke={accent}
+        fill={`url(#radarFill-${gid})`}
+        fillOpacity={0.48}
+        strokeWidth={1.75}
+        dot={{
+          r: 3,
+          fill: accent,
+          stroke: '#0a0b0d',
+          strokeWidth: 1,
+          fillOpacity: 0.95,
+        }}
+        activeDot={{
+          r: 5,
+          fill: accent,
+          stroke: '#fff',
+          strokeWidth: 1,
+          filter: `url(#radarGlow-${gid})`,
+        }}
+        isAnimationActive={false}
+        style={{ filter: `drop-shadow(0 0 12px color-mix(in srgb, ${accent} 45%, transparent))` }}
+      />
+
+      <Tooltip
+        cursor={{ stroke: accent, strokeOpacity: 0.35, strokeWidth: 1 }}
+        content={(props) => <HudRadarTooltip {...props} accent={accent} />}
+        wrapperStyle={{ outline: 'none', zIndex: 20 }}
+      />
+    </RadarChart>
+  )
+})
 
 /**
  * @param {{ data: { axis: string; value: number; fullMark: number }[]; loading?: boolean }} props
@@ -114,100 +201,35 @@ export default function OperationalRadarChart({ data, loading }) {
         <p className="cmd-panel__subtitle">Personel · lojistik · ekipman karşılaştırması</p>
       </div>
 
-      <div className="cmd-radar__stage relative mx-auto w-full max-w-[340px] flex-1">
-        <div className="cmd-radar__sonar-ring cmd-radar__sonar-ring--outer" aria-hidden />
-        <div className="cmd-radar__sonar-ring cmd-radar__sonar-ring--mid" aria-hidden />
-        <div className="cmd-radar__sonar-sweep" aria-hidden />
+      <div className="cmd-radar__viewport">
+        <RadarSonarLayer />
+
+        <div className="cmd-radar__chart-layer">
+          <RadarChartLayer chartData={chartData} accent={accent} gid={gid} />
+        </div>
+
+        <div className="cmd-radar__labels" aria-hidden={loading}>
+          {chartData.map((row) => (
+            <span
+              key={row.subject}
+              className={['cmd-radar__label', LABEL_SLOT[row.subject] ?? 'cmd-radar__label--n'].join(' ')}
+            >
+              {row.subject}
+            </span>
+          ))}
+        </div>
 
         {loading ? (
-          <div className="absolute inset-0 z-[3] flex items-center justify-center font-mono-technical text-xs uppercase tracking-widest text-app-text/55">
+          <div className="cmd-radar__overlay cmd-radar__overlay--loading">
             Hesaplanıyor…
           </div>
         ) : null}
 
         {!loading && !hasSignal ? (
-          <div className="pointer-events-none absolute inset-x-0 bottom-1 z-[3] px-2 text-center font-mono-technical text-[9px] uppercase leading-relaxed tracking-wide text-app-text/45">
+          <div className="cmd-radar__overlay cmd-radar__overlay--hint">
             Veri bekleniyor — antrenman ve cephanelik kayıtları radarı doldurur.
           </div>
         ) : null}
-
-        <ResponsiveContainer width="100%" height={248} minWidth={220} debounce={180}>
-          <RadarChart
-            data={chartData}
-            cx="50%"
-            cy="50%"
-            outerRadius="56%"
-            margin={{ top: 28, right: 44, bottom: 28, left: 44 }}
-          >
-            <defs>
-              <linearGradient id={`radarFill-${gid}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={accent} stopOpacity={0.42} />
-                <stop offset="55%" stopColor={accent} stopOpacity={0.22} />
-                <stop offset="100%" stopColor="#004dff" stopOpacity={0.08} />
-              </linearGradient>
-              <filter id={`radarGlow-${gid}`} x="-30%" y="-30%" width="160%" height="160%">
-                <feGaussianBlur stdDeviation="2.5" result="blur" />
-                <feMerge>
-                  <feMergeNode in="blur" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-            </defs>
-
-            <PolarGrid
-              gridType="polygon"
-              stroke="rgba(0, 255, 136, 0.16)"
-              strokeWidth={1}
-              radialLines
-            />
-
-            <PolarAngleAxis dataKey="subject" tick={HudAxisTick} tickLine={false} axisLine={false} />
-
-            <PolarRadiusAxis
-              angle={90}
-              domain={[0, CHART_MAX]}
-              tickCount={5}
-              axisLine={false}
-              tickLine={false}
-              tick={{
-                fill: 'rgba(100, 116, 139, 0.55)',
-                fontSize: 8,
-                fontFamily: "'JetBrains Mono', monospace",
-              }}
-            />
-
-            <Radar
-              name="Hazırlık"
-              dataKey="value"
-              stroke={accent}
-              fill={`url(#radarFill-${gid})`}
-              fillOpacity={0.48}
-              strokeWidth={1.75}
-              dot={{
-                r: 3,
-                fill: accent,
-                stroke: '#0a0b0d',
-                strokeWidth: 1,
-                fillOpacity: 0.95,
-              }}
-              activeDot={{
-                r: 5,
-                fill: accent,
-                stroke: '#fff',
-                strokeWidth: 1,
-                filter: `url(#radarGlow-${gid})`,
-              }}
-              isAnimationActive={false}
-              style={{ filter: `drop-shadow(0 0 12px color-mix(in srgb, ${accent} 45%, transparent))` }}
-            />
-
-            <Tooltip
-              cursor={{ stroke: accent, strokeOpacity: 0.35, strokeWidth: 1 }}
-              content={(props) => <HudRadarTooltip {...props} accent={accent} />}
-              wrapperStyle={{ outline: 'none', zIndex: 20 }}
-            />
-          </RadarChart>
-        </ResponsiveContainer>
       </div>
 
       {!loading ? (
@@ -215,7 +237,7 @@ export default function OperationalRadarChart({ data, loading }) {
           {chartData.map((row) => (
             <li key={row.subject} className="inline-flex items-center gap-1.5">
               <span
-                className="size-1.5 rounded-full"
+                className="size-1.5 shrink-0 rounded-full"
                 style={{
                   background: accent,
                   boxShadow: `0 0 6px color-mix(in srgb, ${accent} 70%, transparent)`,

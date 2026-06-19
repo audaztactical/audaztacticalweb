@@ -1112,6 +1112,110 @@
   min-height: 300px;
 }
 
+/* Sabit boyutlu viewport — sonar ve grafik ayrı compositor katmanları */
+.cmd-radar__viewport {
+  position: relative;
+  width: 300px;
+  height: 248px;
+  margin-inline: auto;
+  flex-shrink: 0;
+  contain: layout style;
+}
+
+.cmd-radar__sonar-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+  transform: translateZ(0);
+  isolation: isolate;
+}
+
+.cmd-radar__chart-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  contain: layout style paint;
+  transform: translateZ(0);
+  isolation: isolate;
+}
+
+.cmd-radar__chart-layer .recharts-wrapper,
+.cmd-radar__chart-layer .recharts-surface {
+  overflow: visible !important;
+}
+
+.cmd-radar__labels {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  contain: layout style;
+}
+
+.cmd-radar__label {
+  position: absolute;
+  margin: 0;
+  font-family: 'JetBrains Mono', 'Roboto Mono', var(--font-hud);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(148 163 184 / 0.88);
+  white-space: nowrap;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.cmd-radar__label--n {
+  left: 50%;
+  top: 2px;
+  transform: translateX(-50%) translateZ(0);
+}
+
+.cmd-radar__label--sw {
+  left: 4px;
+  bottom: 10px;
+}
+
+.cmd-radar__label--se {
+  right: 4px;
+  bottom: 10px;
+  text-align: right;
+}
+
+.cmd-radar__overlay {
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+  font-family: 'Roboto Mono', var(--font-hud);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.cmd-radar__overlay--loading {
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: rgb(148 163 184 / 0.55);
+}
+
+.cmd-radar__overlay--hint {
+  left: 0;
+  right: 0;
+  bottom: 4px;
+  padding-inline: 8px;
+  text-align: center;
+  font-size: 9px;
+  line-height: 1.45;
+  color: rgb(148 163 184 / 0.45);
+}
+
 .cmd-radar__stage {
   min-height: 248px;
   isolation: isolate;
@@ -1125,17 +1229,19 @@
   translate: -50% -50%;
   border-radius: 50%;
   border: 1px solid rgb(0 255 136 / 0.08);
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .cmd-radar__sonar-ring--outer {
-  width: min(92%, 300px);
-  aspect-ratio: 1;
+  width: 276px;
+  height: 276px;
   opacity: 0.45;
 }
 
 .cmd-radar__sonar-ring--mid {
-  width: min(62%, 200px);
-  aspect-ratio: 1;
+  width: 186px;
+  height: 186px;
   border-color: rgb(0 255 136 / 0.05);
   opacity: 0.3;
 }
@@ -1145,19 +1251,21 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  width: min(88%, 280px);
-  aspect-ratio: 1;
+  width: 264px;
+  height: 264px;
   translate: -50% -50%;
   border-radius: 50%;
   overflow: hidden;
   opacity: 0.55;
   mask-image: radial-gradient(circle, black 0%, black 55%, transparent 72%);
+  transform: translateZ(0);
 }
 
-.cmd-radar__sonar-sweep::before {
-  content: '';
+.cmd-radar__sonar-sweep-arm {
   position: absolute;
   inset: -50%;
+  will-change: transform;
+  backface-visibility: hidden;
   background: conic-gradient(
     from 0deg,
     transparent 0deg,
