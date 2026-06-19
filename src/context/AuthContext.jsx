@@ -84,6 +84,8 @@ export function AuthProvider({ children }) {
   const [googleRedirectResolving, setGoogleRedirectResolving] = useState(false)
   const [googleAuthError, setGoogleAuthError] = useState(/** @type {{ code: string, message: string } | null} */ (null))
   const [isAdmin, setIsAdmin] = useState(false)
+  /** Kayıt tamamlanana kadar landing → dashboard otomatik yönlendirmeyi engeller */
+  const [registrationInProgress, setRegistrationInProgress] = useState(false)
 
   usePresenceHeartbeat(user?.uid)
 
@@ -307,6 +309,7 @@ export function AuthProvider({ children }) {
       }
 
       let credUser = null
+      setRegistrationInProgress(true)
       try {
         const cred = await createUserWithEmailAndPassword(auth, email.trim(), password)
         credUser = cred.user
@@ -338,6 +341,8 @@ export function AuthProvider({ children }) {
           }
         }
         throw err
+      } finally {
+        setRegistrationInProgress(false)
       }
     },
     []
@@ -451,12 +456,14 @@ export function AuthProvider({ children }) {
       googleRedirectResolving,
       googleAuthError,
       clearGoogleAuthError: () => setGoogleAuthError(null),
+      registrationInProgress,
     }),
     [
       user,
       loading,
       userData,
       profileLoading,
+      registrationInProgress,
       isInstructor,
       isPremiumMember,
       isAccountLocked,

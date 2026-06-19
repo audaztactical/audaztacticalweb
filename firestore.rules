@@ -81,12 +81,18 @@ service cloud.firestore {
     }
 
     /** İlk kayıt: yalnızca standart operatör rolleri; premium alanları yasak. */
-    function validSelfRegistrationRole() {
+    function validselfRegistrationRole() {
       let role = userRoleOf(request.resource.data);
       return (role == 'operator' || role == 'member' || role == '')
         && request.resource.data.get('accountStatus', 'active') == 'active'
         && !('premiumPaymentId' in request.resource.data)
         && !('premiumUpgradedAt' in request.resource.data);
+    }
+
+    /** Protokol onayı — yalnızca agreedToTerms alanları (profil henüz yoksa). */
+    function isOwnerTermsAckOnly() {
+      return request.resource.data.keys().hasOnly(['agreedToTerms', 'termsAgreedAt', 'updatedAt'])
+        && request.resource.data.agreedToTerms == true;
     }
 
     match /users/{userId} {
@@ -97,10 +103,12 @@ service cloud.firestore {
       allow list: if isContentAdmin()
         || isInstructor()
         || (isSignedIn() && isAuthMuhabereVisibleUser());
-      allow create: if isOwnerUid(userId) && validSelfRegistrationRole();
+      allow create: if isOwnerUid(userId) && (validselfRegistrationRole() || isOwnerTermsAckOnly());
       allow update: if isContentAdmin()
         || isMuhaberePeerContactLink(userId)
         || isMuhaberePeerContactUnlink(userId)
+        || (isOwnerUid(userId) && !exists(/databases/$(database)/documents/users/$(userId)) && validselfRegistrationRole())
+        || (isOwnerUid(userId) && isOwnerTermsAckOnly())
         || (isOwnerUid(userId) && ownerPrivilegedFieldsUnchanged());
       allow delete: if false;
     }

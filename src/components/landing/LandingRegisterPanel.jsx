@@ -185,6 +185,10 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
         setFormError('Bu e-posta veya kullanıcı adı zaten kayıtlı')
       } else if (code === 'username-already-in-use') {
         setFieldErrors((f) => ({ ...f, usernameDraft: 'Bu kullanıcı adı alınmış' }))
+      } else if (code === 'permission-denied' || String(code).includes('permission')) {
+        setFormError(
+          'Profil kaydı reddedildi. Sayfayı Ctrl+F5 ile yenileyip tekrar deneyin; sorun sürerse destek ile iletişime geçin.',
+        )
       } else {
         setFormError(typeof err?.message === 'string' ? err.message : 'Kayıt tamamlanamadı')
       }
@@ -411,9 +415,9 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder={betaMode ? 'Beta: kullanıcı adı ile otomatik' : '••••••••'}
+              placeholder="En az 6 karakter"
               error={fieldErrors.password}
-              required={!betaMode || loginId.trim().includes('@')}
+              required
             />
 
             {formError ? (

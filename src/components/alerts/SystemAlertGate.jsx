@@ -131,12 +131,14 @@ function SystemAlertOverlay({
   )
 }
 
+const SYSTEM_ALERTS_DISABLED = import.meta.env.VITE_DISABLE_SYSTEM_ALERTS === 'true'
+
 export default function SystemAlertGate() {
   const { user, userData } = useAuth()
   const [pending, setPending] = useState(/** @type {SystemAlertRecord[]} */ ([]))
 
   useEffect(() => {
-    if (!user?.uid) {
+    if (SYSTEM_ALERTS_DISABLED || !user?.uid) {
       setPending([])
       return undefined
     }
@@ -155,6 +157,8 @@ export default function SystemAlertGate() {
     },
     [user, userData],
   )
+
+  if (SYSTEM_ALERTS_DISABLED) return null
 
   const current = pending[0]
   if (!current) return null

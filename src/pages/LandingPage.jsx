@@ -43,7 +43,8 @@ function HudStatusPill({ status }) {
 }
 
 export default function LandingPage() {
-  const { user, loading, googleRedirectResolving } = useAuth()
+  const { user, loading, googleRedirectResolving, profileLoading, userData, registrationInProgress } =
+    useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   const skipIntro = location.state?.skipIntro === true
@@ -92,14 +93,26 @@ export default function LandingPage() {
   }, [location.state?.openAuth, scrollToPanel])
 
   useEffect(() => {
-    if (loading || googleRedirectResolving || !user || showIntro) return
+    if (loading || googleRedirectResolving || registrationInProgress || !user || showIntro) return
+    // Profil henüz yoksa (yarım kayıt) dashboard'a atlama
+    if (profileLoading || !userData?.username?.trim()) return
     // Karargâh'a Dön (skipIntro) ile bilinçli ziyaret — landing'de kal
     if (location.state?.skipIntro === true) return
     const target = hasPendingGoogleAuthRedirectPath()
       ? consumeGoogleAuthRedirectPath()
       : '/dashboard'
     navigate(target, { replace: true })
-  }, [user, loading, googleRedirectResolving, navigate, showIntro, location.state?.skipIntro])
+  }, [
+    user,
+    loading,
+    googleRedirectResolving,
+    registrationInProgress,
+    profileLoading,
+    userData?.username,
+    navigate,
+    showIntro,
+    location.state?.skipIntro,
+  ])
 
   return (
     <div className="relative min-h-dvh bg-[#0a0b0d] text-slate-100">

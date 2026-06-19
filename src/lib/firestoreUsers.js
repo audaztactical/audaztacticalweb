@@ -171,7 +171,7 @@ export async function createOperatorProfile(
         docPayload.premiumPaymentId = premiumPaymentId
         docPayload.premiumUpgradedAt = serverTimestamp()
       }
-      tx.set(userRef, docPayload, { merge: true })
+      tx.set(userRef, docPayload)
     })
   } catch (error) {
     console.error('Firestore Yazma Hatası:', error)
@@ -224,23 +224,19 @@ export async function createGoogleOperatorProfile(user) {
         const ns = await tx.get(nameRef)
         if (ns.exists()) throw Object.assign(new Error('collision'), { code: '__collision__' })
         tx.set(nameRef, { uid })
-        tx.set(
-          userRef,
-          {
-            email,
-            username: key,
-            callsign: name,
-            displayName: name,
-            bloodType: 'BELİRTİLMEDİ',
-            status: 'Sivil',
-            role: 'member',
-            accountStatus: 'active',
-            enrolledAt: serverTimestamp(),
-            agreedToTerms: false,
-            updatedAt: serverTimestamp(),
-          },
-          { merge: true },
-        )
+        tx.set(userRef, {
+          email,
+          username: key,
+          callsign: name,
+          displayName: name,
+          bloodType: 'BELİRTİLMEDİ',
+          status: 'Sivil',
+          role: 'member',
+          accountStatus: 'active',
+          enrolledAt: serverTimestamp(),
+          agreedToTerms: false,
+          updatedAt: serverTimestamp(),
+        })
       })
       return
     } catch (error) {
