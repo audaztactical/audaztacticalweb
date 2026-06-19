@@ -1178,18 +1178,6 @@
   }
 }
 
-@keyframes cmd-radar-ring-pulse {
-  0%,
-  100% {
-    opacity: 0.35;
-    scale: 0.98;
-  }
-  50% {
-    opacity: 0.75;
-    scale: 1;
-  }
-}
-
 .cmd-radar-tooltip {
   min-width: 148px;
   padding: 0.55rem 0.7rem;
