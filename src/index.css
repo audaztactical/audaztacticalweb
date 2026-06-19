@@ -1110,7 +1110,148 @@
 }
 
 .cmd-radar {
-  min-height: 280px;
+  min-height: 300px;
+}
+
+.cmd-radar__stage {
+  min-height: 248px;
+  isolation: isolate;
+}
+
+.cmd-radar__sonar-ring {
+  pointer-events: none;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  border-radius: 50%;
+  border: 1px solid rgb(0 255 136 / 0.08);
+}
+
+.cmd-radar__sonar-ring--outer {
+  width: min(92%, 300px);
+  aspect-ratio: 1;
+  animation: cmd-radar-ring-pulse 3.6s ease-in-out infinite;
+}
+
+.cmd-radar__sonar-ring--mid {
+  width: min(62%, 200px);
+  aspect-ratio: 1;
+  border-color: rgb(0 255 136 / 0.05);
+  animation: cmd-radar-ring-pulse 3.6s ease-in-out infinite 0.6s;
+}
+
+.cmd-radar__sonar-sweep {
+  pointer-events: none;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(88%, 280px);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  overflow: hidden;
+  opacity: 0.55;
+  mask-image: radial-gradient(circle, black 0%, black 55%, transparent 72%);
+}
+
+.cmd-radar__sonar-sweep::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 300deg,
+    rgb(0 255 136 / 0.07) 328deg,
+    rgb(0 255 136 / 0.28) 352deg,
+    transparent 360deg
+  );
+  animation: cmd-radar-sweep 4.8s linear infinite;
+}
+
+@keyframes cmd-radar-sweep {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes cmd-radar-ring-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    scale: 0.98;
+  }
+  50% {
+    opacity: 0.75;
+    scale: 1;
+  }
+}
+
+.cmd-radar-tooltip {
+  min-width: 148px;
+  padding: 0.55rem 0.7rem;
+  border-radius: 3px;
+  border: 1px solid rgb(0 255 136 / 0.28);
+  background: rgb(6 8 12 / 0.94);
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 0.6),
+    0 8px 28px -8px rgb(0 0 0 / 0.85),
+    0 0 18px -6px rgb(0 255 136 / 0.22);
+  backdrop-filter: blur(8px);
+}
+
+.cmd-radar-tooltip__kicker {
+  margin: 0 0 0.2rem;
+  font-family: 'Roboto Mono', var(--font-hud);
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgb(148 163 184 / 0.65);
+}
+
+.cmd-radar-tooltip__label {
+  margin: 0;
+  font-family: 'Roboto Mono', var(--font-hud);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(226 232 240 / 0.92);
+}
+
+.cmd-radar-tooltip__value {
+  margin: 0.35rem 0 0.45rem;
+  font-family: 'Roboto Mono', var(--font-hud);
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.cmd-radar-tooltip__unit {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgb(148 163 184 / 0.55);
+}
+
+.cmd-radar-tooltip__bar {
+  height: 3px;
+  border-radius: 2px;
+  background: rgb(255 255 255 / 0.06);
+  overflow: hidden;
+}
+
+.cmd-radar-tooltip__bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  box-shadow: 0 0 8px rgb(0 255 136 / 0.45);
+  transition: width 0.35s ease-out;
 }
 
 /* Konum seçici + meteoroloji veri satırları */
