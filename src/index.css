@@ -843,7 +843,6 @@
 .cmd-mission-item--critical {
   border-color: rgb(239 68 68 / 0.35);
   box-shadow: 0 0 20px -6px rgb(239 68 68 / 0.28);
-  animation: cmd-critical-pulse 2.4s ease-in-out infinite;
 }
 
 @keyframes cmd-critical-pulse {
@@ -1131,14 +1130,14 @@
 .cmd-radar__sonar-ring--outer {
   width: min(92%, 300px);
   aspect-ratio: 1;
-  animation: cmd-radar-ring-pulse 3.6s ease-in-out infinite;
+  opacity: 0.45;
 }
 
 .cmd-radar__sonar-ring--mid {
   width: min(62%, 200px);
   aspect-ratio: 1;
   border-color: rgb(0 255 136 / 0.05);
-  animation: cmd-radar-ring-pulse 3.6s ease-in-out infinite 0.6s;
+  opacity: 0.3;
 }
 
 .cmd-radar__sonar-sweep {
@@ -1581,7 +1580,10 @@
 }
 
 .weapon-maint-alarm {
-  animation: weapon-maint-alarm-blink 1.15s ease-in-out infinite;
+  border-color: rgba(239, 68, 68, 0.75);
+  box-shadow:
+    0 0 18px rgba(239, 68, 68, 0.35),
+    inset 0 0 12px rgba(239, 68, 68, 0.08);
 }
 
 /* ILWS Matrix wireframe — kayan ikili kod */

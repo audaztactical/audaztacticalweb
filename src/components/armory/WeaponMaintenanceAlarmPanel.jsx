@@ -25,7 +25,7 @@ export default function WeaponMaintenanceAlarmPanel({ weapons, rangeLogs, update
         role="alert"
       >
         <p className="flex items-start gap-2 font-mono-technical text-[9px] font-bold uppercase leading-relaxed tracking-wide text-red-400">
-          <AlertTriangle className="mt-0.5 size-4 shrink-0 animate-pulse" aria-hidden />
+          <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
           <span>[ ALERT: {MAINTENANCE_ALERT_MESSAGE} ]</span>
         </p>
         <ul className="space-y-1.5 border-t border-red-500/25 pt-2">

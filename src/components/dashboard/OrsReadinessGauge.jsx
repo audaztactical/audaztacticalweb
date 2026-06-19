@@ -50,7 +50,7 @@ export default function OrsReadinessGauge({ score, penalties, loading, embedded 
     scoreColor = 'text-[#FF0000]'
   }
 
-  const panelPulse = isCritical ? 'animate-pulse ring-1 ring-[#FF0000]/45' : ''
+  const panelPulse = isCritical ? 'ring-1 ring-[#FF0000]/45' : ''
 
   const inner = (
     <>

@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useId, useMemo } from 'react'
 import {
   PolarAngleAxis,
   PolarGrid,
@@ -105,18 +105,6 @@ export default function OperationalRadarChart({ data, loading }) {
     [data],
   )
 
-  const valueKey = useMemo(() => chartData.map((r) => r.rawValue).join('|'), [chartData])
-  const prevKeyRef = useRef(/** @type {string | null} */ (null))
-  const [animateRadar, setAnimateRadar] = useState(true)
-
-  useEffect(() => {
-    if (prevKeyRef.current === valueKey) return undefined
-    prevKeyRef.current = valueKey
-    setAnimateRadar(true)
-    const t = window.setTimeout(() => setAnimateRadar(false), 1100)
-    return () => window.clearTimeout(t)
-  }, [valueKey])
-
   const hasSignal = chartData.some((row) => row.rawValue > 0)
 
   return (
@@ -209,9 +197,7 @@ export default function OperationalRadarChart({ data, loading }) {
                 strokeWidth: 1,
                 filter: `url(#radarGlow-${gid})`,
               }}
-              isAnimationActive={animateRadar && !loading}
-              animationDuration={900}
-              animationEasing="ease-out"
+              isAnimationActive={false}
               style={{ filter: `drop-shadow(0 0 12px color-mix(in srgb, ${accent} 45%, transparent))` }}
             />
 
