@@ -2724,3 +2724,29 @@
       0 0 0 1px rgba(251, 191, 36, 0.65);
   }
 }
+
+.progress-hud-accordion {
+  display: grid;
+}
+
+.progress-hud-inline-expand {
+  height: auto;
+  min-height: 0;
+  max-height: none;
+}
+
+.progress-hud-panel--accordion {
+  min-height: 0;
+  max-height: none;
+}
+
+.progress-hud-slot--open > :first-child .progress-hud-panel,
+.progress-hud-slot--open > :first-child.rounded-xl {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-color: transparent;
+}
+
+.compact-shell .progress-hud-panel {
+  min-height: 0;
+}

@@ -33,7 +33,9 @@ import {
   getLogSuccessOrAccuracy,
 } from '../lib/progressAnalytics'
 import PerformanceTrendChart from '../components/progress/PerformanceTrendChart'
-import ProgressHudPanels, { EXPANDED_HUD_PANEL_IDS } from '../components/progress/ProgressHudPanels'
+import ProgressHudPanels, { EXPANDED_HUD_PANEL_IDS, HudInlineAccordion } from '../components/progress/ProgressHudPanels'
+import { useAccordionReveal } from '../hooks/useAccordionReveal'
+import { useCompactShell } from '../hooks/useCompactShell'
 import GroupJoinPanel from '../components/progress/GroupJoinPanel'
 import { resolveLogFocusId } from '../lib/progressHudAnalytics'
 import { buildLogsById } from '../lib/progressTacticalTooltip'
@@ -360,6 +362,18 @@ export default function ProgressTracker({ onBack }) {
   const [barsAnimate, setBarsAnimate] = useState(false)
   const [focusedLogId, setFocusedLogId] = useState(/** @type {string | null} */ (null))
   const [hudExpandedPanel, setHudExpandedPanel] = useState(/** @type {ExpandedHudPanelId | null} */ (null))
+  const compact = useCompactShell()
+  const trendSlotRef = useRef(/** @type {HTMLDivElement | null} */ (null))
+  useAccordionReveal(compact && hudExpandedPanel === 'TREND', trendSlotRef)
+  const hudOverlayActive = !compact && hudExpandedPanel != null
+
+  const handleTrendExpand = () => {
+    if (compact) {
+      setHudExpandedPanel((prev) => (prev === 'TREND' ? null : 'TREND'))
+      return
+    }
+    setHudExpandedPanel('TREND')
+  }
 
   const uid = user?.uid ?? null
   const authBusy = loading || profileLoading
@@ -733,32 +747,66 @@ export default function ProgressTracker({ onBack }) {
 
             <div className="grid gap-4 lg:grid-cols-2">
               <div
-                className="rounded-xl border border-slate-800 bg-slate-950 p-4"
-                aria-hidden={hudExpandedPanel === 'TREND' || hudExpandedPanel === 'TCCC' ? true : undefined}
-                {...(hudExpandedPanel === 'TREND' || hudExpandedPanel === 'TCCC' ? { inert: true } : {})}
+                ref={trendSlotRef}
+                className={[
+                  'flex min-w-0 flex-col',
+                  compact && hudExpandedPanel === 'TREND' ? 'progress-hud-slot--open' : '',
+                ].join(' ')}
+                aria-hidden={hudOverlayActive ? true : undefined}
+                {...(hudOverlayActive ? { inert: true } : {})}
               >
-                <div className="mb-4 flex items-center justify-between gap-2">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <TrendingUp className="size-4 shrink-0 text-emerald-500" strokeWidth={1.5} aria-hidden />
-                    <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-app-text">
-                      PERFORMANS TRENDİ
-                    </h2>
+                <div className="rounded-xl border border-slate-800 bg-slate-950 p-3 sm:p-4">
+                  <div className="mb-4 flex items-center justify-between gap-2">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <TrendingUp className="size-4 shrink-0 text-emerald-500" strokeWidth={1.5} aria-hidden />
+                      <h2 className="text-[10px] font-bold uppercase tracking-[0.18em] text-app-text sm:text-[11px] sm:tracking-[0.2em]">
+                        PERFORMANS TRENDİ
+                      </h2>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <span className="font-mono text-[8px] uppercase text-app-text/45 sm:text-[9px]">
+                        SON {trendSeries.length} OTURUM
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleTrendExpand}
+                        className="rounded border border-slate-700 bg-slate-900/80 p-1.5 text-app-text/70 transition-colors hover:border-emerald-600/50 hover:text-emerald-400"
+                        aria-label="Performans trendi tam ekran"
+                        aria-expanded={compact ? hudExpandedPanel === 'TREND' : undefined}
+                      >
+                        <Maximize2 className="size-4" strokeWidth={1.75} aria-hidden />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <span className="font-mono text-[8px] uppercase text-app-text/45">
-                      SON {trendSeries.length} OTURUM
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setHudExpandedPanel('TREND')}
-                      className="rounded border border-slate-700 bg-slate-900/80 p-1.5 text-app-text/70 transition-colors hover:border-emerald-600/50 hover:text-emerald-400"
-                      aria-label="Performans trendi tam ekran"
-                    >
-                      <Maximize2 className="size-4" strokeWidth={1.75} aria-hidden />
-                    </button>
-                  </div>
+                  <PerformanceTrendChart barsAnimate={barsAnimate} series={trendChartSeries} />
                 </div>
-                <PerformanceTrendChart barsAnimate={barsAnimate} series={trendChartSeries} />
+                {compact ? (
+                  <HudInlineAccordion open={hudExpandedPanel === 'TREND'} panelId="TREND">
+                    <div className="rounded-b-xl border border-t-0 border-emerald-800/35 bg-slate-950/98">
+                      <header className="flex items-center justify-between gap-2 border-b border-slate-800/60 px-3 py-2">
+                        <p className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-emerald-500/75 sm:text-[10px]">
+                          DETAY · PERFORMANS TRENDİ
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setHudExpandedPanel(null)}
+                          className="inline-flex items-center gap-1 rounded border border-slate-700 bg-slate-900/80 px-2 py-1 font-mono text-[9px] font-bold uppercase tracking-wider text-app-text/70 transition-colors hover:border-amber-500/50 hover:text-amber-300"
+                          aria-label="Performans trendi kapat"
+                        >
+                          <X className="size-3.5" strokeWidth={2} aria-hidden />
+                          KAPAT
+                        </button>
+                      </header>
+                      <div className="p-3">
+                        <PerformanceTrendChart
+                          barsAnimate={barsAnimate}
+                          series={trendChartSeries}
+                          variant="expanded"
+                        />
+                      </div>
+                    </div>
+                  </HudInlineAccordion>
+                ) : null}
               </div>
 
               <div className="rounded-xl border border-slate-800 bg-slate-950 p-4">

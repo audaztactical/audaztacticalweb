@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Activity, AlertTriangle, Crosshair, Maximize2, Radio, TrendingUp, X } from 'lucide-react'
+import { useAccordionReveal } from '../../hooks/useAccordionReveal'
+import { useCompactShell } from '../../hooks/useCompactShell'
 import {
   buildCharacterMatrix,
   buildChronicErrorRadar,
@@ -67,8 +69,8 @@ function HudPanelHeader({ title, accentClass, icon, badge, trailing, onExpand, v
   const Icon = icon
   const titleClass =
     variant === 'expanded'
-      ? 'text-sm font-bold uppercase tracking-[0.28em]'
-      : 'text-[11px] font-bold uppercase tracking-[0.22em]'
+      ? 'text-xs font-bold uppercase tracking-[0.18em] sm:text-sm sm:tracking-[0.24em] lg:tracking-[0.28em]'
+      : 'text-[10px] font-bold uppercase tracking-[0.16em] sm:text-[11px] sm:tracking-[0.22em]'
 
   return (
     <header
@@ -112,14 +114,44 @@ function HudPanelHeader({ title, accentClass, icon, badge, trailing, onExpand, v
 /**
  * @param {HudPanelVariant} variant
  * @param {boolean} [embeddedInOverlay]
+ * @param {boolean} [embeddedInAccordion]
  */
-function panelShellClass(variant, embeddedInOverlay = false) {
+function panelShellClass(variant, embeddedInOverlay = false, embeddedInAccordion = false) {
   if (variant === 'expanded' && embeddedInOverlay) {
     return 'progress-hud-panel relative flex h-full min-h-0 w-full max-w-full flex-col overflow-hidden bg-transparent p-0 font-mono'
   }
+  if (variant === 'expanded' && embeddedInAccordion) {
+    return 'progress-hud-panel progress-hud-panel--accordion relative flex w-full min-h-0 flex-col overflow-hidden bg-slate-950/98 p-3 font-mono sm:p-4'
+  }
   return variant === 'expanded'
-    ? 'progress-hud-panel relative flex h-full max-h-full w-full min-h-0 max-w-full flex-col overflow-hidden rounded-xl border border-emerald-800/40 bg-slate-950/95 p-3 font-mono shadow-[0_0_48px_rgba(52,211,153,0.1)] sm:p-4'
-    : 'progress-hud-panel relative overflow-hidden rounded-xl border border-slate-800 bg-slate-950 p-4 font-mono'
+    ? 'progress-hud-panel relative flex w-full min-h-0 max-w-full flex-col overflow-hidden rounded-xl border border-emerald-800/40 bg-slate-950/95 p-3 font-mono shadow-[0_0_48px_rgba(52,211,153,0.1)] sm:p-4'
+    : 'progress-hud-panel relative overflow-hidden rounded-xl border border-slate-800 bg-slate-950 p-3 font-mono sm:p-4'
+}
+
+/**
+ * @param {{ open: boolean; panelId: ExpandedHudPanelId; children: React.ReactNode }} props
+ */
+export function HudInlineAccordion({ open, panelId, children }) {
+  return (
+    <div
+      className={[
+        'progress-hud-accordion grid transition-[grid-template-rows] duration-300 ease-out',
+        open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',
+      ].join(' ')}
+      aria-hidden={!open}
+    >
+      <div className="min-h-0 overflow-hidden">
+        <div
+          id={`hud-panel-expand-${panelId}`}
+          className="progress-hud-inline-expand h-auto min-h-0"
+          role="region"
+          aria-labelledby={open ? `hud-panel-trigger-${panelId}` : undefined}
+        >
+          {children}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 /**
@@ -279,6 +311,7 @@ function TcccSimulationDebriefSidebar({ logs }) {
  *   onExpand?: () => void
  *   suppressHeader?: boolean
  *   embeddedInOverlay?: boolean
+ *   embeddedInAccordion?: boolean
  * }} props
  */
 export function TacticalCharacterMatrix({
@@ -288,6 +321,7 @@ export function TacticalCharacterMatrix({
   onExpand,
   suppressHeader = false,
   embeddedInOverlay = false,
+  embeddedInAccordion = false,
 }) {
   const expanded = variant === 'expanded'
   const logsById = useMemo(() => buildLogsById(logs), [logs])
@@ -305,14 +339,22 @@ export function TacticalCharacterMatrix({
     return Math.max(0.5, ...visiblePoints.map((p) => p.reaction)) * 1.15
   }, [focusedLogId, visiblePoints, maxReaction])
 
-  const cornerText = expanded ? 'text-[10px]' : 'text-[7px]'
-  const axisText = expanded ? 'text-[9px]' : 'text-[7px]'
-  const emptyText = expanded ? 'text-xs' : 'text-[9px]'
-  const dotLocked = expanded ? 'progress-hud-focus-pulse size-6 ring-2 ring-amber-400/80' : 'progress-hud-focus-pulse size-4 ring-2 ring-amber-400/80'
-  const dotNormal = expanded ? 'progress-hud-sonar size-4' : 'progress-hud-sonar size-2.5'
+  const cornerText = embeddedInAccordion
+    ? 'text-[9px] sm:text-[10px]'
+    : expanded
+      ? 'text-[10px] sm:text-[11px]'
+      : 'text-[8px] sm:text-[9px]'
+  const axisText = embeddedInAccordion
+    ? 'text-[8px] sm:text-[9px]'
+    : expanded
+      ? 'text-[9px] sm:text-[10px]'
+      : 'text-[7px] sm:text-[8px]'
+  const emptyText = expanded ? 'text-[11px] sm:text-xs' : 'text-[9px] sm:text-[10px]'
+  const dotLocked = expanded ? 'progress-hud-focus-pulse size-5 ring-2 ring-amber-400/80 sm:size-6' : 'progress-hud-focus-pulse size-4 ring-2 ring-amber-400/80'
+  const dotNormal = expanded ? 'progress-hud-sonar size-3.5 sm:size-4' : 'progress-hud-sonar size-2.5'
 
   return (
-    <section className={panelShellClass(variant, embeddedInOverlay)}>
+    <section className={panelShellClass(variant, embeddedInOverlay, embeddedInAccordion)}>
       <span
         className={[
           'progress-hud-scanline pointer-events-none absolute inset-0 z-10',
@@ -339,10 +381,12 @@ export function TacticalCharacterMatrix({
         className={[
           'relative z-20 m-0 border border-emerald-900/30 bg-black/60',
           embeddedInOverlay
-            ? 'min-h-0 w-full max-w-full flex-1 aspect-square max-h-full'
-            : expanded
-              ? 'mx-auto aspect-square h-auto w-full max-h-[min(75vh,calc(100vw-3rem))] max-w-[min(75vh,calc(100vw-3rem))] shrink-0'
-              : 'aspect-[4/3] w-full shrink-0',
+            ? 'aspect-square max-h-full min-h-0 w-full max-w-full flex-1'
+            : embeddedInAccordion
+              ? 'mx-auto aspect-square w-full max-h-[min(50vh,20rem)] shrink-0'
+              : expanded
+                ? 'mx-auto aspect-square h-auto w-full max-h-[min(75vh,calc(100vw-3rem))] max-w-[min(75vh,calc(100vw-3rem))] shrink-0'
+                : 'aspect-[4/3] w-full shrink-0',
         ].join(' ')}
       >
         <figcaption className="sr-only">Reaksiyon süresi ve isabet matrisi</figcaption>
@@ -425,6 +469,7 @@ export function TacticalCharacterMatrix({
  *   onExpand?: () => void
  *   suppressHeader?: boolean
  *   embeddedInOverlay?: boolean
+ *   embeddedInAccordion?: boolean
  * }} props
  */
 export function ChronicErrorRadar({
@@ -434,6 +479,7 @@ export function ChronicErrorRadar({
   onExpand,
   suppressHeader = false,
   embeddedInOverlay = false,
+  embeddedInAccordion = false,
 }) {
   const expanded = variant === 'expanded'
   const logsById = useMemo(() => buildLogsById(logs), [logs])
@@ -441,7 +487,7 @@ export function ChronicErrorRadar({
   const { items, maxCount } = useMemo(() => buildChronicErrorRadar(logs), [logs])
 
   return (
-    <section className={panelShellClass(variant, embeddedInOverlay)}>
+    <section className={panelShellClass(variant, embeddedInOverlay, embeddedInAccordion)}>
       {expanded ? (
         <span className="progress-hud-scanline pointer-events-none absolute inset-0 z-10 opacity-25" aria-hidden />
       ) : null}
@@ -462,7 +508,7 @@ export function ChronicErrorRadar({
 
       {items.length === 0 ? (
         <p
-          className={`text-center uppercase text-app-text/45 ${embeddedInOverlay ? 'flex flex-1 items-center justify-center text-xs' : expanded ? 'py-6 text-xs' : 'py-6 text-[9px]'}`}
+          className={`text-center uppercase text-app-text/45 ${embeddedInOverlay ? 'flex flex-1 items-center justify-center text-xs' : expanded ? 'py-6 text-[11px] sm:text-xs' : 'py-6 text-[9px] sm:text-[10px]'}`}
         >
           {focusedLogId ? 'BU OTURUMDA KRİTİK HATA YOK' : 'HATA KAYDI YOK · TEMİZ HAT'}
         </p>
@@ -504,12 +550,12 @@ export function ChronicErrorRadar({
               >
                 <p className="mb-1 flex items-center justify-between gap-2">
                   <span
-                    className={`font-bold uppercase text-app-text/55 ${expanded ? 'text-[10px]' : 'text-[8px]'}`}
+                    className={`font-bold uppercase text-app-text/55 ${expanded ? 'text-[10px] sm:text-[11px]' : 'text-[8px] sm:text-[9px]'}`}
                   >
                     {item.code}
                   </span>
                   <span
-                    className={`tabular-nums text-app-text/45 ${expanded ? 'text-[10px]' : 'text-[8px]'}`}
+                    className={`tabular-nums text-app-text/45 ${expanded ? 'text-[10px] sm:text-[11px]' : 'text-[8px] sm:text-[9px]'}`}
                   >
                     FLAG_FREQ_{item.count}
                   </span>
@@ -541,7 +587,7 @@ export function ChronicErrorRadar({
                   </span>
                 </p>
                 <p
-                  className={`mt-1 font-bold uppercase ${critical ? 'text-rose-400' : 'text-app-text/70'} ${expanded ? 'text-[11px]' : 'text-[9px]'}`}
+                  className={`mt-1 font-bold uppercase ${critical ? 'text-rose-400' : 'text-app-text/70'} ${expanded ? 'text-[10px] sm:text-[11px]' : 'text-[9px] sm:text-[10px]'}`}
                 >
                   {item.label}
                 </p>
@@ -568,6 +614,7 @@ export function ChronicErrorRadar({
  *   onExpand?: () => void
  *   suppressHeader?: boolean
  *   embeddedInOverlay?: boolean
+ *   embeddedInAccordion?: boolean
  * }} props
  */
 export function StressPerformanceWave({
@@ -577,6 +624,7 @@ export function StressPerformanceWave({
   onExpand,
   suppressHeader = false,
   embeddedInOverlay = false,
+  embeddedInAccordion = false,
 }) {
   const expanded = variant === 'expanded'
   const logsById = useMemo(() => buildLogsById(logs), [logs])
@@ -602,8 +650,8 @@ export function StressPerformanceWave({
   }, [wave, focusedLogId])
 
   const focusSessionIdx = focusedLogId ? sessions.findIndex((s) => s.id === focusedLogId) : -1
-  const w = expanded ? 720 : 320
-  const h = expanded ? 200 : 120
+  const w = expanded ? (embeddedInOverlay ? 720 : embeddedInAccordion ? 480 : 520) : 320
+  const h = expanded ? (embeddedInOverlay ? 200 : embeddedInAccordion ? 160 : 180) : 120
   const pad = expanded ? 16 : 12
 
   const pathD = useMemo(() => {
@@ -619,7 +667,7 @@ export function StressPerformanceWave({
   }, [sessions, w, h, pad])
 
   return (
-    <section className={panelShellClass(variant, embeddedInOverlay)}>
+    <section className={panelShellClass(variant, embeddedInOverlay, embeddedInAccordion)}>
       <span
         className={[
           'progress-hud-scanline pointer-events-none absolute inset-0 z-10',
@@ -640,7 +688,7 @@ export function StressPerformanceWave({
             ) : null
           }
           trailing={
-            <span className={`uppercase text-app-text/45 ${expanded ? 'text-[10px]' : 'text-[8px]'}`}>
+            <span className={`uppercase text-app-text/45 ${expanded ? 'text-[10px] sm:text-[11px]' : 'text-[8px] sm:text-[9px]'}`}>
               {wave.dayLabel || '—'}
             </span>
           }
@@ -651,7 +699,7 @@ export function StressPerformanceWave({
         <div
           className={[
             'relative z-20 min-h-0 w-full flex-1',
-            embeddedInOverlay ? 'min-h-[min(38vh,280px)]' : expanded ? 'min-h-[min(42vh,340px)]' : 'min-h-52',
+            embeddedInOverlay ? 'min-h-[min(38vh,280px)]' : embeddedInAccordion ? 'min-h-[min(36vh,240px)]' : expanded ? 'min-h-[min(42vh,340px)]' : 'min-h-52',
           ].join(' ')}
         >
           <StressPerformanceTcccChart
@@ -664,7 +712,7 @@ export function StressPerformanceWave({
         </div>
       ) : sessions.length < 2 ? (
         <p
-          className={`text-center uppercase text-app-text/45 ${embeddedInOverlay ? 'flex flex-1 items-center justify-center text-xs' : expanded ? 'py-8 text-xs' : 'py-8 text-[9px]'}`}
+          className={`text-center uppercase text-app-text/45 ${embeddedInOverlay ? 'flex flex-1 items-center justify-center text-xs' : expanded ? 'py-8 text-[11px] sm:text-xs' : 'py-8 text-[9px] sm:text-[10px]'}`}
         >
           {wave.source === 'tccc_sim' ? '≥2 TCCC SİMÜLASYON KAYDI GEREKLİ' : 'AYNI GÜN İÇİNDE ≥2 OTURUM GEREKLİ'}
         </p>
@@ -717,7 +765,7 @@ export function StressPerformanceWave({
                     type="button"
                     className={[
                       'w-full rounded border font-mono uppercase transition-colors',
-                      expanded ? 'py-2 text-[10px]' : 'py-1 text-[7px]',
+                      expanded ? 'py-2 text-[10px] sm:text-[11px]' : 'py-1 text-[8px] sm:text-[9px]',
                       isFocus
                         ? 'border-amber-500/60 bg-amber-950/30 font-bold text-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.35)]'
                         : 'border-transparent text-app-text/45 hover:border-emerald-800/50 hover:text-emerald-400',
@@ -763,6 +811,7 @@ export function StressPerformanceWave({
  *   onExpand?: () => void
  *   suppressHeader?: boolean
  *   embeddedInOverlay?: boolean
+ *   embeddedInAccordion?: boolean
  * }} props
  */
 export function TcccReactionWavePanel({
@@ -771,12 +820,13 @@ export function TcccReactionWavePanel({
   onExpand,
   suppressHeader = false,
   embeddedInOverlay = false,
+  embeddedInAccordion = false,
 }) {
   const expanded = variant === 'expanded'
   const chartData = useMemo(() => buildTcccReactionChartPoints(logs, 8), [logs])
 
   return (
-    <section className={panelShellClass(variant, embeddedInOverlay)}>
+    <section className={panelShellClass(variant, embeddedInOverlay, embeddedInAccordion)}>
       <span
         className={[
           'progress-hud-scanline pointer-events-none absolute inset-0 z-10',
@@ -810,6 +860,116 @@ export function TcccReactionWavePanel({
         {expanded ? <TcccSimulationDebriefSidebar logs={logs} /> : null}
       </div>
     </section>
+  )
+}
+
+/**
+ * @param {{
+ *   panelId: ExpandedHudPanelId
+ *   logs: Record<string, unknown>[]
+ *   errorLogs: Record<string, unknown>[]
+ *   focusedLogId: string | null
+ *   matrixLogs: Record<string, unknown>[]
+ *   trendSeries?: { id: string; label: string; value: number; tag: string; logRow?: Record<string, unknown> | null }[]
+ *   barsAnimate?: boolean
+ *   embeddedInAccordion?: boolean
+ * }} props
+ */
+function HudExpandedPanelBody({
+  panelId,
+  logs,
+  errorLogs,
+  focusedLogId,
+  matrixLogs,
+  trendSeries = [],
+  barsAnimate = false,
+  embeddedInAccordion = false,
+}) {
+  const shellProps = embeddedInAccordion ? { embeddedInAccordion: true } : { embeddedInOverlay: true }
+
+  return (
+    <>
+      {panelId === 'MATRIX' ? (
+        <TacticalCharacterMatrix
+          logs={matrixLogs}
+          focusedLogId={focusedLogId}
+          variant="expanded"
+          suppressHeader
+          {...shellProps}
+        />
+      ) : null}
+      {panelId === 'RADAR' ? (
+        <ChronicErrorRadar
+          logs={errorLogs}
+          focusedLogId={focusedLogId}
+          variant="expanded"
+          suppressHeader
+          {...shellProps}
+        />
+      ) : null}
+      {panelId === 'WAVE' ? (
+        <StressPerformanceWave
+          logs={logs}
+          focusedLogId={focusedLogId}
+          variant="expanded"
+          suppressHeader
+          {...shellProps}
+        />
+      ) : null}
+      {panelId === 'TCCC' ? (
+        <TcccReactionWavePanel logs={logs} variant="expanded" suppressHeader {...shellProps} />
+      ) : null}
+      {panelId === 'TREND' ? (
+        <div className="relative flex w-full min-w-0 flex-col overflow-hidden">
+          <PerformanceTrendChart series={trendSeries} barsAnimate={barsAnimate} variant="expanded" />
+        </div>
+      ) : null}
+    </>
+  )
+}
+
+/**
+ * @param {{
+ *   panelId: ExpandedHudPanelId
+ *   isOpen: boolean
+ *   compact: boolean
+ *   slotRef: React.RefObject<HTMLDivElement | null>
+ *   onClose: () => void
+ *   children: React.ReactNode
+ *   expandedContent: React.ReactNode
+ * }} props
+ */
+function HudPanelSlot({ panelId, isOpen, compact, slotRef, onClose, children, expandedContent }) {
+  useAccordionReveal(compact && isOpen, slotRef)
+
+  return (
+    <div
+      ref={slotRef}
+      className={['flex min-w-0 flex-col', isOpen && compact ? 'progress-hud-slot--open' : ''].join(' ')}
+    >
+      {children}
+      {compact ? (
+        <HudInlineAccordion open={isOpen} panelId={panelId}>
+          <div className="rounded-b-xl border border-t-0 border-emerald-800/35 bg-slate-950/98">
+            <header className="flex items-center justify-between gap-2 border-b border-slate-800/60 px-3 py-2">
+              <p className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-emerald-500/75 sm:text-[10px]">
+                DETAY · {PANEL_TITLES[panelId]}
+              </p>
+              <button
+                type="button"
+                onClick={onClose}
+                className="inline-flex items-center gap-1 rounded border border-slate-700 bg-slate-900/80 px-2 py-1 font-mono text-[9px] font-bold uppercase tracking-wider text-app-text/70 transition-colors hover:border-amber-500/50 hover:text-amber-300"
+                aria-label={`${PANEL_TITLES[panelId]} kapat`}
+              >
+                <X className="size-3.5" strokeWidth={2} aria-hidden />
+                KAPAT
+              </button>
+            </header>
+            {expandedContent}
+          </div>
+        </HudInlineAccordion>
+      ) : null}
+    </div>
   )
 }
 
@@ -879,41 +1039,15 @@ function HudPanelExpandOverlay({
 
       <div className="relative z-10 flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden py-2">
         <div className="flex h-full min-h-0 w-full max-w-6xl flex-col overflow-hidden">
-        {panelId === 'MATRIX' ? (
-          <TacticalCharacterMatrix
-            logs={matrixLogs}
-            focusedLogId={focusedLogId}
-            variant="expanded"
-            suppressHeader
-            embeddedInOverlay
-          />
-        ) : null}
-        {panelId === 'RADAR' ? (
-          <ChronicErrorRadar
-            logs={errorLogs}
-            focusedLogId={focusedLogId}
-            variant="expanded"
-            suppressHeader
-            embeddedInOverlay
-          />
-        ) : null}
-        {panelId === 'WAVE' ? (
-          <StressPerformanceWave
+          <HudExpandedPanelBody
+            panelId={panelId}
             logs={logs}
+            errorLogs={errorLogs}
             focusedLogId={focusedLogId}
-            variant="expanded"
-            suppressHeader
-            embeddedInOverlay
+            matrixLogs={matrixLogs}
+            trendSeries={trendSeries}
+            barsAnimate={barsAnimate}
           />
-        ) : null}
-        {panelId === 'TCCC' ? (
-          <TcccReactionWavePanel logs={logs} variant="expanded" suppressHeader embeddedInOverlay />
-        ) : null}
-        {panelId === 'TREND' ? (
-          <div className="relative flex h-full min-h-[280px] w-full min-w-0 flex-1 flex-col overflow-hidden">
-            <PerformanceTrendChart series={trendSeries} barsAnimate={barsAnimate} variant="expanded" />
-          </div>
-        ) : null}
         </div>
       </div>
 
@@ -946,6 +1080,7 @@ export default function ProgressHudPanels({
   trendSeries = [],
   barsAnimate = false,
 }) {
+  const compact = useCompactShell()
   const errorLogs = radarLogs ?? logs
   const matrixLogs = useMemo(() => {
     if (!focusedLogId) return logs
@@ -955,10 +1090,26 @@ export default function ProgressHudPanels({
   const expandedPanel = controlledExpanded !== undefined ? controlledExpanded : internalExpanded
   const setExpandedPanel = onExpandedPanelChange ?? setInternalExpanded
 
+  const matrixSlotRef = useRef(/** @type {HTMLDivElement | null} */ (null))
+  const radarSlotRef = useRef(/** @type {HTMLDivElement | null} */ (null))
+  const waveSlotRef = useRef(/** @type {HTMLDivElement | null} */ (null))
+  const tcccSlotRef = useRef(/** @type {HTMLDivElement | null} */ (null))
+
   const closeExpanded = useCallback(() => setExpandedPanel(null), [setExpandedPanel])
 
+  const handleExpand = useCallback(
+    (id) => {
+      if (compact) {
+        setExpandedPanel((prev) => (prev === id ? null : id))
+        return
+      }
+      setExpandedPanel(id)
+    },
+    [compact, setExpandedPanel],
+  )
+
   useEffect(() => {
-    if (!expandedPanel) return undefined
+    if (compact || !expandedPanel) return undefined
     const scrollY = window.scrollY
     const prevBodyOverflow = document.body.style.overflow
     const prevBodyPosition = document.body.style.position
@@ -986,13 +1137,37 @@ export default function ProgressHudPanels({
       window.scrollTo(0, scrollY)
       window.removeEventListener('keydown', onKey)
     }
-  }, [expandedPanel, closeExpanded])
+  }, [compact, expandedPanel, closeExpanded])
+
+  useEffect(() => {
+    if (!compact) return undefined
+    const onKey = (e) => {
+      if (e.key === 'Escape' && expandedPanel) {
+        e.preventDefault()
+        closeExpanded()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [compact, expandedPanel, closeExpanded])
+
+  const expandedBodyProps = {
+    logs,
+    errorLogs,
+    focusedLogId,
+    matrixLogs,
+    trendSeries,
+    barsAnimate,
+    embeddedInAccordion: true,
+  }
+
+  const gridInert = Boolean(expandedPanel && !compact)
 
   return (
     <section className="space-y-4">
       <header className="flex items-center gap-2 border-b border-emerald-900/30 pb-2">
         <Radio className="size-4 text-emerald-500" aria-hidden />
-        <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-emerald-400/90">
+        <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-emerald-400/90 sm:text-[10px] sm:tracking-[0.28em]">
           İSTİHBARAT ANALİTİK MERKEZİ · HUD MODÜLLERİ
           {focusedLogId ? (
             <span className="ml-2 text-amber-400/90">· DRILL-DOWN AKTİF</span>
@@ -1002,28 +1177,75 @@ export default function ProgressHudPanels({
 
       <section
         className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"
-        aria-hidden={expandedPanel ? true : undefined}
-        {...(expandedPanel ? { inert: true } : {})}
+        aria-hidden={gridInert ? true : undefined}
+        {...(gridInert ? { inert: true } : {})}
       >
-        <TacticalCharacterMatrix
-          logs={matrixLogs}
-          focusedLogId={focusedLogId}
-          onExpand={() => setExpandedPanel('MATRIX')}
-        />
-        <ChronicErrorRadar
-          logs={errorLogs}
-          focusedLogId={focusedLogId}
-          onExpand={() => setExpandedPanel('RADAR')}
-        />
-        <StressPerformanceWave
-          logs={logs}
-          focusedLogId={focusedLogId}
-          onExpand={() => setExpandedPanel('WAVE')}
-        />
-        <TcccReactionWavePanel logs={logs} onExpand={() => setExpandedPanel('TCCC')} />
+        <HudPanelSlot
+          panelId="MATRIX"
+          isOpen={expandedPanel === 'MATRIX'}
+          compact={compact}
+          slotRef={matrixSlotRef}
+          onClose={closeExpanded}
+          expandedContent={
+            <HudExpandedPanelBody panelId="MATRIX" {...expandedBodyProps} />
+          }
+        >
+          <TacticalCharacterMatrix
+            logs={matrixLogs}
+            focusedLogId={focusedLogId}
+            onExpand={() => handleExpand('MATRIX')}
+          />
+        </HudPanelSlot>
+
+        <HudPanelSlot
+          panelId="RADAR"
+          isOpen={expandedPanel === 'RADAR'}
+          compact={compact}
+          slotRef={radarSlotRef}
+          onClose={closeExpanded}
+          expandedContent={
+            <HudExpandedPanelBody panelId="RADAR" {...expandedBodyProps} />
+          }
+        >
+          <ChronicErrorRadar
+            logs={errorLogs}
+            focusedLogId={focusedLogId}
+            onExpand={() => handleExpand('RADAR')}
+          />
+        </HudPanelSlot>
+
+        <HudPanelSlot
+          panelId="WAVE"
+          isOpen={expandedPanel === 'WAVE'}
+          compact={compact}
+          slotRef={waveSlotRef}
+          onClose={closeExpanded}
+          expandedContent={
+            <HudExpandedPanelBody panelId="WAVE" {...expandedBodyProps} />
+          }
+        >
+          <StressPerformanceWave
+            logs={logs}
+            focusedLogId={focusedLogId}
+            onExpand={() => handleExpand('WAVE')}
+          />
+        </HudPanelSlot>
+
+        <HudPanelSlot
+          panelId="TCCC"
+          isOpen={expandedPanel === 'TCCC'}
+          compact={compact}
+          slotRef={tcccSlotRef}
+          onClose={closeExpanded}
+          expandedContent={
+            <HudExpandedPanelBody panelId="TCCC" {...expandedBodyProps} />
+          }
+        >
+          <TcccReactionWavePanel logs={logs} onExpand={() => handleExpand('TCCC')} />
+        </HudPanelSlot>
       </section>
 
-      {expandedPanel ? (
+      {expandedPanel && !compact ? (
         <HudPanelExpandOverlay
           panelId={expandedPanel}
           onClose={closeExpanded}
