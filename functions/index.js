@@ -11,6 +11,7 @@ const { ensureAdminClaimHandler } = require('./lib/adminClaims')
 const { claimInstructorRoleHandler } = require('./lib/instructorClaim')
 const { joinGroupByPasswordHandler } = require('./lib/joinGroup')
 const { completePremiumUpgradeHandler } = require('./lib/premiumUpgrade')
+const { registerOperatorProfileHandler } = require('./lib/registerOperatorProfile')
 const { syncMuhabereChannelSummary, syncMuhabereDmSummary } = require('./src/muhabereSync')
 const { resolveYoutubeChannelInputHandler } = require('./lib/youtubeChannelResolve')
 const { triggerVideoNewsIngestHandler } = require('./lib/videoNewsTrigger')
@@ -168,6 +169,18 @@ exports.joinGroupByPassword = onCall(
     cors: true,
   },
   joinGroupByPasswordHandler,
+)
+
+/**
+ * Callable: kayıt sonrası users/{uid} + usernames/{key} (Admin SDK — istemci kurallarını atlar).
+ */
+exports.registerOperatorProfile = onCall(
+  {
+    memory: '128MiB',
+    timeoutSeconds: 30,
+    cors: true,
+  },
+  registerOperatorProfileHandler,
 )
 
 /**

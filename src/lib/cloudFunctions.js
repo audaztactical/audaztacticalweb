@@ -158,6 +158,14 @@ export function callJoinGroupByPassword(password) {
 }
 
 /**
+ * Kayıt profili — sunucu tarafı transaction (Firestore istemci kurallarını atlar).
+ * @param {Record<string, unknown>} payload
+ */
+export function callRegisterOperatorProfile(payload) {
+  return callFunction('registerOperatorProfile', payload)
+}
+
+/**
  * @param {string} paymentIntentId
  */
 export function callCompletePremiumUpgrade(paymentIntentId) {

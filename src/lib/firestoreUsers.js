@@ -1,7 +1,7 @@
 import { doc, getDoc, serverTimestamp, runTransaction, setDoc } from 'firebase/firestore'
 import { safeOnSnapshot } from './firestoreSnapshot'
 import { auth, db, isFirebaseConfigured } from './firebase'
-import { callCompletePremiumUpgrade } from './cloudFunctions'
+import { callCompletePremiumUpgrade, callRegisterOperatorProfile, isCloudFunctionUnavailableError } from './cloudFunctions'
 import { normalizeUserRole, normalizeAccountStatus } from './authRoles'
 
 /** Firestore'da kayıt yoksa veya hata durumunda AuthContext varsayılanları */
@@ -142,7 +142,7 @@ export async function createOperatorProfile(
     throw e
   }
 
-  const writeProfile = async () => {
+  const writeProfileDirect = async () => {
     if (auth?.currentUser?.uid === uid) {
       await auth.currentUser.getIdToken(true)
     }
@@ -178,12 +178,48 @@ export async function createOperatorProfile(
     })
   }
 
+  const writeProfileViaFunction = async () => {
+    if (auth?.currentUser?.uid === uid) {
+      await auth.currentUser.getIdToken(true)
+    }
+    try {
+      await callRegisterOperatorProfile({
+        email: email ?? null,
+        username: key,
+        callsign: callsign ?? '',
+        bloodType: bloodType ?? '',
+        status: status ?? 'Sivil',
+        role,
+        accountStatus,
+        premiumPaymentId,
+      })
+    } catch (err) {
+      const code = String(/** @type {{ code?: string }} */ (err)?.code ?? '')
+      if (code === 'functions/already-exists') {
+        const e = new Error('Bu kullanıcı adı zaten kullanılıyor.')
+        e.code = 'username-already-in-use'
+        throw e
+      }
+      throw err
+    }
+  }
+
   try {
+    try {
+      await writeProfileViaFunction()
+      return
+    } catch (err) {
+      if (!isCloudFunctionUnavailableError(err)) throw err
+      if (import.meta.env.DEV) {
+        console.warn('[createOperatorProfile] Cloud Function kullanılamıyor, doğrudan Firestore deneniyor:', err)
+      }
+    }
+
     const maxAttempts = 3
     let lastErr = null
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {
-        await writeProfile()
+        await writeProfileDirect()
         return
       } catch (err) {
         lastErr = err
@@ -238,34 +274,63 @@ export async function createGoogleOperatorProfile(user) {
   for (const key of candidates) {
     if (!isValidUsernameNormalized(key)) continue
     try {
-      await runTransaction(db, async (tx) => {
-        const nameRef = doc(db, 'usernames', key)
-        const userRef = doc(db, 'users', uid)
-        const ns = await tx.get(nameRef)
-        if (ns.exists()) throw Object.assign(new Error('collision'), { code: '__collision__' })
-        tx.set(nameRef, { uid })
-        tx.set(userRef, {
-          email,
-          username: key,
-          callsign: name,
-          displayName: name,
-          bloodType: 'BELİRTİLMEDİ',
-          status: 'Sivil',
-          role: 'member',
-          accountStatus: 'active',
-          enrolledAt: serverTimestamp(),
-          agreedToTerms: false,
-          updatedAt: serverTimestamp(),
-        })
+      await callRegisterOperatorProfile({
+        email,
+        username: key,
+        callsign: name,
+        bloodType: 'BELİRTİLMEDİ',
+        status: 'Sivil',
+        role: 'member',
+        accountStatus: 'active',
       })
       return
     } catch (error) {
-      if (/** @type {any} */ (error)?.code === '__collision__') {
+      const code = String(/** @type {{ code?: string }} */ (error)?.code ?? '')
+      if (code === 'functions/already-exists') {
         lastErr = error
         continue
       }
+      if (isCloudFunctionUnavailableError(error)) {
+        break
+      }
       console.error('Firestore Yazma Hatası (Google):', error)
       throw error
+    }
+  }
+
+  if (lastErr && candidates.length > 0) {
+    for (const key of candidates) {
+      if (!isValidUsernameNormalized(key)) continue
+      try {
+        await runTransaction(db, async (tx) => {
+          const nameRef = doc(db, 'usernames', key)
+          const userRef = doc(db, 'users', uid)
+          const ns = await tx.get(nameRef)
+          if (ns.exists()) throw Object.assign(new Error('collision'), { code: '__collision__' })
+          tx.set(nameRef, { uid })
+          tx.set(userRef, {
+            email,
+            username: key,
+            callsign: name,
+            displayName: name,
+            bloodType: 'BELİRTİLMEDİ',
+            status: 'Sivil',
+            role: 'member',
+            accountStatus: 'active',
+            enrolledAt: serverTimestamp(),
+            agreedToTerms: false,
+            updatedAt: serverTimestamp(),
+          })
+        })
+        return
+      } catch (error) {
+        if (/** @type {any} */ (error)?.code === '__collision__') {
+          lastErr = error
+          continue
+        }
+        console.error('Firestore Yazma Hatası (Google):', error)
+        throw error
+      }
     }
   }
   console.error('username claim failed after retries:', lastErr)
