@@ -161,7 +161,7 @@ export default function InstructorDashboard() {
   ])
 
   return (
-    <div className={ctPage}>
+    <div className={`${ctPage} min-w-0 overflow-x-hidden`}>
       <CleanFade>
         <header className="mb-8 border-b border-zinc-800 pb-6">
           <p className={ctHeaderEyebrow}>Eğitmen komuta merkezi</p>

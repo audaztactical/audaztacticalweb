@@ -7,11 +7,11 @@ export const ctHeaderTitle = 'text-2xl font-semibold tracking-tight text-zinc-10
 export const ctHeaderSubtitle = 'mt-2 max-w-2xl text-sm leading-relaxed text-zinc-500'
 
 export const ctNav =
-  'flex shrink-0 flex-row gap-1 overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-900/50 p-1.5 lg:w-56 lg:flex-col'
+  'flex w-full max-w-full shrink-0 flex-row gap-1 overflow-x-auto overscroll-x-contain rounded-xl border border-zinc-800 bg-zinc-900/50 p-1.5 [-webkit-overflow-scrolling:touch] lg:w-56 lg:flex-col lg:overflow-visible'
 
 export const ctNavBtn = (active) =>
   [
-    'flex items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors duration-200',
+    'flex shrink-0 items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors duration-200',
     active
       ? 'bg-zinc-800 text-zinc-100'
       : 'text-zinc-500 hover:bg-zinc-800/60 hover:text-zinc-300',

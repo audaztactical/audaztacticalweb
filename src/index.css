@@ -2016,6 +2016,18 @@
   grid-column: 1 / -1;
 }
 
+/* Eğitmen paneli — sektör kartları mobilde tek sütun, taşma yok */
+.compact-shell .instructor-category-bento,
+.native-app .instructor-category-bento {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.compact-shell .instructor-category-bento > button,
+.native-app .instructor-category-bento > button {
+  min-width: 0;
+  width: 100%;
+}
+
 .compact-shell button:not(.touch-auto),
 .compact-shell [type='button']:not(.touch-auto),
 .compact-shell [type='submit']:not(.touch-auto),
