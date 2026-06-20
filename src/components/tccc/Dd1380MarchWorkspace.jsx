@@ -45,6 +45,7 @@ const selectClass =
  *   saveError: string | null
  *   disabled?: boolean
  *   onMarchLetterClick?: (key: import('../../lib/marchDd1380Config').MarchStepKey) => void
+ *   protocolInline?: React.ReactNode
  * }} props
  */
 export default function Dd1380MarchWorkspace({
@@ -56,6 +57,7 @@ export default function Dd1380MarchWorkspace({
   saveError,
   disabled = false,
   onMarchLetterClick,
+  protocolInline = null,
 }) {
   const activeStep = MARCH_DD1380_STEPS.find((s) => s.key === form.activeMarchStep) ?? MARCH_DD1380_STEPS[0]
   const detailPanelRef = useRef(/** @type {HTMLDivElement | null} */ (null))
@@ -91,7 +93,7 @@ export default function Dd1380MarchWorkspace({
                   onMarchLetterClick?.(step.key)
                 }}
                 className={[
-                  'flex min-w-[4.25rem] shrink-0 flex-col items-center rounded-xl border px-2 py-3 transition hover:brightness-110 sm:min-w-0',
+                  'flex min-w-[3.5rem] shrink-0 flex-col items-center rounded-xl border px-1.5 py-2 transition hover:brightness-110 sm:min-w-0 sm:px-2 sm:py-3',
                   MARCH_DD1380_BUTTON_STYLES[step.key],
                   active ? 'ring-2 ring-accent/70 brightness-110' : 'opacity-85',
                 ].join(' ')}
@@ -99,17 +101,19 @@ export default function Dd1380MarchWorkspace({
               >
                 <span
                   className={[
-                    'font-mono-technical text-3xl font-black tabular-nums leading-none',
+                    'font-mono-technical text-2xl font-black tabular-nums leading-none sm:text-3xl',
                     step.accent,
                   ].join(' ')}
                 >
                   {step.key}
                 </span>
-                <Icon className={`mt-1.5 size-6 opacity-90 ${step.accent}`} strokeWidth={1.5} aria-hidden />
+                <Icon className={`mt-1 size-5 opacity-90 sm:mt-1.5 sm:size-6 ${step.accent}`} strokeWidth={1.5} aria-hidden />
               </button>
             )
           })}
         </div>
+
+        {protocolInline}
 
         <div
           ref={detailPanelRef}

@@ -306,12 +306,12 @@ export default function ChatWindow({
   }, [loadOlderPage, mode, refId])
 
   return (
-    <>
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       {header}
 
       <div
         ref={scrollRef}
-        className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-4"
+        className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain px-3 py-2 sm:px-4 sm:py-4"
       >
         <div ref={contentRef} className="flex flex-col gap-3">
         <div ref={loadMoreRef} className="flex min-h-[1px] shrink-0 items-center justify-center py-1">
@@ -362,6 +362,6 @@ export default function ChatWindow({
       </div>
 
       {footer}
-    </>
+    </div>
   )
 }

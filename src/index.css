@@ -1932,18 +1932,34 @@
   overflow: hidden;
 }
 
-.compact-shell .mobile-app-main > .flex-1:has(.muhabere-page) {
+.compact-shell .mobile-app-main:has(.muhabere-page) > .flex-1 {
   display: flex;
   min-height: 0;
+  flex: 1;
   flex-direction: column;
   overflow: hidden;
-  padding: 0.5rem;
+  padding: 0.25rem 0.5rem 0;
+}
+
+.compact-shell .mobile-app-main:has(.muhabere-page) > .flex-1 > div {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .compact-shell .muhabere-page {
   height: auto;
   min-height: 0;
   max-height: none;
+}
+
+.compact-shell .muhabere-page--chat {
+  height: calc(100dvh - 3.5rem - var(--mobile-tab-bar-h) - var(--safe-top) - var(--safe-bottom));
+  max-height: calc(100dvh - 3.5rem - var(--mobile-tab-bar-h) - var(--safe-top) - var(--safe-bottom));
+  min-height: 0;
+  overflow: hidden;
 }
 
 .compact-shell .cmd-mission-item {

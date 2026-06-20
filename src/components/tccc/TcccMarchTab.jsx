@@ -30,12 +30,14 @@ export default function TcccMarchTab({
   const compact = useCompactShell()
   const [protocolKey, setProtocolKey] = useState(/** @type {MarchStepKey | null} */ (null))
   const protocolSideRef = useRef(/** @type {HTMLDivElement | null} */ (null))
+  const protocolInlineRef = useRef(/** @type {HTMLDivElement | null} */ (null))
 
   useAccordionReveal(Boolean(protocolKey && !compact), protocolSideRef)
+  useAccordionReveal(Boolean(protocolKey && compact), protocolInlineRef)
 
   const handleMarchLetter = (/** @type {MarchStepKey} */ key) => {
     onPatch({ activeMarchStep: key })
-    setProtocolKey(key)
+    setProtocolKey((prev) => (prev === key ? null : key))
   }
 
   return (
@@ -54,6 +56,17 @@ export default function TcccMarchTab({
           saveError={saveError}
           disabled={disabled}
           onMarchLetterClick={handleMarchLetter}
+          protocolInline={
+            compact && protocolKey ? (
+              <div ref={protocolInlineRef} className="mt-2 h-auto min-h-0">
+                <MarchProtocolPanel
+                  stepKey={protocolKey}
+                  onClose={() => setProtocolKey(null)}
+                  variant="inline"
+                />
+              </div>
+            ) : null
+          }
         />
         {protocolKey && !compact ? (
           <div ref={protocolSideRef} className="min-h-0">
@@ -61,9 +74,6 @@ export default function TcccMarchTab({
           </div>
         ) : null}
       </div>
-      {protocolKey && compact ? (
-        <MarchProtocolPanel stepKey={protocolKey} onClose={() => setProtocolKey(null)} variant="modal" />
-      ) : null}
     </div>
   )
 }

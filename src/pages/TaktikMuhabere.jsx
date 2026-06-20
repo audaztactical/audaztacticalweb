@@ -51,7 +51,6 @@ import {
 import { MUHABERE_CONTENT_VIOLATION } from '../lib/muhabereContentFilter'
 import { useOperatorsPresenceMap } from '../hooks/useOperatorsPresenceMap'
 import { useCompactShell } from '../hooks/useCompactShell'
-import { useVisualViewportInset } from '../hooks/useVisualViewportInset'
 
 /** @typedef {import('../lib/firestoreTaktikMuhabere').MuhabereContact} MuhabereContact */
 /** @typedef {import('../lib/firestoreTaktikMuhabere').MuhabereMessage} MuhabereMessage */
@@ -212,7 +211,6 @@ export default function TaktikMuhabere() {
   const hasConversation = Boolean(conversationMode && threadId)
   const showMobileRoster = !compact || !hasConversation
   const showMobileChat = !compact || hasConversation
-  const keyboardInset = useVisualViewportInset(compact && hasConversation)
 
   const clearMobileConversation = useCallback(() => {
     setSelectedChannelId(null)
@@ -890,9 +888,11 @@ export default function TaktikMuhabere() {
   return (
     <div
       className={[
-        'muhabere-page mx-auto flex max-w-[1200px] flex-col font-mono',
+        'muhabere-page mx-auto flex w-full max-w-[1200px] flex-col font-mono',
         compact
-          ? 'min-h-0 flex-1'
+          ? hasConversation
+            ? 'muhabere-page--chat min-h-0 flex-1 overflow-hidden'
+            : 'min-h-0 flex-1'
           : 'h-[calc(100dvh-var(--app-chrome-h,8rem))] min-h-[min(420px,calc(100dvh-var(--app-chrome-h,8rem)))]',
       ].join(' ')}
     >
@@ -908,7 +908,12 @@ export default function TaktikMuhabere() {
         </header>
       ) : null}
 
-      <div className={['flex min-h-0 flex-1 overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950', compact ? 'mt-2' : 'mt-3 sm:mt-4'].join(' ')}>
+      <div
+        className={[
+          'flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950',
+          compact ? (hasConversation ? 'mt-0' : 'mt-2') : 'mt-3 sm:mt-4',
+        ].join(' ')}
+      >
         <aside
           className={[
             'flex shrink-0 flex-col border-r border-zinc-800 bg-zinc-900/50',
@@ -1195,7 +1200,7 @@ export default function TaktikMuhabere() {
 
         <section
           className={[
-            'flex min-w-0 flex-1 flex-col bg-zinc-950',
+            'flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-zinc-950',
             compact && !showMobileChat ? 'hidden' : '',
           ].join(' ')}
         >
@@ -1220,25 +1225,25 @@ export default function TaktikMuhabere() {
               onHideMessage={handleHideMessage}
               hidingMessageId={hidingMessageId}
               header={
-              <header className="flex shrink-0 items-center gap-2 border-b border-zinc-800 px-3 py-3 sm:gap-3 sm:px-4">
+              <header className="flex shrink-0 items-center gap-2 border-b border-zinc-800 px-2 py-2 sm:gap-3 sm:px-4 sm:py-3">
                 {compact && hasConversation ? (
                   <button
                     type="button"
                     onClick={clearMobileConversation}
-                    className="inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900 text-zinc-300 transition hover:border-lime-500/40 hover:text-lime-400"
+                    className="inline-flex size-9 shrink-0 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900 text-zinc-300 transition hover:border-lime-500/40 hover:text-lime-400"
                     aria-label="Sohbet listesine dön"
                   >
-                    <ChevronLeft className="size-5" strokeWidth={2} aria-hidden />
+                    <ChevronLeft className="size-4" strokeWidth={2} aria-hidden />
                   </button>
                 ) : null}
                 {conversationMode === 'channel' ? (
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900">
-                    <Radio className="size-5 text-lime-400" strokeWidth={1.75} aria-hidden />
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900 sm:size-10">
+                    <Radio className="size-4 text-lime-400 sm:size-5" strokeWidth={1.75} aria-hidden />
                   </div>
                 ) : (
                   <OperatorAvatar
                     uid={selected?.uid}
-                    size="md"
+                    size={compact ? 'sm' : 'md'}
                     callsign={selected?.callsign}
                     username={selected?.username}
                     photoUrl={selected?.photoURL ?? undefined}
@@ -1247,7 +1252,7 @@ export default function TaktikMuhabere() {
                   />
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold uppercase tracking-wide text-zinc-100">
+                  <p className="truncate text-xs font-bold uppercase tracking-wide text-zinc-100 sm:text-sm">
                     {conversationMode === 'channel'
                       ? selectedChannel?.name ?? 'KANAL'
                       : selected?.callsign}
@@ -1286,10 +1291,7 @@ export default function TaktikMuhabere() {
               </header>
               }
               footer={
-              <footer
-                className="shrink-0 border-t border-zinc-800 p-2 sm:p-4"
-                style={keyboardInset > 0 ? { paddingBottom: `${Math.max(8, keyboardInset)}px` } : undefined}
-              >
+              <footer className="shrink-0 border-t border-zinc-800 p-2 sm:p-4">
                 {uploadProgress != null ? (
                   <div className="mb-3 rounded-md border border-lime-500/30 bg-lime-950/30 px-3 py-2">
                     <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-lime-400">
@@ -1303,7 +1305,7 @@ export default function TaktikMuhabere() {
                     </div>
                   </div>
                 ) : null}
-                <form onSubmit={handleSend} className="flex gap-2">
+                <form onSubmit={handleSend} className="flex gap-1.5 sm:gap-2">
                   <MuhabereAttachMenu
                     threadId={threadId}
                     mode={conversationMode === 'channel' ? 'channel' : 'dm'}
@@ -1347,7 +1349,7 @@ export default function TaktikMuhabere() {
                     disabled={sending || uploadProgress != null}
                     autoFocus={!compact}
                     className={[
-                      'min-w-0 flex-1 rounded-md border bg-zinc-900 px-2.5 py-2 font-mono text-sm text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:ring-1 disabled:opacity-50 sm:px-3 sm:py-2.5',
+                      'min-w-0 flex-1 rounded-md border bg-zinc-900 px-2 py-1.5 font-mono text-xs text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:ring-1 disabled:opacity-50 sm:px-3 sm:py-2.5 sm:text-sm',
                       burnMode
                         ? 'border-red-600/70 focus:border-red-500 focus:ring-red-500/25'
                         : 'border-zinc-700 focus:border-zinc-600 focus:ring-lime-500/20',
@@ -1357,7 +1359,7 @@ export default function TaktikMuhabere() {
                   <button
                     type="submit"
                     disabled={!draft.trim() || sending || uploadProgress != null}
-                    className="inline-flex shrink-0 items-center justify-center gap-1 rounded-md border border-zinc-700 bg-zinc-900 px-4 py-2.5 text-sm font-bold uppercase tracking-wider text-zinc-400 transition duration-200 hover:border-lime-500/40 hover:bg-lime-900/50 hover:text-lime-400 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="inline-flex shrink-0 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-zinc-400 transition duration-200 hover:border-lime-500/40 hover:bg-lime-900/50 hover:text-lime-400 disabled:cursor-not-allowed disabled:opacity-40 sm:px-4 sm:py-2.5 sm:text-sm"
                     aria-label="Gönder"
                   >
                     {sending ? (
