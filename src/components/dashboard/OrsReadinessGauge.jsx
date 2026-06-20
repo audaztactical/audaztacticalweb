@@ -55,8 +55,8 @@ export default function OrsReadinessGauge({ score, penalties, loading, embedded 
   const inner = (
     <>
       <div className="pointer-events-none flex flex-col items-center text-center">
-        <p className={`font-mono-technical text-[10px] font-bold uppercase tracking-[0.45em] ${titleAccent}`}>OHP</p>
-        <p className="mt-1.5 font-mono-technical text-[9px] uppercase tracking-[0.22em] text-app-text/45">
+        <p className={`font-mono-technical text-[10px] font-bold uppercase tracking-[0.32em] sm:tracking-[0.45em] ${titleAccent}`}>OHP</p>
+        <p className="mt-1 font-mono-technical text-[9px] uppercase tracking-[0.16em] text-app-text/45 sm:tracking-[0.22em]">
           OPERASYONEL_HAZIRLIK_PUANI
         </p>
       </div>
@@ -91,31 +91,31 @@ export default function OrsReadinessGauge({ score, penalties, loading, embedded 
           />
         </svg>
         <div className="pointer-events-none absolute bottom-2 left-1/2 flex -translate-x-1/2 flex-col items-center">
-          <span className={`font-mono-technical text-5xl font-black tabular-nums leading-none tracking-tight ${scoreColor}`}>{score}</span>
-          <span className="mt-1 font-mono-technical text-[10px] text-app-text/45">/ 100</span>
+          <span className={`font-mono-technical text-3xl font-black tabular-nums leading-none tracking-tight sm:text-5xl ${scoreColor}`}>{score}</span>
+          <span className="mt-0.5 font-mono-technical text-[9px] text-app-text/45 sm:mt-1 sm:text-[10px]">/ 100</span>
         </div>
       </div>
 
       <p
-        className={`mt-3 text-center font-mono-technical text-[10px] font-bold uppercase leading-snug tracking-[0.06em] ${isReady ? 'text-accent' : ''} ${isMarginal ? 'text-amber-400' : ''} ${isCritical ? 'text-[#FF0000]' : ''}`}
+        className={`mt-2 text-center font-mono-technical text-[10px] font-bold uppercase leading-snug tracking-[0.04em] sm:mt-3 sm:text-[10px] sm:tracking-[0.06em] ${isReady ? 'text-accent' : ''} ${isMarginal ? 'text-amber-400' : ''} ${isCritical ? 'text-[#FF0000]' : ''}`}
       >
         {statusLine}
       </p>
 
       <div className="mt-4 space-y-1 border-t border-white/10 pt-3">
         {penalties.length === 0 ? (
-          <p className="text-center font-mono-technical text-[9px] uppercase tracking-wider text-accent/75">
+          <p className="text-center font-mono-technical text-[10px] uppercase tracking-wider text-accent/75 sm:text-[9px]">
             HATA_KUYRUĞU: TEMİZ · PUAN_KESİNTİSİ_YOK
           </p>
         ) : (
           penalties.slice(0, 3).map((pen, i) => (
             <div
               key={`${pen.code}-${i}`}
-              className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-1 text-[9px] sm:justify-between"
+              className="grid grid-cols-1 gap-1 text-[10px] sm:flex sm:flex-wrap sm:items-baseline sm:justify-between sm:gap-x-2 sm:gap-y-1 sm:text-[9px]"
             >
-              <span className="font-mono-technical text-[#FF0000]/95">{pen.code}</span>
+              <span className="font-mono-technical text-[#FF0000]/95 break-words">{pen.code}</span>
               <span className="font-mono-technical tabular-nums text-app-text/55">{pen.detail}</span>
-              <span className="font-mono-technical tabular-nums text-app-text/45">{pen.delta} PUAN</span>
+              <span className="font-mono-technical tabular-nums text-app-text/45 sm:text-right">{pen.delta} PUAN</span>
             </div>
           ))
         )}

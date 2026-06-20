@@ -1928,6 +1928,56 @@
   padding-top: 0.75rem;
 }
 
+.compact-shell .mobile-app-main:has(.muhabere-page) {
+  overflow: hidden;
+}
+
+.compact-shell .mobile-app-main > .flex-1:has(.muhabere-page) {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0.5rem;
+}
+
+.compact-shell .muhabere-page {
+  height: auto;
+  min-height: 0;
+  max-height: none;
+}
+
+.compact-shell .cmd-mission-item {
+  gap: 0.65rem;
+  padding: 0.65rem 0.85rem;
+}
+
+.compact-shell .cmd-mission-item__title {
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.compact-shell .cmd-mission-item__meta {
+  font-size: 11px;
+}
+
+.compact-shell .cmd-panel__title {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+}
+
+.compact-shell .cmd-panel__subtitle {
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.compact-shell .cmd-radar__label {
+  font-size: 9px;
+}
+
+.compact-shell .cmd-ohp-embedded .font-mono-technical {
+  letter-spacing: 0.04em;
+}
+
 .compact-shell .dashboard-hud-shell.cmd-center {
   padding-top: 1rem;
 }

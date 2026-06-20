@@ -430,27 +430,29 @@ export default function Cephanelik() {
       </div>
 
       <div className="relative z-[2] space-y-3">
-        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-white/10 pb-3">
+        <div className="flex flex-col gap-3 border-b border-white/10 pb-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
           <div className="min-w-0 flex-1">
-            <p className="font-mono-technical text-[10px] font-semibold uppercase tracking-[0.32em] text-accent/85">
+            <p className="font-mono-technical text-[9px] font-semibold uppercase tracking-[0.22em] text-accent/85 sm:text-[10px] sm:tracking-[0.32em]">
               [ ENVANTER VE LOJİSTİK ]
             </p>
-            <h1 className="font-display mt-1 text-lg font-bold tracking-[0.1em] text-app-text sm:text-xl">ILWS TERMINAL</h1>
+            <h1 className="font-display mt-1 text-base font-bold tracking-[0.08em] text-app-text sm:text-lg md:text-xl">
+              ILWS TERMINAL
+            </h1>
             <p className="mt-0.5 max-w-xl font-mono-technical text-[9px] leading-snug text-app-text/55">
               Integrated Logistics &amp; Weapon System · cephanelik ve teçhizat yönetimi
             </p>
           </div>
-          <div className="flex shrink-0 flex-col items-end gap-2">
-            <HudTicker className="text-right" />
+          <div className="flex w-full min-w-0 flex-col items-stretch gap-2 sm:w-auto sm:shrink-0 sm:items-end">
+            <HudTicker className="text-left sm:text-right" />
             {activeCategory !== 'weapons' && activeCategory !== 'attachments' && activeCategory !== 'ammo' ? (
               <button
                 type="button"
                 onClick={openCreate}
                 disabled={!ready}
-                className="inline-flex items-center gap-2 rounded border border-accent/45 bg-accent/12 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent shadow-[0_0_14px_-4px_rgba(255,180,0,0.35)] hover:bg-accent/18 disabled:opacity-50"
+                className="inline-flex w-full items-center justify-center gap-2 rounded border border-accent/45 bg-accent/12 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent shadow-[0_0_14px_-4px_rgba(255,180,0,0.35)] hover:bg-accent/18 disabled:opacity-50 sm:w-auto"
               >
                 <Plus className="size-3.5" strokeWidth={2} aria-hidden />
-                + YENİ_ENVANTER_KAYDI
+                <span className="truncate">+ YENİ_ENVANTER_KAYDI</span>
               </button>
             ) : null}
           </div>

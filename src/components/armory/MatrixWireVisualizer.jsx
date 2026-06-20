@@ -72,8 +72,8 @@ export default function MatrixWireVisualizer({
     : undefined
 
   const heightClass = hubMode
-    ? 'h-[13rem] min-h-[11rem] sm:h-[15rem]'
-    : 'h-[12.5rem] min-h-[10rem] sm:h-[14rem]'
+    ? 'h-[9rem] min-h-[8rem] sm:h-[13rem] sm:min-h-[11rem] md:h-[15rem]'
+    : 'h-[10rem] min-h-[9rem] sm:h-[12.5rem] sm:min-h-[10rem] md:h-[14rem]'
 
   return (
     <div

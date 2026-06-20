@@ -51,6 +51,7 @@ import {
 import { MUHABERE_CONTENT_VIOLATION } from '../lib/muhabereContentFilter'
 import { useOperatorsPresenceMap } from '../hooks/useOperatorsPresenceMap'
 import { useCompactShell } from '../hooks/useCompactShell'
+import { useVisualViewportInset } from '../hooks/useVisualViewportInset'
 
 /** @typedef {import('../lib/firestoreTaktikMuhabere').MuhabereContact} MuhabereContact */
 /** @typedef {import('../lib/firestoreTaktikMuhabere').MuhabereMessage} MuhabereMessage */
@@ -211,6 +212,7 @@ export default function TaktikMuhabere() {
   const hasConversation = Boolean(conversationMode && threadId)
   const showMobileRoster = !compact || !hasConversation
   const showMobileChat = !compact || hasConversation
+  const keyboardInset = useVisualViewportInset(compact && hasConversation)
 
   const clearMobileConversation = useCallback(() => {
     setSelectedChannelId(null)
@@ -368,6 +370,7 @@ export default function TaktikMuhabere() {
       setSelectedUid((prev) => {
         if (peerTarget && rows.some((c) => c.uid === peerTarget)) return peerTarget
         if (prev && rows.some((c) => c.uid === prev)) return prev
+        if (compact) return null
         const active = splitMuhabereContacts(rows, archivedDmIds, deletedDmIds).active
         return active[0]?.uid ?? null
       })
@@ -389,7 +392,7 @@ export default function TaktikMuhabere() {
     return () => {
       active = false
     }
-  }, [uid, peerTarget, peerFromNav?.peerId, peerFromQuery, navigate, loadRoster, setSearchParams, archivedDmIds, deletedDmIds])
+  }, [uid, peerTarget, peerFromNav?.peerId, peerFromQuery, navigate, loadRoster, setSearchParams, archivedDmIds, deletedDmIds, compact])
 
   useEffect(() => {
     if (!uid) {
@@ -802,12 +805,13 @@ export default function TaktikMuhabere() {
   }, [chatId, selectedUid, uid, conversationMode])
 
   useEffect(() => {
-    if (!selectedUid && !selectedChannelId) return
+    if (compact) return undefined
+    if (!selectedUid && !selectedChannelId) return undefined
     const id = window.requestAnimationFrame(() => {
       messageInputRef.current?.focus()
     })
     return () => window.cancelAnimationFrame(id)
-  }, [selectedUid, selectedChannelId])
+  }, [compact, selectedUid, selectedChannelId])
 
   const focusMessageInput = () => {
     window.requestAnimationFrame(() => {
@@ -884,14 +888,27 @@ export default function TaktikMuhabere() {
     : 'Tim rehberi boş — üstten operatör arayıp katılım isteği gönderin.'
 
   return (
-    <div className="muhabere-page mx-auto flex h-[calc(100dvh-var(--app-chrome-h,8rem))] min-h-[min(420px,calc(100dvh-var(--app-chrome-h,8rem)))] max-w-[1200px] flex-col font-mono">
-      <header className="shrink-0 border-b border-zinc-800 pb-3 sm:pb-4">
-        <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-zinc-500">COM-01 · SECURE</p>
-        <h1 className="mt-1 text-xl font-semibold uppercase tracking-wide text-zinc-100 sm:text-2xl">Taktik Muhabere</h1>
-        <p className="mt-1 text-xs text-zinc-500">Uçtan uca operatör ağı · Tim rehberi</p>
-      </header>
+    <div
+      className={[
+        'muhabere-page mx-auto flex max-w-[1200px] flex-col font-mono',
+        compact
+          ? 'min-h-0 flex-1'
+          : 'h-[calc(100dvh-var(--app-chrome-h,8rem))] min-h-[min(420px,calc(100dvh-var(--app-chrome-h,8rem)))]',
+      ].join(' ')}
+    >
+      {!compact || !hasConversation ? (
+        <header className="shrink-0 border-b border-zinc-800 pb-2 sm:pb-4">
+          <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-zinc-500 sm:text-[10px] sm:tracking-[0.32em]">
+            COM-01 · SECURE
+          </p>
+          <h1 className="mt-0.5 text-base font-semibold uppercase tracking-wide text-zinc-100 sm:mt-1 sm:text-xl lg:text-2xl">
+            Taktik Muhabere
+          </h1>
+          <p className="mt-0.5 text-[11px] text-zinc-500 sm:mt-1 sm:text-xs">Uçtan uca operatör ağı · Tim rehberi</p>
+        </header>
+      ) : null}
 
-      <div className="mt-3 flex min-h-0 flex-1 overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950 sm:mt-4">
+      <div className={['flex min-h-0 flex-1 overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950', compact ? 'mt-2' : 'mt-3 sm:mt-4'].join(' ')}>
         <aside
           className={[
             'flex shrink-0 flex-col border-r border-zinc-800 bg-zinc-900/50',
@@ -1269,7 +1286,10 @@ export default function TaktikMuhabere() {
               </header>
               }
               footer={
-              <footer className="shrink-0 border-t border-zinc-800 p-4">
+              <footer
+                className="shrink-0 border-t border-zinc-800 p-2 sm:p-4"
+                style={keyboardInset > 0 ? { paddingBottom: `${Math.max(8, keyboardInset)}px` } : undefined}
+              >
                 {uploadProgress != null ? (
                   <div className="mb-3 rounded-md border border-lime-500/30 bg-lime-950/30 px-3 py-2">
                     <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-lime-400">
@@ -1325,9 +1345,9 @@ export default function TaktikMuhabere() {
                         : '// Mesajınızı yazın…'
                     }
                     disabled={sending || uploadProgress != null}
-                    autoFocus
+                    autoFocus={!compact}
                     className={[
-                      'min-w-0 flex-1 rounded-md border bg-zinc-900 px-3 py-2.5 font-mono text-sm text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:ring-1 disabled:opacity-50',
+                      'min-w-0 flex-1 rounded-md border bg-zinc-900 px-2.5 py-2 font-mono text-sm text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:ring-1 disabled:opacity-50 sm:px-3 sm:py-2.5',
                       burnMode
                         ? 'border-red-600/70 focus:border-red-500 focus:ring-red-500/25'
                         : 'border-zinc-700 focus:border-zinc-600 focus:ring-lime-500/20',

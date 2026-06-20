@@ -11,13 +11,14 @@ import {
   getCaliberName,
   getCurrentStock,
 } from '../../lib/ammoIlws'
-import { ATIS_DRILL_CUSTOM, ATIS_DRILL_LEVELS } from '../../lib/atisDrills'
+import { ATIS_DRILL_CUSTOM } from '../../lib/atisDrills'
 import { buildWeaponSpecsSnapshot } from '../../lib/atisLogPayload'
 import { sanitizeShotCounts } from '../../lib/atisShotCounts'
 import { submitAtisRecord } from '../../lib/atisSubmit'
 import { invNum, invStr } from '../../lib/inventoryIlws'
 import { filterWeaponRows, getAttachedAccessoryId, weaponDisplayName } from '../../lib/weaponIlws'
 import AtisLogRegistry from './AtisLogRegistry'
+import AtisDrillPicker from './AtisDrillPicker'
 import OperatorInstructorRecordsEmbed from './OperatorInstructorRecordsEmbed'
 import IndividualTrainingSessionHeader from './IndividualTrainingSessionHeader'
 
@@ -28,9 +29,10 @@ const inputErrorClass =
   'w-full rounded border border-red-500/55 bg-red-950/20 px-2 py-2 font-mono-technical text-sm text-red-200 outline-none focus:border-red-400'
 
 const selectClass =
-  'dossier-blood-select w-full rounded border border-accent/35 bg-app-bg py-2 pl-2 pr-8 font-mono-technical text-[11px] uppercase text-app-text outline-none focus:border-accent/60'
+  'dossier-blood-select w-full rounded border border-accent/35 bg-app-bg py-2 pl-2 pr-8 font-mono-technical text-sm uppercase text-app-text outline-none focus:border-accent/60 sm:text-[11px]'
 
-const labelClass = 'font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-app-text/55'
+const labelClass =
+  'font-mono-technical text-[10px] font-bold uppercase tracking-[0.18em] text-app-text/55 sm:text-[8px] sm:tracking-[0.22em]'
 
 const textareaClass =
   'w-full min-h-[5.5rem] resize-y rounded border border-accent/30 bg-app-bg px-2 py-2 font-mono-technical text-sm leading-relaxed text-slate-100 outline-none placeholder:text-app-text/45 focus:border-accent/60'
@@ -420,24 +422,11 @@ export default function AtisShootingTerminal({
 
               <fieldset className="space-y-2">
                 <legend className={labelClass}>ATIŞ TÜRÜ</legend>
-                <select
-                  className={selectClass}
+                <AtisDrillPicker
                   value={form.drillKey}
-                  onChange={(e) => patch({ drillKey: e.target.value, customDrillName: '' })}
+                  onChange={(drillKey) => patch({ drillKey, customDrillName: '' })}
                   required
-                >
-                  <option value="">— DRILL SEÇİN —</option>
-                  {ATIS_DRILL_LEVELS.map((tier) => (
-                    <optgroup key={tier.level} label={tier.title}>
-                      {tier.drills.map((d) => (
-                        <option key={d.id} value={d.id}>
-                          {d.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ))}
-                  <option value={ATIS_DRILL_CUSTOM}>[+] YENİ ATIŞ TÜRÜ EKLE</option>
-                </select>
+                />
                 {showCustomDrill ? (
                   <input
                     className={inputClass}

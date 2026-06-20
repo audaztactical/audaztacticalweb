@@ -196,10 +196,10 @@ export default function LandingPage() {
               OPERASYONEL PLATFORM
               <span className="text-app-text/30"> ]</span>
             </p>
-            <h1 className="font-display mt-4 text-4xl font-bold leading-tight tracking-tight text-app-text sm:text-5xl md:text-6xl">
+            <h1 className="font-display mt-3 text-2xl font-bold leading-tight tracking-tight text-app-text sm:mt-4 sm:text-4xl md:text-5xl lg:text-6xl">
               AUDAZ <span className="text-accent">TACTICAL</span>
             </h1>
-            <p className="mt-4 text-lg text-app-text/75 sm:text-xl">Sınırlarını Dijitalleştir</p>
+            <p className="mt-3 text-base text-app-text/75 sm:mt-4 sm:text-lg md:text-xl">Sınırlarını Dijitalleştir</p>
           </div>
 
           <div

@@ -195,10 +195,10 @@ export default function OperationalRadarChart({ data, loading }) {
   const hasSignal = chartData.some((row) => row.rawValue > 0)
 
   return (
-    <div className="cmd-radar relative flex h-full min-h-[300px] flex-col">
-      <div className="mb-3 shrink-0">
-        <p className="cmd-panel__title">Kapasite radarı</p>
-        <p className="cmd-panel__subtitle">Personel · lojistik · ekipman karşılaştırması</p>
+    <div className="cmd-radar relative flex h-full min-h-[220px] flex-col sm:min-h-[300px]">
+      <div className="mb-2 shrink-0 sm:mb-3">
+        <p className="cmd-panel__title text-xs sm:text-[13px]">Kapasite radarı</p>
+        <p className="cmd-panel__subtitle text-[10px] sm:text-[13px]">Personel · lojistik · ekipman karşılaştırması</p>
       </div>
 
       <div className="cmd-radar__viewport">
@@ -233,7 +233,7 @@ export default function OperationalRadarChart({ data, loading }) {
       </div>
 
       {!loading ? (
-        <ul className="mt-2 flex shrink-0 flex-wrap justify-center gap-x-4 gap-y-1 font-mono-technical text-[9px] uppercase tracking-wide text-app-text/50">
+        <ul className="mt-2 grid shrink-0 grid-cols-1 gap-1 font-mono-technical text-[10px] uppercase tracking-wide text-app-text/50 sm:flex sm:flex-wrap sm:justify-center sm:gap-x-4 sm:gap-y-1 sm:text-[9px]">
           {chartData.map((row) => (
             <li key={row.subject} className="inline-flex items-center gap-1.5">
               <span
