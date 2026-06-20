@@ -10,6 +10,7 @@ import {
   reload,
   sendEmailVerification,
   signInWithEmailAndPassword,
+  signOut,
   updateProfile,
   GoogleAuthProvider,
 } from 'firebase/auth'
@@ -35,7 +36,14 @@ import {
   subscribeUserProfile,
   completePremiumUpgrade,
   updateUserAgreedToTerms,
+  normalizeUsername,
+  releaseUsernameIfOrphaned,
+  repairPendingOperatorProfile,
 } from '../lib/firestoreUsers'
+import {
+  clearPendingOperatorProfile,
+  savePendingOperatorProfile,
+} from '../lib/pendingOperatorProfile'
 import { usePresenceHeartbeat } from '../hooks/usePresenceHeartbeat'
 import {
   resolveUserIsAdmin,
@@ -185,7 +193,11 @@ export function AuthProvider({ children }) {
 
       let mergedProfile = null
       try {
-        const raw = await fetchUserProfile(nextUser.uid)
+        let raw = await fetchUserProfile(nextUser.uid)
+        if (!raw?.username) {
+          await repairPendingOperatorProfile(nextUser.uid)
+          raw = await fetchUserProfile(nextUser.uid)
+        }
         if (raw) {
           mergedProfile = mergeWithGuest(raw, nextUser)
           setUserData(mergedProfile)
@@ -326,6 +338,15 @@ export function AuthProvider({ children }) {
         const display = callsign.trim()
         await updateProfile(credUser, { displayName: display })
         await credUser.getIdToken(true)
+        savePendingOperatorProfile({
+          email: email.trim(),
+          username: normalizeUsername(username),
+          callsign: display,
+          bloodType,
+          status,
+          role,
+          accountStatus,
+        })
         await createOperatorProfile(credUser.uid, {
           email: email.trim(),
           username,
@@ -336,6 +357,7 @@ export function AuthProvider({ children }) {
           accountStatus,
           premiumPaymentId,
         })
+        clearPendingOperatorProfile()
         if (tokenRef) {
           await callClaimInstructorRole(tokenRef.id)
         }
@@ -346,7 +368,19 @@ export function AuthProvider({ children }) {
       } catch (err) {
         if (credUser) {
           try {
+            const profile = await fetchUserProfile(credUser.uid)
+            if (profile?.username) {
+              clearPendingOperatorProfile()
+              return { user: credUser }
+            }
+            await releaseUsernameIfOrphaned(credUser.uid, normalizeUsername(username))
             await deleteUser(credUser)
+          } catch {
+            /* ignore */
+          }
+          clearPendingOperatorProfile()
+          try {
+            await signOut(auth)
           } catch {
             /* ignore */
           }

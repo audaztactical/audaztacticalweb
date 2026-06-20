@@ -1,8 +1,12 @@
-import { doc, getDoc, serverTimestamp, runTransaction, setDoc } from 'firebase/firestore'
+import { doc, getDoc, deleteDoc, serverTimestamp, runTransaction, setDoc } from 'firebase/firestore'
 import { safeOnSnapshot } from './firestoreSnapshot'
 import { auth, db, isFirebaseConfigured } from './firebase'
 import { callCompletePremiumUpgrade, callRegisterOperatorProfile, isCloudFunctionUnavailableError } from './cloudFunctions'
 import { normalizeUserRole, normalizeAccountStatus } from './authRoles'
+import {
+  clearPendingOperatorProfile,
+  readPendingOperatorProfile,
+} from './pendingOperatorProfile'
 
 /** Firestore'da kayıt yoksa veya hata durumunda AuthContext varsayılanları */
 export const GUEST_PROFILE = {
@@ -25,7 +29,7 @@ export function isValidUsernameNormalized(key) {
 }
 
 /**
- * Kayıt için müsaitlik; mevcut kullanıcı kendi adını tutuyorsa müsait sayılır.
+ * Kayıt için müsaitlik; mevcut kullanıcı kendi adını tutuyorsa veya kayıt yetimse müsait sayılır.
  * @param {string} normalizedKey
  * @param {string | null} [forUid]
  */
@@ -33,9 +37,35 @@ export async function isUsernameAvailable(normalizedKey, forUid = null) {
   if (!isFirebaseConfigured() || !db || !normalizedKey) return false
   const snap = await getDoc(doc(db, 'usernames', normalizedKey))
   if (!snap.exists()) return true
-  const d = snap.data()
-  if (forUid && typeof d?.uid === 'string' && d.uid === forUid) return true
+  const ownerUid = typeof snap.data()?.uid === 'string' ? snap.data().uid : ''
+  if (forUid && ownerUid === forUid) return true
+  if (!ownerUid) return true
+  const ownerProfile = await getDoc(doc(db, 'users', ownerUid))
+  if (!ownerProfile.exists()) return true
   return false
+}
+
+/**
+ * Başarısız kayıt sonrası yetim usernames/{key} (users/{uid} yok) temizliği.
+ * @param {string} uid
+ * @param {string} normalizedKey
+ */
+export async function releaseUsernameIfOrphaned(uid, normalizedKey) {
+  if (!isFirebaseConfigured() || !db || !uid || !normalizedKey) return
+  try {
+    const nameRef = doc(db, 'usernames', normalizedKey)
+    const userRef = doc(db, 'users', uid)
+    const [nameSnap, userSnap] = await Promise.all([getDoc(nameRef), getDoc(userRef)])
+    if (
+      nameSnap.exists() &&
+      nameSnap.data()?.uid === uid &&
+      !userSnap.exists()
+    ) {
+      await deleteDoc(nameRef)
+    }
+  } catch {
+    /* ignore — kayıt geri alımı en iyi çaba */
+  }
 }
 
 /**
@@ -114,12 +144,33 @@ export function subscribeUserProfile(uid, onProfile, onError) {
   )
 }
 
+/** @type {Map<string, Promise<void>>} */
+const profileCreateInflight = new Map()
+
 /**
  * Operatör profili — users/{uid} + usernames/{key} (transaction)
  * @param {string} uid
  * @param {{ email?: string, callsign: string, username: string, bloodType: string, status: string, role?: string, accountStatus?: string, premiumPaymentId?: string }} payload
  */
-export async function createOperatorProfile(
+export async function createOperatorProfile(uid, payload) {
+  const key = normalizeUsername(payload.username)
+  const inflightKey = `${uid}::${key}`
+  const existing = profileCreateInflight.get(inflightKey)
+  if (existing) return existing
+  const work = createOperatorProfileImpl(uid, payload)
+  profileCreateInflight.set(inflightKey, work)
+  try {
+    await work
+  } finally {
+    profileCreateInflight.delete(inflightKey)
+  }
+}
+
+/**
+ * @param {string} uid
+ * @param {{ email?: string, callsign: string, username: string, bloodType: string, status: string, role?: string, accountStatus?: string, premiumPaymentId?: string }} payload
+ */
+async function createOperatorProfileImpl(
   uid,
   {
     email,
@@ -142,43 +193,12 @@ export async function createOperatorProfile(
     throw e
   }
 
-  const writeProfileDirect = async () => {
-    if (auth?.currentUser?.uid === uid) {
-      await auth.currentUser.getIdToken(true)
-    }
-    await runTransaction(db, async (tx) => {
-      const nameRef = doc(db, 'usernames', key)
-      const userRef = doc(db, 'users', uid)
-      const ns = await tx.get(nameRef)
-      if (ns.exists()) {
-        const e = new Error('Bu kullanıcı adı zaten kullanılıyor.')
-        e.code = 'username-already-in-use'
-        throw e
-      }
-      tx.set(nameRef, { uid })
-      const normalizedRole = normalizeUserRole(role)
-      const docPayload = {
-        email: email ?? null,
-        username: key,
-        callsign: callsign ?? '',
-        displayName: callsign ?? '',
-        bloodType: bloodType ?? '',
-        status: status ?? 'Sivil',
-        role: normalizedRole,
-        accountStatus: normalizeAccountStatus(accountStatus),
-        enrolledAt: serverTimestamp(),
-        agreedToTerms: false,
-        updatedAt: serverTimestamp(),
-      }
-      if (premiumPaymentId) {
-        docPayload.premiumPaymentId = premiumPaymentId
-        docPayload.premiumUpgradedAt = serverTimestamp()
-      }
-      tx.set(userRef, docPayload)
-    })
+  const existingProfile = await fetchUserProfile(uid)
+  if (existingProfile?.username === key) {
+    return
   }
 
-  const writeProfileViaFunction = async () => {
+  const invokeCloudProfile = async () => {
     if (auth?.currentUser?.uid === uid) {
       await auth.currentUser.getIdToken(true)
     }
@@ -196,6 +216,8 @@ export async function createOperatorProfile(
     } catch (err) {
       const code = String(/** @type {{ code?: string }} */ (err)?.code ?? '')
       if (code === 'functions/already-exists') {
+        const after = await fetchUserProfile(uid)
+        if (after?.username === key) return
         const e = new Error('Bu kullanıcı adı zaten kullanılıyor.')
         e.code = 'username-already-in-use'
         throw e
@@ -205,33 +227,45 @@ export async function createOperatorProfile(
   }
 
   try {
-    try {
-      await writeProfileViaFunction()
+    await invokeCloudProfile()
+  } catch (err) {
+    let recovered = await fetchUserProfile(uid)
+    if (recovered?.username === key) return
+
+    if (isCloudFunctionUnavailableError(err)) {
+      await new Promise((resolve) => setTimeout(resolve, 450))
+      recovered = await fetchUserProfile(uid)
+      if (recovered?.username === key) return
+      await invokeCloudProfile()
       return
-    } catch (err) {
-      if (!isCloudFunctionUnavailableError(err)) throw err
-      if (import.meta.env.DEV) {
-        console.warn('[createOperatorProfile] Cloud Function kullanılamıyor, doğrudan Firestore deneniyor:', err)
-      }
     }
 
-    const maxAttempts = 3
-    let lastErr = null
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      try {
-        await writeProfileDirect()
-        return
-      } catch (err) {
-        lastErr = err
-        const code = err?.code ?? ''
-        if (code !== 'permission-denied' || attempt >= maxAttempts - 1) throw err
-        await new Promise((resolve) => setTimeout(resolve, 120 * (attempt + 1)))
-      }
-    }
-    throw lastErr
-  } catch (error) {
-    console.error('Firestore Yazma Hatası:', error)
-    throw error
+    console.error('Firestore Yazma Hatası:', err)
+    throw err
+  }
+}
+
+/**
+ * Oturum açık ama profil eksik — kayıt sırasında saklanan veri ile tamamlar.
+ * @param {string} uid
+ */
+export async function repairPendingOperatorProfile(uid) {
+  const pending = readPendingOperatorProfile()
+  if (!pending?.username || !uid) return false
+  try {
+    await createOperatorProfile(uid, {
+      email: pending.email ?? '',
+      username: pending.username,
+      callsign: pending.callsign ?? '',
+      bloodType: pending.bloodType ?? '',
+      status: pending.status ?? 'Sivil',
+      role: pending.role ?? 'member',
+      accountStatus: pending.accountStatus ?? 'active',
+    })
+    clearPendingOperatorProfile()
+    return true
+  } catch {
+    return false
   }
 }
 

@@ -20,7 +20,8 @@ import { useStorage } from '../hooks/useStorage'
 import { auth } from '../lib/firebase'
 import { buildSystemLogEntries } from '../lib/dashboardHudData'
 import { computeORS } from '../lib/orsEngine'
-import { updateUserBloodType, updateUserCallsign, updateUserAvatarUrl } from '../lib/firestoreUsers'
+import { updateUserBloodType, updateUserCallsign, updateUserAvatarUrl, createOperatorProfile, repairPendingOperatorProfile, normalizeUsername } from '../lib/firestoreUsers'
+import { readPendingOperatorProfile } from '../lib/pendingOperatorProfile'
 import { userStoragePath } from '../services/storageService'
 
 import { getAccentColor } from '../lib/themeColors'
@@ -342,6 +343,9 @@ export default function Profile() {
   const [changeError, setChangeError] = useState('')
   const [securityOpen, setSecurityOpen] = useState(false)
   const [avatarMsg, setAvatarMsg] = useState(null)
+  const [profileRepairBusy, setProfileRepairBusy] = useState(false)
+  const [profileRepairMsg, setProfileRepairMsg] = useState(null)
+  const [profileRepairUsername, setProfileRepairUsername] = useState('')
   const avatarInputRef = useRef(/** @type {HTMLInputElement | null} */ (null))
   const {
     replace: replaceAvatar,
@@ -350,6 +354,53 @@ export default function Profile() {
     error: avatarUploadError,
     reset: resetAvatarUpload,
   } = useStorage()
+
+  useEffect(() => {
+    if (!user?.uid) return
+    const pending = readPendingOperatorProfile()
+    if (pending?.username) setProfileRepairUsername(pending.username)
+    void (async () => {
+      const ok = await repairPendingOperatorProfile(user.uid)
+      if (ok) await refreshUserProfile()
+    })()
+  }, [user?.uid, refreshUserProfile])
+
+  const completeOperatorProfile = async () => {
+    if (!user?.uid) return
+    const key = normalizeUsername(profileRepairUsername)
+    if (!key) {
+      setProfileRepairMsg({ type: 'err', text: 'Kayıt sırasında seçtiğiniz kullanıcı adını girin.' })
+      return
+    }
+    setProfileRepairBusy(true)
+    setProfileRepairMsg(null)
+    try {
+      await createOperatorProfile(user.uid, {
+        email: user.email ?? '',
+        username: key,
+        callsign: (callsignDraft || user.displayName || 'Operatör').trim(),
+        bloodType: '',
+        status: 'Beta',
+        role: 'member',
+        accountStatus: 'active',
+      })
+      await refreshUserProfile()
+      setProfileRepairMsg({ type: 'ok', text: 'Profil tamamlandı — sayfa yenileniyor.' })
+    } catch (err) {
+      reportFirebaseError(err)
+      setProfileRepairMsg({
+        type: 'err',
+        text:
+          err?.code === 'username-already-in-use'
+            ? 'Bu kullanıcı adı başka bir hesapta. Farklı bir ad deneyin veya destek ile iletişime geçin.'
+            : typeof err?.message === 'string'
+              ? err.message
+              : 'Profil tamamlanamadı.',
+      })
+    } finally {
+      setProfileRepairBusy(false)
+    }
+  }
 
   useEffect(() => {
     if (!userData?.callsign && !user?.displayName) {
@@ -570,6 +621,48 @@ export default function Profile() {
           <span className="text-app-text/45">/100</span>
         </div>
       </div>
+
+      {!rawUsername && user?.uid ? (
+        <div className="relative z-[2] mb-4 rounded-lg border border-amber-500/40 bg-amber-950/30 px-4 py-3">
+          <p className="font-mono-technical text-xs font-bold uppercase tracking-wider text-amber-300">
+            Profil kaydı eksik
+          </p>
+          <p className="mt-1 text-sm text-amber-100/85">
+            Oturum açık ancak operatör profiliniz Firestore&apos;a yazılmamış (GUEST görünümü). Kayıt
+            sırasında seçtiğiniz kullanıcı adını girip profili tamamlayın.
+          </p>
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
+            <label className="min-w-0 flex-1">
+              <span className="font-mono-technical text-[9px] uppercase tracking-wider text-amber-200/70">
+                Kullanıcı adı
+              </span>
+              <input
+                value={profileRepairUsername}
+                onChange={(e) =>
+                  setProfileRepairUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_\s]/g, ''))
+                }
+                placeholder="örn: sarma1"
+                className="mt-1 w-full rounded border border-amber-500/30 bg-black/40 px-3 py-2 font-mono-technical text-sm text-amber-50 outline-none focus:border-amber-400/60"
+              />
+            </label>
+            <button
+              type="button"
+              onClick={completeOperatorProfile}
+              disabled={profileRepairBusy}
+              className="shrink-0 rounded border border-amber-400/50 bg-amber-500/15 px-4 py-2 font-mono-technical text-[10px] font-bold uppercase tracking-wider text-amber-200 hover:bg-amber-500/25 disabled:opacity-50"
+            >
+              {profileRepairBusy ? '…' : 'Profili tamamla'}
+            </button>
+          </div>
+          {profileRepairMsg ? (
+            <p
+              className={`mt-2 font-mono-technical text-[10px] ${profileRepairMsg.type === 'ok' ? 'text-emerald-400' : 'text-amber-400'}`}
+            >
+              {profileRepairMsg.text}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className={`grid gap-4 lg:grid-cols-[minmax(220px,280px)_1fr] ${criticalPulse ? 'rounded-sm ring-1 ring-red-500/20' : ''}`}>
         <aside className="op-identity-sticky">

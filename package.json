@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "deploy-backend": "node scripts/inject-firestore-admin.mjs && firebase deploy --only firestore:rules,firestore:indexes",
+    "deploy:registration": "firebase deploy --only functions:registerOperatorProfile",
     "deploy:storage": "firebase deploy --only storage",
     "deploy:hosting": "npm run build && firebase deploy --only hosting",
     "deploy:functions": "node scripts/inject-functions-env.mjs && firebase deploy --only functions",

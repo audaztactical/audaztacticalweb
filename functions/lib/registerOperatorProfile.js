@@ -1,6 +1,8 @@
 const { getFirestore, FieldValue } = require('firebase-admin/firestore')
 const { HttpsError } = require('firebase-functions/v2/https')
 
+/** @typedef {'ok' | 'username_taken' | 'profile_exists'} RegisterProfileTxOutcome */
+
 /**
  * @param {unknown} raw
  */
@@ -32,6 +34,19 @@ function normalizeMemberRole(role) {
  * @param {import('firebase-functions/v2/https').CallableRequest} request
  */
 async function registerOperatorProfileHandler(request) {
+  try {
+    return await registerOperatorProfileCore(request)
+  } catch (err) {
+    if (err instanceof HttpsError) throw err
+    console.error('[registerOperatorProfile]', err)
+    throw new HttpsError('internal', 'Profil kaydı tamamlanamadı.')
+  }
+}
+
+/**
+ * @param {import('firebase-functions/v2/https').CallableRequest} request
+ */
+async function registerOperatorProfileCore(request) {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Giriş gerekli.')
   }
@@ -77,21 +92,43 @@ async function registerOperatorProfileHandler(request) {
   const nameRef = db.collection('usernames').doc(key)
   const userRef = db.collection('users').doc(uid)
 
+  /** @type {RegisterProfileTxOutcome} */
+  let outcome = 'ok'
+  /** @type {boolean} */
+  let mergeUserDoc = false
+
   await db.runTransaction(async (tx) => {
     const [nameSnap, userSnap] = await Promise.all([tx.get(nameRef), tx.get(userRef)])
 
     if (userSnap.exists) {
       const existing = userSnap.data() ?? {}
-      if (existing.username === key) {
+      const existingUsername =
+        typeof existing.username === 'string' ? existing.username.trim().toLowerCase() : ''
+      if (existingUsername === key) {
+        outcome = 'ok'
         return
       }
-      throw new HttpsError('already-exists', 'Profil zaten mevcut.')
+      if (!existingUsername) {
+        mergeUserDoc = true
+      } else {
+        outcome = 'profile_exists'
+        return
+      }
     }
 
     if (nameSnap.exists) {
-      const ownerUid = nameSnap.data()?.uid
-      if (ownerUid !== uid) {
-        throw new HttpsError('already-exists', 'Bu kullanıcı adı zaten kullanılıyor.')
+      const ownerUid = typeof nameSnap.data()?.uid === 'string' ? nameSnap.data().uid : ''
+      if (ownerUid === uid) {
+        /* kullanıcı adı bu oturuma ayrılmış — users belgesini tamamla */
+      } else if (ownerUid) {
+        const ownerUserSnap = await tx.get(db.collection('users').doc(ownerUid))
+        if (ownerUserSnap.exists) {
+          outcome = 'username_taken'
+          return
+        }
+        tx.set(nameRef, { uid })
+      } else {
+        tx.set(nameRef, { uid })
       }
     } else {
       tx.set(nameRef, { uid })
@@ -117,8 +154,19 @@ async function registerOperatorProfileHandler(request) {
       docPayload.premiumUpgradedAt = FieldValue.serverTimestamp()
     }
 
-    tx.set(userRef, docPayload)
+    if (mergeUserDoc) {
+      tx.set(userRef, docPayload, { merge: true })
+    } else {
+      tx.set(userRef, docPayload)
+    }
   })
+
+  if (outcome === 'username_taken') {
+    throw new HttpsError('already-exists', 'Bu kullanıcı adı zaten kullanılıyor.')
+  }
+  if (outcome === 'profile_exists') {
+    throw new HttpsError('already-exists', 'Profil zaten mevcut.')
+  }
 
   return { ok: true, username: key }
 }

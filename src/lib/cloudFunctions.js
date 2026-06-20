@@ -38,11 +38,20 @@ export function isCloudFunctionUnavailableError(err) {
   const code = String(/** @type {{ code?: string }} */ (err)?.code ?? '')
   const message = String(/** @type {{ message?: string }} */ (err)?.message ?? err ?? '')
 
+  if (
+    code === 'functions/already-exists' ||
+    code === 'functions/invalid-argument' ||
+    code === 'functions/unauthenticated' ||
+    code === 'functions/permission-denied' ||
+    code === 'functions/failed-precondition'
+  ) {
+    return false
+  }
+
   return (
     code === 'functions/unavailable' ||
     code === 'functions/internal' ||
     code === 'functions/not-found' ||
-    code === 'functions/permission-denied' ||
     message.includes('CORS') ||
     message.includes('Failed to fetch') ||
     message.includes('NetworkError') ||
@@ -122,6 +131,9 @@ async function callFunction(name, data = {}) {
     try {
       return await callFunctionViaHttp(name, data)
     } catch (httpErr) {
+      if (!isCloudFunctionUnavailableError(httpErr)) {
+        throw httpErr
+      }
       if (import.meta.env.DEV) {
         console.warn('[cloudFunctions] HTTP callable başarısız, SDK deneniyor:', httpErr)
       }
@@ -158,11 +170,11 @@ export function callJoinGroupByPassword(password) {
 }
 
 /**
- * Kayıt profili — sunucu tarafı transaction (Firestore istemci kurallarını atlar).
+ * Kayıt profili — yalnızca HTTP callable (çift istek / SDK tekrarı önlenir).
  * @param {Record<string, unknown>} payload
  */
 export function callRegisterOperatorProfile(payload) {
-  return callFunction('registerOperatorProfile', payload)
+  return callFunctionViaHttp('registerOperatorProfile', payload)
 }
 
 /**
