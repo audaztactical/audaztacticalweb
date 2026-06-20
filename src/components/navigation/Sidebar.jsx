@@ -58,7 +58,6 @@ export const NAV_GROUPS = [
       { to: '/akademi', label: 'Audaz Akademi', icon: PlayCircle },
       { to: '/forum', label: 'Brifing Odası (Forum)', icon: MessagesSquare },
       { to: '/istihbarat', label: 'Küresel Haber Ağı', icon: Globe },
-      { to: '/acil-durum', label: 'Acil Durum Bildirimleri', icon: ShieldAlert },
     ],
   },
   {

@@ -855,10 +855,6 @@
   }
 }
 
-.system-alert-pulse {
-  animation: cmd-critical-pulse 2s ease-in-out infinite;
-}
-
 .cmd-mission-item__badge--warning {
   border-color: rgb(245 158 11 / 0.45);
   background: rgb(245 158 11 / 0.1);
@@ -1115,8 +1111,9 @@
 /* Sabit boyutlu viewport — sonar ve grafik ayrı compositor katmanları */
 .cmd-radar__viewport {
   position: relative;
-  width: 300px;
-  height: 248px;
+  width: min(300px, 100%);
+  height: auto;
+  aspect-ratio: 300 / 248;
   margin-inline: auto;
   flex-shrink: 0;
   contain: layout style;
@@ -1920,6 +1917,67 @@
 }
 
 /* ——— Mobil uygulama kabuğu (Capacitor / hybrid) ——— */
+.compact-shell {
+  --app-chrome-h: calc(
+    3.5rem + var(--mobile-tab-bar-h) + var(--safe-top) + var(--safe-bottom) + 1rem
+  );
+}
+
+.compact-shell .dashboard-hud-shell,
+.compact-shell .muhabere-page {
+  padding-top: 0.75rem;
+}
+
+.compact-shell .dashboard-hud-shell.cmd-center {
+  padding-top: 1rem;
+}
+
+.compact-shell .op-identity-sticky {
+  position: static;
+}
+
+.compact-shell .cmd-radar__viewport {
+  width: min(280px, calc(100vw - 3rem));
+}
+
+.compact-shell .muhabere-floating-widget {
+  bottom: calc(var(--mobile-tab-bar-h) + var(--safe-bottom) + 0.75rem);
+}
+
+/* BentoCard + dokunma — telefon / tablet + Capacitor native */
+.compact-shell .grid[class*='lg:grid-cols-12'] > [class*='lg:col-span'],
+.native-app .grid[class*='lg:grid-cols-12'] > [class*='lg:col-span'] {
+  grid-column: 1 / -1;
+}
+
+.compact-shell button:not(.touch-auto),
+.compact-shell [type='button']:not(.touch-auto),
+.compact-shell [type='submit']:not(.touch-auto),
+.compact-shell [type='reset']:not(.touch-auto),
+.compact-shell [role='button']:not(.touch-auto),
+.compact-shell a.mobile-tab-link,
+.native-app button:not(.touch-auto),
+.native-app [type='button']:not(.touch-auto),
+.native-app [type='submit']:not(.touch-auto),
+.native-app [type='reset']:not(.touch-auto),
+.native-app [role='button']:not(tr):not(.touch-auto),
+.native-app a.mobile-tab-link {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.native-app input[type='checkbox'],
+.native-app input[type='radio'],
+.native-app .touch-auto,
+.native-app tr[role='button'],
+.compact-shell input[type='checkbox'],
+.compact-shell input[type='radio'],
+.compact-shell .touch-auto,
+.compact-shell tr[role='button'] {
+  min-height: unset;
+  min-width: unset;
+}
+
 .mobile-app-shell {
   padding-bottom: calc(var(--mobile-tab-bar-h) + var(--safe-bottom));
 }
@@ -1950,29 +2008,6 @@
 .mobile-tab-link:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--accent-color) calc(0.55 * 100%), transparent);
   outline-offset: 2px;
-}
-
-/* BentoCard + dokunma — yalnızca Capacitor native kabuk */
-.native-app .grid[class*='lg:grid-cols-12'] > [class*='lg:col-span'] {
-  grid-column: 1 / -1;
-}
-
-.native-app button:not(.touch-auto),
-.native-app [type='button']:not(.touch-auto),
-.native-app [type='submit']:not(.touch-auto),
-.native-app [type='reset']:not(.touch-auto),
-.native-app [role='button']:not(tr):not(.touch-auto),
-.native-app a.mobile-tab-link {
-  min-height: 44px;
-  min-width: 44px;
-}
-
-.native-app input[type='checkbox'],
-.native-app input[type='radio'],
-.native-app .touch-auto,
-.native-app tr[role='button'] {
-  min-height: unset;
-  min-width: unset;
 }
 
 .nav-item-active {

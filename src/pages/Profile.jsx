@@ -538,7 +538,7 @@ export default function Profile() {
     }
   }
 
-  if (profileLoading) {
+  if (profileLoading && !userData) {
     return <DataLoadingScreen />
   }
 
@@ -657,7 +657,7 @@ export default function Profile() {
 
         <div className="grid gap-4 md:grid-cols-2">
           <OpTacticalCard title="OPERATÖR ÖZETİ" code="METRICS_CORE" wide>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <DataStat label="TAMAMLANAN_GÖREV" value={missionN} accentRgb={accent.rgb} fillPct={statFillPct(missionN, statMax)} />
               <DataStat label="EĞİTİM_SAYISI" value={trainN} accentRgb={accent.rgb} fillPct={statFillPct(trainN, statMax)} />
               <DataStat label="SIHHİ_OLAY" value={sihhiN} accentRgb={accent.rgb} fillPct={statFillPct(sihhiN, statMax)} />

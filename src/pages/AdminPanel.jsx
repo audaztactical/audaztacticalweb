@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
-import { Globe, MessageSquare, Package, Pencil, Plus, Radio, Save, Shield, Trash2, Video, X } from 'lucide-react'
+import { Globe, MessageSquare, Package, Pencil, Plus, Save, Shield, Trash2, Video, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import {
   addDoctrine,
@@ -12,16 +12,14 @@ import { addTrainingVideo, deleteTrainingVideo, fetchTrainingVideos } from '../l
 import { bulkAddInventoryItems, parseInventoryBulkText } from '../lib/firestoreInventory'
 import IntelModerationTable from '../components/admin/IntelModerationTable'
 import FeedbackModerationTable from '../components/admin/FeedbackModerationTable'
-import ManualAlertForm from '../components/admin/ManualAlertForm'
 import YoutubeChannelsPanel from '../components/admin/YoutubeChannelsPanel'
 
-/** @typedef {'icerik' | 'istihbarat' | 'youtube-kanallar' | 'erken-uyari' | 'geri-bildirim'} AdminTabId */
+/** @typedef {'icerik' | 'istihbarat' | 'youtube-kanallar' | 'geri-bildirim'} AdminTabId */
 
 const ADMIN_TABS = [
   { id: /** @type {AdminTabId} */ ('icerik'), label: 'İçerik & Envanter', icon: Package },
   { id: 'istihbarat', label: 'Haber Ağı', icon: Globe },
   { id: 'youtube-kanallar', label: 'YouTube Kanalları', icon: Video },
-  { id: 'erken-uyari', label: 'Erken Uyarı', icon: Radio },
   { id: 'geri-bildirim', label: 'Geri Bildirimler', icon: MessageSquare },
 ]
 
@@ -355,10 +353,6 @@ export default function AdminPanel() {
 
       {activeTab === 'youtube-kanallar' ? (
         <YoutubeChannelsPanel onFeedback={showMsg} />
-      ) : null}
-
-      {activeTab === 'erken-uyari' ? (
-        <ManualAlertForm onFeedback={showMsg} />
       ) : null}
 
       {activeTab === 'geri-bildirim' ? (

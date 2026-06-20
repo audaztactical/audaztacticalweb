@@ -12,7 +12,6 @@
     "deploy:intel": "firebase deploy --only functions:fetchTacticalNews",
     "deploy:alerts": "firebase deploy --only functions:fetchLocalAlerts",
     "deploy:fcm": "firebase deploy --only functions:subscribeToAlerts",
-    "deploy:manual-alert": "firebase deploy --only functions:sendManualAlert",
     "deploy:global-intel": "firebase deploy --only functions:subscribeToGlobalIntel",
     "deploy:video-news": "firebase deploy --only functions:fetchVideoNews",
     "logs": "firebase functions:log --only fetchTacticalNews",

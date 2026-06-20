@@ -102,13 +102,6 @@ function buildGoogleProvider() {
   return provider
 }
 
-/** Redirect handler (firebaseapp.com/__/auth/handler) Firebase Hosting + init.json gerektirir. */
-function isLocalDevAuthEnvironment() {
-  if (typeof window === 'undefined') return false
-  const host = window.location.hostname
-  return host === 'localhost' || host === '127.0.0.1'
-}
-
 async function completePopupSignIn(auth, provider) {
   const credential = await signInWithPopup(auth, provider)
   try {
@@ -121,8 +114,7 @@ async function completePopupSignIn(auth, provider) {
 }
 
 /**
- * Google OAuth — localhost'ta popup (COOP yok); prod'da redirect.
- * Redirect için: npm run deploy:hosting
+ * Google OAuth — redirect (popup COOP uyarıları üretir; yalnızca redirect başarısız olursa popup).
  * @param {import('firebase/auth').Auth} auth
  * @param {string} [redirectPath='/dashboard']
  * @returns {Promise<{ mode: 'redirect' } | { mode: 'popup', credential: import('firebase/auth').UserCredential }>}
@@ -137,16 +129,6 @@ export async function startGoogleSignIn(auth, redirectPath = '/dashboard') {
   resetGoogleRedirectResultCache()
   stashGoogleAuthRedirectPath(redirectPath)
   const provider = buildGoogleProvider()
-
-  if (isLocalDevAuthEnvironment()) {
-    try {
-      const credential = await completePopupSignIn(auth, provider)
-      return { mode: 'popup', credential }
-    } catch (popupErr) {
-      logGoogleAuthHud('signInWithPopup(localhost)', popupErr)
-      throw popupErr
-    }
-  }
 
   try {
     await signInWithRedirect(auth, provider)

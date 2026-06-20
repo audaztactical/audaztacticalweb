@@ -1,5 +1,4 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import SystemAlertGate from '../alerts/SystemAlertGate'
 import { useAuth } from '../../context/AuthContext'
 import { userRequiresEmailVerification } from '../../lib/authEmailVerification'
 
@@ -42,10 +41,5 @@ export default function ProtectedRoute() {
     return <Navigate to="/dashboard" replace />
   }
 
-  return (
-    <>
-      <SystemAlertGate />
-      <Outlet />
-    </>
-  )
+  return <Outlet />
 }

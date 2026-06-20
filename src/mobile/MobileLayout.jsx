@@ -16,13 +16,6 @@ export default function MobileLayout() {
   const [signingOut, setSigningOut] = useState(false)
 
   useEffect(() => {
-    document.documentElement.classList.add('native-app')
-    return () => {
-      document.documentElement.classList.remove('native-app')
-    }
-  }, [])
-
-  useEffect(() => {
     setNavMenuOpen(false)
   }, [location.pathname])
 

@@ -239,7 +239,7 @@ export default function TaktikMuhabereFloatingWidget({ uid }) {
   }
 
   const shellClass = [
-    'pointer-events-auto fixed bottom-4 right-4 z-50 flex flex-col overflow-hidden rounded-md border font-mono shadow-lg transition-all duration-200',
+    'muhabere-floating-widget pointer-events-auto fixed right-4 z-50 flex flex-col overflow-hidden rounded-md border font-mono shadow-lg transition-all duration-200',
     isMinimized
       ? [
           'w-56',

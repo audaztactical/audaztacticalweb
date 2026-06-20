@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
-import { ChevronRight, Flame, Loader2, Radio, Search, Shield, UserMinus, UserPlus, Users } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Flame, Loader2, Radio, Search, Shield, UserMinus, UserPlus, Users } from 'lucide-react'
 import CreateChannelModal from '../components/muhabere/CreateChannelModal'
 import ChatList from '../components/muhabere/ChatList'
 import ChatWindow from '../components/muhabere/ChatWindow'
@@ -50,6 +50,7 @@ import {
 } from '../lib/firestoreTaktikMuhabere'
 import { MUHABERE_CONTENT_VIOLATION } from '../lib/muhabereContentFilter'
 import { useOperatorsPresenceMap } from '../hooks/useOperatorsPresenceMap'
+import { useCompactShell } from '../hooks/useCompactShell'
 
 /** @typedef {import('../lib/firestoreTaktikMuhabere').MuhabereContact} MuhabereContact */
 /** @typedef {import('../lib/firestoreTaktikMuhabere').MuhabereMessage} MuhabereMessage */
@@ -112,6 +113,7 @@ export default function TaktikMuhabere() {
   const peerFromNav = /** @type {{ peerId?: string } | null} */ (location.state)
   const peerFromQuery = searchParams.get('peer')?.trim() ?? ''
   const peerTarget = peerFromNav?.peerId?.trim() || peerFromQuery
+  const compact = useCompactShell()
 
   const [roster, setRoster] = useState(/** @type {MuhabereContact[]} */ ([]))
   const [rosterLoading, setRosterLoading] = useState(true)
@@ -207,6 +209,13 @@ export default function TaktikMuhabere() {
   const conversationMode = selectedChannelId ? 'channel' : selectedUid ? 'dm' : null
   const threadId = selectedChannelId ?? chatId
   const hasConversation = Boolean(conversationMode && threadId)
+  const showMobileRoster = !compact || !hasConversation
+  const showMobileChat = !compact || hasConversation
+
+  const clearMobileConversation = useCallback(() => {
+    setSelectedChannelId(null)
+    setSelectedUid(null)
+  }, [])
 
   const dmUnreadByPeerId = conversationIndex?.dmUnreadByPeerId ?? {}
 
@@ -875,15 +884,20 @@ export default function TaktikMuhabere() {
     : 'Tim rehberi boş — üstten operatör arayıp katılım isteği gönderin.'
 
   return (
-    <div className="mx-auto flex h-[calc(100dvh-8rem)] min-h-[520px] max-w-[1200px] flex-col font-mono">
-      <header className="shrink-0 border-b border-zinc-800 pb-4">
+    <div className="muhabere-page mx-auto flex h-[calc(100dvh-var(--app-chrome-h,8rem))] min-h-[min(420px,calc(100dvh-var(--app-chrome-h,8rem)))] max-w-[1200px] flex-col font-mono">
+      <header className="shrink-0 border-b border-zinc-800 pb-3 sm:pb-4">
         <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-zinc-500">COM-01 · SECURE</p>
-        <h1 className="mt-1 text-2xl font-semibold uppercase tracking-wide text-zinc-100">Taktik Muhabere</h1>
+        <h1 className="mt-1 text-xl font-semibold uppercase tracking-wide text-zinc-100 sm:text-2xl">Taktik Muhabere</h1>
         <p className="mt-1 text-xs text-zinc-500">Uçtan uca operatör ağı · Tim rehberi</p>
       </header>
 
-      <div className="mt-4 flex min-h-0 flex-1 overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950">
-        <aside className="flex w-80 shrink-0 flex-col border-r border-zinc-800 bg-zinc-900/50">
+      <div className="mt-3 flex min-h-0 flex-1 overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950 sm:mt-4">
+        <aside
+          className={[
+            'flex shrink-0 flex-col border-r border-zinc-800 bg-zinc-900/50',
+            compact ? (showMobileRoster ? 'w-full min-w-0' : 'hidden') : 'w-80',
+          ].join(' ')}
+        >
           <div className="border-b border-zinc-800 bg-zinc-900 px-3 py-3">
             <label className="relative block">
               <Search
@@ -1162,7 +1176,12 @@ export default function TaktikMuhabere() {
           ) : null}
         </aside>
 
-        <section className="flex min-w-0 flex-1 flex-col bg-zinc-950">
+        <section
+          className={[
+            'flex min-w-0 flex-1 flex-col bg-zinc-950',
+            compact && !showMobileChat ? 'hidden' : '',
+          ].join(' ')}
+        >
           {!hasConversation ? (
             <p className="flex flex-1 items-center justify-center px-6 text-center text-xs leading-relaxed text-zinc-600">
               {roster.length === 0 && channels.length === 0
@@ -1184,7 +1203,17 @@ export default function TaktikMuhabere() {
               onHideMessage={handleHideMessage}
               hidingMessageId={hidingMessageId}
               header={
-              <header className="flex shrink-0 items-center gap-3 border-b border-zinc-800 px-4 py-3">
+              <header className="flex shrink-0 items-center gap-2 border-b border-zinc-800 px-3 py-3 sm:gap-3 sm:px-4">
+                {compact && hasConversation ? (
+                  <button
+                    type="button"
+                    onClick={clearMobileConversation}
+                    className="inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900 text-zinc-300 transition hover:border-lime-500/40 hover:text-lime-400"
+                    aria-label="Sohbet listesine dön"
+                  >
+                    <ChevronLeft className="size-5" strokeWidth={2} aria-hidden />
+                  </button>
+                ) : null}
                 {conversationMode === 'channel' ? (
                   <div className="flex size-10 shrink-0 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900">
                     <Radio className="size-5 text-lime-400" strokeWidth={1.75} aria-hidden />

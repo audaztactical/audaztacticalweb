@@ -1,5 +1,4 @@
 import { lazy, Suspense } from 'react'
-import { Capacitor } from '@capacitor/core'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import LandingPage from './pages/LandingPage'
 import { AuthProvider } from './context/AuthContext'
@@ -12,14 +11,10 @@ import AdminRoute from './components/auth/AdminRoute'
 import AccessGuard from './components/auth/AccessGuard'
 import InstructorRoute from './components/auth/InstructorRoute'
 import ProtectedRoute from './components/auth/ProtectedRoute'
-import MainLayout from './layouts/MainLayout'
-import MobileLayout from './mobile/MobileLayout'
+import ResponsiveAppLayout from './layouts/ResponsiveAppLayout'
 import TacticalLoader from './components/TacticalLoader'
 import GoogleAuthRedirectHandler from './components/auth/GoogleAuthRedirectHandler'
 import ScrollToTop from './components/navigation/ScrollToTop'
-
-const isNativePlatform = Capacitor.isNativePlatform()
-const AppLayout = isNativePlatform ? MobileLayout : MainLayout
 
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
@@ -30,7 +25,6 @@ const ModulePlaceholder = lazy(() => import('./pages/ModulePlaceholder'))
 const Akademi = lazy(() => import('./pages/Akademi'))
 const Forum = lazy(() => import('./pages/Forum'))
 const IntelFeed = lazy(() => import('./pages/IntelFeed'))
-const AcilDurumBildirimleri = lazy(() => import('./pages/AcilDurumBildirimleri'))
 const Missions = lazy(() => import('./pages/Missions'))
 const Cephanelik = lazy(() => import('./pages/Cephanelik'))
 const Training = lazy(() => import('./pages/Training'))
@@ -60,7 +54,7 @@ export default function App() {
             <Route element={<ProtectedRoute />}>
               <Route path="verify-email" element={<VerifyEmail />} />
               <Route element={<AccessGuard />}>
-                <Route element={<AppLayout />}>
+                <Route element={<ResponsiveAppLayout />}>
                   <Route path="dashboard" element={<Dashboard />} />
                   <Route path="profil" element={<Profile />} />
                   <Route path="profil/:operatorUid" element={<OperatorProfile />} />
@@ -68,7 +62,6 @@ export default function App() {
                   <Route path="akademi" element={<Akademi />} />
                   <Route path="forum" element={<Forum />} />
                   <Route path="istihbarat" element={<IntelFeed />} />
-                  <Route path="acil-durum" element={<AcilDurumBildirimleri />} />
                   <Route path="gorevler" element={<Missions />} />
                   <Route path="cephanelik" element={<Cephanelik />} />
                   <Route path="antrenman" element={<Training />} />

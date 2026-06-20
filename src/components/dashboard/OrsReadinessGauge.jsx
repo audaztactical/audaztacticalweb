@@ -67,7 +67,7 @@ export default function OrsReadinessGauge({ score, penalties, loading, embedded 
             HESAPLANIYOR...
           </div>
         ) : null}
-        <svg width="300" height="145" viewBox="0 0 200 120" className="overflow-visible" aria-hidden>
+        <svg width="300" height="145" viewBox="0 0 200 120" className="h-auto w-full max-w-[300px] overflow-visible" aria-hidden>
           <defs>
             <linearGradient id={`ohpArcFill-${gid}`} x1="0" y1="0" x2="1" y2="0">
               <stop offset="0%" stopColor={fillStart} stopOpacity={0.95} />

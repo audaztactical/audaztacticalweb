@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components -- AuthProvider + useAuth aynı modülde */
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
   EmailAuthProvider,
   createUserWithEmailAndPassword,
@@ -87,6 +87,10 @@ export function AuthProvider({ children }) {
   /** Kayıt tamamlanana kadar landing → dashboard otomatik yönlendirmeyi engeller */
   const [registrationInProgress, setRegistrationInProgress] = useState(false)
 
+  const userDataRef = useRef(userData)
+  userDataRef.current = userData
+  const authUidRef = useRef(/** @type {string | null} */ (null))
+
   usePresenceHeartbeat(user?.uid)
 
   const refreshAdminClaimFromToken = useCallback(async (authUser, profile) => {
@@ -94,10 +98,10 @@ export function AuthProvider({ children }) {
       setIsAdmin(false)
       return false
     }
-    const admin = await resolveUserIsAdmin(authUser, profile ?? userData)
+    const admin = await resolveUserIsAdmin(authUser, profile ?? userDataRef.current)
     setIsAdmin(admin)
     return admin
-  }, [userData])
+  }, [])
 
   /** Callable ensureAdminClaim — yalnızca VITE_SYNC_ADMIN_CLAIM_ON_LOGIN=true ise (opsiyonel). */
   const syncAdminClaim = useCallback(async (authUser, profile) => {
@@ -118,10 +122,10 @@ export function AuthProvider({ children }) {
       }
     }
 
-    const admin = await resolveUserIsAdmin(authUser, profile ?? userData)
+    const admin = await resolveUserIsAdmin(authUser, profile ?? userDataRef.current)
     setIsAdmin(admin)
     return admin
-  }, [userData])
+  }, [])
 
   // Google signInWithRedirect dönüşü — StrictMode güvenli tek seferlik getRedirectResult
   useEffect(() => {
@@ -165,6 +169,7 @@ export function AuthProvider({ children }) {
       setUser(nextUser)
 
       if (!nextUser) {
+        authUidRef.current = null
         setUserData(null)
         setProfileLoading(false)
         setLoading(false)
@@ -172,37 +177,43 @@ export function AuthProvider({ children }) {
       }
 
       setLoading(false)
-      setProfileLoading(true)
+      const uidChanged = authUidRef.current !== nextUser.uid
+      authUidRef.current = nextUser.uid
+      if (uidChanged) {
+        setProfileLoading(true)
+      }
 
+      let mergedProfile = null
       try {
         const raw = await fetchUserProfile(nextUser.uid)
         if (raw) {
-          setUserData(mergeWithGuest(raw, nextUser))
+          mergedProfile = mergeWithGuest(raw, nextUser)
+          setUserData(mergedProfile)
         } else {
-          setUserData(
-            mergeWithGuest(
-              {
-                username: '',
-                callsign: nextUser.displayName || '',
-                bloodType: '',
-                status: '',
-                email: nextUser.email || '',
-                enrolledAt: null,
-                allergies: '',
-                drugSensitivity: '',
-                importantNotes: '',
-              },
-              nextUser
-            )
+          mergedProfile = mergeWithGuest(
+            {
+              username: '',
+              callsign: nextUser.displayName || '',
+              bloodType: '',
+              status: '',
+              email: nextUser.email || '',
+              enrolledAt: null,
+              allergies: '',
+              drugSensitivity: '',
+              importantNotes: '',
+            },
+            nextUser
           )
+          setUserData(mergedProfile)
         }
       } catch {
-        setUserData(mergeWithGuest({}, nextUser))
+        mergedProfile = mergeWithGuest({}, nextUser)
+        setUserData(mergedProfile)
       } finally {
         setProfileLoading(false)
       }
 
-      await refreshAdminClaimFromToken(nextUser)
+      await refreshAdminClaimFromToken(nextUser, mergedProfile)
     })
 
     return unsubscribe
@@ -211,7 +222,6 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (!isFirebaseConfigured() || !db || !user?.uid) return undefined
 
-    setProfileLoading(true)
     const unsub = subscribeUserProfile(
       user.uid,
       (raw) => {

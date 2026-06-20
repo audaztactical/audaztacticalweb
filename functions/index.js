@@ -5,7 +5,6 @@ const { logger } = require('firebase-functions')
 const { subscribeToAlertsHandler, subscribeToGlobalIntelHandler } = require('./lib/fcmTopics')
 const { runIntelFeedIngest } = require('./lib/intelFeed')
 const { runLocalAlertsIngest } = require('./lib/localAlerts')
-const { sendManualAlertHandler, pushManualAlertFcmHandler } = require('./lib/manualAlerts')
 const { runVideoNewsIngest } = require('./lib/videoNews')
 const { ensureAdminClaimHandler } = require('./lib/adminClaims')
 const { claimInstructorRoleHandler } = require('./lib/instructorClaim')
@@ -86,30 +85,6 @@ exports.subscribeToGlobalIntel = onCall(
     timeoutSeconds: 30,
   },
   subscribeToGlobalIntelHandler,
-)
-
-/**
- * Callable: admin manual alert → news_feed + asayis_ikaz FCM topic.
- */
-exports.sendManualAlert = onCall(
-  {
-    memory: '128MiB',
-    timeoutSeconds: 30,
-    cors: true,
-  },
-  sendManualAlertHandler,
-)
-
-/**
- * Callable: admin — yalnızca manuel ikaz FCM push (Firestore istemci yazar).
- */
-exports.pushManualAlertFcm = onCall(
-  {
-    memory: '128MiB',
-    timeoutSeconds: 30,
-    cors: true,
-  },
-  pushManualAlertFcmHandler,
 )
 
 /**

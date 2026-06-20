@@ -95,6 +95,12 @@ service cloud.firestore {
         && request.resource.data.agreedToTerms == true;
     }
 
+    /** Muhabere çevrimiçi durumu — yalnızca lastSeenAt / isOnline (presence heartbeat). */
+    function isOwnerPresenceOnlyUpdate(uid) {
+      return isOwnerUid(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastSeenAt', 'isOnline']);
+    }
+
     match /users/{userId} {
       allow read: if isOwnerUid(userId)
         || isContentAdmin()
@@ -109,6 +115,7 @@ service cloud.firestore {
         || isMuhaberePeerContactUnlink(userId)
         || (isOwnerUid(userId) && !exists(/databases/$(database)/documents/users/$(userId)) && validselfRegistrationRole())
         || (isOwnerUid(userId) && isOwnerTermsAckOnly())
+        || (isOwnerUid(userId) && isOwnerPresenceOnlyUpdate(userId))
         || (isOwnerUid(userId) && ownerPrivilegedFieldsUnchanged());
       allow delete: if false;
     }
