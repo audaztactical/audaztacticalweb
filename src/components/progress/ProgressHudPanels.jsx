@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Activity, AlertTriangle, Crosshair, Maximize2, Radio, TrendingUp, X } from 'lucide-react'
-import { useAccordionReveal } from '../../hooks/useAccordionReveal'
 import { useCompactShell } from '../../hooks/useCompactShell'
 import {
   buildCharacterMatrix,
@@ -929,48 +928,10 @@ function HudExpandedPanelBody({
 }
 
 /**
- * @param {{
- *   panelId: ExpandedHudPanelId
- *   isOpen: boolean
- *   compact: boolean
- *   slotRef: React.RefObject<HTMLDivElement | null>
- *   onClose: () => void
- *   children: React.ReactNode
- *   expandedContent: React.ReactNode
- * }} props
+ * @param {{ children: React.ReactNode }} props
  */
-function HudPanelSlot({ panelId, isOpen, compact, slotRef, onClose, children, expandedContent }) {
-  useAccordionReveal(compact && isOpen, slotRef)
-
-  return (
-    <div
-      ref={slotRef}
-      className={['flex min-w-0 flex-col', isOpen && compact ? 'progress-hud-slot--open' : ''].join(' ')}
-    >
-      {children}
-      {compact ? (
-        <HudInlineAccordion open={isOpen} panelId={panelId}>
-          <div className="rounded-b-xl border border-t-0 border-emerald-800/35 bg-slate-950/98">
-            <header className="flex items-center justify-between gap-2 border-b border-slate-800/60 px-3 py-2">
-              <p className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-emerald-500/75 sm:text-[10px]">
-                DETAY · {PANEL_TITLES[panelId]}
-              </p>
-              <button
-                type="button"
-                onClick={onClose}
-                className="inline-flex items-center gap-1 rounded border border-slate-700 bg-slate-900/80 px-2 py-1 font-mono text-[9px] font-bold uppercase tracking-wider text-app-text/70 transition-colors hover:border-amber-500/50 hover:text-amber-300"
-                aria-label={`${PANEL_TITLES[panelId]} kapat`}
-              >
-                <X className="size-3.5" strokeWidth={2} aria-hidden />
-                KAPAT
-              </button>
-            </header>
-            {expandedContent}
-          </div>
-        </HudInlineAccordion>
-      ) : null}
-    </div>
-  )
+function HudPanelSlot({ children }) {
+  return <div className="flex min-w-0 flex-col">{children}</div>
 }
 
 /**
@@ -984,14 +945,27 @@ function HudPanelSlot({ panelId, isOpen, compact, slotRef, onClose, children, ex
  *   barsAnimate?: boolean
  * }} props
  */
-function HudPanelExpandOverlay({
+/**
+ * @param {{
+ *   panelId: ExpandedHudPanelId
+ *   onClose: () => void
+ *   logs?: Record<string, unknown>[]
+ *   errorLogs?: Record<string, unknown>[]
+ *   focusedLogId?: string | null
+ *   trendSeries?: { id: string; label: string; value: number; tag: string; logRow?: Record<string, unknown> | null }[]
+ *   barsAnimate?: boolean
+ *   compact?: boolean
+ * }} props
+ */
+export function HudPanelExpandOverlay({
   panelId,
   onClose,
-  logs,
-  errorLogs,
-  focusedLogId,
+  logs = [],
+  errorLogs = [],
+  focusedLogId = null,
   trendSeries = [],
   barsAnimate = false,
+  compact = false,
 }) {
   const TitleIcon = PANEL_ICONS[panelId]
   const accent = PANEL_ACCENTS[panelId]
@@ -1000,9 +974,44 @@ function HudPanelExpandOverlay({
     return logs.filter((row) => resolveLogFocusId(row) === focusedLogId)
   }, [logs, focusedLogId])
 
+  useEffect(() => {
+    const scrollY = window.scrollY
+    const prevBodyOverflow = document.body.style.overflow
+    const prevBodyPosition = document.body.style.position
+    const prevBodyTop = document.body.style.top
+    const prevBodyWidth = document.body.style.width
+    const prevHtmlOverflow = document.documentElement.style.overflow
+    document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
+    document.body.style.position = 'fixed'
+    document.body.style.top = `-${scrollY}px`
+    document.body.style.width = '100%'
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = prevBodyOverflow
+      document.documentElement.style.overflow = prevHtmlOverflow
+      document.body.style.position = prevBodyPosition
+      document.body.style.top = prevBodyTop
+      document.body.style.width = prevBodyWidth
+      window.scrollTo(0, scrollY)
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [onClose])
+
   const overlay = (
     <div
-      className="progress-hud-expand-overlay animate-fade-in fixed inset-0 z-[200] flex h-screen w-screen flex-col justify-between overflow-hidden bg-slate-950/98 p-6 font-mono md:p-12"
+      className={[
+        'progress-hud-expand-overlay animate-fade-in fixed inset-0 flex flex-col overflow-hidden font-mono',
+        compact
+          ? 'progress-hud-expand-overlay--compact z-50 bg-black/95'
+          : 'z-[200] h-screen w-screen justify-between bg-slate-950/98 p-6 md:p-12',
+      ].join(' ')}
       role="dialog"
       aria-modal="true"
       aria-labelledby="hud-expand-title"
@@ -1012,33 +1021,57 @@ function HudPanelExpandOverlay({
       <button
         type="button"
         onClick={onClose}
-        className="progress-hud-expand-close absolute right-4 top-4 z-[210] rounded border border-amber-500/70 bg-amber-950/60 px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-wider text-amber-100 shadow-[0_0_28px_rgba(245,158,11,0.45)] transition-colors hover:border-rose-500/80 hover:bg-rose-950/70 hover:text-rose-50 md:right-8 md:top-8 md:px-4 md:py-2.5"
-        aria-label="Odaktan çık"
+        className={[
+          'progress-hud-expand-close absolute z-[210] rounded border font-mono font-bold uppercase tracking-wider transition-colors',
+          compact
+            ? 'right-3 top-3 border-slate-600 bg-slate-900/90 px-3 py-2 text-[10px] text-app-text/85 hover:border-amber-500/60 hover:text-amber-300'
+            : 'right-4 top-4 border-amber-500/70 bg-amber-950/60 px-3 py-2 text-[10px] text-amber-100 shadow-[0_0_28px_rgba(245,158,11,0.45)] hover:border-rose-500/80 hover:bg-rose-950/70 hover:text-rose-50 md:right-8 md:top-8 md:px-4 md:py-2.5',
+        ].join(' ')}
+        aria-label="Kapat"
       >
         <span className="inline-flex items-center gap-2">
           <X className="size-4 shrink-0" strokeWidth={2} aria-hidden />
-          <span className="hidden sm:inline">[ ODAKTAN ÇIK / ESC ]</span>
-          <span className="sm:hidden">[ ÇIK / ESC ]</span>
+          {compact ? (
+            <span>KAPAT</span>
+          ) : (
+            <>
+              <span className="hidden sm:inline">[ ODAKTAN ÇIK / ESC ]</span>
+              <span className="sm:hidden">[ ÇIK / ESC ]</span>
+            </>
+          )}
         </span>
       </button>
 
-      <header className="relative z-10 w-full max-w-6xl shrink-0 pr-28 md:pr-44">
-        <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-emerald-500/80">
-          TAM EKRAN · HUD ENTEGRASYONU
+      <header
+        className={[
+          'relative z-10 w-full max-w-6xl shrink-0',
+          compact ? 'px-4 pb-2 pt-14' : 'pr-28 md:pr-44',
+        ].join(' ')}
+      >
+        <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-emerald-500/80 sm:text-[10px] sm:tracking-[0.32em]">
+          {compact ? 'HUD DETAY · MOBİL' : 'TAM EKRAN · HUD ENTEGRASYONU'}
         </p>
-        <div className="mt-2 flex items-center gap-2">
-          <TitleIcon className={`size-5 shrink-0 ${accent}`} strokeWidth={1.5} aria-hidden />
-          <h2 id="hud-expand-title" className={`text-base font-bold uppercase tracking-[0.24em] md:text-lg ${accent}`}>
+        <div className="mt-1.5 flex items-center gap-2 sm:mt-2">
+          <TitleIcon className={`size-4 shrink-0 sm:size-5 ${accent}`} strokeWidth={1.5} aria-hidden />
+          <h2
+            id="hud-expand-title"
+            className={`text-sm font-bold uppercase tracking-[0.18em] sm:text-base sm:tracking-[0.24em] md:text-lg ${accent}`}
+          >
             {PANEL_TITLES[panelId]}
             {focusedLogId ? (
-              <span className="ml-2 text-[10px] font-bold text-amber-400/90">· LOCK_ON</span>
+              <span className="ml-2 text-[9px] font-bold text-amber-400/90 sm:text-[10px]">· LOCK_ON</span>
             ) : null}
           </h2>
         </div>
       </header>
 
-      <div className="relative z-10 flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden py-2">
-        <div className="flex h-full min-h-0 w-full max-w-6xl flex-col overflow-hidden">
+      <div
+        className={[
+          'relative z-10 flex min-h-0 w-full flex-1 flex-col',
+          compact ? 'overflow-y-auto overscroll-contain px-4 pb-4' : 'items-center justify-center overflow-hidden py-2',
+        ].join(' ')}
+      >
+        <div className={['flex w-full min-h-0 flex-col', compact ? 'max-w-6xl' : 'h-full max-w-6xl overflow-hidden'].join(' ')}>
           <HudExpandedPanelBody
             panelId={panelId}
             logs={logs}
@@ -1051,9 +1084,11 @@ function HudPanelExpandOverlay({
         </div>
       </div>
 
-      <p className="relative z-10 shrink-0 text-center text-[8px] uppercase tracking-widest text-app-text/45">
-        ESC · TAM EKRAN MODU
-      </p>
+      {!compact ? (
+        <p className="relative z-10 shrink-0 text-center text-[8px] uppercase tracking-widest text-app-text/45">
+          ESC · TAM EKRAN MODU
+        </p>
+      ) : null}
     </div>
   )
 
@@ -1090,78 +1125,16 @@ export default function ProgressHudPanels({
   const expandedPanel = controlledExpanded !== undefined ? controlledExpanded : internalExpanded
   const setExpandedPanel = onExpandedPanelChange ?? setInternalExpanded
 
-  const matrixSlotRef = useRef(/** @type {HTMLDivElement | null} */ (null))
-  const radarSlotRef = useRef(/** @type {HTMLDivElement | null} */ (null))
-  const waveSlotRef = useRef(/** @type {HTMLDivElement | null} */ (null))
-  const tcccSlotRef = useRef(/** @type {HTMLDivElement | null} */ (null))
-
   const closeExpanded = useCallback(() => setExpandedPanel(null), [setExpandedPanel])
 
   const handleExpand = useCallback(
     (id) => {
-      if (compact) {
-        setExpandedPanel((prev) => (prev === id ? null : id))
-        return
-      }
       setExpandedPanel(id)
     },
-    [compact, setExpandedPanel],
+    [setExpandedPanel],
   )
 
-  useEffect(() => {
-    if (compact || !expandedPanel) return undefined
-    const scrollY = window.scrollY
-    const prevBodyOverflow = document.body.style.overflow
-    const prevBodyPosition = document.body.style.position
-    const prevBodyTop = document.body.style.top
-    const prevBodyWidth = document.body.style.width
-    const prevHtmlOverflow = document.documentElement.style.overflow
-    document.body.style.overflow = 'hidden'
-    document.documentElement.style.overflow = 'hidden'
-    document.body.style.position = 'fixed'
-    document.body.style.top = `-${scrollY}px`
-    document.body.style.width = '100%'
-    const onKey = (e) => {
-      if (e.key === 'Escape') {
-        e.preventDefault()
-        closeExpanded()
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => {
-      document.body.style.overflow = prevBodyOverflow
-      document.documentElement.style.overflow = prevHtmlOverflow
-      document.body.style.position = prevBodyPosition
-      document.body.style.top = prevBodyTop
-      document.body.style.width = prevBodyWidth
-      window.scrollTo(0, scrollY)
-      window.removeEventListener('keydown', onKey)
-    }
-  }, [compact, expandedPanel, closeExpanded])
-
-  useEffect(() => {
-    if (!compact) return undefined
-    const onKey = (e) => {
-      if (e.key === 'Escape' && expandedPanel) {
-        e.preventDefault()
-        closeExpanded()
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [compact, expandedPanel, closeExpanded])
-
-  const expandedBodyProps = {
-    logs,
-    errorLogs,
-    focusedLogId,
-    matrixLogs,
-    trendSeries,
-    barsAnimate,
-    embeddedInAccordion: true,
-  }
-
-  const gridInert = Boolean(expandedPanel && !compact)
+  const gridInert = Boolean(expandedPanel)
 
   return (
     <section className="space-y-4">
@@ -1180,16 +1153,7 @@ export default function ProgressHudPanels({
         aria-hidden={gridInert ? true : undefined}
         {...(gridInert ? { inert: true } : {})}
       >
-        <HudPanelSlot
-          panelId="MATRIX"
-          isOpen={expandedPanel === 'MATRIX'}
-          compact={compact}
-          slotRef={matrixSlotRef}
-          onClose={closeExpanded}
-          expandedContent={
-            <HudExpandedPanelBody panelId="MATRIX" {...expandedBodyProps} />
-          }
-        >
+        <HudPanelSlot>
           <TacticalCharacterMatrix
             logs={matrixLogs}
             focusedLogId={focusedLogId}
@@ -1197,16 +1161,7 @@ export default function ProgressHudPanels({
           />
         </HudPanelSlot>
 
-        <HudPanelSlot
-          panelId="RADAR"
-          isOpen={expandedPanel === 'RADAR'}
-          compact={compact}
-          slotRef={radarSlotRef}
-          onClose={closeExpanded}
-          expandedContent={
-            <HudExpandedPanelBody panelId="RADAR" {...expandedBodyProps} />
-          }
-        >
+        <HudPanelSlot>
           <ChronicErrorRadar
             logs={errorLogs}
             focusedLogId={focusedLogId}
@@ -1214,16 +1169,7 @@ export default function ProgressHudPanels({
           />
         </HudPanelSlot>
 
-        <HudPanelSlot
-          panelId="WAVE"
-          isOpen={expandedPanel === 'WAVE'}
-          compact={compact}
-          slotRef={waveSlotRef}
-          onClose={closeExpanded}
-          expandedContent={
-            <HudExpandedPanelBody panelId="WAVE" {...expandedBodyProps} />
-          }
-        >
+        <HudPanelSlot>
           <StressPerformanceWave
             logs={logs}
             focusedLogId={focusedLogId}
@@ -1231,21 +1177,12 @@ export default function ProgressHudPanels({
           />
         </HudPanelSlot>
 
-        <HudPanelSlot
-          panelId="TCCC"
-          isOpen={expandedPanel === 'TCCC'}
-          compact={compact}
-          slotRef={tcccSlotRef}
-          onClose={closeExpanded}
-          expandedContent={
-            <HudExpandedPanelBody panelId="TCCC" {...expandedBodyProps} />
-          }
-        >
+        <HudPanelSlot>
           <TcccReactionWavePanel logs={logs} onExpand={() => handleExpand('TCCC')} />
         </HudPanelSlot>
       </section>
 
-      {expandedPanel && !compact ? (
+      {expandedPanel ? (
         <HudPanelExpandOverlay
           panelId={expandedPanel}
           onClose={closeExpanded}
@@ -1254,6 +1191,7 @@ export default function ProgressHudPanels({
           focusedLogId={focusedLogId}
           trendSeries={trendSeries}
           barsAnimate={barsAnimate}
+          compact={compact}
         />
       ) : null}
     </section>

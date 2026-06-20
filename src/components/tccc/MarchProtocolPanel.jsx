@@ -66,9 +66,21 @@ export default function MarchProtocolPanel({ stepKey, onClose, variant = 'side' 
 
   if (variant === 'modal') {
     return (
-      <div className="fixed inset-0 z-[70] flex items-end justify-center p-4 sm:items-center">
-        <button type="button" className="absolute inset-0 bg-black/80" aria-label="Kapat" onClick={onClose} />
-        <div className="relative w-full max-w-md">{panel}</div>
+      <div
+        className="fixed inset-0 z-50 flex min-h-0 flex-col bg-black/95 font-mono"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${step.key} protokol kartı`}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-3 top-3 z-10 inline-flex items-center gap-1.5 rounded border border-slate-600 bg-slate-900/90 px-3 py-2 font-mono-technical text-[10px] font-bold uppercase tracking-wider text-app-text/85 transition-colors hover:border-amber-500/60 hover:text-amber-300"
+        >
+          <X className="size-4" strokeWidth={2} aria-hidden />
+          KAPAT
+        </button>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 pt-14">{panel}</div>
       </div>
     )
   }

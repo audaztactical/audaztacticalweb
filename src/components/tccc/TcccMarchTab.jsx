@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useRef, useState } from 'react'
+import { useAccordionReveal } from '../../hooks/useAccordionReveal'
+import { useCompactShell } from '../../hooks/useCompactShell'
 import Dd1380MarchWorkspace from './Dd1380MarchWorkspace'
 import MarchProtocolPanel from './MarchProtocolPanel'
 
@@ -25,16 +27,11 @@ export default function TcccMarchTab({
   saveError,
   disabled = false,
 }) {
+  const compact = useCompactShell()
   const [protocolKey, setProtocolKey] = useState(/** @type {MarchStepKey | null} */ (null))
-  const [isMobile, setIsMobile] = useState(false)
+  const protocolSideRef = useRef(/** @type {HTMLDivElement | null} */ (null))
 
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 1023px)')
-    const sync = () => setIsMobile(mq.matches)
-    sync()
-    mq.addEventListener('change', sync)
-    return () => mq.removeEventListener('change', sync)
-  }, [])
+  useAccordionReveal(Boolean(protocolKey && !compact), protocolSideRef)
 
   const handleMarchLetter = (/** @type {MarchStepKey} */ key) => {
     onPatch({ activeMarchStep: key })
@@ -42,8 +39,12 @@ export default function TcccMarchTab({
   }
 
   return (
-    <div className="relative">
-      <div className={protocolKey && !isMobile ? 'lg:grid lg:grid-cols-[1fr_minmax(280px,340px)] lg:gap-4' : ''}>
+    <div className="relative h-auto min-h-0">
+      <div
+        className={[
+          protocolKey && !compact ? 'lg:grid lg:grid-cols-[1fr_minmax(280px,340px)] lg:items-start lg:gap-4' : '',
+        ].join(' ')}
+      >
         <Dd1380MarchWorkspace
           form={form}
           onPatch={onPatch}
@@ -54,11 +55,13 @@ export default function TcccMarchTab({
           disabled={disabled}
           onMarchLetterClick={handleMarchLetter}
         />
-        {protocolKey && !isMobile ? (
-          <MarchProtocolPanel stepKey={protocolKey} onClose={() => setProtocolKey(null)} variant="side" />
+        {protocolKey && !compact ? (
+          <div ref={protocolSideRef} className="min-h-0">
+            <MarchProtocolPanel stepKey={protocolKey} onClose={() => setProtocolKey(null)} variant="side" />
+          </div>
         ) : null}
       </div>
-      {protocolKey && isMobile ? (
+      {protocolKey && compact ? (
         <MarchProtocolPanel stepKey={protocolKey} onClose={() => setProtocolKey(null)} variant="modal" />
       ) : null}
     </div>

@@ -180,7 +180,7 @@ export default function Dashboard() {
   const displayMissions = activeMissions.length > 0 ? activeMissions.slice(0, 6) : m.items.slice(0, 4)
 
   return (
-    <div className="dashboard-hud-shell cmd-center relative mx-auto max-w-[1440px] px-4 py-8 pt-14 sm:px-6 sm:pt-16">
+    <div className="dashboard-hud-shell cmd-center relative mx-auto h-auto min-h-0 max-w-[1440px] px-4 py-8 pt-14 sm:px-6 sm:pt-16">
       <WeaponMaintenanceAlarmFromInventory
         inventory={inv.items}
         rangeLogs={rangeLogs.items}

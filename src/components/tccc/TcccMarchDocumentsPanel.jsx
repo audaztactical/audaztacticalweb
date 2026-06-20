@@ -96,7 +96,7 @@ export default function TcccMarchDocumentsPanel({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="tccc-doc-panel h-auto min-h-0 space-y-4">
       <div className="rounded-lg border border-slate-800 bg-slate-900/50 px-4 py-3">
         <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-app-text/70">
           TAKTİK MEDİKAL KILAVUZ & EVRAK ÇANTASI
@@ -128,7 +128,7 @@ export default function TcccMarchDocumentsPanel({
         })}
       </div>
 
-      <div className="min-h-[200px]">
+      <div className="h-auto min-h-0">
         {activeDocTab === 'march_dd1380' ? (
           <TcccMarchTab
             form={dd1380Form}

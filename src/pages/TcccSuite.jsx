@@ -271,7 +271,7 @@ export default function TcccSuite() {
 
   return (
     <PageShell title="TCCC" subtitle="TACTICAL MEDICAL SUITE">
-      <div className="space-y-5 text-app-text">
+      <div className="tccc-march-shell h-auto min-h-0 space-y-5 text-app-text">
         {statusBanner}
 
         {activeSection === 'menu' ? (

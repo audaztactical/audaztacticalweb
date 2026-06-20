@@ -285,7 +285,7 @@ function Line4EquipmentChecklist({ options, selected, onChange, name, disabled =
 function MedevacMissionBriefing({ onBegin, disabled = false }) {
   return (
     <div
-      className="relative z-30 flex h-auto min-h-[300px] w-full max-h-[min(72vh,720px)] flex-col"
+      className="medevac-simulator-root relative z-30 flex h-auto min-h-0 w-full max-h-[min(72vh,720px)] flex-col sm:min-h-[300px]"
       role="dialog"
       aria-modal="true"
       aria-labelledby="medevac-briefing-title"
@@ -383,7 +383,7 @@ function MedevacMissionBriefing({ onBegin, disabled = false }) {
 function CasevacMissionBriefing({ onBegin, disabled = false }) {
   return (
     <div
-      className="relative z-30 flex h-auto min-h-[300px] w-full max-h-[min(72vh,720px)] flex-col"
+      className="medevac-simulator-root relative z-30 flex h-auto min-h-0 w-full max-h-[min(72vh,720px)] flex-col sm:min-h-[300px]"
       role="dialog"
       aria-modal="true"
       aria-labelledby="casevac-briefing-title"

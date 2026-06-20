@@ -2757,6 +2757,11 @@
   touch-action: none;
 }
 
+.progress-hud-expand-overlay--compact {
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
+
 .progress-hud-expand-close {
   animation: progress-hud-close-glow 2.4s ease-in-out infinite;
 }
@@ -2797,6 +2802,30 @@
   border-bottom-color: transparent;
 }
 
+.compact-shell .dashboard-hud-shell {
+  height: auto;
+  min-height: 0;
+}
+
 .compact-shell .progress-hud-panel {
+  min-height: 0;
+}
+
+.compact-shell .progress-hud-expand-overlay--compact {
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  touch-action: pan-y;
+}
+
+.compact-shell .tccc-march-shell,
+.compact-shell .tccc-doc-panel {
+  height: auto;
+  min-height: 0;
+}
+
+.compact-shell .medevac-simulator-root {
+  max-height: none;
+  height: auto;
   min-height: 0;
 }

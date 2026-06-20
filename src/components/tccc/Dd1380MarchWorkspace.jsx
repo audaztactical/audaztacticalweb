@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import {
   Activity,
   Droplets,
@@ -57,9 +58,17 @@ export default function Dd1380MarchWorkspace({
   onMarchLetterClick,
 }) {
   const activeStep = MARCH_DD1380_STEPS.find((s) => s.key === form.activeMarchStep) ?? MARCH_DD1380_STEPS[0]
+  const detailPanelRef = useRef(/** @type {HTMLDivElement | null} */ (null))
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      detailPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [form.activeMarchStep])
 
   return (
-    <div className="space-y-4">
+    <div className="h-auto min-h-0 space-y-4">
       <section aria-label="M.A.R.C.H. DD-1380">
         <div className="mb-3 flex items-center gap-2">
           <Shield className="size-5 text-accent" strokeWidth={1.5} aria-hidden />
@@ -103,8 +112,9 @@ export default function Dd1380MarchWorkspace({
         </div>
 
         <div
+          ref={detailPanelRef}
           className={[
-            'mt-3 rounded-xl border p-4 sm:p-5',
+            'mt-3 h-auto min-h-0 rounded-xl border p-3 sm:p-5',
             activeStep.panelBorder,
             activeStep.panelBg,
           ].join(' ')}
