@@ -2840,8 +2840,7 @@
 }
 
 .compact-shell .progress-hud-expand-overlay--compact {
-  height: auto;
-  min-height: 0;
+  min-height: 100dvh;
   max-height: none;
   touch-action: pan-y;
 }
