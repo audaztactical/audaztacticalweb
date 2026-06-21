@@ -893,7 +893,7 @@ export default function TaktikMuhabere() {
           ? hasConversation
             ? 'muhabere-page--chat min-h-0 flex-1 overflow-hidden'
             : 'min-h-0 flex-1'
-          : 'h-[calc(100dvh-var(--app-chrome-h,8rem))] min-h-[min(420px,calc(100dvh-var(--app-chrome-h,8rem)))]',
+          : 'h-full min-h-0 flex-1 overflow-hidden',
       ].join(' ')}
     >
       {!compact || !hasConversation ? (
@@ -910,13 +910,13 @@ export default function TaktikMuhabere() {
 
       <div
         className={[
-          'flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950',
+          'flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950 lg:flex-row',
           compact ? (hasConversation ? 'mt-0' : 'mt-2') : 'mt-3 sm:mt-4',
         ].join(' ')}
       >
         <aside
           className={[
-            'flex shrink-0 flex-col border-r border-zinc-800 bg-zinc-900/50',
+            'flex h-full min-h-0 shrink-0 flex-col overflow-hidden border-r border-zinc-800 bg-zinc-900/50',
             compact ? (showMobileRoster ? 'w-full min-w-0' : 'hidden') : 'w-80',
           ].join(' ')}
         >
@@ -1200,7 +1200,7 @@ export default function TaktikMuhabere() {
 
         <section
           className={[
-            'flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-zinc-950',
+            'flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-zinc-950',
             compact && !showMobileChat ? 'hidden' : '',
           ].join(' ')}
         >

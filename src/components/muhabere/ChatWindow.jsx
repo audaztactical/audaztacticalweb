@@ -111,11 +111,10 @@ export default function ChatWindow({
   const scheduleScrollToBottom = useCallback(
     (/** @type {ScrollBehavior} */ behavior = 'auto') => {
       scrollToBottom(behavior)
-      requestAnimationFrame(() => scrollToBottom('auto'))
-      window.setTimeout(() => scrollToBottom('auto'), 60)
-      window.setTimeout(() => scrollToBottom('auto'), 180)
-      window.setTimeout(() => scrollToBottom('auto'), 450)
-      window.setTimeout(() => scrollToBottom('auto'), 900)
+      requestAnimationFrame(() => {
+        scrollToBottom('auto')
+        window.setTimeout(() => scrollToBottom('auto'), 120)
+      })
     },
     [scrollToBottom],
   )

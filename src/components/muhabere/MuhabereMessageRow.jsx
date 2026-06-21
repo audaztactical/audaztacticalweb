@@ -205,7 +205,7 @@ export default function MuhabereMessageRow({
       )
     }
 
-    return <p>{msg.text}</p>
+    return <p className="break-words text-inherit">{msg.text}</p>
   }
 
   return (
