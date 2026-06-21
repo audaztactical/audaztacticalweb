@@ -463,40 +463,6 @@ export const GUIDE_SECTIONS = {
       'Ücretli ödeme şu an kapalı; yükseltme erişim kodu ile yapılır. Lansman sonrasında ödeme ekranı da devreye girebilir.',
   },
 
-  'pricing-plans': {
-    title: 'Üyelik planları',
-    opsCode: 'BIL-01',
-    pageLink: { to: '/fiyatlandirma', label: 'Fiyatlandırma sayfasına git' },
-    access: 'Yalnızca yöneticiler.',
-    adminOnly: true,
-    purpose: 'Ücretsiz, premium ve eğitmen planlarının karşılaştırılması.',
-    steps: [
-      'Yönetici menüsünden Fiyatlandırma sayfasını açın.',
-      'Plan kartlarını inceleyin.',
-      'Satın alma düğmesi şu an bilgilendirme modalı açar; gerçek ödeme yoktur.',
-    ],
-    infoNote:
-      'Bu sayfa yalnızca yöneticilere görünür. Plan sınırları henüz uygulamaya yansımamış olabilir; ücretsiz planda on ATIŞ kaydı ve kilitli sektörler hedeflenmektedir.',
-    notes: ['Standart operatörler bu sayfayı menüde görmez; plan özeti bu kılavuzda yer alır.'],
-  },
-
-  'admin-panel': {
-    title: 'Yönetici Paneli',
-    opsCode: 'ADM-01',
-    pageLink: { to: '/admin', label: 'Yönetici Paneline git' },
-    access: 'Yalnızca yönetici hesapları.',
-    adminOnly: true,
-    purpose: 'İçerik, haber, geri bildirim, forum moderasyonu ve kullanıcı yönetimi.',
-    steps: [
-      'İçerik ve Envanter: akademi doktrinleri.',
-      'Haber Ağı: yazılı haber beslemesi.',
-      'YouTube Kanalları: video kaynakları.',
-      'Geri Bildirimler: kullanıcı mesajları.',
-      'Forum Moderasyonu: şikayet inceleme.',
-      'Kullanıcı Yönetimi: rol ve hesap durumu.',
-    ],
-  },
-
   troubleshooting: {
     title: 'Sorun giderme',
     opsCode: 'DBG-01',

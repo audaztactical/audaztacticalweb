@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { GUIDE_NAV_TREE } from '../../data/guideNavTree'
 
 /**
@@ -13,15 +13,6 @@ export default function GuideNav({ activeId, onSelect, className = '' }) {
     /** @type {Record<string, boolean>} */ ({}),
   )
 
-  useEffect(() => {
-    for (const group of GUIDE_NAV_TREE) {
-      const hasActive = group.children?.some((c) => c.id === activeId)
-      if (hasActive) {
-        setExpandedGroups((prev) => ({ ...prev, [group.id]: true }))
-      }
-    }
-  }, [activeId])
-
   const toggleGroup = useCallback((groupId) => {
     setExpandedGroups((prev) => ({ ...prev, [groupId]: !prev[groupId] }))
   }, [])
@@ -32,7 +23,7 @@ export default function GuideNav({ activeId, onSelect, className = '' }) {
       aria-label="Kılavuz içindekiler"
     >
       {GUIDE_NAV_TREE.map((group) => {
-        const open = expandedGroups[group.id] !== false
+        const open = expandedGroups[group.id] === true
         return (
           <div key={group.id} className="rounded-lg border border-amber-500/15 bg-black/30">
             <button

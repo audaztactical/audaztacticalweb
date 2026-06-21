@@ -65,8 +65,6 @@ export const GUIDE_NAV_TREE = [
     children: [
       { id: 'settings', label: 'Ayarlar' },
       { id: 'access-codes', label: 'Erişim kodları' },
-      { id: 'pricing-plans', label: 'Üyelik planları' },
-      { id: 'admin-panel', label: 'Admin Paneli' },
       { id: 'troubleshooting', label: 'Sorun giderme' },
     ],
   },
