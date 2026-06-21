@@ -1,4 +1,4 @@
-import { doc, serverTimestamp, setDoc } from 'firebase/firestore'
+import { doc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { auth, db, isFirebaseConfigured } from './firebase'
 
 const HEARTBEAT_MIN_INTERVAL_MS = 25_000
@@ -18,7 +18,15 @@ async function writePresenceFields(uid, fields) {
   if (!current || current.uid !== id) return
 
   try {
-    await setDoc(doc(db, 'users', id), fields, { merge: true })
+    const ref = doc(db, 'users', id)
+    const snap = await getDoc(ref)
+    if (!snap.exists()) {
+      if (import.meta.env.DEV) {
+        console.debug('[firestorePresence] Profil yok — presence yazımı atlandı:', id)
+      }
+      return
+    }
+    await updateDoc(ref, fields)
   } catch (err) {
     const code = err && typeof err === 'object' && 'code' in err ? String(err.code) : ''
     if (import.meta.env.DEV && code !== 'permission-denied') {

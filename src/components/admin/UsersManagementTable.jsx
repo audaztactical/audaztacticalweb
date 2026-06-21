@@ -5,6 +5,7 @@ import {
   ChevronDown,
   Loader2,
   MessageSquareWarning,
+  ScanSearch,
   Search,
   ShieldOff,
   Trash2,
@@ -16,10 +17,12 @@ import { useAuth } from '../../context/AuthContext'
 import { callAdminDeleteUser } from '../../lib/cloudFunctions'
 import {
   downgradeUserMembership,
+  findGhostUserRecords,
   formatAccountStatusLabel,
   formatAdminUserDate,
   formatAdminUserDisplayName,
   formatMembershipLabel,
+  isSafeGhostDeleteCandidate,
   subscribeUsersForAdmin,
   SUSPENSION_DURATION_OPTIONS,
   suspendUserAccount,
@@ -32,6 +35,10 @@ import {
   subscribePendingAppealsByUser,
 } from '../../lib/firestoreSuspensionAppeals'
 import {
+  ADMIN_BADGE,
+  ADMIN_BTN_DANGER,
+  ADMIN_BTN_GHOST,
+  ADMIN_BTN_PRIMARY,
   ADMIN_EMPTY_STATE,
   ADMIN_TABLE,
   ADMIN_TABLE_HEAD,
@@ -635,6 +642,268 @@ function ModalActions({ busy, confirmLabel, confirmTone = 'primary', confirmDisa
 }
 
 /**
+ * @param {{
+ *   open: boolean
+ *   candidates: AdminUserRecord[]
+ *   busy: boolean
+ *   onClose: () => void
+ *   onFeedback?: (type: 'ok' | 'err', text: string) => void
+ * }} props
+ */
+function GhostAccountsModal({ open, candidates, busy, onClose, onFeedback }) {
+  const [selectedIds, setSelectedIds] = useState(/** @type {Set<string>} */ (new Set()))
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [deleteBusy, setDeleteBusy] = useState(false)
+  const [result, setResult] = useState(/** @type {{ ok: number; fail: number; errors: string[] } | null} */ (null))
+
+  useEffect(() => {
+    if (!open) return
+    setSelectedIds(new Set())
+    setConfirmOpen(false)
+    setDeleteBusy(false)
+    setResult(null)
+  }, [open, candidates])
+
+  if (!open) return null
+
+  const allSelected = candidates.length > 0 && selectedIds.size === candidates.length
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(candidates.map((c) => c.id)))
+    }
+  }
+
+  const toggleOne = (id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const selectedList = candidates.filter((c) => selectedIds.has(c.id))
+
+  const handleDeleteConfirmed = async () => {
+    setDeleteBusy(true)
+    let ok = 0
+    let fail = 0
+    /** @type {string[]} */
+    const errors = []
+
+    for (const row of selectedList) {
+      if (!isSafeGhostDeleteCandidate(row)) {
+        fail += 1
+        errors.push(`${row.id.slice(0, 8)}… — güvenlik filtresi reddetti`)
+        continue
+      }
+      try {
+        await callAdminDeleteUser(row.id)
+        ok += 1
+      } catch (err) {
+        fail += 1
+        const msg = err instanceof Error ? err.message : 'Silinemedi'
+        errors.push(`${row.id.slice(0, 8)}… — ${msg}`)
+      }
+    }
+
+    setResult({ ok, fail, errors })
+    setConfirmOpen(false)
+    setDeleteBusy(false)
+    setSelectedIds(new Set())
+    onFeedback?.(fail === 0 ? 'ok' : 'err', `${ok} silindi, ${fail} hata.`)
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-[110] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      onClick={onClose}
+    >
+      <div
+        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-zinc-600/40 bg-zinc-950 p-5 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <ScanSearch className="size-5 text-zinc-400" aria-hidden />
+            <h3 className="font-display text-lg font-bold uppercase tracking-wide text-app-text">
+              Hayalet Hesap Taraması
+            </h3>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={deleteBusy || busy}
+            className="rounded-lg border border-white/10 p-1.5 text-app-text/60 hover:text-app-text disabled:opacity-50"
+            aria-label="Kapat"
+          >
+            <X className="size-4" aria-hidden />
+          </button>
+        </div>
+
+        <p className="font-mono-technical text-[10px] uppercase leading-relaxed text-app-text/55">
+          Önizleme modu — username, callsign, e-posta ve kayıt tarihi olmayan profiller.
+          Silme yalnızca onay sonrası çalışır.
+        </p>
+
+        <div className={`${ADMIN_BADGE} mt-3 border-zinc-500/40 bg-zinc-900/50 text-zinc-300`}>
+          {candidates.length} hayalet hesap bulundu
+        </div>
+
+        {result ? (
+          <div className="mt-4 rounded-lg border border-white/10 bg-black/30 p-4">
+            <p className="font-mono-technical text-sm text-app-text">
+              <span className="text-emerald-300">{result.ok} başarılı</span>
+              {' · '}
+              <span className={result.fail ? 'text-red-300' : 'text-app-text/50'}>
+                {result.fail} hata
+              </span>
+            </p>
+            {result.errors.length ? (
+              <ul className="mt-2 max-h-32 overflow-y-auto font-mono-technical text-[10px] text-red-300/90">
+                {result.errors.map((line) => (
+                  <li key={line} className="mt-1">
+                    {line}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        ) : null}
+
+        {candidates.length === 0 ? (
+          <div className={`${ADMIN_EMPTY_STATE} mt-4 min-h-[120px]`}>
+            <p className="font-mono-technical text-[10px] uppercase text-app-text/50">
+              Hayalet hesap bulunamadı
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="mt-4 flex items-center justify-between gap-2">
+              <label className="inline-flex cursor-pointer items-center gap-2 font-mono-technical text-[10px] uppercase text-app-text/70">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={toggleAll}
+                  disabled={deleteBusy || busy}
+                  className="size-3.5 rounded border-white/20 accent-accent"
+                />
+                Tümünü seç ({candidates.length})
+              </label>
+              <span className="font-mono-technical text-[10px] text-app-text/45">
+                {selectedIds.size} seçili
+              </span>
+            </div>
+
+            <div className={`${ADMIN_TABLE_WRAP} mt-3 max-h-[40vh] overflow-y-auto`}>
+              <table className={`${ADMIN_TABLE} font-mono-technical text-xs`}>
+                <thead className={ADMIN_TABLE_HEAD}>
+                  <tr>
+                    <th className={`${ADMIN_TABLE_TH} w-10`} />
+                    <th className={ADMIN_TABLE_TH}>UID</th>
+                    <th className={ADMIN_TABLE_TH}>Son görülme</th>
+                    <th className={ADMIN_TABLE_TH}>Kayıt</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {candidates.map((row) => (
+                    <tr key={row.id} className={ADMIN_TABLE_ROW}>
+                      <td className={ADMIN_TABLE_TD}>
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(row.id)}
+                          onChange={() => toggleOne(row.id)}
+                          disabled={deleteBusy || busy}
+                          className="size-3.5 rounded border-white/20 accent-accent"
+                          aria-label={`Seç: ${row.id}`}
+                        />
+                      </td>
+                      <td className={`${ADMIN_TABLE_TD} font-mono text-[11px]`}>
+                        {row.id}
+                      </td>
+                      <td className={`${ADMIN_TABLE_TD} text-app-text/60`}>
+                        {formatAdminUserDate(row.lastSeenAt) || '—'}
+                      </td>
+                      <td className={`${ADMIN_TABLE_TD} text-app-text/60`}>
+                        {formatAdminUserDate(row.enrolledAt) || '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
+        {!result && candidates.length > 0 ? (
+          <div className="mt-4 flex flex-wrap justify-end gap-2">
+            <button
+              type="button"
+              disabled={deleteBusy || busy}
+              onClick={onClose}
+              className={ADMIN_BTN_GHOST}
+            >
+              Kapat
+            </button>
+            <button
+              type="button"
+              disabled={deleteBusy || busy || selectedIds.size === 0}
+              onClick={() => setConfirmOpen(true)}
+              className={ADMIN_BTN_DANGER}
+            >
+              <Trash2 className="size-3" aria-hidden />
+              Seçilenleri Sil ({selectedIds.size})
+            </button>
+          </div>
+        ) : (
+          <div className="mt-4 flex justify-end">
+            <button type="button" onClick={onClose} className={ADMIN_BTN_PRIMARY}>
+              Kapat
+            </button>
+          </div>
+        )}
+
+        {confirmOpen ? (
+          <div
+            className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-4"
+            role="alertdialog"
+            aria-modal="true"
+            onClick={() => !deleteBusy && setConfirmOpen(false)}
+          >
+            <div
+              className="w-full max-w-md rounded-xl border border-red-500/40 bg-zinc-950 p-5 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p className="flex items-start gap-2 text-sm text-app-text/80">
+                <AlertTriangle className="mt-0.5 size-4 shrink-0 text-red-400" aria-hidden />
+                <span>
+                  <strong className="text-app-text">{selectedList.length} hesap</strong> kalıcı
+                  olarak silinecek. Firebase Auth ve Firestore kayıtları kaldırılır — bu işlem geri
+                  alınamaz.
+                </span>
+              </p>
+              <ModalActions
+                busy={deleteBusy}
+                confirmLabel="Kalıcı Olarak Sil"
+                confirmTone="danger"
+                confirmDisabled={selectedList.length === 0}
+                onCancel={() => setConfirmOpen(false)}
+                onConfirm={handleDeleteConfirmed}
+              />
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+/**
  * @param {{ onFeedback?: (type: 'ok' | 'err', text: string) => void }} props
  */
 export default function UsersManagementTable({ onFeedback }) {
@@ -655,6 +924,8 @@ export default function UsersManagementTable({ onFeedback }) {
     /** @type {{ row: AdminUserRecord; appeal: SuspensionAppealRecord } | null} */ (null),
   )
   const [openDetailId, setOpenDetailId] = useState('')
+  const [ghostModalOpen, setGhostModalOpen] = useState(false)
+  const [ghostCandidates, setGhostCandidates] = useState(/** @type {AdminUserRecord[]} */ ([]))
 
   useEffect(() => {
     const unsub = subscribePendingAppealsByUser(setPendingAppeals)
@@ -740,6 +1011,12 @@ export default function UsersManagementTable({ onFeedback }) {
     }
   }
 
+  const handleScanGhosts = () => {
+    const found = findGhostUserRecords(rows, adminUid)
+    setGhostCandidates(found)
+    setGhostModalOpen(true)
+  }
+
   const handleDelete = async () => {
     if (!deleteTarget) return
     setBusy(true)
@@ -788,6 +1065,15 @@ export default function UsersManagementTable({ onFeedback }) {
             className="w-full rounded-lg border border-white/15 bg-black/40 py-2.5 pl-10 pr-3 font-mono-technical text-sm text-app-text placeholder:text-app-text/40 focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/25"
           />
         </div>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={handleScanGhosts}
+          className={ADMIN_BTN_PREVIEW}
+        >
+          <ScanSearch className="size-3.5" aria-hidden />
+          Hayalet Hesapları Tara
+        </button>
         <span className="font-mono-technical text-[10px] uppercase tracking-wider text-app-text/50">
           {filtered.length} / {rows.length} operatör
         </span>
@@ -948,6 +1234,14 @@ export default function UsersManagementTable({ onFeedback }) {
         appeal={appealView?.appeal ?? null}
         row={appealView?.row ?? null}
         onClose={() => setAppealView(null)}
+        onFeedback={onFeedback}
+      />
+
+      <GhostAccountsModal
+        open={ghostModalOpen}
+        candidates={ghostCandidates}
+        busy={busy}
+        onClose={() => setGhostModalOpen(false)}
         onFeedback={onFeedback}
       />
     </>

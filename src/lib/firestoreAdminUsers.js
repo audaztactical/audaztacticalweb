@@ -22,7 +22,11 @@ import { safeOnSnapshot } from './firestoreSnapshot'
  *   premiumPaymentId: string
  *   premiumUpgradedAt: import('firebase/firestore').Timestamp | Date | null
  *   enrolledAt: import('firebase/firestore').Timestamp | Date | null
+ *   lastSeenAt: import('firebase/firestore').Timestamp | Date | null
  * }} AdminUserRecord */
+
+/** @readonly */
+const GHOST_DELETE_BLOCKED_ROLES = new Set(['admin', 'instructor', 'premium_member', 'command', 'cmd'])
 
 /** @readonly */
 export const SUSPENSION_DURATION_OPTIONS = /** @type {const} */ ([
@@ -60,7 +64,43 @@ export function mapAdminUserDoc(data, id) {
     premiumPaymentId: typeof d.premiumPaymentId === 'string' ? d.premiumPaymentId : '',
     premiumUpgradedAt: coerceFeedbackTimestamp(d.premiumUpgradedAt),
     enrolledAt: coerceFeedbackTimestamp(d.enrolledAt),
+    lastSeenAt: coerceFeedbackTimestamp(d.lastSeenAt),
   }
+}
+
+/**
+ * Hayalet profil — username/callsign/email boş ve kayıt (enrolledAt) yok.
+ * @param {AdminUserRecord} row
+ */
+export function isGhostUserRecord(row) {
+  return (
+    !row.username.trim() &&
+    !row.callsign.trim() &&
+    !row.email.trim() &&
+    !row.enrolledAt
+  )
+}
+
+/**
+ * Silme adayları için ek güvenlik filtresi.
+ * @param {AdminUserRecord} row
+ * @param {string} [adminUid]
+ */
+export function isSafeGhostDeleteCandidate(row, adminUid = '') {
+  if (!isGhostUserRecord(row)) return false
+  if (adminUid && row.id === adminUid) return false
+  if (row.username.trim() || row.email.trim() || row.callsign.trim()) return false
+  if (GHOST_DELETE_BLOCKED_ROLES.has(row.role)) return false
+  if (row.premiumPaymentId.trim()) return false
+  return true
+}
+
+/**
+ * @param {AdminUserRecord[]} rows
+ * @param {string} [adminUid]
+ */
+export function findGhostUserRecords(rows, adminUid = '') {
+  return rows.filter((row) => isSafeGhostDeleteCandidate(row, adminUid))
 }
 
 /**
