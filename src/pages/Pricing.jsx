@@ -30,6 +30,11 @@ import { isPremiumPaymentEnabled } from '../lib/registrationPolicy'
  *   requestAccess?: boolean
  * }} PricingPlan */
 
+/** Gerçek fiyatları göster; false iken sayısal TL tutarları "****" ile maskelenir. */
+const SHOW_REAL_PRICES = false
+
+const MASKED_PRICE_LABEL = '****'
+
 /** @type {PricingPlan[]} */
 const PRICING_PLANS = [
   {
@@ -102,6 +107,7 @@ const PRICING_PLANS = [
  */
 function formatTry(amount) {
   if (amount == null) return '0 TL'
+  if (!SHOW_REAL_PRICES) return MASKED_PRICE_LABEL
   return `${amount.toLocaleString('tr-TR')} TL`
 }
 
@@ -115,9 +121,10 @@ function planPriceLabel(plan, billing) {
     return { main: formatTry(plan.monthlyPrice), sub: '/ ay · KDV dahil değildir' }
   }
   const perMonth = Math.round(plan.yearlyPrice / 12)
+  const perMonthLabel = SHOW_REAL_PRICES ? formatTry(perMonth) : MASKED_PRICE_LABEL
   return {
     main: formatTry(plan.yearlyPrice),
-    sub: `/ yıl · ~${formatTry(perMonth)}/ay · Yıllık öde, 2 ay bedava gibi`,
+    sub: `/ yıl · ~${perMonthLabel}/ay · Yıllık öde, 2 ay bedava gibi`,
   }
 }
 
