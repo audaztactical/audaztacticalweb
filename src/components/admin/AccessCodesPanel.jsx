@@ -127,15 +127,15 @@ export default function AccessCodesPanel({ onFeedback }) {
 
   return (
     <div className="space-y-6">
-      <ADMIN_SUMMARY_BAR>
+      <div className={ADMIN_SUMMARY_BAR}>
         <KeyRound className="size-4 text-accent/80" aria-hidden />
         <span className="text-app-text/70">
           Erişim kodları: <strong className="text-accent">{rows.length}</strong> toplam ·{' '}
           <strong className="text-emerald-300">{activeCount}</strong> aktif
         </span>
-      </ADMIN_SUMMARY_BAR>
+      </div>
 
-      <ADMIN_FORM_CARD>
+      <div className={ADMIN_FORM_CARD}>
         <div className={ADMIN_FORM_CARD_HEADER}>
           <KeyRound className="size-4 text-accent" aria-hidden />
           <h3 className="font-mono-technical text-xs font-bold uppercase tracking-wider text-accent">
@@ -227,7 +227,7 @@ export default function AccessCodesPanel({ onFeedback }) {
             </button>
           </div>
         ) : null}
-      </ADMIN_FORM_CARD>
+      </div>
 
       {loading ? (
         <div className={ADMIN_EMPTY_STATE}>
@@ -242,7 +242,7 @@ export default function AccessCodesPanel({ onFeedback }) {
           </p>
         </div>
       ) : (
-        <ADMIN_TABLE_WRAP>
+        <div className={ADMIN_TABLE_WRAP}>
           <table className={ADMIN_TABLE}>
             <thead className={ADMIN_TABLE_HEAD}>
               <tr>
@@ -299,7 +299,7 @@ export default function AccessCodesPanel({ onFeedback }) {
               ))}
             </tbody>
           </table>
-        </ADMIN_TABLE_WRAP>
+        </div>
       )}
     </div>
   )
