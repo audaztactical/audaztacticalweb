@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   EmailAuthProvider,
   GoogleAuthProvider,
@@ -749,6 +750,12 @@ export default function Profile() {
                   {callsign}
                 </p>
                 <p className="font-mono-technical text-[10px] font-semibold uppercase tracking-widest text-app-text/70">{roleLabel(userData?.role)}</p>
+                <Link
+                  to="/fiyatlandirma"
+                  className="mt-1 inline-block font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent/80 hover:text-accent"
+                >
+                  Üyelik planları →
+                </Link>
               </div>
 
               <dl className="space-y-0 border-t border-white/10 pt-2">

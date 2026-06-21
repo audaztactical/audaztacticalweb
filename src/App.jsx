@@ -32,6 +32,7 @@ const TcccSuite = lazy(() => import('./pages/TcccSuite'))
 const ProgressTracker = lazy(() => import('./pages/ProgressTracker'))
 const InstructorDashboard = lazy(() => import('./pages/InstructorDashboard'))
 const Settings = lazy(() => import('./pages/Settings'))
+const Pricing = lazy(() => import('./pages/Pricing'))
 const AdminPanel = lazy(() => import('./pages/AdminPanel'))
 const PremiumTransition = lazy(() => import('./pages/PremiumTransition'))
 const SiteMaintenance = lazy(() => import('./pages/SiteMaintenance'))
@@ -76,6 +77,7 @@ export default function App() {
                     }
                   />
                   <Route path="ayarlar" element={<Settings />} />
+                  <Route path="fiyatlandirma" element={<Pricing />} />
                   {/* Beta: lansman öncesi premium-gecis → Dashboard yönlendirmesi */}
                   <Route path="premium-gecis" element={<PremiumTransition />} />
                   <Route path="site-bakimda" element={<SiteMaintenance />} />
