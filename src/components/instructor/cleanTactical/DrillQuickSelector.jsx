@@ -1,14 +1,16 @@
 import { BookOpen, ChevronRight, Loader2, Play } from 'lucide-react'
 import {
-  ctBtnPrimary,
-  ctCriteriaBox,
-  ctHelperText,
-  ctInput,
-  ctLabel,
-  ctMsgErr,
-  ctMsgOk,
-  ctSelect,
-} from './tokens'
+  inputClass,
+  labelClass,
+  selectClass,
+} from '../../training/layout/trainingTerminalTokens'
+import {
+  icBtnPrimary,
+  icCriteriaBox,
+  icHelperText,
+  icMsgErr,
+  icMsgOk,
+} from '../layout/instructorCommandTokens'
 
 /**
  * Seviye + drill seçimi ve tek tıkla başlatma (max 2 tık: drill seç → başlat).
@@ -73,8 +75,8 @@ export default function DrillQuickSelector({
   return (
     <div className="space-y-4">
       <label className="block space-y-1.5">
-        <span className={ctLabel}>Seviye</span>
-        <select className={ctSelect} value={levelSelect} onChange={(e) => onLevelChange(e.target.value)}>
+        <span className={labelClass}>Seviye</span>
+        <select className={selectClass} value={levelSelect} onChange={(e) => onLevelChange(e.target.value)}>
           <option value="">Seviye seçin</option>
           {levelOptions.map((lvl) => (
             <option key={lvl} value={lvl}>
@@ -88,25 +90,25 @@ export default function DrillQuickSelector({
       {isNewLevel ? (
         <div className="block space-y-1.5">
           <label className="block space-y-1.5" htmlFor="instructor-new-level">
-            <span className={ctLabel}>Yeni seviye adı</span>
+            <span className={labelClass}>Yeni seviye adı</span>
             <input
               id="instructor-new-level"
-              className={ctInput}
+              className={inputClass}
               value={newLevelName}
               onChange={(e) => onNewLevelNameChange(e.target.value)}
               placeholder="Örn: Seviye 4 (İleri Operasyonlar)"
             />
           </label>
-          <p className={ctHelperText}>
+          <p className={icHelperText}>
             Liste düzeninin bozulmaması için lütfen &apos;Seviye X (Açıklama)&apos; formatında giriniz.
           </p>
         </div>
       ) : null}
 
       <label className="block space-y-1.5">
-        <span className={ctLabel}>Drill</span>
+        <span className={labelClass}>Drill</span>
         <select
-          className={ctSelect}
+          className={selectClass}
           value={drillSelect}
           onChange={(e) => onDrillChange(e.target.value)}
           disabled={!levelLabel && !isNewLevel}
@@ -122,8 +124,8 @@ export default function DrillQuickSelector({
       </label>
 
       {loading ? (
-        <p className="flex items-center gap-2 text-xs text-zinc-500">
-          <Loader2 className="size-3.5 animate-spin" aria-hidden />
+        <p className="flex items-center gap-2 font-mono-technical text-[9px] uppercase text-app-text/55">
+          <Loader2 className="size-3.5 animate-spin text-accent" aria-hidden />
           Kütüphane yükleniyor…
         </p>
       ) : null}
@@ -131,29 +133,29 @@ export default function DrillQuickSelector({
       {showNewDrillSlot}
 
       {selectedDrillName && levelLabel ? (
-        <div className={ctCriteriaBox}>
-          <p className="font-medium text-zinc-300">{selectedDrillName}</p>
-          <p className="mt-0.5 text-zinc-500">{levelLabel}</p>
+        <div className={icCriteriaBox}>
+          <p className="font-bold uppercase text-app-text/85">{selectedDrillName}</p>
+          <p className="mt-0.5 text-app-text/50">{levelLabel}</p>
         </div>
       ) : null}
 
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="block space-y-1.5">
-          <span className={ctLabel}>Mühimmat</span>
+          <span className={labelClass}>Mühimmat</span>
           <input
             type="number"
             min={1}
-            className={`${ctInput} tabular-nums`}
+            className={`${inputClass} tabular-nums`}
             value={totalAmmo}
             onChange={(e) => onTotalAmmoChange(e.target.value)}
           />
         </label>
         <label className="block space-y-1.5">
-          <span className={ctLabel}>Geçer baraj</span>
+          <span className={labelClass}>Geçer baraj</span>
           <input
             type="number"
             min={0}
-            className={`${ctInput} tabular-nums`}
+            className={`${inputClass} tabular-nums`}
             value={minPassScore}
             onChange={(e) => onMinPassScoreChange(e.target.value)}
           />
@@ -161,24 +163,24 @@ export default function DrillQuickSelector({
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <label className="flex shrink-0 cursor-pointer items-center gap-2.5 rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2.5 sm:min-h-[42px]">
+        <label className="flex shrink-0 cursor-pointer items-center gap-2.5 rounded border border-accent/20 bg-black/35 px-3 py-2.5 sm:min-h-[42px]">
           <input
             type="checkbox"
-            className="size-4 rounded border-zinc-600 accent-zinc-300"
+            className="size-4 rounded border-accent/30 accent-[var(--accent-color)]"
             checked={isTimed}
             onChange={(e) => onTimedChange(e.target.checked)}
           />
-          <span className="text-sm text-zinc-400">Zamanlı oturum</span>
+          <span className="font-mono-technical text-[10px] uppercase text-app-text/60">Zamanlı oturum</span>
         </label>
 
         {isTimed ? (
           <label className="block min-w-0 flex-1 space-y-1.5">
-            <span className={ctLabel}>Hedef Süre (sn)</span>
+            <span className={labelClass}>Hedef Süre (sn)</span>
             <input
               type="number"
               min={0.01}
               step={0.01}
-              className={`${ctInput} tabular-nums`}
+              className={`${inputClass} tabular-nums`}
               value={targetTimeSec}
               onChange={(e) => onTargetTimeSecChange(e.target.value)}
               placeholder="örn. 12"
@@ -188,13 +190,13 @@ export default function DrillQuickSelector({
         ) : null}
       </div>
 
-      {thresholdError ? <p className={ctMsgErr}>{thresholdError}</p> : null}
+      {thresholdError ? <p className={icMsgErr}>{thresholdError}</p> : null}
 
       <button
         type="button"
         disabled={starting || !!thresholdError}
         onClick={onStart}
-        className={ctBtnPrimary}
+        className={icBtnPrimary}
       >
         {starting ? (
           <Loader2 className="size-4 animate-spin" aria-hidden />
@@ -205,9 +207,9 @@ export default function DrillQuickSelector({
         <ChevronRight className="size-4 opacity-60" aria-hidden />
       </button>
 
-      {message ? <p className={msgOk ? ctMsgOk : ctMsgErr}>{message}</p> : null}
+      {message ? <p className={msgOk ? icMsgOk : icMsgErr}>{message}</p> : null}
 
-      <p className="flex items-center gap-1.5 text-xs text-zinc-600">
+      <p className="flex items-center gap-1.5 font-mono-technical text-[9px] uppercase text-app-text/40">
         <BookOpen className="size-3.5" aria-hidden />
         Drill seç → Başlat (2 adım)
       </p>

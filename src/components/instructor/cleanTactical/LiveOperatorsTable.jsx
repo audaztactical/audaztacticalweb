@@ -1,19 +1,41 @@
-import { Loader2 } from 'lucide-react'
+import { Loader2, Radio } from 'lucide-react'
 import CleanFade from './CleanFade'
 import {
   computeGroupTrainingAssessment,
   formatGroupTrainingStatusLabelInstructor,
 } from '../../../lib/groupTrainingAssessment'
 import {
-  ctStatusFail,
-  ctStatusOk,
-  ctStatusWarn,
-  ctTable,
-  ctTableWrap,
-  ctTd,
-  ctTh,
-  ctTrHover,
-} from './tokens'
+  icEmptyCell,
+  icEmptyDesc,
+  icEmptyTitle,
+  icLiveDot,
+  icLiveStrip,
+  icStatusFail,
+  icStatusOk,
+  icStatusWarn,
+  icTable,
+  icTableWrap,
+  icTd,
+  icTh,
+  icTrHover,
+} from '../layout/instructorCommandTokens'
+
+/**
+ * @param {{
+ *   title: string
+ *   description: string
+ *   icon?: import('lucide-react').LucideIcon
+ * }} props
+ */
+function EmptyStateMessage({ title, description, icon: Icon = Radio }) {
+  return (
+    <div className={icEmptyCell}>
+      <Icon className="mx-auto size-5 text-accent/50" strokeWidth={1.5} aria-hidden />
+      <p className={`${icEmptyTitle} mt-3`}>{title}</p>
+      <p className={icEmptyDesc}>{description}</p>
+    </div>
+  )
+}
 
 /**
  * @param {{
@@ -27,7 +49,9 @@ import {
  *   }[]
  *   loading?: boolean
  *   idle?: boolean
+ *   live?: boolean
  *   idleMessage?: string
+ *   idleHint?: string
  *   totalAmmo?: number
  *   minPassScore?: number
  *   isTimed?: boolean
@@ -39,42 +63,60 @@ export default function LiveOperatorsTable({
   rows,
   loading = false,
   idle = false,
+  live = false,
   idleMessage = 'Canlı oturum başlatıldığında sonuçlar burada görünür.',
+  idleHint = 'Drill seçin ve oturumu başlatın',
   totalAmmo = 0,
   minPassScore = 0,
   isTimed = false,
   targetTimeSec = null,
   hitsLabel = 'Vuruş',
 }) {
+  const isLive = live || (!idle && !loading)
+
   return (
     <CleanFade>
-      <div className={ctTableWrap}>
-        <table className={ctTable}>
+      {isLive ? (
+        <div className={icLiveStrip} role="status" aria-live="polite">
+          <span className={icLiveDot} aria-hidden />
+          Canlı oturum · operatör sonuçları akıyor
+        </div>
+      ) : null}
+
+      <div className={icTableWrap}>
+        <table className={icTable}>
           <thead>
             <tr>
-              <th className={ctTh}>Operatör</th>
-              <th className={ctTh}>{hitsLabel}</th>
-              <th className={ctTh}>Süre</th>
-              <th className={ctTh}>Durum</th>
+              <th className={icTh}>Operatör</th>
+              <th className={icTh}>{hitsLabel}</th>
+              <th className={icTh}>Süre</th>
+              <th className={icTh}>Durum</th>
             </tr>
           </thead>
           <tbody>
             {loading && rows.length === 0 ? (
               <tr>
-                <td colSpan={4} className={`${ctTd} py-10 text-center text-zinc-500`}>
-                  <Loader2 className="mx-auto size-5 animate-spin text-zinc-400" aria-hidden />
+                <td colSpan={4} className={`${icTd} p-0`}>
+                  <div className={icEmptyCell}>
+                    <Loader2 className="mx-auto size-5 animate-spin text-accent" aria-hidden />
+                    <p className={`${icEmptyTitle} mt-3`}>Sonuçlar senkronize ediliyor</p>
+                    <p className={icEmptyDesc}>Canlı feed bağlanıyor…</p>
+                  </div>
                 </td>
               </tr>
             ) : idle ? (
               <tr>
-                <td colSpan={4} className={`${ctTd} py-10 text-center text-zinc-500`}>
-                  {idleMessage}
+                <td colSpan={4} className={`${icTd} p-0`}>
+                  <EmptyStateMessage title={idleMessage} description={idleHint} />
                 </td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan={4} className={`${ctTd} py-10 text-center text-zinc-500`}>
-                  Operatör girişi bekleniyor…
+                <td colSpan={4} className={`${icTd} p-0`}>
+                  <EmptyStateMessage
+                    title="Operatör girişi bekleniyor"
+                    description="Grup üyeleri antrenman modülünden sonuç aktarabilir"
+                  />
                 </td>
               </tr>
             ) : (
@@ -91,22 +133,26 @@ export default function LiveOperatorsTable({
                 const passed = assessment.isPassed
                 const label = formatGroupTrainingStatusLabelInstructor(statusResult, passed)
                 const statusClass =
-                  passed ? ctStatusOk : statusResult === 'SÜRE İHLALİ' ? ctStatusWarn : ctStatusFail
+                  passed ? icStatusOk : statusResult === 'SÜRE İHLALİ' ? icStatusWarn : icStatusFail
 
                 return (
-                  <tr key={row.id} className={ctTrHover}>
-                    <td className={ctTd}>{row.operatorName}</td>
-                    <td className={`${ctTd} tabular-nums text-zinc-100`}>
+                  <tr key={row.id} className={icTrHover}>
+                    <td className={`${icTd} font-mono-technical text-[11px] uppercase text-app-text`}>
+                      {row.operatorName}
+                    </td>
+                    <td className={`${icTd} tabular-nums font-mono-technical text-[11px] text-app-text`}>
                       {row.hits}
                       {totalAmmo > 0 ? ` / ${totalAmmo}` : ''}
                     </td>
-                    <td className={`${ctTd} tabular-nums text-zinc-500`}>
+                    <td className={`${icTd} tabular-nums font-mono-technical text-[11px] text-app-text/55`}>
                       {row.time != null ? `${row.time}s` : '—'}
                       {isTimed && targetTimeSec != null && targetTimeSec > 0 ? (
-                        <span className="block text-[10px] text-zinc-600">hedef {targetTimeSec}s</span>
+                        <span className="block text-[9px] uppercase text-app-text/40">
+                          hedef {targetTimeSec}s
+                        </span>
                       ) : null}
                     </td>
-                    <td className={ctTd}>
+                    <td className={icTd}>
                       <span className={statusClass}>{label}</span>
                     </td>
                   </tr>

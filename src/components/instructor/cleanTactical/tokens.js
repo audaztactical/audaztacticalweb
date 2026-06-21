@@ -71,3 +71,39 @@ export const ctTh =
   'border-b border-zinc-800 px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-zinc-500'
 export const ctTd = 'border-b border-zinc-800/80 px-3 py-2.5 text-zinc-300'
 export const ctTrHover = 'transition-colors hover:bg-zinc-800/40'
+
+/**
+ * Köprü — Eğitmen Komuta kabuğu token'ları (kademeli geçiş).
+ * Mevcut ct* tanımları korunur; yeni ekranlar ic* alias'larını tercih eder.
+ */
+export {
+  SECTOR_ACCENT,
+  resolveSectorAccent,
+  icPage,
+  icHeaderEyebrow,
+  icHeaderTitle,
+  icHeaderSubtitle,
+  icNav,
+  icNavBtn,
+  icMainPanel,
+  icTableWrap,
+  icTable,
+  icTh,
+  icTd,
+  icTrHover,
+  icStatusOk,
+  icStatusWarn,
+  icStatusFail,
+  icEmptyCell,
+  icEmptyTitle,
+  icEmptyDesc,
+  icLiveStrip,
+  icLiveDot,
+  icLabel,
+  icHelperText,
+  icBtnPrimary,
+  icBtnGhost,
+  icMsgOk,
+  icMsgErr,
+  icCriteriaBox,
+} from '../layout/instructorCommandTokens'

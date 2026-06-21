@@ -17,14 +17,14 @@ import InstructorEgitimTab from '../components/instructor/tabs/InstructorEgitimT
 import InstructorAnalyticsTab from '../components/instructor/tabs/InstructorAnalyticsTab'
 import CleanFade from '../components/instructor/cleanTactical/CleanFade'
 import {
-  ctHeaderEyebrow,
-  ctHeaderSubtitle,
-  ctHeaderTitle,
-  ctMainPanel,
-  ctNav,
-  ctNavBtn,
-  ctPage,
-} from '../components/instructor/cleanTactical/tokens'
+  icHeaderEyebrow,
+  icHeaderSubtitle,
+  icHeaderTitle,
+  icMainPanel,
+  icNav,
+  icNavBtn,
+  icPage,
+} from '../components/instructor/layout/instructorCommandTokens'
 
 /** @typedef {import('../lib/firestoreInstructor').OperatorProfile} OperatorProfile */
 /** @typedef {import('../lib/firestoreGroups').TacticalGroup} TacticalGroup */
@@ -161,22 +161,22 @@ export default function InstructorDashboard() {
   ])
 
   return (
-    <div className={`${ctPage} min-w-0 overflow-x-hidden`}>
+    <div className={`${icPage} min-w-0 overflow-x-hidden`}>
       <CleanFade>
-        <header className="mb-8 border-b border-zinc-800 pb-6">
-          <p className={ctHeaderEyebrow}>Eğitmen komuta merkezi</p>
-          <h1 className={`${ctHeaderTitle} mt-2 flex items-center gap-3`}>
-            <GraduationCap className="size-7 text-zinc-400" strokeWidth={1.5} aria-hidden />
+        <header className="mb-8 border-b border-accent/15 pb-6">
+          <p className={icHeaderEyebrow}>Eğitmen komuta merkezi</p>
+          <h1 className={`${icHeaderTitle} mt-2 flex items-center gap-3`}>
+            <GraduationCap className="size-7 text-accent/80" strokeWidth={1.5} aria-hidden />
             Eğitmen Kontrol Paneli
           </h1>
-          <p className={ctHeaderSubtitle}>
+          <p className={icHeaderSubtitle}>
             Tek giriş noktası — grup yönetimi, canlı eğitim, operatör raporlama ve analitik · {instructorName}
           </p>
         </header>
       </CleanFade>
 
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-        <nav className={ctNav} aria-label="Eğitmen panel sekmeleri">
+        <nav className={icNav} aria-label="Eğitmen panel sekmeleri">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon
             const active = activeTab === item.id
@@ -185,17 +185,21 @@ export default function InstructorDashboard() {
                 key={item.id}
                 type="button"
                 onClick={() => setActiveTab(item.id)}
-                className={ctNavBtn(active)}
+                className={icNavBtn(active)}
                 aria-current={active ? 'page' : undefined}
               >
-                <Icon className="size-4 shrink-0 text-zinc-500" strokeWidth={1.5} aria-hidden />
+                <Icon
+                  className={`size-4 shrink-0 ${active ? 'text-accent' : 'text-app-text/45'}`}
+                  strokeWidth={1.5}
+                  aria-hidden
+                />
                 {item.label}
               </button>
             )
           })}
         </nav>
 
-        <main className={ctMainPanel}>
+        <main className={icMainPanel}>
           <CleanFade key={activeTab + (selectedCategory ?? '')}>{tabPanel}</CleanFade>
         </main>
       </div>

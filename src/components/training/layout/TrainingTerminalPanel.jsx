@@ -5,6 +5,7 @@ import TacticalPanel from '../../ui/TacticalPanel'
  *   title: string
  *   titleClassName?: string
  *   corners?: 'top' | 'bottom' | null
+ *   cornerClassName?: string
  *   panelClassName?: string
  *   bodyClassName?: string
  *   children: import('react').ReactNode
@@ -14,6 +15,7 @@ export default function TrainingTerminalPanel({
   title,
   titleClassName = 'text-accent/90',
   corners = 'top',
+  cornerClassName = 'border-accent/40',
   panelClassName = 'relative flex w-full min-w-0 flex-col overflow-hidden border-accent/20 bg-app-bg/95 p-0',
   bodyClassName = 'flex flex-1 flex-col space-y-4 p-4 sm:p-5',
   children,
@@ -22,14 +24,22 @@ export default function TrainingTerminalPanel({
     <TacticalPanel className={`w-full min-w-0 ${panelClassName}`.trim()}>
       {corners === 'top' ? (
         <>
-          <span className="pointer-events-none absolute left-2 top-2 z-10 h-4 w-4 border-l border-t border-accent/40" />
-          <span className="pointer-events-none absolute right-2 top-2 z-10 h-4 w-4 border-r border-t border-accent/40" />
+          <span
+            className={`pointer-events-none absolute left-2 top-2 z-10 h-4 w-4 border-l border-t ${cornerClassName}`}
+          />
+          <span
+            className={`pointer-events-none absolute right-2 top-2 z-10 h-4 w-4 border-r border-t ${cornerClassName}`}
+          />
         </>
       ) : null}
       {corners === 'bottom' ? (
         <>
-          <span className="pointer-events-none absolute bottom-2 left-2 z-10 h-4 w-4 border-b border-l border-accent/40" />
-          <span className="pointer-events-none absolute bottom-2 right-2 z-10 h-4 w-4 border-b border-r border-accent/40" />
+          <span
+            className={`pointer-events-none absolute bottom-2 left-2 z-10 h-4 w-4 border-b border-l ${cornerClassName}`}
+          />
+          <span
+            className={`pointer-events-none absolute bottom-2 right-2 z-10 h-4 w-4 border-b border-r ${cornerClassName}`}
+          />
         </>
       ) : null}
       <p

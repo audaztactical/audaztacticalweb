@@ -18,21 +18,25 @@ import {
   subscribeTrainingResults,
 } from '../../../lib/firestoreGroupTrainings'
 import { emitFirebaseError } from '../../../lib/firebaseErrorBus'
-import BentoCard from '../cleanTactical/BentoCard'
+import InstructorCommandPanel from '../layout/InstructorCommandPanel'
 import DrillQuickSelector from '../cleanTactical/DrillQuickSelector'
 import InstructorGroupSelect from '../cleanTactical/InstructorGroupSelect'
 import LiveOperatorsTable from '../cleanTactical/LiveOperatorsTable'
 import {
+  icBtnGhost,
+} from '../layout/instructorCommandTokens'
+import {
+  inputClass,
+  labelClass,
+} from '../../training/layout/trainingTerminalTokens'
+import {
   ctBentoGrid,
   ctBentoSpan5,
   ctBentoSpan7,
-  ctBtnGhost,
   ctBtnSecondary,
-  ctHelperText,
-  ctInput,
-  ctLabel,
-  ctMsgErr,
-  ctMsgOk,
+  icHelperText,
+  icMsgErr,
+  icMsgOk,
 } from '../cleanTactical/tokens'
 
 /** @typedef {import('../../../lib/firestoreGroups').TacticalGroup} TacticalGroup */
@@ -364,53 +368,55 @@ export default function InstructorAtisSectorPanel({
   }, [liveTrainingId])
 
   const newDrillForm = showNewDrillForm ? (
-    <div className="space-y-3 rounded-lg border border-zinc-800 bg-zinc-950/50 p-3">
-      <p className="text-xs font-medium text-zinc-400">Yeni drill — {resolvedLevel || '—'}</p>
+    <div className="space-y-3 rounded border border-amber-500/20 bg-black/35 p-3">
+      <p className="font-mono-technical text-[10px] uppercase text-amber-400/90">
+        Yeni drill — {resolvedLevel || '—'}
+      </p>
       <div className="space-y-1.5">
         <label className="block space-y-1.5" htmlFor="instructor-new-drill">
-          <span className={ctLabel}>Drill adı</span>
+          <span className={labelClass}>Drill adı</span>
           <input
             id="instructor-new-drill"
-            className={ctInput}
+            className={inputClass}
             value={newDrillName}
             onChange={(e) => setNewDrillName(e.target.value)}
             placeholder="Örn: VTAC Barricade Drill"
           />
         </label>
-        <p className={ctHelperText}>Standart formatta ve açık bir drill adı giriniz.</p>
+        <p className={icHelperText}>Standart formatta ve açık bir drill adı giriniz.</p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="block space-y-1.5">
-          <span className={ctLabel}>Mühimmat</span>
+          <span className={labelClass}>Mühimmat</span>
           <input
             type="number"
             min={1}
-            className={`${ctInput} tabular-nums`}
+            className={`${inputClass} tabular-nums`}
             value={newDrillAmmo}
             onChange={(e) => setNewDrillAmmo(e.target.value)}
           />
         </label>
         <label className="block space-y-1.5">
-          <span className={ctLabel}>Baraj</span>
+          <span className={labelClass}>Baraj</span>
           <input
             type="number"
             min={0}
-            className={`${ctInput} tabular-nums`}
+            className={`${inputClass} tabular-nums`}
             value={newDrillBaraj}
             onChange={(e) => setNewDrillBaraj(e.target.value)}
           />
         </label>
       </div>
-      <label className="flex items-center gap-2 text-sm text-zinc-400">
+      <label className="flex items-center gap-2 font-mono-technical text-[10px] uppercase text-app-text/60">
         <input
           type="checkbox"
-          className="size-4 rounded accent-zinc-300"
+          className="size-4 rounded accent-amber-400"
           checked={newDrillTimed}
           onChange={(e) => setNewDrillTimed(e.target.checked)}
         />
         Zamanlı
       </label>
-      {newDrillThresholdError ? <p className={ctMsgErr}>{newDrillThresholdError}</p> : null}
+      {newDrillThresholdError ? <p className={icMsgErr}>{newDrillThresholdError}</p> : null}
       <button
         type="button"
         disabled={librarySaving || !!newDrillThresholdError}
@@ -420,7 +426,7 @@ export default function InstructorAtisSectorPanel({
         Kütüphaneye kaydet
       </button>
       {libraryMsg ? (
-        <p className={libraryMsg.includes('kaydedildi') ? ctMsgOk : ctMsgErr}>{libraryMsg}</p>
+        <p className={libraryMsg.includes('kaydedildi') ? icMsgOk : icMsgErr}>{libraryMsg}</p>
       ) : null}
     </div>
   ) : null
@@ -446,10 +452,12 @@ export default function InstructorAtisSectorPanel({
 
       <div className={ctBentoGrid}>
         <div className={ctBentoSpan7}>
-          <BentoCard
+          <InstructorCommandPanel
             title="Drill kütüphanesi"
             description="Seviye ve drill seçin, ardından oturumu başlatın"
             icon={Library}
+            sector="atis"
+            corners="top"
             delay={0.05}
           >
             <DrillQuickSelector
@@ -488,11 +496,11 @@ export default function InstructorAtisSectorPanel({
               levelLabel={resolvedLevel}
               showNewDrillSlot={newDrillForm}
             />
-          </BentoCard>
+          </InstructorCommandPanel>
         </div>
 
         <div className={ctBentoSpan5}>
-          <BentoCard
+          <InstructorCommandPanel
             title="Canlı oturum"
             description={
               liveTrainingMeta
@@ -504,9 +512,11 @@ export default function InstructorAtisSectorPanel({
                 : 'Başlatılan oturumun operatör sonuçları'
             }
             icon={Radio}
+            sector="atis"
+            corners="bottom"
             action={
               liveTrainingId ? (
-                <button type="button" onClick={handleCompleteTraining} className={ctBtnGhost}>
+                <button type="button" onClick={handleCompleteTraining} className={icBtnGhost}>
                   Oturumu kapat
                 </button>
               ) : null
@@ -517,12 +527,13 @@ export default function InstructorAtisSectorPanel({
               rows={results}
               loading={resultsLoading}
               idle={!liveTrainingId}
+              live={Boolean(liveTrainingId)}
               totalAmmo={liveTrainingMeta?.totalAmmo ?? 0}
               minPassScore={liveTrainingMeta?.minPassScore ?? 0}
               isTimed={Boolean(liveTrainingMeta?.isTimed)}
               targetTimeSec={liveTrainingMeta?.targetTimeSec ?? null}
             />
-          </BentoCard>
+          </InstructorCommandPanel>
         </div>
       </div>
     </div>
