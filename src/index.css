@@ -2010,6 +2010,23 @@
   bottom: calc(var(--mobile-tab-bar-h) + var(--safe-bottom) + 0.75rem);
 }
 
+.feedback-floating-bubble {
+  right: calc(1rem + var(--safe-right, 0px));
+  bottom: calc(1.25rem + var(--safe-bottom, 0px));
+}
+
+.compact-shell .feedback-floating-bubble {
+  bottom: calc(var(--mobile-tab-bar-h) + var(--safe-bottom) + 0.75rem);
+}
+
+.feedback-toast-anchor {
+  bottom: calc(1.25rem + var(--safe-bottom, 0px));
+}
+
+.compact-shell .feedback-toast-anchor {
+  bottom: calc(var(--mobile-tab-bar-h) + var(--safe-bottom) + 4.5rem);
+}
+
 /* BentoCard + dokunma — telefon / tablet + Capacitor native */
 .compact-shell .grid[class*='lg:grid-cols-12'] > [class*='lg:col-span'],
 .native-app .grid[class*='lg:grid-cols-12'] > [class*='lg:col-span'] {

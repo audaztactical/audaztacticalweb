@@ -9,6 +9,7 @@ import {
   Landmark,
   LogOut,
   MessageSquare,
+  MessageSquarePlus,
   Globe,
   MessagesSquare,
   PlayCircle,
@@ -19,6 +20,7 @@ import {
   User,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
+import { useFeedbackPanelOptional } from '../../context/FeedbackPanelContext'
 import { useMuhabereNotify } from '../../context/MuhabereNotifyContext'
 import { auth } from '../../lib/firebase'
 import { scheduleScrollAppToTop } from '../../lib/scrollAppToTop'
@@ -173,6 +175,7 @@ export default function Sidebar({
 }) {
   const { isInstructor, role, showAdminPanel, isAdmin } = useAuth()
   const { sidebarMuhabereBadgeCount } = useMuhabereNotify()
+  const feedbackPanel = useFeedbackPanelOptional()
   const showAdminLink = showAdminPanel || isAdmin
 
   const groups = useMemo(() => {
@@ -246,6 +249,23 @@ export default function Sidebar({
               </NavLink>
             </li>
           ) : null}
+          <li>
+            <button
+              type="button"
+              onClick={() => {
+                feedbackPanel?.openPanel()
+                onNavigate?.()
+              }}
+              className={[linkBaseClass, 'group w-full text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200'].join(' ')}
+            >
+              <MessageSquarePlus
+                className="size-[20px] shrink-0 text-zinc-500 transition-colors group-hover:text-lime-400"
+                strokeWidth={1.75}
+                aria-hidden
+              />
+              <span className="font-mono text-[12px] tracking-wide">Şikayet & Öneri</span>
+            </button>
+          </li>
           <li>
             <NavLink
               to="/ayarlar"

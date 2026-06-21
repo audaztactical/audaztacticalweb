@@ -6,7 +6,17 @@ import { safeOnSnapshot } from './firestoreSnapshot'
 /** @readonly */
 export const FEEDBACK_ISSUE_TYPES = /** @type {const} */ (['Hata', 'Öneri', 'Bug'])
 
+/** @readonly */
+export const OPERATOR_FEEDBACK_TYPES = /** @type {const} */ (['complaint', 'suggestion'])
+
+/** @type {Record<(typeof OPERATOR_FEEDBACK_TYPES)[number], string>} */
+export const OPERATOR_FEEDBACK_TYPE_LABELS = {
+  complaint: 'Şikayet',
+  suggestion: 'Öneri',
+}
+
 /** @typedef {(typeof FEEDBACK_ISSUE_TYPES)[number]} FeedbackIssueType */
+/** @typedef {(typeof OPERATOR_FEEDBACK_TYPES)[number]} OperatorFeedbackType */
 
 /** @typedef {{
  *   id: string
@@ -18,6 +28,20 @@ export const FEEDBACK_ISSUE_TYPES = /** @type {const} */ (['Hata', 'Öneri', 'Bu
  *   callsign: string
  *   createdAt: import('firebase/firestore').Timestamp | null
  * }} FeedbackRecord */
+
+/** @typedef {{
+ *   id: string
+ *   type: OperatorFeedbackType
+ *   fullName: string
+ *   subject: string
+ *   message: string
+ *   imageUrls: string[]
+ *   userId: string
+ *   userEmail: string
+ *   callsign: string
+ *   status: string
+ *   createdAt: import('firebase/firestore').Timestamp | null
+ * }} OperatorFeedbackRecord */
 
 function assertDb() {
   if (!isFirebaseConfigured() || !db) {
@@ -100,6 +124,112 @@ export async function submitFeedback({
 
   const ref = await addDoc(collection(db, 'feedback'), payload)
   return ref.id
+}
+
+/**
+ * Şikayet & öneri — yeni şema (type / fullName / subject / message / imageUrls).
+ * @param {{
+ *   type: OperatorFeedbackType
+ *   fullName: string
+ *   subject: string
+ *   message: string
+ *   imageUrls?: string[]
+ *   userId: string
+ *   userEmail?: string
+ *   callsign?: string
+ * }} input
+ * @returns {Promise<string>} feedbackId
+ */
+export async function submitOperatorFeedback({
+  type,
+  fullName,
+  subject,
+  message,
+  imageUrls = [],
+  userId,
+  userEmail = '',
+  callsign = '',
+}) {
+  assertDb()
+
+  const uid = String(userId ?? '').trim()
+  const name = String(fullName ?? '').trim()
+  const subj = String(subject ?? '').trim()
+  const body = String(message ?? '').trim()
+  const urls = Array.isArray(imageUrls)
+    ? imageUrls.map((u) => String(u ?? '').trim()).filter(Boolean).slice(0, 5)
+    : []
+
+  if (!uid) {
+    const e = new Error('Oturum gerekli')
+    e.code = 'unauthenticated'
+    throw e
+  }
+  if (!OPERATOR_FEEDBACK_TYPES.includes(type)) {
+    const e = new Error('Geçersiz bildirim türü')
+    e.code = 'invalid-argument'
+    throw e
+  }
+  if (!name || name.length > 120) {
+    const e = new Error('Ad soyad 1–120 karakter olmalı')
+    e.code = 'invalid-argument'
+    throw e
+  }
+  if (!subj || subj.length > 200) {
+    const e = new Error('Konu başlığı 1–200 karakter olmalı')
+    e.code = 'invalid-argument'
+    throw e
+  }
+  if (!body || body.length > 4000) {
+    const e = new Error('Mesaj 1–4000 karakter olmalı')
+    e.code = 'invalid-argument'
+    throw e
+  }
+
+  const payload = prepareAudazWritePayload({
+    type,
+    fullName: name,
+    subject: subj,
+    message: body,
+    imageUrls: urls,
+    userId: uid,
+    userEmail: String(userEmail ?? auth?.currentUser?.email ?? '').trim(),
+    callsign: String(callsign ?? '').trim(),
+    status: 'new',
+    createdAt: serverTimestamp(),
+  })
+
+  const ref = await addDoc(collection(db, 'feedback'), payload)
+  return ref.id
+}
+
+/**
+ * @param {import('firebase/firestore').DocumentData} data
+ * @param {string} id
+ * @returns {OperatorFeedbackRecord | null}
+ */
+export function mapOperatorFeedbackDoc(data, id) {
+  const type = String(data.type ?? '')
+  if (!OPERATOR_FEEDBACK_TYPES.includes(/** @type {OperatorFeedbackType} */ (type))) return null
+
+  const rawUrls = data.imageUrls
+  const imageUrls = Array.isArray(rawUrls)
+    ? rawUrls.map((u) => String(u ?? '').trim()).filter(Boolean)
+    : []
+
+  return {
+    id,
+    type: /** @type {OperatorFeedbackType} */ (type),
+    fullName: String(data.fullName ?? ''),
+    subject: String(data.subject ?? ''),
+    message: String(data.message ?? ''),
+    imageUrls,
+    userId: String(data.userId ?? ''),
+    userEmail: String(data.userEmail ?? ''),
+    callsign: String(data.callsign ?? ''),
+    status: String(data.status ?? 'new'),
+    createdAt: data.createdAt ?? null,
+  }
 }
 
 /**

@@ -853,20 +853,39 @@ service cloud.firestore {
     }
 
     /**
-     * feedback — operatör geri bildirimleri (hata / öneri / bug).
+     * feedback — operatör geri bildirimleri (hata / öneri / bug + şikayet & öneri).
      */
     match /feedback/{feedbackId} {
       allow create: if isSignedIn()
         && request.resource.data.userId == request.auth.uid
-        && request.resource.data.issueType in ['Hata', 'Öneri', 'Bug']
-        && request.resource.data.description is string
-        && request.resource.data.description.size() > 0
-        && request.resource.data.description.size() <= 4000
         && (
-          !('screenshotURL' in request.resource.data)
+          (
+            request.resource.data.issueType in ['Hata', 'Öneri', 'Bug']
+            && request.resource.data.description is string
+            && request.resource.data.description.size() > 0
+            && request.resource.data.description.size() <= 4000
+            && (
+              !('screenshotURL' in request.resource.data)
+              || (
+                request.resource.data.screenshotURL is string
+                && request.resource.data.screenshotURL.size() <= 2048
+              )
+            )
+          )
           || (
-            request.resource.data.screenshotURL is string
-            && request.resource.data.screenshotURL.size() <= 2048
+            request.resource.data.type in ['complaint', 'suggestion']
+            && request.resource.data.fullName is string
+            && request.resource.data.fullName.size() > 0
+            && request.resource.data.fullName.size() <= 120
+            && request.resource.data.subject is string
+            && request.resource.data.subject.size() > 0
+            && request.resource.data.subject.size() <= 200
+            && request.resource.data.message is string
+            && request.resource.data.message.size() > 0
+            && request.resource.data.message.size() <= 4000
+            && request.resource.data.status == 'new'
+            && request.resource.data.imageUrls is list
+            && request.resource.data.imageUrls.size() <= 5
           )
         );
       allow read, list: if isContentAdmin();

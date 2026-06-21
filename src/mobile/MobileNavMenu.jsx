@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
-import { KeyRound, LogOut, Settings, ShieldAlert, X } from 'lucide-react'
+import { KeyRound, LogOut, MessageSquarePlus, Settings, ShieldAlert, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { useFeedbackPanelOptional } from '../context/FeedbackPanelContext'
 import { useMuhabereNotify } from '../context/MuhabereNotifyContext'
 import { auth } from '../lib/firebase'
 import { scheduleScrollAppToTop } from '../lib/scrollAppToTop'
@@ -27,6 +28,7 @@ export default function MobileNavMenu({
 }) {
   const { isInstructor, role, showAdminPanel, isAdmin } = useAuth()
   const { sidebarMuhabereBadgeCount } = useMuhabereNotify()
+  const feedbackPanel = useFeedbackPanelOptional()
   const showAdminLink = showAdminPanel || isAdmin
   const isInstructorUser = role === 'instructor' || isInstructor
 
@@ -124,6 +126,20 @@ export default function MobileNavMenu({
                 </NavLink>
               </li>
             ) : null}
+            <li>
+              <button
+                type="button"
+                onClick={() => {
+                  feedbackPanel?.openPanel()
+                  scheduleScrollAppToTop()
+                  onClose()
+                }}
+                className="flex min-h-[44px] w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-zinc-400 transition hover:bg-zinc-800/40 hover:text-zinc-200"
+              >
+                <MessageSquarePlus className="size-5 shrink-0" strokeWidth={1.75} aria-hidden />
+                <span className="font-mono text-[12px]">Şikayet & Öneri</span>
+              </button>
+            </li>
             <li>
               <NavLink
                 to="/ayarlar"

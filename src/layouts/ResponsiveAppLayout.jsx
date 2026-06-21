@@ -3,6 +3,10 @@ import { Capacitor } from '@capacitor/core'
 import { useCompactShell } from '../hooks/useCompactShell'
 import MainLayout from './MainLayout'
 import MobileLayout from '../mobile/MobileLayout'
+import { FeedbackPanelProvider } from '../context/FeedbackPanelContext'
+import FeedbackBubble from '../components/feedback/FeedbackBubble'
+import FeedbackPanelModal from '../components/feedback/FeedbackPanelModal'
+import FeedbackToast from '../components/feedback/FeedbackToast'
 
 /** Telefon / tablet tarayıcı + Capacitor — alt sekme çubuğu kabuğu; masaüstünde sidebar. */
 export default function ResponsiveAppLayout() {
@@ -20,5 +24,12 @@ export default function ResponsiveAppLayout() {
     }
   }, [compact, native])
 
-  return compact ? <MobileLayout /> : <MainLayout />
+  return (
+    <FeedbackPanelProvider>
+      {compact ? <MobileLayout /> : <MainLayout />}
+      <FeedbackBubble />
+      <FeedbackPanelModal />
+      <FeedbackToast />
+    </FeedbackPanelProvider>
+  )
 }
