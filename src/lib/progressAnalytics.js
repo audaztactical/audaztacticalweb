@@ -13,6 +13,11 @@ import {
   reactionEfficiencyPercent,
 } from './simulationHistoryHelpers'
 import { isTcccSimulationFailed } from './tcccSimHudAnalytics'
+import {
+  isObservedEvalLog,
+  isUnverifiedObservedEval,
+  getObservedEvalActivityTitle,
+} from './observedEvalRegistry'
 
 const CQB_CRITICAL_ERROR_IDS = new Set(['fatal_funnel_hang', 'muzzle_flagging'])
 
@@ -302,6 +307,10 @@ export function evaluateCategoryLogSuccess(row, category) {
  * @returns {'ATIS' | 'CQB' | 'TCCC' | 'FOF' | 'VBSS' | 'OTHER'}
  */
 export function getLogDisciplineTag(row) {
+  if (isObservedEvalLog(row)) {
+    if (String(row?.operationCategory ?? '').toLowerCase() === 'tccc') return 'TCCC'
+    if (String(row?.operationCategory ?? '').toLowerCase() === 'vbss') return 'VBSS'
+  }
   if (isTcccSimulationLog(row) || isTcccLog(row)) return 'TCCC'
   if (isAtisProgressLog(row)) return 'ATIS'
   if (isCqbProgressLog(row)) return 'CQB'
@@ -505,6 +514,7 @@ export function countLogCriticalErrors(row) {
  * @param {Record<string, unknown>} row
  */
 export function getLogActivityTitle(row) {
+  if (isObservedEvalLog(row)) return getObservedEvalActivityTitle(row)
   const tag = getLogDisciplineTag(row)
   const drill = invStr(row.drillName ?? row.shootType).trim()
   if (drill) return drill
@@ -803,9 +813,9 @@ function matchesDiscipline(row, discipline) {
   if (discipline === 'all') return true
   if (discipline === 'atis') return isAtisProgressLog(row)
   if (discipline === 'cqb') return isCqbProgressLog(row)
-  if (discipline === 'tccc') return isTcccLog(row) || isTcccSimulationLog(row)
+  if (discipline === 'tccc') return isTcccLog(row) || isTcccSimulationLog(row) || (isObservedEvalLog(row) && String(row?.operationCategory ?? '').toLowerCase() === 'tccc')
   if (discipline === 'fof') return isFofProgressLog(row)
-  if (discipline === 'vbss') return isVbssLog(row)
+  if (discipline === 'vbss') return isVbssLog(row) || (isObservedEvalLog(row) && String(row?.operationCategory ?? '').toLowerCase() === 'vbss')
   return false
 }
 
@@ -924,6 +934,7 @@ export function buildActivityFeed(logs, limit = 24) {
       title: getLogActivityTitle(row),
       timestampMs: getProgressLogTimestampMs(row),
       success: getLogSuccessOrAccuracy(row),
+      unverified: isUnverifiedObservedEval(row),
     }))
 }
 
@@ -959,6 +970,7 @@ export function aggregateRangeLogMetrics(logs, opts = {}) {
   let totalCriticalErrors = 0
 
   for (const row of recent) {
+    if (isObservedEvalLog(row)) continue
     const tag = getLogDisciplineTag(row)
     totalCriticalErrors += countLogCriticalErrors(row)
 

@@ -20,6 +20,7 @@ import { useStorage } from '../hooks/useStorage'
 import { auth } from '../lib/firebase'
 import { buildSystemLogEntries } from '../lib/dashboardHudData'
 import { computeORS } from '../lib/orsEngine'
+import { filterObservedEvalLogs } from '../lib/observedEvalRegistry'
 import { updateUserBloodType, updateUserCallsign, updateUserAvatarUrl, createOperatorProfile, repairPendingOperatorProfile, normalizeUsername } from '../lib/firestoreUsers'
 import { readPendingOperatorProfile } from '../lib/pendingOperatorProfile'
 import { userStoragePath } from '../services/storageService'
@@ -269,6 +270,13 @@ export default function Profile() {
   const inv = useAudazData('inventory')
   const h = useAudazData('health_records')
   const rangeLogs = useAudazData('range_logs')
+  const vbssLogs = useAudazData('vbss_logs')
+  const tcccLogs = useAudazData('tccc_logs')
+
+  const observedEvalLogs = useMemo(
+    () => filterObservedEvalLogs([...vbssLogs.items, ...tcccLogs.items]),
+    [vbssLogs.items, tcccLogs.items],
+  )
 
   const [orsClock, setOrsClock] = useState(0)
   useEffect(() => {
@@ -278,12 +286,13 @@ export default function Profile() {
 
   const orsResult = useMemo(() => {
     void orsClock
-    if (!m.ready || !t.ready || !inv.ready || !h.ready || !rangeLogs.ready) return null
+    if (!m.ready || !t.ready || !inv.ready || !h.ready || !rangeLogs.ready || !vbssLogs.ready || !tcccLogs.ready) return null
     return computeORS({
       inventory: inv.items,
       trainings: t.items,
       health: h.items,
       rangeLogs: rangeLogs.items,
+      observedEvalLogs,
       nowMs: Date.now(),
     })
   }, [
@@ -292,11 +301,14 @@ export default function Profile() {
     inv.ready,
     h.ready,
     rangeLogs.ready,
+    vbssLogs.ready,
+    tcccLogs.ready,
     m.items,
     t.items,
     inv.items,
     h.items,
     rangeLogs.items,
+    observedEvalLogs,
     orsClock,
   ])
 

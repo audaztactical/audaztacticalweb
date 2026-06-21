@@ -77,6 +77,7 @@ function TrainingInner() {
     ready: vbssLogsReady,
     loading: vbssLogsLoading,
     listenError: vbssLogsListenError,
+    addItem: addVbssLog,
   } = useAudazData('vbss_logs')
 
   const {
@@ -84,6 +85,7 @@ function TrainingInner() {
     ready: tcccLogsReady,
     loading: tcccLogsLoading,
     listenError: tcccLogsListenError,
+    addItem: addTcccLog,
   } = useAudazData('tccc_logs')
 
   const { wrapRangeLogPayload, wrapTrainingPayload } = useTrainingSession()
@@ -294,6 +296,7 @@ function TrainingInner() {
             logsLoading={vbssLogsLoading}
             logsReady={vbssLogsReady}
             logsListenError={vbssLogsListenError}
+            addLog={addVbssLog}
           />
         ) : showTccc ? (
           <TcccTerminal
@@ -302,6 +305,7 @@ function TrainingInner() {
             logsLoading={tcccLogsLoading}
             logsReady={tcccLogsReady}
             logsListenError={tcccLogsListenError}
+            addLog={addTcccLog}
           />
         ) : showEgitim ? (
           <EgitimTerminal

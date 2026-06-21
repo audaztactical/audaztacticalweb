@@ -12,6 +12,7 @@ import { useMuhabereNotify } from '../context/MuhabereNotifyContext'
 import { useAudazData } from '../hooks/useAudazData'
 import { buildSystemLogEntries } from '../lib/dashboardHudData'
 import { computeORS } from '../lib/orsEngine'
+import { filterObservedEvalLogs } from '../lib/observedEvalRegistry'
 
 /** @param {string | undefined} status */
 function statusLooksComplete(status) {
@@ -63,6 +64,8 @@ export default function Dashboard() {
   const t = useAudazData('trainings')
   const inv = useAudazData('inventory')
   const rangeLogs = useAudazData('range_logs')
+  const vbssLogs = useAudazData('vbss_logs')
+  const tcccLogs = useAudazData('tccc_logs')
   const h = useAudazData('health_records')
 
   const [sessionOpenedMs] = useState(() => Date.now())
@@ -74,7 +77,13 @@ export default function Dashboard() {
   }, [])
 
   const anyErr = Boolean(m.listenError || t.listenError || inv.listenError || h.listenError)
-  const orsLoading = !m.ready || !t.ready || !inv.ready || !h.ready || !rangeLogs.ready
+  const orsLoading =
+    !m.ready || !t.ready || !inv.ready || !h.ready || !rangeLogs.ready || !vbssLogs.ready || !tcccLogs.ready
+
+  const observedEvalLogs = useMemo(
+    () => filterObservedEvalLogs([...vbssLogs.items, ...tcccLogs.items]),
+    [vbssLogs.items, tcccLogs.items],
+  )
 
   const activeMissions = useMemo(
     () => m.items.filter((row) => !statusLooksComplete(/** @type {string} */ (row.status))),
@@ -115,6 +124,7 @@ export default function Dashboard() {
       trainings: t.items,
       health: h.items,
       rangeLogs: rangeLogs.items,
+      observedEvalLogs,
       nowMs: Date.now(),
     })
   }, [
@@ -123,6 +133,7 @@ export default function Dashboard() {
     inv.items,
     h.items,
     rangeLogs.items,
+    observedEvalLogs,
     orsClock,
   ])
 

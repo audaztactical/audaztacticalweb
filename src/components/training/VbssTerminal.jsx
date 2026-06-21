@@ -19,10 +19,12 @@ import { subscribeOperatorVbssEvaluations } from '../../lib/firestoreVbssEvaluat
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
 import { VBSS_EVALUATION_PHASES } from '../../lib/vbssEvaluationPayload'
 import { useOperatorGroup } from '../../hooks/useOperatorGroup'
-import TrainingSessionHeader from './TrainingSessionHeader'
-import VbssLogRegistry from './VbssLogRegistry'
+import IndividualTrainingSessionHeader from './IndividualTrainingSessionHeader'
+import VbssObservedEvalForm from './VbssObservedEvalForm'
+import VbssObservedEvalRegistry from './VbssObservedEvalRegistry'
+import VbssObservedPdfPanel from './VbssObservedPdfPanel'
 
-/** @typedef {'hud' | 'registry'} VbssViewMode */
+/** @typedef {'hud' | 'pdf' | 'entry' | 'observed'} VbssViewMode */
 
 /** @typedef {import('../../lib/firestoreVbssEvaluations').VbssEvaluation} VbssEvaluation */
 /** @typedef {import('../../lib/vbssEvaluationPayload').VbssPhaseId} VbssPhaseId */
@@ -75,6 +77,7 @@ function getPhaseObservation(evaluation, phaseId) {
  *   logsLoading?: boolean
  *   logsReady?: boolean
  *   logsListenError?: Error | null
+ *   addLog?: (payload: Record<string, unknown>) => Promise<{ id: string }>
  * }} props
  */
 export default function VbssTerminal({
@@ -85,6 +88,7 @@ export default function VbssTerminal({
   logsLoading = false,
   logsReady = true,
   logsListenError = null,
+  addLog,
 }) {
   const { user } = useAuth()
   const uid = user?.uid ?? ''
@@ -167,25 +171,25 @@ export default function VbssTerminal({
 
   const combinedError = listenError?.message ?? syncError
 
-  const tabBtnClass = (active) =>
-    `flex-1 rounded border py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider transition sm:flex-none sm:px-5 ${
-      active
-        ? 'border-accent/60 bg-accent/15 text-accent shadow-[0_0_24px_-8px_color-mix(in_srgb,var(--accent-color)_35%,transparent)]]'
-        : 'border-white/15 text-app-text/55 hover:border-accent/35 hover:text-app-text/90'
-    }`
-
   if (!ready) {
     return (
       <div className="space-y-4">
-        <TrainingSessionHeader />
+        <IndividualTrainingSessionHeader />
         <p className="font-mono-technical text-[10px] uppercase text-zinc-500">Oturum gerekli</p>
       </div>
     )
   }
 
+  const tabBtnClassCompact = (active) =>
+    `rounded border px-2 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-wider transition sm:px-3 sm:text-[9px] ${
+      active
+        ? 'border-accent/60 bg-accent/15 text-accent'
+        : 'border-white/15 text-app-text/55 hover:border-accent/35 hover:text-app-text/90'
+    }`
+
   return (
     <div className="space-y-5">
-      <TrainingSessionHeader />
+      <IndividualTrainingSessionHeader />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <button type="button" onClick={onBack} className={ctBackBtn}>
@@ -194,27 +198,21 @@ export default function VbssTerminal({
         </button>
 
         <div
-          className="flex w-full gap-2 rounded border border-accent/25 bg-black/60 p-1 sm:w-auto"
+          className="flex w-full flex-wrap gap-1.5 rounded border border-accent/25 bg-black/60 p-1 sm:w-auto"
           role="tablist"
           aria-label="VBSS terminal görünümü"
         >
-          <button
-            type="button"
-            role="tab"
-            aria-selected={viewMode === 'hud'}
-            onClick={() => setViewMode('hud')}
-            className={tabBtnClass(viewMode === 'hud')}
-          >
+          <button type="button" role="tab" aria-selected={viewMode === 'hud'} onClick={() => setViewMode('hud')} className={tabBtnClassCompact(viewMode === 'hud')}>
             CANLI HUD
           </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={viewMode === 'registry'}
-            onClick={() => setViewMode('registry')}
-            className={tabBtnClass(viewMode === 'registry')}
-          >
-            KAYITLAR
+          <button type="button" role="tab" aria-selected={viewMode === 'pdf'} onClick={() => setViewMode('pdf')} className={tabBtnClassCompact(viewMode === 'pdf')}>
+            PDF FORMU
+          </button>
+          <button type="button" role="tab" aria-selected={viewMode === 'entry'} onClick={() => setViewMode('entry')} className={tabBtnClassCompact(viewMode === 'entry')}>
+            KAYIT GİR
+          </button>
+          <button type="button" role="tab" aria-selected={viewMode === 'observed'} onClick={() => setViewMode('observed')} className={tabBtnClassCompact(viewMode === 'observed')}>
+            KAYITLARIM
           </button>
         </div>
 
@@ -226,14 +224,22 @@ export default function VbssTerminal({
         ) : null}
       </div>
 
-      {viewMode === 'registry' ? (
+      {viewMode === 'pdf' ? (
+        <VbssObservedPdfPanel />
+      ) : viewMode === 'entry' ? (
+        addLog ? (
+          <VbssObservedEvalForm addLog={addLog} hidePdfBanner onSubmitted={() => setViewMode('observed')} />
+        ) : (
+          <p className={ctMsgErr}>Kayıt kanalı hazır değil.</p>
+        )
+      ) : viewMode === 'observed' ? (
         <>
           {!logsReady ? (
             <p className="font-mono-technical text-[10px] uppercase text-app-text/55">KAYIT_KANALI_SENKRON…</p>
           ) : logsListenError ? (
             <p className={ctMsgErr}>Kayıt kanalı kesildi · {logsListenError.message}</p>
           ) : null}
-          <VbssLogRegistry logs={logs} loading={logsLoading} />
+          <VbssObservedEvalRegistry logs={logs} loading={logsLoading} />
         </>
       ) : (
         <>

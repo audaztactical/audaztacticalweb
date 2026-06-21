@@ -22,6 +22,7 @@ import { useAudazData } from '../hooks/useAudazData'
 import { db, isFirebaseConfigured } from '../lib/firebase'
 import { emitFirebaseError } from '../lib/firebaseErrorBus'
 import { computeORS } from '../lib/orsEngine'
+import { filterObservedEvalLogs } from '../lib/observedEvalRegistry'
 import {
   DISCIPLINE_OPTIONS,
   buildActivityFeed,
@@ -250,7 +251,7 @@ function KpiCard({ label, value, sub, accent = 'emerald', progress, animate = fa
 /** @typedef {typeof EXPANDED_HUD_PANEL_IDS[number]} ExpandedHudPanelId */
 
 /**
- * @param {{ feed: { id: string; tag: string; title: string; timestampMs: number; success: number | null }[] }} props
+ * @param {{ feed: { id: string; tag: string; title: string; timestampMs: number; success: number | null; unverified?: boolean }[] }} props
  */
 function ActivityFeedPanel({ feed, selectedLogId = null, onSelectLog }) {
   if (feed.length === 0) {
@@ -283,6 +284,7 @@ function ActivityFeedPanel({ feed, selectedLogId = null, onSelectLog }) {
             onClick={() => onSelectLog?.(item.id)}
             className={[
               'flex w-full cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors',
+              item.unverified ? 'opacity-60' : '',
               selected
                 ? 'border-amber-500/55 bg-amber-950/25 shadow-[0_0_16px_rgba(245,158,11,0.12)]'
                 : 'border-slate-800 bg-slate-900/40 hover:border-slate-700 hover:bg-slate-900/50',
@@ -295,6 +297,11 @@ function ActivityFeedPanel({ feed, selectedLogId = null, onSelectLog }) {
             <div className="min-w-0 flex-1">
               <p className="truncate font-mono text-[11px] font-bold uppercase text-app-text">{item.title}</p>
               <p className="mt-0.5 font-mono text-[9px] text-app-text/55">{when}</p>
+              {item.unverified ? (
+                <p className="mt-1 font-mono text-[8px] font-bold uppercase tracking-wider text-amber-500/85">
+                  Gözlem · Doğrulanmadı
+                </p>
+              ) : null}
             </div>
             {item.success != null ? (
               <span
@@ -351,6 +358,8 @@ export default function ProgressTracker({ onBack }) {
   const inv = useAudazData('inventory')
   const trainings = useAudazData('trainings')
   const health = useAudazData('health_records')
+  const vbssLogs = useAudazData('vbss_logs')
+  const tcccLogs = useAudazData('tccc_logs')
 
   const [discipline, setDiscipline] = useState(/** @type {DisciplineFilter} */ ('all'))
   const [subTopic, setSubTopic] = useState('all')
@@ -450,6 +459,21 @@ export default function ProgressTracker({ onBack }) {
     [logs, discipline, subTopic, timeframe, subTopics]
   )
 
+  const observedEvalLogs = useMemo(
+    () => filterObservedEvalLogs([...vbssLogs.items, ...tcccLogs.items]),
+    [vbssLogs.items, tcccLogs.items],
+  )
+
+  const filteredObservedEvalLogs = useMemo(
+    () => filterProgressLogs(observedEvalLogs, { discipline, subTopic, timeframe }, subTopics),
+    [observedEvalLogs, discipline, subTopic, timeframe, subTopics],
+  )
+
+  const activitySourceLogs = useMemo(
+    () => [...filteredLogs, ...filteredObservedEvalLogs],
+    [filteredLogs, filteredObservedEvalLogs],
+  )
+
   const focusedLog = useMemo(() => {
     if (!focusedLogId) return null
     return filteredLogs.find((row) => resolveLogFocusId(row) === focusedLogId) ?? null
@@ -493,7 +517,7 @@ export default function ProgressTracker({ onBack }) {
     }))
   }, [displayTrendSeries, filteredLogs])
 
-  const activityFeed = useMemo(() => buildActivityFeed(filteredLogs, 24), [filteredLogs])
+  const activityFeed = useMemo(() => buildActivityFeed(activitySourceLogs, 24), [activitySourceLogs])
 
   const hudRadarLogs = useMemo(
     () => (focusedLog ? [focusedLog] : filteredLogs),
@@ -508,9 +532,10 @@ export default function ProgressTracker({ onBack }) {
       trainings: trainings.items,
       health: health.items,
       rangeLogs: logs,
+      observedEvalLogs,
       nowMs: Date.now(),
     })
-  }, [orsReady, inv.items, trainings.items, health.items, logs])
+  }, [orsReady, inv.items, trainings.items, health.items, logs, observedEvalLogs])
 
   const tcccOrsPenaltyActive = useMemo(
     () =>

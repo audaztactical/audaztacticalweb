@@ -270,8 +270,51 @@ service cloud.firestore {
       allow read, write: if canAccessOperatorData(userId);
     }
 
+    function validVbssObservedEvalCreate() {
+      let d = request.resource.data;
+      return d.kind == 'VBSS_OBSERVED_EVAL'
+        && d.type == 'observed_evaluation'
+        && d.userId == request.auth.uid
+        && d.recordSource == 'self_entry'
+        && d.verificationStatus == 'unverified'
+        && d.observationMethod == 'peer_observed'
+        && d.observerName is string
+        && d.observerName.size() > 0
+        && d.observedAt is string
+        && d.observedAt.size() > 0
+        && d.overallScore is number
+        && d.successPercent is number
+        && d.trainingType == 'INDIVIDUAL'
+        && d.operationCategory == 'vbss'
+        && d.discipline == 'vbss';
+    }
+
+    function validTcccObservedEvalCreate() {
+      let d = request.resource.data;
+      return d.kind == 'TCCC_OBSERVED_EVAL'
+        && d.type == 'observed_evaluation'
+        && d.userId == request.auth.uid
+        && d.recordSource == 'self_entry'
+        && d.verificationStatus == 'unverified'
+        && d.observationMethod == 'peer_observed'
+        && d.observerName is string
+        && d.observerName.size() > 0
+        && d.observedAt is string
+        && d.observedAt.size() > 0
+        && d.overallScore is number
+        && d.successPercent is number
+        && d.trainingType == 'INDIVIDUAL'
+        && d.operationCategory == 'tccc'
+        && d.discipline == 'tccc';
+    }
+
     match /vbss_logs/{userId}/entries/{entryId} {
-      allow read, write: if canAccessOperatorData(userId);
+      allow read: if canAccessOperatorData(userId);
+      allow create: if isOwnerUid(userId) && (
+        request.resource.data.get('kind', '') != 'VBSS_OBSERVED_EVAL'
+        || validVbssObservedEvalCreate()
+      );
+      allow update, delete: if canAccessOperatorData(userId);
     }
 
     match /tccc_logs/{userId} {
@@ -279,7 +322,12 @@ service cloud.firestore {
     }
 
     match /tccc_logs/{userId}/entries/{entryId} {
-      allow read, write: if canAccessOperatorData(userId);
+      allow read: if canAccessOperatorData(userId);
+      allow create: if isOwnerUid(userId) && (
+        request.resource.data.get('kind', '') != 'TCCC_OBSERVED_EVAL'
+        || validTcccObservedEvalCreate()
+      );
+      allow update, delete: if canAccessOperatorData(userId);
     }
 
     match /armory_audit_trail/{userId} {

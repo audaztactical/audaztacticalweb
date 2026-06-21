@@ -6,6 +6,7 @@ import { getFofLogTimestampMs } from './fofLogRegistry'
 import { getTcccLogTimestampMs } from './tcccLogRegistry'
 import { getVbssLogTimestampMs } from './vbssLogRegistry'
 import { summarizeSpeedAndSafetyPenalties } from './progressHudAnalytics.js'
+import { isObservedEvalLog, observedEvalTimestampMs } from './observedEvalRegistry.js'
 
 /** Mühimmat / ammo satırlarını toplam miktar için eşleştir. */
 const AMMO_KEYWORDS = ['mühimmat', 'ammo']
@@ -105,6 +106,22 @@ export function countTrainingsLast7Days(trainings, nowMs) {
 }
 
 /**
+ * Gözlemli bireysel değerlendirme kayıtları — yalnızca lojistik 7G sayacına dahil.
+ * @param {Record<string, unknown>[]} observedEvalLogs
+ * @param {number} nowMs
+ */
+export function countObservedEvaluationsLast7Days(observedEvalLogs, nowMs) {
+  const cutoff = nowMs - MS_7D
+  let n = 0
+  for (const row of observedEvalLogs) {
+    if (!isObservedEvalLog(row)) continue
+    const ms = observedEvalTimestampMs(row)
+    if (ms >= cutoff && ms <= nowMs) n++
+  }
+  return n
+}
+
+/**
  * @param {Record<string, unknown>[]} health
  */
 export function getLatestIncident(health) {
@@ -148,6 +165,7 @@ export function incidentPenaltyApplies(incident, nowMs) {
  *   inventory: Record<string, unknown>[],
  *   trainings: Record<string, unknown>[],
  *   health: Record<string, unknown>[],
+ *   observedEvalLogs?: Record<string, unknown>[],
  *   nowMs?: number,
  *   ammoThreshold?: number,
  *   trainingMin?: number,
@@ -158,6 +176,7 @@ export function computeLogisticalORS(p) {
     inventory = [],
     trainings = [],
     health = [],
+    observedEvalLogs = [],
     nowMs = Date.now(),
     ammoThreshold = ORS_AMMO_THRESHOLD_UNITS,
     trainingMin = ORS_TRAINING_MIN_LAST7,
@@ -178,7 +197,9 @@ export function computeLogisticalORS(p) {
     })
   }
 
-  const train7 = countTrainingsLast7Days(trainings, nowMs)
+  const train7Plans = countTrainingsLast7Days(trainings, nowMs)
+  const train7Observed = countObservedEvaluationsLast7Days(observedEvalLogs, nowMs)
+  const train7 = train7Plans + train7Observed
   if (train7 < trainingMin) {
     score -= PENALTY_LOW_TRAINING
     penalties.push({
@@ -212,6 +233,8 @@ export function computeLogisticalORS(p) {
       ammoTotal,
       ammoThreshold,
       trainingsLast7: train7,
+      trainingsLast7Plans: train7Plans,
+      trainingsLast7Observed: train7Observed,
       trainingMin,
       latestIncidentMs: latest ? rowMillis(latest) : 0,
       incidentFlags: inc,
@@ -370,6 +393,7 @@ export function computeCombatReadinessFromLogs(rangeLogs, opts = {}) {
  *   trainings?: Record<string, unknown>[],
  *   health?: Record<string, unknown>[],
  *   rangeLogs?: Record<string, unknown>[],
+ *   observedEvalLogs?: Record<string, unknown>[],
  *   nowMs?: number,
  *   ammoThreshold?: number,
  *   trainingMin?: number,
@@ -384,6 +408,7 @@ export function computeORS(p) {
     trainings = [],
     health = [],
     rangeLogs = [],
+    observedEvalLogs = [],
     nowMs = Date.now(),
     ammoThreshold = ORS_AMMO_THRESHOLD_UNITS,
     trainingMin = ORS_TRAINING_MIN_LAST7,
@@ -396,6 +421,7 @@ export function computeORS(p) {
     inventory,
     trainings,
     health,
+    observedEvalLogs,
     nowMs,
     ammoThreshold,
     trainingMin,
