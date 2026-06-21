@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Copy, KeyRound, Settings2 } from 'lucide-react'
 import PageShell from '../components/layout/PageShell'
+import AccessCodeRedeemPanel from '../components/AccessCodeRedeemPanel'
 import SettingsPanel from '../components/SettingsPanel'
 import FeedbackForm from '../components/FeedbackForm'
 import { useAuth } from '../context/AuthContext'
@@ -50,6 +51,8 @@ export default function Settings() {
     >
       <div className="mx-auto flex max-w-lg flex-col gap-10">
         <SettingsPanel />
+
+        <AccessCodeRedeemPanel />
 
         <FeedbackForm />
 

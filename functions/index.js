@@ -11,6 +11,7 @@ const { adminDeleteUserHandler } = require('./lib/adminDeleteUser')
 const { claimInstructorRoleHandler } = require('./lib/instructorClaim')
 const { joinGroupByPasswordHandler } = require('./lib/joinGroup')
 const { completePremiumUpgradeHandler } = require('./lib/premiumUpgrade')
+const { redeemAccessCodeHandler } = require('./lib/redeemAccessCode')
 const { registerOperatorProfileHandler } = require('./lib/registerOperatorProfile')
 const { syncMuhabereChannelSummary, syncMuhabereDmSummary } = require('./src/muhabereSync')
 const { resolveYoutubeChannelInputHandler } = require('./lib/youtubeChannelResolve')
@@ -169,6 +170,18 @@ exports.registerOperatorProfile = onCall(
     cors: true,
   },
   registerOperatorProfileHandler,
+)
+
+/**
+ * Callable: Premium / Pro-Eğitmen çok-kişilik erişim kodu kullanımı (Admin SDK).
+ */
+exports.redeemAccessCode = onCall(
+  {
+    memory: '128MiB',
+    timeoutSeconds: 30,
+    cors: true,
+  },
+  redeemAccessCodeHandler,
 )
 
 /**

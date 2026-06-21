@@ -185,6 +185,14 @@ export function callCompletePremiumUpgrade(paymentIntentId) {
 }
 
 /**
+ * @param {string} code normalize edilmiş erişim kodu
+ * @returns {Promise<{ ok: boolean; role: string; plan: string; usedCount: number; maxUses: number; status: string }>}
+ */
+export function callRedeemAccessCode(code) {
+  return callFunction('redeemAccessCode', { code })
+}
+
+/**
  * @param {string} input Kanal ID, @handle veya YouTube URL
  * @returns {Promise<{ channelId: string; feedUrl: string; handle?: string; source?: string }>}
  */

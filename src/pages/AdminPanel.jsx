@@ -7,6 +7,7 @@ import {
   Eye,
   FileText,
   Globe,
+  KeyRound,
   Loader2,
   MessageSquare,
   Package,
@@ -32,6 +33,7 @@ import { addTrainingVideo, deleteTrainingVideo, fetchTrainingVideos } from '../l
 import { bulkAddInventoryItems, parseInventoryBulkText } from '../lib/firestoreInventory'
 import IntelModerationTable from '../components/admin/IntelModerationTable'
 import FeedbackModerationTable from '../components/admin/FeedbackModerationTable'
+import AccessCodesPanel from '../components/admin/AccessCodesPanel'
 import UsersManagementTable from '../components/admin/UsersManagementTable'
 import YoutubeChannelsPanel from '../components/admin/YoutubeChannelsPanel'
 import {
@@ -494,6 +496,7 @@ export default function AdminPanel() {
       ) : null}
 
       {activeTab === 'kullanicilar' ? (
+        <div className="space-y-8">
         <AdminSection
           title="Kullanıcı yönetimi"
           subtitle="Operatör hesapları — askıya alma, üyelik düşürme ve kalıcı silme."
@@ -501,6 +504,15 @@ export default function AdminPanel() {
         >
           <UsersManagementTable onFeedback={showMsg} />
         </AdminSection>
+
+        <AdminSection
+          title="Erişim kodları"
+          subtitle="Premium / Pro-Eğitmen çok-kişilik manuel yükseltme kodları."
+          icon={KeyRound}
+        >
+          <AccessCodesPanel onFeedback={showMsg} />
+        </AdminSection>
+        </div>
       ) : null}
 
       {activeTab === 'icerik' ? (

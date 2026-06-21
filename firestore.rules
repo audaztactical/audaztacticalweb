@@ -403,6 +403,34 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    /**
+     * access_codes/{codeId} — Premium / Pro-Eğitmen çok-kişilik erişim kodu (3. bağımsız sistem).
+     * Kullanım (redeem) yalnızca redeemAccessCode Cloud Function ile.
+     */
+    match /access_codes/{codeId} {
+      allow get, list: if isContentAdmin();
+      allow create: if isContentAdmin()
+        && request.resource.data.code == codeId
+        && request.resource.data.usedCount == 0
+        && request.resource.data.status == 'active';
+      allow update: if isContentAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status', 'revokedAt', 'revokedBy', 'updatedAt'
+        ])
+        && request.resource.data.status == 'revoked';
+      allow delete: if false;
+    }
+
+    /**
+     * access_code_redemptions/{redemptionId} — audit trail (yalnızca Cloud Function yazar).
+     */
+    match /access_code_redemptions/{redemptionId} {
+      allow get: if isContentAdmin()
+        || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow list: if isContentAdmin();
+      allow create, update, delete: if false;
+    }
+
     match /instructorLogs/{logId} {
       allow create: if isInstructor() || isContentAdmin();
       allow read: if isContentAdmin() || isInstructor();
