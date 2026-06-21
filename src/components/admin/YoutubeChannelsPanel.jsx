@@ -8,6 +8,15 @@ import {
   fetchYoutubeChannels,
   seedDefaultYoutubeChannelsIfEmpty,
 } from '../../lib/firestoreYoutubeChannels'
+import {
+  ADMIN_EMPTY_STATE,
+  ADMIN_TABLE,
+  ADMIN_TABLE_HEAD,
+  ADMIN_TABLE_ROW,
+  ADMIN_TABLE_TD,
+  ADMIN_TABLE_TH,
+  ADMIN_TABLE_WRAP,
+} from './adminUi'
 
 /** @typedef {import('../../lib/firestoreYoutubeChannels').YoutubeChannelRecord} YoutubeChannelRecord */
 
@@ -202,29 +211,32 @@ export default function YoutubeChannelsPanel({ onFeedback }) {
             Kanallar yükleniyor…
           </div>
         ) : rows.length === 0 ? (
-          <p className="py-8 text-center text-sm text-app-text/55">
-            Henüz kanal yok — yukarıdan ekleyin veya sayfa varsayılan listeyi yükleyecek.
-          </p>
+          <div className={ADMIN_EMPTY_STATE}>
+            <Video className="size-8 text-app-text/40" strokeWidth={1.25} aria-hidden />
+            <p className="font-mono-technical text-sm text-app-text/55">
+              Henüz kanal yok — yukarıdan ekleyin veya sayfa varsayılan listeyi yükleyecek.
+            </p>
+          </div>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-white/10">
-            <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-white/10 bg-black/40 font-mono-technical text-[10px] uppercase tracking-wider text-app-text/55">
+          <div className={ADMIN_TABLE_WRAP}>
+            <table className={ADMIN_TABLE}>
+              <thead className={ADMIN_TABLE_HEAD}>
                 <tr>
-                  <th className="px-3 py-2.5">Kanal adı</th>
-                  <th className="px-3 py-2.5">Channel ID</th>
-                  <th className="px-3 py-2.5">RSS</th>
-                  <th className="px-3 py-2.5 text-right">İşlem</th>
+                  <th className={ADMIN_TABLE_TH}>Kanal adı</th>
+                  <th className={ADMIN_TABLE_TH}>Channel ID</th>
+                  <th className={ADMIN_TABLE_TH}>RSS</th>
+                  <th className={`${ADMIN_TABLE_TH} text-right`}>İşlem</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody>
                 {rows.map((row) => (
-                  <tr key={row.id} className="text-app-text/85">
-                    <td className="px-3 py-2.5 font-semibold">{row.name}</td>
-                    <td className="px-3 py-2.5 font-mono text-xs text-app-text/60">{row.channelId}</td>
-                    <td className="max-w-[12rem] truncate px-3 py-2.5 font-mono text-[10px] text-app-text/45">
+                  <tr key={row.id} className={ADMIN_TABLE_ROW}>
+                    <td className={`${ADMIN_TABLE_TD} font-semibold`}>{row.name}</td>
+                    <td className={`${ADMIN_TABLE_TD} font-mono text-xs text-app-text/60`}>{row.channelId}</td>
+                    <td className={`${ADMIN_TABLE_TD} max-w-[12rem] truncate font-mono text-[10px] text-app-text/45`}>
                       {row.feedUrl}
                     </td>
-                    <td className="px-3 py-2.5 text-right">
+                    <td className={`${ADMIN_TABLE_TD} text-right`}>
                       <button
                         type="button"
                         disabled={deletingId === row.id}

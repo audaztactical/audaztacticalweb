@@ -13,6 +13,15 @@ import { bulkAddInventoryItems, parseInventoryBulkText } from '../lib/firestoreI
 import IntelModerationTable from '../components/admin/IntelModerationTable'
 import FeedbackModerationTable from '../components/admin/FeedbackModerationTable'
 import YoutubeChannelsPanel from '../components/admin/YoutubeChannelsPanel'
+import {
+  ADMIN_EMPTY_STATE,
+  ADMIN_TABLE,
+  ADMIN_TABLE_HEAD,
+  ADMIN_TABLE_ROW,
+  ADMIN_TABLE_TD,
+  ADMIN_TABLE_TH,
+  ADMIN_TABLE_WRAP,
+} from '../components/admin/adminUi'
 
 /** @typedef {'icerik' | 'istihbarat' | 'youtube-kanallar' | 'geri-bildirim'} AdminTabId */
 
@@ -34,21 +43,25 @@ const emptyDoctrineForm = {
 /**
  * @param {{ active: boolean, onClick: () => void, label: string, icon: import('lucide-react').LucideIcon }} props
  */
-function AdminTabButton({ active, onClick, label, icon: Icon }) {
+function AdminTabButton({ active, onClick, label, icon }) {
+  const IconComponent = icon
   return (
     <button
       type="button"
       onClick={onClick}
       aria-current={active ? 'page' : undefined}
       className={[
-        'inline-flex items-center gap-2 border-b-2 px-4 py-3 font-mono-technical text-[11px] font-bold uppercase tracking-wider transition-colors',
+        'relative inline-flex items-center gap-2 rounded-t-lg border border-b-0 px-4 py-3 font-mono-technical text-[11px] font-bold uppercase tracking-wider transition-all',
         active
-          ? 'border-accent text-accent'
-          : 'border-transparent text-app-text/55 hover:border-slate-700 hover:text-app-text/90',
+          ? 'border-accent/40 bg-accent/10 text-accent shadow-[0_-2px_12px_-4px_rgba(132,204,22,0.35)]'
+          : 'border-transparent text-app-text/50 hover:border-white/10 hover:bg-white/[0.03] hover:text-app-text/85',
       ].join(' ')}
     >
-      <Icon className="size-4 shrink-0" strokeWidth={1.5} aria-hidden />
+      <IconComponent className="size-4 shrink-0" strokeWidth={1.5} aria-hidden />
       {label}
+      {active ? (
+        <span className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-accent" aria-hidden />
+      ) : null}
     </button>
   )
 }
@@ -299,8 +312,8 @@ export default function AdminPanel() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8 pb-16">
-      <header className="border-b border-white/10 pb-6">
+    <div className="mx-auto max-w-7xl space-y-6 pb-16">
+      <header className="overflow-hidden rounded-xl border border-accent/20 bg-gradient-to-br from-black/60 via-zinc-950/90 to-black/70 px-5 py-6 shadow-[0_0_48px_-16px_rgba(132,204,22,0.15)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="font-mono-technical text-[10px] font-semibold uppercase tracking-[0.35em] text-accent">
@@ -308,15 +321,20 @@ export default function AdminPanel() {
             </p>
             <h1 className="font-display mt-2 text-3xl font-bold tracking-tight text-app-text">Admin Panel</h1>
             <p className="mt-2 max-w-2xl text-sm text-app-text/55">
-              Kontrol merkezi — içerik, istihbarat ve erken uyarı modülleri. Yetkili hesap:{' '}
-              <span className="font-mono-technical text-accent">{user?.email ?? '—'}</span>
+              Komuta merkezi — içerik, istihbarat, kanal yönetimi ve operatör geri bildirimleri.
+            </p>
+            <p className="mt-2 font-mono-technical text-[10px] uppercase tracking-wider text-app-text/45">
+              Yetkili hesap:{' '}
+              <span className="text-accent">{user?.email ?? '—'}</span>
             </p>
           </div>
-          <div className="flex items-center gap-2 rounded-lg border border-accent/30 bg-accent/10 px-3 py-2">
-            <Shield className="size-4 text-accent" aria-hidden />
-            <span className="font-mono-technical text-[10px] uppercase tracking-wider text-app-text/70">
-              ROOT_ERİŞİM
-            </span>
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex items-center gap-2 rounded-lg border border-accent/40 bg-accent/10 px-3 py-2 shadow-[0_0_20px_-6px_rgba(132,204,22,0.4)]">
+              <Shield className="size-4 text-accent" aria-hidden />
+              <span className="font-mono-technical text-[10px] font-bold uppercase tracking-wider text-accent">
+                ROOT_ERİŞİM
+              </span>
+            </div>
           </div>
         </div>
         {msg.text ? (
@@ -333,7 +351,7 @@ export default function AdminPanel() {
       </header>
 
       <nav
-        className="-mt-2 flex flex-wrap gap-1 border-b border-gray-800"
+        className="flex flex-wrap gap-1 rounded-t-xl border border-b-0 border-white/10 bg-black/30 px-2 pt-2"
         aria-label="Admin panel sekmeleri"
       >
         {ADMIN_TABS.map((tab) => (
@@ -358,7 +376,7 @@ export default function AdminPanel() {
       {activeTab === 'geri-bildirim' ? (
         <AdminSection
           title="Operatör geri bildirimleri"
-          subtitle="Hata, öneri ve bug raporları — feedback koleksiyonu."
+          subtitle="Şikayet & öneri (yeni şema) ve legacy hata/bug raporları — feedback koleksiyonu."
           icon={MessageSquare}
         >
           <FeedbackModerationTable onFeedback={showMsg} />
@@ -453,26 +471,30 @@ export default function AdminPanel() {
             </div>
           </form>
 
-          <div className="overflow-hidden rounded-lg border border-white/10">
-            <div className="border-b border-white/10 bg-black/40 px-4 py-2 font-mono-technical text-[10px] uppercase tracking-widest text-app-text/55">
+          <div className={ADMIN_TABLE_WRAP}>
+            <div className="border-b border-white/10 bg-black/40 px-4 py-2 font-mono-technical text-[10px] uppercase tracking-widest text-accent/70">
               Kayıtlı doktrinler
             </div>
             <div className="max-h-[560px] overflow-auto">
               {loadingDoc ? (
                 <p className="p-4 text-sm text-app-text/55">Yükleniyor…</p>
+              ) : doctrines.length === 0 ? (
+                <div className={`${ADMIN_EMPTY_STATE} border-0 rounded-none`}>
+                  <p className="font-mono-technical text-sm text-app-text/55">Henüz doktrin kaydı yok.</p>
+                </div>
               ) : (
-                <table className="w-full min-w-[480px] text-left text-sm">
-                  <thead className="sticky top-0 z-[1] bg-[#0a0b0d]/95 backdrop-blur">
-                    <tr className="border-b border-white/10 font-mono-technical text-[10px] uppercase tracking-wider text-app-text/55">
-                      <th className="px-3 py-2">Başlık</th>
-                      <th className="px-3 py-2">Kategori</th>
-                      <th className="px-3 py-2">Yayın</th>
-                      <th className="px-3 py-2 text-right">İşlem</th>
+                <table className={`${ADMIN_TABLE} min-w-[480px]`}>
+                  <thead className={`${ADMIN_TABLE_HEAD} sticky top-0 z-[1]`}>
+                    <tr>
+                      <th className={ADMIN_TABLE_TH}>Başlık</th>
+                      <th className={ADMIN_TABLE_TH}>Kategori</th>
+                      <th className={ADMIN_TABLE_TH}>Yayın</th>
+                      <th className={`${ADMIN_TABLE_TH} text-right`}>İşlem</th>
                     </tr>
                   </thead>
                   <tbody>
                     {doctrines.map((row) => (
-                      <tr key={row.id} className="border-b border-white/5 hover:bg-white/[0.03]">
+                      <tr key={row.id} className={ADMIN_TABLE_ROW}>
                         <td className="max-w-[180px] truncate px-3 py-2.5 font-medium text-app-text" title={row.title}>
                           {row.title}
                         </td>
@@ -516,9 +538,6 @@ export default function AdminPanel() {
                   </tbody>
                 </table>
               )}
-              {!loadingDoc && doctrines.length === 0 ? (
-                <p className="p-4 text-sm text-app-text/55">Henüz doktrin yok.</p>
-              ) : null}
             </div>
           </div>
         </div>
@@ -546,25 +565,33 @@ export default function AdminPanel() {
             Ekle
           </button>
         </form>
-        <div className="overflow-x-auto rounded-lg border border-white/10">
-          <table className="w-full min-w-[400px] text-left text-sm">
-            <thead>
-              <tr className="border-b border-white/10 font-mono-technical text-[10px] uppercase tracking-wider text-app-text/55">
-                <th className="px-3 py-2">Başlık</th>
-                <th className="px-3 py-2">URL</th>
-                <th className="px-3 py-2 text-right">Sil</th>
+        <div className={ADMIN_TABLE_WRAP}>
+          <table className={`${ADMIN_TABLE} min-w-[400px]`}>
+            <thead className={ADMIN_TABLE_HEAD}>
+              <tr>
+                <th className={ADMIN_TABLE_TH}>Başlık</th>
+                <th className={ADMIN_TABLE_TH}>URL</th>
+                <th className={`${ADMIN_TABLE_TH} text-right`}>Sil</th>
               </tr>
             </thead>
             <tbody>
               {loadingVid ? (
                 <tr>
-                  <td colSpan={3} className="px-3 py-4 text-app-text/55">
+                  <td colSpan={3} className={`${ADMIN_TABLE_TD} text-app-text/55`}>
                     Yükleniyor…
+                  </td>
+                </tr>
+              ) : videos.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className={ADMIN_TABLE_TD}>
+                    <p className="py-4 text-center font-mono-technical text-xs text-app-text/55">
+                      Henüz eğitim videosu eklenmemiş.
+                    </p>
                   </td>
                 </tr>
               ) : (
                 videos.map((v) => (
-                  <tr key={v.id} className="border-b border-white/5">
+                  <tr key={v.id} className={ADMIN_TABLE_ROW}>
                     <td className="px-3 py-2 font-medium text-app-text">{v.title}</td>
                     <td className="max-w-xs truncate px-3 py-2 font-mono-technical text-xs text-app-text/55">{v.url}</td>
                     <td className="px-3 py-2 text-right">

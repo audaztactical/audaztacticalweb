@@ -4,6 +4,15 @@ import { Loader2, ShieldAlert, Trash2 } from 'lucide-react'
 import { db, isFirebaseConfigured } from '../../lib/firebase'
 import { formatIntelTimestamp, mapIntelFeedDoc } from '../../lib/firestoreIntelFeed'
 import { safeOnSnapshot } from '../../lib/firestoreSnapshot'
+import {
+  ADMIN_EMPTY_STATE,
+  ADMIN_TABLE,
+  ADMIN_TABLE_HEAD,
+  ADMIN_TABLE_ROW,
+  ADMIN_TABLE_TD,
+  ADMIN_TABLE_TH,
+  ADMIN_TABLE_WRAP,
+} from './adminUi'
 
 /** @typedef {import('../../lib/firestoreIntelFeed').IntelFeedItem & { isAlert?: boolean }} ModerationRow */
 
@@ -101,7 +110,7 @@ export default function IntelModerationTable({ onFeedback }) {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className={ADMIN_TABLE_WRAP}>
         {error ? (
           <p className="p-5 font-mono-technical text-sm text-orange-300">{error}</p>
         ) : loading ? (
@@ -109,15 +118,22 @@ export default function IntelModerationTable({ onFeedback }) {
             <Loader2 className="size-5 animate-spin text-accent" aria-hidden />
             <span className="font-mono-technical text-xs uppercase tracking-wider">Veri akışı kuruluyor…</span>
           </div>
+        ) : rows.length === 0 ? (
+          <div className={`${ADMIN_EMPTY_STATE} border-0 rounded-none`}>
+            <ShieldAlert className="size-8 text-app-text/40" strokeWidth={1.25} aria-hidden />
+            <p className="font-mono-technical text-xs uppercase tracking-wider text-app-text/55">
+              news_feed koleksiyonunda kayıt yok
+            </p>
+          </div>
         ) : (
-          <table className="w-full min-w-[720px] text-left text-sm">
-            <thead className="border-b border-gray-800 bg-black/40">
-              <tr className="font-mono-technical text-[10px] uppercase tracking-wider text-app-text/55">
-                <th className="px-4 py-3">Tarih</th>
-                <th className="px-4 py-3">Kaynak</th>
-                <th className="px-4 py-3">Başlık</th>
-                <th className="px-4 py-3">Etiketler</th>
-                <th className="px-4 py-3 text-right">Aksiyon</th>
+          <table className={`${ADMIN_TABLE} min-w-[720px]`}>
+            <thead className={ADMIN_TABLE_HEAD}>
+              <tr>
+                <th className={ADMIN_TABLE_TH}>Tarih</th>
+                <th className={ADMIN_TABLE_TH}>Kaynak</th>
+                <th className={ADMIN_TABLE_TH}>Başlık</th>
+                <th className={ADMIN_TABLE_TH}>Etiketler</th>
+                <th className={`${ADMIN_TABLE_TH} text-right`}>Aksiyon</th>
               </tr>
             </thead>
             <tbody>
@@ -125,20 +141,17 @@ export default function IntelModerationTable({ onFeedback }) {
                 const title = row.trTitle || row.enTitle || '—'
                 const busy = deletingId === row.id
                 return (
-                  <tr
-                    key={row.id}
-                    className="border-b border-gray-800 transition-colors hover:bg-white/[0.03]"
-                  >
-                    <td className="whitespace-nowrap px-4 py-3 font-mono-technical text-[11px] tabular-nums text-app-text/70">
+                  <tr key={row.id} className={ADMIN_TABLE_ROW}>
+                    <td className={`${ADMIN_TABLE_TD} whitespace-nowrap font-mono-technical text-[11px] tabular-nums text-app-text/70`}>
                       {formatIntelTimestamp(row.timestamp)}
                     </td>
-                    <td className="max-w-[140px] truncate px-4 py-3 text-xs text-app-text/70" title={row.source}>
+                    <td className={`${ADMIN_TABLE_TD} max-w-[140px] truncate text-xs text-app-text/70`} title={row.source}>
                       {row.source}
                     </td>
-                    <td className="max-w-[280px] truncate px-4 py-3 font-medium text-app-text" title={title}>
+                    <td className={`${ADMIN_TABLE_TD} max-w-[280px] truncate font-medium text-app-text`} title={title}>
                       {title}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className={ADMIN_TABLE_TD}>
                       <div className="flex flex-wrap gap-1">
                         {row.isAlert ? (
                           <span className="rounded border border-red-500/40 bg-red-950/40 px-1.5 py-0.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-red-400">
@@ -158,7 +171,7 @@ export default function IntelModerationTable({ onFeedback }) {
                         ) : null}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className={`${ADMIN_TABLE_TD} text-right`}>
                       <button
                         type="button"
                         onClick={() => handleDelete(row)}
@@ -180,11 +193,6 @@ export default function IntelModerationTable({ onFeedback }) {
             </tbody>
           </table>
         )}
-        {!loading && !error && rows.length === 0 ? (
-          <p className="p-6 text-center font-mono-technical text-xs uppercase tracking-wider text-app-text/55">
-            news_feed koleksiyonunda kayıt yok.
-          </p>
-        ) : null}
       </div>
     </section>
   )

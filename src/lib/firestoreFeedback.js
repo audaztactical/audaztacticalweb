@@ -1,4 +1,4 @@
-import { addDoc, collection, orderBy, query, serverTimestamp } from 'firebase/firestore'
+import { addDoc, collection, doc, orderBy, query, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { prepareAudazWritePayload } from './audazFirestoreWrite'
 import { auth, db, isFirebaseConfigured } from './firebase'
 import { safeOnSnapshot } from './firestoreSnapshot'
@@ -14,6 +14,36 @@ export const OPERATOR_FEEDBACK_TYPE_LABELS = {
   complaint: 'Şikayet',
   suggestion: 'Öneri',
 }
+
+/** @readonly */
+export const FEEDBACK_STATUS_VALUES = /** @type {const} */ (['new', 'reviewed', 'resolved'])
+
+/** @type {Record<(typeof FEEDBACK_STATUS_VALUES)[number], string>} */
+export const FEEDBACK_STATUS_LABELS = {
+  new: 'Yeni',
+  reviewed: 'İncelendi',
+  resolved: 'Çözüldü',
+}
+
+/** @typedef {(typeof FEEDBACK_STATUS_VALUES)[number]} FeedbackStatusValue */
+
+/** @typedef {'legacy' | 'operator'} FeedbackSchemaKind */
+
+/** @typedef {{
+ *   id: string
+ *   schema: FeedbackSchemaKind
+ *   typeKey: string
+ *   typeLabel: string
+ *   operatorName: string
+ *   userEmail: string
+ *   userId: string
+ *   callsign: string
+ *   subject: string
+ *   message: string
+ *   imageUrls: string[]
+ *   status: string
+ *   createdAt: import('firebase/firestore').Timestamp | Date | null
+ * }} UnifiedFeedbackRecord */
 
 /** @typedef {(typeof FEEDBACK_ISSUE_TYPES)[number]} FeedbackIssueType */
 /** @typedef {(typeof OPERATOR_FEEDBACK_TYPES)[number]} OperatorFeedbackType */
@@ -68,7 +98,7 @@ export function mapFeedbackDoc(data, id) {
     userId: String(data.userId ?? ''),
     userEmail: String(data.userEmail ?? ''),
     callsign: String(data.callsign ?? ''),
-    createdAt: data.createdAt ?? null,
+    createdAt: coerceFeedbackTimestamp(data.createdAt),
   }
 }
 
@@ -228,12 +258,138 @@ export function mapOperatorFeedbackDoc(data, id) {
     userEmail: String(data.userEmail ?? ''),
     callsign: String(data.callsign ?? ''),
     status: String(data.status ?? 'new'),
-    createdAt: data.createdAt ?? null,
+    createdAt: coerceFeedbackTimestamp(data.createdAt),
   }
 }
 
 /**
- * @param {(rows: FeedbackRecord[]) => void} onData
+ * Legacy + yeni şemayı tek satır modeline indirger.
+ * @param {import('firebase/firestore').DocumentData} data
+ * @param {string} id
+ * @returns {UnifiedFeedbackRecord | null}
+ */
+export function mapUnifiedFeedbackDoc(data, id) {
+  const operator = mapOperatorFeedbackDoc(data, id)
+  if (operator) {
+    return {
+      id,
+      schema: 'operator',
+      typeKey: operator.type,
+      typeLabel: OPERATOR_FEEDBACK_TYPE_LABELS[operator.type] ?? operator.type,
+      operatorName: operator.fullName.trim() || operator.callsign.trim() || '—',
+      userEmail: operator.userEmail,
+      userId: operator.userId,
+      callsign: operator.callsign,
+      subject: operator.subject,
+      message: operator.message,
+      imageUrls: operator.imageUrls,
+      status: operator.status || 'new',
+      createdAt: operator.createdAt,
+    }
+  }
+
+  const legacy = mapFeedbackDoc(data, id)
+  if (!legacy) return null
+
+  const legacyStatus = String(data.status ?? '').trim()
+  return {
+    id,
+    schema: 'legacy',
+    typeKey: legacy.issueType,
+    typeLabel: legacy.issueType,
+    operatorName: legacy.callsign.trim() || '—',
+    userEmail: legacy.userEmail,
+    userId: legacy.userId,
+    callsign: legacy.callsign,
+    subject: '',
+    message: legacy.description,
+    imageUrls: legacy.screenshotURL ? [legacy.screenshotURL] : [],
+    status: legacyStatus || 'legacy',
+    createdAt: coerceFeedbackTimestamp(legacy.createdAt ?? data.createdAt),
+  }
+}
+
+/**
+ * @param {unknown} raw
+ * @returns {import('firebase/firestore').Timestamp | Date | null}
+ */
+export function coerceFeedbackTimestamp(raw) {
+  if (raw == null) return null
+  if (typeof raw === 'object' && raw !== null && typeof /** @type {{ toDate?: () => Date }} */ (raw).toDate === 'function') {
+    try {
+      return /** @type {import('firebase/firestore').Timestamp} */ (raw)
+    } catch {
+      return null
+    }
+  }
+  if (raw instanceof Date && !Number.isNaN(raw.getTime())) return raw
+  if (typeof raw === 'number' && Number.isFinite(raw)) {
+    const d = new Date(raw)
+    return Number.isNaN(d.getTime()) ? null : d
+  }
+  if (typeof raw === 'string') {
+    const d = new Date(raw)
+    return Number.isNaN(d.getTime()) ? null : d
+  }
+  if (typeof raw === 'object' && raw !== null) {
+    const sec =
+      /** @type {{ seconds?: number; _seconds?: number; nanoseconds?: number }} */ (raw).seconds ??
+      /** @type {{ _seconds?: number }} */ (raw)._seconds
+    if (typeof sec === 'number' && Number.isFinite(sec)) {
+      return new Date(sec * 1000)
+    }
+  }
+  return null
+}
+
+/**
+ * @param {UnifiedFeedbackRecord[]} rows
+ */
+export function summarizeFeedbackRows(rows) {
+  let complaints = 0
+  let suggestions = 0
+  let fresh = 0
+
+  for (const row of rows) {
+    if (row.typeKey === 'complaint' || row.typeKey === 'Hata' || row.typeKey === 'Bug') {
+      complaints += 1
+    } else if (row.typeKey === 'suggestion' || row.typeKey === 'Öneri') {
+      suggestions += 1
+    }
+    if (row.status === 'new' || row.status === 'legacy') fresh += 1
+  }
+
+  return {
+    total: rows.length,
+    complaints,
+    suggestions,
+    fresh,
+  }
+}
+
+/**
+ * Admin — geri bildirim durumu güncelle (isContentAdmin Firestore kuralı).
+ * @param {string} feedbackId
+ * @param {FeedbackStatusValue} status
+ */
+export async function updateFeedbackStatus(feedbackId, status) {
+  assertDb()
+  const id = String(feedbackId ?? '').trim()
+  if (!id) {
+    const e = new Error('Kayıt kimliği gerekli')
+    e.code = 'invalid-argument'
+    throw e
+  }
+  if (!FEEDBACK_STATUS_VALUES.includes(status)) {
+    const e = new Error('Geçersiz durum')
+    e.code = 'invalid-argument'
+    throw e
+  }
+  await updateDoc(doc(db, 'feedback', id), { status })
+}
+
+/**
+ * @param {(rows: UnifiedFeedbackRecord[]) => void} onData
  * @param {(err: unknown) => void} [onError]
  */
 export function subscribeFeedbackForAdmin(onData, onError) {
@@ -248,7 +404,7 @@ export function subscribeFeedbackForAdmin(onData, onError) {
     q,
     (snap) => {
       const rows = snap.docs
-        .map((d) => mapFeedbackDoc(d.data(), d.id))
+        .map((d) => mapUnifiedFeedbackDoc(d.data(), d.id))
         .filter(Boolean)
       onData(rows)
     },
@@ -257,12 +413,26 @@ export function subscribeFeedbackForAdmin(onData, onError) {
 }
 
 /**
- * @param {import('firebase/firestore').Timestamp | null | undefined} ts
+ * @param {import('firebase/firestore').Timestamp | Date | null | undefined | unknown} ts
  */
 export function formatFeedbackTimestamp(ts) {
-  if (!ts || typeof ts.toDate !== 'function') return '—'
+  const coerced = coerceFeedbackTimestamp(ts)
+  if (!coerced) return '—'
+
+  /** @type {Date | null} */
+  let date = coerced instanceof Date ? coerced : null
+  if (!date && typeof /** @type {{ toDate?: () => Date }} */ (coerced).toDate === 'function') {
+    try {
+      date = /** @type {{ toDate: () => Date }} */ (coerced).toDate()
+    } catch {
+      return '—'
+    }
+  }
+
+  if (!date || Number.isNaN(date.getTime())) return '—'
+
   try {
-    return ts.toDate().toLocaleString('tr-TR', {
+    return date.toLocaleString('tr-TR', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
