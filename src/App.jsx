@@ -77,7 +77,14 @@ export default function App() {
                     }
                   />
                   <Route path="ayarlar" element={<Settings />} />
-                  <Route path="fiyatlandirma" element={<Pricing />} />
+                  <Route
+                    path="fiyatlandirma"
+                    element={
+                      <AdminRoute>
+                        <Pricing />
+                      </AdminRoute>
+                    }
+                  />
                   {/* Beta: lansman öncesi premium-gecis → Dashboard yönlendirmesi */}
                   <Route path="premium-gecis" element={<PremiumTransition />} />
                   <Route path="site-bakimda" element={<SiteMaintenance />} />

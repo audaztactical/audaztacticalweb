@@ -261,7 +261,8 @@ function statFillPct(n, max) {
 }
 
 export default function Profile() {
-  const { user, userData, profileLoading, refreshUserProfile, linkAccountWithPassword } = useAuth()
+  const { user, userData, profileLoading, refreshUserProfile, linkAccountWithPassword, isAdmin, showAdminPanel } = useAuth()
+  const showPricingLink = showAdminPanel || isAdmin
   const { themeClass } = useTheme()
   const { reportFirebaseError } = useFirebaseErrorReporter()
   const [authProvidersTick, setAuthProvidersTick] = useState(0)
@@ -750,12 +751,14 @@ export default function Profile() {
                   {callsign}
                 </p>
                 <p className="font-mono-technical text-[10px] font-semibold uppercase tracking-widest text-app-text/70">{roleLabel(userData?.role)}</p>
-                <Link
-                  to="/fiyatlandirma"
-                  className="mt-1 inline-block font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent/80 hover:text-accent"
-                >
-                  Üyelik planları →
-                </Link>
+                {showPricingLink ? (
+                  <Link
+                    to="/fiyatlandirma"
+                    className="mt-1 inline-block font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent/80 hover:text-accent"
+                  >
+                    Üyelik planları →
+                  </Link>
+                ) : null}
               </div>
 
               <dl className="space-y-0 border-t border-white/10 pt-2">

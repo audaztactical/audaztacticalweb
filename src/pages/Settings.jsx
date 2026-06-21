@@ -10,7 +10,8 @@ import { createInstructorInviteToken } from '../lib/firestoreInstructorTokens'
 import { emitFirebaseError } from '../lib/firebaseErrorBus'
 
 export default function Settings() {
-  const { isAdmin } = useAuth()
+  const { isAdmin, showAdminPanel } = useAuth()
+  const showPricingLink = showAdminPanel || isAdmin
   const [generatedToken, setGeneratedToken] = useState('')
   const [tokenBusy, setTokenBusy] = useState(false)
   const [tokenMsg, setTokenMsg] = useState('')
@@ -51,22 +52,24 @@ export default function Settings() {
       headerAction={<Settings2 className="size-6 text-accent/50" strokeWidth={1.25} aria-hidden />}
     >
       <div className="mx-auto flex max-w-lg flex-col gap-10">
-        <Link
-          to="/fiyatlandirma"
-          className="group flex items-center gap-3 rounded-xl border border-accent/25 bg-black/40 px-4 py-3 transition hover:border-accent/45 hover:bg-accent/[0.06]"
-        >
-          <span className="flex size-10 shrink-0 items-center justify-center rounded border border-accent/35 bg-accent/10 text-accent">
-            <CreditCard className="size-5" strokeWidth={1.5} aria-hidden />
-          </span>
-          <span className="min-w-0">
-            <span className="block font-mono-technical text-[10px] font-bold uppercase tracking-[0.2em] text-accent/90">
-              Üyelik planları
+        {showPricingLink ? (
+          <Link
+            to="/fiyatlandirma"
+            className="group flex items-center gap-3 rounded-xl border border-accent/25 bg-black/40 px-4 py-3 transition hover:border-accent/45 hover:bg-accent/[0.06]"
+          >
+            <span className="flex size-10 shrink-0 items-center justify-center rounded border border-accent/35 bg-accent/10 text-accent">
+              <CreditCard className="size-5" strokeWidth={1.5} aria-hidden />
             </span>
-            <span className="mt-0.5 block font-mono-technical text-[11px] text-app-text/65 group-hover:text-app-text/85">
-              Fiyatlandırma ve plan karşılaştırması →
+            <span className="min-w-0">
+              <span className="block font-mono-technical text-[10px] font-bold uppercase tracking-[0.2em] text-accent/90">
+                Üyelik planları
+              </span>
+              <span className="mt-0.5 block font-mono-technical text-[11px] text-app-text/65 group-hover:text-app-text/85">
+                Fiyatlandırma ve plan karşılaştırması →
+              </span>
             </span>
-          </span>
-        </Link>
+          </Link>
+        ) : null}
 
         <SettingsPanel />
 

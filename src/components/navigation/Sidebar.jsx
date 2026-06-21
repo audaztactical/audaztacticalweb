@@ -267,34 +267,36 @@ export default function Sidebar({
               <span className="font-mono text-[12px] tracking-wide">Şikayet & Öneri</span>
             </button>
           </li>
-          <li>
-            <NavLink
-              to="/fiyatlandirma"
-              onClick={onNavigate}
-              className={({ isActive }) =>
-                [
-                  linkBaseClass,
-                  isActive
-                    ? 'bg-zinc-800/60 text-lime-400'
-                    : 'text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200',
-                ].join(' ')
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <CreditCard
-                    className={[
-                      'size-[20px] shrink-0 transition-colors duration-200',
-                      isActive ? 'text-lime-400' : 'text-zinc-500 group-hover:text-zinc-300',
-                    ].join(' ')}
-                    strokeWidth={1.75}
-                    aria-hidden
-                  />
-                  <span className="font-mono text-[12px] tracking-wide">Fiyatlandırma</span>
-                </>
-              )}
-            </NavLink>
-          </li>
+          {showAdminLink ? (
+            <li>
+              <NavLink
+                to="/fiyatlandirma"
+                onClick={onNavigate}
+                className={({ isActive }) =>
+                  [
+                    linkBaseClass,
+                    isActive
+                      ? 'bg-zinc-800/60 text-lime-400'
+                      : 'text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200',
+                  ].join(' ')
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <CreditCard
+                      className={[
+                        'size-[20px] shrink-0 transition-colors duration-200',
+                        isActive ? 'text-lime-400' : 'text-zinc-500 group-hover:text-zinc-300',
+                      ].join(' ')}
+                      strokeWidth={1.75}
+                      aria-hidden
+                    />
+                    <span className="font-mono text-[12px] tracking-wide">Fiyatlandırma</span>
+                  </>
+                )}
+              </NavLink>
+            </li>
+          ) : null}
           <li>
             <NavLink
               to="/ayarlar"
