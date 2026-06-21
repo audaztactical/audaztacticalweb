@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   Ban,
   Loader2,
+  MessageSquareWarning,
   Search,
   ShieldOff,
   Trash2,
@@ -23,6 +24,7 @@ import {
   suspendUserAccount,
   unsuspendUserAccount,
 } from '../../lib/firestoreAdminUsers'
+import { formatFeedbackTimestamp, subscribePendingAppealsByUser } from '../../lib/firestoreSuspensionAppeals'
 import {
   ADMIN_EMPTY_STATE,
   ADMIN_TABLE,
@@ -34,6 +36,7 @@ import {
 } from './adminUi'
 
 /** @typedef {import('../../lib/firestoreAdminUsers').AdminUserRecord} AdminUserRecord */
+/** @typedef {import('../../lib/firestoreSuspensionAppeals').SuspensionAppealRecord} SuspensionAppealRecord */
 
 const ROLE_TONE = {
   admin: 'border-amber-500/40 bg-amber-950/30 text-amber-300',
@@ -257,6 +260,52 @@ function DeleteConfirmModal({ open, row, onClose, onConfirm, busy }) {
 }
 
 /**
+ * @param {{
+ *   open: boolean
+ *   appeal: SuspensionAppealRecord | null
+ *   row: AdminUserRecord | null
+ *   onClose: () => void
+ * }} props
+ */
+function AppealViewModal({ open, appeal, row, onClose }) {
+  if (!open || !appeal || !row) return null
+
+  return (
+    <ModalShell title="Bekleyen İtiraz" onClose={onClose}>
+      <p className="text-sm text-app-text/70">
+        <strong className="text-app-text">{formatAdminUserDisplayName(row)}</strong>
+        {row.email ? ` · ${row.email}` : ''}
+      </p>
+      {appeal.createdAt ? (
+        <p className="mt-2 font-mono-technical text-[10px] uppercase tracking-wider text-app-text/50">
+          Gönderim: {formatFeedbackTimestamp(appeal.createdAt)}
+        </p>
+      ) : null}
+      {appeal.suspensionReasonSnapshot ? (
+        <p className="mt-3 font-mono-technical text-[10px] text-orange-300/80">
+          Askı sebebi (anlık): {appeal.suspensionReasonSnapshot}
+        </p>
+      ) : null}
+      <div className="mt-4 rounded-lg border border-orange-500/30 bg-orange-950/20 px-4 py-3">
+        <p className="font-mono-technical text-[10px] font-bold uppercase tracking-wider text-orange-400">
+          İtiraz mesajı
+        </p>
+        <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-app-text/90">{appeal.message}</p>
+      </div>
+      <div className="mt-4 flex justify-end">
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-lg border border-white/15 px-4 py-2 font-mono-technical text-[10px] uppercase tracking-wider text-app-text/70 hover:bg-white/5"
+        >
+          Kapat
+        </button>
+      </div>
+    </ModalShell>
+  )
+}
+
+/**
  * @param {{ title: string; onClose: () => void; danger?: boolean; children: import('react').ReactNode }} props
  */
 function ModalShell({ title, onClose, danger = false, children }) {
@@ -346,6 +395,15 @@ export default function UsersManagementTable({ onFeedback }) {
   const [suspendTarget, setSuspendTarget] = useState(/** @type {AdminUserRecord | null} */ (null))
   const [membershipTarget, setMembershipTarget] = useState(/** @type {AdminUserRecord | null} */ (null))
   const [deleteTarget, setDeleteTarget] = useState(/** @type {AdminUserRecord | null} */ (null))
+  const [pendingAppeals, setPendingAppeals] = useState(/** @type {Record<string, SuspensionAppealRecord>} */ ({}))
+  const [appealView, setAppealView] = useState(
+    /** @type {{ row: AdminUserRecord; appeal: SuspensionAppealRecord } | null} */ (null),
+  )
+
+  useEffect(() => {
+    const unsub = subscribePendingAppealsByUser(setPendingAppeals)
+    return unsub
+  }, [])
 
   useEffect(() => {
     setLoading(true)
@@ -531,14 +589,29 @@ export default function UsersManagementTable({ onFeedback }) {
                       </span>
                     </td>
                     <td className={ADMIN_TABLE_TD}>
-                      <span
-                        className={[
-                          'inline-block rounded border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
-                          STATUS_TONE[row.accountStatus] ?? STATUS_TONE.active,
-                        ].join(' ')}
-                      >
-                        {formatAccountStatusLabel(row)}
-                      </span>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span
+                          className={[
+                            'inline-block rounded border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
+                            STATUS_TONE[row.accountStatus] ?? STATUS_TONE.active,
+                          ].join(' ')}
+                        >
+                          {formatAccountStatusLabel(row)}
+                        </span>
+                        {suspended && pendingAppeals[row.id] ? (
+                          <button
+                            type="button"
+                            title="Bekleyen itiraz"
+                            onClick={() =>
+                              setAppealView({ row, appeal: pendingAppeals[row.id] })
+                            }
+                            className="inline-flex items-center gap-0.5 rounded border border-orange-500/40 bg-orange-950/30 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-orange-300 transition hover:bg-orange-950/50"
+                          >
+                            <MessageSquareWarning className="size-3" aria-hidden />
+                            İtiraz
+                          </button>
+                        ) : null}
+                      </div>
                     </td>
                     <td className={ADMIN_TABLE_TD}>{formatMembershipLabel(row)}</td>
                     <td className={`${ADMIN_TABLE_TD} whitespace-nowrap tabular-nums text-app-text/60`}>
@@ -607,6 +680,13 @@ export default function UsersManagementTable({ onFeedback }) {
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
         busy={busy}
+      />
+
+      <AppealViewModal
+        open={Boolean(appealView)}
+        appeal={appealView?.appeal ?? null}
+        row={appealView?.row ?? null}
+        onClose={() => setAppealView(null)}
       />
     </>
   )

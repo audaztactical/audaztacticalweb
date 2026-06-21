@@ -3,6 +3,7 @@ import { safeOnSnapshot } from './firestoreSnapshot'
 import { auth, db, isFirebaseConfigured } from './firebase'
 import { callCompletePremiumUpgrade, callRegisterOperatorProfile, isCloudFunctionUnavailableError } from './cloudFunctions'
 import { normalizeUserRole, normalizeAccountStatus } from './authRoles'
+import { coerceFeedbackTimestamp } from './firestoreFeedback'
 import {
   clearPendingOperatorProfile,
   readPendingOperatorProfile,
@@ -90,7 +91,7 @@ export function mapUserDocToProfile(d) {
     accountStatus: normalizeAccountStatus(d.accountStatus),
     premiumPaymentId: typeof d.premiumPaymentId === 'string' ? d.premiumPaymentId : '',
     premiumUpgradedAt: d.premiumUpgradedAt ?? null,
-    suspendedUntil: d.suspendedUntil ?? null,
+    suspendedUntil: coerceFeedbackTimestamp(d.suspendedUntil),
     suspensionReason: typeof d.suspensionReason === 'string' ? d.suspensionReason : '',
     allergies: typeof d.allergies === 'string' ? d.allergies : '',
     drugSensitivity: typeof d.drugSensitivity === 'string' ? d.drugSensitivity : '',

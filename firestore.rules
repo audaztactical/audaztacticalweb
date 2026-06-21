@@ -915,6 +915,22 @@ service cloud.firestore {
       allow update, delete: if isContentAdmin();
     }
 
+    /**
+     * suspensionAppeals — askıdaki kullanıcı itirazları (yalnızca create açık).
+     */
+    match /suspensionAppeals/{appealId} {
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.userEmail is string
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() <= 2000
+        && request.resource.data.status == 'pending'
+        && request.resource.data.suspensionReasonSnapshot is string
+        && request.resource.data.suspensionReasonSnapshot.size() <= 500;
+      allow read, list, update, delete: if isContentAdmin();
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

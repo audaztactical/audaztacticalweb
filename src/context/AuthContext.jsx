@@ -63,6 +63,8 @@ function mergeWithGuest(partial, authUser) {
     accountStatus: normalizeAccountStatus(partial?.accountStatus),
     premiumPaymentId: typeof partial.premiumPaymentId === 'string' ? partial.premiumPaymentId : '',
     premiumUpgradedAt: partial.premiumUpgradedAt ?? null,
+    suspendedUntil: partial.suspendedUntil ?? null,
+    suspensionReason: typeof partial.suspensionReason === 'string' ? partial.suspensionReason : '',
     allergies: typeof partial.allergies === 'string' ? partial.allergies : '',
     drugSensitivity: typeof partial.drugSensitivity === 'string' ? partial.drugSensitivity : '',
     importantNotes: typeof partial.importantNotes === 'string' ? partial.importantNotes : '',
