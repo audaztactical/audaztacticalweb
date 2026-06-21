@@ -878,13 +878,19 @@ service cloud.firestore {
       }
     }
 
+    /** forum_reports belge kimliği son segmenti reporter UID (createForumReport / buildForumReportId). */
+    function isOwnForumReportId(reportId) {
+      return isSignedIn() && reportId.matches('.*_' + request.auth.uid + '$');
+    }
+
     /**
      * forum_reports — Brifing Odası kullanıcı şikayetleri.
      * Belge kimliği: post_{targetId}_{reporterId} | comment_{parentPostId}_{targetId}_{reporterId}
      */
     match /forum_reports/{reportId} {
       allow create: if isSignedIn() && isValidForumReportCreate(reportId);
-      allow read, list, update: if isContentAdmin();
+      allow get: if isContentAdmin() || isOwnForumReportId(reportId);
+      allow list, update: if isContentAdmin();
       allow delete: if false;
     }
 

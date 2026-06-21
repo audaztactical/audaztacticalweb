@@ -10,6 +10,7 @@ import {
   Plus,
   Shield,
   Target,
+  Trash2,
   X,
 } from 'lucide-react'
 import HudFluffDecor from '../components/dashboard/HudFluffDecor'
@@ -29,6 +30,12 @@ function str(v) {
 function opKodu(id) {
   const raw = (id || 'XXXXX').replace(/-/g, '').slice(0, 5).toUpperCase()
   return `OP-${raw}`
+}
+
+/** @param {Record<string, unknown>} row @param {string | null | undefined} uid */
+function isMissionOwner(row, uid) {
+  if (!uid) return false
+  return String(row.ownerId ?? '').trim() === uid
 }
 
 const MISSION_TYPES = [
@@ -495,6 +502,80 @@ function AarRecordModal({ open, mode, initial, onClose, onSubmit, busy }) {
 }
 
 /**
+ * @param {{
+ *   open: boolean
+ *   row: Record<string, unknown> | null
+ *   onClose: () => void
+ *   onConfirm: () => void | Promise<void>
+ *   busy?: boolean
+ * }} props
+ */
+function AarDeleteConfirmModal({ open, row, onClose, onConfirm, busy = false }) {
+  useEffect(() => {
+    if (!open) return undefined
+    const onKey = (e) => {
+      if (e.key === 'Escape' && !busy) onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, onClose, busy])
+
+  if (!open || !row) return null
+
+  return (
+    <div
+      className="fixed inset-0 z-[110] flex items-center justify-center bg-black/75 p-3 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="aar-delete-title"
+    >
+      <button type="button" className="absolute inset-0 cursor-default" aria-label="Kapat" onClick={busy ? undefined : onClose} />
+      <TacticalPanel className="relative z-[1] w-full max-w-md border-red-500/25 bg-[#0c0c0e]/98 p-0 shadow-2xl backdrop-blur-md">
+        <div className="flex items-center justify-between border-b border-white/10 bg-app-bg px-3 py-2 sm:px-4">
+          <p id="aar-delete-title" className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] text-red-400/90">
+            OPERASYON_KAYDI_SİL
+          </p>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={busy}
+            className="rounded border border-white/15 p-1 text-app-text/70 hover:text-app-text disabled:opacity-50"
+            aria-label="Kapat"
+          >
+            <X className="size-4" strokeWidth={1.5} />
+          </button>
+        </div>
+        <div className="space-y-4 px-4 py-4">
+          <p className="font-mono-technical text-[11px] leading-relaxed text-app-text/80">
+            <span className="font-bold text-app-text">{str(row.title) || opKodu(String(row.id))}</span> kaydını silmek
+            istediğinize emin misiniz? Bu işlem geri alınamaz.
+          </p>
+          <div className="flex flex-wrap justify-end gap-2 border-t border-white/10 pt-3">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={busy}
+              className="rounded border border-white/15 px-3 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-app-text/70 hover:bg-white/5 disabled:opacity-50"
+            >
+              İPTAL
+            </button>
+            <button
+              type="button"
+              onClick={() => void onConfirm()}
+              disabled={busy}
+              className="inline-flex items-center gap-1.5 rounded border border-red-500/45 bg-red-950/35 px-3 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-red-300 hover:bg-red-950/50 disabled:opacity-50"
+            >
+              <Trash2 className="size-3" strokeWidth={1.5} aria-hidden />
+              {busy ? 'SİLİNİYOR…' : 'SİL'}
+            </button>
+          </div>
+        </div>
+      </TacticalPanel>
+    </div>
+  )
+}
+
+/**
  * MÜŞTEREK HAREKAT KONSOLU — ortalanmış iki bölmeli operasyon terminali
  * @param {{
  *   row: Record<string, unknown> | null
@@ -672,7 +753,7 @@ function OpDetayKonsolu({ row, onClose, onEdit }) {
 }
 
 /** @param {Record<string, unknown>} row */
-function AarCard({ row, onEdit, onOpenDetail }) {
+function AarCard({ row, onEdit, onDelete, onOpenDetail, canDelete }) {
   const oc = getOutcome(row)
   const meta = outcomeMeta(oc)
   const mt = getMissionType(row)
@@ -705,6 +786,19 @@ function AarCard({ row, onEdit, onOpenDetail }) {
           >
             <Pencil className="size-3" strokeWidth={1.5} />
           </button>
+          {canDelete ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete(row)
+              }}
+              className="rounded border border-white/10 p-0.5 text-app-text/55 hover:border-red-500/45 hover:text-red-400"
+              aria-label="Sil"
+            >
+              <Trash2 className="size-3" strokeWidth={1.5} />
+            </button>
+          ) : null}
           <span
             className="max-w-[10rem] rounded border px-1.5 py-0.5 text-center font-mono-technical text-[7px] font-bold uppercase leading-tight tracking-wide"
             style={{ borderColor: `${meta.rgb}66`, color: meta.rgb, boxShadow: `0 0 10px ${meta.rgb}33` }}
@@ -740,7 +834,7 @@ function AarCard({ row, onEdit, onOpenDetail }) {
 export default function Missions() {
   const { user } = useAuth()
   const { themeClass } = useTheme()
-  const { items, loading, ready, listenError, addItem, updateItem } = useAudazData('missions')
+  const { items, loading, ready, listenError, addItem, updateItem, deleteItem } = useAudazData('missions')
   const [strip, setStrip] = useState(/** @type {'all' | 'milsim' | 'cqb' | 'success'} */ ('all'))
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
@@ -749,6 +843,8 @@ export default function Missions() {
   const [editRow, setEditRow] = useState(/** @type {Record<string, unknown> | null} */ (null))
   const [saveBusy, setSaveBusy] = useState(false)
   const [detailRow, setDetailRow] = useState(/** @type {Record<string, unknown> | null} */ (null))
+  const [deleteTarget, setDeleteTarget] = useState(/** @type {Record<string, unknown> | null} */ (null))
+  const [deleteBusy, setDeleteBusy] = useState(false)
 
   const filterDateInvalid = Boolean(dateFrom && dateTo && dateFrom > dateTo)
 
@@ -827,6 +923,34 @@ export default function Missions() {
     },
     [addItem, updateItem, user?.uid, modalMode, editRow]
   )
+
+  const openDeleteConfirm = useCallback((row) => {
+    if (!isMissionOwner(row, user?.uid)) return
+    setDeleteTarget(row)
+  }, [user?.uid])
+
+  const closeDeleteConfirm = useCallback(() => {
+    if (deleteBusy) return
+    setDeleteTarget(null)
+  }, [deleteBusy])
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!deleteTarget?.id || !user?.uid || !isMissionOwner(deleteTarget, user.uid)) return
+    setDeleteBusy(true)
+    try {
+      await deleteItem(String(deleteTarget.id))
+      if (detailRow?.id === deleteTarget.id) setDetailRow(null)
+      if (editRow?.id === deleteTarget.id) {
+        setEditRow(null)
+        setModalOpen(false)
+      }
+      setDeleteTarget(null)
+    } catch {
+      /* FirebaseErrorContext */
+    } finally {
+      setDeleteBusy(false)
+    }
+  }, [deleteTarget, deleteItem, user?.uid, detailRow?.id, editRow?.id])
 
   return (
     <div className="missions-aar-shell relative mx-auto max-w-[1480px] px-3 py-5 pt-12 sm:px-4 sm:pt-14 md:px-6" data-theme={themeClass}>
@@ -929,7 +1053,14 @@ export default function Missions() {
             ) : (
               <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
                 {filtered.map((row) => (
-                  <AarCard key={row.id} row={row} onEdit={openEdit} onOpenDetail={openDetail} />
+                  <AarCard
+                    key={row.id}
+                    row={row}
+                    onEdit={openEdit}
+                    onDelete={openDeleteConfirm}
+                    onOpenDetail={openDetail}
+                    canDelete={isMissionOwner(row, user?.uid)}
+                  />
                 ))}
               </div>
             )}
@@ -946,6 +1077,14 @@ export default function Missions() {
         onClose={closeModal}
         onSubmit={handleSubmit}
         busy={saveBusy}
+      />
+
+      <AarDeleteConfirmModal
+        open={Boolean(deleteTarget)}
+        row={deleteTarget}
+        onClose={closeDeleteConfirm}
+        onConfirm={handleDeleteConfirm}
+        busy={deleteBusy}
       />
     </div>
   )
