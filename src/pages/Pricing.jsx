@@ -206,8 +206,8 @@ function PricingPlanCard({ plan, billing, onRequestAccess }) {
           className="pointer-events-none absolute left-1/2 top-0 z-30 -translate-x-1/2 -translate-y-1/2"
           aria-hidden
         >
-          <span className="inline-flex items-center gap-1 rounded-full border border-accent bg-accent px-3 py-1 font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-black shadow-[0_0_22px_-2px_var(--accent-color)] ring-1 ring-black/15">
-            <Sparkles className="size-3 text-black" strokeWidth={2} aria-hidden />
+          <span className="inline-flex items-center gap-1 rounded-full border-2 border-amber-400 bg-amber-500 px-3 py-1 font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-zinc-950 shadow-[0_0_28px_0_rgb(245_158_11)]">
+            <Sparkles className="size-3 text-zinc-950" strokeWidth={2.5} aria-hidden />
             En Popüler
           </span>
         </div>
