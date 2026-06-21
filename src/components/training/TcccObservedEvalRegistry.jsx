@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import TacticalPanel from '../ui/TacticalPanel'
-import { TCCC_MARCH_ACTION_CHIPS, TCCC_MARCH_EVALUATION_PHASES } from '../../lib/tcccEvaluationPayload'
+import { TCCC_MARCH_ACTION_CHIPS, TCCC_MARCH_EVALUATION_PHASES, TCCC_PHASE_SUB_CRITERIA } from '../../lib/tcccEvaluationPayload'
+import { PhaseSubScoresDisplay } from './PhaseSubCriteriaFields'
 import {
   filterObservedEvalLogs,
   formatObservedEvalDate,
@@ -86,10 +87,14 @@ export default function TcccObservedEvalRegistry({ logs, loading = false }) {
                     className={`rounded border px-2 py-2 ${p?.criticalFail ? 'border-red-500/30 bg-red-950/20' : 'border-white/10 bg-black/30'}`}
                   >
                     <p className="font-mono-technical text-[8px] uppercase text-app-text/45">{meta.letter}</p>
-                    <p className={`font-mono-technical text-lg font-bold tabular-nums ${p?.criticalFail ? 'text-red-400' : 'text-accent'}`}>
-                      {p?.score ?? '—'}
-                      <span className="text-xs text-app-text/40">/10</span>
-                    </p>
+                    <div className="mt-1">
+                      <PhaseSubScoresDisplay
+                        phaseData={p}
+                        criteria={TCCC_PHASE_SUB_CRITERIA[meta.id]}
+                        maxScore={10}
+                        compact
+                      />
+                    </div>
                     {chipLabels.length > 0 ? (
                       <p className="mt-1 line-clamp-2 font-mono-technical text-[7px] text-app-text/45">{chipLabels.join(' · ')}</p>
                     ) : null}

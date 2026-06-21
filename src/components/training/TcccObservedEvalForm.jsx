@@ -11,9 +11,9 @@ import { submitTcccObservedEval } from '../../lib/tcccObservedEvalSubmit'
 import {
   TCCC_MARCH_ACTION_CHIPS,
   TCCC_MARCH_EVALUATION_PHASES,
+  TCCC_PHASE_SUB_CRITERIA,
 } from '../../lib/tcccEvaluationPayload'
-
-/** @typedef {import('../../lib/tcccEvaluationPayload').TcccMarchPhaseId} TcccMarchPhaseId */
+import PhaseSubCriteriaFields from './PhaseSubCriteriaFields'
 
 const inputClass =
   'w-full rounded border border-accent/30 bg-app-bg px-2 py-2 font-mono-technical text-sm text-slate-100 outline-none placeholder:text-app-text/45 focus:border-accent/60'
@@ -29,40 +29,6 @@ const chipClass = (active) =>
       ? 'border-accent/50 bg-accent/10 text-accent'
       : 'border-white/10 text-app-text/60 hover:border-accent/30'
   }`
-
-const SEGMENT_VALUES = Array.from({ length: 10 }, (_, i) => i + 1)
-
-/**
- * @param {{
- *   value: string
- *   onChange: (v: string) => void
- *   disabled?: boolean
- * }} props
- */
-function ScoreBar({ value, onChange, disabled = false }) {
-  const selected = disabled ? 0 : Number(value) || 0
-  return (
-    <div className="flex flex-wrap gap-1" role="group" aria-label="Skor 1-10">
-      {SEGMENT_VALUES.map((n) => (
-        <button
-          key={n}
-          type="button"
-          disabled={disabled}
-          onClick={() => onChange(String(n))}
-          className={[
-            'h-8 min-w-[2rem] rounded border font-mono-technical text-[11px] font-bold tabular-nums',
-            selected >= n
-              ? 'border-accent/60 bg-accent/15 text-accent'
-              : 'border-white/15 text-app-text/45 hover:border-accent/35',
-            disabled ? 'cursor-not-allowed opacity-40' : '',
-          ].join(' ')}
-        >
-          {n}
-        </button>
-      ))}
-    </div>
-  )
-}
 
 /**
  * @param {{
@@ -91,8 +57,15 @@ export default function TcccObservedEvalForm({ addLog, onSubmitted, hidePdfBanne
   }, [])
 
   const patchPhase = useCallback(
-    (/** @type {TcccMarchPhaseId} */ id, /** @type {Partial<typeof form.m>} */ next) => {
-      setForm((f) => ({ ...f, [id]: { ...f[id], ...next } }))
+    (/** @type {import('../../lib/tcccEvaluationPayload').TcccMarchPhaseId} */ id, /** @type {Partial<typeof form.m>} */ next) => {
+      setForm((f) => ({
+        ...f,
+        [id]: {
+          ...f[id],
+          ...next,
+          subScores: next.subScores ? { ...f[id].subScores, ...next.subScores } : f[id].subScores,
+        },
+      }))
       setMsg('')
       setOk(false)
     },
@@ -214,7 +187,7 @@ export default function TcccObservedEvalForm({ addLog, onSubmitted, hidePdfBanne
                 </div>
                 <button
                   type="button"
-                  onClick={() => patchPhase(meta.id, { criticalFail: !phase.criticalFail, score: !phase.criticalFail ? '' : phase.score })}
+                  onClick={() => patchPhase(meta.id, { criticalFail: !phase.criticalFail })}
                   className={[
                     'inline-flex items-center gap-1 rounded border px-2 py-1 font-mono-technical text-[8px] font-bold uppercase tracking-wider',
                     phase.criticalFail
@@ -227,10 +200,19 @@ export default function TcccObservedEvalForm({ addLog, onSubmitted, hidePdfBanne
                 </button>
               </div>
 
-              <div className="space-y-1.5">
-                <span className={labelClass}>Performans skoru (1–10) *</span>
-                <ScoreBar value={phase.score} onChange={(v) => patchPhase(meta.id, { score: v })} disabled={phase.criticalFail} />
-              </div>
+              <PhaseSubCriteriaFields
+                criteria={TCCC_PHASE_SUB_CRITERIA[meta.id]}
+                subScores={phase.subScores}
+                onSubScoreChange={(criterionId, value) =>
+                  patchPhase(meta.id, { subScores: { [criterionId]: value } })
+                }
+                min={1}
+                max={10}
+                disabled={phase.criticalFail}
+                variant="select"
+                selectClassName={inputClass}
+                labelClassName={labelClass}
+              />
 
               <div className="space-y-1.5">
                 <span className={labelClass}>Taktik müdahale</span>

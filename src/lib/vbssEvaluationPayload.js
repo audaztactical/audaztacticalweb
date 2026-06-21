@@ -1,6 +1,14 @@
+import { VBSS_PHASE_SUB_CRITERIA } from './evaluationPhaseCriteria'
+import {
+  buildSubScoresPayload,
+  computePhaseScoreFromForm,
+  emptySubScoreForm,
+  validatePhaseSubScoresForm,
+} from './evaluationSubScores'
+
 /** @typedef {'boarding' | 'clearing' | 'control'} VbssPhaseId */
 
-/** @typedef {{ score: string; observation: string }} VbssPhaseFormState */
+/** @typedef {{ subScores: Record<string, string>; observation: string }} VbssPhaseFormState */
 
 /**
  * @typedef {{
@@ -34,28 +42,28 @@ export const VBSS_EVALUATION_PHASES = [
   },
 ]
 
-/** @returns {VbssPhaseFormState} */
-function emptyPhase() {
-  return { score: '', observation: '' }
+/** @param {VbssPhaseId} phaseId */
+function emptyPhase(phaseId) {
+  return { subScores: emptySubScoreForm(VBSS_PHASE_SUB_CRITERIA[phaseId]), observation: '' }
 }
 
 export const VBSS_EVALUATION_INITIAL_FORM = /** @type {VbssEvaluationFormState} */ ({
   operatorId: '',
   isTimed: false,
   targetOperationSec: '',
-  boarding: emptyPhase(),
-  clearing: emptyPhase(),
-  control: emptyPhase(),
+  boarding: emptyPhase('boarding'),
+  clearing: emptyPhase('clearing'),
+  control: emptyPhase('control'),
 })
 
 /**
+ * @deprecated Geriye dönük — form artık subScores kullanır.
  * @param {VbssPhaseFormState} phase
+ * @param {VbssPhaseId} [phaseId]
  */
-export function parsePhaseScore(phase) {
-  if (phase.score === '') return null
-  const n = Number(phase.score)
-  if (!Number.isFinite(n) || n < 0 || n > 10) return null
-  return Math.round(n)
+export function parsePhaseScore(phase, phaseId) {
+  if (!phaseId) return null
+  return computePhaseScoreFromForm(phase.subScores, VBSS_PHASE_SUB_CRITERIA[phaseId], { min: 0, max: 10 })
 }
 
 /**
@@ -66,14 +74,32 @@ export function validateVbssEvaluationForm(form) {
   if (!form.operatorId.trim()) return 'Değerlendirilecek operatör seçin.'
   for (const meta of VBSS_EVALUATION_PHASES) {
     const phase = form[meta.id]
-    if (phase.score === '') return `${meta.title} için skor seçin.`
-    if (parsePhaseScore(phase) === null) return `${meta.title} skoru 0–10 arasında olmalı.`
+    const err = validatePhaseSubScoresForm(phase.subScores, VBSS_PHASE_SUB_CRITERIA[meta.id], {
+      min: 0,
+      max: 10,
+      phaseTitle: meta.title,
+    })
+    if (err) return err
   }
   if (form.isTimed) {
     const sec = Number(form.targetOperationSec)
     if (!Number.isFinite(sec) || sec <= 0) return 'Hedef operasyon süresi geçersiz.'
   }
   return null
+}
+
+/**
+ * @param {VbssPhaseFormState} phase
+ * @param {VbssPhaseId} phaseId
+ */
+export function buildVbssPhasePayload(phase, phaseId) {
+  const criteria = VBSS_PHASE_SUB_CRITERIA[phaseId]
+  const { subScores, score } = buildSubScoresPayload(phase.subScores, criteria, { min: 0, max: 10 })
+  return {
+    score,
+    subScores,
+    observation: String(phase.observation ?? '').trim(),
+  }
 }
 
 /**
@@ -85,17 +111,16 @@ export function validateVbssEvaluationForm(form) {
  * }} input
  */
 export function buildVbssEvaluationPayload({ form, groupId, instructorId, operatorName = '' }) {
-  /** @type {Record<VbssPhaseId, { score: number; observation: string }>} */
+  /** @type {Record<VbssPhaseId, { score: number; subScores: Record<string, number>; observation: string }>} */
   const operationalScores = {}
   const operationalNotes = {}
 
   let sum = 0
   for (const meta of VBSS_EVALUATION_PHASES) {
-    const phase = form[meta.id]
-    const score = parsePhaseScore(phase) ?? 0
-    sum += score
-    operationalScores[meta.id] = { score, observation: String(phase.observation ?? '').trim() }
-    operationalNotes[meta.id] = String(phase.observation ?? '').trim()
+    const phasePayload = buildVbssPhasePayload(form[meta.id], meta.id)
+    sum += phasePayload.score
+    operationalScores[meta.id] = phasePayload
+    operationalNotes[meta.id] = phasePayload.observation
   }
 
   const overallScore = Math.round((sum / VBSS_EVALUATION_PHASES.length) * 10) / 10
@@ -115,3 +140,5 @@ export function buildVbssEvaluationPayload({ form, groupId, instructorId, operat
     overallScore,
   }
 }
+
+export { VBSS_PHASE_SUB_CRITERIA }

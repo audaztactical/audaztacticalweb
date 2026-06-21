@@ -14,8 +14,8 @@ import { safeOnSnapshot, timestampToMs } from './firestoreSnapshot'
  *   type: string
  *   isTimed: boolean
  *   targetOperationSec: number | null
- *   phases: Record<string, { score: number; observation: string }>
- *   operationalScores: Record<string, { score: number; observation: string }>
+ *   phases: Record<string, { score: number; subScores?: Record<string, number>; observation: string }>
+ *   operationalScores: Record<string, { score: number; subScores?: Record<string, number>; observation: string }>
  *   operationalNotes: Record<string, string>
  *   overallScore: number
  *   createdAt?: unknown
@@ -40,14 +40,25 @@ export function mapVbssEvaluationDoc(raw, docId) {
   const d = /** @type {Record<string, unknown>} */ (raw)
 
   const phasesRaw = d.phases ?? d.operationalScores
-  /** @type {Record<string, { score: number; observation: string }>} */
+  /** @type {Record<string, { score: number; subScores?: Record<string, number>; observation: string }>} */
   const phases = {}
   if (phasesRaw && typeof phasesRaw === 'object') {
     for (const [key, val] of Object.entries(phasesRaw)) {
       if (!val || typeof val !== 'object') continue
       const p = /** @type {Record<string, unknown>} */ (val)
+      /** @type {Record<string, number> | undefined} */
+      let subScores
+      if (p.subScores && typeof p.subScores === 'object') {
+        subScores = {}
+        for (const [subId, subVal] of Object.entries(p.subScores)) {
+          if (typeof subVal === 'number' && Number.isFinite(subVal)) {
+            subScores[subId] = Math.min(10, Math.max(0, subVal))
+          }
+        }
+      }
       phases[key] = {
         score: Math.min(10, Math.max(0, Number(p.score) || 0)),
+        ...(subScores && Object.keys(subScores).length ? { subScores } : {}),
         observation: String(p.observation ?? ''),
       }
     }

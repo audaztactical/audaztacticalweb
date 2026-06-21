@@ -10,11 +10,10 @@ import {
 import {
   VBSS_EVALUATION_INITIAL_FORM,
   VBSS_EVALUATION_PHASES,
-  parsePhaseScore,
+  buildVbssPhasePayload,
+  validateVbssEvaluationForm,
 } from './vbssEvaluationPayload'
 import { TRAINING_TYPE_INDIVIDUAL } from './trainingGroupFields'
-
-/** @typedef {import('./vbssEvaluationPayload').VbssPhaseFormState} VbssPhaseFormState */
 
 /**
  * @typedef {Omit<import('./vbssEvaluationPayload').VbssEvaluationFormState, 'operatorId'> & {
@@ -25,20 +24,15 @@ import { TRAINING_TYPE_INDIVIDUAL } from './trainingGroupFields'
  * }} VbssObservedEvalFormState
  */
 
-/** @returns {VbssPhaseFormState} */
-function emptyPhase() {
-  return { score: '', observation: '' }
-}
-
 export const VBSS_OBSERVED_EVAL_INITIAL_FORM = /** @type {VbssObservedEvalFormState} */ ({
   observerName: '',
   observerCallsign: '',
   observedAt: '',
   isTimed: false,
   targetOperationSec: '',
-  boarding: emptyPhase(),
-  clearing: emptyPhase(),
-  control: emptyPhase(),
+  boarding: { ...VBSS_EVALUATION_INITIAL_FORM.boarding },
+  clearing: { ...VBSS_EVALUATION_INITIAL_FORM.clearing },
+  control: { ...VBSS_EVALUATION_INITIAL_FORM.control },
   operationNote: '',
 })
 
@@ -49,11 +43,8 @@ export const VBSS_OBSERVED_EVAL_INITIAL_FORM = /** @type {VbssObservedEvalFormSt
 export function validateVbssObservedEvalForm(form) {
   if (!invStr(form.observerName).trim()) return 'Gözlemci adı zorunludur.'
   if (!invStr(form.observedAt).trim()) return 'Saha tarihi zorunludur.'
-  for (const meta of VBSS_EVALUATION_PHASES) {
-    const phase = form[meta.id]
-    if (phase.score === '') return `${meta.title} için skor seçin.`
-    if (parsePhaseScore(phase) === null) return `${meta.title} skoru 0–10 arasında olmalı.`
-  }
+  const coreErr = validateVbssEvaluationForm({ ...form, operatorId: 'self' })
+  if (coreErr && coreErr !== 'Değerlendirilecek operatör seçin.') return coreErr
   if (form.isTimed) {
     const sec = Number(form.targetOperationSec)
     if (!Number.isFinite(sec) || sec <= 0) return 'Hedef operasyon süresi geçersiz.'
@@ -69,17 +60,16 @@ export function validateVbssObservedEvalForm(form) {
  * }} input
  */
 export function buildVbssObservedEvalPayload({ form, userId, operatorName = '' }) {
-  /** @type {Record<string, { score: number; observation: string }>} */
+  /** @type {Record<string, { score: number; subScores: Record<string, number>; observation: string }>} */
   const operationalScores = {}
   const operationalNotes = {}
 
   let sum = 0
   for (const meta of VBSS_EVALUATION_PHASES) {
-    const phase = form[meta.id]
-    const score = parsePhaseScore(phase) ?? 0
-    sum += score
-    operationalScores[meta.id] = { score, observation: String(phase.observation ?? '').trim() }
-    operationalNotes[meta.id] = String(phase.observation ?? '').trim()
+    const phasePayload = buildVbssPhasePayload(form[meta.id], meta.id)
+    sum += phasePayload.score
+    operationalScores[meta.id] = phasePayload
+    operationalNotes[meta.id] = phasePayload.observation
   }
 
   const overallScore = Math.round((sum / VBSS_EVALUATION_PHASES.length) * 10) / 10

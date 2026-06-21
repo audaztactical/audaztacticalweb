@@ -8,17 +8,13 @@ import {
   VERIFICATION_STATUS_UNVERIFIED,
 } from './observedEvalConstants'
 import {
-  TCCC_MARCH_ACTION_CHIPS,
+  TCCC_EVALUATION_INITIAL_FORM,
   TCCC_MARCH_EVALUATION_PHASES,
-  activeActionChipIds,
+  buildTcccPhasePayload,
   formHasAnyCriticalFail,
-  parseMarchPhaseScore,
-  resolveMarchPhaseScore,
+  validateTcccEvaluationForm,
 } from './tcccEvaluationPayload'
 import { TRAINING_TYPE_INDIVIDUAL } from './trainingGroupFields'
-
-/** @typedef {import('./tcccEvaluationPayload').TcccMarchPhaseFormState} TcccMarchPhaseFormState */
-/** @typedef {import('./tcccEvaluationPayload').TcccMarchPhaseId} TcccMarchPhaseId */
 
 /**
  * @typedef {Omit<import('./tcccEvaluationPayload').TcccEvaluationFormState, 'operatorId'> & {
@@ -29,27 +25,17 @@ import { TRAINING_TYPE_INDIVIDUAL } from './trainingGroupFields'
  * }} TcccObservedEvalFormState
  */
 
-/** @param {TcccMarchPhaseId} phaseId */
-function emptyMarchPhase(phaseId) {
-  /** @type {Record<string, boolean>} */
-  const actions = {}
-  for (const chip of TCCC_MARCH_ACTION_CHIPS[phaseId]) {
-    actions[chip.id] = false
-  }
-  return { score: '', observation: '', criticalFail: false, actions }
-}
-
 export const TCCC_OBSERVED_EVAL_INITIAL_FORM = /** @type {TcccObservedEvalFormState} */ ({
   observerName: '',
   observerCallsign: '',
   observedAt: '',
   isTimed: false,
   targetInterventionSec: '',
-  m: emptyMarchPhase('m'),
-  a: emptyMarchPhase('a'),
-  r: emptyMarchPhase('r'),
-  c: emptyMarchPhase('c'),
-  h: emptyMarchPhase('h'),
+  m: { ...TCCC_EVALUATION_INITIAL_FORM.m },
+  a: { ...TCCC_EVALUATION_INITIAL_FORM.a },
+  r: { ...TCCC_EVALUATION_INITIAL_FORM.r },
+  c: { ...TCCC_EVALUATION_INITIAL_FORM.c },
+  h: { ...TCCC_EVALUATION_INITIAL_FORM.h },
   operationNote: '',
 })
 
@@ -60,13 +46,8 @@ export const TCCC_OBSERVED_EVAL_INITIAL_FORM = /** @type {TcccObservedEvalFormSt
 export function validateTcccObservedEvalForm(form) {
   if (!invStr(form.observerName).trim()) return 'Gözlemci adı zorunludur.'
   if (!invStr(form.observedAt).trim()) return 'Saha tarihi zorunludur.'
-  for (const meta of TCCC_MARCH_EVALUATION_PHASES) {
-    const phase = form[meta.id]
-    if (phase.criticalFail) continue
-    if (phase.score === '') return `${meta.title} için skor seçin (1–10).`
-    const n = parseMarchPhaseScore(phase)
-    if (n === null || n < 1 || n > 10) return `${meta.title} skoru 1–10 arasında olmalı.`
-  }
+  const coreErr = validateTcccEvaluationForm({ ...form, operatorId: 'self' })
+  if (coreErr && coreErr !== 'Değerlendirilecek operatör seçin.') return coreErr
   if (form.isTimed) {
     const sec = Number(form.targetInterventionSec)
     if (!Number.isFinite(sec) || sec <= 0) return 'Müdahale hedef süresi geçersiz.'
@@ -82,30 +63,22 @@ export function validateTcccObservedEvalForm(form) {
  * }} input
  */
 export function buildTcccObservedEvalPayload({ form, userId, operatorName = '' }) {
-  /** @type {Record<TcccMarchPhaseId, { score: number; observation: string; criticalFail: boolean; actionChips: string[] }>} */
+  /** @type {Record<string, ReturnType<typeof buildTcccPhasePayload>>} */
   const marchScores = {}
   const operationalNotes = {}
-  /** @type {Record<TcccMarchPhaseId, boolean>} */
+  /** @type {Record<string, boolean>} */
   const criticalFails = {}
-  /** @type {Record<TcccMarchPhaseId, string[]>} */
+  /** @type {Record<string, string[]>} */
   const marchActionChips = {}
 
   let sum = 0
   for (const meta of TCCC_MARCH_EVALUATION_PHASES) {
-    const phase = form[meta.id]
-    const criticalFail = Boolean(phase.criticalFail)
-    const score = resolveMarchPhaseScore(phase)
-    const actionChips = activeActionChipIds(phase.actions)
-    sum += score
-    criticalFails[meta.id] = criticalFail
-    marchActionChips[meta.id] = actionChips
-    marchScores[meta.id] = {
-      score,
-      observation: String(phase.observation ?? '').trim(),
-      criticalFail,
-      actionChips,
-    }
-    operationalNotes[meta.id] = String(phase.observation ?? '').trim()
+    const phasePayload = buildTcccPhasePayload(form[meta.id], meta.id)
+    sum += phasePayload.score
+    criticalFails[meta.id] = phasePayload.criticalFail
+    marchActionChips[meta.id] = phasePayload.actionChips
+    marchScores[meta.id] = phasePayload
+    operationalNotes[meta.id] = phasePayload.observation
   }
 
   const overallScore = Math.round((sum / TCCC_MARCH_EVALUATION_PHASES.length) * 10) / 10
@@ -153,3 +126,5 @@ export function buildTcccObservedEvalPayload({ form, userId, operatorName = '' }
     status: 'active',
   }
 }
+
+export { TCCC_MARCH_EVALUATION_PHASES, TCCC_EVALUATION_INITIAL_FORM }

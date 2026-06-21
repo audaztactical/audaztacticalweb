@@ -11,8 +11,9 @@ import {
 } from '../../lib/operatorGroupInstructorRecords'
 import { formatGroupTrainingStatusLabelInstructor } from '../../lib/groupTrainingAssessment'
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
-import { VBSS_EVALUATION_PHASES } from '../../lib/vbssEvaluationPayload'
-import { TCCC_MARCH_EVALUATION_PHASES } from '../../lib/tcccEvaluationPayload'
+import { VBSS_EVALUATION_PHASES, VBSS_PHASE_SUB_CRITERIA } from '../../lib/vbssEvaluationPayload'
+import { TCCC_MARCH_EVALUATION_PHASES, TCCC_PHASE_SUB_CRITERIA } from '../../lib/tcccEvaluationPayload'
+import { PhaseSubScoresDisplay } from '../training/PhaseSubCriteriaFields'
 
 /** @typedef {import('../../lib/firestoreGroupTraining').GroupActivityLog} GroupActivityLog */
 /** @typedef {import('../../lib/firestoreGroupTraining').GroupTrainingDiscipline} GroupTrainingDiscipline */
@@ -234,9 +235,14 @@ export default function OperatorInstructorRecordsPanel({
               const obs = p?.observation || row.operationalNotes?.[phase.id] || ''
               return (
                 <div key={phase.id} className="font-mono-technical text-[10px] uppercase">
-                  <p className="text-sky-400">
-                    {phase.title ?? phase.label}: {p?.score ?? '—'}/10
-                  </p>
+                  <p className="text-sky-400">{phase.title ?? phase.label}</p>
+                  <div className="mt-1 normal-case">
+                    <PhaseSubScoresDisplay
+                      phaseData={p}
+                      criteria={VBSS_PHASE_SUB_CRITERIA[phase.id]}
+                      maxScore={10}
+                    />
+                  </div>
                   {obs ? (
                     <p className="mt-0.5 normal-case text-app-text/90">{obs}</p>
                   ) : (
@@ -287,9 +293,16 @@ export default function OperatorInstructorRecordsPanel({
               return (
                 <div key={phase.id} className="font-mono-technical text-[10px] uppercase">
                   <p className={critical ? 'text-rose-400' : 'text-sky-400'}>
-                    {phase.title ?? phase.label}: {p?.score ?? '—'}/10
+                    {phase.title ?? phase.label}
                     {critical ? ' · KRİTİK HATA' : ''}
                   </p>
+                  <div className="mt-1 normal-case">
+                    <PhaseSubScoresDisplay
+                      phaseData={p}
+                      criteria={TCCC_PHASE_SUB_CRITERIA[phase.id]}
+                      maxScore={10}
+                    />
+                  </div>
                   {obs ? (
                     <p className="mt-0.5 normal-case text-app-text/90">{obs}</p>
                   ) : (

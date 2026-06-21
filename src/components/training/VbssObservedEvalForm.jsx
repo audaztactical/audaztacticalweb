@@ -8,8 +8,9 @@ import {
   VBSS_OBSERVED_EVAL_INITIAL_FORM,
   validateVbssObservedEvalForm,
 } from '../../lib/vbssObservedEvalPayload'
+import { VBSS_PHASE_SUB_CRITERIA } from '../../lib/vbssEvaluationPayload'
 import { submitVbssObservedEval } from '../../lib/vbssObservedEvalSubmit'
-import { VBSS_SCORE_OPTIONS } from '../../lib/vbssEvaluationPayload'
+import PhaseSubCriteriaFields from './PhaseSubCriteriaFields'
 
 const inputClass =
   'w-full rounded border border-accent/30 bg-app-bg px-2 py-2 font-mono-technical text-sm text-slate-100 outline-none placeholder:text-app-text/45 focus:border-accent/60'
@@ -49,8 +50,15 @@ export default function VbssObservedEvalForm({ addLog, onSubmitted, hidePdfBanne
   }, [])
 
   const patchPhase = useCallback(
-    (/** @type {import('../../lib/vbssEvaluationPayload').VbssPhaseId} */ id, /** @type {Partial<{ score: string; observation: string }>} */ next) => {
-      setForm((f) => ({ ...f, [id]: { ...f[id], ...next } }))
+    (/** @type {import('../../lib/vbssEvaluationPayload').VbssPhaseId} */ id, /** @type {Partial<{ subScores: Record<string, string>; observation: string }>} */ next) => {
+      setForm((f) => ({
+        ...f,
+        [id]: {
+          ...f[id],
+          ...next,
+          subScores: next.subScores ? { ...f[id].subScores, ...next.subScores } : f[id].subScores,
+        },
+      }))
       setMsg('')
       setOk(false)
     },
@@ -156,15 +164,18 @@ export default function VbssObservedEvalForm({ addLog, onSubmitted, hidePdfBanne
               <p className="font-mono-technical text-xs font-bold uppercase tracking-wider text-app-text">{meta.title}</p>
               <p className="mt-0.5 font-mono-technical text-[9px] text-app-text/50">{meta.subtitle}</p>
             </div>
-            <label className="block space-y-1.5">
-              <span className={labelClass}>Skor (0–10) *</span>
-              <select className={selectClass} value={form[meta.id].score} onChange={(e) => patchPhase(meta.id, { score: e.target.value })} required>
-                <option value="">— SEÇİN —</option>
-                {VBSS_SCORE_OPTIONS.map((n) => (
-                  <option key={n} value={String(n)}>{n}</option>
-                ))}
-              </select>
-            </label>
+            <PhaseSubCriteriaFields
+              criteria={VBSS_PHASE_SUB_CRITERIA[meta.id]}
+              subScores={form[meta.id].subScores}
+              onSubScoreChange={(criterionId, value) =>
+                patchPhase(meta.id, { subScores: { [criterionId]: value } })
+              }
+              min={0}
+              max={10}
+              variant="select"
+              selectClassName={selectClass}
+              labelClassName={labelClass}
+            />
             <label className="block space-y-1.5">
               <span className={labelClass}>Gözlem notu</span>
               <textarea className={textareaClass} value={form[meta.id].observation} onChange={(e) => patchPhase(meta.id, { observation: e.target.value })} />

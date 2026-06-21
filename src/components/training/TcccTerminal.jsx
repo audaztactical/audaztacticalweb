@@ -28,7 +28,9 @@ import { useTrainingSession } from '../../context/TrainingSessionContext'
 import { TRAINING_TYPE_GROUP } from '../../lib/trainingGroupFields'
 import { subscribeOperatorTcccEvaluations } from '../../lib/firestoreTcccEvaluations'
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
-import { TCCC_MARCH_ACTION_CHIPS, TCCC_MARCH_EVALUATION_PHASES } from '../../lib/tcccEvaluationPayload'
+import { TCCC_MARCH_ACTION_CHIPS, TCCC_MARCH_EVALUATION_PHASES, TCCC_PHASE_SUB_CRITERIA } from '../../lib/tcccEvaluationPayload'
+import { readStoredPhaseScore } from '../../lib/evaluationSubScores'
+import { PhaseSubScoresDisplay } from './PhaseSubCriteriaFields'
 import { useOperatorGroup } from '../../hooks/useOperatorGroup'
 import IndividualTrainingSessionHeader from './IndividualTrainingSessionHeader'
 import TcccObservedEvalForm from './TcccObservedEvalForm'
@@ -74,8 +76,7 @@ function getMarchPhase(evaluation, phaseId) {
  */
 function getMarchScore(evaluation, phaseId) {
   const p = getMarchPhase(evaluation, phaseId)
-  if (!p || typeof p.score !== 'number') return null
-  return p.score
+  return readStoredPhaseScore(p)
 }
 
 /**
@@ -424,29 +425,37 @@ export default function TcccTerminal({
                       Değerlendirme bekleniyor…
                     </p>
                   ) : (
-                    <div className="flex items-end justify-between gap-2">
-                      <div>
-                        <p className="text-xs font-medium text-zinc-500">Skor</p>
-                        <p
-                          className={`font-mono text-3xl font-bold tabular-nums ${
-                            critical ? 'text-red-400' : 'text-zinc-100'
-                          }`}
-                        >
-                          {score}
-                          <span className="text-base font-medium text-zinc-500">/10</span>
-                        </p>
+                    <div className="space-y-2">
+                      <div className="flex items-end justify-between gap-2">
+                        <div>
+                          <p className="text-xs font-medium text-zinc-500">Safha ortalaması</p>
+                          <p
+                            className={`font-mono text-2xl font-bold tabular-nums ${
+                              critical ? 'text-red-400' : 'text-zinc-100'
+                            }`}
+                          >
+                            {score}
+                            <span className="text-base font-medium text-zinc-500">/10</span>
+                          </p>
+                        </div>
+                        {critical ? (
+                          <AlertTriangle className="size-7 shrink-0 text-red-400/90" aria-hidden />
+                        ) : (
+                          <div
+                            className="size-9 shrink-0 rounded-full border border-emerald-500/30"
+                            style={{
+                              background: `conic-gradient(rgb(52 211 153 / 0.55) ${(score ?? 0) * 36}deg, rgb(39 39 42 / 0.4) 0deg)`,
+                            }}
+                            aria-hidden
+                          />
+                        )}
                       </div>
-                      {critical ? (
-                        <AlertTriangle className="size-8 shrink-0 text-red-400/90" aria-hidden />
-                      ) : (
-                        <div
-                          className="size-10 shrink-0 rounded-full border border-emerald-500/30"
-                          style={{
-                            background: `conic-gradient(rgb(52 211 153 / 0.55) ${score * 36}deg, rgb(39 39 42 / 0.4) 0deg)`,
-                          }}
-                          aria-hidden
-                        />
-                      )}
+                      <PhaseSubScoresDisplay
+                        phaseData={getMarchPhase(latestEvaluation, meta.id)}
+                        criteria={TCCC_PHASE_SUB_CRITERIA[meta.id]}
+                        maxScore={10}
+                        compact
+                      />
                     </div>
                   )}
                 </BentoCard>

@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf'
 import { PDF_FONT_FAMILY, preparePdfAssets, setPdfFont } from './pdfFontLoader'
 import { TCCC_MARCH_ACTION_CHIPS, TCCC_MARCH_EVALUATION_PHASES } from './tcccEvaluationPayload'
+import { TCCC_PHASE_SUB_CRITERIA } from './evaluationPhaseCriteria'
 import { TCCC_OBSERVED_PDF_FORM_VERSION } from './observedEvalConstants'
 
 /** @typedef {{ callsign?: string; username?: string; displayName?: string }} OperatorPrefill */
@@ -143,9 +144,17 @@ export async function generateTcccObservationFormPdf(operator = {}) {
     doc.text('☐ KRİTİK HATA (K.İ.A)', MARGIN, y)
     y += 6
     doc.setTextColor(...COLORS.muted)
-    doc.text('SKOR (1–10):', MARGIN, y)
-    drawScoreBoxes1to10(doc, MARGIN + 28, y - 3.5)
-    y += 12
+    const criteria = TCCC_PHASE_SUB_CRITERIA[meta.id] ?? []
+    for (const criterion of criteria) {
+      doc.text(`${criterion.label} (1–10):`, MARGIN, y)
+      drawScoreBoxes1to10(doc, MARGIN + 48, y - 3.5)
+      y += 10
+    }
+    if (!criteria.length) {
+      doc.text('SKOR (1–10):', MARGIN, y)
+      drawScoreBoxes1to10(doc, MARGIN + 28, y - 3.5)
+      y += 6
+    }
 
     doc.text('TAKTİK MÜDAHALE (uygulananları işaretleyin):', MARGIN, y)
     y += 5

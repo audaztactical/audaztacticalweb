@@ -15,11 +15,13 @@ import {
   TCCC_EVALUATION_INITIAL_FORM,
   TCCC_MARCH_ACTION_CHIPS,
   TCCC_MARCH_EVALUATION_PHASES,
+  TCCC_PHASE_SUB_CRITERIA,
   buildTcccEvaluationPayload,
   formHasAnyCriticalFail,
   resolveMarchPhaseScore,
   validateTcccEvaluationForm,
 } from '../../../lib/tcccEvaluationPayload'
+import PhaseSubCriteriaFields from '../../training/PhaseSubCriteriaFields'
 import InstructorGroupSelect from '../cleanTactical/InstructorGroupSelect'
 import CleanFade from '../cleanTactical/CleanFade'
 import { ctBtnPrimary, ctHelperText, ctMsgErr, ctMsgOk } from '../cleanTactical/tokens'
@@ -178,7 +180,7 @@ function CasualtyStatusBar({ unstable }) {
  *   title: string
  *   subtitle: string
  *   phase: TcccMarchPhaseFormState
- *   onScoreChange: (v: string) => void
+ *   onSubScoreChange: (criterionId: string, value: string) => void
  *   onObservationChange: (v: string) => void
  *   onCriticalFailChange: (v: boolean) => void
  *   onActionToggle: (chipId: string) => void
@@ -190,14 +192,15 @@ function TcccMarchHudCard({
   title,
   subtitle,
   phase,
-  onScoreChange,
+  onSubScoreChange,
   onObservationChange,
   onCriticalFailChange,
   onActionToggle,
 }) {
   const Icon = PHASE_ICONS[phaseId]
-  const { criticalFail, score, observation, actions } = phase
-  const effectiveScore = resolveMarchPhaseScore(phase)
+  const { criticalFail, subScores, observation, actions } = phase
+  const effectiveScore = resolveMarchPhaseScore(phase, phaseId)
+  const criteria = TCCC_PHASE_SUB_CRITERIA[phaseId]
 
   return (
     <article
@@ -234,10 +237,15 @@ function TcccMarchHudCard({
         <KillSwitch active={criticalFail} onChange={onCriticalFailChange} />
       </header>
 
-      <SegmentedScoreBar
-        value={criticalFail ? '0' : score}
-        onChange={onScoreChange}
+      <PhaseSubCriteriaFields
+        criteria={criteria}
+        subScores={subScores}
+        onSubScoreChange={onSubScoreChange}
+        min={1}
+        max={10}
         disabled={criticalFail}
+        variant="segmented"
+        labelClassName={hudLabel}
       />
 
       <p className="font-mono text-[10px] text-zinc-600">
@@ -319,7 +327,11 @@ export default function InstructorTcccSectorPanel({
     (/** @type {TcccMarchPhaseId} */ id, /** @type {Partial<TcccMarchPhaseFormState>} */ next) => {
       setForm((prev) => ({
         ...prev,
-        [id]: { ...prev[id], ...next },
+        [id]: {
+          ...prev[id],
+          ...next,
+          subScores: next.subScores ? { ...prev[id].subScores, ...next.subScores } : prev[id].subScores,
+        },
       }))
     },
     [],
@@ -331,7 +343,6 @@ export default function InstructorTcccSectorPanel({
       [id]: {
         ...prev[id],
         criticalFail: checked,
-        score: checked ? '0' : prev[id].score === '0' ? '' : prev[id].score,
       },
     }))
   }, [])
@@ -499,7 +510,9 @@ export default function InstructorTcccSectorPanel({
               title={meta.title}
               subtitle={meta.subtitle}
               phase={form[meta.id]}
-              onScoreChange={(v) => patchPhase(meta.id, { score: v })}
+              onSubScoreChange={(criterionId, value) =>
+                patchPhase(meta.id, { subScores: { [criterionId]: value } })
+              }
               onObservationChange={(v) => patchPhase(meta.id, { observation: v })}
               onCriticalFailChange={(v) => handleCriticalFailChange(meta.id, v)}
               onActionToggle={(chipId) => handleActionToggle(meta.id, chipId)}

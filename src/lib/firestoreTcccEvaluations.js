@@ -8,6 +8,7 @@ import { safeOnSnapshot, timestampToMs } from './firestoreSnapshot'
 
 /** @typedef {{
  *   score: number
+ *   subScores?: Record<string, number>
  *   observation: string
  *   criticalFail: boolean
  *   actionChips?: string[]
@@ -62,8 +63,19 @@ export function mapTcccEvaluationDoc(raw, docId) {
       const actionChips = Array.isArray(chipsRaw)
         ? chipsRaw.map((c) => String(c)).filter(Boolean)
         : []
+      /** @type {Record<string, number> | undefined} */
+      let subScores
+      if (p.subScores && typeof p.subScores === 'object') {
+        subScores = {}
+        for (const [subId, subVal] of Object.entries(p.subScores)) {
+          if (typeof subVal === 'number' && Number.isFinite(subVal)) {
+            subScores[subId] = Math.min(10, Math.max(0, subVal))
+          }
+        }
+      }
       phases[/** @type {TcccMarchPhaseId} */ (key)] = {
         score: Math.min(10, Math.max(0, Number(p.score) || 0)),
+        ...(subScores && Object.keys(subScores).length ? { subScores } : {}),
         observation: String(p.observation ?? ''),
         criticalFail: Boolean(p.criticalFail),
         actionChips,

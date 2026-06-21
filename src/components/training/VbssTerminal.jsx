@@ -17,7 +17,9 @@ import { useTrainingSession } from '../../context/TrainingSessionContext'
 import { TRAINING_TYPE_GROUP } from '../../lib/trainingGroupFields'
 import { subscribeOperatorVbssEvaluations } from '../../lib/firestoreVbssEvaluations'
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
-import { VBSS_EVALUATION_PHASES } from '../../lib/vbssEvaluationPayload'
+import { VBSS_EVALUATION_PHASES, VBSS_PHASE_SUB_CRITERIA } from '../../lib/vbssEvaluationPayload'
+import { readStoredPhaseScore } from '../../lib/evaluationSubScores'
+import { PhaseSubScoresDisplay } from './PhaseSubCriteriaFields'
 import { useOperatorGroup } from '../../hooks/useOperatorGroup'
 import IndividualTrainingSessionHeader from './IndividualTrainingSessionHeader'
 import VbssObservedEvalForm from './VbssObservedEvalForm'
@@ -53,8 +55,7 @@ function formatOperationTime(totalSec) {
 function getPhaseScore(evaluation, phaseId) {
   if (!evaluation) return null
   const p = evaluation.phases?.[phaseId] ?? evaluation.operationalScores?.[phaseId]
-  if (!p || typeof p.score !== 'number') return null
-  return p.score
+  return readStoredPhaseScore(p)
 }
 
 /**
@@ -365,20 +366,28 @@ export default function VbssTerminal({
                         Değerlendirme bekleniyor…
                       </p>
                     ) : (
-                      <div className="flex items-end justify-between gap-3">
-                        <div>
-                          <p className="text-xs font-medium text-zinc-500">Skor</p>
-                          <p className="font-mono text-4xl font-bold tabular-nums text-zinc-100">
-                            {score}
-                            <span className="text-lg font-medium text-zinc-500">/10</span>
-                          </p>
+                      <div className="space-y-3">
+                        <div className="flex items-end justify-between gap-3">
+                          <div>
+                            <p className="text-xs font-medium text-zinc-500">Safha ortalaması</p>
+                            <p className="font-mono text-3xl font-bold tabular-nums text-zinc-100">
+                              {score}
+                              <span className="text-lg font-medium text-zinc-500">/10</span>
+                            </p>
+                          </div>
+                          <div
+                            className="h-12 w-12 rounded-full border border-emerald-500/30 bg-emerald-500/10"
+                            style={{
+                              background: `conic-gradient(rgb(52 211 153 / 0.55) ${(score ?? 0) * 36}deg, rgb(39 39 42 / 0.4) 0deg)`,
+                            }}
+                            aria-hidden
+                          />
                         </div>
-                        <div
-                          className="h-12 w-12 rounded-full border border-emerald-500/30 bg-emerald-500/10"
-                          style={{
-                            background: `conic-gradient(rgb(52 211 153 / 0.55) ${score * 36}deg, rgb(39 39 42 / 0.4) 0deg)`,
-                          }}
-                          aria-hidden
+                        <PhaseSubScoresDisplay
+                          phaseData={latestEvaluation?.phases?.[meta.id] ?? latestEvaluation?.operationalScores?.[meta.id]}
+                          criteria={VBSS_PHASE_SUB_CRITERIA[meta.id]}
+                          maxScore={10}
+                          compact
                         />
                       </div>
                     )}

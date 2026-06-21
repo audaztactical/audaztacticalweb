@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import TacticalPanel from '../ui/TacticalPanel'
-import { VBSS_EVALUATION_PHASES } from '../../lib/vbssEvaluationPayload'
+import { VBSS_EVALUATION_PHASES, VBSS_PHASE_SUB_CRITERIA } from '../../lib/vbssEvaluationPayload'
+import { PhaseSubScoresDisplay } from './PhaseSubCriteriaFields'
 import {
   filterObservedEvalLogs,
   formatObservedEvalDate,
@@ -68,10 +69,14 @@ export default function VbssObservedEvalRegistry({ logs, loading = false }) {
               {VBSS_EVALUATION_PHASES.map((meta) => (
                 <div key={meta.id} className="rounded border border-white/10 bg-black/30 px-2 py-2">
                   <p className="font-mono-technical text-[8px] uppercase text-app-text/45">{meta.id}</p>
-                  <p className="font-mono-technical text-lg font-bold tabular-nums text-accent">
-                    {phases[meta.id]?.score ?? '—'}
-                    <span className="text-xs text-app-text/40">/10</span>
-                  </p>
+                  <div className="mt-1">
+                    <PhaseSubScoresDisplay
+                      phaseData={phases[meta.id]}
+                      criteria={VBSS_PHASE_SUB_CRITERIA[meta.id]}
+                      maxScore={10}
+                      compact
+                    />
+                  </div>
                 </div>
               ))}
             </div>

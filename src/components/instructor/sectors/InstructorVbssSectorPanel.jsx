@@ -5,10 +5,11 @@ import { emitFirebaseError } from '../../../lib/firebaseErrorBus'
 import {
   VBSS_EVALUATION_INITIAL_FORM,
   VBSS_EVALUATION_PHASES,
-  VBSS_SCORE_OPTIONS,
+  VBSS_PHASE_SUB_CRITERIA,
   buildVbssEvaluationPayload,
   validateVbssEvaluationForm,
 } from '../../../lib/vbssEvaluationPayload'
+import PhaseSubCriteriaFields from '../../training/PhaseSubCriteriaFields'
 import BentoCard from '../cleanTactical/BentoCard'
 import InstructorGroupSelect from '../cleanTactical/InstructorGroupSelect'
 import CleanFade from '../cleanTactical/CleanFade'
@@ -34,9 +35,12 @@ import {
  *   phaseId: VbssPhaseId
  *   title: string
  *   subtitle: string
- *   score: string
+ *   phaseId: VbssPhaseId
+ *   title: string
+ *   subtitle: string
+ *   subScores: Record<string, string>
  *   observation: string
- *   onScoreChange: (v: string) => void
+ *   onSubScoreChange: (criterionId: string, value: string) => void
  *   onObservationChange: (v: string) => void
  * }} props
  */
@@ -44,11 +48,12 @@ function VbssPhaseCard({
   phaseId,
   title,
   subtitle,
-  score,
+  subScores,
   observation,
-  onScoreChange,
+  onSubScoreChange,
   onObservationChange,
 }) {
+  const criteria = VBSS_PHASE_SUB_CRITERIA[phaseId]
   return (
     <BentoCard
       title={title}
@@ -56,25 +61,18 @@ function VbssPhaseCard({
       icon={phaseId === 'boarding' ? Anchor : phaseId === 'clearing' ? Ship : ClipboardCheck}
       className="border-zinc-800/90"
     >
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="block space-y-1.5" htmlFor={`vbss-score-${phaseId}`}>
-          <span className={ctLabel}>Skor (0–10)</span>
-          <select
-            id={`vbss-score-${phaseId}`}
-            className={ctSelect}
-            value={score}
-            onChange={(e) => onScoreChange(e.target.value)}
-            required
-          >
-            <option value="">Seçin</option>
-            {VBSS_SCORE_OPTIONS.map((n) => (
-              <option key={n} value={String(n)}>
-                {n}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="block space-y-1.5 sm:col-span-2" htmlFor={`vbss-note-${phaseId}`}>
+      <div className="grid gap-4">
+        <PhaseSubCriteriaFields
+          criteria={criteria}
+          subScores={subScores}
+          onSubScoreChange={onSubScoreChange}
+          min={0}
+          max={10}
+          variant="select"
+          selectClassName={ctSelect}
+          labelClassName={ctLabel}
+        />
+        <label className="block space-y-1.5" htmlFor={`vbss-note-${phaseId}`}>
           <span className={ctLabel}>Gözlem notu</span>
           <textarea
             id={`vbss-note-${phaseId}`}
@@ -136,10 +134,14 @@ export default function InstructorVbssSectorPanel({
   }, [])
 
   const patchPhase = useCallback(
-    (/** @type {VbssPhaseId} */ id, /** @type {Partial<{ score: string; observation: string }>} */ next) => {
+    (/** @type {VbssPhaseId} */ id, /** @type {Partial<{ subScores: Record<string, string>; observation: string }>} */ next) => {
       setForm((prev) => ({
         ...prev,
-        [id]: { ...prev[id], ...next },
+        [id]: {
+          ...prev[id],
+          ...next,
+          subScores: next.subScores ? { ...prev[id].subScores, ...next.subScores } : prev[id].subScores,
+        },
       }))
     },
     [],
@@ -273,9 +275,11 @@ export default function InstructorVbssSectorPanel({
                 phaseId={meta.id}
                 title={meta.title}
                 subtitle={meta.subtitle}
-                score={form[meta.id].score}
+                subScores={form[meta.id].subScores}
                 observation={form[meta.id].observation}
-                onScoreChange={(v) => patchPhase(meta.id, { score: v })}
+                onSubScoreChange={(criterionId, value) =>
+                  patchPhase(meta.id, { subScores: { [criterionId]: value } })
+                }
                 onObservationChange={(v) => patchPhase(meta.id, { observation: v })}
               />
             </div>

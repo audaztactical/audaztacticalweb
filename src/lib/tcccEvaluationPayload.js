@@ -1,3 +1,11 @@
+import { TCCC_PHASE_SUB_CRITERIA } from './evaluationPhaseCriteria'
+import {
+  buildSubScoresPayload,
+  computePhaseScoreFromForm,
+  emptySubScoreForm,
+  validatePhaseSubScoresForm,
+} from './evaluationSubScores'
+
 /** @typedef {'m' | 'a' | 'r' | 'c' | 'h'} TcccMarchPhaseId */
 
 /** Segmented bar dışındaki tüketiciler / HMR uyumluluğu (1–10 skor). */
@@ -7,7 +15,7 @@ export const TCCC_SCORE_OPTIONS = Array.from({ length: 10 }, (_, i) => i + 1)
 
 /** @typedef {Record<string, boolean>} TcccActionChipState */
 
-/** @typedef {{ score: string; observation: string; criticalFail: boolean; actions: TcccActionChipState }} TcccMarchPhaseFormState */
+/** @typedef {{ subScores: Record<string, string>; observation: string; criticalFail: boolean; actions: TcccActionChipState }} TcccMarchPhaseFormState */
 
 /**
  * @typedef {{
@@ -91,9 +99,14 @@ function emptyActionsForPhase(phaseId) {
   return actions
 }
 
-/** @returns {TcccMarchPhaseFormState} */
-function emptyMarchPhase(/** @type {TcccMarchPhaseId} */ phaseId) {
-  return { score: '', observation: '', criticalFail: false, actions: emptyActionsForPhase(phaseId) }
+/** @param {TcccMarchPhaseId} phaseId */
+function emptyMarchPhase(phaseId) {
+  return {
+    subScores: emptySubScoreForm(TCCC_PHASE_SUB_CRITERIA[phaseId]),
+    observation: '',
+    criticalFail: false,
+    actions: emptyActionsForPhase(phaseId),
+  }
 }
 
 export const TCCC_EVALUATION_INITIAL_FORM = /** @type {TcccEvaluationFormState} */ ({
@@ -109,20 +122,21 @@ export const TCCC_EVALUATION_INITIAL_FORM = /** @type {TcccEvaluationFormState} 
 
 /**
  * @param {TcccMarchPhaseFormState} phase
+ * @param {TcccMarchPhaseId} [phaseId]
  */
-export function parseMarchPhaseScore(phase) {
-  if (phase.score === '') return null
-  const n = Number(phase.score)
-  if (!Number.isFinite(n) || n < 0 || n > 10) return null
-  return Math.round(n)
+export function parseMarchPhaseScore(phase, phaseId) {
+  if (!phaseId) return null
+  if (phase.criticalFail) return 0
+  return computePhaseScoreFromForm(phase.subScores, TCCC_PHASE_SUB_CRITERIA[phaseId], { min: 1, max: 10 })
 }
 
 /**
  * @param {TcccMarchPhaseFormState} phase
+ * @param {TcccMarchPhaseId} phaseId
  */
-export function resolveMarchPhaseScore(phase) {
+export function resolveMarchPhaseScore(phase, phaseId) {
   if (phase.criticalFail) return 0
-  return parseMarchPhaseScore(phase) ?? 0
+  return parseMarchPhaseScore(phase, phaseId) ?? 0
 }
 
 /**
@@ -151,15 +165,40 @@ export function validateTcccEvaluationForm(form) {
   for (const meta of TCCC_MARCH_EVALUATION_PHASES) {
     const phase = form[meta.id]
     if (phase.criticalFail) continue
-    if (phase.score === '') return `${meta.title} için skor seçin (1–10).`
-    const n = parseMarchPhaseScore(phase)
-    if (n === null || n < 1 || n > 10) return `${meta.title} skoru 1–10 arasında olmalı.`
+    const err = validatePhaseSubScoresForm(phase.subScores, TCCC_PHASE_SUB_CRITERIA[meta.id], {
+      min: 1,
+      max: 10,
+      phaseTitle: meta.title,
+    })
+    if (err) return err
   }
   if (form.isTimed) {
     const sec = Number(form.targetInterventionSec)
     if (!Number.isFinite(sec) || sec <= 0) return 'Müdahale hedef süresi geçersiz.'
   }
   return null
+}
+
+/**
+ * @param {TcccMarchPhaseFormState} phase
+ * @param {TcccMarchPhaseId} phaseId
+ */
+export function buildTcccPhasePayload(phase, phaseId) {
+  const criteria = TCCC_PHASE_SUB_CRITERIA[phaseId]
+  const criticalFail = Boolean(phase.criticalFail)
+  const actionChips = activeActionChipIds(phase.actions)
+  const { subScores, score } = buildSubScoresPayload(phase.subScores, criteria, {
+    min: 1,
+    max: 10,
+    criticalFail,
+  })
+  return {
+    score,
+    subScores,
+    observation: String(phase.observation ?? '').trim(),
+    criticalFail,
+    actionChips,
+  }
 }
 
 /**
@@ -171,7 +210,7 @@ export function validateTcccEvaluationForm(form) {
  * }} input
  */
 export function buildTcccEvaluationPayload({ form, groupId, instructorId, operatorName = '' }) {
-  /** @type {Record<TcccMarchPhaseId, { score: number; observation: string; criticalFail: boolean; actionChips: string[] }>} */
+  /** @type {Record<TcccMarchPhaseId, { score: number; subScores: Record<string, number>; observation: string; criticalFail: boolean; actionChips: string[] }>} */
   const marchScores = {}
   const operationalNotes = {}
   /** @type {Record<TcccMarchPhaseId, boolean>} */
@@ -181,20 +220,12 @@ export function buildTcccEvaluationPayload({ form, groupId, instructorId, operat
 
   let sum = 0
   for (const meta of TCCC_MARCH_EVALUATION_PHASES) {
-    const phase = form[meta.id]
-    const criticalFail = Boolean(phase.criticalFail)
-    const score = resolveMarchPhaseScore(phase)
-    const actionChips = activeActionChipIds(phase.actions)
-    sum += score
-    criticalFails[meta.id] = criticalFail
-    marchActionChips[meta.id] = actionChips
-    marchScores[meta.id] = {
-      score,
-      observation: String(phase.observation ?? '').trim(),
-      criticalFail,
-      actionChips,
-    }
-    operationalNotes[meta.id] = String(phase.observation ?? '').trim()
+    const phasePayload = buildTcccPhasePayload(form[meta.id], meta.id)
+    sum += phasePayload.score
+    criticalFails[meta.id] = phasePayload.criticalFail
+    marchActionChips[meta.id] = phasePayload.actionChips
+    marchScores[meta.id] = phasePayload
+    operationalNotes[meta.id] = phasePayload.observation
   }
 
   const overallScore = Math.round((sum / TCCC_MARCH_EVALUATION_PHASES.length) * 10) / 10
@@ -220,3 +251,5 @@ export function buildTcccEvaluationPayload({ form, groupId, instructorId, operat
     overallScore,
   }
 }
+
+export { TCCC_PHASE_SUB_CRITERIA }

@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf'
 import { PDF_FONT_FAMILY, preparePdfAssets, setPdfFont } from './pdfFontLoader'
 import { VBSS_EVALUATION_PHASES } from './vbssEvaluationPayload'
+import { VBSS_PHASE_SUB_CRITERIA } from './evaluationPhaseCriteria'
 import { VBSS_OBSERVED_PDF_FORM_VERSION } from './observedEvalConstants'
 
 /** @typedef {{ callsign?: string; username?: string; displayName?: string }} OperatorPrefill */
@@ -158,9 +159,17 @@ function drawPhases(doc, startY, pageW, pageH) {
     doc.text(meta.subtitle, MARGIN, y)
     y += 6
 
-    doc.text('SKOR (0–10):', MARGIN, y)
-    drawScoreBoxes(doc, MARGIN + 28, y - 3.5, 11, 0)
-    y += 12
+    const criteria = VBSS_PHASE_SUB_CRITERIA[meta.id] ?? []
+    for (const criterion of criteria) {
+      doc.text(`${criterion.label} (0–10):`, MARGIN, y)
+      drawScoreBoxes(doc, MARGIN + 48, y - 3.5, 11, 0)
+      y += 10
+    }
+    if (!criteria.length) {
+      doc.text('SKOR (0–10):', MARGIN, y)
+      drawScoreBoxes(doc, MARGIN + 28, y - 3.5, 11, 0)
+      y += 10
+    }
 
     doc.text('GÖZLEM NOTU:', MARGIN, y)
     y += 4
