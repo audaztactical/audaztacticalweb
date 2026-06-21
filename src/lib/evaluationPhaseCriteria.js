@@ -1,5 +1,4 @@
-import { VBSS_EVALUATION_PHASES } from './vbssEvaluationPayload'
-import { TCCC_MARCH_EVALUATION_PHASES } from './tcccEvaluationPayload'
+import { VBSS_EVALUATION_PHASES, TCCC_MARCH_EVALUATION_PHASES } from './evaluationPhaseDefinitions'
 
 /** @typedef {{ id: string; label: string }} EvaluationSubCriterion */
 

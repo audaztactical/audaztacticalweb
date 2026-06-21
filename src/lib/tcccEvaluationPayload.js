@@ -1,3 +1,4 @@
+import { TCCC_MARCH_EVALUATION_PHASES } from './evaluationPhaseDefinitions'
 import { TCCC_PHASE_SUB_CRITERIA } from './evaluationPhaseCriteria'
 import {
   buildSubScoresPayload,
@@ -30,6 +31,8 @@ export const TCCC_SCORE_OPTIONS = Array.from({ length: 10 }, (_, i) => i + 1)
  * }} TcccEvaluationFormState
  */
 
+export { TCCC_MARCH_EVALUATION_PHASES }
+
 /** @type {Record<TcccMarchPhaseId, TcccActionChipDef[]>} */
 export const TCCC_MARCH_ACTION_CHIPS = {
   m: [
@@ -54,40 +57,6 @@ export const TCCC_MARCH_ACTION_CHIPS = {
     { id: 'head_trauma', label: 'Kafa Travması Kontrolü' },
   ],
 }
-
-/** @type {{ id: TcccMarchPhaseId; letter: string; title: string; subtitle: string }[]} */
-export const TCCC_MARCH_EVALUATION_PHASES = [
-  {
-    id: 'm',
-    letter: 'M',
-    title: 'M — Massive Hemorrhage',
-    subtitle: 'Büyük kanama kontrolü, turnike uygulaması',
-  },
-  {
-    id: 'a',
-    letter: 'A',
-    title: 'A — Airway',
-    subtitle: 'Havayolu açıklığı, NPA yerleşimi',
-  },
-  {
-    id: 'r',
-    letter: 'R',
-    title: 'R — Respiration',
-    subtitle: 'Solunum yönetimi, Chest Seal, Needle Decompression',
-  },
-  {
-    id: 'c',
-    letter: 'C',
-    title: 'C — Circulation',
-    subtitle: 'Dolaşım kontrolü, nabız takibi, IV/IO erişim',
-  },
-  {
-    id: 'h',
-    letter: 'H',
-    title: 'H — Hypothermia / Head',
-    subtitle: 'Hipotermi önleme, kafa travması kontrolü',
-  },
-]
 
 /** @param {TcccMarchPhaseId} phaseId */
 function emptyActionsForPhase(phaseId) {

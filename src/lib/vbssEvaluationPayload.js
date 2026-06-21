@@ -1,3 +1,4 @@
+import { VBSS_EVALUATION_PHASES } from './evaluationPhaseDefinitions'
 import { VBSS_PHASE_SUB_CRITERIA } from './evaluationPhaseCriteria'
 import {
   buildSubScoresPayload,
@@ -5,6 +6,8 @@ import {
   emptySubScoreForm,
   validatePhaseSubScoresForm,
 } from './evaluationSubScores'
+
+export { VBSS_EVALUATION_PHASES }
 
 /** @typedef {'boarding' | 'clearing' | 'control'} VbssPhaseId */
 
@@ -22,25 +25,6 @@ import {
  */
 
 export const VBSS_SCORE_OPTIONS = Array.from({ length: 11 }, (_, i) => i)
-
-/** @type {{ id: VbssPhaseId; title: string; subtitle: string }[]} */
-export const VBSS_EVALUATION_PHASES = [
-  {
-    id: 'boarding',
-    title: 'Safha 1: Sızma ve Biniş',
-    subtitle: 'Boarding — yöntem, hız, kancalama emniyeti',
-  },
-  {
-    id: 'clearing',
-    title: 'Safha 2: Gemi İçi İlerleme',
-    subtitle: 'Clearing — iletişim, köşe kontrolü, merdiven disiplini',
-  },
-  {
-    id: 'control',
-    title: 'Safha 3: Kontrol ve Güvenlik',
-    subtitle: 'Control — mürettebat yönetimi, köprü kontrolü, 360° emniyet',
-  },
-]
 
 /** @param {VbssPhaseId} phaseId */
 function emptyPhase(phaseId) {
