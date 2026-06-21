@@ -28,7 +28,7 @@ export default function TrainingCategoryHub({ onCategorySelect }) {
     userGroup,
   })
 
-  const renderCard = (/** @type {import('./trainingCategories').TrainingCategory} */ category) => {
+  const renderCard = (/** @type {import('./trainingCategories').TrainingCategory} */ category, /** @type {number} */ index) => {
     const isGroupSector = category.id === 'grup-egitimi'
     const highlightLabel =
       isGroupSector && hasLiveGroupTraining
@@ -45,6 +45,7 @@ export default function TrainingCategoryHub({ onCategorySelect }) {
         opsCode={category.opsCode}
         vizVariant={category.vizVariant}
         highlightLabel={highlightLabel}
+        imagePriority={index < 2 ? 'high' : 'low'}
         onSelect={() => {
           if (profileLoading) return
           if (category.externalRoute) {
@@ -72,17 +73,19 @@ export default function TrainingCategoryHub({ onCategorySelect }) {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {TRAINING_CATEGORIES.filter((c) => INDIVIDUAL_TRAINING_CATEGORY_IDS.includes(c.id)).map(renderCard)}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 lg:grid-cols-3 lg:gap-5 xl:gap-7 2xl:mx-auto 2xl:max-w-[88rem] 2xl:grid-cols-2 2xl:gap-8">
+        {TRAINING_CATEGORIES.filter((c) => INDIVIDUAL_TRAINING_CATEGORY_IDS.includes(c.id)).map((category, index) =>
+          renderCard(category, index),
+        )}
 
         {canSeeGroupTraining
           ? (() => {
               const groupCategory = TRAINING_CATEGORIES.find((c) => c.id === 'grup-egitimi')
-              return groupCategory ? renderCard(groupCategory) : null
+              return groupCategory ? renderCard(groupCategory, INDIVIDUAL_TRAINING_CATEGORY_IDS.length) : null
             })()
           : null}
 
-        {isInstructor ? renderCard(INSTRUCTOR_CONTROL_PANEL_CARD) : null}
+        {isInstructor ? renderCard(INSTRUCTOR_CONTROL_PANEL_CARD, INDIVIDUAL_TRAINING_CATEGORY_IDS.length + 1) : null}
       </div>
 
       {profileLoading ? (

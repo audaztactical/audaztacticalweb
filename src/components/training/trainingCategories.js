@@ -1,9 +1,11 @@
-import atisImg from '../../assets/atis.png'
-import cqbImg from '../../assets/cqb.png'
-import fofImg from '../../assets/fof.png'
-import vbssImg from '../../assets/vbss.png'
-import tcccImg from '../../assets/tccc.png'
-import egitimImg from '../../assets/egitim.png'
+import atisImg from '../../assets/atis.webp'
+import cqbImg from '../../assets/cqb.webp'
+import fofImg from '../../assets/fof.webp'
+import vbssImg from '../../assets/vbss.webp'
+import tcccImg from '../../assets/tccc.webp'
+import egitimImg from '../../assets/egitim.webp'
+
+/** Hub kart görselleri — 960×720 WebP (~100KB/kart, PNG ~7MB yerine). */
 
 /** @typedef {'pistol' | 'reddot' | 'cartridge'} TrainingVizVariant */
 

@@ -12,6 +12,7 @@ import MatrixWireVisualizer from '../armory/MatrixWireVisualizer'
  *   disabled?: boolean
  *   disabledHint?: string
  *   highlightLabel?: string
+ *   imagePriority?: 'high' | 'low' | 'auto'
  * }} props
  */
 export default function TrainingCategoryCard({
@@ -24,6 +25,7 @@ export default function TrainingCategoryCard({
   disabled = false,
   disabledHint,
   highlightLabel,
+  imagePriority = 'auto',
 }) {
   return (
     <button
@@ -53,9 +55,11 @@ export default function TrainingCategoryCard({
         <Crosshair className="size-4 text-accent/50" strokeWidth={1.25} aria-hidden />
       </span>
 
-      <div className="relative shrink-0 border-b border-accent/12 bg-app-bg px-4 py-3.5">
-        <p className="text-center font-display text-sm font-bold uppercase tracking-[0.28em] text-app-text sm:text-base">{title}</p>
-        <p className="mt-1 text-center font-mono-technical text-[7px] uppercase tracking-[0.35em] text-accent/45 opacity-70 transition-opacity group-hover:opacity-100">
+      <div className="relative shrink-0 border-b border-accent/12 bg-app-bg px-4 py-3.5 xl:px-5 xl:py-4 2xl:px-6 2xl:py-5">
+        <p className="text-center font-display text-sm font-bold uppercase tracking-[0.28em] text-app-text sm:text-base xl:text-lg xl:tracking-[0.32em] 2xl:text-xl">
+          {title}
+        </p>
+        <p className="mt-1 text-center font-mono-technical text-[7px] uppercase tracking-[0.35em] text-accent/45 opacity-70 transition-opacity group-hover:opacity-100 xl:text-[8px] 2xl:mt-1.5 2xl:text-[9px] 2xl:tracking-[0.38em]">
           {sectorLabel ?? `${opsCode} · OPS_SEKTÖR`}
         </p>
       </div>
@@ -63,17 +67,24 @@ export default function TrainingCategoryCard({
       <div className="relative transition-transform duration-300 ease-out group-hover:scale-[1.02]">
         <div className="pointer-events-none absolute inset-0 z-[3] bg-[radial-gradient(ellipse_at_center,rgba(0,255,65,0.12)_0%,transparent_68%)] opacity-60 group-hover:opacity-100" />
         <div className="pointer-events-none absolute inset-0 z-[3] bg-accent/[0.04] mix-blend-screen opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-        <MatrixWireVisualizer hubMode variant={vizVariant} imageSrc={imageSrc} imageAlt={title} label="" />
+        <MatrixWireVisualizer
+          hubMode
+          variant={vizVariant}
+          imageSrc={imageSrc}
+          imageAlt={title}
+          imagePriority={imagePriority}
+          label=""
+        />
       </div>
 
-      <div className="flex items-center justify-between border-t border-accent/10 bg-app-bg px-3 py-2 font-mono-technical text-[7px] uppercase tracking-wider text-accent/40 transition-colors group-hover:border-accent/25 group-hover:text-accent/70">
-        <span className="opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+      <div className="flex items-center justify-between border-t border-accent/10 bg-app-bg px-3 py-2 font-mono-technical text-[7px] uppercase tracking-wider text-accent/40 transition-colors group-hover:border-accent/25 group-hover:text-accent/70 xl:gap-3 xl:px-4 xl:py-2.5 xl:text-[8px] xl:tracking-[0.18em] 2xl:px-5 2xl:py-3 2xl:text-[9px] 2xl:tracking-[0.22em]">
+        <span className="min-w-0 truncate opacity-0 transition-opacity duration-300 group-hover:opacity-100 xl:max-w-[38%]">
           LAT 41.02<span className="text-app-text/20"> · </span>LON 29.01
         </span>
-        <span className="tabular-nums opacity-70 group-hover:opacity-100">
+        <span className="shrink-0 tabular-nums opacity-70 group-hover:opacity-100">
           BIT<span className="text-accent/60">_</span>9600
         </span>
-        <span className="hidden opacity-0 transition-opacity duration-300 group-hover:inline group-hover:opacity-100 sm:inline">
+        <span className="hidden min-w-0 truncate opacity-0 transition-opacity duration-300 group-hover:inline group-hover:opacity-100 sm:inline xl:max-w-[38%]">
           HD_LINK
         </span>
       </div>

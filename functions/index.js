@@ -177,7 +177,7 @@ exports.registerOperatorProfile = onCall(
  */
 exports.redeemAccessCode = onCall(
   {
-    memory: '128MiB',
+    memory: '256MiB',
     timeoutSeconds: 30,
     cors: true,
   },

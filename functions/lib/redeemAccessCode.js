@@ -1,5 +1,6 @@
 const { getFirestore, FieldValue } = require('firebase-admin/firestore')
 const { HttpsError } = require('firebase-functions/v2/https')
+const { logger } = require('firebase-functions')
 
 /** @readonly */
 const ACCESS_PLANS = new Set(['premium', 'pro_instructor'])
@@ -36,6 +37,19 @@ function isExpired(expiresAt) {
  * @param {import('firebase-functions/v2/https').CallableRequest} request
  */
 async function redeemAccessCodeHandler(request) {
+  try {
+    return await redeemAccessCodeCore(request)
+  } catch (err) {
+    if (err instanceof HttpsError) throw err
+    logger.error('[redeemAccessCode]', err)
+    throw new HttpsError('internal', 'Erişim kodu kullanılamadı.')
+  }
+}
+
+/**
+ * @param {import('firebase-functions/v2/https').CallableRequest} request
+ */
+async function redeemAccessCodeCore(request) {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Giriş gerekli.')
   }
@@ -66,11 +80,11 @@ async function redeemAccessCodeHandler(request) {
       throw new HttpsError('already-exists', 'Bu kodu daha önce kullandınız.')
     }
 
-    const code = codeSnap.data()
-    const plan = typeof code.plan === 'string' ? code.plan : ''
-    const maxUses = Number(code.maxUses)
-    const usedCount = Number(code.usedCount ?? 0)
-    const status = typeof code.status === 'string' ? code.status : 'active'
+    const codeDoc = codeSnap.data()
+    const plan = typeof codeDoc.plan === 'string' ? codeDoc.plan : ''
+    const maxUses = Number(codeDoc.maxUses)
+    const usedCount = Number(codeDoc.usedCount ?? 0)
+    const status = typeof codeDoc.status === 'string' ? codeDoc.status : 'active'
 
     if (!ACCESS_PLANS.has(plan)) {
       throw new HttpsError('failed-precondition', 'Erişim kodu yapılandırması geçersiz.')
@@ -80,7 +94,7 @@ async function redeemAccessCodeHandler(request) {
       throw new HttpsError('failed-precondition', 'Erişim kodu iptal edilmiş.')
     }
 
-    if (isExpired(code.expiresAt)) {
+    if (isExpired(codeDoc.expiresAt)) {
       throw new HttpsError('failed-precondition', 'Erişim kodunun süresi dolmuş.')
     }
 

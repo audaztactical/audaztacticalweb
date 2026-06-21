@@ -3,6 +3,9 @@ import { defaultAnalysisLines, streamGlyphs } from './matrixWireModels'
 
 /** @typedef {'pistol' | 'reddot' | 'cartridge'} MatrixModelVariant */
 
+const HUB_IMAGE_WIDTH = 960
+const HUB_IMAGE_HEIGHT = 720
+
 const STREAM_LINES = 10
 const TILT_MAX = 15
 const IMG_GLOW = 'drop-shadow(0 0 15px rgba(0, 255, 65, 0.6))'
@@ -15,6 +18,7 @@ const IMG_GLOW = 'drop-shadow(0 0 15px rgba(0, 255, 65, 0.6))'
  *   imageAlt?: string
  *   analysisLines?: string[]
  *   hubMode?: boolean
+ *   imagePriority?: 'high' | 'low' | 'auto'
  *   className?: string
  * }} props
  */
@@ -25,6 +29,7 @@ export default function MatrixWireVisualizer({
   imageAlt = '',
   analysisLines = [],
   hubMode = false,
+  imagePriority = 'auto',
   className = '',
 }) {
   const wrapRef = useRef(/** @type {HTMLDivElement | null} */ (null))
@@ -32,6 +37,11 @@ export default function MatrixWireVisualizer({
   const [hovering, setHovering] = useState(false)
   const [hud, setHud] = useState('SENKRON · BEKLEMEDE')
   const [tick, setTick] = useState(0)
+  const [imageReady, setImageReady] = useState(false)
+
+  useEffect(() => {
+    setImageReady(false)
+  }, [imageSrc])
 
   const lines = useMemo(
     () => (analysisLines.length ? analysisLines : defaultAnalysisLines(variant)),
@@ -72,8 +82,16 @@ export default function MatrixWireVisualizer({
     : undefined
 
   const heightClass = hubMode
-    ? 'h-[9rem] min-h-[8rem] sm:h-[13rem] sm:min-h-[11rem] md:h-[15rem]'
+    ? 'h-[9rem] min-h-[8rem] sm:h-[13rem] sm:min-h-[11rem] md:h-[15rem] xl:h-[16rem] 2xl:h-[20rem] 2xl:min-h-[18rem]'
     : 'h-[10rem] min-h-[9rem] sm:h-[12.5rem] sm:min-h-[10rem] md:h-[14rem]'
+
+  const streamTextClass = hubMode
+    ? 'font-mono text-[7px] leading-tight text-accent/30 xl:text-[8px] 2xl:text-[9px] 2xl:leading-snug'
+    : 'font-mono text-[7px] leading-tight text-accent/30'
+
+  const imgLoading = hubMode && imagePriority === 'high' ? 'eager' : 'lazy'
+  /** @type {'high' | 'low' | 'auto'} */
+  const imgFetchPriority = hubMode ? (imagePriority === 'high' ? 'high' : 'low') : 'auto'
 
   return (
     <div
@@ -90,14 +108,14 @@ export default function MatrixWireVisualizer({
       <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_center,rgba(0,255,65,0.04)_0%,transparent_72%)]" />
 
       <div className="pointer-events-none absolute inset-0 z-[1]">
-        <div className="matrix-viz-stream matrix-viz-stream--left font-mono text-[7px] leading-tight text-accent/30">
+        <div className={`matrix-viz-stream matrix-viz-stream--left ${streamTextClass}`}>
           {Array.from({ length: STREAM_LINES }, (_, i) => (
             <p key={`l-${i}`}>
               {glyphs[(i + tick) % glyphs.length]} · {((tick * 997 + i * 137) % 0xffff).toString(16).toUpperCase()}
             </p>
           ))}
         </div>
-        <div className="matrix-viz-stream matrix-viz-stream--right font-mono text-[7px] leading-tight text-accent/30">
+        <div className={`matrix-viz-stream matrix-viz-stream--right ${streamTextClass}`}>
           {Array.from({ length: STREAM_LINES }, (_, i) => (
             <p key={`r-${i}`}>
               {glyphs[(i + tick + 2) % glyphs.length]} · {((tick * 431 + i * 89) % 0xffff).toString(16).toUpperCase()}
@@ -109,6 +127,17 @@ export default function MatrixWireVisualizer({
       </div>
 
       <div className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-center perspective-[1000px] [transform-style:preserve-3d]">
+        {hubMode && !imageReady ? (
+          <div
+            className="absolute inset-x-[12%] inset-y-[14%] animate-pulse rounded border border-accent/15 bg-accent/[0.04]"
+            aria-hidden
+          >
+            <div className="flex h-full flex-col items-center justify-center gap-2 font-mono-technical text-[8px] uppercase tracking-[0.28em] text-accent/35 xl:text-[9px] 2xl:text-[10px]">
+              <span className="size-8 rounded border border-accent/20 bg-accent/[0.06] xl:size-10 2xl:size-12" />
+              HD_ASSET · YÜKLENİYOR
+            </div>
+          </div>
+        ) : null}
         <div
           className={`flex h-full w-full items-center justify-center [transform-style:preserve-3d] ${
             hovering ? 'transition-transform duration-200 ease-out' : 'matrix-viz-idle'
@@ -118,10 +147,18 @@ export default function MatrixWireVisualizer({
           <img
             src={imageSrc}
             alt={imageAlt}
-            loading="lazy"
+            width={hubMode ? HUB_IMAGE_WIDTH : undefined}
+            height={hubMode ? HUB_IMAGE_HEIGHT : undefined}
+            loading={imgLoading}
             decoding="async"
+            fetchPriority={imgFetchPriority}
             draggable={false}
-            className="matrix-viz-asset max-h-[78%] max-w-[72%] select-none object-contain [transform-style:preserve-3d]"
+            onLoad={() => setImageReady(true)}
+            className={[
+              'matrix-viz-asset max-h-[78%] max-w-[72%] select-none object-contain [transform-style:preserve-3d]',
+              hubMode ? 'transition-opacity duration-300' : '',
+              hubMode && !imageReady ? 'opacity-0' : 'opacity-100',
+            ].join(' ')}
             style={{ filter: IMG_GLOW }}
           />
         </div>
