@@ -1,4 +1,4 @@
-import { collection, getDocs, limit, orderBy, query, where } from 'firebase/firestore'
+import { collection, doc, getDocs, limit, orderBy, query, updateDoc, where } from 'firebase/firestore'
 import { db, isFirebaseConfigured } from './firebase'
 import { safeOnSnapshot, timestampToMs } from './firestoreSnapshot'
 
@@ -15,8 +15,32 @@ export const INTEL_NEWS_TYPE = 'haber'
  *   trSummary: string
  *   tags: string[]
  *   url: string
+ *   type?: string
+ *   public?: boolean
+ *   hiddenFromFeed?: boolean
  * }} IntelFeedItem
  */
+
+/**
+ * Küresel Haber Ağı / landing görünürlük filtresi.
+ * isAlert KHA görünürlüğünü etkilemez (yalnızca admin İKAZ rozeti + FCM).
+ * @param {Record<string, unknown>} data
+ */
+export function isIntelFeedDocVisible(data) {
+  if (data.hiddenFromFeed === true) return false
+  if (String(data.source ?? '').trim() === 'AUDAZ KOMUTA MERKEZİ') return false
+  const tags = Array.isArray(data.tags) ? data.tags : []
+  if (tags.some((t) => String(t).includes('SİSTEM İKAZI'))) return false
+  return true
+}
+
+function assertDb() {
+  if (!isFirebaseConfigured() || !db) {
+    const e = new Error('Firebase yapılandırılmadı')
+    e.code = 'failed-precondition'
+    throw e
+  }
+}
 
 /**
  * @param {unknown} raw
@@ -95,9 +119,7 @@ export async function fetchLandingIntelNews(max = 3) {
         .filter((row) => {
           if (!row) return false
           const raw = snap.docs.find((docSnap) => docSnap.id === row.id)?.data()
-          if (raw?.isAlert === true) return false
-          if (String(raw?.source ?? '').trim() === 'AUDAZ KOMUTA MERKEZİ') return false
-          return true
+          return isIntelFeedDocVisible(raw ?? {})
         })
     }
   } catch {
@@ -111,11 +133,22 @@ export async function fetchLandingIntelNews(max = 3) {
     .filter((row) => {
       if (!row) return false
       const raw = snap.docs.find((docSnap) => docSnap.id === row.id)?.data()
-      if (raw?.isAlert === true) return false
-      if (String(raw?.source ?? '').trim() === 'AUDAZ KOMUTA MERKEZİ') return false
+      if (!isIntelFeedDocVisible(raw ?? {})) return false
       return row.type === INTEL_NEWS_TYPE || row.public !== false
     })
     .slice(0, cap)
+}
+
+/**
+ * Admin — kaydı Küresel Haber Ağı'ndan gizle / geri al.
+ * @param {string} itemId
+ * @param {boolean} hidden
+ */
+export async function setIntelFeedHiddenFromFeed(itemId, hidden) {
+  assertDb()
+  const id = String(itemId ?? '').trim()
+  if (!id) throw new Error('Kayıt kimliği gerekli')
+  await updateDoc(doc(db, 'news_feed', id), { hiddenFromFeed: Boolean(hidden) })
 }
 
 /**
@@ -134,14 +167,7 @@ export function subscribeIntelFeed(onData, onError) {
     q,
     (snap) => {
       const rows = snap.docs
-        .filter((docSnap) => {
-          const data = docSnap.data()
-          if (data.isAlert === true) return false
-          if (String(data.source ?? '').trim() === 'AUDAZ KOMUTA MERKEZİ') return false
-          const tags = Array.isArray(data.tags) ? data.tags : []
-          if (tags.some((t) => String(t).includes('SİSTEM İKAZI'))) return false
-          return true
-        })
+        .filter((docSnap) => isIntelFeedDocVisible(docSnap.data()))
         .map((d) => mapIntelFeedDoc(d.data(), d.id))
         .filter(Boolean)
         .sort((a, b) => timestampToMs(b.timestamp) - timestampToMs(a.timestamp))

@@ -1,12 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import { collection, deleteDoc, doc, limit, orderBy, query } from 'firebase/firestore'
-import { Globe, Loader2, ShieldAlert, Trash2 } from 'lucide-react'
+import { Globe, Eye, EyeOff, Loader2, Trash2 } from 'lucide-react'
 import { db, isFirebaseConfigured } from '../../lib/firebase'
-import { formatIntelTimestamp, mapIntelFeedDoc } from '../../lib/firestoreIntelFeed'
+import {
+  formatIntelTimestamp,
+  mapIntelFeedDoc,
+  setIntelFeedHiddenFromFeed,
+} from '../../lib/firestoreIntelFeed'
 import { safeOnSnapshot } from '../../lib/firestoreSnapshot'
 import {
   ADMIN_BADGE,
   ADMIN_BTN_DANGER,
+  ADMIN_BTN_GHOST,
   ADMIN_EMPTY_STATE,
   ADMIN_SUMMARY_BAR,
   ADMIN_TABLE,
@@ -17,7 +22,7 @@ import {
   ADMIN_TABLE_WRAP,
 } from './adminUi'
 
-/** @typedef {import('../../lib/firestoreIntelFeed').IntelFeedItem & { isAlert?: boolean }} ModerationRow */
+/** @typedef {import('../../lib/firestoreIntelFeed').IntelFeedItem & { isAlert?: boolean; hiddenFromFeed?: boolean }} ModerationRow */
 
 const FEED_LIMIT = 30
 
@@ -27,8 +32,9 @@ const FEED_LIMIT = 30
 function IntelSummaryBar({ rows }) {
   const stats = useMemo(() => {
     const alerts = rows.filter((r) => r.isAlert).length
+    const hidden = rows.filter((r) => r.hiddenFromFeed).length
     const sources = new Set(rows.map((r) => r.source).filter(Boolean)).size
-    return { total: rows.length, alerts, sources }
+    return { total: rows.length, alerts, hidden, sources }
   }, [rows])
 
   return (
@@ -46,6 +52,14 @@ function IntelSummaryBar({ rows }) {
       <span className="text-sky-300/90">
         Kaynak: <strong>{stats.sources}</strong>
       </span>
+      {stats.hidden > 0 ? (
+        <>
+          <span className="text-app-text/50">·</span>
+          <span className="text-zinc-400">
+            Gizli: <strong>{stats.hidden}</strong>
+          </span>
+        </>
+      ) : null}
     </div>
   )
 }
@@ -60,6 +74,7 @@ export default function IntelModerationTable({ onFeedback }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [deletingId, setDeletingId] = useState(/** @type {string | null} */ (null))
+  const [visibilityBusyId, setVisibilityBusyId] = useState(/** @type {string | null} */ (null))
 
   useEffect(() => {
     if (!isFirebaseConfigured() || !db) {
@@ -85,6 +100,7 @@ export default function IntelModerationTable({ onFeedback }) {
             return {
               ...mapped,
               isAlert: Boolean(raw?.isAlert),
+              hiddenFromFeed: raw?.hiddenFromFeed === true,
             }
           })
           .filter(Boolean)
@@ -99,6 +115,24 @@ export default function IntelModerationTable({ onFeedback }) {
 
     return unsub
   }, [])
+
+  /**
+   * @param {ModerationRow} row
+   */
+  const handleToggleVisibility = async (row) => {
+    if (!db || visibilityBusyId) return
+    const nextHidden = !row.hiddenFromFeed
+    setVisibilityBusyId(row.id)
+    try {
+      await setIntelFeedHiddenFromFeed(row.id, nextHidden)
+      onFeedback?.('ok', nextHidden ? 'Kayıt Küresel Haber Ağı\'ndan gizlendi.' : 'Kayıt yeniden yayına alındı.')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Görünürlük güncellenemedi.'
+      onFeedback?.('err', message)
+    } finally {
+      setVisibilityBusyId(null)
+    }
+  }
 
   /**
    * @param {ModerationRow} row
@@ -170,16 +204,28 @@ export default function IntelModerationTable({ onFeedback }) {
             {rows.map((row) => {
               const title = row.trTitle || row.enTitle || '—'
               const busy = deletingId === row.id
+              const visBusy = visibilityBusyId === row.id
+              const hidden = row.hiddenFromFeed === true
               return (
-                <tr key={row.id} className={ADMIN_TABLE_ROW}>
+                <tr
+                  key={row.id}
+                  className={[ADMIN_TABLE_ROW, hidden ? 'opacity-60' : ''].filter(Boolean).join(' ')}
+                >
                   <td className={`${ADMIN_TABLE_TD} whitespace-nowrap font-mono-technical text-[11px] tabular-nums text-app-text/70`}>
                     {formatIntelTimestamp(row.timestamp)}
                   </td>
                   <td className={`${ADMIN_TABLE_TD} max-w-[140px] truncate text-xs text-app-text/70`} title={row.source}>
                     {row.source}
                   </td>
-                  <td className={`${ADMIN_TABLE_TD} max-w-[280px] truncate font-bold text-app-text`} title={title}>
-                    {title}
+                  <td className={`${ADMIN_TABLE_TD} max-w-[280px]`}>
+                    <p className="truncate font-bold text-app-text" title={title}>
+                      {title}
+                    </p>
+                    {hidden ? (
+                      <span className="mt-1 inline-block rounded border border-zinc-600/50 bg-zinc-900/50 px-1.5 py-0.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-zinc-400">
+                        GİZLİ
+                      </span>
+                    ) : null}
                   </td>
                   <td className={ADMIN_TABLE_TD}>
                     <div className="flex flex-wrap gap-1">
@@ -202,20 +248,38 @@ export default function IntelModerationTable({ onFeedback }) {
                     </div>
                   </td>
                   <td className={`${ADMIN_TABLE_TD} text-right`}>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(row)}
-                      disabled={busy}
-                      title="İmha et"
-                      className={[ADMIN_BTN_DANGER, 'border-red-500/30 text-red-500 hover:border-red-400/50 hover:bg-red-950/30 hover:text-red-400'].join(' ')}
-                    >
-                      {busy ? (
-                        <Loader2 className="size-3.5 animate-spin" aria-hidden />
-                      ) : (
-                        <Trash2 className="size-3.5" aria-hidden />
-                      )}
-                      Sil
-                    </button>
+                    <div className="flex flex-wrap justify-end gap-1">
+                      <button
+                        type="button"
+                        onClick={() => void handleToggleVisibility(row)}
+                        disabled={busy || visBusy}
+                        title={hidden ? 'Yayına geri al' : 'Yayından kaldır'}
+                        className={ADMIN_BTN_GHOST}
+                      >
+                        {visBusy ? (
+                          <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                        ) : hidden ? (
+                          <Eye className="size-3.5" aria-hidden />
+                        ) : (
+                          <EyeOff className="size-3.5" aria-hidden />
+                        )}
+                        {hidden ? 'Yayına Geri Al' : 'Yayından Kaldır'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(row)}
+                        disabled={busy || visBusy}
+                        title="İmha et"
+                        className={[ADMIN_BTN_DANGER, 'border-red-500/30 text-red-500 hover:border-red-400/50 hover:bg-red-950/30 hover:text-red-400'].join(' ')}
+                      >
+                        {busy ? (
+                          <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                        ) : (
+                          <Trash2 className="size-3.5" aria-hidden />
+                        )}
+                        Sil
+                      </button>
+                    </div>
                   </td>
                 </tr>
               )
