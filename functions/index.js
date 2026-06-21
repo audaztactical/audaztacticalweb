@@ -151,7 +151,7 @@ exports.joinGroupByPassword = onCall(
  */
 exports.registerOperatorProfile = onCall(
   {
-    memory: '128MiB',
+    memory: '256MiB',
     timeoutSeconds: 30,
     cors: true,
   },

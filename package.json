@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "//deploy": "audazworks.com = Vercel (npm run deploy:vercel). deploy:hosting / deploy:firebase-preview yalnizca Firebase audaz-web.web.app yedek/preview hosting gunceller.",
   "scripts": {
     "dev": "node scripts/inject-firestore-admin.mjs && node scripts/inject-fcm-sw.mjs && vite",
     "build": "node scripts/inject-fcm-sw.mjs && vite build",
@@ -11,7 +12,9 @@
     "deploy-backend": "node scripts/inject-firestore-admin.mjs && firebase deploy --only firestore:rules,firestore:indexes",
     "deploy:registration": "firebase deploy --only functions:registerOperatorProfile",
     "deploy:storage": "firebase deploy --only storage",
-    "deploy:hosting": "npm run build && firebase deploy --only hosting",
+    "deploy:vercel": "npm run build && npx vercel --prod --yes",
+    "deploy:firebase-preview": "npm run build && firebase deploy --only hosting",
+    "deploy:hosting": "npm run deploy:firebase-preview",
     "deploy:functions": "node scripts/inject-functions-env.mjs && firebase deploy --only functions",
     "deploy:functions:admin": "firebase deploy --only functions:ensureAdminClaim,functions:claimInstructorRole",
     "open:auth-providers": "firebase open auth",
