@@ -36,6 +36,7 @@ const Pricing = lazy(() => import('./pages/Pricing'))
 const AdminPanel = lazy(() => import('./pages/AdminPanel'))
 const PremiumTransition = lazy(() => import('./pages/PremiumTransition'))
 const SiteMaintenance = lazy(() => import('./pages/SiteMaintenance'))
+const UsageGuide = lazy(() => import('./pages/UsageGuide'))
 
 export default function App() {
   return (
@@ -68,6 +69,7 @@ export default function App() {
                   <Route path="antrenman" element={<Training />} />
                   <Route path="tccc" element={<TcccSuite />} />
                   <Route path="basarilar" element={<ProgressTracker />} />
+                  <Route path="kilavuz" element={<UsageGuide />} />
                   <Route
                     path="egitmen-komuta"
                     element={

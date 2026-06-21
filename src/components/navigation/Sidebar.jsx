@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import {
   BarChart3,
+  BookOpen,
   CreditCard,
   Crosshair,
   HeartPulse,
@@ -78,6 +79,11 @@ export const NAV_GROUPS = [
     title: '[ KOMUTA VE ANALİTİK ]',
     items: [{ to: '/basarilar', label: 'Kişisel Başarı Takibi', icon: BarChart3 }],
   },
+  {
+    id: 'usage-guide',
+    title: '[ KULLANIM KILAVUZU ]',
+    items: [{ to: '/kilavuz', end: true, label: 'Kullanım Kılavuzu', icon: BookOpen }],
+  },
 ]
 
 const instructorNavItem = /** @type {NavItem} */ ({
@@ -88,6 +94,9 @@ const instructorNavItem = /** @type {NavItem} */ ({
 
 const groupTitleClass =
   'px-3 pb-2 pt-5 font-mono text-[9px] font-bold uppercase tracking-[0.22em] text-zinc-500 first:pt-2'
+
+const guideGroupTitleClass =
+  'px-3 pb-2 pt-5 font-mono text-[9px] font-bold uppercase tracking-[0.22em] text-amber-500/80 first:pt-2'
 
 const linkBaseClass =
   'group flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all duration-200'
@@ -102,12 +111,24 @@ const linkBaseClass =
  *   badgeCount?: number
  *   blinkIcon?: boolean
  *   state?: Record<string, unknown>
+ *   variant?: 'default' | 'amber'
  * }} props
  */
-export function SidebarLink({ to, end, label, icon, onNavigate, badgeCount = 0, blinkIcon = false, state }) {
+export function SidebarLink({
+  to,
+  end,
+  label,
+  icon,
+  onNavigate,
+  badgeCount = 0,
+  blinkIcon = false,
+  state,
+  variant = 'default',
+}) {
   const Icon = icon
   const showBadge = badgeCount > 0
   const location = useLocation()
+  const isAmber = variant === 'amber'
 
   const handleClick = () => {
     scheduleScrollAppToTop()
@@ -192,29 +213,36 @@ export default function Sidebar({
   return (
     <>
       <nav className="flex flex-1 flex-col overflow-y-auto px-3 py-4" aria-label="Modüller">
-        {groups.map((group) => (
-          <section key={group.id} aria-labelledby={`nav-group-${group.id}`}>
-            <h2 id={`nav-group-${group.id}`} className={groupTitleClass}>
-              {group.title}
-            </h2>
-            <ul className="flex flex-col gap-1 pb-2">
-              {group.items.map((item) => (
-                <li key={item.to}>
-                  <SidebarLink
-                    to={item.to}
-                    end={item.end}
-                    label={item.label}
-                    icon={item.icon}
-                    state={item.state}
-                    onNavigate={onNavigate}
-                    badgeCount={item.to === '/mesajlar' ? sidebarMuhabereBadgeCount : 0}
-                    blinkIcon={item.to === '/mesajlar' && sidebarMuhabereBadgeCount > 0}
-                  />
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
+        {groups.map((group) => {
+          const isGuideGroup = group.id === 'usage-guide'
+          return (
+            <section key={group.id} aria-labelledby={`nav-group-${group.id}`}>
+              <h2
+                id={`nav-group-${group.id}`}
+                className={isGuideGroup ? guideGroupTitleClass : groupTitleClass}
+              >
+                {group.title}
+              </h2>
+              <ul className="flex flex-col gap-1 pb-2">
+                {group.items.map((item) => (
+                  <li key={item.to}>
+                    <SidebarLink
+                      to={item.to}
+                      end={item.end}
+                      label={item.label}
+                      icon={item.icon}
+                      state={item.state}
+                      onNavigate={onNavigate}
+                      badgeCount={item.to === '/mesajlar' ? sidebarMuhabereBadgeCount : 0}
+                      blinkIcon={item.to === '/mesajlar' && sidebarMuhabereBadgeCount > 0}
+                      variant={isGuideGroup ? 'amber' : 'default'}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )
+        })}
       </nav>
 
       <div className="border-t border-zinc-800/80 px-3 py-4">
