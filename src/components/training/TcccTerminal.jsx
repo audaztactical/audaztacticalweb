@@ -266,7 +266,9 @@ export default function TcccTerminal({
         <TcccObservedPdfPanel />
       ) : viewMode === 'entry' ? (
         addLog ? (
-          <TcccObservedEvalForm addLog={addLog} hidePdfBanner onSubmitted={() => setViewMode('observed')} />
+          <div className="w-full min-w-0 max-w-none">
+            <TcccObservedEvalForm addLog={addLog} hidePdfBanner onSubmitted={() => setViewMode('observed')} />
+          </div>
         ) : (
           <p className={ctMsgErr}>Kayıt kanalı hazır değil.</p>
         )

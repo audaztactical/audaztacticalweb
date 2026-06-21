@@ -14,12 +14,12 @@ export default function TrainingTerminalPanel({
   title,
   titleClassName = 'text-accent/90',
   corners = 'top',
-  panelClassName = 'relative flex flex-col overflow-hidden border-accent/20 bg-app-bg/95 p-0',
+  panelClassName = 'relative flex w-full min-w-0 flex-col overflow-hidden border-accent/20 bg-app-bg/95 p-0',
   bodyClassName = 'flex flex-1 flex-col space-y-4 p-4 sm:p-5',
   children,
 }) {
   return (
-    <TacticalPanel className={panelClassName}>
+    <TacticalPanel className={`w-full min-w-0 ${panelClassName}`.trim()}>
       {corners === 'top' ? (
         <>
           <span className="pointer-events-none absolute left-2 top-2 z-10 h-4 w-4 border-l border-t border-accent/40" />

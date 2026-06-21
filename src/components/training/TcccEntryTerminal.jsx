@@ -113,36 +113,11 @@ export default function TcccEntryTerminal({ addLog, onSubmitted, hidePdfBanner =
 
   const criticalCount = TCCC_MARCH_EVALUATION_PHASES.filter((m) => form[m.id].criticalFail).length
 
-  return (
-    <div className="space-y-4">
-      {!hidePdfBanner ? (
-        <TacticalPanel className="border-accent/25 bg-app-bg/90 p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] text-accent/85">
-                [ PDF GÖZLEM FORMU · MARCH ]
-              </p>
-              <p className="mt-1 font-mono-technical text-[9px] text-app-text/55">
-                Formu indirin, gözlemci MARCH safhalarını işaretlesin, sonuçları buraya girin.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleDownloadPdf}
-              disabled={pdfBusy}
-              className="inline-flex items-center justify-center gap-2 rounded border border-accent/50 bg-accent/12 px-4 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent transition hover:bg-accent/20 disabled:opacity-50"
-            >
-              {pdfBusy ? <Loader2 className="size-3.5 animate-spin" /> : <Download className="size-3.5" />}
-              PDF Formu İndir
-            </button>
-          </div>
-        </TacticalPanel>
-      ) : null}
-
-      <TrainingTerminalLayout
-        onSubmit={handleSubmit}
-        left={
-          <TrainingTerminalPanel title="GÖZLEM META · MARCH METRİKLER">
+  const entryForm = (
+    <TrainingTerminalLayout
+      onSubmit={handleSubmit}
+      left={
+        <TrainingTerminalPanel title="GÖZLEM META · MARCH METRİKLER">
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block space-y-1.5">
                 <span className={labelClass}>Gözlemci adı *</span>
@@ -299,6 +274,36 @@ export default function TcccEntryTerminal({ addLog, onSubmitted, hidePdfBanner =
           />
         }
       />
+  )
+
+  if (hidePdfBanner) {
+    return entryForm
+  }
+
+  return (
+    <div className="w-full min-w-0 max-w-none space-y-4">
+      <TacticalPanel className="border-accent/25 bg-app-bg/90 p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] text-accent/85">
+              [ PDF GÖZLEM FORMU · MARCH ]
+            </p>
+            <p className="mt-1 font-mono-technical text-[9px] text-app-text/55">
+              Formu indirin, gözlemci MARCH safhalarını işaretlesin, sonuçları buraya girin.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleDownloadPdf}
+            disabled={pdfBusy}
+            className="inline-flex items-center justify-center gap-2 rounded border border-accent/50 bg-accent/12 px-4 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent transition hover:bg-accent/20 disabled:opacity-50"
+          >
+            {pdfBusy ? <Loader2 className="size-3.5 animate-spin" /> : <Download className="size-3.5" />}
+            PDF Formu İndir
+          </button>
+        </div>
+      </TacticalPanel>
+      {entryForm}
     </div>
   )
 }

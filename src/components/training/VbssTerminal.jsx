@@ -229,7 +229,9 @@ export default function VbssTerminal({
         <VbssObservedPdfPanel />
       ) : viewMode === 'entry' ? (
         addLog ? (
-          <VbssObservedEvalForm addLog={addLog} hidePdfBanner onSubmitted={() => setViewMode('observed')} />
+          <div className="w-full min-w-0 max-w-none">
+            <VbssObservedEvalForm addLog={addLog} hidePdfBanner onSubmitted={() => setViewMode('observed')} />
+          </div>
         ) : (
           <p className={ctMsgErr}>Kayıt kanalı hazır değil.</p>
         )
