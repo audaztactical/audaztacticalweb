@@ -1,8 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { AlertTriangle, ChevronLeft } from 'lucide-react'
 import cqbImg from '../../assets/cqb.png'
-import MatrixWireVisualizer from '../armory/MatrixWireVisualizer'
-import TacticalPanel from '../ui/TacticalPanel'
 import { useAuth } from '../../context/AuthContext'
 import { submitCqbRecord } from '../../lib/cqbSubmit'
 import {
@@ -21,26 +19,20 @@ import { invNum, invStr } from '../../lib/inventoryIlws'
 import { calculateCqbSuccessPercent } from '../../lib/trainingSuccessScore'
 import CqbLogRegistry from './CqbLogRegistry'
 import OperatorInstructorRecordsEmbed from './OperatorInstructorRecordsEmbed'
-import SuccessScorePreview from './SuccessScorePreview'
 import IndividualTrainingSessionHeader from './IndividualTrainingSessionHeader'
-
-const inputClass =
-  'w-full rounded border border-accent/30 bg-app-bg px-2 py-2 font-mono-technical text-sm text-slate-100 outline-none placeholder:text-app-text/45 focus:border-accent/60'
-
-const selectClass =
-  'dossier-blood-select w-full rounded border border-accent/35 bg-app-bg py-2 pl-2 pr-8 font-mono-technical text-[11px] uppercase text-app-text outline-none focus:border-accent/60'
-
-const textareaClass =
-  'w-full min-h-[6rem] resize-y rounded border border-accent/30 bg-app-bg px-2 py-2 font-mono-technical text-sm leading-relaxed text-slate-100 outline-none placeholder:text-app-text/45 focus:border-accent/60'
-
-const labelClass = 'font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-app-text/55'
-
-const errorCheckClass = (checked) =>
-  `flex cursor-pointer items-start gap-2.5 rounded border px-2.5 py-2 transition ${
-    checked
-      ? 'border-accent/50 bg-accent/10 text-green-400'
-      : 'border-white/10 text-zinc-300 hover:border-accent/25 hover:text-zinc-100'
-  }`
+import TrainingTerminalLayout from './layout/TrainingTerminalLayout'
+import TrainingTerminalPanel from './layout/TrainingTerminalPanel'
+import TrainingMetricGrid, { TrainingMetricField } from './layout/TrainingMetricGrid'
+import TrainingPhaseBlock from './layout/TrainingPhaseBlock'
+import TrainingVisualStage from './layout/TrainingVisualStage'
+import TrainingStatusBar from './layout/TrainingStatusBar'
+import {
+  errorCheckClass,
+  inputClass,
+  labelClass,
+  selectClass,
+  textareaClass,
+} from './layout/trainingTerminalTokens'
 
 /** @typedef {'form' | 'registry'} CqbViewMode */
 
@@ -99,27 +91,22 @@ function CqbSelectField({
  */
 function CqbErrorPhaseCell({ group, selected, onToggle }) {
   return (
-    <div className="rounded border border-white/8 bg-app-bg/80 p-3">
-      <p className="mb-3 border-b border-amber-500/20 pb-2 font-mono-technical text-xs font-bold uppercase tracking-widest text-amber-500">
-        {group.title}
-      </p>
-      <div className="space-y-3">
-        {group.items.map((preset) => {
-          const checked = selected.includes(preset.id)
-          return (
-            <label key={preset.id} className={errorCheckClass(checked)}>
-              <input
-                type="checkbox"
-                className="mt-1 size-4 shrink-0 accent-accent"
-                checked={checked}
-                onChange={() => onToggle(preset.id)}
-              />
-              <span className="font-mono-technical text-sm leading-snug">{preset.label}</span>
-            </label>
-          )
-        })}
-      </div>
-    </div>
+    <TrainingPhaseBlock title={group.title}>
+      {group.items.map((preset) => {
+        const checked = selected.includes(preset.id)
+        return (
+          <label key={preset.id} className={errorCheckClass(checked)}>
+            <input
+              type="checkbox"
+              className="mt-1 size-4 shrink-0 accent-accent"
+              checked={checked}
+              onChange={() => onToggle(preset.id)}
+            />
+            <span className="font-mono-technical text-sm leading-snug">{preset.label}</span>
+          </label>
+        )
+      })}
+    </TrainingPhaseBlock>
   )
 }
 
@@ -393,18 +380,10 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
           VERİ_KANALI_KESİLDİ · YENİDEN_DENE
         </p>
       ) : (
-        <form
+        <TrainingTerminalLayout
           onSubmit={handleSubmit}
-          className="grid gap-4 lg:grid-cols-2 lg:items-stretch"
-        >
-          <TacticalPanel className="relative flex flex-col overflow-hidden border-accent/20 bg-app-bg/95 p-0">
-            <span className="pointer-events-none absolute left-2 top-2 z-10 h-4 w-4 border-l border-t border-accent/40" />
-            <span className="pointer-events-none absolute right-2 top-2 z-10 h-4 w-4 border-r border-t border-accent/40" />
-            <p className="border-b border-accent/15 bg-app-bg px-4 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-accent/90">
-              OPERASYON KURULUMU · METRİKLER
-            </p>
-
-            <div className="flex flex-1 flex-col space-y-4 p-4 sm:p-5">
+          left={
+            <TrainingTerminalPanel title="OPERASYON KURULUMU · METRİKLER">
               <CqbSelectField
                 legend="ODA TOPOLOJİSİ"
                 value={form.roomTopology}
@@ -461,122 +440,116 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                   ))}
                 </select>
               </fieldset>
-              <div className="rounded border border-accent/20 bg-black/40 p-3">
-                <p className="mb-3 font-mono-technical text-[7px] font-bold uppercase tracking-[0.2em] text-accent/80">
-                  SAHA METRİKLERİ
-                </p>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  <label className="block space-y-1">
-                    <span className={labelClass}>TEHDİT SAYISI</span>
-                    <input
-                      type="number"
-                      min={0}
-                      step={1}
-                      className={`${inputClass} tabular-nums`}
-                      value={form.threatCount}
-                      onChange={(e) => onThreatChange(e.target.value)}
-                    />
-                  </label>
-                  <label className="block space-y-1">
-                    <span className={labelClass}>ETKİSİZ ALINAN</span>
-                    <input
-                      type="number"
-                      min={0}
-                      step={1}
-                      className={
-                        neutralizedInvalid || countError
-                          ? 'w-full rounded border border-red-500/55 bg-red-950/20 px-2 py-2 font-mono-technical text-sm text-red-200 outline-none tabular-nums'
-                          : `${inputClass} tabular-nums`
-                      }
-                      value={form.neutralizedCount}
-                      onChange={(e) => onNeutralizedChange(e.target.value)}
-                    />
-                  </label>
-                  <label className="block space-y-1">
-                    <span className={labelClass}>CLEARANCE TIME (SN)</span>
-                    <input
-                      type="number"
-                      min={0.001}
-                      step={0.01}
-                      inputMode="decimal"
-                      className={`${inputClass} tabular-nums`}
-                      placeholder="30.00"
-                      value={form.clearanceTimeMs}
-                      onChange={(e) => patch({ clearanceTimeMs: e.target.value })}
-                    />
-                  </label>
-                  <label className="block space-y-1">
-                    <span className={labelClass}>ACCURACY SCORE (%)</span>
-                    <input
-                      type="number"
-                      min={0}
-                      max={100}
-                      step={0.1}
-                      inputMode="decimal"
-                      className={`${inputClass} tabular-nums`}
-                      placeholder="85"
-                      value={form.accuracyScore}
-                      onChange={(e) => patch({ accuracyScore: e.target.value })}
-                    />
-                  </label>
-                  <label className="block space-y-1">
-                    <span className={labelClass}>SAFETY VIOLATIONS</span>
-                    <input
-                      type="number"
-                      min={0}
-                      step={1}
-                      className={`${inputClass} tabular-nums`}
-                      value={form.safetyViolations}
-                      onChange={(e) => patch({ safetyViolations: e.target.value })}
-                    />
-                  </label>
-                  <label className="block space-y-1 sm:col-span-1">
-                    <span className={labelClass}>TACTICAL DECISION</span>
-                    <select
-                      className={selectClass}
-                      value={form.tacticalDecision}
-                      onChange={(e) => patch({ tacticalDecision: e.target.value })}
-                      required
-                    >
-                      <option value="">— KARAR SEÇİN —</option>
-                      {TACTICAL_DECISION_OPTIONS.map((o) => (
-                        <option key={o.id} value={o.id}>
-                          {o.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-                {countError ? (
-                  <p className="mt-2 flex items-center gap-1.5 font-mono-technical text-[8px] font-bold uppercase text-red-400">
-                    <AlertTriangle className="size-3 shrink-0" aria-hidden />
-                    {countError}
-                  </p>
-                ) : null}
-              </div>
-              <div className="mt-auto hidden border-t border-accent/12 pt-3 lg:block">
-                <MatrixWireVisualizer hubMode variant="reddot" imageSrc={cqbImg} imageAlt="CQB" label="" />
-                <div className="mt-2 font-mono-technical text-[8px] uppercase text-app-text/55">
-                  <p>
-                    TEHDİT / ETKİSİZ:{' '}
-                    <span className="text-accent">
-                      {threatNum} / {neutralizedNum}
-                    </span>
-                  </p>
-                  <p className="mt-0.5 text-accent">HATA: {totalTacticalErrorCount} İŞARETLİ</p>
-                </div>
-              </div>
-            </div>
-          </TacticalPanel>
-
-          <TacticalPanel className="relative flex min-h-0 flex-col border-accent/25 bg-app-bg/95 p-0">
-            <span className="pointer-events-none absolute bottom-2 left-2 z-10 h-4 w-4 border-b border-l border-accent/40" />
-            <span className="pointer-events-none absolute bottom-2 right-2 z-10 h-4 w-4 border-b border-r border-accent/40" />
-            <p className="border-b border-accent/15 bg-app-bg px-4 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-app-text">
-              TAKTİK HATALAR · ANALİZ
-            </p>
-
-            <div className="flex min-h-0 flex-1 flex-col space-y-4 p-4 sm:p-5">
+              <TrainingMetricGrid
+                footer={
+                  countError ? (
+                    <p className="mt-2 flex items-center gap-1.5 font-mono-technical text-[8px] font-bold uppercase text-red-400">
+                      <AlertTriangle className="size-3 shrink-0" aria-hidden />
+                      {countError}
+                    </p>
+                  ) : null
+                }
+              >
+                <TrainingMetricField label="TEHDİT SAYISI">
+                  <input
+                    type="number"
+                    min={0}
+                    step={1}
+                    className={`${inputClass} tabular-nums`}
+                    value={form.threatCount}
+                    onChange={(e) => onThreatChange(e.target.value)}
+                  />
+                </TrainingMetricField>
+                <TrainingMetricField label="ETKİSİZ ALINAN">
+                  <input
+                    type="number"
+                    min={0}
+                    step={1}
+                    className={
+                      neutralizedInvalid || countError
+                        ? 'w-full rounded border border-red-500/55 bg-red-950/20 px-2 py-2 font-mono-technical text-sm text-red-200 outline-none tabular-nums'
+                        : `${inputClass} tabular-nums`
+                    }
+                    value={form.neutralizedCount}
+                    onChange={(e) => onNeutralizedChange(e.target.value)}
+                  />
+                </TrainingMetricField>
+                <TrainingMetricField label="CLEARANCE TIME (SN)">
+                  <input
+                    type="number"
+                    min={0.001}
+                    step={0.01}
+                    inputMode="decimal"
+                    className={`${inputClass} tabular-nums`}
+                    placeholder="30.00"
+                    value={form.clearanceTimeMs}
+                    onChange={(e) => patch({ clearanceTimeMs: e.target.value })}
+                  />
+                </TrainingMetricField>
+                <TrainingMetricField label="ACCURACY SCORE (%)">
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={0.1}
+                    inputMode="decimal"
+                    className={`${inputClass} tabular-nums`}
+                    placeholder="85"
+                    value={form.accuracyScore}
+                    onChange={(e) => patch({ accuracyScore: e.target.value })}
+                  />
+                </TrainingMetricField>
+                <TrainingMetricField label="SAFETY VIOLATIONS">
+                  <input
+                    type="number"
+                    min={0}
+                    step={1}
+                    className={`${inputClass} tabular-nums`}
+                    value={form.safetyViolations}
+                    onChange={(e) => patch({ safetyViolations: e.target.value })}
+                  />
+                </TrainingMetricField>
+                <TrainingMetricField label="TACTICAL DECISION" className="sm:col-span-1">
+                  <select
+                    className={selectClass}
+                    value={form.tacticalDecision}
+                    onChange={(e) => patch({ tacticalDecision: e.target.value })}
+                    required
+                  >
+                    <option value="">— KARAR SEÇİN —</option>
+                    {TACTICAL_DECISION_OPTIONS.map((o) => (
+                      <option key={o.id} value={o.id}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                </TrainingMetricField>
+              </TrainingMetricGrid>
+              <TrainingVisualStage
+                imageSrc={cqbImg}
+                imageAlt="CQB"
+                stats={
+                  <>
+                    <p>
+                      TEHDİT / ETKİSİZ:{' '}
+                      <span className="text-accent">
+                        {threatNum} / {neutralizedNum}
+                      </span>
+                    </p>
+                    <p className="mt-0.5 text-accent">HATA: {totalTacticalErrorCount} İŞARETLİ</p>
+                  </>
+                }
+              />
+            </TrainingTerminalPanel>
+          }
+          right={
+            <TrainingTerminalPanel
+              title="TAKTİK HATALAR · ANALİZ"
+              titleClassName="text-app-text"
+              corners="bottom"
+              panelClassName="relative flex min-h-0 flex-col border-accent/25 bg-app-bg/95 p-0"
+              bodyClassName="flex min-h-0 flex-1 flex-col space-y-4 p-4 sm:p-5"
+            >
               <fieldset className="flex min-h-0 flex-1 flex-col space-y-3 overflow-hidden rounded border border-accent/20 bg-black/40 p-3">
                 <legend className={`${labelClass} text-accent/80`}>
                   TAKTİK HATALAR · FAZ BAZLI
@@ -665,38 +638,20 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                   maxLength={2000}
                 />
               </label>
-            </div>
-          </TacticalPanel>
-
-          <div className="space-y-3 lg:col-span-2">
-            {submitOk ? (
-              <p className="rounded border border-accent/40 bg-accent/10 px-3 py-2 text-center font-mono-technical text-[9px] font-bold uppercase text-accent">
-                CQB_KAYDI_AKTARILDI · RANGE_LOGS
-              </p>
-            ) : null}
-            {submitError ? (
-              <p className="rounded border border-red-500/40 bg-red-950/25 px-3 py-2 text-center font-mono-technical text-[9px] font-bold uppercase text-red-300">
-                {submitError}
-              </p>
-            ) : null}
-
-            <div className="flex flex-wrap gap-2 rounded border border-accent/15 bg-black/40 p-3">
-              <SuccessScorePreview percent={previewSuccessPercent} />
-              {submitBlockedReason && !saving ? (
-                <p className="w-full rounded border border-amber-500/35 bg-amber-950/20 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase text-amber-300/95">
-                  {submitBlockedReason}
-                </p>
-              ) : null}
-              <button
-                type="submit"
-                disabled={saving || !canSubmit}
-                className="w-full rounded border border-accent/55 bg-accent/12 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent shadow-[0_0_24px_-8px_color-mix(in_srgb,var(--accent-color)_35%,transparent)]] hover:bg-accent/20 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {saving ? 'AKTARILIYOR…' : 'CQB_KAYDINI_ONAYLA'}
-              </button>
-            </div>
-          </div>
-        </form>
+            </TrainingTerminalPanel>
+          }
+          footer={
+            <TrainingStatusBar
+              successPercent={previewSuccessPercent}
+              submitBlockedReason={submitBlockedReason}
+              saving={saving}
+              canSubmit={canSubmit}
+              submitLabel="CQB_KAYDINI_ONAYLA"
+              successMessage={submitOk ? 'CQB_KAYDI_AKTARILDI · RANGE_LOGS' : null}
+              errorMessage={submitError}
+            />
+          }
+        />
       )}
 
       <OperatorInstructorRecordsEmbed discipline="cqb" />
