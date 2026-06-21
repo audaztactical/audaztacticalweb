@@ -53,6 +53,8 @@ import {
   ADMIN_TABLE_WRAP,
   PUBLISH_TONE,
   VIDEO_SOURCE_TONE,
+  ADMIN_TAB_TONES,
+  ADMIN_TAB_DEFAULT_TONE,
 } from '../components/admin/adminUi'
 
 /** @typedef {'icerik' | 'istihbarat' | 'youtube-kanallar' | 'geri-bildirim' | 'kullanicilar'} AdminTabId */
@@ -74,26 +76,39 @@ const emptyDoctrineForm = {
 }
 
 /**
- * @param {{ active: boolean, onClick: () => void, label: string, icon: import('lucide-react').LucideIcon }} props
+ * @param {{
+ *   active: boolean
+ *   onClick: () => void
+ *   label: string
+ *   icon: import('lucide-react').LucideIcon
+ *   tabId: AdminTabId
+ * }} props
  */
-function AdminTabButton({ active, onClick, label, icon }) {
+function AdminTabButton({ active, onClick, label, icon, tabId }) {
   const IconComponent = icon
+  const tone = ADMIN_TAB_TONES[tabId] ?? ADMIN_TAB_TONES[ADMIN_TAB_DEFAULT_TONE]
+
   return (
     <button
       type="button"
       onClick={onClick}
       aria-current={active ? 'page' : undefined}
       className={[
-        'relative inline-flex items-center gap-2 rounded-t-lg border border-b-0 px-4 py-3 font-mono-technical text-[11px] font-bold uppercase tracking-wider transition-all',
-        active
-          ? 'border-accent/40 bg-accent/10 text-accent shadow-[0_-2px_12px_-4px_rgba(132,204,22,0.35)]'
-          : 'border-transparent text-app-text/50 hover:border-white/10 hover:bg-white/[0.03] hover:text-app-text/85',
+        'group relative inline-flex items-center gap-2 rounded-t-lg border border-b-0 px-4 py-3 font-mono-technical text-[11px] font-bold uppercase tracking-wider transition-all',
+        active ? tone.active : ['border-transparent text-app-text/50', tone.idleHover].join(' '),
       ].join(' ')}
     >
-      <IconComponent className="size-4 shrink-0" strokeWidth={1.5} aria-hidden />
+      <IconComponent
+        className={[
+          'size-4 shrink-0 transition-colors',
+          active ? tone.iconActive : [tone.iconIdle, tone.iconHover].join(' '),
+        ].join(' ')}
+        strokeWidth={1.5}
+        aria-hidden
+      />
       {label}
       {active ? (
-        <span className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-accent" aria-hidden />
+        <span className={`absolute inset-x-3 bottom-0 h-0.5 rounded-full ${tone.underline}`} aria-hidden />
       ) : null}
     </button>
   )
@@ -443,6 +458,7 @@ export default function AdminPanel() {
             onClick={() => setActiveTab(tab.id)}
             label={tab.label}
             icon={tab.icon}
+            tabId={tab.id}
           />
         ))}
       </nav>

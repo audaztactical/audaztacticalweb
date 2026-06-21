@@ -64,3 +64,66 @@ export const VIDEO_SOURCE_TONE = {
   vimeo: 'border-sky-500/35 bg-sky-950/25 text-sky-300',
   other: 'border-accent/35 bg-accent/10 text-accent/90',
 }
+
+/**
+ * Admin sekme çubuğu — her sekme için vurgu rengi (tek kaynak).
+ * @type {Record<string, {
+ *   iconActive: string
+ *   iconIdle: string
+ *   iconHover: string
+ *   active: string
+ *   idleHover: string
+ *   underline: string
+ * }>}
+ */
+export const ADMIN_TAB_TONES = {
+  icerik: {
+    iconActive: 'text-accent',
+    iconIdle: 'text-app-text/35',
+    iconHover: 'group-hover:text-accent/80',
+    active:
+      'border-accent/40 bg-accent/10 text-accent shadow-[0_-2px_12px_-4px_rgba(132,204,22,0.35)]',
+    idleHover: 'hover:border-accent/25 hover:bg-accent/[0.06] hover:text-accent/85',
+    underline: 'bg-accent',
+  },
+  istihbarat: {
+    iconActive: 'text-sky-300',
+    iconIdle: 'text-app-text/35',
+    iconHover: 'group-hover:text-sky-300/80',
+    active:
+      'border-sky-500/40 bg-sky-950/25 text-sky-300 shadow-[0_-2px_12px_-4px_rgba(56,189,248,0.28)]',
+    idleHover: 'hover:border-sky-500/25 hover:bg-sky-950/20 hover:text-sky-300/85',
+    underline: 'bg-sky-400',
+  },
+  'youtube-kanallar': {
+    iconActive: 'text-red-300',
+    iconIdle: 'text-app-text/35',
+    iconHover: 'group-hover:text-red-300/80',
+    active:
+      'border-red-500/40 bg-red-950/25 text-red-300 shadow-[0_-2px_12px_-4px_rgba(239,68,68,0.28)]',
+    idleHover: 'hover:border-red-500/25 hover:bg-red-950/20 hover:text-red-300/85',
+    underline: 'bg-red-400',
+  },
+  'geri-bildirim': {
+    iconActive: 'text-orange-300',
+    iconIdle: 'text-app-text/35',
+    iconHover: 'group-hover:text-orange-300/80',
+    active:
+      'border-orange-500/40 bg-orange-950/25 text-orange-300 shadow-[0_-2px_12px_-4px_rgba(251,146,60,0.28)]',
+    idleHover: 'hover:border-orange-500/25 hover:bg-orange-950/20 hover:text-orange-300/85',
+    underline: 'bg-orange-400',
+  },
+  kullanicilar: {
+    iconActive: 'text-amber-300',
+    iconIdle: 'text-app-text/35',
+    iconHover: 'group-hover:text-amber-300/80',
+    active:
+      'border-amber-500/40 bg-amber-950/25 text-amber-300 shadow-[0_-2px_12px_-4px_rgba(245,158,11,0.28)]',
+    idleHover: 'hover:border-amber-500/25 hover:bg-amber-950/20 hover:text-amber-300/85',
+    underline: 'bg-amber-400',
+  },
+}
+
+/** @type {keyof typeof ADMIN_TAB_TONES} */
+export const ADMIN_TAB_DEFAULT_TONE = 'icerik'
+
