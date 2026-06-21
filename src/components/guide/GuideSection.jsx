@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
-import { ExternalLink, Shield, ShieldAlert } from 'lucide-react'
-import GuideStatusCallout, { GuidePrerequisiteCallout } from './GuideStatusCallout'
+import { ChevronRight, Shield, ShieldAlert } from 'lucide-react'
+import GuideInfoNote, { GuidePrerequisiteCallout } from './GuideInfoNote'
 import GuideFlowDiagram from './GuideFlowDiagram'
 
 /** @typedef {import('../../data/guideContent').GuideSectionContent} GuideSectionContent */
@@ -15,12 +15,12 @@ export default function GuideSection({ id, section }) {
   const {
     title,
     opsCode,
-    route,
+    pageLink,
     access,
     purpose,
     prerequisites,
     steps,
-    status,
+    infoNote,
     flowId,
     notes,
     instructorOnly,
@@ -45,36 +45,36 @@ export default function GuideSection({ id, section }) {
           {adminOnly ? (
             <span className="inline-flex items-center gap-1 rounded border border-lime-500/35 bg-lime-950/25 px-2 py-0.5 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-lime-300">
               <ShieldAlert className="size-3" strokeWidth={2} aria-hidden />
-              Admin
+              Yönetici
             </span>
           ) : null}
         </div>
         <h2 className="font-display text-lg font-bold uppercase tracking-[0.1em] text-app-text sm:text-xl">
           {title}
         </h2>
-        {route ? (
+        {pageLink ? (
           <Link
-            to={route.split('?')[0]}
+            to={pageLink.to}
             className="inline-flex items-center gap-1 font-mono-technical text-[10px] text-amber-400/90 transition hover:text-amber-300"
           >
-            {route}
-            <ExternalLink className="size-3 opacity-70" strokeWidth={2} aria-hidden />
+            {pageLink.label}
+            <ChevronRight className="size-3 opacity-70" strokeWidth={2} aria-hidden />
           </Link>
         ) : null}
       </header>
 
       <dl className="mb-4 space-y-3 font-mono-technical text-xs leading-relaxed">
         <div>
-          <dt className="mb-1 text-[9px] font-bold uppercase tracking-[0.22em] text-app-text/45">Erişim</dt>
+          <dt className="mb-1 text-[9px] font-bold uppercase tracking-[0.22em] text-app-text/45">Kimler kullanabilir</dt>
           <dd className="text-app-text/80">{access}</dd>
         </div>
         <div>
-          <dt className="mb-1 text-[9px] font-bold uppercase tracking-[0.22em] text-app-text/45">Amaç</dt>
+          <dt className="mb-1 text-[9px] font-bold uppercase tracking-[0.22em] text-app-text/45">Ne işe yarar</dt>
           <dd className="text-app-text/85">{purpose}</dd>
         </div>
       </dl>
 
-      {status ? <GuideStatusCallout now={status.now} launch={status.launch} className="mb-4" /> : null}
+      {infoNote ? <GuideInfoNote className="mb-4">{infoNote}</GuideInfoNote> : null}
 
       {prerequisites?.length ? (
         <GuidePrerequisiteCallout className="mb-4">
@@ -90,7 +90,7 @@ export default function GuideSection({ id, section }) {
 
       <div className="mb-3">
         <p className="mb-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.22em] text-amber-500/75">
-          Temel akış
+          Nasıl kullanılır
         </p>
         <ol className="list-decimal space-y-2 pl-5 font-mono-technical text-xs leading-relaxed text-app-text/85">
           {steps.map((step, i) => (

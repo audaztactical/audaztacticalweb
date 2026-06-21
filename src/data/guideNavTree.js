@@ -74,7 +74,7 @@ export const GUIDE_NAV_TREE = [
     id: 'ekler',
     label: 'Ekler',
     children: [
-      { id: 'deep-links', label: 'Derin linkler' },
+      { id: 'deep-links', label: 'Hızlı geçiş ipuçları' },
       { id: 'glossary', label: 'Terimler sözlüğü' },
     ],
   },

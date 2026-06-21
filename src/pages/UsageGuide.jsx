@@ -4,7 +4,7 @@ import HudFluffDecor from '../components/dashboard/HudFluffDecor'
 import GuideShell from '../components/guide/GuideShell'
 import GuideNav from '../components/guide/GuideNav'
 import GuideSection from '../components/guide/GuideSection'
-import GuideStatusCallout from '../components/guide/GuideStatusCallout'
+import GuideInfoNote from '../components/guide/GuideInfoNote'
 import { GUIDE_SECTIONS } from '../data/guideContent'
 import { flattenGuideNavIds } from '../data/guideNavTree'
 
@@ -70,14 +70,15 @@ export default function UsageGuide() {
           Operatör Kılavuzu
         </h1>
         <p className="mt-2 max-w-2xl font-mono-technical text-xs leading-relaxed text-app-text/55">
-          Audaz Tactical modüllerinin amacı, ön koşulları ve adım adım kullanımı. Durum kutularında kod
-          davranışı ile lansman planı ayrı gösterilir.
+          Audaz Tactical modüllerinin amacı, ön koşulları ve adım adım kullanımı. Her bölümde güncel
+          durum sade bir bilgi notu olarak özetlenir.
         </p>
         <div className="mt-4">
-          <GuideStatusCallout
-            now="Beta dönemi: tüm bireysel antrenman sektörleri (ATIŞ–EĞİTİM) açık; ATIŞ 10 kayıt limiti uygulanmıyor; premium ödeme kapalı — yükseltme erişim kodu ile."
-            launch="Lansman sonrası Pricing.jsx tier vaatleri devreye girebilir: ücretsiz planda yalnızca ATIŞ (10 kayıt), CQB/FOF/Eğitim kilitli; Premium ödeme ve kilitli hesap yönlendirmesi."
-          />
+          <GuideInfoNote>
+            Beta dönemindesiniz: tüm bireysel antrenman sektörleri açık, atış kayıt sınırı uygulanmıyor
+            ve ücretli ödeme henüz aktif değil — premium veya eğitmen erişimi erişim kodu ile
+            verilebilir. Resmi lansman sonrasında planlar değişebilir.
+          </GuideInfoNote>
         </div>
       </header>
 
