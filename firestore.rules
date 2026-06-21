@@ -928,7 +928,9 @@ service cloud.firestore {
         && request.resource.data.status == 'pending'
         && request.resource.data.suspensionReasonSnapshot is string
         && request.resource.data.suspensionReasonSnapshot.size() <= 500;
-      allow read, list, update, delete: if isContentAdmin();
+      allow read: if isContentAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow update, delete: if isContentAdmin();
     }
 
     match /{document=**} {

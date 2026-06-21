@@ -6,7 +6,7 @@ import {
   formatFeedbackTimestamp,
   hasTimedSuspensionEnd,
   submitSuspensionAppeal,
-  subscribePendingAppealForSuspension,
+  subscribeAppealForSuspension,
 } from '../../lib/firestoreSuspensionAppeals'
 import { auth } from '../../lib/firebase'
 import { useAuth } from '../../context/AuthContext'
@@ -19,7 +19,7 @@ export default function SuspensionGate({ children }) {
   const [appealMessage, setAppealMessage] = useState('')
   const [appealBusy, setAppealBusy] = useState(false)
   const [appealError, setAppealError] = useState('')
-  const [pendingAppeal, setPendingAppeal] = useState(
+  const [currentAppeal, setCurrentAppeal] = useState(
     /** @type {import('../../lib/firestoreSuspensionAppeals').SuspensionAppealRecord | null} */ (null),
   )
   const [appealLoading, setAppealLoading] = useState(false)
@@ -29,21 +29,22 @@ export default function SuspensionGate({ children }) {
   const suspendedUntil = userData?.suspendedUntil ?? null
   const timedEnd = hasTimedSuspensionEnd(suspendedUntil)
   const untilLabel = timedEnd ? formatFeedbackTimestamp(suspendedUntil) : null
+  const adminReply = String(currentAppeal?.adminReply ?? '').trim()
 
   useEffect(() => {
     if (!suspended || !user?.uid) {
-      setPendingAppeal(null)
+      setCurrentAppeal(null)
       setAppealLoading(false)
       return undefined
     }
 
     setAppealLoading(true)
-    const unsub = subscribePendingAppealForSuspension(
+    const unsub = subscribeAppealForSuspension(
       user.uid,
       reason,
       suspendedUntil,
       (appeal) => {
-        setPendingAppeal(appeal)
+        setCurrentAppeal(appeal)
         setAppealLoading(false)
       },
       () => {
@@ -67,7 +68,7 @@ export default function SuspensionGate({ children }) {
   }
 
   const handleSubmitAppeal = async () => {
-    if (!user?.uid || pendingAppeal) return
+    if (!user?.uid || currentAppeal) return
     setAppealBusy(true)
     setAppealError('')
     try {
@@ -141,11 +142,23 @@ export default function SuspensionGate({ children }) {
               <Loader2 className="size-3.5 animate-spin" aria-hidden />
               İtiraz durumu kontrol ediliyor…
             </p>
-          ) : pendingAppeal ? (
+          ) : adminReply ? (
+            <div className="rounded-lg border border-accent/30 bg-accent/5 px-4 py-3">
+              <p className="font-mono-technical text-[10px] font-bold uppercase tracking-wider text-accent">
+                Yöneticinin Yanıtı
+              </p>
+              <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-app-text/90">{adminReply}</p>
+              {currentAppeal?.repliedAt ? (
+                <p className="mt-2 font-mono-technical text-[10px] text-app-text/50">
+                  — {formatFeedbackTimestamp(currentAppeal.repliedAt)}
+                </p>
+              ) : null}
+            </div>
+          ) : currentAppeal ? (
             <p className="rounded-lg border border-accent/25 bg-accent/5 px-4 py-3 font-mono-technical text-xs leading-relaxed text-accent/90">
               İtirazınız iletildi
-              {pendingAppeal.createdAt
-                ? `, ${formatFeedbackTimestamp(pendingAppeal.createdAt)} tarihinde gönderildi`
+              {currentAppeal.createdAt
+                ? `, ${formatFeedbackTimestamp(currentAppeal.createdAt)} tarihinde gönderildi`
                 : ''}
               . İnceleme sonucu size bildirilecektir.
             </p>

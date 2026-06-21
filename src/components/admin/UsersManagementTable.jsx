@@ -24,7 +24,12 @@ import {
   suspendUserAccount,
   unsuspendUserAccount,
 } from '../../lib/firestoreAdminUsers'
-import { formatFeedbackTimestamp, subscribePendingAppealsByUser } from '../../lib/firestoreSuspensionAppeals'
+import {
+  formatFeedbackTimestamp,
+  replyToSuspensionAppeal,
+  subscribeAppealById,
+  subscribePendingAppealsByUser,
+} from '../../lib/firestoreSuspensionAppeals'
 import {
   ADMIN_EMPTY_STATE,
   ADMIN_TABLE,
@@ -265,13 +270,61 @@ function DeleteConfirmModal({ open, row, onClose, onConfirm, busy }) {
  *   appeal: SuspensionAppealRecord | null
  *   row: AdminUserRecord | null
  *   onClose: () => void
+ *   onFeedback?: (type: 'ok' | 'err', text: string) => void
  * }} props
  */
-function AppealViewModal({ open, appeal, row, onClose }) {
-  if (!open || !appeal || !row) return null
+function AppealViewModal({ open, appeal: initialAppeal, row, onClose, onFeedback }) {
+  const { user } = useAuth()
+  const [appeal, setAppeal] = useState(/** @type {SuspensionAppealRecord | null} */ (null))
+  const [replyText, setReplyText] = useState('')
+  const [editMode, setEditMode] = useState(false)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    if (!open || !initialAppeal?.id) {
+      setAppeal(null)
+      setReplyText('')
+      setEditMode(false)
+      return undefined
+    }
+
+    setAppeal(initialAppeal)
+    setReplyText(initialAppeal.adminReply ?? '')
+    setEditMode(false)
+
+    const unsub = subscribeAppealById(initialAppeal.id, (next) => {
+      if (next) setAppeal(next)
+    })
+
+    return unsub
+  }, [open, initialAppeal])
+
+  if (!open || !row || !appeal) return null
+
+  const hasReply = Boolean(String(appeal.adminReply ?? '').trim())
+
+  const handleSendReply = async () => {
+    const body = replyText.trim()
+    if (!body) return
+    setBusy(true)
+    try {
+      await replyToSuspensionAppeal(appeal.id, {
+        adminReply: body,
+        repliedBy: user?.uid ?? '',
+        repliedByEmail: user?.email ?? '',
+        recipientId: row.id,
+      })
+      onFeedback?.('ok', 'Yanıt gönderildi ve kullanıcıya bildirildi.')
+      setEditMode(false)
+    } catch (err) {
+      onFeedback?.('err', err instanceof Error ? err.message : 'Yanıt gönderilemedi.')
+    } finally {
+      setBusy(false)
+    }
+  }
 
   return (
-    <ModalShell title="Bekleyen İtiraz" onClose={onClose}>
+    <ModalShell title={hasReply && !editMode ? 'İtiraz Yanıtlandı' : 'Bekleyen İtiraz'} onClose={onClose}>
       <p className="text-sm text-app-text/70">
         <strong className="text-app-text">{formatAdminUserDisplayName(row)}</strong>
         {row.email ? ` · ${row.email}` : ''}
@@ -292,6 +345,70 @@ function AppealViewModal({ open, appeal, row, onClose }) {
         </p>
         <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-app-text/90">{appeal.message}</p>
       </div>
+
+      {hasReply && !editMode ? (
+        <div className="mt-4 rounded-lg border border-accent/30 bg-accent/5 px-4 py-3">
+          <p className="font-mono-technical text-[10px] font-bold uppercase tracking-wider text-accent">
+            Gönderilen yanıt
+          </p>
+          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-app-text/90">{appeal.adminReply}</p>
+          {appeal.repliedAt ? (
+            <p className="mt-2 font-mono-technical text-[10px] text-app-text/50">
+              {formatFeedbackTimestamp(appeal.repliedAt)}
+              {appeal.repliedByEmail ? ` · ${appeal.repliedByEmail}` : ''}
+            </p>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => {
+              setEditMode(true)
+              setReplyText(appeal.adminReply)
+            }}
+            className="mt-3 rounded border border-white/15 px-3 py-1.5 font-mono-technical text-[10px] uppercase tracking-wider text-app-text/70 hover:bg-white/5"
+          >
+            Yanıtı Güncelle
+          </button>
+        </div>
+      ) : (
+        <div className="mt-4">
+          <label className="font-mono-technical text-[10px] font-bold uppercase tracking-wider text-accent/80">
+            Yanıt Yaz
+          </label>
+          <textarea
+            rows={4}
+            value={replyText}
+            onChange={(e) => setReplyText(e.target.value)}
+            disabled={busy}
+            placeholder="Kullanıcıya iletilecek yanıt…"
+            className="mt-1.5 w-full rounded-lg border border-white/15 bg-black/50 px-3 py-2.5 text-sm text-app-text placeholder:text-app-text/40 focus:border-accent/40 focus:outline-none disabled:opacity-50"
+          />
+          <div className="mt-3 flex flex-wrap justify-end gap-2">
+            {editMode ? (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  setEditMode(false)
+                  setReplyText(appeal.adminReply ?? '')
+                }}
+                className="rounded-lg border border-white/15 px-4 py-2 font-mono-technical text-[10px] uppercase tracking-wider text-app-text/70 hover:bg-white/5 disabled:opacity-50"
+              >
+                İptal
+              </button>
+            ) : null}
+            <button
+              type="button"
+              disabled={busy || !replyText.trim()}
+              onClick={() => void handleSendReply()}
+              className="inline-flex items-center gap-2 rounded-lg border border-accent/45 bg-accent/15 px-4 py-2 font-mono-technical text-[10px] font-bold uppercase tracking-wider text-accent hover:bg-accent/25 disabled:opacity-50"
+            >
+              {busy ? <Loader2 className="size-3.5 animate-spin" aria-hidden /> : null}
+              Yanıtı Gönder
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="mt-4 flex justify-end">
         <button
           type="button"
@@ -687,6 +804,7 @@ export default function UsersManagementTable({ onFeedback }) {
         appeal={appealView?.appeal ?? null}
         row={appealView?.row ?? null}
         onClose={() => setAppealView(null)}
+        onFeedback={onFeedback}
       />
     </>
   )
