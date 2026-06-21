@@ -686,6 +686,7 @@ export async function setChatTypingStatus(chatId, uid, isTyping) {
 }
 
 /**
+ * Peer typing — yalnızca boolean değişince callback (gereksiz re-render önleme).
  * @param {string} chatId
  * @param {string} peerUid
  * @param {(typing: boolean) => void} onData
@@ -703,12 +704,16 @@ export function subscribeChatTypingStatus(chatId, peerUid, onData, onError) {
     return () => {}
   }
 
+  let lastTyping = /** @type {boolean | null} */ (null)
+
   return safeOnSnapshot(
     doc(db, 'chats', cid),
     (snap) => {
       const map = snap.data()?.typingStatus
       const typing =
         map && typeof map === 'object' && !Array.isArray(map) ? Boolean(map[peer]) : false
+      if (typing === lastTyping) return
+      lastTyping = typing
       onData(typing)
     },
     (err) => onError?.(err),

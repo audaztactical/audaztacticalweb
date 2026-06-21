@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, memo } from 'react'
 import { Loader2 } from 'lucide-react'
 import MuhabereMessageRow from './MuhabereMessageRow'
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
@@ -13,6 +13,14 @@ import {
 } from '../../lib/firestoreTaktikMuhabere'
 
 /** @typedef {import('../../lib/firestoreTaktikMuhabere').MuhabereMessage} MuhabereMessage */
+
+const MuhabereTypingIndicator = memo(function MuhabereTypingIndicator({ callsign }) {
+  return (
+    <p className="font-mono text-xs text-lime-500/90" aria-live="polite" aria-atomic="true">
+      [ {callsign.toUpperCase()} VERİ GİRİYOR... ]
+    </p>
+  )
+})
 
 /**
  * Aktif konuşma penceresi — yalnızca odaklanılan oda için onSnapshot + sayfalı geçmiş.
@@ -349,9 +357,7 @@ export default function ChatWindow({
         )}
 
         {mode === 'dm' && peerTyping ? (
-          <p className="animate-pulse font-mono text-xs text-lime-500">
-            [ {peerCallsign.toUpperCase()} VERİ GİRİYOR... ]
-          </p>
+          <MuhabereTypingIndicator callsign={peerCallsign} />
         ) : null}
 
         {messagesError ? (

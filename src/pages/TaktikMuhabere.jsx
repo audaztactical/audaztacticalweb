@@ -165,6 +165,8 @@ export default function TaktikMuhabere() {
   const [dmDeleteTarget, setDmDeleteTarget] = useState(/** @type {MuhabereContact | null} */ (null))
 
   const typingStopRef = useRef(/** @type {ReturnType<typeof setTimeout> | null} */ (null))
+  const typingActiveRef = useRef(false)
+  const peerTypingHideRef = useRef(/** @type {ReturnType<typeof setTimeout> | null} */ (null))
   const messageInputRef = useRef(/** @type {HTMLInputElement | null} */ (null))
   const [sendError, setSendError] = useState(/** @type {string | null} */ (null))
 
@@ -319,17 +321,39 @@ export default function TaktikMuhabere() {
     [uid, hidingMessageId],
   )
 
+  const stopTyping = useCallback(() => {
+    if (typingStopRef.current) {
+      window.clearTimeout(typingStopRef.current)
+      typingStopRef.current = null
+    }
+    if (!typingActiveRef.current || !chatId || !uid) return
+    typingActiveRef.current = false
+    void setChatTypingStatus(chatId, uid, false)
+  }, [chatId, uid])
+
+  const extendTyping = useCallback(() => {
+    if (!chatId || !uid) return
+    if (typingStopRef.current) window.clearTimeout(typingStopRef.current)
+    if (!typingActiveRef.current) {
+      typingActiveRef.current = true
+      void setChatTypingStatus(chatId, uid, true)
+    }
+    typingStopRef.current = window.setTimeout(() => {
+      stopTyping()
+    }, 2000)
+  }, [chatId, uid, stopTyping])
+
   const handleDraftChange = useCallback(
     (/** @type {string} */ value) => {
       setDraft(value)
       if (!chatId || !uid) return
-      void setChatTypingStatus(chatId, uid, true)
-      if (typingStopRef.current) window.clearTimeout(typingStopRef.current)
-      typingStopRef.current = window.setTimeout(() => {
-        void setChatTypingStatus(chatId, uid, false)
-      }, 2000)
+      if (!value.trim()) {
+        stopTyping()
+        return
+      }
+      extendTyping()
     },
-    [chatId, uid],
+    [chatId, uid, stopTyping, extendTyping],
   )
 
   const loadRoster = useCallback(async () => {
@@ -788,16 +812,34 @@ export default function TaktikMuhabere() {
       setPeerTyping(false)
       return undefined
     }
-    return subscribeChatTypingStatus(chatId, selectedUid, setPeerTyping, (err) =>
-      emitFirebaseError(err),
+    return subscribeChatTypingStatus(
+      chatId,
+      selectedUid,
+      (typing) => {
+        if (peerTypingHideRef.current) {
+          window.clearTimeout(peerTypingHideRef.current)
+          peerTypingHideRef.current = null
+        }
+        if (typing) {
+          setPeerTyping(true)
+          return
+        }
+        peerTypingHideRef.current = window.setTimeout(() => {
+          setPeerTyping(false)
+          peerTypingHideRef.current = null
+        }, 400)
+      },
+      (err) => emitFirebaseError(err),
     )
   }, [chatId, selectedUid, conversationMode])
 
   useEffect(() => {
     setBurnGhosts({})
     setBurnMode(false)
+    typingActiveRef.current = false
     return () => {
       if (typingStopRef.current) window.clearTimeout(typingStopRef.current)
+      if (peerTypingHideRef.current) window.clearTimeout(peerTypingHideRef.current)
       if (chatId && uid && conversationMode === 'dm') void setChatTypingStatus(chatId, uid, false)
     }
   }, [chatId, selectedUid, uid, conversationMode])
@@ -853,6 +895,7 @@ export default function TaktikMuhabere() {
         return
       }
       setDraft('')
+      if (conversationMode === 'dm' && chatId) stopTyping()
       sentOk = true
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Gönderim başarısız.'
