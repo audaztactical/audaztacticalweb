@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Loader2, MessageSquare, ThumbsUp, UserCheck, UserPlus } from 'lucide-react'
+import { Loader2, Flag, MessageSquare, ThumbsUp, UserCheck, UserPlus } from 'lucide-react'
 import OperatorAvatar from '../ui/OperatorAvatar'
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
 import {
@@ -47,10 +47,12 @@ function CategoryBadge({ category }) {
  *   post: ForumPost
  *   currentUid: string | null
  *   currentCallsign: string
+ *   currentCallsign: string
  *   onOpen: () => void
+ *   onReport?: () => void
  * }} props
  */
-export default function ForumPostCard({ post, currentUid, currentCallsign, onOpen }) {
+export default function ForumPostCard({ post, currentUid, currentCallsign, onOpen, onReport }) {
   const [author, setAuthor] = useState(/** @type {ForumAuthorProfile | null} */ (null))
   const [authorLoading, setAuthorLoading] = useState(true)
   const [likeBusy, setLikeBusy] = useState(false)
@@ -281,6 +283,20 @@ export default function ForumPostCard({ post, currentUid, currentCallsign, onOpe
             <MessageSquare className="size-3" strokeWidth={1.75} aria-hidden />
             {post.replyCount} yanıt
           </span>
+
+          {currentUid && !isOwnPost && onReport ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onReport()
+              }}
+              className="inline-flex items-center gap-1.5 rounded border border-zinc-700 bg-zinc-950 px-2.5 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-zinc-500 transition hover:border-amber-500/40 hover:text-amber-400"
+            >
+              <Flag className="size-3" strokeWidth={2} aria-hidden />
+              Şikayet et
+            </button>
+          ) : null}
         </div>
 
         {!isOwnPost ? (

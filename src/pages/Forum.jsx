@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
-import { ChevronLeft, Loader2, MessagesSquare, Plus, Send } from 'lucide-react'
+import { ChevronLeft, Flag, Loader2, MessagesSquare, Plus, Send } from 'lucide-react'
 import ForumImageBlock from '../components/common/ForumImageBlock'
 import TacticalImageAttachField from '../components/common/TacticalImageAttachField'
 import ForumPostCard from '../components/forum/ForumPostCard'
+import ForumReportModal from '../components/forum/ForumReportModal'
 import OperatorAvatar from '../components/ui/OperatorAvatar'
 import PageShell from '../components/layout/PageShell'
 import { useAuth } from '../context/AuthContext'
+import { useFeedbackPanelOptional } from '../context/FeedbackPanelContext'
 import { useStorage } from '../hooks/useStorage'
 import { emitFirebaseError } from '../lib/firebaseErrorBus'
 import {
@@ -78,9 +80,11 @@ function CategoryBadge({ category }) {
  *   uid: string | null
  *   callsign: string
  *   onBack: () => void
+ *   onReportPost: () => void
+ *   onReportReply: (reply: ForumReply) => void
  * }} props
  */
-function ForumThreadView({ post, uid, callsign, onBack }) {
+function ForumThreadView({ post, uid, callsign, onBack, onReportPost, onReportReply }) {
   const [replies, setReplies] = useState(/** @type {ForumReply[]} */ ([]))
   const [loading, setLoading] = useState(true)
   const [replyDraft, setReplyDraft] = useState('')
@@ -158,12 +162,28 @@ function ForumThreadView({ post, uid, callsign, onBack }) {
       </button>
 
       <article className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-5">
+        {post.removed ? (
+          <p className="rounded border border-red-900/40 bg-red-950/20 px-4 py-6 text-center font-mono text-xs uppercase text-red-300">
+            Bu brifing moderasyon tarafından kaldırıldı.
+          </p>
+        ) : (
+          <>
         <div className="mb-3 flex flex-wrap items-center gap-3">
           <OperatorAvatar uid={post.authorId} callsign={post.authorCallsign} size="sm" />
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="font-mono text-xs font-bold uppercase tracking-wide text-lime-400">{post.authorCallsign}</p>
             <span className="font-mono text-[10px] text-zinc-500">{formatForumTimestamp(post.timestamp)}</span>
           </div>
+          {uid && uid !== post.authorId ? (
+            <button
+              type="button"
+              onClick={onReportPost}
+              className="inline-flex items-center gap-1.5 rounded border border-zinc-700 bg-zinc-950 px-2.5 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-zinc-500 transition hover:border-amber-500/40 hover:text-amber-400"
+            >
+              <Flag className="size-3" strokeWidth={2} aria-hidden />
+              Şikayet et
+            </button>
+          ) : null}
         </div>
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <CategoryBadge category={post.category} />
@@ -173,6 +193,8 @@ function ForumThreadView({ post, uid, callsign, onBack }) {
           <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-zinc-300">{post.content}</p>
         ) : null}
         <ForumImageBlock url={post.imageUrl} alt={post.title} />
+          </>
+        )}
       </article>
 
       <section className="mt-6" aria-label="Yanıtlar">
@@ -193,17 +215,35 @@ function ForumThreadView({ post, uid, callsign, onBack }) {
           <ul className="space-y-3">
             {replies.map((reply) => (
               <li key={reply.id} className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-4">
-                <div className="mb-2 flex flex-wrap items-center gap-3">
-                  <OperatorAvatar uid={reply.authorId} callsign={reply.authorCallsign} size="sm" />
-                  <div className="font-mono text-[10px] uppercase tracking-wider">
-                    <span className="font-bold text-lime-400">{reply.authorCallsign}</span>
-                    <span className="ml-2 text-zinc-500">{formatForumTimestamp(reply.timestamp)}</span>
+                {reply.removed ? (
+                  <p className="font-mono text-[10px] uppercase text-zinc-500">[ Yorum kaldırıldı ]</p>
+                ) : (
+                  <>
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <OperatorAvatar uid={reply.authorId} callsign={reply.authorCallsign} size="sm" />
+                    <div className="font-mono text-[10px] uppercase tracking-wider">
+                      <span className="font-bold text-lime-400">{reply.authorCallsign}</span>
+                      <span className="ml-2 text-zinc-500">{formatForumTimestamp(reply.timestamp)}</span>
+                    </div>
                   </div>
+                  {uid && uid !== reply.authorId ? (
+                    <button
+                      type="button"
+                      onClick={() => onReportReply(reply)}
+                      className="inline-flex items-center gap-1 rounded border border-zinc-700 px-2 py-1 font-mono text-[9px] font-bold uppercase tracking-wider text-zinc-500 hover:border-amber-500/40 hover:text-amber-400"
+                    >
+                      <Flag className="size-3" aria-hidden />
+                      Şikayet
+                    </button>
+                  ) : null}
                 </div>
                 {reply.content ? (
                   <p className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-300">{reply.content}</p>
                 ) : null}
                 <ForumImageBlock url={reply.imageUrl} />
+                  </>
+                )}
               </li>
             ))}
           </ul>
@@ -252,6 +292,7 @@ function ForumThreadView({ post, uid, callsign, onBack }) {
 
 export default function Forum() {
   const { user, userData } = useAuth()
+  const feedbackPanel = useFeedbackPanelOptional()
   const uid = user?.uid ?? null
   const callsign = (userData?.callsign || user?.displayName || 'OPERATÖR').trim()
   const navigate = useNavigate()
@@ -274,6 +315,9 @@ export default function Forum() {
   const [category, setCategory] = useState(/** @type {ForumCategory} */ ('GENEL OPERASYON'))
   const [submitting, setSubmitting] = useState(false)
   const [postImageUrl, setPostImageUrl] = useState('')
+  const [reportTarget, setReportTarget] = useState(
+    /** @type {{ targetType: 'post' | 'comment'; targetId: string; parentPostId?: string | null } | null} */ (null),
+  )
   const {
     upload: uploadPostImage,
     loading: postImgLoading,
@@ -453,7 +497,22 @@ export default function Forum() {
       }
     >
       {activePost ? (
-        <ForumThreadView post={activePost} uid={uid} callsign={callsign} onBack={closePost} />
+        <ForumThreadView
+          post={activePost}
+          uid={uid}
+          callsign={callsign}
+          onBack={closePost}
+          onReportPost={() =>
+            setReportTarget({ targetType: 'post', targetId: activePost.id, parentPostId: null })
+          }
+          onReportReply={(reply) =>
+            setReportTarget({
+              targetType: 'comment',
+              targetId: reply.id,
+              parentPostId: activePost.id,
+            })
+          }
+        />
       ) : (
         <>
           <div className="mb-6">
@@ -576,6 +635,9 @@ export default function Forum() {
                       currentUid={uid}
                       currentCallsign={callsign}
                       onOpen={() => openPost(post)}
+                      onReport={() =>
+                        setReportTarget({ targetType: 'post', targetId: post.id, parentPostId: null })
+                      }
                     />
                   </li>
                 ))}
@@ -584,6 +646,17 @@ export default function Forum() {
           </section>
         </>
       )}
+
+      <ForumReportModal
+        open={Boolean(reportTarget && uid)}
+        onClose={() => setReportTarget(null)}
+        targetType={reportTarget?.targetType ?? 'post'}
+        targetId={reportTarget?.targetId ?? ''}
+        parentPostId={reportTarget?.parentPostId ?? null}
+        reporterId={uid ?? ''}
+        reporterCallsign={callsign}
+        onSuccess={() => feedbackPanel?.pushToast('Şikayetiniz alındı — moderasyon ekibine iletildi.')}
+      />
     </PageShell>
   )
 }

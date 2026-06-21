@@ -797,6 +797,57 @@ service cloud.firestore {
         );
     }
 
+    function isForumSoftRemovePayload() {
+      return request.resource.data.removed == true
+        && request.resource.data.removedReason is string
+        && request.resource.data.removedBy == request.auth.uid
+        && request.resource.data.removedAt == request.time;
+    }
+
+    function isForumPostSoftRemoveUpdate() {
+      return isContentAdmin()
+        && request.writeFields.hasOnly(['removed', 'removedReason', 'removedBy', 'removedAt'])
+        && isForumSoftRemovePayload();
+    }
+
+    function isForumReplySoftRemoveUpdate() {
+      return isForumPostSoftRemoveUpdate();
+    }
+
+    function isValidForumReportReason(reason) {
+      return reason == 'spam'
+        || reason == 'harassment'
+        || reason == 'inappropriate'
+        || reason == 'other';
+    }
+
+    function isValidForumReportCreate(reportId) {
+      let d = request.resource.data;
+      let uid = request.auth.uid;
+      return d.reporterId == uid
+        && (d.targetType == 'post' || d.targetType == 'comment')
+        && d.targetId is string
+        && d.targetId.size() > 0
+        && isValidForumReportReason(d.reason)
+        && d.status == 'pending'
+        && d.createdAt == request.time
+        && (d.description == null || (d.description is string && d.description.size() <= 500))
+        && d.reporterCallsign is string
+        && (
+          (
+            d.targetType == 'post'
+            && (!('parentPostId' in d) || d.parentPostId == null)
+            && reportId == 'post_' + d.targetId + '_' + uid
+          )
+          || (
+            d.targetType == 'comment'
+            && d.parentPostId is string
+            && d.parentPostId.size() > 0
+            && reportId == 'comment_' + d.parentPostId + '_' + d.targetId + '_' + uid
+          )
+        );
+    }
+
     /**
      * forum_posts — Brifing Odası (başlıklar, mutabık, yanıtlar).
      */
@@ -812,6 +863,7 @@ service cloud.firestore {
           request.writeFields.hasOnly(['replyCount'])
           && request.resource.data.replyCount == resource.data.replyCount + 1
         )
+        || isForumPostSoftRemoveUpdate()
       );
       allow delete: if isContentAdmin()
         || (isSignedIn() && resource.data.authorId == request.auth.uid);
@@ -821,8 +873,19 @@ service cloud.firestore {
         allow create: if isSignedIn()
           && request.resource.data.authorId == request.auth.uid
           && request.resource.data.content is string;
-        allow update, delete: if false;
+        allow update: if isForumReplySoftRemoveUpdate();
+        allow delete: if false;
       }
+    }
+
+    /**
+     * forum_reports — Brifing Odası kullanıcı şikayetleri.
+     * Belge kimliği: post_{targetId}_{reporterId} | comment_{parentPostId}_{targetId}_{reporterId}
+     */
+    match /forum_reports/{reportId} {
+      allow create: if isSignedIn() && isValidForumReportCreate(reportId);
+      allow read, list, update: if isContentAdmin();
+      allow delete: if false;
     }
 
     /**

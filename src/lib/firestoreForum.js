@@ -44,6 +44,10 @@ export const FORUM_CATEGORIES = /** @type {const} */ ([
  *   replyCount: number
  *   likes: string[]
  *   imageUrl: string
+ *   removed: boolean
+ *   removedReason: string
+ *   removedBy: string
+ *   removedAt: unknown
  * }} ForumPost */
 
 /** @typedef {{
@@ -62,6 +66,10 @@ export const FORUM_CATEGORIES = /** @type {const} */ ([
  *   authorCallsign: string
  *   timestamp: unknown
  *   imageUrl: string
+ *   removed: boolean
+ *   removedReason: string
+ *   removedBy: string
+ *   removedAt: unknown
  * }} ForumReply */
 
 function assertDb() {
@@ -115,6 +123,10 @@ function mapForumPostDoc(snap) {
     replyCount: typeof d.replyCount === 'number' ? d.replyCount : 0,
     likes: Array.isArray(d.likes) ? d.likes.filter((id) => typeof id === 'string') : [],
     imageUrl: typeof d.imageUrl === 'string' && d.imageUrl.trim() ? d.imageUrl.trim() : '',
+    removed: d.removed === true,
+    removedReason: typeof d.removedReason === 'string' ? d.removedReason : '',
+    removedBy: typeof d.removedBy === 'string' ? d.removedBy : '',
+    removedAt: d.removedAt ?? null,
   }
 }
 
@@ -122,7 +134,7 @@ function mapForumPostDoc(snap) {
  * @param {import('firebase/firestore').QueryDocumentSnapshot} snap
  * @returns {ForumReply}
  */
-function mapForumReplyDoc(snap) {
+export function mapForumReplyDoc(snap) {
   const d = snap.data()
   return {
     id: snap.id,
@@ -131,20 +143,27 @@ function mapForumReplyDoc(snap) {
     authorCallsign: typeof d.authorCallsign === 'string' ? d.authorCallsign : 'OPERATÖR',
     timestamp: d.timestamp ?? null,
     imageUrl: typeof d.imageUrl === 'string' && d.imageUrl.trim() ? d.imageUrl.trim() : '',
+    removed: d.removed === true,
+    removedReason: typeof d.removedReason === 'string' ? d.removedReason : '',
+    removedBy: typeof d.removedBy === 'string' ? d.removedBy : '',
+    removedAt: d.removedAt ?? null,
   }
 }
 
 /**
  * @param {(posts: ForumPost[]) => void} onNext
  * @param {(err: unknown) => void} [onError]
+ * @param {{ includeRemoved?: boolean }} [options]
  */
-export function subscribeForumPosts(onNext, onError) {
+export function subscribeForumPosts(onNext, onError, options = {}) {
   assertDb()
+  const includeRemoved = options.includeRemoved === true
   const q = query(collection(db, 'forum_posts'), orderBy('timestamp', 'desc'))
   return safeOnSnapshot(
     q,
     (snap) => {
-      onNext(snap.docs.map(mapForumPostDoc))
+      const rows = snap.docs.map(mapForumPostDoc)
+      onNext(includeRemoved ? rows : rows.filter((p) => !p.removed))
     },
     onError,
   )
@@ -154,17 +173,20 @@ export function subscribeForumPosts(onNext, onError) {
  * @param {string} postId
  * @param {(replies: ForumReply[]) => void} onNext
  * @param {(err: unknown) => void} [onError]
+ * @param {{ includeRemoved?: boolean }} [options]
  */
-export function subscribeForumReplies(postId, onNext, onError) {
+export function subscribeForumReplies(postId, onNext, onError, options = {}) {
   assertDb()
   const pid = String(postId ?? '').trim()
   if (!pid) return () => {}
 
+  const includeRemoved = options.includeRemoved === true
   const q = query(collection(db, 'forum_posts', pid, 'replies'), orderBy('timestamp', 'asc'))
   return safeOnSnapshot(
     q,
     (snap) => {
-      onNext(snap.docs.map(mapForumReplyDoc))
+      const rows = snap.docs.map(mapForumReplyDoc)
+      onNext(includeRemoved ? rows : rows.filter((r) => !r.removed))
     },
     onError,
   )

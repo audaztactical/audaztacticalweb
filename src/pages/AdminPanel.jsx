@@ -10,6 +10,7 @@ import {
   KeyRound,
   Loader2,
   MessageSquare,
+  MessagesSquare,
   Package,
   Pencil,
   Play,
@@ -33,6 +34,7 @@ import { addTrainingVideo, deleteTrainingVideo, fetchTrainingVideos } from '../l
 import { bulkAddInventoryItems, parseInventoryBulkText } from '../lib/firestoreInventory'
 import IntelModerationTable from '../components/admin/IntelModerationTable'
 import FeedbackModerationTable from '../components/admin/FeedbackModerationTable'
+import ForumModerationTable from '../components/admin/ForumModerationTable'
 import AccessCodesPanel from '../components/admin/AccessCodesPanel'
 import UsersManagementTable from '../components/admin/UsersManagementTable'
 import YoutubeChannelsPanel from '../components/admin/YoutubeChannelsPanel'
@@ -59,13 +61,14 @@ import {
   ADMIN_TAB_DEFAULT_TONE,
 } from '../components/admin/adminUi'
 
-/** @typedef {'icerik' | 'istihbarat' | 'youtube-kanallar' | 'geri-bildirim' | 'kullanicilar'} AdminTabId */
+/** @typedef {'icerik' | 'istihbarat' | 'youtube-kanallar' | 'geri-bildirim' | 'forum-moderasyon' | 'kullanicilar'} AdminTabId */
 
 const ADMIN_TABS = [
   { id: /** @type {AdminTabId} */ ('icerik'), label: 'İçerik & Envanter', icon: Package },
   { id: 'istihbarat', label: 'Haber Ağı', icon: Globe },
   { id: 'youtube-kanallar', label: 'YouTube Kanalları', icon: Video },
   { id: 'geri-bildirim', label: 'Geri Bildirimler', icon: MessageSquare },
+  { id: 'forum-moderasyon', label: 'Forum Moderasyonu', icon: MessagesSquare },
   { id: 'kullanicilar', label: 'Kullanıcı Yönetimi', icon: Users },
 ]
 
@@ -208,6 +211,7 @@ function SummaryStat({ label, value, tone = 'text-app-text/80' }) {
 export default function AdminPanel() {
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState(/** @type {AdminTabId} */ ('icerik'))
+  const [userFocusId, setUserFocusId] = useState('')
   const [doctrines, setDoctrines] = useState([])
   const [videos, setVideos] = useState([])
   const [loadingDoc, setLoadingDoc] = useState(true)
@@ -495,6 +499,22 @@ export default function AdminPanel() {
         </AdminSection>
       ) : null}
 
+      {activeTab === 'forum-moderasyon' ? (
+        <AdminSection
+          title="Forum moderasyonu"
+          subtitle="Brifing Odası şikayet kuyruğu ve tüm gönderi/yorum taraması — soft delete ile audit."
+          icon={MessagesSquare}
+        >
+          <ForumModerationTable
+            onFeedback={showMsg}
+            onNavigateToUser={(uid) => {
+              setUserFocusId(uid)
+              setActiveTab('kullanicilar')
+            }}
+          />
+        </AdminSection>
+      ) : null}
+
       {activeTab === 'kullanicilar' ? (
         <div className="space-y-8">
         <AdminSection
@@ -502,7 +522,7 @@ export default function AdminPanel() {
           subtitle="Operatör hesapları — askıya alma, üyelik düşürme ve kalıcı silme."
           icon={Users}
         >
-          <UsersManagementTable onFeedback={showMsg} />
+          <UsersManagementTable onFeedback={showMsg} focusUserId={userFocusId} />
         </AdminSection>
 
         <AdminSection

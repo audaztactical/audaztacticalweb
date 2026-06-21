@@ -905,9 +905,9 @@ function GhostAccountsModal({ open, candidates, busy, onClose, onFeedback }) {
 }
 
 /**
- * @param {{ onFeedback?: (type: 'ok' | 'err', text: string) => void }} props
+ * @param {{ onFeedback?: (type: 'ok' | 'err', text: string) => void; focusUserId?: string }} props
  */
-export default function UsersManagementTable({ onFeedback }) {
+export default function UsersManagementTable({ onFeedback, focusUserId = '' }) {
   const { user } = useAuth()
   const adminUid = user?.uid ?? ''
 
@@ -915,6 +915,10 @@ export default function UsersManagementTable({ onFeedback }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [query, setQuery] = useState('')
+
+  useEffect(() => {
+    if (focusUserId) setQuery(focusUserId)
+  }, [focusUserId])
   const [busy, setBusy] = useState(false)
 
   const [suspendTarget, setSuspendTarget] = useState(/** @type {AdminUserRecord | null} */ (null))

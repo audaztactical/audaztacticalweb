@@ -122,6 +122,15 @@ export const ADMIN_TAB_TONES = {
     idleHover: 'hover:border-amber-500/25 hover:bg-amber-950/20 hover:text-amber-300/85',
     underline: 'bg-amber-400',
   },
+  'forum-moderasyon': {
+    iconActive: 'text-violet-300',
+    iconIdle: 'text-app-text/35',
+    iconHover: 'group-hover:text-violet-300/80',
+    active:
+      'border-violet-500/40 bg-violet-950/25 text-violet-300 shadow-[0_-2px_12px_-4px_rgba(139,92,246,0.28)]',
+    idleHover: 'hover:border-violet-500/25 hover:bg-violet-950/20 hover:text-violet-300/85',
+    underline: 'bg-violet-400',
+  },
 }
 
 /** @type {keyof typeof ADMIN_TAB_TONES} */
