@@ -200,16 +200,12 @@ function PricingPlanCard({ plan, billing, onRequestAccess }) {
   const isPopular = Boolean(plan.popular)
 
   return (
-    <TacticalPanel
-      className={[
-        'flex h-full flex-col p-0 transition-shadow',
-        isPopular
-          ? 'border-accent/45 bg-accent/[0.06] shadow-[0_0_40px_-12px_rgba(255,180,0,0.45)] ring-1 ring-accent/25'
-          : 'border-white/10 bg-black/35',
-      ].join(' ')}
-    >
+    <div className="relative h-full">
       {isPopular ? (
-        <div className="absolute left-1/2 top-0 z-20 -translate-x-1/2 -translate-y-1/2">
+        <div
+          className="pointer-events-none absolute left-1/2 top-0 z-30 -translate-x-1/2 -translate-y-1/2"
+          aria-hidden
+        >
           <span className="inline-flex items-center gap-1 rounded-full border border-accent/50 bg-accent/20 px-3 py-1 font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-accent shadow-[0_0_16px_-4px_rgba(255,180,0,0.5)]">
             <Sparkles className="size-3" strokeWidth={2} aria-hidden />
             En Popüler
@@ -217,6 +213,14 @@ function PricingPlanCard({ plan, billing, onRequestAccess }) {
         </div>
       ) : null}
 
+      <TacticalPanel
+        className={[
+          'flex h-full flex-col p-0 transition-shadow',
+          isPopular
+            ? 'border-accent/45 bg-accent/[0.06] shadow-[0_0_40px_-12px_rgba(255,180,0,0.45)] ring-1 ring-accent/25'
+            : 'border-white/10 bg-black/35',
+        ].join(' ')}
+      >
       <div className="flex flex-1 flex-col px-4 pb-4 pt-6 sm:px-5 sm:pb-5 sm:pt-7">
         <div className="mb-4 flex items-start gap-3">
           <span
@@ -272,7 +276,8 @@ function PricingPlanCard({ plan, billing, onRequestAccess }) {
           {plan.ctaLabel}
         </button>
       </div>
-    </TacticalPanel>
+      </TacticalPanel>
+    </div>
   )
 }
 
@@ -364,9 +369,12 @@ export default function Pricing() {
         </div>
       </div>
 
-      <div className="grid gap-4 pt-2 lg:grid-cols-3 lg:gap-5 lg:items-stretch">
+      <div className="grid gap-4 overflow-visible pt-5 lg:grid-cols-3 lg:gap-5 lg:items-stretch">
         {PRICING_PLANS.map((plan) => (
-          <div key={plan.id} className={plan.popular ? 'relative lg:scale-[1.02] lg:z-10' : 'relative'}>
+          <div
+            key={plan.id}
+            className={plan.popular ? 'relative overflow-visible lg:z-10 lg:scale-[1.02]' : 'relative overflow-visible'}
+          >
             <PricingPlanCard plan={plan} billing={billing} onRequestAccess={setAccessPlan} />
           </div>
         ))}
