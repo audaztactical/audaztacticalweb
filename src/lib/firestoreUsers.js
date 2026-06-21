@@ -90,6 +90,8 @@ export function mapUserDocToProfile(d) {
     accountStatus: normalizeAccountStatus(d.accountStatus),
     premiumPaymentId: typeof d.premiumPaymentId === 'string' ? d.premiumPaymentId : '',
     premiumUpgradedAt: d.premiumUpgradedAt ?? null,
+    suspendedUntil: d.suspendedUntil ?? null,
+    suspensionReason: typeof d.suspensionReason === 'string' ? d.suspensionReason : '',
     allergies: typeof d.allergies === 'string' ? d.allergies : '',
     drugSensitivity: typeof d.drugSensitivity === 'string' ? d.drugSensitivity : '',
     importantNotes: typeof d.importantNotes === 'string' ? d.importantNotes : '',

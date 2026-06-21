@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
-import { Globe, MessageSquare, Package, Pencil, Plus, Save, Shield, Trash2, Video, X } from 'lucide-react'
+import { Globe, MessageSquare, Package, Pencil, Plus, Save, Shield, Trash2, Users, Video, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import {
   addDoctrine,
@@ -12,6 +12,7 @@ import { addTrainingVideo, deleteTrainingVideo, fetchTrainingVideos } from '../l
 import { bulkAddInventoryItems, parseInventoryBulkText } from '../lib/firestoreInventory'
 import IntelModerationTable from '../components/admin/IntelModerationTable'
 import FeedbackModerationTable from '../components/admin/FeedbackModerationTable'
+import UsersManagementTable from '../components/admin/UsersManagementTable'
 import YoutubeChannelsPanel from '../components/admin/YoutubeChannelsPanel'
 import {
   ADMIN_EMPTY_STATE,
@@ -23,13 +24,14 @@ import {
   ADMIN_TABLE_WRAP,
 } from '../components/admin/adminUi'
 
-/** @typedef {'icerik' | 'istihbarat' | 'youtube-kanallar' | 'geri-bildirim'} AdminTabId */
+/** @typedef {'icerik' | 'istihbarat' | 'youtube-kanallar' | 'geri-bildirim' | 'kullanicilar'} AdminTabId */
 
 const ADMIN_TABS = [
   { id: /** @type {AdminTabId} */ ('icerik'), label: 'İçerik & Envanter', icon: Package },
   { id: 'istihbarat', label: 'Haber Ağı', icon: Globe },
   { id: 'youtube-kanallar', label: 'YouTube Kanalları', icon: Video },
   { id: 'geri-bildirim', label: 'Geri Bildirimler', icon: MessageSquare },
+  { id: 'kullanicilar', label: 'Kullanıcı Yönetimi', icon: Users },
 ]
 
 const emptyDoctrineForm = {
@@ -380,6 +382,16 @@ export default function AdminPanel() {
           icon={MessageSquare}
         >
           <FeedbackModerationTable onFeedback={showMsg} />
+        </AdminSection>
+      ) : null}
+
+      {activeTab === 'kullanicilar' ? (
+        <AdminSection
+          title="Kullanıcı yönetimi"
+          subtitle="Operatör hesapları — askıya alma, üyelik düşürme ve kalıcı silme."
+          icon={Users}
+        >
+          <UsersManagementTable onFeedback={showMsg} />
         </AdminSection>
       ) : null}
 

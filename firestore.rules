@@ -69,6 +69,27 @@ service cloud.firestore {
         && (isOperativeMemberRole(authMuhabereRole()) || authMuhabereRole() == 'instructor');
     }
 
+    /** Oturum açmış kullanıcının users/{uid} verisi */
+    function authUserDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    /** accountStatus == suspended ve süre dolmamış (suspendedUntil null = süresiz). */
+    function isCurrentlySuspended() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && authUserDoc().get('accountStatus', 'active') == 'suspended'
+        && (
+          !('suspendedUntil' in authUserDoc())
+          || authUserDoc().suspendedUntil == null
+          || authUserDoc().suspendedUntil > request.time
+        );
+    }
+
+    function isNotSuspended() {
+      return !isCurrentlySuspended();
+    }
+
     function userRoleOf(data) {
       return userRoleFromData(data);
     }
@@ -76,7 +97,8 @@ service cloud.firestore {
     /** Kendi profilinde ayrıcalıklı alanlar istemciden değiştirilemez (Admin SDK / Cloud Functions). */
     function ownerPrivilegedFieldsUnchanged() {
       return !request.resource.data.diff(resource.data).affectedKeys().hasAny([
-        'role', 'userRole', 'accountStatus', 'premiumPaymentId', 'premiumUpgradedAt'
+        'role', 'userRole', 'accountStatus', 'premiumPaymentId', 'premiumUpgradedAt',
+        'suspendedUntil', 'suspensionReason'
       ]);
     }
 
@@ -792,7 +814,7 @@ service cloud.firestore {
 
       match /messages/{messageId} {
         allow read: if canReadMuhabereMessage(chatId);
-        allow create: if isChatParticipant(chatId) && isValidMuhabereDmMessageCreate();
+        allow create: if isChatParticipant(chatId) && isValidMuhabereDmMessageCreate() && isNotSuspended();
         allow update: if isChatParticipant(chatId)
           && resource.data.receiverId == request.auth.uid
           && request.resource.data.status == 'read'
@@ -824,7 +846,7 @@ service cloud.firestore {
 
       match /messages/{messageId} {
         allow read: if isChannelMember(channelId);
-        allow create: if isChannelMember(channelId) && isValidChannelMessageCreate(channelId);
+        allow create: if isChannelMember(channelId) && isValidChannelMessageCreate(channelId) && isNotSuspended();
         allow update, delete: if false;
       }
     }
@@ -857,6 +879,7 @@ service cloud.firestore {
      */
     match /feedback/{feedbackId} {
       allow create: if isSignedIn()
+        && isNotSuspended()
         && request.resource.data.userId == request.auth.uid
         && (
           (

@@ -197,4 +197,12 @@ export function callTriggerVideoNewsIngest() {
   return callFunction('triggerVideoNewsIngest')
 }
 
+/**
+ * Admin — kullanıcı hesabını kalıcı sil (Auth + Firestore).
+ * @param {string} uid
+ */
+export function callAdminDeleteUser(uid) {
+  return callFunction('adminDeleteUser', { uid: String(uid ?? '').trim() })
+}
+
 export { callFunctionViaHttp }

@@ -7,6 +7,7 @@ const { runIntelFeedIngest } = require('./lib/intelFeed')
 const { runLocalAlertsIngest } = require('./lib/localAlerts')
 const { runVideoNewsIngest } = require('./lib/videoNews')
 const { ensureAdminClaimHandler } = require('./lib/adminClaims')
+const { adminDeleteUserHandler } = require('./lib/adminDeleteUser')
 const { claimInstructorRoleHandler } = require('./lib/instructorClaim')
 const { joinGroupByPasswordHandler } = require('./lib/joinGroup')
 const { completePremiumUpgradeHandler } = require('./lib/premiumUpgrade')
@@ -120,6 +121,18 @@ exports.ensureAdminClaim = onCall(
     cors: true,
   },
   ensureAdminClaimHandler,
+)
+
+/**
+ * Callable: admin kullanıcı silme (Auth + users/{uid}).
+ */
+exports.adminDeleteUser = onCall(
+  {
+    memory: '256MiB',
+    timeoutSeconds: 60,
+    cors: true,
+  },
+  adminDeleteUserHandler,
 )
 
 /**

@@ -1,11 +1,11 @@
 /** @typedef {'member' | 'instructor' | 'premium_member' | 'admin' | 'command' | 'cmd' | string} AudazUserRole */
-/** @typedef {'active' | 'locked'} AudazAccountStatus */
+/** @typedef {'active' | 'locked' | 'suspended'} AudazAccountStatus */
 
 /** @readonly */
 export const AUDAZ_ROLES = /** @type {const} */ (['member', 'instructor', 'premium_member'])
 
 /** @readonly */
-export const AUDAZ_ACCOUNT_STATUSES = /** @type {const} */ (['active', 'locked'])
+export const AUDAZ_ACCOUNT_STATUSES = /** @type {const} */ (['active', 'locked', 'suspended'])
 
 /** Eski kayıtlar — member ile eşdeğer */
 const LEGACY_MEMBER_ROLES = new Set(['operator', 'operatör', ''])
@@ -28,7 +28,9 @@ export function normalizeUserRole(role) {
  */
 export function normalizeAccountStatus(status) {
   const s = typeof status === 'string' ? status.trim().toLowerCase() : 'active'
-  return s === 'locked' ? 'locked' : 'active'
+  if (s === 'locked') return 'locked'
+  if (s === 'suspended') return 'suspended'
+  return 'active'
 }
 
 /**
@@ -71,4 +73,33 @@ export function isOperatorRole(role) {
  */
 export function isAccountLocked(status) {
   return normalizeAccountStatus(status) === 'locked'
+}
+
+/**
+ * Askıya alma — süre dolmuşsa false (UI + kurallar ile uyumlu).
+ * @param {{ accountStatus?: string; suspendedUntil?: import('firebase/firestore').Timestamp | Date | null | { seconds?: number } } | null | undefined} userData
+ */
+export function isAccountSuspended(userData) {
+  if (!userData) return false
+  if (normalizeAccountStatus(userData.accountStatus) !== 'suspended') return false
+
+  const until = userData.suspendedUntil
+  if (until == null) return true
+
+  /** @type {Date | null} */
+  let end = null
+  if (until instanceof Date) {
+    end = until
+  } else if (typeof until === 'object' && until !== null && typeof until.toDate === 'function') {
+    try {
+      end = until.toDate()
+    } catch {
+      end = null
+    }
+  } else if (typeof until === 'object' && until !== null && typeof until.seconds === 'number') {
+    end = new Date(until.seconds * 1000)
+  }
+
+  if (!end || Number.isNaN(end.getTime())) return true
+  return end.getTime() > Date.now()
 }
