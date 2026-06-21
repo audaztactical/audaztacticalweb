@@ -205,7 +205,7 @@ export default function MuhabereMessageRow({
       )
     }
 
-    return <p className="break-words text-inherit">{msg.text}</p>
+    return <p className="min-w-0 max-w-full break-words [overflow-wrap:anywhere] text-inherit">{msg.text}</p>
   }
 
   return (
@@ -213,7 +213,7 @@ export default function MuhabereMessageRow({
       <div
         ref={rowRef}
         className={[
-          'group/msg relative flex max-w-[85%] flex-col gap-1',
+          'group/msg relative flex min-w-0 max-w-[85%] flex-col gap-1',
           outgoing ? 'ml-auto items-end' : 'items-start',
         ].join(' ')}
       >
@@ -268,7 +268,7 @@ export default function MuhabereMessageRow({
 
         <div
           className={[
-            'rounded-md border px-3 py-2 text-sm leading-relaxed',
+            'min-w-0 max-w-full overflow-hidden rounded-md border px-3 py-2 text-sm leading-relaxed',
             displayDestroyed
               ? 'border-red-950/60 bg-black/70 text-red-500'
               : outgoing

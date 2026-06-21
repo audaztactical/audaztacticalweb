@@ -310,9 +310,9 @@ export default function ChatWindow({
 
       <div
         ref={scrollRef}
-        className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain px-3 py-2 sm:px-4 sm:py-4"
+        className="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain px-3 py-2 sm:px-4 sm:py-4"
       >
-        <div ref={contentRef} className="flex flex-col gap-3">
+        <div ref={contentRef} className="flex min-w-0 w-full flex-col gap-3">
         <div ref={loadMoreRef} className="flex min-h-[1px] shrink-0 items-center justify-center py-1">
           {loadingOlder ? (
             <span className="inline-flex items-center gap-2 text-[10px] text-zinc-500">
