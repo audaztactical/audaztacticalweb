@@ -174,7 +174,7 @@ export default function VbssTerminal({
 
   if (!ready) {
     return (
-      <div className="space-y-4">
+      <div className="w-full min-w-0 max-w-none space-y-4">
         <IndividualTrainingSessionHeader />
         <p className="font-mono-technical text-[10px] uppercase text-zinc-500">Oturum gerekli</p>
       </div>
@@ -189,7 +189,7 @@ export default function VbssTerminal({
     }`
 
   return (
-    <div className="space-y-5">
+    <div className="w-full min-w-0 max-w-none space-y-4">
       <IndividualTrainingSessionHeader />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
@@ -225,13 +225,12 @@ export default function VbssTerminal({
         ) : null}
       </div>
 
+      <div className="w-full min-w-0 max-w-none">
       {viewMode === 'pdf' ? (
         <VbssObservedPdfPanel />
       ) : viewMode === 'entry' ? (
         addLog ? (
-          <div className="w-full min-w-0 max-w-none">
-            <VbssObservedEvalForm addLog={addLog} hidePdfBanner onSubmitted={() => setViewMode('observed')} />
-          </div>
+          <VbssObservedEvalForm addLog={addLog} hidePdfBanner onSubmitted={() => setViewMode('observed')} />
         ) : (
           <p className={ctMsgErr}>Kayıt kanalı hazır değil.</p>
         )
@@ -344,7 +343,7 @@ export default function VbssTerminal({
           </div>
 
           {/* Orta panel — safhalar */}
-          <div className={ctBentoGrid}>
+          <div className={`${ctBentoGrid} w-full min-w-0`}>
             {VBSS_EVALUATION_PHASES.map((meta, index) => {
               const score = getPhaseScore(latestEvaluation, meta.id)
               const Icon = PHASE_ICONS[meta.id]
@@ -443,6 +442,7 @@ export default function VbssTerminal({
       )}
         </>
       )}
+      </div>
     </div>
   )
 }

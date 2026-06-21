@@ -245,12 +245,12 @@ function TrainingInner() {
   }
 
   return (
-    <div className="ilws-shell relative mx-auto max-w-[1480px] px-3 py-5 pt-12 sm:px-4 sm:pt-14 md:px-6">
+    <div className="ilws-shell relative mx-auto w-full min-w-0 max-w-[1480px] px-3 py-5 pt-12 sm:px-4 sm:pt-14 md:px-6">
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden>
         <HudFluffDecor />
       </div>
 
-      <div className="relative z-[2] space-y-5">
+      <div className="relative z-[2] w-full min-w-0 space-y-5">
         <header className="flex flex-wrap items-end justify-between gap-3 border-b border-white/10 pb-3">
           <div className="min-w-0 flex-1">
             <p className="font-mono-technical text-[10px] font-semibold uppercase tracking-[0.32em] text-accent/85">

@@ -41,7 +41,7 @@ export default function TcccObservedEvalRegistry({ logs, loading = false }) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="w-full min-w-0 space-y-3">
       {rows.map((row) => {
         const phases = /** @type {Record<string, { score?: number; criticalFail?: boolean; actionChips?: string[] }>} */ (
           row.phases ?? row.marchScores ?? {}

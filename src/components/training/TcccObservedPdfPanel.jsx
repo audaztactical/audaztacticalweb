@@ -27,7 +27,7 @@ export default function TcccObservedPdfPanel() {
   }
 
   return (
-    <TacticalPanel className="border-accent/25 bg-app-bg/90 p-6">
+    <TacticalPanel className="w-full min-w-0 border-accent/25 bg-app-bg/90 p-6">
       <p className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] text-accent/85">
         [ TCCC MARCH GÖZLEM FORMU · OBS-V1 ]
       </p>

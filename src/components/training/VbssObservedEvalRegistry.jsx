@@ -41,7 +41,7 @@ export default function VbssObservedEvalRegistry({ logs, loading = false }) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="w-full min-w-0 space-y-3">
       {rows.map((row) => {
         const phases = /** @type {Record<string, { score?: number; observation?: string }>} */ (row.phases ?? row.operationalScores ?? {})
         const overall = getObservedEvalOverallScore(row)

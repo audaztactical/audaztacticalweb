@@ -10,7 +10,7 @@ export default function TrainingTerminalLayout({ onSubmit, left, right, footer }
   return (
     <form
       onSubmit={onSubmit}
-      className="grid w-full min-w-0 max-w-none gap-4 lg:grid-cols-2 lg:items-stretch lg:[&>*]:min-w-0"
+      className="grid w-full min-w-0 max-w-none gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-stretch lg:[&>*]:min-w-0"
     >
       {left}
       {right}

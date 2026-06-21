@@ -232,7 +232,7 @@ export default function TcccEntryTerminal({ addLog, onSubmitted, hidePdfBanner =
             panelClassName="relative flex min-h-0 flex-col border-accent/25 bg-app-bg/95 p-0"
             bodyClassName="flex min-h-0 flex-1 flex-col space-y-4 p-4 sm:p-5"
           >
-            <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto pr-0.5 sm:max-h-[min(32rem,42vh)] lg:max-h-[min(36rem,48vh)]">
+            <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto pr-0.5 lg:grid-cols-2 sm:max-h-[min(32rem,42vh)] lg:max-h-[min(36rem,48vh)]">
               {TCCC_MARCH_EVALUATION_PHASES.map((meta) => (
                 <TcccMarchPhaseBlock
                   key={meta.id}

@@ -211,7 +211,7 @@ export default function TcccTerminal({
 
   if (!ready) {
     return (
-      <div className="space-y-4">
+      <div className="w-full min-w-0 max-w-none space-y-4">
         <IndividualTrainingSessionHeader />
         <p className="font-mono-technical text-[10px] uppercase text-zinc-500">Oturum gerekli</p>
       </div>
@@ -226,7 +226,7 @@ export default function TcccTerminal({
     }`
 
   return (
-    <div className="space-y-5">
+    <div className="w-full min-w-0 max-w-none space-y-4">
       <IndividualTrainingSessionHeader />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
@@ -262,13 +262,12 @@ export default function TcccTerminal({
         ) : null}
       </div>
 
+      <div className="w-full min-w-0 max-w-none">
       {viewMode === 'pdf' ? (
         <TcccObservedPdfPanel />
       ) : viewMode === 'entry' ? (
         addLog ? (
-          <div className="w-full min-w-0 max-w-none">
-            <TcccObservedEvalForm addLog={addLog} hidePdfBanner onSubmitted={() => setViewMode('observed')} />
-          </div>
+          <TcccObservedEvalForm addLog={addLog} hidePdfBanner onSubmitted={() => setViewMode('observed')} />
         ) : (
           <p className={ctMsgErr}>Kayıt kanalı hazır değil.</p>
         )
@@ -539,6 +538,7 @@ export default function TcccTerminal({
       )}
         </>
       )}
+      </div>
     </div>
   )
 }
