@@ -357,10 +357,15 @@ export default function ForumModerationTable({ onFeedback, onNavigateToUser }) {
         setLoading(false)
       },
       (err) => {
-        const message = err instanceof Error ? err.message : 'Şikayetler yüklenemedi.'
+        const code = err && typeof err === 'object' && 'code' in err ? String(err.code) : ''
+        const message =
+          code === 'permission-denied'
+            ? 'Şikayet listesi için Firestore kuralları güncel değil veya admin yetkisi eksik. npm run deploy-backend çalıştırın.'
+            : err instanceof Error
+              ? err.message
+              : 'Şikayetler yüklenemedi.'
         setError(message)
         setLoading(false)
-        onFeedback?.('err', message)
       },
     )
 
