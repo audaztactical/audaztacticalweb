@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertTriangle,
   Ban,
+  ChevronDown,
   Loader2,
   MessageSquareWarning,
   Search,
@@ -54,6 +55,143 @@ const STATUS_TONE = {
   active: 'border-emerald-500/35 bg-emerald-950/25 text-emerald-300',
   suspended: 'border-orange-500/40 bg-orange-950/30 text-orange-300',
   locked: 'border-red-500/40 bg-red-950/30 text-red-300',
+}
+
+/**
+ * @param {AdminUserRecord} row
+ */
+function inferAdminUserProfileKind(row) {
+  const hasUsername = Boolean(row.username?.trim())
+  const hasEmail = Boolean(row.email?.trim())
+  const hasCallsign = Boolean(row.callsign?.trim())
+  const hasEnrolled = Boolean(row.enrolledAt)
+
+  if (hasUsername && hasEnrolled) {
+    return {
+      kind: 'complete',
+      label: 'Kayıt tamamlanmış',
+      hint: hasEmail
+        ? 'E-posta/şifre veya Google OAuth — registerOperatorProfile'
+        : 'Profil oluşturulmuş (e-posta Firestore\'da boş)',
+    }
+  }
+  if (hasEmail && !hasUsername) {
+    return {
+      kind: 'partial',
+      label: 'Yarım profil',
+      hint: 'Auth oturumu var; username/callsign atanmamış (kayıt yarım kalmış olabilir)',
+    }
+  }
+  if (!hasUsername && !hasEmail && !hasCallsign) {
+    return {
+      kind: 'ghost',
+      label: 'Hayalet belge',
+      hint: 'Presence heartbeat veya ayar merge ile oluşmuş minimal users/{uid}. Anonymous auth yok.',
+    }
+  }
+  return {
+    kind: 'unknown',
+    label: 'Eksik profil',
+    hint: 'Standart kayıt akışı dışında oluşturulmuş olabilir',
+  }
+}
+
+/**
+ * @param {{
+ *   row: AdminUserRecord
+ *   isSelf: boolean
+ *   open: boolean
+ *   onToggle: () => void
+ *   onClose: () => void
+ * }} props
+ */
+function OperatorRowDetailPopover({ row, isSelf, open, onToggle, onClose }) {
+  const rootRef = useRef(/** @type {HTMLDivElement | null} */ (null))
+  const profile = inferAdminUserProfileKind(row)
+
+  useEffect(() => {
+    if (!open) return undefined
+    const onDocClick = (e) => {
+      if (rootRef.current && !rootRef.current.contains(/** @type {Node} */ (e.target))) {
+        onClose()
+      }
+    }
+    document.addEventListener('mousedown', onDocClick)
+    return () => document.removeEventListener('mousedown', onDocClick)
+  }, [open, onClose])
+
+  return (
+    <div ref={rootRef} className="relative shrink-0" data-operator-detail>
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-label="Operatör detayları"
+        onClick={onToggle}
+        className={[
+          'inline-flex size-6 items-center justify-center rounded border transition',
+          open
+            ? 'border-accent/45 bg-accent/10 text-accent'
+            : 'border-white/10 text-app-text/45 hover:border-white/20 hover:text-app-text/70',
+        ].join(' ')}
+      >
+        <ChevronDown
+          className={['size-3.5 transition-transform', open ? 'rotate-180' : ''].join(' ')}
+          aria-hidden
+        />
+      </button>
+
+      {open ? (
+        <div
+          role="dialog"
+          aria-label="Operatör detay paneli"
+          className="absolute left-0 top-full z-30 mt-1.5 w-[min(18rem,calc(100vw-2rem))] rounded-lg border border-white/12 bg-zinc-950/95 p-3 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.85)] backdrop-blur-sm"
+        >
+          <p className="font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent/80">
+            Operatör detayı
+          </p>
+          <dl className="mt-2 space-y-2 font-mono-technical text-[10px]">
+            <div>
+              <dt className="uppercase text-app-text/45">UID</dt>
+              <dd className="mt-0.5 break-all text-app-text/80">{row.id}</dd>
+            </div>
+            <div>
+              <dt className="uppercase text-app-text/45">Username</dt>
+              <dd className="mt-0.5 text-app-text/80">{row.username ? `@${row.username}` : '—'}</dd>
+            </div>
+            <div>
+              <dt className="uppercase text-app-text/45">Callsign</dt>
+              <dd className="mt-0.5 text-app-text/80">{row.callsign.trim() || '—'}</dd>
+            </div>
+            <div>
+              <dt className="uppercase text-app-text/45">Profil kaynağı</dt>
+              <dd className="mt-0.5">
+                <span
+                  className={[
+                    'inline-block rounded border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider',
+                    profile.kind === 'complete'
+                      ? 'border-emerald-500/35 bg-emerald-950/25 text-emerald-300'
+                      : profile.kind === 'ghost'
+                        ? 'border-zinc-500/40 bg-zinc-900/50 text-zinc-400'
+                        : 'border-amber-500/35 bg-amber-950/25 text-amber-300',
+                  ].join(' ')}
+                >
+                  {profile.label}
+                </span>
+                <p className="mt-1 leading-relaxed text-app-text/55">{profile.hint}</p>
+              </dd>
+            </div>
+            {isSelf ? (
+              <div>
+                <span className="inline-block rounded border border-amber-500/35 bg-amber-950/25 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-300">
+                  Siz
+                </span>
+              </div>
+            ) : null}
+          </dl>
+        </div>
+      ) : null}
+    </div>
+  )
 }
 
 /**
@@ -516,6 +654,7 @@ export default function UsersManagementTable({ onFeedback }) {
   const [appealView, setAppealView] = useState(
     /** @type {{ row: AdminUserRecord; appeal: SuspensionAppealRecord } | null} */ (null),
   )
+  const [openDetailId, setOpenDetailId] = useState('')
 
   useEffect(() => {
     const unsub = subscribePendingAppealsByUser(setPendingAppeals)
@@ -681,16 +820,21 @@ export default function UsersManagementTable({ onFeedback }) {
                 const suspended = isSuspendedRow(row)
                 return (
                   <tr key={row.id} className={ADMIN_TABLE_ROW}>
-                    <td className={ADMIN_TABLE_TD}>
-                      <p className="font-bold text-app-text">{formatAdminUserDisplayName(row)}</p>
-                      {row.username ? (
-                        <p className="mt-0.5 text-[10px] text-accent/70">@{row.username}</p>
-                      ) : null}
-                      {self ? (
-                        <span className="mt-1 inline-block rounded border border-amber-500/35 bg-amber-950/25 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-300">
-                          Siz
-                        </span>
-                      ) : null}
+                    <td className={`${ADMIN_TABLE_TD} relative`}>
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <p className="min-w-0 truncate font-bold text-app-text">
+                          {formatAdminUserDisplayName(row)}
+                        </p>
+                        <OperatorRowDetailPopover
+                          row={row}
+                          isSelf={self}
+                          open={openDetailId === row.id}
+                          onToggle={() =>
+                            setOpenDetailId((prev) => (prev === row.id ? '' : row.id))
+                          }
+                          onClose={() => setOpenDetailId('')}
+                        />
+                      </div>
                     </td>
                     <td className={`${ADMIN_TABLE_TD} max-w-[180px] truncate text-app-text/70`} title={row.email}>
                       {row.email || '—'}
