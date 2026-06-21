@@ -19,6 +19,8 @@ const labelClass = 'font-mono-technical text-[8px] font-bold uppercase tracking-
  *   variant?: 'select' | 'segmented'
  *   selectClassName?: string
  *   labelClassName?: string
+ *   segmentedBarClassName?: string
+ *   segmentedButtonClassName?: string
  * }} props
  */
 export default function PhaseSubCriteriaFields({
@@ -31,6 +33,8 @@ export default function PhaseSubCriteriaFields({
   variant = 'select',
   selectClassName = selectClass,
   labelClassName = labelClass,
+  segmentedBarClassName = 'gap-1',
+  segmentedButtonClassName = 'h-8',
 }) {
   const options =
     min === 0
@@ -72,6 +76,8 @@ export default function PhaseSubCriteriaFields({
               max={max}
               disabled={disabled}
               labelClassName={labelClassName}
+              barClassName={segmentedBarClassName}
+              buttonClassName={segmentedButtonClassName}
             />
           )}
         </div>
@@ -89,16 +95,28 @@ export default function PhaseSubCriteriaFields({
  *   max: number
  *   disabled?: boolean
  *   labelClassName?: string
+ *   barClassName?: string
+ *   buttonClassName?: string
  * }} props
  */
-function SegmentedCriterionBar({ label, value, onChange, min, max, disabled = false, labelClassName = labelClass }) {
+function SegmentedCriterionBar({
+  label,
+  value,
+  onChange,
+  min,
+  max,
+  disabled = false,
+  labelClassName = labelClass,
+  barClassName = 'gap-1',
+  buttonClassName = 'h-8',
+}) {
   const selected = disabled ? 0 : Number(value) || 0
   const values = Array.from({ length: max - min + 1 }, (_, i) => min + i)
 
   return (
     <div className="space-y-1.5" role="group" aria-label={`${label} skoru`}>
       <p className={labelClassName}>{label}</p>
-      <div className="flex gap-1">
+      <div className={`flex ${barClassName}`}>
         {values.map((n) => {
           const filled = selected >= n
           return (
@@ -110,7 +128,7 @@ function SegmentedCriterionBar({ label, value, onChange, min, max, disabled = fa
               aria-label={`${label} skor ${n}`}
               onClick={() => onChange(String(n))}
               className={[
-                'h-8 min-w-0 flex-1 rounded-sm border font-mono text-[10px] font-bold tabular-nums transition',
+                `${buttonClassName} min-w-0 flex-1 rounded-sm border font-mono text-[10px] font-bold tabular-nums transition`,
                 filled
                   ? 'border-lime-400 bg-lime-500 text-zinc-950 shadow-[0_0_12px_rgba(132,204,22,0.35)]'
                   : 'border-zinc-700 bg-zinc-800 text-zinc-600 hover:border-zinc-600',

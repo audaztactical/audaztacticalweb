@@ -62,6 +62,8 @@ export default function TcccMarchPhaseBlock({
         disabled={phase.criticalFail}
         variant="segmented"
         labelClassName={labelClass}
+        segmentedBarClassName="gap-1.5 lg:gap-2"
+        segmentedButtonClassName="h-9 lg:h-10"
       />
 
       <div className="space-y-1.5">
@@ -83,7 +85,7 @@ export default function TcccMarchPhaseBlock({
       <label className="block space-y-1.5">
         <span className={labelClass}>Gözlem notu</span>
         <textarea
-          className={`${textareaClass} min-h-[4rem]`}
+          className={`${textareaClass} min-h-[4.5rem]`}
           value={phase.observation}
           onChange={(e) => onPatch({ observation: e.target.value })}
         />

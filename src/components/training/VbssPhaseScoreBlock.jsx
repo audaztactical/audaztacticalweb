@@ -32,11 +32,13 @@ export default function VbssPhaseScoreBlock({
         max={10}
         variant="segmented"
         labelClassName={labelClass}
+        segmentedBarClassName="gap-1.5 lg:gap-2"
+        segmentedButtonClassName="h-9 lg:h-10"
       />
       <label className="block space-y-1.5">
         <span className={labelClass}>Gözlem notu</span>
         <textarea
-          className={`${textareaClass} min-h-[4rem]`}
+          className={`${textareaClass} min-h-[4.5rem]`}
           value={observation}
           onChange={(e) => onObservationChange(e.target.value)}
         />
