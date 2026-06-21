@@ -1,6 +1,26 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
-import { Globe, MessageSquare, Package, Pencil, Plus, Save, Shield, Trash2, Users, Video, X } from 'lucide-react'
+import {
+  AlignLeft,
+  BookOpen,
+  ChevronUp,
+  Eye,
+  FileText,
+  Globe,
+  Loader2,
+  MessageSquare,
+  Package,
+  Pencil,
+  Play,
+  Plus,
+  Save,
+  Shield,
+  Tag,
+  Trash2,
+  Users,
+  Video,
+  X,
+} from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import {
   addDoctrine,
@@ -15,13 +35,24 @@ import FeedbackModerationTable from '../components/admin/FeedbackModerationTable
 import UsersManagementTable from '../components/admin/UsersManagementTable'
 import YoutubeChannelsPanel from '../components/admin/YoutubeChannelsPanel'
 import {
+  ADMIN_BADGE,
+  ADMIN_BTN_DANGER,
+  ADMIN_BTN_GHOST,
+  ADMIN_BTN_PREVIEW,
+  ADMIN_BTN_PRIMARY,
   ADMIN_EMPTY_STATE,
+  ADMIN_FORM_CARD,
+  ADMIN_FORM_CARD_HEADER,
+  ADMIN_PANEL_LIST_HEADER,
+  ADMIN_SUMMARY_BAR,
   ADMIN_TABLE,
   ADMIN_TABLE_HEAD,
   ADMIN_TABLE_ROW,
   ADMIN_TABLE_TD,
   ADMIN_TABLE_TH,
   ADMIN_TABLE_WRAP,
+  PUBLISH_TONE,
+  VIDEO_SOURCE_TONE,
 } from '../components/admin/adminUi'
 
 /** @typedef {'icerik' | 'istihbarat' | 'youtube-kanallar' | 'geri-bildirim' | 'kullanicilar'} AdminTabId */
@@ -119,6 +150,44 @@ function TextAreaStyle({ className = '', ...props }) {
   )
 }
 
+/**
+ * @param {{ icon: import('lucide-react').LucideIcon; title: string; accentClass?: string; children: import('react').ReactNode }} props
+ */
+function DoctrineFormCard({ icon, title, accentClass = 'text-accent', children }) {
+  const IconComponent = icon
+  return (
+    <div className={ADMIN_FORM_CARD}>
+      <div className={ADMIN_FORM_CARD_HEADER}>
+        <IconComponent className={`size-4 shrink-0 ${accentClass}`} strokeWidth={1.5} aria-hidden />
+        <p className={`font-mono-technical text-[10px] font-bold uppercase tracking-widest ${accentClass}`}>{title}</p>
+      </div>
+      {children}
+    </div>
+  )
+}
+
+/**
+ * @param {string} url
+ * @returns {'youtube' | 'vimeo' | 'other'}
+ */
+function detectVideoSource(url) {
+  const u = String(url ?? '').toLowerCase()
+  if (u.includes('youtube.com') || u.includes('youtu.be')) return 'youtube'
+  if (u.includes('vimeo.com')) return 'vimeo'
+  return 'other'
+}
+
+/**
+ * @param {{ label: string; value: number | string; tone?: string }} props
+ */
+function SummaryStat({ label, value, tone = 'text-app-text/80' }) {
+  return (
+    <span className={tone}>
+      {label}: <strong className="text-app-text">{value}</strong>
+    </span>
+  )
+}
+
 export default function AdminPanel() {
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState(/** @type {AdminTabId} */ ('icerik'))
@@ -136,6 +205,17 @@ export default function AdminPanel() {
   const [videoUrl, setVideoUrl] = useState('')
 
   const [bulkText, setBulkText] = useState('')
+  const [previewOpen, setPreviewOpen] = useState(false)
+
+  const doctrineStats = useMemo(() => {
+    const total = doctrines.length
+    const published = doctrines.filter((d) => d.isPublic).length
+    return { total, published, draft: total - published }
+  }, [doctrines])
+
+  const bulkLineCount = useMemo(() => {
+    return bulkText.split('\n').filter((line) => line.trim()).length
+  }, [bulkText])
 
   const showMsg = useCallback((type, text) => {
     setMsg({ type, text })
@@ -368,11 +448,23 @@ export default function AdminPanel() {
       </nav>
 
       {activeTab === 'istihbarat' ? (
-        <IntelModerationTable onFeedback={showMsg} />
+        <AdminSection
+          title="İstihbarat moderasyonu"
+          subtitle={`Son ${30} kayıt — canlı akış. Yanlış pozitifleri doğrudan imha edin.`}
+          icon={Globe}
+        >
+          <IntelModerationTable onFeedback={showMsg} />
+        </AdminSection>
       ) : null}
 
       {activeTab === 'youtube-kanallar' ? (
-        <YoutubeChannelsPanel onFeedback={showMsg} />
+        <AdminSection
+          title="YouTube kanalları"
+          subtitle="Liste Firestore'da; videolar RSS ile saatlik botta veya manuel çekimle video_news'e yazılır."
+          icon={Video}
+        >
+          <YoutubeChannelsPanel onFeedback={showMsg} />
+        </AdminSection>
       ) : null}
 
       {activeTab === 'geri-bildirim' ? (
@@ -404,7 +496,7 @@ export default function AdminPanel() {
       >
         <div className="grid gap-8 lg:grid-cols-2">
           <form onSubmit={onSubmitDoctrine} className="space-y-4">
-            <div>
+            <DoctrineFormCard icon={BookOpen} title="Kimlik & başlık" accentClass="text-accent">
               <FieldLabel>Başlık</FieldLabel>
               <InputStyle
                 value={form.title}
@@ -412,8 +504,9 @@ export default function AdminPanel() {
                 placeholder="Doktrin başlığı"
                 required
               />
-            </div>
-            <div>
+            </DoctrineFormCard>
+
+            <DoctrineFormCard icon={AlignLeft} title="Özet (teaser)" accentClass="text-sky-300/90">
               <FieldLabel>Özet (Teaser)</FieldLabel>
               <TextAreaStyle
                 rows={3}
@@ -421,8 +514,9 @@ export default function AdminPanel() {
                 onChange={(e) => setForm((f) => ({ ...f, teaser: e.target.value }))}
                 placeholder="Kısa özet — herkese açık önizleme"
               />
-            </div>
-            <div>
+            </DoctrineFormCard>
+
+            <DoctrineFormCard icon={FileText} title="Tam metin (Markdown)" accentClass="text-amber-300/90">
               <FieldLabel>Tam metin (Markdown)</FieldLabel>
               <TextAreaStyle
                 rows={12}
@@ -431,42 +525,57 @@ export default function AdminPanel() {
                 placeholder={'## Bölüm\n- Madde 1\n- Madde 2'}
                 className="min-h-[200px]"
               />
-              <details className="mt-2">
-                <summary className="cursor-pointer font-mono-technical text-[10px] uppercase tracking-wider text-app-text/55">
-                  Önizleme
-                </summary>
-                <div className="markdown-admin-preview mt-2 max-h-56 overflow-auto rounded-lg border border-white/10 bg-black/40 p-4 text-sm leading-relaxed text-app-text/90">
-                  <ReactMarkdown>{form.body || '*Boş*'}</ReactMarkdown>
-                </div>
-              </details>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <FieldLabel>Kategori</FieldLabel>
-                <InputStyle
-                  value={form.category}
-                  onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                  placeholder="Genel"
-                />
+              <div className="mt-3">
+                <button
+                  type="button"
+                  onClick={() => setPreviewOpen((v) => !v)}
+                  className={[
+                    ADMIN_BTN_PREVIEW,
+                    previewOpen ? 'border-accent/40 bg-accent/10 text-accent' : '',
+                  ].join(' ')}
+                  aria-expanded={previewOpen}
+                >
+                  {previewOpen ? <ChevronUp className="size-3.5" aria-hidden /> : <Play className="size-3.5" aria-hidden />}
+                  {previewOpen ? 'Önizlemeyi gizle' : '▶ Önizleme'}
+                </button>
+                {previewOpen ? (
+                  <div className="markdown-admin-preview mt-3 max-h-56 overflow-auto rounded-lg border border-accent/20 bg-black/40 p-4 text-sm leading-relaxed text-app-text/90 shadow-[inset_0_1px_0_rgba(132,204,22,0.08)]">
+                    <div className="mb-2 flex items-center gap-2 font-mono-technical text-[9px] uppercase tracking-wider text-accent/60">
+                      <Eye className="size-3" aria-hidden />
+                      Canlı önizleme
+                    </div>
+                    <ReactMarkdown>{form.body || '*Boş*'}</ReactMarkdown>
+                  </div>
+                ) : null}
               </div>
-              <div className="flex items-end pb-1">
-                <label className="flex cursor-pointer items-center gap-3 font-mono-technical text-sm text-app-text/90">
-                  <input
-                    type="checkbox"
-                    checked={form.isPublic}
-                    onChange={(e) => setForm((f) => ({ ...f, isPublic: e.target.checked }))}
-                    className="size-4 rounded border-white/20 bg-black/50 text-accent focus:ring-accent/40"
+            </DoctrineFormCard>
+
+            <DoctrineFormCard icon={Tag} title="Sınıflandırma & yayın" accentClass="text-emerald-300/90">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <FieldLabel>Kategori</FieldLabel>
+                  <InputStyle
+                    value={form.category}
+                    onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                    placeholder="Genel"
                   />
-                  Herkese açık (isPublic)
-                </label>
+                </div>
+                <div className="flex items-end pb-1">
+                  <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-white/10 bg-black/40 px-3 py-2.5 font-mono-technical text-sm text-app-text/90 transition hover:border-emerald-500/30">
+                    <input
+                      type="checkbox"
+                      checked={form.isPublic}
+                      onChange={(e) => setForm((f) => ({ ...f, isPublic: e.target.checked }))}
+                      className="size-4 rounded border-white/20 bg-black/50 text-accent focus:ring-accent/40"
+                    />
+                    Herkese açık (isPublic)
+                  </label>
+                </div>
               </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="submit"
-                disabled={busy}
-                className="inline-flex items-center gap-2 rounded-lg border border-accent/50 bg-accent/15 px-4 py-2.5 font-display text-sm font-bold uppercase tracking-wider text-accent transition hover:bg-accent/25 disabled:opacity-50"
-              >
+            </DoctrineFormCard>
+
+            <div className="flex flex-wrap gap-2 pt-1">
+              <button type="submit" disabled={busy} className={ADMIN_BTN_PRIMARY}>
                 {editingId ? <Save className="size-4" /> : <Plus className="size-4" />}
                 {editingId ? 'Güncelle' : 'Doktrin ekle'}
               </button>
@@ -474,7 +583,7 @@ export default function AdminPanel() {
                 <button
                   type="button"
                   onClick={resetDoctrineForm}
-                  className="inline-flex items-center gap-2 rounded-lg border border-white/15 px-4 py-2.5 font-display text-sm text-app-text/70 hover:bg-white/5"
+                  className="inline-flex items-center gap-2 rounded-lg border border-white/15 px-4 py-2.5 font-display text-sm text-app-text/70 transition hover:bg-white/5"
                 >
                   <X className="size-4" />
                   İptal
@@ -483,144 +592,180 @@ export default function AdminPanel() {
             </div>
           </form>
 
-          <div className={ADMIN_TABLE_WRAP}>
-            <div className="border-b border-white/10 bg-black/40 px-4 py-2 font-mono-technical text-[10px] uppercase tracking-widest text-accent/70">
-              Kayıtlı doktrinler
+          <div>
+            <div className={ADMIN_SUMMARY_BAR}>
+              <span className="font-bold uppercase tracking-wider text-accent/90">Özet</span>
+              <span className="text-app-text/50">·</span>
+              <SummaryStat label="Toplam" value={doctrineStats.total} />
+              <span className="text-app-text/50">·</span>
+              <SummaryStat label="Yayında" value={doctrineStats.published} tone="text-emerald-300/90" />
+              <span className="text-app-text/50">·</span>
+              <SummaryStat label="Taslak" value={doctrineStats.draft} tone="text-zinc-400" />
             </div>
-            <div className="max-h-[560px] overflow-auto">
-              {loadingDoc ? (
-                <p className="p-4 text-sm text-app-text/55">Yükleniyor…</p>
-              ) : doctrines.length === 0 ? (
-                <div className={`${ADMIN_EMPTY_STATE} border-0 rounded-none`}>
-                  <p className="font-mono-technical text-sm text-app-text/55">Henüz doktrin kaydı yok.</p>
-                </div>
-              ) : (
-                <table className={`${ADMIN_TABLE} min-w-[480px]`}>
-                  <thead className={`${ADMIN_TABLE_HEAD} sticky top-0 z-[1]`}>
-                    <tr>
-                      <th className={ADMIN_TABLE_TH}>Başlık</th>
-                      <th className={ADMIN_TABLE_TH}>Kategori</th>
-                      <th className={ADMIN_TABLE_TH}>Yayın</th>
-                      <th className={`${ADMIN_TABLE_TH} text-right`}>İşlem</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {doctrines.map((row) => (
-                      <tr key={row.id} className={ADMIN_TABLE_ROW}>
-                        <td className="max-w-[180px] truncate px-3 py-2.5 font-medium text-app-text" title={row.title}>
-                          {row.title}
-                        </td>
-                        <td className="px-3 py-2.5 text-app-text/70">{row.category}</td>
-                        <td className="px-3 py-2.5">
-                          <span
-                            className={`rounded px-2 py-0.5 font-mono-technical text-[10px] uppercase ${
-                              row.isPublic ? 'bg-emerald-950/50 text-emerald-400' : 'bg-slate-800 text-app-text/55'
-                            }`}
-                          >
-                            {row.isPublic ? 'Açık' : 'Kapalı'}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2 text-right">
-                          <div className="flex flex-wrap justify-end gap-1">
-                            <button
-                              type="button"
-                              onClick={() => onEditDoctrine(row)}
-                              className="rounded border border-white/10 px-2 py-1 text-[10px] uppercase text-accent hover:bg-white/5"
-                            >
-                              Düzenle
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => onTogglePublish(row)}
-                              className="rounded border border-white/10 px-2 py-1 text-[10px] uppercase text-app-text/70 hover:bg-white/5"
-                            >
-                              {row.isPublic ? 'Yayından kaldır' : 'Yayınla'}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => onDeleteDoctrine(row.id)}
-                              className="rounded border border-orange-500/30 px-2 py-1 text-[10px] uppercase text-orange-400 hover:bg-orange-950/30"
-                            >
-                              Sil
-                            </button>
-                          </div>
-                        </td>
+
+            <div className={ADMIN_TABLE_WRAP}>
+              <div className={ADMIN_PANEL_LIST_HEADER}>Kayıtlı doktrinler</div>
+              <div className="max-h-[560px] overflow-auto">
+                {loadingDoc ? (
+                  <div className="flex items-center justify-center gap-2 p-8 text-app-text/55">
+                    <Loader2 className="size-4 animate-spin text-accent" aria-hidden />
+                    <span className="font-mono-technical text-xs uppercase tracking-wider">Yükleniyor…</span>
+                  </div>
+                ) : doctrines.length === 0 ? (
+                  <div className={`${ADMIN_EMPTY_STATE} border-0 rounded-none`}>
+                    <BookOpen className="size-8 text-app-text/40" strokeWidth={1.25} aria-hidden />
+                    <p className="font-mono-technical text-sm text-app-text/55">Henüz doktrin kaydı yok.</p>
+                    <p className="text-xs text-app-text/45">Sol taraftaki formdan ilk doktrini ekleyin.</p>
+                  </div>
+                ) : (
+                  <table className={`${ADMIN_TABLE} min-w-[480px]`}>
+                    <thead className={`${ADMIN_TABLE_HEAD} sticky top-0 z-[1]`}>
+                      <tr>
+                        <th className={ADMIN_TABLE_TH}>Başlık</th>
+                        <th className={ADMIN_TABLE_TH}>Kategori</th>
+                        <th className={ADMIN_TABLE_TH}>Yayın</th>
+                        <th className={`${ADMIN_TABLE_TH} text-right`}>İşlem</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
+                    </thead>
+                    <tbody>
+                      {doctrines.map((row) => (
+                        <tr key={row.id} className={ADMIN_TABLE_ROW}>
+                          <td className={`${ADMIN_TABLE_TD} max-w-[200px]`}>
+                            <p className="truncate font-bold text-app-text" title={row.title}>
+                              {row.title}
+                            </p>
+                            {editingId === row.id ? (
+                              <span className="mt-1 inline-block rounded border border-amber-500/35 bg-amber-950/25 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-300">
+                                Düzenleniyor
+                              </span>
+                            ) : null}
+                          </td>
+                          <td className={ADMIN_TABLE_TD}>
+                            <span className={[ADMIN_BADGE, 'border-accent/30 bg-accent/10 text-accent/90'].join(' ')}>
+                              {row.category || 'Genel'}
+                            </span>
+                          </td>
+                          <td className={ADMIN_TABLE_TD}>
+                            <span
+                              className={[
+                                ADMIN_BADGE,
+                                row.isPublic ? PUBLISH_TONE.public : PUBLISH_TONE.private,
+                              ].join(' ')}
+                            >
+                              {row.isPublic ? 'Açık' : 'Kapalı'}
+                            </span>
+                          </td>
+                          <td className={`${ADMIN_TABLE_TD} text-right`}>
+                            <div className="flex flex-wrap justify-end gap-1">
+                              <button
+                                type="button"
+                                onClick={() => onEditDoctrine(row)}
+                                className={[ADMIN_BTN_GHOST, 'text-accent hover:border-accent/30 hover:text-accent'].join(' ')}
+                              >
+                                Düzenle
+                              </button>
+                              <button type="button" onClick={() => onTogglePublish(row)} className={ADMIN_BTN_GHOST}>
+                                {row.isPublic ? 'Yayından kaldır' : 'Yayınla'}
+                              </button>
+                              <button type="button" onClick={() => onDeleteDoctrine(row.id)} className={ADMIN_BTN_DANGER}>
+                                Sil
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </AdminSection>
 
       <AdminSection title="Eğitim videoları" subtitle="YouTube / Vimeo bağlantısı" icon={Video}>
-        <form onSubmit={onAddVideo} className="mb-6 grid gap-4 sm:grid-cols-[1fr_2fr_auto] sm:items-end">
-          <div>
-            <FieldLabel>Başlık</FieldLabel>
-            <InputStyle value={videoTitle} onChange={(e) => setVideoTitle(e.target.value)} placeholder="Video başlığı" />
-          </div>
-          <div>
-            <FieldLabel>Bağlantı</FieldLabel>
-            <InputStyle
-              value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
-              placeholder="https://www.youtube.com/watch?v=..."
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={busy}
-            className="h-10 rounded-lg border border-accent/50 bg-accent/15 px-4 font-display text-sm font-bold text-accent hover:bg-accent/25 disabled:opacity-50"
-          >
-            Ekle
-          </button>
-        </form>
-        <div className={ADMIN_TABLE_WRAP}>
-          <table className={`${ADMIN_TABLE} min-w-[400px]`}>
-            <thead className={ADMIN_TABLE_HEAD}>
-              <tr>
-                <th className={ADMIN_TABLE_TH}>Başlık</th>
-                <th className={ADMIN_TABLE_TH}>URL</th>
-                <th className={`${ADMIN_TABLE_TH} text-right`}>Sil</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loadingVid ? (
-                <tr>
-                  <td colSpan={3} className={`${ADMIN_TABLE_TD} text-app-text/55`}>
-                    Yükleniyor…
-                  </td>
-                </tr>
-              ) : videos.length === 0 ? (
-                <tr>
-                  <td colSpan={3} className={ADMIN_TABLE_TD}>
-                    <p className="py-4 text-center font-mono-technical text-xs text-app-text/55">
-                      Henüz eğitim videosu eklenmemiş.
-                    </p>
-                  </td>
-                </tr>
-              ) : (
-                videos.map((v) => (
-                  <tr key={v.id} className={ADMIN_TABLE_ROW}>
-                    <td className="px-3 py-2 font-medium text-app-text">{v.title}</td>
-                    <td className="max-w-xs truncate px-3 py-2 font-mono-technical text-xs text-app-text/55">{v.url}</td>
-                    <td className="px-3 py-2 text-right">
-                      <button
-                        type="button"
-                        onClick={() => onDeleteVideo(v.id)}
-                        className="rounded border border-orange-500/30 px-2 py-1 text-[10px] uppercase text-orange-400"
-                      >
-                        Sil
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+        <div className={ADMIN_SUMMARY_BAR}>
+          <span className="font-bold uppercase tracking-wider text-accent/90">Özet</span>
+          <span className="text-app-text/50">·</span>
+          <SummaryStat label="Toplam video" value={loadingVid ? '…' : videos.length} />
         </div>
+
+        <form onSubmit={onAddVideo} className={`${ADMIN_FORM_CARD} mb-6`}>
+          <div className={ADMIN_FORM_CARD_HEADER}>
+            <Video className="size-4 text-accent" strokeWidth={1.5} aria-hidden />
+            <p className="font-mono-technical text-[10px] font-bold uppercase tracking-widest text-accent">
+              Yeni video ekle
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-[1fr_2fr_auto] sm:items-end">
+            <div>
+              <FieldLabel>Başlık</FieldLabel>
+              <InputStyle value={videoTitle} onChange={(e) => setVideoTitle(e.target.value)} placeholder="Video başlığı" />
+            </div>
+            <div>
+              <FieldLabel>Bağlantı</FieldLabel>
+              <InputStyle
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder="https://www.youtube.com/watch?v=..."
+              />
+            </div>
+            <button type="submit" disabled={busy} className={`${ADMIN_BTN_PRIMARY} h-10 shrink-0`}>
+              <Plus className="size-4" aria-hidden />
+              Ekle
+            </button>
+          </div>
+        </form>
+
+        {loadingVid ? (
+          <div className="flex items-center justify-center gap-2 py-10 text-app-text/55">
+            <Loader2 className="size-4 animate-spin text-accent" aria-hidden />
+            <span className="font-mono-technical text-xs uppercase tracking-wider">Videolar yükleniyor…</span>
+          </div>
+        ) : videos.length === 0 ? (
+          <div className={ADMIN_EMPTY_STATE}>
+            <Video className="size-8 text-app-text/40" strokeWidth={1.25} aria-hidden />
+            <p className="font-mono-technical text-sm text-app-text/55">Henüz eğitim videosu eklenmemiş.</p>
+          </div>
+        ) : (
+          <div className={ADMIN_TABLE_WRAP}>
+            <div className={ADMIN_PANEL_LIST_HEADER}>Kayıtlı videolar</div>
+            <table className={`${ADMIN_TABLE} min-w-[400px]`}>
+              <thead className={`${ADMIN_TABLE_HEAD} sticky top-0 z-[1]`}>
+                <tr>
+                  <th className={ADMIN_TABLE_TH}>Başlık</th>
+                  <th className={ADMIN_TABLE_TH}>Kaynak</th>
+                  <th className={ADMIN_TABLE_TH}>URL</th>
+                  <th className={`${ADMIN_TABLE_TH} text-right`}>İşlem</th>
+                </tr>
+              </thead>
+              <tbody>
+                {videos.map((v) => {
+                  const source = detectVideoSource(v.url)
+                  return (
+                    <tr key={v.id} className={ADMIN_TABLE_ROW}>
+                      <td className={`${ADMIN_TABLE_TD} font-bold text-app-text`}>{v.title}</td>
+                      <td className={ADMIN_TABLE_TD}>
+                        <span className={[ADMIN_BADGE, VIDEO_SOURCE_TONE[source]].join(' ')}>
+                          {source === 'youtube' ? 'YouTube' : source === 'vimeo' ? 'Vimeo' : 'Bağlantı'}
+                        </span>
+                      </td>
+                      <td className={`${ADMIN_TABLE_TD} max-w-xs truncate font-mono-technical text-xs text-app-text/55`} title={v.url}>
+                        {v.url}
+                      </td>
+                      <td className={`${ADMIN_TABLE_TD} text-right`}>
+                        <button type="button" onClick={() => onDeleteVideo(v.id)} className={ADMIN_BTN_DANGER}>
+                          <Trash2 className="size-3" aria-hidden />
+                          Sil
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </AdminSection>
 
       <AdminSection
@@ -628,19 +773,33 @@ export default function AdminPanel() {
         subtitle="Her satır: adet | ürün adı | seri no (opsiyonel)"
         icon={Plus}
       >
+        <div className={ADMIN_SUMMARY_BAR}>
+          <span className="font-bold uppercase tracking-wider text-accent/90">Özet</span>
+          <span className="text-app-text/50">·</span>
+          <SummaryStat label="Satır" value={bulkLineCount} tone="text-amber-300/90" />
+        </div>
+
         <form onSubmit={onBulkInventory} className="space-y-4">
-          <TextAreaStyle
-            rows={10}
-            value={bulkText}
-            onChange={(e) => setBulkText(e.target.value)}
-            placeholder={'2 | Glock 17 | SN-001\n1 | Telsiz Motorola\n5 | 9mm mühimmat'}
-            className="font-mono-technical"
-          />
-          <button
-            type="submit"
-            disabled={busy}
-            className="rounded-lg border border-accent/50 bg-accent/15 px-5 py-2.5 font-display text-sm font-bold uppercase tracking-wider text-accent hover:bg-accent/25 disabled:opacity-50"
-          >
+          <div className={ADMIN_FORM_CARD}>
+            <div className={ADMIN_FORM_CARD_HEADER}>
+              <Package className="size-4 text-accent" strokeWidth={1.5} aria-hidden />
+              <p className="font-mono-technical text-[10px] font-bold uppercase tracking-widest text-accent">
+                Toplu envanter metni
+              </p>
+            </div>
+            <TextAreaStyle
+              rows={10}
+              value={bulkText}
+              onChange={(e) => setBulkText(e.target.value)}
+              placeholder={'2 | Glock 17 | SN-001\n1 | Telsiz Motorola\n5 | 9mm mühimmat'}
+              className="font-mono-technical"
+            />
+            <p className="mt-3 rounded-lg border border-white/10 bg-black/40 px-3 py-2 font-mono-technical text-[10px] leading-relaxed text-app-text/50">
+              Format: <span className="text-amber-300/90">adet | ürün adı | seri no</span> — seri no opsiyonel.
+            </p>
+          </div>
+          <button type="submit" disabled={busy || bulkLineCount === 0} className={ADMIN_BTN_PRIMARY}>
+            <Package className="size-4" aria-hidden />
             Envantere yaz
           </button>
         </form>
