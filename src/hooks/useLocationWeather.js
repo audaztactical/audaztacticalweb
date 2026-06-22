@@ -5,6 +5,8 @@ import { DEFAULT_DISTRICT_NAME, DEFAULT_PROVINCE_ID, getProvinceById, resolveLoc
 import { readMeteoLocationPreference, saveMeteoLocationPreference } from '../lib/meteoLocationStorage'
 import { fetchLocationWeather } from '../lib/weatherService'
 
+const WEATHER_REFRESH_MS = 30 * 60 * 1000
+
 /**
  * @typedef {import('../lib/weatherService').fetchLocationWeather extends (...args: any) => Promise<infer R> ? R : never} WeatherData
  * @typedef {{ lat: number, lon: number }} GpsCoords
@@ -36,26 +38,36 @@ export function useLocationWeather(provinceId, districtName, gpsCoords = null) {
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
-    setError(null)
 
-    fetchLocationWeather(location)
-      .then((result) => {
-        if (!cancelled) {
-          setData(result)
-          setLoading(false)
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setData(null)
-          setError(err instanceof Error ? err.message : 'Veri alınamadı')
-          setLoading(false)
-        }
-      })
+    const loadWeather = (/** @type {boolean} */ silent) => {
+      if (!silent) {
+        setLoading(true)
+        setError(null)
+      }
+
+      fetchLocationWeather(location)
+        .then((result) => {
+          if (!cancelled) {
+            setData(result)
+            setLoading(false)
+          }
+        })
+        .catch((err) => {
+          if (!cancelled) {
+            setData(null)
+            setError(err instanceof Error ? err.message : 'Veri alınamadı')
+            setLoading(false)
+          }
+        })
+    }
+
+    loadWeather(false)
+
+    const intervalId = window.setInterval(() => loadWeather(true), WEATHER_REFRESH_MS)
 
     return () => {
       cancelled = true
+      window.clearInterval(intervalId)
     }
   }, [location.lat, location.lon, location.coastal])
 

@@ -45,12 +45,14 @@ export default function CommandSideWidgets({ signalSeries: _legacySignal }) {
 
   const [expanded, setExpanded] = useState(/** @type {Record<string, boolean>} */ ({}))
 
-  const windSeries = data?.windSeries?.length ? data.windSeries : _legacySignal ?? []
+  const hasLiveWindSeries = Boolean(data?.windSeries?.length)
+  const windSeries = hasLiveWindSeries ? data.windSeries : _legacySignal ?? []
+  const windSeriesIsEstimated = !hasLiveWindSeries && windSeries.length > 0
 
   const widgets = useMemo(
     () => [
       { id: 'weather', label: 'Weather Sat-Map', desc: 'Meteorolojik durum', icon: CloudRain, glow: 'cmd-widget--sky' },
-      { id: 'signal', label: 'Signal Strength', desc: 'Rüzgar hız trendi', icon: Radio, glow: 'cmd-widget--green', chart: true },
+      { id: 'signal', label: 'Rüzgar Trendi', desc: 'Saatlik rüzgar hızı', icon: Radio, glow: 'cmd-widget--green', chart: true },
       { id: 'geo', label: 'Geographic Overlay', desc: 'Koordinat ve bölge', icon: Map, glow: 'cmd-widget--slate', geo: true },
       { id: 'globe', label: 'Global Intel', desc: 'Atmosferik parametreler', icon: Globe2, glow: 'cmd-widget--sky', intel: true },
     ],
@@ -112,7 +114,14 @@ export default function CommandSideWidgets({ signalSeries: _legacySignal }) {
                   <Icon className="size-4 text-app-text/90" strokeWidth={1.5} />
                 </span>
                 <div className="min-w-0 flex-1 text-left">
-                  <p className="cmd-widget__label">{w.label}</p>
+                  <p className="cmd-widget__label flex flex-wrap items-center gap-1.5">
+                    <span>{w.label}</span>
+                    {w.id === 'signal' && windSeriesIsEstimated ? (
+                      <span className="rounded border border-amber-500/45 bg-amber-950/40 px-1.5 py-0.5 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-amber-400/95">
+                        Tahmini
+                      </span>
+                    ) : null}
+                  </p>
                   <p className="cmd-widget__desc">{w.desc}</p>
                 </div>
                 <ChevronDown
@@ -173,7 +182,11 @@ export default function CommandSideWidgets({ signalSeries: _legacySignal }) {
                         />
                       </LineChart>
                     </ResponsiveContainer>
-                    <p className="cmd-met-chart-caption">Saatlik rüzgar (km/h)</p>
+                    <p className="cmd-met-chart-caption">
+                      {windSeriesIsEstimated
+                        ? 'Gerçek veri alınamadı — tahmini eğilim gösteriliyor'
+                        : 'Saatlik rüzgar (km/h) · Open-Meteo'}
+                    </p>
                   </div>
                 ) : null}
 
