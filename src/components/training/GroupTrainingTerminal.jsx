@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   ArrowLeft,
   CheckCircle2,
@@ -453,7 +454,10 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
           Kategorilere dön
         </button>
         <AmberAlert label="[ GRUP_GEREKLİ ]">
-          Grup eğitimine katılmak için önce bir taktik grubuna dahil olmalısınız (Başarılar → Gruba Katıl).
+          Grup eğitimine katılmak için önce bir taktik grubuna dahil olmalısınız.{' '}
+          <Link to="/takim" className="font-bold text-accent underline-offset-2 hover:underline">
+            Taktik Timim →
+          </Link>
         </AmberAlert>
       </div>
     )

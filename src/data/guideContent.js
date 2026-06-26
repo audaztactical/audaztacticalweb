@@ -409,11 +409,11 @@ export const GUIDE_SECTIONS = {
   'group-join': {
     title: 'Gruba katılım',
     opsCode: 'GRP-JOIN',
-    pageLink: { to: '/basarilar', label: 'Kişisel Başarı Takibi sayfasına git' },
+    pageLink: { to: '/takim', label: 'Taktik Timim sayfasına git' },
     access: 'Henüz gruba dahil olmayan operatörler.',
     purpose: 'Eğitmenin verdiği grup şifresiyle takıma katılmak.',
     steps: [
-      'Kişisel Başarı Takibi sayfasında Grup Şifresi bölümünü bulun.',
+      'Taktik Timim sayfasında Grup Şifresi bölümünü bulun.',
       'En az dört karakterlik şifreyi girip Katıl deyin.',
       'Başarılı olunca Grup Eğitimi kartı antrenman sayfasında görünür.',
     ],

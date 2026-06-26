@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import InstructorCategoryBento from '../instructor/cleanTactical/InstructorCategoryBento'
 import CleanFade from '../instructor/cleanTactical/CleanFade'
@@ -22,12 +23,14 @@ const CATEGORY_HEADERS = {
  *   selectedCategory: string | null
  *   onSelectedCategoryChange: (category: string | null) => void
  *   onBack: () => void
+ *   embedded?: boolean
  * }} props
  */
 export default function OperatorGroupAcademicPortal({
   selectedCategory,
   onSelectedCategoryChange,
   onBack,
+  embedded = false,
 }) {
   const { user } = useAuth()
   const { membership, isMember, loading } = useOperatorGroup()
@@ -53,12 +56,17 @@ export default function OperatorGroupAcademicPortal({
     return (
       <section className="rounded-xl border border-slate-800 bg-slate-950/60 p-8 text-center">
         <p className="font-mono-technical text-[10px] uppercase text-app-text/55">
-          Eğitmen kayıtlarını görüntülemek için bir taktik grubuna dahil olmalısınız.
+          Eğitmen kayıtlarını görüntülemek için bir taktik grubuna dahil olmalısınız.{' '}
+          <Link to="/takim" className="text-accent hover:text-accent/80">
+            Taktik Timim →
+          </Link>
         </p>
-        <button type="button" onClick={onBack} className={`${ctBackBtn} mx-auto mt-4`}>
-          <ArrowLeft className="size-3.5" aria-hidden />
-          Sektörlere dön
-        </button>
+        {!embedded ? (
+          <button type="button" onClick={onBack} className={`${ctBackBtn} mx-auto mt-4`}>
+            <ArrowLeft className="size-3.5" aria-hidden />
+            Sektörlere dön
+          </button>
+        ) : null}
       </section>
     )
   }
@@ -67,11 +75,13 @@ export default function OperatorGroupAcademicPortal({
     return (
       <CleanFade className="space-y-6">
         <header>
-          <button type="button" onClick={onBack} className={ctBackBtn}>
-            <ArrowLeft className="size-3.5" aria-hidden />
-            Antrenman terminali
-          </button>
-          <h2 className={`${ctHeaderTitle} mt-4`}>Grup eğitmen kayıtları</h2>
+          {!embedded ? (
+            <button type="button" onClick={onBack} className={ctBackBtn}>
+              <ArrowLeft className="size-3.5" aria-hidden />
+              Antrenman terminali
+            </button>
+          ) : null}
+          <h2 className={`${ctHeaderTitle} ${embedded ? '' : 'mt-4'}`}>Grup eğitmen kayıtları</h2>
           <p className={ctHeaderSubtitle}>
             {groupName ? `${groupName} · ` : ''}Sektör seçin — tüm kayıtlar salt okunurdur
           </p>

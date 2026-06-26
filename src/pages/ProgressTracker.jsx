@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { collection, onSnapshot, orderBy, query } from 'firebase/firestore'
 import {
   Activity,
@@ -7,6 +7,7 @@ import {
   Award,
   BarChart2,
   ChevronDown,
+  ChevronRight,
   Clock,
   Crosshair,
   Filter,
@@ -35,7 +36,6 @@ import {
 } from '../lib/progressAnalytics'
 import PerformanceTrendChart from '../components/progress/PerformanceTrendChart'
 import ProgressHudPanels, { EXPANDED_HUD_PANEL_IDS } from '../components/progress/ProgressHudPanels'
-import GroupJoinPanel from '../components/progress/GroupJoinPanel'
 import { resolveLogFocusId } from '../lib/progressHudAnalytics'
 import { buildLogsById } from '../lib/progressTacticalTooltip'
 
@@ -687,7 +687,23 @@ export default function ProgressTracker({ onBack }) {
               <LogFocusBanner logId={focusedLogId} onRelease={() => setFocusedLogId(null)} />
             ) : null}
 
-            <GroupJoinPanel />
+            <Link
+              to="/takim"
+              className="group flex items-center gap-3 rounded-xl border border-emerald-900/35 bg-slate-950/80 px-4 py-3 transition hover:border-emerald-600/45 hover:bg-emerald-950/20"
+            >
+              <span className="flex size-10 shrink-0 items-center justify-center rounded border border-emerald-600/35 bg-emerald-950/40 text-emerald-400">
+                <Target className="size-5" strokeWidth={1.5} aria-hidden />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400/90">
+                  Taktik tim
+                </span>
+                <span className="mt-0.5 block font-mono text-[11px] text-app-text/65 group-hover:text-app-text/85">
+                  Grubuna katılmak veya kadronu görmek için Taktik Timim sayfasına git →
+                </span>
+              </span>
+              <ChevronRight className="size-4 shrink-0 text-emerald-500/70" strokeWidth={1.75} aria-hidden />
+            </Link>
 
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <KpiCard

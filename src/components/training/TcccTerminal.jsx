@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   Activity,
   AlertTriangle,
@@ -304,7 +305,10 @@ export default function TcccTerminal({
         </div>
       ) : !isMember || !groupId ? (
         <AmberAlert label="[ GRUP ÜYELİĞİ ]">
-          Canlı değerlendirme için bir taktik grubuna dahil olmalısınız (Başarılar → Gruba Katıl).
+          Canlı değerlendirme için bir taktik grubuna dahil olmalısınız.{' '}
+          <Link to="/takim" className="font-bold text-accent underline-offset-2 hover:underline">
+            Taktik Timim →
+          </Link>
         </AmberAlert>
       ) : (
         <>

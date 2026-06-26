@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Anchor, ArrowLeft, ClipboardList, Loader2, Radio, Ship, Users } from 'lucide-react'
 import AmberAlert from '../common/AmberAlert'
 import BentoCard from '../instructor/cleanTactical/BentoCard'
@@ -267,7 +268,10 @@ export default function VbssTerminal({
         </div>
       ) : !isMember || !groupId ? (
         <AmberAlert label="[ GRUP ÜYELİĞİ ]">
-          Canlı değerlendirme için bir taktik grubuna dahil olmalısınız (Başarılar → Gruba Katıl).
+          Canlı değerlendirme için bir taktik grubuna dahil olmalısınız.{' '}
+          <Link to="/takim" className="font-bold text-accent underline-offset-2 hover:underline">
+            Taktik Timim →
+          </Link>
         </AmberAlert>
       ) : (
         <>

@@ -7,7 +7,10 @@ import { emitFirebaseError } from '../../lib/firebaseErrorBus'
 const inputClass =
   'w-full rounded-sm border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-app-text outline-none transition-colors focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/25'
 
-export default function GroupJoinPanel() {
+/**
+ * @param {{ onJoined?: () => void }} props
+ */
+export default function GroupJoinPanel({ onJoined }) {
   const { user } = useAuth()
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
@@ -41,6 +44,7 @@ export default function GroupJoinPanel() {
         setMessage('• [BAŞARILI]: Gruba başarıyla dahil oldunuz!')
       }
       setPassword('')
+      onJoined?.()
     } catch (err) {
       emitFirebaseError(err)
       const code = err?.code ?? ''

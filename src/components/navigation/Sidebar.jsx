@@ -20,6 +20,7 @@ import {
   ShieldAlert,
   Target,
   User,
+  UsersRound,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useFeedbackPanelOptional } from '../../context/FeedbackPanelContext'
@@ -77,7 +78,10 @@ export const NAV_GROUPS = [
   {
     id: 'command',
     title: '[ KOMUTA VE ANALİTİK ]',
-    items: [{ to: '/basarilar', label: 'Kişisel Başarı Takibi', icon: BarChart3 }],
+    items: [
+      { to: '/takim', label: 'Taktik Timim', icon: UsersRound },
+      { to: '/basarilar', label: 'Kişisel Başarı Takibi', icon: BarChart3 },
+    ],
   },
   {
     id: 'usage-guide',
