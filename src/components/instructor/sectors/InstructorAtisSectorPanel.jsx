@@ -15,6 +15,8 @@ import {
 import {
   completeGroupTraining,
   createGroupTraining,
+  subscribeGroupTrainingResults,
+  subscribeInstructorActiveGroupTrainings,
   subscribeTrainingResults,
 } from '../../../lib/firestoreGroupTrainings'
 import { emitFirebaseError } from '../../../lib/firebaseErrorBus'
@@ -22,6 +24,7 @@ import InstructorCommandPanel from '../layout/InstructorCommandPanel'
 import DrillQuickSelector from '../cleanTactical/DrillQuickSelector'
 import InstructorGroupSelect from '../cleanTactical/InstructorGroupSelect'
 import LiveOperatorsTable from '../cleanTactical/LiveOperatorsTable'
+import ActiveAtisSessionsList from '../cleanTactical/ActiveAtisSessionsList'
 import {
   icBtnGhost,
 } from '../layout/instructorCommandTokens'
@@ -43,6 +46,24 @@ import {
 /** @typedef {import('../../../lib/firestoreInstructor').OperatorProfile} OperatorProfile */
 /** @typedef {import('../../../lib/firestoreDrillTemplates').DrillTemplate} DrillTemplate */
 /** @typedef {import('../../../lib/firestoreGroupTrainings').TrainingResult} TrainingResult */
+/** @typedef {import('../../../lib/firestoreGroupTrainings').GroupTraining} GroupTraining */
+
+/**
+ * @param {unknown} ts
+ */
+function formatSessionStart(ts) {
+  const ms =
+    ts && typeof ts === 'object' && ts !== null && 'toMillis' in ts && typeof ts.toMillis === 'function'
+      ? ts.toMillis()
+      : Date.parse(String(ts ?? '')) || 0
+  if (!ms) return '—'
+  return new Intl.DateTimeFormat('tr-TR', {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(ms))
+}
 
 function validateAmmoThresholds(totalAmmo, minPassScore) {
   const ammo = Number(totalAmmo)
@@ -92,12 +113,14 @@ export default function InstructorAtisSectorPanel({
   const [startSaving, setStartSaving] = useState(false)
   const [startMsg, setStartMsg] = useState('')
 
-  const [liveTrainingId, setLiveTrainingId] = useState('')
-  const [liveTrainingMeta, setLiveTrainingMeta] = useState(
-    /** @type {{ trainingName: string; totalAmmo: number; minPassScore: number; isTimed: boolean; targetTimeSec: number | null } | null} */ (null),
-  )
+  const [activeTrainings, setActiveTrainings] = useState(/** @type {GroupTraining[]} */ ([]))
+  const [activeTrainingsLoading, setActiveTrainingsLoading] = useState(false)
+  const [groupResults, setGroupResults] = useState(/** @type {TrainingResult[]} */ ([]))
+
+  const [trackedTrainingId, setTrackedTrainingId] = useState('')
   const [results, setResults] = useState(/** @type {TrainingResult[]} */ ([]))
   const [resultsLoading, setResultsLoading] = useState(false)
+  const [closingTrainingId, setClosingTrainingId] = useState('')
 
   const thresholdError = useMemo(
     () => validateAmmoThresholds(totalAmmo, minPassScore),
@@ -113,6 +136,21 @@ export default function InstructorAtisSectorPanel({
     () => groups.find((g) => g.groupId === activeGroupId) ?? null,
     [groups, activeGroupId],
   )
+
+  const trackedTraining = useMemo(
+    () => activeTrainings.find((t) => t.id === trackedTrainingId) ?? null,
+    [activeTrainings, trackedTrainingId],
+  )
+
+  const participantCounts = useMemo(() => {
+    /** @type {Record<string, number>} */
+    const counts = {}
+    for (const row of groupResults) {
+      if (!row.trainingId) continue
+      counts[row.trainingId] = (counts[row.trainingId] ?? 0) + 1
+    }
+    return counts
+  }, [groupResults])
 
   const resolvedLevel = useMemo(() => {
     if (levelSelect === DRILL_SELECT_NEW_LEVEL) return newLevelName.trim()
@@ -172,6 +210,66 @@ export default function InstructorAtisSectorPanel({
   }, [instructorId])
 
   useEffect(() => {
+    if (!activeGroupId || !instructorId) {
+      setActiveTrainings([])
+      setActiveTrainingsLoading(false)
+      return undefined
+    }
+
+    let active = true
+    setActiveTrainingsLoading(true)
+    const unsub = subscribeInstructorActiveGroupTrainings(
+      activeGroupId,
+      instructorId,
+      (rows) => {
+        if (!active) return
+        setActiveTrainings(rows)
+        setActiveTrainingsLoading(false)
+      },
+      (err) => {
+        if (!active) return
+        emitFirebaseError(err)
+        setActiveTrainingsLoading(false)
+      },
+    )
+    return () => {
+      active = false
+      unsub()
+    }
+  }, [activeGroupId, instructorId])
+
+  useEffect(() => {
+    if (!activeGroupId) {
+      setGroupResults([])
+      return undefined
+    }
+
+    let active = true
+    const unsub = subscribeGroupTrainingResults(
+      activeGroupId,
+      (rows) => {
+        if (!active) return
+        setGroupResults(rows)
+      },
+      (err) => {
+        if (!active) return
+        emitFirebaseError(err)
+      },
+    )
+    return () => {
+      active = false
+      unsub()
+    }
+  }, [activeGroupId])
+
+  useEffect(() => {
+    if (!trackedTrainingId) return
+    if (!activeTrainings.some((t) => t.id === trackedTrainingId)) {
+      setTrackedTrainingId('')
+    }
+  }, [activeTrainings, trackedTrainingId])
+
+  useEffect(() => {
     if (!levelSelect && levelOptions.length > 0) {
       setLevelSelect(DEFAULT_INSTRUCTOR_LEVELS[0] ?? levelOptions[0])
     }
@@ -212,7 +310,7 @@ export default function InstructorAtisSectorPanel({
   }, [targetTimeSec])
 
   useEffect(() => {
-    if (!liveTrainingId) {
+    if (!trackedTrainingId) {
       setResults([])
       setResultsLoading(false)
       return undefined
@@ -221,7 +319,7 @@ export default function InstructorAtisSectorPanel({
     let active = true
     setResultsLoading(true)
     const unsub = subscribeTrainingResults(
-      liveTrainingId,
+      trackedTrainingId,
       (rows) => {
         if (!active) return
         setResults(rows)
@@ -237,7 +335,7 @@ export default function InstructorAtisSectorPanel({
       active = false
       unsub()
     }
-  }, [liveTrainingId])
+  }, [trackedTrainingId])
 
   const handleLevelChange = (value) => {
     if (value === '__new_level__') {
@@ -336,18 +434,10 @@ export default function InstructorAtisSectorPanel({
         targetTimeSec: parsedTargetTime,
         totalAmmo: Number(totalAmmo),
         minPassScore: Number(minPassScore),
-        // Oturum penceresi (grup eğitimi erişim süresi) — drill zamanlılığından bağımsız
         sessionDurationHours: 2,
         sessionDurationMinutes: 0,
       })
-      setLiveTrainingId(created.id)
-      setLiveTrainingMeta({
-        trainingName,
-        totalAmmo: Number(totalAmmo),
-        minPassScore: Number(minPassScore),
-        isTimed,
-        targetTimeSec: parsedTargetTime,
-      })
+      setTrackedTrainingId(created.id)
       setStartMsg('Oturum aktif — canlı takip başladı')
     } catch (err) {
       emitFirebaseError(err)
@@ -357,18 +447,36 @@ export default function InstructorAtisSectorPanel({
     }
   }
 
-  const handleCompleteTraining = useCallback(async () => {
-    if (!liveTrainingId) return
+  const handleCloseTraining = useCallback(async (trainingId) => {
+    const id = String(trainingId ?? '').trim()
+    if (!id) return
+
+    setClosingTrainingId(id)
     try {
-      await completeGroupTraining(liveTrainingId)
+      await completeGroupTraining(id)
       setStartMsg('Oturum tamamlandı')
-      setLiveTrainingId('')
-      setLiveTrainingMeta(null)
-      setResults([])
+      if (trackedTrainingId === id) {
+        setTrackedTrainingId('')
+        setResults([])
+      }
     } catch (err) {
       emitFirebaseError(err)
+    } finally {
+      setClosingTrainingId('')
     }
-  }, [liveTrainingId])
+  }, [trackedTrainingId])
+
+  const livePanelTitle = trackedTraining
+    ? `${trackedTraining.trainingName} · ${formatSessionStart(trackedTraining.createdAt)}`
+    : 'Canlı oturum'
+
+  const livePanelDescription = trackedTraining
+    ? `${trackedTraining.level} · baraj ${trackedTraining.minPassScore}${
+        trackedTraining.isTimed && trackedTraining.targetTimeSec != null
+          ? ` · hedef ${trackedTraining.targetTimeSec}s`
+          : ''
+      } · ${participantCounts[trackedTraining.id] ?? 0} katılımcı`
+    : 'Takip etmek için aktif oturumlardan birini seçin'
 
   const newDrillForm = showNewDrillForm ? (
     <div className="space-y-3 rounded border border-amber-500/20 bg-black/35 p-3">
@@ -447,10 +555,20 @@ export default function InstructorAtisSectorPanel({
         value={activeGroupId}
         onChange={(id) => {
           onActiveGroupIdChange(id)
-          setLiveTrainingId('')
-          setLiveTrainingMeta(null)
+          setTrackedTrainingId('')
+          setResults([])
         }}
         className="max-w-xs"
+      />
+
+      <ActiveAtisSessionsList
+        sessions={activeTrainings}
+        participantCounts={participantCounts}
+        selectedId={trackedTrainingId}
+        onSelect={setTrackedTrainingId}
+        onClose={handleCloseTraining}
+        closingId={closingTrainingId}
+        loading={activeTrainingsLoading}
       />
 
       <div className={ctBentoGrid}>
@@ -504,22 +622,19 @@ export default function InstructorAtisSectorPanel({
 
         <div className={ctBentoSpan5}>
           <InstructorCommandPanel
-            title="Canlı oturum"
-            description={
-              liveTrainingMeta
-                ? `${liveTrainingMeta.trainingName} · baraj ${liveTrainingMeta.minPassScore}${
-                    liveTrainingMeta.isTimed && liveTrainingMeta.targetTimeSec != null
-                      ? ` · hedef ${liveTrainingMeta.targetTimeSec}s`
-                      : ''
-                  }`
-                : 'Başlatılan oturumun operatör sonuçları'
-            }
+            title={livePanelTitle}
+            description={livePanelDescription}
             icon={Radio}
             sector="atis"
             corners="bottom"
             action={
-              liveTrainingId ? (
-                <button type="button" onClick={handleCompleteTraining} className={icBtnGhost}>
+              trackedTrainingId ? (
+                <button
+                  type="button"
+                  onClick={() => handleCloseTraining(trackedTrainingId)}
+                  disabled={closingTrainingId === trackedTrainingId}
+                  className={icBtnGhost}
+                >
                   Oturumu kapat
                 </button>
               ) : null
@@ -529,12 +644,14 @@ export default function InstructorAtisSectorPanel({
             <LiveOperatorsTable
               rows={results}
               loading={resultsLoading}
-              idle={!liveTrainingId}
-              live={Boolean(liveTrainingId)}
-              totalAmmo={liveTrainingMeta?.totalAmmo ?? 0}
-              minPassScore={liveTrainingMeta?.minPassScore ?? 0}
-              isTimed={Boolean(liveTrainingMeta?.isTimed)}
-              targetTimeSec={liveTrainingMeta?.targetTimeSec ?? null}
+              idle={!trackedTrainingId}
+              live={Boolean(trackedTrainingId)}
+              chronological
+              totalAmmo={trackedTraining?.totalAmmo ?? 0}
+              minPassScore={trackedTraining?.minPassScore ?? 0}
+              isTimed={Boolean(trackedTraining?.isTimed)}
+              targetTimeSec={trackedTraining?.targetTimeSec ?? null}
+              idleHint="Aktif oturumlardan Takip et ile canlı akışa geçin"
             />
           </InstructorCommandPanel>
         </div>

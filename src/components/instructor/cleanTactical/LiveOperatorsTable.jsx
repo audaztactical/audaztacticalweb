@@ -1,4 +1,5 @@
 import { Loader2, Radio } from 'lucide-react'
+import { useMemo } from 'react'
 import CleanFade from './CleanFade'
 import {
   computeGroupTrainingAssessment,
@@ -46,6 +47,7 @@ function EmptyStateMessage({ title, description, icon: Icon = Radio }) {
  *     time?: number | null
  *     isPassed?: boolean
  *     statusResult?: string
+ *     submittedAt?: unknown
  *   }[]
  *   loading?: boolean
  *   idle?: boolean
@@ -57,6 +59,7 @@ function EmptyStateMessage({ title, description, icon: Icon = Radio }) {
  *   isTimed?: boolean
  *   targetTimeSec?: number | null
  *   hitsLabel?: string
+ *   chronological?: boolean
  * }} props
  */
 export default function LiveOperatorsTable({
@@ -71,8 +74,32 @@ export default function LiveOperatorsTable({
   isTimed = false,
   targetTimeSec = null,
   hitsLabel = 'Vuruş',
+  chronological = false,
 }) {
   const isLive = live || (!idle && !loading)
+
+  const displayRows = useMemo(() => {
+    if (!chronological) return rows
+    return [...rows].sort((a, b) => {
+      const aMs =
+        a.submittedAt &&
+        typeof a.submittedAt === 'object' &&
+        a.submittedAt !== null &&
+        'toMillis' in a.submittedAt &&
+        typeof a.submittedAt.toMillis === 'function'
+          ? a.submittedAt.toMillis()
+          : Date.parse(String(a.submittedAt ?? '')) || 0
+      const bMs =
+        b.submittedAt &&
+        typeof b.submittedAt === 'object' &&
+        b.submittedAt !== null &&
+        'toMillis' in b.submittedAt &&
+        typeof b.submittedAt.toMillis === 'function'
+          ? b.submittedAt.toMillis()
+          : Date.parse(String(b.submittedAt ?? '')) || 0
+      return aMs - bMs
+    })
+  }, [rows, chronological])
 
   return (
     <CleanFade>
@@ -94,7 +121,7 @@ export default function LiveOperatorsTable({
             </tr>
           </thead>
           <tbody>
-            {loading && rows.length === 0 ? (
+            {loading && displayRows.length === 0 ? (
               <tr>
                 <td colSpan={4} className={`${icTd} p-0`}>
                   <div className={icEmptyCell}>
@@ -110,7 +137,7 @@ export default function LiveOperatorsTable({
                   <EmptyStateMessage title={idleMessage} description={idleHint} />
                 </td>
               </tr>
-            ) : rows.length === 0 ? (
+            ) : displayRows.length === 0 ? (
               <tr>
                 <td colSpan={4} className={`${icTd} p-0`}>
                   <EmptyStateMessage
@@ -120,7 +147,7 @@ export default function LiveOperatorsTable({
                 </td>
               </tr>
             ) : (
-              rows.map((row) => {
+              displayRows.map((row) => {
                 const assessment = computeGroupTrainingAssessment({
                   totalAmmo,
                   minPassScore,
