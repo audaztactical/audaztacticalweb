@@ -103,18 +103,18 @@ export function AuthProvider({ children }) {
 
   usePresenceHeartbeat(user?.uid)
 
-  const refreshAdminClaimFromToken = useCallback(async (authUser, profile) => {
+  const refreshAdminClaimFromToken = useCallback(async (authUser) => {
     if (!authUser) {
       setIsAdmin(false)
       return false
     }
-    const admin = await resolveUserIsAdmin(authUser, profile ?? userDataRef.current)
+    const admin = await resolveUserIsAdmin(authUser)
     setIsAdmin(admin)
     return admin
   }, [])
 
   /** Callable ensureAdminClaim — yalnızca VITE_SYNC_ADMIN_CLAIM_ON_LOGIN=true ise (opsiyonel). */
-  const syncAdminClaim = useCallback(async (authUser, profile) => {
+  const syncAdminClaim = useCallback(async (authUser) => {
     if (!authUser) {
       setIsAdmin(false)
       return false
@@ -132,7 +132,7 @@ export function AuthProvider({ children }) {
       }
     }
 
-    const admin = await resolveUserIsAdmin(authUser, profile ?? userDataRef.current)
+    const admin = await resolveUserIsAdmin(authUser)
     setIsAdmin(admin)
     return admin
   }, [])
@@ -227,7 +227,7 @@ export function AuthProvider({ children }) {
         setProfileLoading(false)
       }
 
-      await refreshAdminClaimFromToken(nextUser, mergedProfile)
+      await refreshAdminClaimFromToken(nextUser)
     })
 
     return unsubscribe
@@ -476,8 +476,8 @@ export function AuthProvider({ children }) {
       setIsAdmin(false)
       return
     }
-    void resolveUserIsAdmin(user, userData).then(setIsAdmin)
-  }, [user, userData])
+    void resolveUserIsAdmin(user).then(setIsAdmin)
+  }, [user])
 
   const value = useMemo(
     () => ({

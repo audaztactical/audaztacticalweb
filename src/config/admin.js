@@ -1,18 +1,7 @@
 /**
- * Admin yetkilendirme — Firebase custom claim (admin: true) veya Firestore role === 'admin'.
+ * Admin yetkilendirme — yalnızca Firebase custom claim (admin: true).
  * E-posta eşleşmesi istemci bundle'ında kullanılmaz (ensureAdminClaim sunucuda doğrular).
  */
-
-import { normalizeUserRole } from '../lib/authRoles'
-
-/**
- * @param {{ role?: string, userRole?: string } | null | undefined} userData
- */
-export function userDataHasAdminRole(userData) {
-  if (!userData) return false
-  const role = userData.role ?? userData.userRole
-  return normalizeUserRole(role) === 'admin'
-}
 
 /**
  * @param {import('firebase/auth').User | null | undefined} user
@@ -30,22 +19,18 @@ export async function userHasAdminClaim(user) {
 
 /**
  * @param {import('firebase/auth').User | null | undefined} user
- * @param {{ role?: string, userRole?: string } | null | undefined} [userData]
  * @returns {Promise<boolean>}
  */
-export async function resolveUserIsAdmin(user, userData) {
-  if (!user) return false
-  if (userDataHasAdminRole(userData)) return true
+export async function resolveUserIsAdmin(user) {
   return userHasAdminClaim(user)
 }
 
 /**
- * Doktrin, eğitim videosu vb. — admin claim veya Firestore admin rolü.
+ * Doktrin, eğitim videosu vb. — admin custom claim gerekli.
  * @param {import('firebase/auth').User | null | undefined} user
- * @param {{ role?: string, userRole?: string } | null | undefined} [userData]
  */
-export async function assertCanManageAdminContent(user, userData) {
-  if (!(await resolveUserIsAdmin(user, userData))) {
+export async function assertCanManageAdminContent(user) {
+  if (!(await resolveUserIsAdmin(user))) {
     const e = new Error('Bu işlem yalnızca sistem yöneticisi içindir.')
     e.code = 'permission-denied'
     e.__audazCode = 'ERR_ADMIN_CONTENT_REQUIRED'
