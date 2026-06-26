@@ -336,6 +336,9 @@ export default function InstructorAtisSectorPanel({
         targetTimeSec: parsedTargetTime,
         totalAmmo: Number(totalAmmo),
         minPassScore: Number(minPassScore),
+        // Oturum penceresi (grup eğitimi erişim süresi) — drill zamanlılığından bağımsız
+        sessionDurationHours: 2,
+        sessionDurationMinutes: 0,
       })
       setLiveTrainingId(created.id)
       setLiveTrainingMeta({
