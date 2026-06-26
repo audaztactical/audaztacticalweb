@@ -10,6 +10,11 @@ import { useAuth } from '../context/AuthContext'
 import { fetchOperatorProfiles } from '../lib/firestoreInstructor'
 import { subscribeInstructorGroups } from '../lib/firestoreGroups'
 import { subscribeInstructorMergedGroupActivityLogs } from '../lib/firestoreGroupTraining'
+import {
+  subscribeInstructorMergedGroupTrainingResults,
+  subscribeInstructorMergedGroupTrainings,
+} from '../lib/firestoreGroupTrainings'
+import { mergeInstructorGroupAnalytics } from '../lib/instructorGroupAnalytics'
 import { emitFirebaseError } from '../lib/firebaseErrorBus'
 import InstructorGroupsTab from '../components/instructor/tabs/InstructorGroupsTab'
 import InstructorOperatorsTab from '../components/instructor/tabs/InstructorOperatorsTab'
@@ -29,6 +34,8 @@ import {
 /** @typedef {import('../lib/firestoreInstructor').OperatorProfile} OperatorProfile */
 /** @typedef {import('../lib/firestoreGroups').TacticalGroup} TacticalGroup */
 /** @typedef {import('../lib/firestoreGroupTraining').GroupActivityLog} GroupActivityLog */
+/** @typedef {import('../lib/firestoreGroupTrainings').TrainingResult} TrainingResult */
+/** @typedef {import('../lib/firestoreGroupTrainings').GroupTraining} GroupTraining */
 
 /** @typedef {'gruplar' | 'operatorler' | 'egitim' | 'basari'} InstructorTabId */
 
@@ -49,7 +56,14 @@ export default function InstructorDashboard() {
   const [operators, setOperators] = useState(/** @type {OperatorProfile[]} */ ([]))
   const [operatorsLoading, setOperatorsLoading] = useState(true)
   const [activityLogs, setActivityLogs] = useState(/** @type {GroupActivityLog[]} */ ([]))
+  const [trainingResults, setTrainingResults] = useState(/** @type {TrainingResult[]} */ ([]))
+  const [groupTrainings, setGroupTrainings] = useState(/** @type {GroupTraining[]} */ ([]))
   const [logsLoading, setLogsLoading] = useState(false)
+
+  const mergedActivityLogs = useMemo(
+    () => mergeInstructorGroupAnalytics(activityLogs, trainingResults, groupTrainings),
+    [activityLogs, trainingResults, groupTrainings],
+  )
 
   const instructorName = (userData?.callsign || user?.displayName || 'Eğitmen').trim()
   const instructorId = user?.uid ?? ''
@@ -96,24 +110,63 @@ export default function InstructorDashboard() {
   useEffect(() => {
     if (!groups.length) {
       setActivityLogs([])
+      setTrainingResults([])
+      setGroupTrainings([])
       setLogsLoading(false)
       return undefined
     }
 
     setLogsLoading(true)
+    let pending = 3
+
+    const markReady = () => {
+      pending -= 1
+      if (pending <= 0) setLogsLoading(false)
+    }
+
     const groupIds = groups.map((g) => g.groupId)
-    const unsub = subscribeInstructorMergedGroupActivityLogs(
+
+    const unsubLogs = subscribeInstructorMergedGroupActivityLogs(
       groupIds,
       (next) => {
         setActivityLogs(next)
-        setLogsLoading(false)
+        markReady()
       },
       (err) => {
         emitFirebaseError(err)
-        setLogsLoading(false)
+        markReady()
       },
     )
-    return unsub
+
+    const unsubResults = subscribeInstructorMergedGroupTrainingResults(
+      groupIds,
+      (next) => {
+        setTrainingResults(next)
+        markReady()
+      },
+      (err) => {
+        emitFirebaseError(err)
+        markReady()
+      },
+    )
+
+    const unsubTrainings = subscribeInstructorMergedGroupTrainings(
+      groupIds,
+      (next) => {
+        setGroupTrainings(next)
+        markReady()
+      },
+      (err) => {
+        emitFirebaseError(err)
+        markReady()
+      },
+    )
+
+    return () => {
+      unsubLogs()
+      unsubResults()
+      unsubTrainings()
+    }
   }, [groups])
 
   useEffect(() => {
@@ -129,7 +182,7 @@ export default function InstructorDashboard() {
           <InstructorOperatorsTab
             groups={groups}
             operators={operators}
-            activityLogs={activityLogs}
+            activityLogs={mergedActivityLogs}
             loading={groupsLoading || operatorsLoading || logsLoading}
           />
         )
@@ -154,7 +207,7 @@ export default function InstructorDashboard() {
     groupsLoading,
     operators,
     operatorsLoading,
-    activityLogs,
+    mergedActivityLogs,
     logsLoading,
     instructorId,
     selectedCategory,

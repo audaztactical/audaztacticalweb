@@ -1,3 +1,8 @@
+import {
+  averageGroupOverallForOperator,
+  countGroupDrillsForOperator,
+} from './groupActivityHud'
+
 /** @typedef {import('./firestoreGroups').TacticalGroup} TacticalGroup */
 /** @typedef {import('./firestoreInstructor').OperatorProfile} OperatorProfile */
 /** @typedef {import('./firestoreGroupTraining').GroupActivityLog} GroupActivityLog */
@@ -36,18 +41,8 @@ export function buildInstructorSquadRoster(groups, allOperators, activityLogs) {
 
   return [...uidToGroups.entries()].map(([uid, groupNames]) => {
     const op = operatorByUid.get(uid)
-    const mine = activityLogs.filter((l) => l.operatorId === uid)
-    const totalSessions = mine.length
-    const overallSuccess = totalSessions
-      ? Math.round(
-          (mine.reduce((acc, l) => {
-            const rounds = Math.max(1, l.criticalMetrics?.totalRounds || 1)
-            return acc + (Math.min(rounds, l.score) / rounds) * 100
-          }, 0) /
-            totalSessions) *
-            10,
-        ) / 10
-      : 0
+    const totalSessions = countGroupDrillsForOperator(activityLogs, uid)
+    const overallSuccess = averageGroupOverallForOperator(activityLogs, uid)
 
     return {
       uid,

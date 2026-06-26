@@ -170,9 +170,9 @@ export function filterGroupLogsForOperator(logs, operatorId) {
  * @param {GroupActivityLog} log
  */
 export function computeGroupLogHitPercent(log) {
+  const stored = Number(log.accuracyPercent)
+  if (Number.isFinite(stored) && stored >= 0) return stored
   if (log.isTimed === false) {
-    const stored = Number(log.accuracyPercent)
-    if (Number.isFinite(stored) && stored >= 0) return stored
     const shots = Math.max(1, log.atisShotsFired || log.criticalMetrics.totalRounds || 1)
     const hits = Math.min(shots, Math.max(0, log.atisHits || log.score))
     return Math.round((hits / shots) * 1000) / 10

@@ -151,7 +151,7 @@ export default function InstructorOperatorsTab({ groups, operators, activityLogs
               </ul>
             </div>
             <p className="mt-3 font-mono text-[8px] uppercase text-app-text/45">
-              Metrikler yalnızca group_activity_logs akademik kayıtlarından türetilir.
+              Metrikler group_activity_logs ve grup eğitimi training_results kayıtlarından birleştirilir.
             </p>
           </div>
         </div>

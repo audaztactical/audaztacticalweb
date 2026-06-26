@@ -743,3 +743,103 @@ export async function fetchOperatorTrainingResult(trainingId, operatorId) {
   const d = snap.docs[0]
   return mapTrainingResultDoc(d.data(), d.id)
 }
+
+/**
+ * Eğitmenin tüm grupları için birleşik training_results feed'i.
+ * @param {string[]} groupIds
+ * @param {(results: TrainingResult[]) => void} onData
+ * @param {(err: unknown) => void} [onError]
+ */
+export function subscribeInstructorMergedGroupTrainingResults(groupIds, onData, onError) {
+  if (!isFirebaseConfigured() || !db || !groupIds.length) {
+    onData([])
+    return () => {}
+  }
+
+  /** @type {Map<string, TrainingResult[]>} */
+  const buckets = new Map()
+
+  const emitMerged = () => {
+    const byId = new Map()
+    for (const rows of buckets.values()) {
+      for (const row of rows) {
+        if (row?.id) byId.set(row.id, row)
+      }
+    }
+    const merged = [...byId.values()].sort(
+      (a, b) => timestampToMs(b.submittedAt) - timestampToMs(a.submittedAt),
+    )
+    onData(merged)
+  }
+
+  const unsubs = groupIds.map((groupId) =>
+    subscribeGroupTrainingResults(
+      groupId,
+      (rows) => {
+        buckets.set(groupId, rows)
+        emitMerged()
+      },
+      onError,
+    ),
+  )
+
+  return () => {
+    unsubs.forEach((off) => {
+      try {
+        off()
+      } catch {
+        /* ignore */
+      }
+    })
+  }
+}
+
+/**
+ * Eğitmenin tüm grupları için birleşik group_trainings metadata feed'i.
+ * @param {string[]} groupIds
+ * @param {(trainings: GroupTraining[]) => void} onData
+ * @param {(err: unknown) => void} [onError]
+ */
+export function subscribeInstructorMergedGroupTrainings(groupIds, onData, onError) {
+  if (!isFirebaseConfigured() || !db || !groupIds.length) {
+    onData([])
+    return () => {}
+  }
+
+  /** @type {Map<string, GroupTraining[]>} */
+  const buckets = new Map()
+
+  const emitMerged = () => {
+    const byId = new Map()
+    for (const rows of buckets.values()) {
+      for (const row of rows) {
+        if (row?.id) byId.set(row.id, row)
+      }
+    }
+    const merged = [...byId.values()].sort(
+      (a, b) => timestampToMs(b.createdAt) - timestampToMs(a.createdAt),
+    )
+    onData(merged)
+  }
+
+  const unsubs = groupIds.map((groupId) =>
+    subscribeGroupTrainings(
+      groupId,
+      (rows) => {
+        buckets.set(groupId, rows)
+        emitMerged()
+      },
+      onError,
+    ),
+  )
+
+  return () => {
+    unsubs.forEach((off) => {
+      try {
+        off()
+      } catch {
+        /* ignore */
+      }
+    })
+  }
+}
