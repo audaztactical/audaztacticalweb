@@ -24,7 +24,7 @@ import {
 import { buildGroupTrainingLink, sendNotificationSafe } from '../services/notificationService'
 import { fetchGroupById } from './firestoreGroups'
 import { trainingResultToSyntheticLog } from './instructorGroupAnalytics'
-import { db, isFirebaseConfigured } from './firebase'
+import { auth, db, isFirebaseConfigured } from './firebase'
 import { safeOnSnapshot, timestampToMs } from './firestoreSnapshot'
 
 /** @typedef {'active' | 'completed'} GroupTrainingStatus */
@@ -258,8 +258,15 @@ const expiringTrainingIds = new Set()
  * @param {GroupTraining[]} trainings
  */
 export async function closeExpiredGroupTrainings(trainings) {
+  const uid = auth?.currentUser?.uid ?? ''
+  if (!uid) return
+
   const expiredActive = trainings.filter(
-    (t) => t.status === 'active' && isTrainingSessionExpired(t) && !expiringTrainingIds.has(t.id),
+    (t) =>
+      t.status === 'active' &&
+      t.instructorId === uid &&
+      isTrainingSessionExpired(t) &&
+      !expiringTrainingIds.has(t.id),
   )
   if (!expiredActive.length) return
 
@@ -406,7 +413,7 @@ export async function fetchActiveGroupTrainings(groupId) {
  * @param {(trainings: GroupTraining[]) => void} onData
  * @param {(err: unknown) => void} [onError]
  */
-export function subscribeGroupTrainings(groupId, onData, onError) {
+export function subscribeGroupTrainings(groupId, onData, onError, opts = {}) {
   if (!isFirebaseConfigured() || !db) {
     onData([])
     return () => {}
@@ -417,11 +424,13 @@ export function subscribeGroupTrainings(groupId, onData, onError) {
     return () => {}
   }
 
+  const { autoCloseExpired = false } = opts
+
   return subscribeMergedGroupTrainings(
     gid,
     (rows) => {
       onData(rows)
-      void closeExpiredGroupTrainings(rows)
+      if (autoCloseExpired) void closeExpiredGroupTrainings(rows)
     },
     onError,
     { nonExpiredOnly: true },

@@ -120,6 +120,7 @@ export default function InstructorAnalyticsTab({ groups, operators }) {
         emitFirebaseError(err)
         markReady()
       },
+      { autoCloseExpired: true },
     )
 
     return () => {

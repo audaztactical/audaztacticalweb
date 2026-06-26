@@ -545,6 +545,26 @@ service cloud.firestore {
       return isGroupInstructor(groupId) || isGroupMember(groupId) || isContentAdmin();
     }
 
+    /** Operatör profil groupId'si allowedGroups içindeyse çapraz grup oturumları okunabilir. */
+    function operatorProfileGroupId() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('groupId', '')
+        : '';
+    }
+
+    function isAllowedGroupTrainingParticipant() {
+      let gid = operatorProfileGroupId();
+      return gid != ''
+        && gid in resource.data.get('allowedGroups', [])
+        && isGroupMember(gid);
+    }
+
+    function canReadGroupTraining() {
+      return canReadGroupAcademic(resource.data.groupId)
+        || isAllowedGroupTrainingParticipant();
+    }
+
     /** Karşı tarafın contacts dizisine yalnızca kendi UID eklenir (tim eşleşmesi). */
     function isMuhaberePeerContactLink(targetUid) {
       let prior = resource.data.get('contacts', []);
@@ -696,9 +716,9 @@ service cloud.firestore {
      * group_trainings — eğitmen açtığı canlı grup eğitim oturumları.
      */
     match /group_trainings/{trainingId} {
-      allow read: if canReadGroupAcademic(resource.data.groupId);
+      allow read: if canReadGroupTraining();
       allow list: if isInstructor() || isContentAdmin()
-        || (isSignedIn() && canReadGroupAcademic(resource.data.groupId));
+        || (isSignedIn() && canReadGroupTraining());
       allow create: if isInstructor()
         && request.resource.data.instructorId == request.auth.uid
         && request.resource.data.id == trainingId
