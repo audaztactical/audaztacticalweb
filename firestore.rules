@@ -687,6 +687,17 @@ service cloud.firestore {
         && isGroupInstructor(request.resource.data.groupId)
         && request.resource.data.logId == logId
       ) || (
+        isInstructor()
+        && request.resource.data.instructorId == request.auth.uid
+        && request.resource.data.type == 'group_training_result'
+        && request.resource.data.trainingType == 'GROUP'
+        && request.resource.data.sourceDomain == 'group_trainings'
+        && request.resource.data.operatorSubmitted == true
+        && request.resource.data.logId == logId
+        && request.resource.data.groupId is string
+        && request.resource.data.operatorId is string
+        && isGroupInstructor(request.resource.data.groupId)
+      ) || (
         isSignedIn()
         && request.resource.data.type == 'operator_group_feed'
         && request.resource.data.trainingType == 'GROUP'
@@ -726,7 +737,10 @@ service cloud.firestore {
         && request.resource.data.status == 'active';
       allow update: if isInstructor()
         && resource.data.instructorId == request.auth.uid
-        && isGroupInstructor(resource.data.groupId);
+        && isGroupInstructor(resource.data.groupId)
+        && resource.data.status == 'active'
+        && request.resource.data.status == 'completed'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
       allow delete: if false;
     }
 

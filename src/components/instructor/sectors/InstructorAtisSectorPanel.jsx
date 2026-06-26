@@ -25,6 +25,7 @@ import DrillQuickSelector from '../cleanTactical/DrillQuickSelector'
 import InstructorGroupSelect from '../cleanTactical/InstructorGroupSelect'
 import LiveOperatorsTable from '../cleanTactical/LiveOperatorsTable'
 import ActiveAtisSessionsList from '../cleanTactical/ActiveAtisSessionsList'
+import AtisSessionHistoryPanel from '../cleanTactical/AtisSessionHistoryPanel'
 import {
   icBtnGhost,
 } from '../layout/instructorCommandTokens'
@@ -85,6 +86,7 @@ function validateAmmoThresholds(totalAmmo, minPassScore) {
  */
 export default function InstructorAtisSectorPanel({
   groups,
+  operators,
   instructorId,
   activeGroupId,
   onActiveGroupIdChange,
@@ -570,6 +572,8 @@ export default function InstructorAtisSectorPanel({
         closingId={closingTrainingId}
         loading={activeTrainingsLoading}
       />
+
+      <AtisSessionHistoryPanel groups={groups} operators={operators} instructorId={instructorId} />
 
       <div className={ctBentoGrid}>
         <div className={ctBentoSpan7}>

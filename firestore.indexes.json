@@ -133,6 +133,14 @@
       ]
     },
     {
+      "collectionGroup": "group_trainings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "allowedGroups", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "training_results",
       "queryScope": "COLLECTION",
       "fields": [
