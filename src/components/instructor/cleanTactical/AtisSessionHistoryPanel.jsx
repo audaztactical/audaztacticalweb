@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronDown, History, Loader2 } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight, History, Loader2 } from 'lucide-react'
 import { useAuth } from '../../../context/AuthContext'
 import { subscribeInstructorMergedGroupTrainingResults } from '../../../lib/firestoreGroupTrainings'
 import {
@@ -31,11 +31,25 @@ import {
   icTrHover,
   resolveSectorAccent,
 } from '../layout/instructorCommandTokens'
+import { ctBtnSecondary, ctInput, ctLabel } from './tokens'
 
 /** @typedef {import('../../../lib/firestoreGroups').TacticalGroup} TacticalGroup */
 /** @typedef {import('../../../lib/firestoreInstructor').OperatorProfile} OperatorProfile */
 /** @typedef {import('../../../lib/firestoreGroupTrainings').GroupTraining} GroupTraining */
 /** @typedef {import('../../../lib/firestoreGroupTrainings').TrainingResult} TrainingResult */
+
+const PAGE_SIZE = 10
+
+/**
+ * @param {string} dateStr YYYY-MM-DD
+ * @param {'start' | 'end'} edge
+ */
+function dateInputToMs(dateStr, edge) {
+  const trimmed = String(dateStr ?? '').trim()
+  if (!trimmed) return null
+  const ms = Date.parse(`${trimmed}T${edge === 'start' ? '00:00:00' : '23:59:59.999'}`)
+  return Number.isFinite(ms) ? ms : null
+}
 
 /**
  * @param {{
@@ -52,6 +66,10 @@ export default function AtisSessionHistoryPanel({ groups, operators, instructorI
   const [allResults, setAllResults] = useState(/** @type {TrainingResult[]} */ ([]))
   const [loading, setLoading] = useState(false)
   const [expandedId, setExpandedId] = useState('')
+  const [page, setPage] = useState(1)
+  const [drillFilter, setDrillFilter] = useState('')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
 
   const groupIds = useMemo(() => groups.map((g) => g.groupId).filter(Boolean), [groups])
 
@@ -124,6 +142,59 @@ export default function AtisSessionHistoryPanel({ groups, operators, instructorI
     }
   }, [groupIds, instructorId])
 
+  const drillOptions = useMemo(() => {
+    const names = new Set(
+      completedTrainings
+        .map((s) => s.trainingName?.trim())
+        .filter((name) => typeof name === 'string' && name.length > 0),
+    )
+    return [...names].sort((a, b) => a.localeCompare(b, 'tr'))
+  }, [completedTrainings])
+
+  const filteredSessions = useMemo(() => {
+    const q = drillFilter.trim().toLowerCase()
+    const fromMs = dateInputToMs(dateFrom, 'start')
+    const toMs = dateInputToMs(dateTo, 'end')
+
+    return completedTrainings.filter((session) => {
+      if (q && !String(session.trainingName ?? '').toLowerCase().includes(q)) return false
+      const openMs = timestampToDisplayMs(session.createdAt)
+      if (fromMs != null && openMs < fromMs) return false
+      if (toMs != null && openMs > toMs) return false
+      return true
+    })
+  }, [completedTrainings, drillFilter, dateFrom, dateTo])
+
+  const totalPages = Math.max(1, Math.ceil(filteredSessions.length / PAGE_SIZE))
+
+  const safePage = Math.min(page, totalPages)
+
+  const paginatedSessions = useMemo(() => {
+    const start = (safePage - 1) * PAGE_SIZE
+    return filteredSessions.slice(start, start + PAGE_SIZE)
+  }, [filteredSessions, safePage])
+
+  const rangeStart = filteredSessions.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1
+  const rangeEnd = Math.min(safePage * PAGE_SIZE, filteredSessions.length)
+
+  const hasActiveFilters = Boolean(drillFilter.trim() || dateFrom || dateTo)
+
+  useEffect(() => {
+    setPage(1)
+  }, [drillFilter, dateFrom, dateTo])
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages)
+  }, [page, totalPages])
+
+  const clearFilters = () => {
+    setDrillFilter('')
+    setDateFrom('')
+    setDateTo('')
+    setPage(1)
+    setExpandedId('')
+  }
+
   const toggleExpanded = (trainingId) => {
     setExpandedId((prev) => (prev === trainingId ? '' : trainingId))
   }
@@ -137,8 +208,57 @@ export default function AtisSessionHistoryPanel({ groups, operators, instructorI
             Oturum geçmişi
           </p>
           <span className="ml-auto font-mono-technical text-[9px] tabular-nums text-app-text/45">
-            {completedTrainings.length} KAPALI
+            {filteredSessions.length} KAPALI
           </span>
+        </div>
+
+        <div className="border-b border-amber-900/20 bg-black/25 px-3 py-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <label className="block space-y-1 sm:col-span-2 lg:col-span-1">
+              <span className={ctLabel}>Drill adı</span>
+              <input
+                type="search"
+                list="atis-history-drill-options"
+                value={drillFilter}
+                onChange={(e) => setDrillFilter(e.target.value)}
+                placeholder="Filtrele…"
+                className={`${ctInput} font-mono-technical text-[11px] uppercase`}
+              />
+              <datalist id="atis-history-drill-options">
+                {drillOptions.map((name) => (
+                  <option key={name} value={name} />
+                ))}
+              </datalist>
+            </label>
+            <label className="block space-y-1">
+              <span className={ctLabel}>Başlangıç tarihi</span>
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className={`${ctInput} font-mono-technical text-[11px] tabular-nums`}
+              />
+            </label>
+            <label className="block space-y-1">
+              <span className={ctLabel}>Bitiş tarihi</span>
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className={`${ctInput} font-mono-technical text-[11px] tabular-nums`}
+              />
+            </label>
+            <div className="flex items-end">
+              <button
+                type="button"
+                onClick={clearFilters}
+                disabled={!hasActiveFilters}
+                className={`${ctBtnSecondary} w-full font-mono-technical text-[10px] uppercase tracking-wider disabled:opacity-40`}
+              >
+                Filtreyi temizle
+              </button>
+            </div>
+          </div>
         </div>
 
         {loading && completedTrainings.length === 0 ? (
@@ -146,14 +266,21 @@ export default function AtisSessionHistoryPanel({ groups, operators, instructorI
             <Loader2 className="mx-auto size-5 animate-spin text-amber-400" aria-hidden />
             <p className={`${icEmptyTitle} mt-3`}>Geçmiş oturumlar yükleniyor</p>
           </div>
-        ) : completedTrainings.length === 0 ? (
+        ) : filteredSessions.length === 0 ? (
           <div className={icEmptyCell}>
-            <p className={icEmptyTitle}>Tamamlanmış oturum yok</p>
-            <p className={icEmptyDesc}>Kapatılan RNG-01 oturumları burada arşivlenir</p>
+            <p className={icEmptyTitle}>
+              {hasActiveFilters ? 'Filtreye uyan oturum yok' : 'Tamamlanmış oturum yok'}
+            </p>
+            <p className={icEmptyDesc}>
+              {hasActiveFilters
+                ? 'Farklı drill veya tarih aralığı deneyin'
+                : 'Kapatılan RNG-01 oturumları burada arşivlenir'}
+            </p>
           </div>
         ) : (
+          <>
           <div className="divide-y divide-amber-900/20">
-            {completedTrainings.map((session) => {
+            {paginatedSessions.map((session) => {
               const sessionResults = resultsForTraining(session, allResults)
               const participantCount = sessionResults.length
               const successAvg = computeSessionHitPercentAverage(session, allResults)
@@ -321,6 +448,37 @@ export default function AtisSessionHistoryPanel({ groups, operators, instructorI
               )
             })}
           </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-amber-900/25 bg-black/30 px-3 py-2.5">
+            <p className="font-mono-technical text-[9px] uppercase tabular-nums text-app-text/55">
+              {filteredSessions.length === 0
+                ? '0 oturum'
+                : `${filteredSessions.length} oturumdan ${rangeStart}–${rangeEnd}`}
+              {' · '}
+              Sayfa {safePage}/{totalPages}
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                disabled={safePage <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className={`${ctBtnSecondary} inline-flex items-center gap-1 px-2 py-1 font-mono-technical text-[9px] uppercase disabled:opacity-40`}
+              >
+                <ChevronLeft className="size-3.5" aria-hidden />
+                Önceki
+              </button>
+              <button
+                type="button"
+                disabled={safePage >= totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                className={`${ctBtnSecondary} inline-flex items-center gap-1 px-2 py-1 font-mono-technical text-[9px] uppercase disabled:opacity-40`}
+              >
+                Sonraki
+                <ChevronRight className="size-3.5" aria-hidden />
+              </button>
+            </div>
+          </div>
+          </>
         )}
       </div>
     </CleanFade>

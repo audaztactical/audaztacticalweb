@@ -123,6 +123,7 @@ export default function InstructorAtisSectorPanel({
   const [results, setResults] = useState(/** @type {TrainingResult[]} */ ([]))
   const [resultsLoading, setResultsLoading] = useState(false)
   const [closingTrainingId, setClosingTrainingId] = useState('')
+  const [sectorTab, setSectorTab] = useState(/** @type {'active' | 'history'} */ ('active'))
 
   const thresholdError = useMemo(
     () => validateAmmoThresholds(totalAmmo, minPassScore),
@@ -550,32 +551,62 @@ export default function InstructorAtisSectorPanel({
     )
   }
 
+  /** @param {'active' | 'history'} id @param {string} label */
+  const renderSectorTab = (id, label) => {
+    const active = sectorTab === id
+    return (
+      <button
+        key={id}
+        type="button"
+        onClick={() => setSectorTab(id)}
+        className={[
+          'flex-1 rounded border py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider transition',
+          active
+            ? 'border-amber-500/60 bg-amber-950/40 text-amber-300'
+            : 'border-slate-800 text-app-text/55 hover:border-amber-800/40 hover:text-app-text/75',
+        ].join(' ')}
+        aria-current={active ? 'page' : undefined}
+      >
+        {label}
+      </button>
+    )
+  }
+
   return (
     <div className="space-y-5">
-      <InstructorGroupSelect
-        groups={groups}
-        value={activeGroupId}
-        onChange={(id) => {
-          onActiveGroupIdChange(id)
-          setTrackedTrainingId('')
-          setResults([])
-        }}
-        className="max-w-xs"
-      />
+      <div
+        className="flex w-full gap-2 rounded border border-amber-900/25 bg-black/40 p-1"
+        role="tablist"
+        aria-label="Atış sektörü görünümü"
+      >
+        {renderSectorTab('active', 'Aktif oturumlar')}
+        {renderSectorTab('history', 'Oturum geçmişi')}
+      </div>
 
-      <ActiveAtisSessionsList
-        sessions={activeTrainings}
-        participantCounts={participantCounts}
-        selectedId={trackedTrainingId}
-        onSelect={setTrackedTrainingId}
-        onClose={handleCloseTraining}
-        closingId={closingTrainingId}
-        loading={activeTrainingsLoading}
-      />
+      {sectorTab === 'active' ? (
+        <>
+          <InstructorGroupSelect
+            groups={groups}
+            value={activeGroupId}
+            onChange={(id) => {
+              onActiveGroupIdChange(id)
+              setTrackedTrainingId('')
+              setResults([])
+            }}
+            className="max-w-xs"
+          />
 
-      <AtisSessionHistoryPanel groups={groups} operators={operators} instructorId={instructorId} />
+          <ActiveAtisSessionsList
+            sessions={activeTrainings}
+            participantCounts={participantCounts}
+            selectedId={trackedTrainingId}
+            onSelect={setTrackedTrainingId}
+            onClose={handleCloseTraining}
+            closingId={closingTrainingId}
+            loading={activeTrainingsLoading}
+          />
 
-      <div className={ctBentoGrid}>
+          <div className={ctBentoGrid}>
         <div className={ctBentoSpan7}>
           <InstructorCommandPanel
             title="Drill kütüphanesi"
@@ -660,6 +691,10 @@ export default function InstructorAtisSectorPanel({
           </InstructorCommandPanel>
         </div>
       </div>
+        </>
+      ) : (
+        <AtisSessionHistoryPanel groups={groups} operators={operators} instructorId={instructorId} />
+      )}
     </div>
   )
 }
