@@ -103,14 +103,11 @@ export default function NotificationDropdown() {
 
   const handleItemClick = (/** @type {import('../../services/notificationService').AppNotification} */ item) => {
     const target = buildNotificationNavigationTarget(item)
+    const path = `${target.pathname}${target.search}${target.hash}`
     setOpen(false)
 
     navigate(
-      {
-        pathname: target.pathname,
-        search: target.search,
-        hash: target.hash,
-      },
+      path,
       Object.keys(target.state).length > 0 ? { state: target.state } : undefined,
     )
 

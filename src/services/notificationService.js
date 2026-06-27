@@ -137,6 +137,37 @@ function extractTrainingIdFromLink(link) {
 }
 
 /**
+ * Grup eğitimi (GRP-07) bildirimi — TRAINING veya ilgili SYSTEM kayıtları.
+ * @param {AppNotification} item
+ */
+function isGroupTrainingNotification(item) {
+  if (item.type === 'TRAINING') return true
+
+  const link = String(item.link ?? '')
+  if (link.includes('sector=grup-egitimi')) return true
+  if (extractTrainingIdFromLink(link)) return true
+
+  const title = String(item.title ?? '').toLowerCase()
+  if (title.includes('grup eğitimi')) return true
+
+  const message = String(item.message ?? '').toLowerCase()
+  if (message.includes('antrenman modülünden katılın')) return true
+
+  return false
+}
+
+/**
+ * @param {AppNotification} item
+ * @returns {string}
+ */
+function resolveGroupTrainingNotificationLink(item) {
+  const targetId = String(item.targetId ?? '').trim()
+  const storedLink = String(item.link ?? '').trim()
+  const trainingId = targetId || extractTrainingIdFromLink(storedLink)
+  return buildGroupTrainingLink(trainingId)
+}
+
+/**
  * Bildirim tipine göre güvenilir yönlendirme rotası üretir.
  * @param {AppNotification} item
  * @returns {string}
@@ -162,14 +193,15 @@ export function resolveNotificationLink(item) {
   }
 
   if (type === 'TRAINING') {
-    if (targetId) return buildGroupTrainingLink(targetId)
-    const trainingFromLink = extractTrainingIdFromLink(storedLink)
-    if (trainingFromLink) return buildGroupTrainingLink(trainingFromLink)
-    return buildGroupTrainingLink()
+    return resolveGroupTrainingNotificationLink(item)
   }
 
   if (type === 'ACADEMY') {
     return '/akademi'
+  }
+
+  if (isGroupTrainingNotification(item)) {
+    return resolveGroupTrainingNotificationLink(item)
   }
 
   if (postFromStoredLink) return buildForumPostLink(postFromStoredLink)
@@ -207,9 +239,12 @@ export function buildNotificationNavigationState(item) {
     return state
   }
 
-  if (item.type === 'TRAINING') {
+  if (item.type === 'TRAINING' || isGroupTrainingNotification(item)) {
     state.trainingSector = 'grup-egitimi'
-    const trainingId = targetId || extractTrainingIdFromLink(link)
+    const trainingId =
+      targetId ||
+      extractTrainingIdFromLink(link) ||
+      extractTrainingIdFromLink(String(item.link ?? ''))
     if (trainingId) state.groupTrainingId = trainingId
     return state
   }

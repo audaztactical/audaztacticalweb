@@ -137,7 +137,10 @@ function TrainingInner() {
 
     if (trainingId && canAccessGrupEgitimi) setDeepLinkTrainingId(trainingId)
 
-    if (sectorFromUrl || trainingFromUrl) {
+    const appliedGroupDeepLink =
+      wantsGroupSector && canAccessGrupEgitimi && (trainingId || sectorFromUrl || sectorFromState)
+
+    if (appliedGroupDeepLink && (sectorFromUrl || trainingFromUrl)) {
       setSearchParams(
         (prev) => {
           const next = new URLSearchParams(prev)
