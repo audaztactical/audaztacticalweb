@@ -21,6 +21,7 @@ import {
   resolveGoogleRedirectReturn,
   startGoogleSignIn,
 } from '../lib/googleRedirectAuth'
+import { hasPendingGoogleAuthRedirectPath } from '../lib/googleAuth'
 import { emitFirebaseError } from '../lib/firebaseErrorBus'
 import { callClaimInstructorRole, callEnsureAdminClaim, isCloudFunctionUnavailableError, isEnsureAdminClaimDenied } from '../lib/cloudFunctions'
 import { isPlatformInBetaPeriod } from '../lib/registrationPolicy'
@@ -137,9 +138,10 @@ export function AuthProvider({ children }) {
     return admin
   }, [])
 
-  // Google signInWithRedirect dönüşü — StrictMode güvenli tek seferlik getRedirectResult
+  // Google signInWithRedirect dönüşü — yalnızca bekleyen redirect varsa getRedirectResult çağır
   useEffect(() => {
     if (!isFirebaseConfigured() || !auth) return undefined
+    if (!hasPendingGoogleAuthRedirectPath()) return undefined
 
     let mounted = true
     setGoogleRedirectResolving(true)
@@ -227,7 +229,7 @@ export function AuthProvider({ children }) {
         setProfileLoading(false)
       }
 
-      await refreshAdminClaimFromToken(nextUser)
+      void refreshAdminClaimFromToken(nextUser)
     })
 
     return unsubscribe
@@ -470,14 +472,6 @@ export function AuthProvider({ children }) {
   }, [userData?.role, userData?.accountStatus])
 
   const showAdminPanel = isAdmin
-
-  useEffect(() => {
-    if (!user) {
-      setIsAdmin(false)
-      return
-    }
-    void resolveUserIsAdmin(user).then(setIsAdmin)
-  }, [user])
 
   const value = useMemo(
     () => ({
