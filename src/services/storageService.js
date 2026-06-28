@@ -6,7 +6,7 @@ import {
   uploadBytes,
   uploadBytesResumable,
 } from 'firebase/storage'
-import { isFirebaseConfigured, ensureStorage } from '../lib/firebase'
+import { isFirebaseConfigured, storage } from '../lib/firebase'
 
 const COMPRESS_THRESHOLD_BYTES = 500 * 1024
 const MAX_IMAGE_DIMENSION = 1024
@@ -50,13 +50,7 @@ function toStorageError(err) {
  * @returns {import('firebase/storage').FirebaseStorage}
  */
 function requireStorage() {
-  if (!isFirebaseConfigured()) {
-    const err = new Error('Firebase Storage yapılandırılmadı.')
-    err.code = 'failed-precondition'
-    throw err
-  }
-  const storage = ensureStorage()
-  if (!storage) {
+  if (!isFirebaseConfigured() || !storage) {
     const err = new Error('Firebase Storage yapılandırılmadı.')
     err.code = 'failed-precondition'
     throw err
