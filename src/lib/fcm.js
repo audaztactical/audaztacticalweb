@@ -144,10 +144,22 @@ export async function syncUserFcmTokenIfPermitted(uid) {
  * @param {string} uid
  */
 export async function registerUserPushNotifications(uid) {
-  const tokenResult = await requestPushPermissionAndToken()
+  if (!uid) return { ok: false, reason: 'not_configured' }
+  if (!isFirebaseConfigured() || !app) return { ok: false, reason: 'not_configured' }
+  if (typeof window === 'undefined' || !('Notification' in window)) {
+    return { ok: false, reason: 'not_supported' }
+  }
+
+  const permission = await Notification.requestPermission()
+  if (permission !== 'granted') {
+    return { ok: false, reason: permission === 'denied' ? 'denied' : 'dismissed' }
+  }
+
+  const tokenResult = await acquireFcmTokenAfterPermission()
   if (!tokenResult.ok || !tokenResult.token) {
     return { ok: false, reason: tokenResult.reason ?? 'no_token' }
   }
+
   try {
     await saveUserFcmToken(uid, tokenResult.token)
     return { ok: true, token: tokenResult.token }
@@ -219,35 +231,91 @@ function classifyFcmError(err) {
   return 'error'
 }
 
+/** @returns {boolean} */
+export function isPushVapidConfigured() {
+  return Boolean(VAPID_KEY && String(VAPID_KEY).trim())
+}
+
+/**
+ * @param {string | undefined} reason
+ * @returns {string}
+ */
+export function getPushRegistrationErrorMessage(reason) {
+  switch (reason) {
+    case 'vapid_missing':
+      return 'VAPID anahtarı tanımlı değil. Proje kökündeki .env.local dosyasına VITE_FIREBASE_VAPID_KEY ekleyin (Firebase Console → Project Settings → Cloud Messaging → Web Push certificates → Key pair). Ardından npm run dev yeniden başlatın.'
+    case 'vapid_invalid':
+      return 'VAPID anahtarı geçersiz. Firebase Console’daki Web Push sertifika anahtarını kontrol edin.'
+    case 'denied':
+      return 'Tarayıcı bildirim izni reddedildi. Adres çubuğundaki site izinlerinden bildirimleri açabilirsiniz.'
+    case 'dismissed':
+      return 'Bildirim izni verilmedi. Push bildirimleri için izin gerekli.'
+    case 'not_supported':
+      return 'Bu tarayıcı push bildirimlerini desteklemiyor.'
+    case 'not_configured':
+      return 'Firebase yapılandırması eksik.'
+    case 'config_invalid':
+      return 'FCM yapılandırması hatalı. .env.local ile firebase-messaging-sw.js eşleşmesini kontrol edin (npm run dev veya npm run build).'
+    case 'save_failed':
+      return 'FCM token Firestore’a kaydedilemedi. Oturumunuzun açık olduğundan emin olun.'
+    case 'no_token':
+      return 'FCM cihaz token’ı alınamadı. Sayfayı yenileyip tekrar deneyin.'
+    default:
+      return 'Push bildirimleri etkinleştirilemedi. Lütfen tekrar deneyin.'
+  }
+}
+
+/**
+ * İzin verildikten sonra service worker + FCM token alır.
+ * @returns {Promise<{ ok: boolean, reason?: string, token?: string, issues?: string[] }>}
+ */
+async function acquireFcmTokenAfterPermission() {
+  if (!VAPID_KEY) return { ok: false, reason: 'vapid_missing' }
+
+  const validation = await validateFcmConfig()
+  if (!validation.ok) {
+    const swOnly =
+      validation.issues.length === 1 &&
+      validation.issues[0]?.includes('firebase-messaging-sw.js')
+    if (!swOnly) {
+      return { ok: false, reason: 'config_invalid', issues: validation.issues }
+    }
+  }
+
+  if (!(await isSupported())) return { ok: false, reason: 'not_supported' }
+
+  try {
+    const registration = await registerMessagingServiceWorker()
+    const messaging = getMessaging(app)
+    const token = await getToken(messaging, {
+      vapidKey: VAPID_KEY,
+      serviceWorkerRegistration: registration,
+    })
+
+    if (!token) return { ok: false, reason: 'no_token' }
+    if (import.meta.env.DEV) console.info('[FCM · token]', fingerprint(token))
+    return { ok: true, token }
+  } catch (err) {
+    return { ok: false, reason: classifyFcmError(err) }
+  }
+}
+
 /**
  * İzin iste → service worker kaydet → FCM token al.
  * @returns {Promise<{ ok: boolean, reason?: string, token?: string }>}
  */
 export async function requestPushPermissionAndToken() {
   if (!isFirebaseConfigured() || !app) return { ok: false, reason: 'not_configured' }
-  if (!VAPID_KEY) return { ok: false, reason: 'vapid_missing' }
   if (typeof window === 'undefined' || !('Notification' in window)) {
     return { ok: false, reason: 'not_supported' }
   }
 
-  const validation = await validateFcmConfig()
-  if (!validation.ok) return { ok: false, reason: 'config_invalid' }
-
-  if (!(await isSupported())) return { ok: false, reason: 'not_supported' }
-
   const permission = await Notification.requestPermission()
-  if (permission !== 'granted') return { ok: false, reason: 'denied' }
+  if (permission !== 'granted') {
+    return { ok: false, reason: permission === 'denied' ? 'denied' : 'dismissed' }
+  }
 
-  const registration = await registerMessagingServiceWorker()
-  const messaging = getMessaging(app)
-  const token = await getToken(messaging, {
-    vapidKey: VAPID_KEY,
-    serviceWorkerRegistration: registration,
-  })
-
-  if (!token) return { ok: false, reason: 'no_token' }
-  if (import.meta.env.DEV) console.info('[FCM · token]', fingerprint(token))
-  return { ok: true, token }
+  return acquireFcmTokenAfterPermission()
 }
 
 /** @param {'subscribeToAlerts' | 'subscribeToGlobalIntel'} callableName @param {(active: boolean) => void} setActive */

@@ -3,7 +3,7 @@ import { Bell, Loader2, Moon, Palette, Settings2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { AUDAZ_THEME_OPTIONS, mergeAudazSettings } from '../lib/audazSettings'
-import { clearUserFcmToken, registerUserPushNotifications } from '../lib/fcm'
+import { clearUserFcmToken, getPushRegistrationErrorMessage, registerUserPushNotifications } from '../lib/fcm'
 import { emitFirebaseError } from '../lib/firebaseErrorBus'
 import {
   playNotificationSound,
@@ -160,14 +160,18 @@ export default function SettingsPanel({ className = '' }) {
   const { settings, loading, saving, ready, updateSettings, setTheme } = useTheme()
   const [draft, setDraft] = useState(settings)
   const [saveStatus, setSaveStatus] = useState(/** @type {SaveStatus} */ ('idle'))
+  const [pushRegistering, setPushRegistering] = useState(false)
+  const [pushError, setPushError] = useState('')
 
   const draftRef = useRef(settings)
   const hideSavedTimerRef = useRef(/** @type {ReturnType<typeof setTimeout> | undefined} */ (undefined))
   const persistRef = useRef(/** @type {(next: AudazUserSettings) => Promise<void>} */ (async () => {}))
+  const settingsSyncBlockedRef = useRef(false)
 
   draftRef.current = draft
 
   useEffect(() => {
+    if (settingsSyncBlockedRef.current) return
     setDraft(settings)
     draftRef.current = settings
   }, [settings])
@@ -248,24 +252,37 @@ export default function SettingsPanel({ className = '' }) {
   const handlePushToggle = useCallback(
     async (next) => {
       const uid = user?.uid
-      if (!uid) return
+      if (!uid || pushRegistering) return
+
+      setPushError('')
 
       if (next) {
-        handlePatch({ notifications: { push: true } })
-        const result = await registerUserPushNotifications(uid)
-        if (!result.ok) {
-          handlePatch({ notifications: { push: false } })
-        }
-      } else {
-        handlePatch({ notifications: { push: false } })
+        settingsSyncBlockedRef.current = true
+        setPushRegistering(true)
         try {
-          await clearUserFcmToken(uid)
+          const result = await registerUserPushNotifications(uid)
+          if (result.ok) {
+            handlePatch({ notifications: { push: true } })
+          } else {
+            setPushError(getPushRegistrationErrorMessage(result.reason))
+          }
         } catch {
-          /* sessiz */
+          setPushError(getPushRegistrationErrorMessage('error'))
+        } finally {
+          settingsSyncBlockedRef.current = false
+          setPushRegistering(false)
         }
+        return
+      }
+
+      handlePatch({ notifications: { push: false } })
+      try {
+        await clearUserFcmToken(uid)
+      } catch {
+        /* sessiz */
       }
     },
-    [handlePatch, user?.uid],
+    [handlePatch, pushRegistering, user?.uid],
   )
 
   const handleThemeChange = useCallback(
@@ -292,7 +309,7 @@ export default function SettingsPanel({ className = '' }) {
     [clearSavedHideTimer, saveStatus, scheduleSavedHide, setTheme],
   )
 
-  const controlsDisabled = saving || saveStatus === 'saving'
+  const controlsDisabled = saving || saveStatus === 'saving' || pushRegistering
 
   if (loading) {
     return (
@@ -420,13 +437,31 @@ export default function SettingsPanel({ className = '' }) {
           />
           <HudToggle
             label="Push bildirimleri"
-            hint="Site kapalıyken tarayıcı bildirimi (izin gerekir)"
+            hint={
+              pushRegistering
+                ? 'Tarayıcı izni ve FCM token alınıyor…'
+                : 'Site kapalıyken tarayıcı bildirimi (izin gerekir)'
+            }
             enabled={draft.notifications.push}
             disabled={controlsDisabled}
             onChange={(next) => {
               void handlePushToggle(next)
             }}
           />
+          {pushRegistering ? (
+            <p className="flex items-center gap-2 font-mono-technical text-[9px] uppercase tracking-wide text-amber-400/80">
+              <Loader2 className="size-3 animate-spin" aria-hidden />
+              Push etkinleştiriliyor…
+            </p>
+          ) : null}
+          {pushError ? (
+            <p
+              role="alert"
+              className="rounded border border-red-500/35 bg-red-950/25 px-3 py-2 font-mono-technical text-[10px] leading-relaxed text-red-300/95"
+            >
+              {pushError}
+            </p>
+          ) : null}
         </div>
 
         <AutoSaveStatusIndicator status={saveStatus} />
