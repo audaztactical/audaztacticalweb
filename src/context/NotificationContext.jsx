@@ -49,17 +49,24 @@ export function NotificationProvider({ children }) {
     setLoading(true)
     const unsub = subscribeNotifications(
       uid,
-      (rows) => {
+      (rows, snap) => {
         if (initialSnapshotRef.current) {
-          initialSnapshotRef.current = false
           knownIdsRef.current = new Set(rows.map((row) => row.id))
           setNotifications(rows)
           setLoading(false)
+
+          // Cache boş → sunucu dolu geçişinde false positive ses önleme
+          if (!snap.metadata.fromCache) {
+            initialSnapshotRef.current = false
+          }
           return
         }
 
-        const incoming = rows.filter((row) => !knownIdsRef.current.has(row.id))
-        if (incoming.some((row) => !row.isRead)) {
+        const hasNewUnread = snap
+          .docChanges()
+          .some((change) => change.type === 'added' && change.doc.data().isRead !== true)
+
+        if (hasNewUnread) {
           playNotificationSound()
         }
 

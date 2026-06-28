@@ -444,7 +444,7 @@ function isMissingIndexError(err) {
  * Composite index hazır değilse yalnızca where sorgusu + istemci sıralaması kullanır.
  *
  * @param {string} recipientId
- * @param {(rows: AppNotification[]) => void} onNext
+ * @param {(rows: AppNotification[], snap: import('firebase/firestore').QuerySnapshot) => void} onNext
  * @param {(err: unknown) => void} [onError]
  * @param {number} [maxDocs=40]
  * @returns {() => void}
@@ -462,7 +462,7 @@ export function subscribeNotifications(recipientId, onNext, onError, maxDocs = 4
   }
 
   const apply = (/** @type {import('firebase/firestore').QuerySnapshot} */ snap) => {
-    onNext(mapAndSortNotifications(snap, maxDocs))
+    onNext(mapAndSortNotifications(snap, maxDocs), snap)
   }
 
   const indexedQ = query(
