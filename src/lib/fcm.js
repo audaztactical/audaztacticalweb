@@ -1,5 +1,13 @@
 import { getMessaging, getToken, isSupported, onMessage } from 'firebase/messaging'
-import { deleteField, doc, serverTimestamp, updateDoc } from 'firebase/firestore'
+import {
+  arrayRemove,
+  arrayUnion,
+  deleteField,
+  doc,
+  getDoc,
+  serverTimestamp,
+  updateDoc,
+} from 'firebase/firestore'
 import { getAudazFunctions } from './cloudFunctions'
 import { httpsCallable } from 'firebase/functions'
 import { getAudazApp, db, firebaseConfig, isFirebaseConfigured } from './firebase'
@@ -8,6 +16,9 @@ export const EARLY_WARNINGS_STORAGE_KEY = 'audaz_early_warnings_active'
 export const GLOBAL_INTEL_STORAGE_KEY = 'audaz_global_intel_active'
 
 const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY
+
+/** @type {string | null} */
+let cachedDeviceFcmToken = null
 
 /**
  * projectId eksik stale app instance'larını önler.
@@ -85,27 +96,70 @@ async function ensureMessagingServiceWorker() {
 }
 
 /**
+ * @returns {Promise<string | null>}
+ */
+async function readLocalFcmToken() {
+  if (!VAPID_KEY || !(await isSupported())) return null
+  try {
+    const registration = await ensureMessagingServiceWorker()
+    const messaging = getAudazMessaging()
+    if (!messaging) return null
+    const token = await getToken(messaging, {
+      vapidKey: VAPID_KEY,
+      serviceWorkerRegistration: registration,
+    })
+    if (token) cachedDeviceFcmToken = token
+    return token || null
+  } catch {
+    return cachedDeviceFcmToken
+  }
+}
+
+/**
  * @param {string} uid
  * @param {string} token
  */
 export async function saveUserFcmToken(uid, token) {
   if (!uid || !token || !isFirebaseConfigured() || !db) return false
-  await updateDoc(doc(db, 'users', uid), {
-    fcmToken: token,
+
+  cachedDeviceFcmToken = token
+  const userRef = doc(db, 'users', uid)
+  const snap = await getDoc(userRef)
+  const legacyToken =
+    typeof snap.data()?.fcmToken === 'string' ? snap.data().fcmToken.trim() : ''
+
+  /** @type {Record<string, unknown>} */
+  const updates = {
+    fcmTokens: legacyToken && legacyToken !== token ? arrayUnion(token, legacyToken) : arrayUnion(token),
     fcmTokenUpdatedAt: serverTimestamp(),
-  })
+    fcmToken: deleteField(),
+  }
+
+  await updateDoc(userRef, updates)
   return true
 }
 
 /**
+ * Mevcut cihazın FCM token'ını fcmTokens dizisinden kaldırır.
  * @param {string} uid
  */
 export async function clearUserFcmToken(uid) {
   if (!uid || !isFirebaseConfigured() || !db) return false
-  await updateDoc(doc(db, 'users', uid), {
+
+  const token = cachedDeviceFcmToken || (await readLocalFcmToken())
+  const userRef = doc(db, 'users', uid)
+
+  /** @type {Record<string, unknown>} */
+  const updates = {
     fcmToken: deleteField(),
     fcmTokenUpdatedAt: serverTimestamp(),
-  })
+  }
+
+  if (token) {
+    updates.fcmTokens = arrayRemove(token)
+  }
+
+  await updateDoc(userRef, updates)
   return true
 }
 
@@ -126,13 +180,7 @@ export async function syncUserFcmTokenIfPermitted(uid) {
   if (!(await isSupported())) return { ok: false, reason: 'not_supported' }
 
   try {
-    const registration = await ensureMessagingServiceWorker()
-    const messaging = getAudazMessaging()
-    if (!messaging) return { ok: false, reason: 'not_configured' }
-    const token = await getToken(messaging, {
-      vapidKey: VAPID_KEY,
-      serviceWorkerRegistration: registration,
-    })
+    const token = await readLocalFcmToken()
     if (!token) return { ok: false, reason: 'no_token' }
     await saveUserFcmToken(uid, token)
     return { ok: true, token }
@@ -142,7 +190,7 @@ export async function syncUserFcmTokenIfPermitted(uid) {
 }
 
 /**
- * Kullanıcı etkileşimi sonrası izin iste, token al ve users/{uid}.fcmToken'a kaydet.
+ * Kullanıcı etkileşimi sonrası izin iste, token al ve users/{uid}.fcmTokens'a kaydet.
  * @param {string} uid
  */
 export async function registerUserPushNotifications(uid) {
@@ -296,14 +344,7 @@ async function acquireFcmTokenAfterPermission() {
   if (!(await isSupported())) return { ok: false, reason: 'not_supported' }
 
   try {
-    const registration = await ensureMessagingServiceWorker()
-    const messaging = getAudazMessaging()
-    if (!messaging) return { ok: false, reason: 'not_configured' }
-    const token = await getToken(messaging, {
-      vapidKey: VAPID_KEY,
-      serviceWorkerRegistration: registration,
-    })
-
+    const token = await readLocalFcmToken()
     if (!token) return { ok: false, reason: 'no_token' }
     if (import.meta.env.DEV) console.info('[FCM · token]', fingerprint(token))
     return { ok: true, token }

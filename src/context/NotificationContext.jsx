@@ -6,7 +6,6 @@ import {
   markAsRead,
   subscribeNotifications,
 } from '../services/notificationService'
-import { playNotificationSound } from '../lib/notificationSound'
 
 /** @typedef {import('../services/notificationService').AppNotification} AppNotification */
 
@@ -60,14 +59,6 @@ export function NotificationProvider({ children }) {
             initialSnapshotRef.current = false
           }
           return
-        }
-
-        const hasNewUnread = snap
-          .docChanges()
-          .some((change) => change.type === 'added' && change.doc.data().isRead !== true)
-
-        if (hasNewUnread) {
-          playNotificationSound()
         }
 
         knownIdsRef.current = new Set(rows.map((row) => row.id))

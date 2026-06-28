@@ -139,7 +139,15 @@ if (!firebaseConfig.projectId || !firebaseConfig.apiKey || !firebaseConfig.appId
 
     event.waitUntil(
       clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-        for (const client of clientList) {
+        const sameOriginClients = clientList.filter((client) => {
+          try {
+            return new URL(client.url).origin === self.location.origin;
+          } catch {
+            return false;
+          }
+        });
+
+        for (const client of sameOriginClients) {
           if ('focus' in client) {
             if ('navigate' in client) {
               return client.navigate(absoluteUrl).then(() => client.focus());
@@ -148,6 +156,7 @@ if (!firebaseConfig.projectId || !firebaseConfig.apiKey || !firebaseConfig.appId
             return client;
           }
         }
+
         if (clients.openWindow) {
           return clients.openWindow(absoluteUrl);
         }

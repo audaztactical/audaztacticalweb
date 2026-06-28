@@ -11,16 +11,8 @@ import {
   Megaphone,
   Target,
   UserPlus,
-  Volume2,
-  VolumeX,
 } from 'lucide-react'
 import { useNotifications } from '../../context/NotificationContext'
-import { useTheme } from '../../contexts/ThemeContext'
-import {
-  playNotificationSound,
-  setNotificationSoundEnabled,
-  unlockNotificationAudio,
-} from '../../lib/notificationSound'
 import {
   buildNotificationNavigationTarget,
   formatNotificationTime,
@@ -43,8 +35,6 @@ const TYPE_META = {
  */
 export default function NotificationDropdown() {
   const navigate = useNavigate()
-  const { settings, updateSettings } = useTheme()
-  const soundEnabled = settings.notifications.sound
   const { notifications, unreadCount, loading, markNotificationRead, markAllNotificationsRead } =
     useNotifications()
 
@@ -126,14 +116,6 @@ export default function NotificationDropdown() {
     }
   }
 
-  const handleSoundToggle = () => {
-    unlockNotificationAudio()
-    const next = !soundEnabled
-    setNotificationSoundEnabled(next)
-    void updateSettings({ notifications: { sound: next } })
-    if (next) playNotificationSound()
-  }
-
   const handleMarkAll = async () => {
     if (unreadCount === 0 || markingAll) return
     setMarkingAll(true)
@@ -163,24 +145,6 @@ export default function NotificationDropdown() {
             [ BİLDİRİMLER ]
           </p>
           <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={handleSoundToggle}
-              className={[
-                'inline-flex size-7 items-center justify-center rounded border transition',
-                soundEnabled
-                  ? 'border-amber-500/40 text-amber-400 hover:border-amber-500/60'
-                  : 'border-zinc-700 text-zinc-500 hover:border-zinc-600',
-              ].join(' ')}
-              aria-label={soundEnabled ? 'Sesli uyarı açık' : 'Sesli uyarı kapalı'}
-              title={soundEnabled ? 'Sesli uyarı açık' : 'Sesli uyarı kapalı'}
-            >
-              {soundEnabled ? (
-                <Volume2 className="size-3.5" strokeWidth={2} aria-hidden />
-              ) : (
-                <VolumeX className="size-3.5" strokeWidth={2} aria-hidden />
-              )}
-            </button>
             <button
               type="button"
               onClick={handleMarkAll}
@@ -265,10 +229,7 @@ export default function NotificationDropdown() {
     <div ref={rootRef} className="relative z-[120]">
       <button
         type="button"
-        onClick={() => {
-          unlockNotificationAudio()
-          setOpen((v) => !v)
-        }}
+        onClick={() => setOpen((v) => !v)}
         className={[
           'relative inline-flex h-9 w-9 items-center justify-center rounded-lg border transition',
           open

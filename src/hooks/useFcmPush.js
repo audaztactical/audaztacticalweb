@@ -3,13 +3,11 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import {
   clearUserFcmToken,
-  setupForegroundMessageHandler,
   syncUserFcmTokenIfPermitted,
 } from '../lib/fcm'
-import { playNotificationSound } from '../lib/notificationSound'
 
 /**
- * Giriş sonrası FCM token senkronu (izin verilmişse) + foreground push handler.
+ * Giriş sonrası FCM token senkronu (izin verilmişse).
  * Push izni yalnızca Ayarlar toggle'ından istenir.
  */
 export function useFcmPush() {
@@ -39,10 +37,4 @@ export function useFcmPush() {
     return undefined
   }, [uid, ready, pushEnabled])
 
-  useEffect(() => {
-    if (!uid) return undefined
-    return setupForegroundMessageHandler(() => {
-      playNotificationSound()
-    })
-  }, [uid])
 }

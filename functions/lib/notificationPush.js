@@ -6,9 +6,19 @@ const VALID_TYPES = new Set([
   'LIKE',
   'COMMENT',
   'FRIEND_REQUEST',
+  'MESSAGE',
+  'DM',
   'TRAINING',
+  'INTEL',
+  'NEWS',
+  'FORUM_POST',
   'ACADEMY',
   'SYSTEM',
+])
+
+const INVALID_TOKEN_CODES = new Set([
+  'messaging/registration-token-not-registered',
+  'messaging/invalid-registration-token',
 ])
 
 /**
@@ -17,7 +27,70 @@ const VALID_TYPES = new Set([
  */
 function normalizeLink(link) {
   const trimmed = String(link ?? '').trim()
-  return trimmed || '/dashboard'
+  if (!trimmed) return '/dashboard'
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed
+  return trimmed.startsWith('/') ? trimmed : `/${trimmed}`
+}
+
+/**
+ * Push tıklama yönlendirmesi — data.link öncelikli, tip bazlı yedek.
+ * @param {string} type
+ * @param {Record<string, unknown>} data
+ * @returns {string}
+ */
+function resolvePushLink(type, data) {
+  const storedLink = String(data.link ?? '').trim()
+
+  switch (type) {
+    case 'LIKE':
+    case 'COMMENT':
+      return normalizeLink(storedLink || '/forum')
+    case 'FRIEND_REQUEST':
+      return normalizeLink(storedLink || '/profil')
+    case 'MESSAGE':
+    case 'DM':
+      return normalizeLink(storedLink || '/mesajlar')
+    case 'TRAINING':
+      if (storedLink.includes('sector=grup-egitimi')) return normalizeLink(storedLink)
+      return '/antrenman?sector=grup-egitimi'
+    case 'INTEL':
+    case 'NEWS':
+      return '/istihbarat'
+    case 'FORUM_POST':
+      return normalizeLink(storedLink || '/forum')
+    case 'ACADEMY':
+    case 'SYSTEM':
+      return '/dashboard'
+    default:
+      return normalizeLink(storedLink)
+  }
+}
+
+/**
+ * @param {unknown} userData
+ * @returns {string[]}
+ */
+function collectFcmTokens(userData) {
+  if (!userData || typeof userData !== 'object') return []
+
+  /** @type {string[]} */
+  const tokens = []
+
+  if (Array.isArray(userData.fcmTokens)) {
+    for (const entry of userData.fcmTokens) {
+      if (typeof entry === 'string') {
+        const trimmed = entry.trim()
+        if (trimmed) tokens.push(trimmed)
+      }
+    }
+  }
+
+  if (typeof userData.fcmToken === 'string') {
+    const legacy = userData.fcmToken.trim()
+    if (legacy) tokens.push(legacy)
+  }
+
+  return [...new Set(tokens)]
 }
 
 /**
@@ -36,8 +109,10 @@ async function sendUserNotificationPush(snap, notificationId) {
   }
 
   const userSnap = await getFirestore().doc(`users/${recipientId}`).get()
-  const fcmToken = typeof userSnap.data()?.fcmToken === 'string' ? userSnap.data().fcmToken.trim() : ''
-  if (!fcmToken) {
+  const userData = userSnap.data()
+  const tokens = collectFcmTokens(userData)
+
+  if (tokens.length === 0) {
     return { sent: false, reason: 'no_token' }
   }
 
@@ -45,11 +120,11 @@ async function sendUserNotificationPush(snap, notificationId) {
   const type = VALID_TYPES.has(rawType) ? rawType : 'SYSTEM'
   const title = String(data.title ?? 'AUDAZ TACTICAL').trim() || 'AUDAZ TACTICAL'
   const message = String(data.message ?? '').trim()
-  const link = normalizeLink(data.link)
+  const link = resolvePushLink(type, data)
 
   try {
-    await getMessaging().send({
-      token: fcmToken,
+    const response = await getMessaging().sendEachForMulticast({
+      tokens,
       notification: {
         title,
         body: message,
@@ -72,30 +147,45 @@ async function sendUserNotificationPush(snap, notificationId) {
       },
     })
 
-    return { sent: true }
-  } catch (err) {
-    const code = err && typeof err === 'object' && 'code' in err ? String(err.code) : ''
-    if (
-      code === 'messaging/registration-token-not-registered' ||
-      code === 'messaging/invalid-registration-token'
-    ) {
+    const staleTokens = []
+    response.responses.forEach((result, index) => {
+      if (result.success) return
+      const code =
+        result.error && typeof result.error === 'object' && 'code' in result.error
+          ? String(result.error.code)
+          : ''
+      if (INVALID_TOKEN_CODES.has(code)) {
+        staleTokens.push(tokens[index])
+      }
+    })
+
+    if (staleTokens.length > 0) {
       try {
-        await getFirestore().doc(`users/${recipientId}`).update({
-          fcmToken: FieldValue.delete(),
-          fcmTokenUpdatedAt: FieldValue.serverTimestamp(),
-        })
+        await getFirestore()
+          .doc(`users/${recipientId}`)
+          .update({
+            fcmTokens: FieldValue.arrayRemove(...staleTokens),
+            fcmToken: FieldValue.delete(),
+            fcmTokenUpdatedAt: FieldValue.serverTimestamp(),
+          })
       } catch (cleanupErr) {
         logger.warn('Stale FCM token cleanup failed', { recipientId, cleanupErr })
       }
     }
 
+    return {
+      sent: response.successCount > 0,
+      successCount: response.successCount,
+      failureCount: response.failureCount,
+      staleTokensRemoved: staleTokens.length,
+    }
+  } catch (err) {
     logger.warn('User notification FCM failed', {
       notificationId,
       recipientId,
-      code,
       message: err instanceof Error ? err.message : String(err),
     })
-    return { sent: false, reason: code || 'fcm_error' }
+    return { sent: false, reason: 'fcm_error' }
   }
 }
 
@@ -116,4 +206,6 @@ async function onNotificationCreatedPushHandler(event) {
 module.exports = {
   sendUserNotificationPush,
   onNotificationCreatedPushHandler,
+  resolvePushLink,
+  collectFcmTokens,
 }

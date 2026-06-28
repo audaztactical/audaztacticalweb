@@ -5,11 +5,6 @@ import { useTheme } from '../contexts/ThemeContext'
 import { AUDAZ_THEME_OPTIONS, mergeAudazSettings } from '../lib/audazSettings'
 import { clearUserFcmToken, getPushRegistrationErrorMessage, registerUserPushNotifications } from '../lib/fcm'
 import { emitFirebaseError } from '../lib/firebaseErrorBus'
-import {
-  playNotificationSound,
-  setNotificationSoundEnabled,
-  unlockNotificationAudio,
-} from '../lib/notificationSound'
 
 /** @typedef {import('../lib/audazSettings').AudazUserSettings} AudazUserSettings */
 
@@ -239,16 +234,6 @@ export default function SettingsPanel({ className = '' }) {
     [handleChange],
   )
 
-  const handleSoundToggle = useCallback(
-    (next) => {
-      unlockNotificationAudio()
-      setNotificationSoundEnabled(next)
-      if (next) playNotificationSound()
-      handlePatch({ notifications: { sound: next } })
-    },
-    [handlePatch],
-  )
-
   const handlePushToggle = useCallback(
     async (next) => {
       const uid = user?.uid
@@ -428,13 +413,6 @@ export default function SettingsPanel({ className = '' }) {
               }}
             />
           ))}
-          <HudToggle
-            label="Sesli uyarı"
-            hint="Site açıkken yeni bildirimde kısa bip sesi"
-            enabled={draft.notifications.sound}
-            disabled={controlsDisabled}
-            onChange={handleSoundToggle}
-          />
           <HudToggle
             label="Push bildirimleri"
             hint={

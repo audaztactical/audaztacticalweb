@@ -21,7 +21,6 @@ import {
 import { db, isFirebaseConfigured } from '../lib/firebase'
 import { emitFirebaseError } from '../lib/firebaseErrorBus'
 import { safeOnSnapshot } from '../lib/firestoreSnapshot'
-import { setNotificationSoundEnabled } from '../lib/notificationSound'
 
 /** @typedef {import('../lib/audazSettings').AudazTheme} AudazTheme */
 /** @typedef {import('../lib/audazSettings').AudazUserSettings} AudazUserSettings */
@@ -103,7 +102,6 @@ export function ThemeProvider({ children }) {
       (snap) => {
         const raw = snap.exists() ? snap.data()?.settings : null
         const parsed = parseAudazSettings(raw)
-        setNotificationSoundEnabled(parsed.notifications.sound)
         setSettings(parsed)
         setLoading(false)
         setError(null)
@@ -139,9 +137,6 @@ export function ThemeProvider({ children }) {
       const merged = mergeAudazSettings(previous, patch)
 
       setSettings(merged)
-      if (patch.notifications?.sound !== undefined) {
-        setNotificationSoundEnabled(merged.notifications.sound)
-      }
       if (patch.theme) {
         applyRootThemeClass(audazThemeToCssClass(merged.theme))
         setThemeOverride(merged.theme)

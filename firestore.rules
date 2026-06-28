@@ -123,6 +123,14 @@ service cloud.firestore {
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastSeenAt', 'isOnline']);
     }
 
+    /** FCM cihaz token'ları — yalnızca fcmTokens / fcmTokenUpdatedAt / legacy fcmToken temizliği. */
+    function isOwnerFcmTokensOnlyUpdate(uid) {
+      return isOwnerUid(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'fcmTokens', 'fcmTokenUpdatedAt', 'fcmToken'
+        ]);
+    }
+
     match /users/{userId} {
       allow read: if isOwnerUid(userId)
         || isContentAdmin()
@@ -138,6 +146,7 @@ service cloud.firestore {
         || (isOwnerUid(userId) && !exists(/databases/$(database)/documents/users/$(userId)) && validselfRegistrationRole())
         || (isOwnerUid(userId) && isOwnerTermsAckOnly())
         || (isOwnerUid(userId) && isOwnerPresenceOnlyUpdate(userId))
+        || (isOwnerUid(userId) && isOwnerFcmTokensOnlyUpdate(userId))
         || (isOwnerUid(userId) && ownerPrivilegedFieldsUnchanged());
       allow delete: if false;
     }
