@@ -3,7 +3,7 @@ import { Bell, Loader2, Moon, Palette, Settings2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { AUDAZ_THEME_OPTIONS, mergeAudazSettings } from '../lib/audazSettings'
-import { clearUserFcmToken, getPushRegistrationErrorMessage, registerUserPushNotifications } from '../lib/fcm'
+import { clearUserFcmToken, getPushRegistrationErrorMessage, registerUserPushNotifications, syncPushTopicSubscriptions, syncUserFcmTokenIfPermitted } from '../lib/fcm'
 import { emitFirebaseError } from '../lib/firebaseErrorBus'
 
 /** @typedef {import('../lib/audazSettings').AudazUserSettings} AudazUserSettings */
@@ -248,6 +248,13 @@ export default function SettingsPanel({ className = '' }) {
           const result = await registerUserPushNotifications(uid)
           if (result.ok) {
             handlePatch({ notifications: { push: true } })
+            void syncUserFcmTokenIfPermitted(uid).then((tokenResult) => {
+              if (tokenResult.ok && tokenResult.token) {
+                void syncPushTopicSubscriptions(tokenResult.token, {
+                  intel: draftRef.current.notifications.intel !== false,
+                })
+              }
+            })
           } else {
             setPushError(getPushRegistrationErrorMessage(result.reason))
           }

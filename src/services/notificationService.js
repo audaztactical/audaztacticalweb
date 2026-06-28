@@ -12,7 +12,7 @@ import {
 import { db, isFirebaseConfigured } from '../lib/firebase'
 import { safeOnSnapshot, timestampToMs } from '../lib/firestoreSnapshot'
 
-/** @typedef {'LIKE' | 'COMMENT' | 'FRIEND_REQUEST' | 'TRAINING' | 'ACADEMY' | 'SYSTEM'} NotificationType */
+/** @typedef {'LIKE' | 'COMMENT' | 'FRIEND_REQUEST' | 'TRAINING' | 'ACADEMY' | 'SYSTEM' | 'MESSAGE' | 'INTEL' | 'FORUM_POST'} NotificationType */
 
 /**
  * @typedef {{
@@ -35,7 +35,24 @@ export const NOTIFICATION_TYPES = /** @type {const} */ ([
   'TRAINING',
   'ACADEMY',
   'SYSTEM',
+  'MESSAGE',
+  'INTEL',
+  'FORUM_POST',
 ])
+
+/**
+ * @param {string} text
+ * @param {number} [maxLen=60]
+ * @returns {string}
+ */
+export function previewNotificationText(text, maxLen = 60) {
+  const normalized = String(text ?? '')
+    .trim()
+    .replace(/\s+/g, ' ')
+  if (!normalized) return '…'
+  if (normalized.length <= maxLen) return normalized
+  return `${normalized.slice(0, Math.max(1, maxLen - 1))}…`
+}
 
 /**
  * Forum brifing detayına derin link.
@@ -198,6 +215,22 @@ export function resolveNotificationLink(item) {
 
   if (type === 'ACADEMY') {
     return '/akademi'
+  }
+
+  if (type === 'MESSAGE') {
+    if (storedLink) return storedLink
+    if (targetId) return buildMuhaberePeerLink(targetId)
+    return '/mesajlar'
+  }
+
+  if (type === 'INTEL') {
+    return '/istihbarat'
+  }
+
+  if (type === 'FORUM_POST') {
+    if (targetId) return buildForumPostLink(targetId)
+    if (postFromStoredLink) return buildForumPostLink(postFromStoredLink)
+    return storedLink || '/forum'
   }
 
   if (isGroupTrainingNotification(item)) {

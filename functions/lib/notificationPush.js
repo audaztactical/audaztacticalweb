@@ -2,20 +2,6 @@ const { getFirestore, FieldValue } = require('firebase-admin/firestore')
 const { getMessaging } = require('firebase-admin/messaging')
 const { logger } = require('firebase-functions')
 
-const VALID_TYPES = new Set([
-  'LIKE',
-  'COMMENT',
-  'FRIEND_REQUEST',
-  'MESSAGE',
-  'DM',
-  'TRAINING',
-  'INTEL',
-  'NEWS',
-  'FORUM_POST',
-  'ACADEMY',
-  'SYSTEM',
-])
-
 const INVALID_TOKEN_CODES = new Set([
   'messaging/registration-token-not-registered',
   'messaging/invalid-registration-token',
@@ -30,6 +16,16 @@ function normalizeLink(link) {
   if (!trimmed) return '/dashboard'
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed
   return trimmed.startsWith('/') ? trimmed : `/${trimmed}`
+}
+
+/**
+ * Firestore type alanını normalize eder; bilinmeyen tipler de push alır.
+ * @param {unknown} raw
+ * @returns {string}
+ */
+function normalizeNotificationType(raw) {
+  const type = String(raw ?? '').trim().toUpperCase()
+  return type || 'SYSTEM'
 }
 
 /**
@@ -73,24 +69,41 @@ function resolvePushLink(type, data) {
 function collectFcmTokens(userData) {
   if (!userData || typeof userData !== 'object') return []
 
-  /** @type {string[]} */
-  const tokens = []
+  /** @type {Set<string>} */
+  const tokenSet = new Set()
 
   if (Array.isArray(userData.fcmTokens)) {
     for (const entry of userData.fcmTokens) {
       if (typeof entry === 'string') {
         const trimmed = entry.trim()
-        if (trimmed) tokens.push(trimmed)
+        if (trimmed) tokenSet.add(trimmed)
       }
     }
   }
 
   if (typeof userData.fcmToken === 'string') {
     const legacy = userData.fcmToken.trim()
-    if (legacy) tokens.push(legacy)
+    if (legacy && !tokenSet.has(legacy)) {
+      tokenSet.add(legacy)
+    }
   }
 
-  return [...new Set(tokens)]
+  return [...tokenSet]
+}
+
+/**
+ * FCM data alanı yalnızca string kabul eder.
+ * @param {Record<string, unknown>} fields
+ * @returns {Record<string, string>}
+ */
+function toFcmDataPayload(fields) {
+  /** @type {Record<string, string>} */
+  const data = {}
+  for (const [key, value] of Object.entries(fields)) {
+    if (value === undefined || value === null) continue
+    data[key] = String(value)
+  }
+  return data
 }
 
 /**
@@ -116,30 +129,25 @@ async function sendUserNotificationPush(snap, notificationId) {
     return { sent: false, reason: 'no_token' }
   }
 
-  const rawType = typeof data.type === 'string' ? data.type : 'SYSTEM'
-  const type = VALID_TYPES.has(rawType) ? rawType : 'SYSTEM'
+  const type = normalizeNotificationType(data.type)
   const title = String(data.title ?? 'AUDAZ TACTICAL').trim() || 'AUDAZ TACTICAL'
   const message = String(data.message ?? '').trim()
   const link = resolvePushLink(type, data)
 
   try {
+    // Yalnızca data payload — notification alanı SW onBackgroundMessage ile çift gösterim üretir.
     const response = await getMessaging().sendEachForMulticast({
       tokens,
-      notification: {
-        title,
-        body: message,
-      },
-      data: {
+      data: toFcmDataPayload({
         type,
         title,
         message,
         link,
         notificationId: String(notificationId),
-      },
+      }),
       webpush: {
-        notification: {
-          icon: '/logo.png',
-          badge: '/logo.png',
+        headers: {
+          Urgency: 'high',
         },
         fcmOptions: {
           link: link.startsWith('http') ? link : undefined,
@@ -175,6 +183,8 @@ async function sendUserNotificationPush(snap, notificationId) {
 
     return {
       sent: response.successCount > 0,
+      type,
+      tokenCount: tokens.length,
       successCount: response.successCount,
       failureCount: response.failureCount,
       staleTokensRemoved: staleTokens.length,
@@ -183,9 +193,10 @@ async function sendUserNotificationPush(snap, notificationId) {
     logger.warn('User notification FCM failed', {
       notificationId,
       recipientId,
+      type,
       message: err instanceof Error ? err.message : String(err),
     })
-    return { sent: false, reason: 'fcm_error' }
+    return { sent: false, reason: 'fcm_error', type }
   }
 }
 
@@ -208,4 +219,6 @@ module.exports = {
   onNotificationCreatedPushHandler,
   resolvePushLink,
   collectFcmTokens,
+  normalizeNotificationType,
+  toFcmDataPayload,
 }

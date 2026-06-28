@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import {
   clearUserFcmToken,
+  syncPushTopicSubscriptions,
   syncUserFcmTokenIfPermitted,
 } from '../lib/fcm'
 
@@ -14,6 +15,7 @@ export function useFcmPush() {
   const { user } = useAuth()
   const { settings, ready } = useTheme()
   const pushEnabled = settings.notifications.push === true
+  const intelEnabled = settings.notifications.intel !== false
   const uid = user?.uid ?? ''
   const prevPushEnabledRef = useRef(pushEnabled)
 
@@ -31,10 +33,14 @@ export function useFcmPush() {
     }
 
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-      void syncUserFcmTokenIfPermitted(uid)
+      void syncUserFcmTokenIfPermitted(uid).then((result) => {
+        if (result.ok && result.token) {
+          void syncPushTopicSubscriptions(result.token, { intel: intelEnabled })
+        }
+      })
     }
 
     return undefined
-  }, [uid, ready, pushEnabled])
+  }, [uid, ready, pushEnabled, intelEnabled])
 
 }

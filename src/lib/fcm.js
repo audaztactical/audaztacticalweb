@@ -408,3 +408,35 @@ export function enableEarlyWarnings() {
 export function enableGlobalIntel() {
   return subscribeFcmTopic('subscribeToGlobalIntel', setGlobalIntelActive)
 }
+
+/**
+ * Mevcut FCM token ile intel_updates / forum_updates topic aboneliklerini günceller.
+ * @param {string} token
+ * @param {{ intel?: boolean }} [options]
+ */
+export async function syncPushTopicSubscriptions(token, options = {}) {
+  const fcmToken = String(token ?? '').trim()
+  const functions = getAudazFunctions()
+  if (!fcmToken || !functions) return { ok: false, reason: 'not_configured' }
+
+  /** @type {Array<'subscribeToIntelUpdates' | 'subscribeToForumUpdates'>} */
+  const callables = ['subscribeToForumUpdates']
+  if (options.intel !== false) {
+    callables.push('subscribeToIntelUpdates')
+  }
+
+  try {
+    await Promise.all(
+      callables.map(async (callableName) => {
+        const subscribe = httpsCallable(functions, callableName)
+        const result = await subscribe({ token: fcmToken })
+        if (!result.data || result.data.success !== true) {
+          throw new Error(`${callableName}_failed`)
+        }
+      }),
+    )
+    return { ok: true }
+  } catch {
+    return { ok: false, reason: 'subscribe_failed' }
+  }
+}

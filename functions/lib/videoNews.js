@@ -1,7 +1,7 @@
 const Parser = require('rss-parser')
 const { getFirestore, FieldValue, Timestamp } = require('firebase-admin/firestore')
-const { getMessaging } = require('firebase-admin/messaging')
 const { docIdFromUrl } = require('./intelFeed')
+const { broadcastIntelNotification } = require('./broadcastNotifications')
 
 /** @typedef {{ name: string, url: string }} VideoNewsChannel */
 
@@ -187,20 +187,13 @@ async function sendGlobalIntelVideoAlert(newVideosCount) {
   }
 
   try {
-    const messageId = await getMessaging().send({
-      notification: {
-        title: '⚠️ KÜRESEL HABER AĞI',
-        body: `Sisteme ${newVideosCount} adet yeni taktiksel video analizi eklendi.`,
-      },
-      topic: FCM_TOPIC_GLOBAL_INTEL,
-      data: {
-        type: 'VIDEO_INTEL',
-        count: String(newVideosCount),
-      },
+    return broadcastIntelNotification({
+      title: 'Yeni İstihbarat',
+      message: `Küresel Haber Ağı'na ${newVideosCount} yeni video eklendi.`,
+      link: '/istihbarat',
     })
-    return { sent: true, messageId }
   } catch (err) {
-    console.error('[VIDEO BOT] FCM global_intel gönderimi başarısız:', err)
+    console.error('[VIDEO BOT] intel_updates bildirimi başarısız:', err)
     return { sent: false, reason: 'fcm_error' }
   }
 }

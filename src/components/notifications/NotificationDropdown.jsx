@@ -9,6 +9,8 @@ import {
   Loader2,
   MessageSquare,
   Megaphone,
+  Newspaper,
+  Radio,
   Target,
   UserPlus,
 } from 'lucide-react'
@@ -25,7 +27,10 @@ const TYPE_META = {
   LIKE: { icon: Heart, accent: 'text-amber-400 border-amber-500/40 bg-amber-950/30' },
   COMMENT: { icon: MessageSquare, accent: 'text-lime-400 border-lime-500/40 bg-lime-950/30' },
   FRIEND_REQUEST: { icon: UserPlus, accent: 'text-sky-400 border-sky-500/40 bg-sky-950/30' },
+  MESSAGE: { icon: MessageSquare, accent: 'text-cyan-400 border-cyan-500/40 bg-cyan-950/30' },
   TRAINING: { icon: Target, accent: 'text-orange-400 border-orange-500/40 bg-orange-950/30' },
+  INTEL: { icon: Radio, accent: 'text-rose-400 border-rose-500/40 bg-rose-950/30' },
+  FORUM_POST: { icon: Newspaper, accent: 'text-indigo-400 border-indigo-500/40 bg-indigo-950/30' },
   ACADEMY: { icon: BookOpen, accent: 'text-violet-400 border-violet-500/40 bg-violet-950/30' },
   SYSTEM: { icon: Megaphone, accent: 'text-zinc-300 border-zinc-600/40 bg-zinc-900/50' },
 }

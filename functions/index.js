@@ -3,8 +3,9 @@ const { onCall } = require('firebase-functions/v2/https')
 const { onSchedule } = require('firebase-functions/v2/scheduler')
 const { onDocumentCreated } = require('firebase-functions/v2/firestore')
 const { logger } = require('firebase-functions')
-const { subscribeToAlertsHandler, subscribeToGlobalIntelHandler } = require('./lib/fcmTopics')
+const { subscribeToAlertsHandler, subscribeToGlobalIntelHandler, subscribeToIntelUpdatesHandler, subscribeToForumUpdatesHandler } = require('./lib/fcmTopics')
 const { onNotificationCreatedPushHandler } = require('./lib/notificationPush')
+const { onNewsFeedItemCreatedHandler, onForumPostCreatedHandler } = require('./lib/broadcastNotifications')
 const { runIntelFeedIngest } = require('./lib/intelFeed')
 const { runLocalAlertsIngest } = require('./lib/localAlerts')
 const { runVideoNewsIngest } = require('./lib/videoNews')
@@ -89,6 +90,28 @@ exports.subscribeToGlobalIntel = onCall(
     timeoutSeconds: 30,
   },
   subscribeToGlobalIntelHandler,
+)
+
+/**
+ * Callable: client FCM token → intel_updates topic subscription.
+ */
+exports.subscribeToIntelUpdates = onCall(
+  {
+    memory: '128MiB',
+    timeoutSeconds: 30,
+  },
+  subscribeToIntelUpdatesHandler,
+)
+
+/**
+ * Callable: client FCM token → forum_updates topic subscription.
+ */
+exports.subscribeToForumUpdates = onCall(
+  {
+    memory: '128MiB',
+    timeoutSeconds: 30,
+  },
+  subscribeToForumUpdatesHandler,
 )
 
 /**
@@ -238,4 +261,28 @@ exports.onNotificationCreatedPush = onDocumentCreated(
     timeoutSeconds: 30,
   },
   onNotificationCreatedPushHandler,
+)
+
+/**
+ * Firestore trigger: news_feed/{itemId} oluşturulunca intel_updates topic + in-app fan-out.
+ */
+exports.onNewsFeedItemCreated = onDocumentCreated(
+  {
+    document: 'news_feed/{itemId}',
+    memory: '512MiB',
+    timeoutSeconds: 120,
+  },
+  onNewsFeedItemCreatedHandler,
+)
+
+/**
+ * Firestore trigger: forum_posts/{postId} oluşturulunca forum_updates topic + in-app fan-out.
+ */
+exports.onForumPostCreated = onDocumentCreated(
+  {
+    document: 'forum_posts/{postId}',
+    memory: '512MiB',
+    timeoutSeconds: 120,
+  },
+  onForumPostCreatedHandler,
 )

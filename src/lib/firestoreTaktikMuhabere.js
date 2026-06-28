@@ -23,14 +23,68 @@ import {
 import {
   buildMuhaberePeerLink,
   buildMuhabereRequestsLink,
+  previewNotificationText,
   sendNotificationSafe,
 } from '../services/notificationService'
+import { fetchUserProfile } from './firestoreUsers'
 import { assertMuhabereContentAllowed } from './muhabereContentFilter'
 import { buildConversationId, mapConversationSummaryDoc } from './muhabereConversation'
 import { db, isFirebaseConfigured } from './firebase'
 import { safeOnSnapshot, timestampToMs } from './firestoreSnapshot'
 
 export const MUHABERE_MESSAGE_PAGE_SIZE = 20
+
+/**
+ * DM / kanal mesajı sonrası alıcılara MESSAGE bildirimi (fire-and-forget).
+ * @param {{ senderId: string, recipientIds: string[], preview: string }} input
+ */
+async function notifyMuhabereMessageRecipients({ senderId, recipientIds, preview }) {
+  const from = String(senderId ?? '').trim()
+  const recipients = [
+    ...new Set(
+      recipientIds.map((id) => String(id ?? '').trim()).filter(Boolean),
+    ),
+  ].filter((id) => id !== from)
+
+  if (!from || recipients.length === 0) return
+
+  let callsign = 'OPERATÖR'
+  try {
+    const profile = await fetchUserProfile(from)
+    const label = String(profile?.callsign ?? '').trim()
+    if (label) callsign = label
+  } catch {
+    /* profil okunamazsa varsayılan callsign */
+  }
+
+  const messagePreview = previewNotificationText(preview, 60)
+
+  await Promise.all(
+    recipients.map((recipientId) =>
+      sendNotificationSafe({
+        recipientId,
+        senderId: from,
+        type: 'MESSAGE',
+        title: callsign,
+        message: messagePreview,
+        link: '/mesajlar',
+      }),
+    ),
+  )
+}
+
+/**
+ * @param {string} senderId
+ * @param {string[]} recipientIds
+ * @param {string} preview
+ */
+function queueMuhabereMessageNotifications(senderId, recipientIds, preview) {
+  void notifyMuhabereMessageRecipients({ senderId, recipientIds, preview }).catch((err) => {
+    if (import.meta.env.DEV) {
+      console.warn('[muhabere] MESSAGE bildirimi gönderilemedi:', err)
+    }
+  })
+}
 
 /** @typedef {{
  *   uid: string
@@ -1111,10 +1165,12 @@ export async function sendChatMessage({
       isBurn: true,
       burnTime: Math.max(3, Math.min(60, Number(burnTime) || 10)),
     })
+    queueMuhabereMessageNotifications(from, [to], body)
     return
   }
 
   await addDoc(collection(db, 'chats', cid, 'messages'), payload)
+  queueMuhabereMessageNotifications(from, [to], body)
 }
 
 /**
@@ -1385,6 +1441,16 @@ export async function sendChannelMessage({
 
   await addDoc(collection(db, 'channels', cid, 'messages'), payload)
   await markMuhabereChannelAsRead(from, cid, Date.now())
+
+  try {
+    const channelSnap = await getDoc(doc(db, 'channels', cid))
+    const members = Array.isArray(channelSnap.data()?.members)
+      ? channelSnap.data().members.map((member) => String(member ?? '').trim()).filter(Boolean)
+      : []
+    queueMuhabereMessageNotifications(from, members, body)
+  } catch {
+    /* kanal üyeleri okunamazsa bildirim atlanır */
+  }
 }
 
 /**
