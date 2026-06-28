@@ -5,6 +5,8 @@
  *   training: boolean
  *   intel: boolean
  *   academy: boolean
+ *   sound: boolean
+ *   push: boolean
  * }} AudazNotificationSettings */
 
 /** @typedef {{
@@ -20,6 +22,8 @@ export const DEFAULT_AUDAZ_SETTINGS = /** @type {AudazUserSettings} */ ({
     training: true,
     intel: true,
     academy: true,
+    sound: true,
+    push: false,
   },
 })
 
@@ -79,6 +83,14 @@ export function parseAudazSettings(raw) {
         typeof notificationsRaw.academy === 'boolean'
           ? notificationsRaw.academy
           : DEFAULT_AUDAZ_SETTINGS.notifications.academy,
+      sound:
+        typeof notificationsRaw.sound === 'boolean'
+          ? notificationsRaw.sound
+          : DEFAULT_AUDAZ_SETTINGS.notifications.sound,
+      push:
+        typeof notificationsRaw.push === 'boolean'
+          ? notificationsRaw.push
+          : DEFAULT_AUDAZ_SETTINGS.notifications.push,
     },
   }
 }
@@ -108,6 +120,8 @@ export function audazSettingsEqual(a, b) {
     a.notifications.muhabere === b.notifications.muhabere &&
     a.notifications.training === b.notifications.training &&
     a.notifications.intel === b.notifications.intel &&
-    a.notifications.academy === b.notifications.academy
+    a.notifications.academy === b.notifications.academy &&
+    a.notifications.sound === b.notifications.sound &&
+    a.notifications.push === b.notifications.push
   )
 }

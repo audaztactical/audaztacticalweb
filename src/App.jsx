@@ -14,6 +14,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute'
 import ResponsiveAppLayout from './layouts/ResponsiveAppLayout'
 import TacticalLoader from './components/TacticalLoader'
 import GoogleAuthRedirectHandler from './components/auth/GoogleAuthRedirectHandler'
+import FcmPushBootstrap from './components/notifications/FcmPushBootstrap'
 import ScrollToTop from './components/navigation/ScrollToTop'
 
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'))
@@ -43,6 +44,7 @@ export default function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
+      <FcmPushBootstrap />
       <NotificationProvider>
       <TcccAlertProvider>
         <FirebaseErrorProvider>

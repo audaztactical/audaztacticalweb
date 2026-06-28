@@ -49,16 +49,59 @@ firebase.initializeApp(${JSON.stringify(firebaseConfig, null, 2)});
 
 const messaging = firebase.messaging();
 
+function resolveNotificationUrl(data) {
+  const link = data && typeof data.link === 'string' ? data.link.trim() : '';
+  if (!link) return '/dashboard';
+  if (link.startsWith('http://') || link.startsWith('https://')) return link;
+  return link.startsWith('/') ? link : '/' + link;
+}
+
 messaging.onBackgroundMessage((payload) => {
-  const title = payload.notification?.title || '[ AUDAZ İKAZ ] SİSTEM UYARISI';
-  const body = payload.notification?.body || '';
+  const data = payload.data || {};
+  const title =
+    payload.notification?.title ||
+    (typeof data.title === 'string' ? data.title : '') ||
+    '[ AUDAZ ] BİLDİRİM';
+  const body =
+    payload.notification?.body ||
+    (typeof data.message === 'string' ? data.message : '') ||
+    '';
+  const link = resolveNotificationUrl(data);
+  const tag = data.notificationId || data.docId || data.type || 'audaz-notification';
+
   self.registration.showNotification(title, {
     body,
     icon: '/logo.png',
     badge: '/logo.png',
-    data: payload.data || {},
-    tag: payload.data?.docId || 'audaz-alert',
+    data: { ...data, link },
+    tag: String(tag),
   });
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = resolveNotificationUrl(event.notification?.data || {});
+  const absoluteUrl = targetUrl.startsWith('http')
+    ? targetUrl
+    : self.location.origin + targetUrl;
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if ('focus' in client) {
+          if ('navigate' in client) {
+            return client.navigate(absoluteUrl).then(() => client.focus());
+          }
+          client.focus();
+          return client;
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(absoluteUrl);
+      }
+      return undefined;
+    }),
+  );
 });
 `
 

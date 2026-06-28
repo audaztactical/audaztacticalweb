@@ -1,8 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Bell, Loader2, Moon, Palette, Settings2 } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import { AUDAZ_THEME_OPTIONS, mergeAudazSettings } from '../lib/audazSettings'
+import { clearUserFcmToken, registerUserPushNotifications } from '../lib/fcm'
 import { emitFirebaseError } from '../lib/firebaseErrorBus'
+import {
+  playNotificationSound,
+  setNotificationSoundEnabled,
+  unlockNotificationAudio,
+} from '../lib/notificationSound'
 
 /** @typedef {import('../lib/audazSettings').AudazUserSettings} AudazUserSettings */
 
@@ -149,6 +156,7 @@ function AutoSaveStatusIndicator({ status }) {
  * @param {{ className?: string }} [props]
  */
 export default function SettingsPanel({ className = '' }) {
+  const { user } = useAuth()
   const { settings, loading, saving, ready, updateSettings, setTheme } = useTheme()
   const [draft, setDraft] = useState(settings)
   const [saveStatus, setSaveStatus] = useState(/** @type {SaveStatus} */ ('idle'))
@@ -225,6 +233,39 @@ export default function SettingsPanel({ className = '' }) {
       handleChange(next)
     },
     [handleChange],
+  )
+
+  const handleSoundToggle = useCallback(
+    (next) => {
+      unlockNotificationAudio()
+      setNotificationSoundEnabled(next)
+      if (next) playNotificationSound()
+      handlePatch({ notifications: { sound: next } })
+    },
+    [handlePatch],
+  )
+
+  const handlePushToggle = useCallback(
+    async (next) => {
+      const uid = user?.uid
+      if (!uid) return
+
+      if (next) {
+        handlePatch({ notifications: { push: true } })
+        const result = await registerUserPushNotifications(uid)
+        if (!result.ok) {
+          handlePatch({ notifications: { push: false } })
+        }
+      } else {
+        handlePatch({ notifications: { push: false } })
+        try {
+          await clearUserFcmToken(uid)
+        } catch {
+          /* sessiz */
+        }
+      }
+    },
+    [handlePatch, user?.uid],
   )
 
   const handleThemeChange = useCallback(
@@ -370,6 +411,22 @@ export default function SettingsPanel({ className = '' }) {
               }}
             />
           ))}
+          <HudToggle
+            label="Sesli uyarı"
+            hint="Site açıkken yeni bildirimde kısa bip sesi"
+            enabled={draft.notifications.sound}
+            disabled={controlsDisabled}
+            onChange={handleSoundToggle}
+          />
+          <HudToggle
+            label="Push bildirimleri"
+            hint="Site kapalıyken tarayıcı bildirimi (izin gerekir)"
+            enabled={draft.notifications.push}
+            disabled={controlsDisabled}
+            onChange={(next) => {
+              void handlePushToggle(next)
+            }}
+          />
         </div>
 
         <AutoSaveStatusIndicator status={saveStatus} />

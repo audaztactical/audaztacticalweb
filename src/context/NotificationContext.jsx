@@ -1,11 +1,12 @@
 /* eslint-disable react-refresh/only-export-components -- provider + hook */
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from './AuthContext'
 import {
   markAllAsRead,
   markAsRead,
   subscribeNotifications,
 } from '../services/notificationService'
+import { playNotificationSound } from '../lib/notificationSound'
 
 /** @typedef {import('../services/notificationService').AppNotification} AppNotification */
 
@@ -30,6 +31,14 @@ export function NotificationProvider({ children }) {
   const [notifications, setNotifications] = useState(/** @type {AppNotification[]} */ ([]))
   const [loading, setLoading] = useState(true)
 
+  const knownIdsRef = useRef(/** @type {Set<string>} */ (new Set()))
+  const initialSnapshotRef = useRef(true)
+
+  useEffect(() => {
+    knownIdsRef.current = new Set()
+    initialSnapshotRef.current = true
+  }, [uid])
+
   useEffect(() => {
     if (!uid) {
       setNotifications([])
@@ -41,6 +50,20 @@ export function NotificationProvider({ children }) {
     const unsub = subscribeNotifications(
       uid,
       (rows) => {
+        if (initialSnapshotRef.current) {
+          initialSnapshotRef.current = false
+          knownIdsRef.current = new Set(rows.map((row) => row.id))
+          setNotifications(rows)
+          setLoading(false)
+          return
+        }
+
+        const incoming = rows.filter((row) => !knownIdsRef.current.has(row.id))
+        if (incoming.some((row) => !row.isRead)) {
+          playNotificationSound()
+        }
+
+        knownIdsRef.current = new Set(rows.map((row) => row.id))
         setNotifications(rows)
         setLoading(false)
       },

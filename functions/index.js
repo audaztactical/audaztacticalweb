@@ -1,8 +1,10 @@
 const { initializeApp } = require('firebase-admin/app')
 const { onCall } = require('firebase-functions/v2/https')
 const { onSchedule } = require('firebase-functions/v2/scheduler')
+const { onDocumentCreated } = require('firebase-functions/v2/firestore')
 const { logger } = require('firebase-functions')
 const { subscribeToAlertsHandler, subscribeToGlobalIntelHandler } = require('./lib/fcmTopics')
+const { onNotificationCreatedPushHandler } = require('./lib/notificationPush')
 const { runIntelFeedIngest } = require('./lib/intelFeed')
 const { runLocalAlertsIngest } = require('./lib/localAlerts')
 const { runVideoNewsIngest } = require('./lib/videoNews')
@@ -225,3 +227,15 @@ exports.triggerVideoNewsIngest = onCall(
  */
 exports.syncMuhabereChannelSummary = syncMuhabereChannelSummary
 exports.syncMuhabereDmSummary = syncMuhabereDmSummary
+
+/**
+ * Firestore trigger: notifications/{id} oluşturulunca alıcıya FCM push gönder.
+ */
+exports.onNotificationCreatedPush = onDocumentCreated(
+  {
+    document: 'notifications/{notificationId}',
+    memory: '256MiB',
+    timeoutSeconds: 30,
+  },
+  onNotificationCreatedPushHandler,
+)

@@ -1,7 +1,8 @@
-import { getMessaging, getToken, isSupported } from 'firebase/messaging'
+import { getMessaging, getToken, isSupported, onMessage } from 'firebase/messaging'
+import { deleteField, doc, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { getAudazFunctions } from './cloudFunctions'
 import { httpsCallable } from 'firebase/functions'
-import { app, firebaseConfig, isFirebaseConfigured } from './firebase'
+import { app, db, firebaseConfig, isFirebaseConfigured } from './firebase'
 
 export const EARLY_WARNINGS_STORAGE_KEY = 'audaz_early_warnings_active'
 export const GLOBAL_INTEL_STORAGE_KEY = 'audaz_global_intel_active'
@@ -60,16 +61,122 @@ export async function validateFcmConfig() {
 /**
  * @returns {Promise<ServiceWorkerRegistration>}
  */
+async function ensureMessagingServiceWorker() {
+  let registration = await navigator.serviceWorker.getRegistration('/')
+  if (!registration) {
+    registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+      scope: '/',
+    })
+  }
+  await registration.update()
+  await navigator.serviceWorker.ready
+  return registration
+}
+
+/**
+ * @returns {Promise<ServiceWorkerRegistration>}
+ */
 async function registerMessagingServiceWorker() {
   const existing = await navigator.serviceWorker.getRegistration('/')
   if (existing) await existing.unregister()
 
-  const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
-    scope: '/',
+  return ensureMessagingServiceWorker()
+}
+
+/**
+ * @param {string} uid
+ * @param {string} token
+ */
+export async function saveUserFcmToken(uid, token) {
+  if (!uid || !token || !isFirebaseConfigured() || !db) return false
+  await updateDoc(doc(db, 'users', uid), {
+    fcmToken: token,
+    fcmTokenUpdatedAt: serverTimestamp(),
   })
-  await registration.update()
-  await navigator.serviceWorker.ready
-  return registration
+  return true
+}
+
+/**
+ * @param {string} uid
+ */
+export async function clearUserFcmToken(uid) {
+  if (!uid || !isFirebaseConfigured() || !db) return false
+  await updateDoc(doc(db, 'users', uid), {
+    fcmToken: deleteField(),
+    fcmTokenUpdatedAt: serverTimestamp(),
+  })
+  return true
+}
+
+/**
+ * İzin verilmişse token al ve Firestore'a kaydet (izin istemez).
+ * @param {string} uid
+ */
+export async function syncUserFcmTokenIfPermitted(uid) {
+  if (!uid || !isFirebaseConfigured() || !app || !VAPID_KEY) {
+    return { ok: false, reason: 'not_configured' }
+  }
+  if (typeof window === 'undefined' || !('Notification' in window)) {
+    return { ok: false, reason: 'not_supported' }
+  }
+  if (Notification.permission !== 'granted') {
+    return { ok: false, reason: 'not_granted' }
+  }
+  if (!(await isSupported())) return { ok: false, reason: 'not_supported' }
+
+  try {
+    const registration = await ensureMessagingServiceWorker()
+    const messaging = getMessaging(app)
+    const token = await getToken(messaging, {
+      vapidKey: VAPID_KEY,
+      serviceWorkerRegistration: registration,
+    })
+    if (!token) return { ok: false, reason: 'no_token' }
+    await saveUserFcmToken(uid, token)
+    return { ok: true, token }
+  } catch {
+    return { ok: false, reason: 'error' }
+  }
+}
+
+/**
+ * Kullanıcı etkileşimi sonrası izin iste, token al ve users/{uid}.fcmToken'a kaydet.
+ * @param {string} uid
+ */
+export async function registerUserPushNotifications(uid) {
+  const tokenResult = await requestPushPermissionAndToken()
+  if (!tokenResult.ok || !tokenResult.token) {
+    return { ok: false, reason: tokenResult.reason ?? 'no_token' }
+  }
+  try {
+    await saveUserFcmToken(uid, tokenResult.token)
+    return { ok: true, token: tokenResult.token }
+  } catch {
+    return { ok: false, reason: 'save_failed' }
+  }
+}
+
+/**
+ * Uygulama açıkken gelen FCM mesajları.
+ * @param {(payload: import('firebase/messaging').MessagePayload) => void} onPayload
+ * @returns {(() => void) | undefined}
+ */
+export function setupForegroundMessageHandler(onPayload) {
+  if (!isFirebaseConfigured() || !app || typeof window === 'undefined') return undefined
+
+  let unsubscribe = () => {}
+
+  void isSupported().then((supported) => {
+    if (!supported) return
+    const messaging = getMessaging(app)
+    unsubscribe = onMessage(messaging, (payload) => {
+      onPayload(payload)
+    })
+  })
+
+  return () => {
+    unsubscribe()
+  }
 }
 
 export function isEarlyWarningsActive() {
