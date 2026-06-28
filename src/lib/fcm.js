@@ -2,12 +2,22 @@ import { getMessaging, getToken, isSupported, onMessage } from 'firebase/messagi
 import { deleteField, doc, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { getAudazFunctions } from './cloudFunctions'
 import { httpsCallable } from 'firebase/functions'
-import { app, db, firebaseConfig, isFirebaseConfigured } from './firebase'
+import { getAudazApp, db, firebaseConfig, isFirebaseConfigured } from './firebase'
 
 export const EARLY_WARNINGS_STORAGE_KEY = 'audaz_early_warnings_active'
 export const GLOBAL_INTEL_STORAGE_KEY = 'audaz_global_intel_active'
 
 const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY
+
+/**
+ * projectId eksik stale app instance'larını önler.
+ * @returns {import('firebase/messaging').Messaging | null}
+ */
+function getAudazMessaging() {
+  const firebaseApp = getAudazApp()
+  if (!firebaseApp?.options?.projectId) return null
+  return getMessaging(firebaseApp)
+}
 
 /** @param {string | undefined} key */
 function fingerprint(key) {
@@ -46,6 +56,7 @@ export async function validateFcmConfig() {
   const report = {
     projectId: firebaseConfig.projectId,
     appId: firebaseConfig.appId,
+    appInstanceProjectId: getAudazApp()?.options?.projectId ?? '(yok)',
     messagingSenderId: firebaseConfig.messagingSenderId,
     envApiKey: fingerprint(envKey),
     swApiKey: fingerprint(swKey ?? undefined),
@@ -71,16 +82,6 @@ async function ensureMessagingServiceWorker() {
   await registration.update()
   await navigator.serviceWorker.ready
   return registration
-}
-
-/**
- * @returns {Promise<ServiceWorkerRegistration>}
- */
-async function registerMessagingServiceWorker() {
-  const existing = await navigator.serviceWorker.getRegistration('/')
-  if (existing) await existing.unregister()
-
-  return ensureMessagingServiceWorker()
 }
 
 /**
@@ -113,7 +114,7 @@ export async function clearUserFcmToken(uid) {
  * @param {string} uid
  */
 export async function syncUserFcmTokenIfPermitted(uid) {
-  if (!uid || !isFirebaseConfigured() || !app || !VAPID_KEY) {
+  if (!uid || !isFirebaseConfigured() || !getAudazApp() || !VAPID_KEY) {
     return { ok: false, reason: 'not_configured' }
   }
   if (typeof window === 'undefined' || !('Notification' in window)) {
@@ -126,7 +127,8 @@ export async function syncUserFcmTokenIfPermitted(uid) {
 
   try {
     const registration = await ensureMessagingServiceWorker()
-    const messaging = getMessaging(app)
+    const messaging = getAudazMessaging()
+    if (!messaging) return { ok: false, reason: 'not_configured' }
     const token = await getToken(messaging, {
       vapidKey: VAPID_KEY,
       serviceWorkerRegistration: registration,
@@ -145,7 +147,7 @@ export async function syncUserFcmTokenIfPermitted(uid) {
  */
 export async function registerUserPushNotifications(uid) {
   if (!uid) return { ok: false, reason: 'not_configured' }
-  if (!isFirebaseConfigured() || !app) return { ok: false, reason: 'not_configured' }
+  if (!isFirebaseConfigured() || !getAudazApp()) return { ok: false, reason: 'not_configured' }
   if (typeof window === 'undefined' || !('Notification' in window)) {
     return { ok: false, reason: 'not_supported' }
   }
@@ -174,16 +176,23 @@ export async function registerUserPushNotifications(uid) {
  * @returns {(() => void) | undefined}
  */
 export function setupForegroundMessageHandler(onPayload) {
-  if (!isFirebaseConfigured() || !app || typeof window === 'undefined') return undefined
+  if (!isFirebaseConfigured() || !getAudazApp() || typeof window === 'undefined') return undefined
 
   let unsubscribe = () => {}
 
   void isSupported().then((supported) => {
     if (!supported) return
-    const messaging = getMessaging(app)
-    unsubscribe = onMessage(messaging, (payload) => {
-      onPayload(payload)
-    })
+    try {
+      const messaging = getAudazMessaging()
+      if (!messaging) return
+      unsubscribe = onMessage(messaging, (payload) => {
+        onPayload(payload)
+      })
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.warn('[FCM · onMessage]', err)
+      }
+    }
   })
 
   return () => {
@@ -252,6 +261,8 @@ export function getPushRegistrationErrorMessage(reason) {
       return 'Bildirim izni verilmedi. Push bildirimleri için izin gerekli.'
     case 'not_supported':
       return 'Bu tarayıcı push bildirimlerini desteklemiyor.'
+    case 'installations_denied':
+      return 'FCM kurulum hatası (Installations). Sayfayı yenileyip tekrar deneyin; sorun sürerse tarayıcı önbelleğini temizleyin.'
     case 'not_configured':
       return 'Firebase yapılandırması eksik.'
     case 'config_invalid':
@@ -285,8 +296,9 @@ async function acquireFcmTokenAfterPermission() {
   if (!(await isSupported())) return { ok: false, reason: 'not_supported' }
 
   try {
-    const registration = await registerMessagingServiceWorker()
-    const messaging = getMessaging(app)
+    const registration = await ensureMessagingServiceWorker()
+    const messaging = getAudazMessaging()
+    if (!messaging) return { ok: false, reason: 'not_configured' }
     const token = await getToken(messaging, {
       vapidKey: VAPID_KEY,
       serviceWorkerRegistration: registration,
@@ -305,7 +317,7 @@ async function acquireFcmTokenAfterPermission() {
  * @returns {Promise<{ ok: boolean, reason?: string, token?: string }>}
  */
 export async function requestPushPermissionAndToken() {
-  if (!isFirebaseConfigured() || !app) return { ok: false, reason: 'not_configured' }
+  if (!isFirebaseConfigured() || !getAudazApp()) return { ok: false, reason: 'not_configured' }
   if (typeof window === 'undefined' || !('Notification' in window)) {
     return { ok: false, reason: 'not_supported' }
   }

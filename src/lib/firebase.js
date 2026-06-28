@@ -1,4 +1,4 @@
-import { initializeApp, getApps, getApp } from 'firebase/app'
+import { initializeApp, getApps } from 'firebase/app'
 import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
@@ -35,8 +35,32 @@ let storage = null
 /** @type {import('firebase/analytics').Analytics | null} */
 let analytics = null
 
+/**
+ * Tam yapılandırmalı Firebase app — getApp() stale/HMR instance döndürmesin.
+ * @returns {import('firebase/app').FirebaseApp | null}
+ */
+export function getAudazApp() {
+  if (!isFirebaseConfigured()) return null
+
+  const projectId = String(firebaseConfig.projectId).trim()
+  const appId = String(firebaseConfig.appId).trim()
+
+  for (const candidate of getApps()) {
+    const opts = candidate.options
+    if (opts?.projectId === projectId && opts?.appId === appId) {
+      return candidate
+    }
+  }
+
+  if (getApps().length === 0) {
+    return initializeApp(firebaseConfig)
+  }
+
+  return initializeApp(firebaseConfig, `audaz-${projectId}`)
+}
+
 if (isFirebaseConfigured()) {
-  app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)
+  app = getAudazApp()
   auth = getAuth(app)
 
   if (typeof window !== 'undefined') {
