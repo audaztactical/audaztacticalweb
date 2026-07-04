@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
-import { BookOpen, ExternalLink, GraduationCap, Loader2, Lock, PlayCircle, ShieldAlert, X } from 'lucide-react'
+import { BookOpen, ExternalLink, Loader2, Lock, PlayCircle, ShieldAlert, X } from 'lucide-react'
 import PageShell from '../components/layout/PageShell'
 import TacticalPanel from '../components/ui/TacticalPanel'
 import { emitFirebaseError } from '../lib/firebaseErrorBus'
@@ -14,63 +14,40 @@ import {
 /** Geçici bakım — false yapınca tam Akademi içeriği geri gelir. */
 const AKADEMI_COMING_SOON = true
 
-const AKADEMI_READINESS_PERCENT = 70
+const akademiShellProps = {
+  fullWidth: true,
+  hideSector: true,
+  className: 'w-full px-6 sm:px-8 lg:px-10',
+  title: 'Audaz Akademi',
+  subtitle: 'Saha doktrinleri ve eğitim video kütüphanesi — komuta merkezi içerik akışı.',
+}
 
 function AkademiComingSoonScreen() {
   return (
-    <PageShell
-      title="Audaz Akademi"
-      subtitle="Saha doktrinleri ve eğitim video kütüphanesi — komuta merkezi içerik akışı."
-      headerAction={
-        <span className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-zinc-500">
-          <GraduationCap className="size-3.5 text-lime-500/70" strokeWidth={1.75} aria-hidden />
-          EDU-07 · KÜTÜPHANE
-        </span>
-      }
-    >
-      <div className="flex min-h-[min(58vh,480px)] flex-col items-center justify-center px-4 py-8">
-        <TacticalPanel className="w-full max-w-xl border-accent/25 bg-app-bg/95 p-0 shadow-[0_0_24px_-8px_color-mix(in_srgb,var(--accent-color)_35%,transparent)]]">
-          <div className="border-b border-accent/15 bg-app-bg px-4 py-3 text-center">
+    <PageShell {...akademiShellProps}>
+      <div className="flex min-h-[min(58vh,480px)] w-full flex-col items-center justify-center py-8">
+        <TacticalPanel className="w-full max-w-4xl border-accent/25 bg-app-bg/95 p-0 shadow-[0_0_24px_-8px_color-mix(in_srgb,var(--accent-color)_35%,transparent)]]">
+          <div className="border-b border-accent/15 bg-app-bg px-6 py-4 text-center sm:px-8">
             <p className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.32em] text-accent/85">
               SİSTEM ERİŞİMİ: AKADEMİ
             </p>
           </div>
-          <div className="flex flex-col items-center px-6 py-10 text-center">
-            <div className="relative mb-6 flex size-16 items-center justify-center rounded-full border border-accent/35 bg-accent/5 shadow-[0_0_24px_-8px_color-mix(in_srgb,var(--accent-color)_35%,transparent)]]">
-              <ShieldAlert className="size-8 text-accent" strokeWidth={1.5} aria-hidden />
+          <div className="flex flex-col items-center p-8 text-center sm:p-12">
+            <div className="relative mb-8 flex h-20 w-20 items-center justify-center rounded-full border border-accent/35 bg-accent/5 shadow-[0_0_24px_-8px_color-mix(in_srgb,var(--accent-color)_35%,transparent)]]">
+              <ShieldAlert className="h-16 w-16 text-accent" strokeWidth={1.5} aria-hidden />
               <Lock className="absolute -bottom-1 -right-1 size-4 rounded-full border border-accent/40 bg-black p-0.5 text-accent/80" strokeWidth={2} aria-hidden />
             </div>
-            <p className="font-mono-technical text-lg font-bold uppercase tracking-[0.22em] text-accent sm:text-xl">
+            <p className="font-mono-technical text-3xl font-bold uppercase tracking-[0.22em] text-accent">
               GELİŞTİRME AŞAMASINDA
             </p>
             <p className="mt-2 font-mono-technical text-sm font-bold uppercase tracking-[0.28em] text-accent/75">
               YAKINDA AKTİF
             </p>
-            <p className="mt-5 max-w-sm font-mono-technical text-[10px] leading-relaxed uppercase tracking-wider text-app-text/55">
+            <p className="mt-6 max-w-2xl font-mono-technical text-base leading-relaxed text-app-text/60">
               Bu modül şu an operasyon dışı. Diğer taktik kanallar (Karargah, Cephanelik, Antrenman) normal erişime açıktır.
             </p>
           </div>
         </TacticalPanel>
-
-        <div className="mt-8 w-full max-w-xl">
-          <div className="mb-1.5 flex items-center justify-between font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/45">
-            <span>Operasyonel Hazırlık Durumu</span>
-            <span className="tabular-nums text-accent/60">%{AKADEMI_READINESS_PERCENT}</span>
-          </div>
-          <div
-            className="h-1.5 overflow-hidden rounded-full border border-accent/15 bg-black/60"
-            role="progressbar"
-            aria-valuenow={AKADEMI_READINESS_PERCENT}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label="Akademi operasyonel hazırlık durumu"
-          >
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-accent/35 to-accent shadow-[0_0_24px_-8px_color-mix(in_srgb,var(--accent-color)_35%,transparent)]] transition-[width] duration-700"
-              style={{ width: `${AKADEMI_READINESS_PERCENT}%` }}
-            />
-          </div>
-        </div>
       </div>
     </PageShell>
   )
@@ -279,16 +256,7 @@ function AkademiContent() {
   }, [])
 
   return (
-    <PageShell
-      title="Audaz Akademi"
-      subtitle="Saha doktrinleri ve eğitim video kütüphanesi — komuta merkezi içerik akışı."
-      headerAction={
-        <span className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-zinc-500">
-          <GraduationCap className="size-3.5 text-lime-500/70" strokeWidth={1.75} aria-hidden />
-          EDU-07 · KÜTÜPHANE
-        </span>
-      }
-    >
+    <PageShell {...akademiShellProps}>
       <div className="mb-6 flex flex-wrap gap-2">
         <AkademiTabButton
           id="doktrinler"
