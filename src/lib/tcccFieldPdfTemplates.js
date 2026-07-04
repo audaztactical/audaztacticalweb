@@ -113,21 +113,15 @@ function drawHatNote(doc, margin, right, y, note) {
  * @param {number} pageW
  * @param {number} right
  * @param {number} y
+ * @param {string[]} items
  * @returns {number}
  */
-function draw9LineAbbreviationsSection(doc, margin, pageW, right, y) {
+function drawAbbreviationsSection(doc, margin, pageW, right, y, items) {
   doc.setDrawColor(...PDF_COLORS.tableLine)
   doc.setLineWidth(0.2)
   doc.line(margin, y, right, y)
   y += 5
   y = drawSectionTitle(doc, margin, pageW, 'Kısaltmalar ve Protokol Notları', y)
-  const items = [
-    'MGRS: Military Grid Reference System (Askeri Izgara Referans Sistemi)',
-    'MEDEVAC: Medical Evacuation (Tıbbi Tahliye)',
-    'EPW: Enemy Prisoner of War (Düşman Savaş Esiri)',
-    'Tahliye öncelikleri: A=Acil (<1 saat) · B=Öncelikli (<4 saat) · C=Rutin (<24 saat)',
-    'Bu form doldurulduktan sonra telsizle okunur, kopyası taşınan personelde kalır',
-  ]
   setPdfFont(doc, 'normal')
   doc.setFontSize(6.5)
   doc.setTextColor(...PDF_COLORS.muted)
@@ -137,6 +131,45 @@ function draw9LineAbbreviationsSection(doc, margin, pageW, right, y) {
     y += lines.length * 3.1 + 1
   }
   return y
+}
+
+/**
+ * @param {import('jspdf').jsPDF} doc
+ * @param {number} margin
+ * @param {number} pageW
+ * @param {number} right
+ * @param {number} y
+ * @returns {number}
+ */
+function draw9LineAbbreviationsSection(doc, margin, pageW, right, y) {
+  return drawAbbreviationsSection(doc, margin, pageW, right, y, [
+    'MGRS: Military Grid Reference System (Askeri Izgara Referans Sistemi)',
+    'MEDEVAC: Medical Evacuation (Tıbbi Tahliye)',
+    'EPW: Enemy Prisoner of War (Düşman Savaş Esiri)',
+    'Tahliye öncelikleri: A=Acil (<1 saat) · B=Öncelikli (<4 saat) · C=Rutin (<24 saat)',
+    'Bu form doldurulduktan sonra telsizle okunur, kopyası taşınan personelde kalır',
+  ])
+}
+
+/**
+ * @param {import('jspdf').jsPDF} doc
+ * @param {number} margin
+ * @param {number} right
+ * @param {number} y
+ * @param {string} title
+ * @param {string} note
+ * @param {(doc: import('jspdf').jsPDF, margin: number, right: number, y: number) => number} renderBody
+ * @returns {number}
+ */
+function drawMistSection(doc, margin, right, y, title, note, renderBody) {
+  setPdfFont(doc, 'bold')
+  doc.setFontSize(PDF_FONT_SIZE.body)
+  doc.setTextColor(...PDF_COLORS.text)
+  doc.text(title, margin, y)
+  y += 5
+  y = drawHatNote(doc, margin, right, y, note)
+  y = renderBody(doc, margin, right, y)
+  return y + 1
 }
 
 /**
@@ -246,53 +279,91 @@ export async function generateCasevacMistTemplate() {
   let y = initBlankFormPage(doc, margin, pageW, pageH, formId, logoDataUrl, logoDims, 'CASEVAC MIST RAPORU')
 
   y = drawSectionTitle(doc, margin, pageW, 'Hasta Bilgileri', y)
-  y = drawLabeledField(doc, margin, y, 'Hasta adı / callsign', 90)
-  y = drawLabeledField(doc, margin + 98, y - 6, 'Zaman', right - margin - 98)
-  y = drawLabeledField(doc, margin, y, 'Koordinat (MGRS/GPS)', right - margin)
-  y += 2
+  y = drawLabeledField(doc, margin, y, 'Hasta adı / callsign', right - margin)
+
+  setPdfFont(doc, 'normal')
+  doc.setFontSize(PDF_FONT_SIZE.body)
+  doc.setTextColor(...PDF_COLORS.muted)
+  doc.text('Zaman', margin, y)
+  y += 4
+  y = drawHatNote(doc, margin, right, y, '24 saat formatında yazın. Örn: 14:35')
+  drawFormFieldLine(doc, margin, y, right - margin)
+  y += 7
+
+  doc.text('Koordinat (MGRS/GPS)', margin, y)
+  y += 4
+  y = drawHatNote(doc, margin, right, y, 'MGRS veya GPS koordinatı. Örn: 37S NA 12345 67890')
+  drawFormFieldLine(doc, margin, y, right - margin)
+  y += 9
 
   y = drawSectionTitle(doc, margin, pageW, 'MIST Protokolü', y)
 
-  setPdfFont(doc, 'bold')
-  doc.setFontSize(PDF_FONT_SIZE.body)
-  doc.setTextColor(...PDF_COLORS.text)
-  doc.text('M (Mekanizma)', margin, y)
-  y += 5
-  y = drawCheckboxRow(doc, margin + 2, y, ['Ateşli', 'Patlama', 'Düşme', 'Diğer'], right)
-  drawFormFieldLine(doc, margin + 72, y - 4, right - margin - 72)
-  y += 4
+  y = drawMistSection(
+    doc,
+    margin,
+    right,
+    y,
+    'M — Mekanizma (Mechanism of Injury)',
+    'Yaralanmanın nasıl oluştuğunu belirtin. Birden fazla seçenek işaretlenebilir. Patlama için mesafeyi ekleyin.',
+    (d, m, r, cy) => {
+      let ny = drawCheckboxRow(d, m + 2, cy, ['Ateşli', 'Patlama', 'Düşme', 'Diğer'], r)
+      drawFormFieldLine(d, m + 72, ny - 4, r - m - 72)
+      return ny + 4
+    },
+  )
 
-  setPdfFont(doc, 'bold')
-  doc.setFontSize(PDF_FONT_SIZE.body)
-  doc.setTextColor(...PDF_COLORS.text)
-  doc.text('I (Yaralanma)', margin, y)
-  y += 5
-  drawFormFieldLine(doc, margin, y + 2, right - margin)
-  y += 10
+  y = drawMistSection(
+    doc,
+    margin,
+    right,
+    y,
+    'I — Yaralanma (Injuries)',
+    'Görülen veya şüphelenilen tüm yaralanmaları vücut bölgesiyle birlikte yazın. Örn: Sol bacak açık kırık, göğüs sol taraf penetran.',
+    (d, m, r, cy) => {
+      drawFormFieldLine(d, m, cy + 2, r - m)
+      return cy + 10
+    },
+  )
 
-  setPdfFont(doc, 'bold')
-  doc.setFontSize(PDF_FONT_SIZE.body)
-  doc.setTextColor(...PDF_COLORS.text)
-  doc.text('S (Semptomlar / Bulgular)', margin, y)
-  y += 5
-  y = drawLabeledField(doc, margin, y, 'Nabız', 35)
-  y = drawLabeledField(doc, margin + 42, y - 6, 'SpO2', 30)
-  y = drawLabeledField(doc, margin + 80, y - 6, 'Bilinç', right - margin - 80)
-  y += 2
+  y = drawMistSection(
+    doc,
+    margin,
+    right,
+    y,
+    'S — Semptomlar ve Bulgular (Signs & Symptoms)',
+    'Nabız: dakikadaki atım sayısı. SpO2: %95 üzeri normal. Bilinç AVPU: A=Uyanık, V=Sese yanıt, P=Ağrıya yanıt, U=Yanıtsız',
+    (d, m, r, cy) => {
+      let ny = drawLabeledField(d, m, cy, 'Nabız', 35)
+      ny = drawLabeledField(d, m + 42, ny - 6, 'SpO2', 30)
+      ny = drawLabeledField(d, m + 80, ny - 6, 'Bilinç', r - m - 80)
+      return ny + 2
+    },
+  )
 
-  setPdfFont(doc, 'bold')
-  doc.setFontSize(PDF_FONT_SIZE.body)
-  doc.setTextColor(...PDF_COLORS.text)
-  doc.text('T (Yapılan Tedavi)', margin, y)
-  y += 5
-  y = drawCheckboxRow(doc, margin + 2, y, ['Turnike', 'Hava yolu', 'IV'], right)
-  y += 4
+  y = drawMistSection(
+    doc,
+    margin,
+    right,
+    y,
+    'T — Yapılan Tedavi (Treatment)',
+    'Sahada uygulanan tüm müdahaleleri işaretleyin. Turnike uygulandıysa uygulama saatini mutlaka yazın.',
+    (d, m, r, cy) => drawCheckboxRow(d, m + 2, cy, ['Turnike', 'Hava yolu', 'IV'], r) + 4,
+  )
 
   y = drawSectionTitle(doc, margin, pageW, 'Ek Notlar', y)
   for (let i = 0; i < 3; i++) {
     drawFormFieldLine(doc, margin, y + 4, right - margin)
     y += 8
   }
+
+  y = drawAbbreviationsSection(doc, margin, pageW, right, y + 2, [
+    'MIST: Mechanism · Injuries · Signs & Symptoms · Treatment',
+    'CASEVAC: Casualty Evacuation (Yaralı Tahliyesi)',
+    'AVPU: Alert · Voice · Pain · Unresponsive (Bilinç Değerlendirme Skalası)',
+    'SpO2: Oksijen saturasyonu (%95 üzeri normal)',
+    'Turnike uygulandıysa: Uygulama saatini hastanın alnına yaz ve formda belirt',
+    'Bu form tahliye aracına teslim edilir, kopyası taktik sağlık personelinde kalır',
+  ])
 
   stampPdfFooters(doc, formId)
   doc.save(`AUDAZ-CASEVAC-MIST-${formId}.pdf`)
