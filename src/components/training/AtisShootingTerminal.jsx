@@ -139,7 +139,7 @@ export default function AtisShootingTerminal({
     if (!uid) return 'OTURUM_GEREKLİ'
     if (weapons.length === 0) return 'CEPHANELİKTE_SİLAH_YOK'
     if (ammoRows.length === 0) return 'MÜHİMMAT_DEPOSU_BOŞ'
-    if (!form.weaponId) return 'SİLAH_SEÇİMİ_GEREKLİ'
+    if (!form.weaponId) return 'Silah seçimi gerekli'
     if (!form.drillKey) return 'ATIŞ_TÜRÜ_SEÇİMİ_GEREKLİ'
     if (showCustomDrill && !form.customDrillName.trim()) return 'ÖZEL_DRILL_ADI_GEREKLİ'
     if (!form.ammoId) {
@@ -366,7 +366,7 @@ export default function AtisShootingTerminal({
                 </p>
               </>
             ) : (
-              <p className="text-app-text/45">SİLAH_SEÇİMİ_BEKLENİYOR</p>
+              <p className="text-app-text/45">Silah seçimi bekleniyor</p>
             )}
             {selectedAmmo ? (
               <p className="mt-2 border-t border-white/10 pt-2 text-app-text/55">
@@ -607,9 +607,6 @@ export default function AtisShootingTerminal({
                   rows={4}
                   maxLength={2000}
                 />
-                <p className="font-mono-technical text-[8px] uppercase text-app-text/45">
-                  KAYIT_DEFTERİ_DETAYINDA_GÖRÜNÜR · İSTEĞE_BAĞLI
-                </p>
               </label>
 
               {submitOk ? (
@@ -643,7 +640,7 @@ export default function AtisShootingTerminal({
                   disabled={saving || !canSubmit}
                   className="flex-1 rounded border border-accent/55 bg-accent/12 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent shadow-[0_0_24px_-8px_color-mix(in_srgb,var(--accent-color)_35%,transparent)]] hover:bg-accent/20 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  {saving ? 'AKTARILIYOR…' : 'ATIŞ_KAYDINI_ONAYLA'}
+                  {saving ? 'AKTARILIYOR…' : 'Atış Kaydını Onayla'}
                 </button>
               </div>
             </form>

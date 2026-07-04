@@ -60,7 +60,7 @@ export default function TrainingCategoryCard({
           {title}
         </p>
         <p className="mt-1 text-center font-mono-technical text-[7px] uppercase tracking-[0.35em] text-accent/45 opacity-70 transition-opacity group-hover:opacity-100 xl:text-[8px] 2xl:mt-1.5 2xl:text-[9px] 2xl:tracking-[0.38em]">
-          {sectorLabel ?? `${opsCode} · OPS_SEKTÖR`}
+          {sectorLabel ?? opsCode}
         </p>
       </div>
 
@@ -77,17 +77,6 @@ export default function TrainingCategoryCard({
         />
       </div>
 
-      <div className="flex items-center justify-between border-t border-accent/10 bg-app-bg px-3 py-2 font-mono-technical text-[7px] uppercase tracking-wider text-accent/40 transition-colors group-hover:border-accent/25 group-hover:text-accent/70 xl:gap-3 xl:px-4 xl:py-2.5 xl:text-[8px] xl:tracking-[0.18em] 2xl:px-5 2xl:py-3 2xl:text-[9px] 2xl:tracking-[0.22em]">
-        <span className="min-w-0 truncate opacity-0 transition-opacity duration-300 group-hover:opacity-100 xl:max-w-[38%]">
-          LAT 41.02<span className="text-app-text/20"> · </span>LON 29.01
-        </span>
-        <span className="shrink-0 tabular-nums opacity-70 group-hover:opacity-100">
-          BIT<span className="text-accent/60">_</span>9600
-        </span>
-        <span className="hidden min-w-0 truncate opacity-0 transition-opacity duration-300 group-hover:inline group-hover:opacity-100 sm:inline xl:max-w-[38%]">
-          HD_LINK
-        </span>
-      </div>
     </button>
   )
 }

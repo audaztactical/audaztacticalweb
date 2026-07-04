@@ -155,7 +155,7 @@ export function buildCasualtyCardPayload(form, userId) {
     operationNote: operationNoteText,
     operationNoteManual: manualOperationNote || null,
     evacPriority: evacValid,
-    title: `DD1380 · ${invStr(form.patientName).trim() || 'YARALI'} · ${evacValid}`,
+    title: `DD1380 · ${invStr(form.patientName).trim() || 'Yaralı'} · ${evacLabel}`,
     timestamp: new Date().toISOString(),
   }
 }

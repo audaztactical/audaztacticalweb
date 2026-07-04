@@ -43,6 +43,7 @@ export default function TrainingCategoryHub({ onCategorySelect }) {
         title={category.title}
         imageSrc={category.imageSrc}
         opsCode={category.opsCode}
+        sectorLabel={category.sectorLabel}
         vizVariant={category.vizVariant}
         highlightLabel={highlightLabel}
         imagePriority={index < 2 ? 'high' : 'low'}

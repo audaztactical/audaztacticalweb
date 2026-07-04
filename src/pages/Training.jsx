@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
-import HudFluffDecor from '../components/dashboard/HudFluffDecor'
 import HudTicker from '../components/ui/HudTicker'
 import AtisShootingTerminal from '../components/training/AtisShootingTerminal'
 import CqbTerminal from '../components/training/CqbTerminal'
@@ -11,7 +10,6 @@ import EgitimTerminal from '../components/training/EgitimTerminal'
 import GroupTrainingTerminal from '../components/training/GroupTrainingTerminal'
 import TrainingCategoryHub from '../components/training/TrainingCategoryHub'
 import {
-  countVisibleTrainingChannels,
   resolveUserGroup,
   TRAINING_CATEGORIES,
 } from '../components/training/trainingCategories'
@@ -39,15 +37,6 @@ function TrainingInner() {
   const userGroup = useMemo(() => resolveUserGroup(userData), [userData])
   const isInstructor = role === 'instructor'
   const canAccessGrupEgitimi = Boolean(userGroup) || isInstructor
-  const visibleCategoryCount = useMemo(
-    () =>
-      countVisibleTrainingChannels({
-        role: role ?? 'operator',
-        userGroup,
-      }),
-    [role, userGroup],
-  )
-
   const {
     items: inventory,
     updateItem,
@@ -249,10 +238,6 @@ function TrainingInner() {
 
   return (
     <div className="ilws-shell relative mx-auto w-full min-w-0 max-w-[1480px] px-3 py-5 pt-12 sm:px-4 sm:pt-14 md:px-6">
-      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden>
-        <HudFluffDecor />
-      </div>
-
       <div className="relative z-[2] w-full min-w-0 space-y-5">
         <header className="flex flex-wrap items-end justify-between gap-3 border-b border-white/10 pb-3">
           <div className="min-w-0 flex-1">
@@ -325,7 +310,7 @@ function TrainingInner() {
         ) : (
           <section aria-label="Operasyon kategorileri">
             <p className="mb-3 font-mono-technical text-[8px] font-bold uppercase tracking-[0.28em] text-accent/70">
-              SEKTÖR_SEÇİMİ · {visibleCategoryCount} KANAL
+              Sektör Seçimi
             </p>
             <TrainingCategoryHub onCategorySelect={handleCategorySelect} />
           </section>

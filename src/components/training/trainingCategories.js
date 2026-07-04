@@ -16,6 +16,7 @@ import egitimImg from '../../assets/egitim.webp'
  * @property {string} imageSrc
  * @property {string} opsCode
  * @property {TrainingVizVariant} vizVariant
+ * @property {string} [sectorLabel] Kart alt başlığı (ops kodu + sektör adı)
  * @property {boolean} [requiresGroup] Grup üyeliği veya eğitmen
  * @property {boolean} [requiresInstructor] Yalnızca eğitmen
  * @property {string} [externalRoute] Sektör terminali yerine harici rota
@@ -33,10 +34,10 @@ export const INDIVIDUAL_TRAINING_CATEGORY_IDS = [
 
 /** @type {TrainingCategory[]} */
 export const TRAINING_CATEGORIES = [
-  { id: 'atis', title: 'ATIŞ', imageSrc: atisImg, opsCode: 'RNG-01', vizVariant: 'pistol' },
-  { id: 'cqb', title: 'CQB', imageSrc: cqbImg, opsCode: 'CQB-02', vizVariant: 'reddot' },
-  { id: 'fof', title: 'FOF', imageSrc: fofImg, opsCode: 'FOF-03', vizVariant: 'cartridge' },
-  { id: 'vbss', title: 'VBSS', imageSrc: vbssImg, opsCode: 'VBS-04', vizVariant: 'pistol' },
+  { id: 'atis', title: 'ATIŞ', imageSrc: atisImg, opsCode: 'RNG-01', sectorLabel: 'RNG-01 · Atış Sektörü', vizVariant: 'pistol' },
+  { id: 'cqb', title: 'CQB', imageSrc: cqbImg, opsCode: 'CQB-02', sectorLabel: 'CQB-02 · Yakın Mesafe', vizVariant: 'reddot' },
+  { id: 'fof', title: 'FOF', imageSrc: fofImg, opsCode: 'FOF-03', sectorLabel: 'FOF-03 · Kuvvet Karşılaşması', vizVariant: 'cartridge' },
+  { id: 'vbss', title: 'VBSS', imageSrc: vbssImg, opsCode: 'VBS-04', sectorLabel: 'VBS-04 · Gemi Operasyonu', vizVariant: 'pistol' },
   { id: 'tccc', title: 'TCCC', imageSrc: tcccImg, opsCode: 'MED-05', vizVariant: 'reddot' },
   { id: 'egitim', title: 'EĞİTİM', imageSrc: egitimImg, opsCode: 'EDU-06', vizVariant: 'cartridge' },
   {

@@ -89,10 +89,7 @@ export default function TcccMedicalHistoryTab({ cards, loading }) {
       <div className="flex items-center justify-between gap-3 border-b border-accent/12 pb-2">
         <div>
           <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-accent/90">
-            YARALI ARŞİVİ · OPERASYONEL KAYIT
-          </p>
-          <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-app-text/45">
-            casualty_cards · {sorted.length} kayıt · DD-1380
+            Yaralı Arşivi
           </p>
         </div>
       </div>

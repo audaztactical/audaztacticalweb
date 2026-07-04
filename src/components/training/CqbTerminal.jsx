@@ -143,7 +143,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
   const submitBlockedReason = useMemo(() => {
     if (saving) return null
     if (!uid) return 'OTURUM_GEREKLİ'
-    if (!form.roomTopology) return 'ODA_TOPOLOJİSİ_GEREKLİ'
+    if (!form.roomTopology) return 'Oda topolojisi gerekli'
     if (showCustomRoom && !form.customRoomTopology.trim()) return 'ÖZEL_TOPOLOJİ_ADI_GEREKLİ'
     if (!form.entryMethod) return 'GİRİŞ_METODU_GEREKLİ'
     if (showCustomEntry && !form.customEntryMethod.trim()) return 'ÖZEL_GİRİŞ_METODU_GEREKLİ'
@@ -474,7 +474,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                     onChange={(e) => onNeutralizedChange(e.target.value)}
                   />
                 </TrainingMetricField>
-                <TrainingMetricField label="CLEARANCE TIME (SN)">
+                <TrainingMetricField label="Temizleme Süresi (sn)">
                   <input
                     type="number"
                     min={0.001}
@@ -486,7 +486,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                     onChange={(e) => patch({ clearanceTimeMs: e.target.value })}
                   />
                 </TrainingMetricField>
-                <TrainingMetricField label="ACCURACY SCORE (%)">
+                <TrainingMetricField label="İsabet Oranı (%)">
                   <input
                     type="number"
                     min={0}
@@ -499,7 +499,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                     onChange={(e) => patch({ accuracyScore: e.target.value })}
                   />
                 </TrainingMetricField>
-                <TrainingMetricField label="SAFETY VIOLATIONS">
+                <TrainingMetricField label="Güvenlik İhlali">
                   <input
                     type="number"
                     min={0}
@@ -509,7 +509,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                     onChange={(e) => patch({ safetyViolations: e.target.value })}
                   />
                 </TrainingMetricField>
-                <TrainingMetricField label="TACTICAL DECISION" className="sm:col-span-1">
+                <TrainingMetricField label="Taktik Karar" className="sm:col-span-1">
                   <select
                     className={selectClass}
                     value={form.tacticalDecision}
@@ -599,7 +599,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
 
               <div className="shrink-0 rounded border border-amber-500/25 bg-amber-950/15 p-2.5">
                 <p className="mb-2 font-mono-technical text-[7px] font-bold uppercase tracking-[0.18em] text-amber-400/90">
-                  ÖZEL HATA · custom_error
+                  Özel Hata
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <input
@@ -622,7 +622,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                     disabled={!customErrorDraft.trim()}
                     className="shrink-0 rounded border border-amber-500/50 bg-amber-500/10 px-3 py-2 font-mono-technical text-[8px] font-bold uppercase text-amber-200 hover:bg-amber-500/20 disabled:opacity-40"
                   >
-                    HATA_EKLE
+                    Hata Ekle
                   </button>
                 </div>
               </div>
@@ -646,7 +646,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
               submitBlockedReason={submitBlockedReason}
               saving={saving}
               canSubmit={canSubmit}
-              submitLabel="CQB_KAYDINI_ONAYLA"
+              submitLabel="CQB Kaydını Onayla"
               successMessage={submitOk ? 'CQB_KAYDI_AKTARILDI · RANGE_LOGS' : null}
               errorMessage={submitError}
             />

@@ -134,7 +134,6 @@ export default function MatrixWireVisualizer({
           >
             <div className="flex h-full flex-col items-center justify-center gap-2 font-mono-technical text-[8px] uppercase tracking-[0.28em] text-accent/35 xl:text-[9px] 2xl:text-[10px]">
               <span className="size-8 rounded border border-accent/20 bg-accent/[0.06] xl:size-10 2xl:size-12" />
-              HD_ASSET · YÜKLENİYOR
             </div>
           </div>
         ) : null}

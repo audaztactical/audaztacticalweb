@@ -19,9 +19,9 @@ import {
  */
 export function getTcccSimStatusLabel(row) {
   const stored = invStr(row.tcccSimStatus).toUpperCase()
-  if (stored === 'BAŞARILI' || stored === 'BASARILI') return 'BAŞARILI / CLEAN HIT'
-  if (stored === 'BAŞARISIZ' || stored === 'BASARISIZ') return 'BAŞARISIZ / COLD HIT'
-  return getSimulationSuccess(row) ? 'BAŞARILI / CLEAN HIT' : 'BAŞARISIZ / COLD HIT'
+  if (stored === 'BAŞARILI' || stored === 'BASARILI') return 'Başarılı'
+  if (stored === 'BAŞARISIZ' || stored === 'BASARISIZ') return 'Başarısız'
+  return getSimulationSuccess(row) ? 'Başarılı' : 'Başarısız'
 }
 
 /**

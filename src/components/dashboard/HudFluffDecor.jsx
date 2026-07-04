@@ -47,12 +47,6 @@ export default function HudFluffDecor({ className = '' }) {
         <p>Bellek {ram}%</p>
         <p>G/Ç {bus}%</p>
       </div>
-      <div className={`${box} absolute bottom-0 left-0 z-0`} aria-hidden>
-        <p className="text-app-text/45">Bağlantı aktif</p>
-      </div>
-      <div className={`${box} absolute bottom-0 right-0 z-0 text-right`} aria-hidden>
-        <p className="text-amber-500/55">Veri akışı ●</p>
-      </div>
     </div>
   )
 }

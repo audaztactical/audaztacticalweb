@@ -94,13 +94,13 @@ function StatusBadge({ status }) {
   if (status === 'BAŞARILI') {
     return (
       <span className="rounded border border-emerald-500/40 bg-emerald-500/10 px-2 py-1 font-mono text-xs text-emerald-400">
-        BAŞARILI / CLEAN HIT
+        Başarılı
       </span>
     )
   }
   return (
     <span className="sim-history-cold-hit rounded border border-red-500/40 bg-red-500/10 px-2 py-1 font-mono text-xs text-red-400">
-      BAŞARISIZ / COLD HIT
+      Başarısız
     </span>
   )
 }
@@ -716,7 +716,7 @@ export default function SimulationHistory({ rangeLogs, loading = false }) {
   return (
     <section aria-label="Simülasyon geçmiş kayıtları" className="space-y-3">
       <p className="font-mono text-[10px] uppercase tracking-wider text-app-text/55">
-        TAKTİK DEBRİEF LOG · {tableRows.length} KAYIT
+        Simülasyon Geçmişi · {tableRows.length} kayıt
       </p>
 
       <div className="overflow-x-auto rounded-xl border border-emerald-500/25 bg-slate-950/80 shadow-[0_0_24px_rgb(16,185,129,0.08)]">
