@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Flame, Loader2, Radio, Search, Shield, UserMinus, UserPlus, Users } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Flame, Loader2, Radio, Search, UserPlus, Users } from 'lucide-react'
 import CreateChannelModal from '../components/muhabere/CreateChannelModal'
+import EditChannelModal from '../components/muhabere/EditChannelModal'
 import ChatList from '../components/muhabere/ChatList'
 import ChatWindow from '../components/muhabere/ChatWindow'
 import MuhabereChannelMembersModal from '../components/muhabere/MuhabereChannelMembersModal'
 import MuhabereArchiveSection from '../components/muhabere/MuhabereArchiveSection'
 import MuhabereAttachMenu from '../components/muhabere/MuhabereAttachMenu'
-import MuhabereConversationActions from '../components/muhabere/MuhabereConversationActions'
+import MuhabereConversationMenu from '../components/muhabere/MuhabereConversationMenu'
+import MuhabereUnreadBadge from '../components/muhabere/MuhabereUnreadBadge'
 import TacticalAlert from '../components/muhabere/TacticalAlert'
 import OperatorAvatar from '../components/ui/OperatorAvatar'
 import PresenceIndicator from '../components/ui/PresenceIndicator'
@@ -21,8 +23,11 @@ import {
   fetchMuhabereContacts,
   archiveMuhabereChannelForUser,
   archiveMuhabereDmForUser,
+  blockMuhabereUser,
+  deleteMuhabereChannel,
   deleteMuhabereChannelForUser,
   deleteMuhabereDmForUser,
+  formatConversationPreviewTime,
   leaveMuhabereChannel,
   removeMuhabereChannelMember,
   unarchiveMuhabereChannelForUser,
@@ -31,7 +36,6 @@ import {
   setChatTypingStatus,
   muhabereRequestErrorMessage,
   rejectMuhabereContactRequest,
-  removeMuhabereContact,
   searchMuhabereOperators,
   sendChannelMessage,
   sendChatMessage,
@@ -143,7 +147,6 @@ export default function TaktikMuhabere() {
   const [pendingSentUids, setPendingSentUids] = useState(/** @type {Set<string>} */ (() => new Set()))
   const [sendingRequestUid, setSendingRequestUid] = useState(/** @type {string | null} */ (null))
   const [requestBusyId, setRequestBusyId] = useState(/** @type {string | null} */ (null))
-  const [removingUid, setRemovingUid] = useState(/** @type {string | null} */ (null))
   const [profileUid, setProfileUid] = useState(/** @type {string | null} */ (null))
   const [burnMode, setBurnMode] = useState(false)
   const [peerTyping, setPeerTyping] = useState(false)
@@ -163,6 +166,10 @@ export default function TaktikMuhabere() {
   const [deletingDmUid, setDeletingDmUid] = useState(/** @type {string | null} */ (null))
   const [dmArchiveTarget, setDmArchiveTarget] = useState(/** @type {MuhabereContact | null} */ (null))
   const [dmDeleteTarget, setDmDeleteTarget] = useState(/** @type {MuhabereContact | null} */ (null))
+  const [dmBlockTarget, setDmBlockTarget] = useState(/** @type {MuhabereContact | null} */ (null))
+  const [editChannelTarget, setEditChannelTarget] = useState(/** @type {MuhabereChannel | null} */ (null))
+  const [destroyingChannelId, setDestroyingChannelId] = useState(/** @type {string | null} */ (null))
+  const [blockingUid, setBlockingUid] = useState(/** @type {string | null} */ (null))
 
   const typingStopRef = useRef(/** @type {ReturnType<typeof setTimeout> | null} */ (null))
   const typingActiveRef = useRef(false)
@@ -220,6 +227,17 @@ export default function TaktikMuhabere() {
   }, [])
 
   const dmUnreadByPeerId = conversationIndex?.dmUnreadByPeerId ?? {}
+
+  const senderNames = useMemo(() => {
+    /** @type {Record<string, string>} */
+    const map = {}
+    for (const contact of roster) {
+      map[contact.uid] = contact.callsign
+    }
+    if (uid && userData?.callsign) map[uid] = userData.callsign
+    else if (uid && user?.displayName) map[uid] = user.displayName
+    return map
+  }, [roster, uid, userData?.callsign, user?.displayName])
 
   const handleConversationSummariesChange = useCallback((/** @type {import('../lib/muhabereConversation').ReturnType<import('../lib/muhabereConversation').indexConversationSummaries>} */ index) => {
     setConversationIndex(index)
@@ -612,6 +630,34 @@ export default function TaktikMuhabere() {
     [uid, deletingChannelId, clearChannelSelection, pushSystemToast],
   )
 
+  const handleDestroyChannel = useCallback(
+    async (/** @type {MuhabereChannel} */ channel) => {
+      if (!uid || destroyingChannelId) return
+      const cid = String(channel.id ?? '').trim()
+      if (!cid) return
+
+      setDestroyingChannelId(cid)
+      setDeletedChannelIds((prev) => new Set([...prev, cid]))
+      try {
+        await deleteMuhabereChannel(cid, uid)
+        await deleteMuhabereChannelForUser(uid, cid)
+        clearChannelSelection(cid)
+        setChannels((prev) => prev.filter((c) => c.id !== cid))
+        pushSystemToast(`KANAL SİLİNDİ — ${channel.name.toUpperCase()}`)
+      } catch (err) {
+        setDeletedChannelIds((prev) => {
+          const next = new Set(prev)
+          next.delete(cid)
+          return next
+        })
+        emitFirebaseError(err)
+      } finally {
+        setDestroyingChannelId(null)
+      }
+    },
+    [uid, destroyingChannelId, clearChannelSelection, pushSystemToast],
+  )
+
   const handleRemoveChannelMember = useCallback(
     async (/** @type {string} */ memberUid) => {
       if (!uid || !selectedChannelId || removingChannelMemberUid) return
@@ -712,6 +758,28 @@ export default function TaktikMuhabere() {
     [uid, deletingDmUid, clearDmSelection],
   )
 
+  const handleBlockUser = useCallback(
+    async (/** @type {MuhabereContact} */ contact) => {
+      if (!uid || blockingUid) return
+      const peer = String(contact.uid ?? '').trim()
+      if (!peer) return
+
+      setBlockingUid(peer)
+      try {
+        await blockMuhabereUser(uid, peer)
+        await deleteMuhabereDmForUser(uid, peer)
+        clearDmSelection(peer)
+        setRoster((prev) => prev.filter((c) => c.uid !== peer))
+        pushSystemToast(`ENGELLENDİ — ${contact.callsign.toUpperCase()}`)
+      } catch (err) {
+        emitFirebaseError(err)
+      } finally {
+        setBlockingUid(null)
+      }
+    },
+    [uid, blockingUid, clearDmSelection, pushSystemToast],
+  )
+
   useEffect(() => {
     if (!uid) {
       setChannels([])
@@ -766,30 +834,6 @@ export default function TaktikMuhabere() {
       pushSystemToast(muhabereRequestErrorMessage(err).toUpperCase())
     } finally {
       setRequestBusyId(null)
-    }
-  }
-
-  const handleDisconnect = async (/** @type {MuhabereContact} */ contact) => {
-    if (!uid || removingUid) return
-
-    const confirmed = window.confirm(
-      `[${contact.callsign}] ile olan taktiksel ağ bağlantısı koparılacak. Onaylıyor musunuz?`,
-    )
-    if (!confirmed) return
-
-    setRemovingUid(contact.uid)
-    try {
-      await removeMuhabereContact(uid, contact.uid)
-      if (selectedUid === contact.uid) {
-        setSelectedUid(null)
-      }
-      setRoster((prev) => prev.filter((c) => c.uid !== contact.uid))
-      pushSystemToast(`BAĞLANTI KESİLDİ — ${contact.callsign.toUpperCase()} ağdan çıkarıldı.`)
-    } catch (err) {
-      emitFirebaseError(err)
-      pushSystemToast(muhabereRequestErrorMessage(err).toUpperCase())
-    } finally {
-      setRemovingUid(null)
     }
   }
 
@@ -915,11 +959,12 @@ export default function TaktikMuhabere() {
   const listError = isSearchMode ? searchError : rosterError
   const listItems = isSearchMode ? searchResults : activeRoster
 
-  const dmAlertsBusy = Boolean(archivingDmUid || deletingDmUid)
+  const dmAlertsBusy = Boolean(archivingDmUid || deletingDmUid || blockingUid)
   const closeDmAlerts = () => {
     if (dmAlertsBusy) return
     setDmArchiveTarget(null)
     setDmDeleteTarget(null)
+    setDmBlockTarget(null)
   }
 
   const emptyMessage = isSearchMode
@@ -953,17 +998,17 @@ export default function TaktikMuhabere() {
 
       <div
         className={[
-          'flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950 lg:flex-row',
+          'flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-zinc-800/90 bg-[#0a0b0d] lg:flex-row',
           compact ? (hasConversation ? 'mt-0' : 'mt-2') : 'mt-3 sm:mt-4',
         ].join(' ')}
       >
         <aside
           className={[
-            'flex h-full min-h-0 shrink-0 flex-col overflow-hidden border-r border-zinc-800 bg-zinc-900/50',
+            'flex h-full min-h-0 shrink-0 flex-col overflow-hidden border-r border-zinc-800/90 bg-[#0a0b0d]',
             compact ? (showMobileRoster ? 'w-full min-w-0' : 'hidden') : 'w-80',
           ].join(' ')}
         >
-          <div className="border-b border-zinc-800 bg-zinc-900 px-3 py-3">
+          <div className="border-b border-zinc-800/80 bg-[#0a0b0d] px-3 py-3">
             <label className="relative block">
               <Search
                 className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-zinc-500"
@@ -975,7 +1020,7 @@ export default function TaktikMuhabere() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Çağrı Adı Ara..."
-                className="w-full rounded-md border border-zinc-700 bg-zinc-950 py-2 pl-9 pr-3 font-mono text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-zinc-600 focus:ring-1 focus:ring-lime-500/20"
+                className="w-full rounded-md border border-zinc-700/90 bg-zinc-950 py-2 pl-9 pr-3 font-mono text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20"
                 autoComplete="off"
                 spellCheck={false}
               />
@@ -1040,9 +1085,14 @@ export default function TaktikMuhabere() {
               selectedChannelId={selectedChannelId}
               archivingChannelId={archivingChannelId}
               deletingChannelId={deletingChannelId}
+              destroyingChannelId={destroyingChannelId}
+              editingChannelId={editChannelTarget?.id ?? null}
               onSelectChannel={selectChannel}
               onArchiveChannel={handleArchiveChannel}
               onDeleteChannel={handleDeleteChannel}
+              onLeaveChannel={handleDeleteChannel}
+              onEditChannel={(channel) => setEditChannelTarget(channel)}
+              onDestroyChannel={handleDestroyChannel}
               onCreateChannel={() => setShowCreateChannel(true)}
               onSummariesChange={handleConversationSummariesChange}
             />
@@ -1071,30 +1121,28 @@ export default function TaktikMuhabere() {
             >
               {listItems.map((contact) => {
                 const active = !isSearchMode && contact.uid === selectedUid
-                const dmUnread = dmUnreadByPeerId[contact.uid] ?? 0
+                const dmUnread = active ? 0 : dmUnreadByPeerId[contact.uid] ?? 0
                 const dmSummary = conversationIndex?.byPeerUid[contact.uid]
-                const hasSignal = dmUnread > 0
+                const hasUnread = dmUnread > 0
                 const presence = presenceMap[contact.uid]
                 const inRoster = rosterUidSet.has(contact.uid)
                 const showRequest = isSearchMode && !inRoster
                 const requestSent = pendingSentUids.has(contact.uid)
                 const isSending = sendingRequestUid === contact.uid
 
-                const isRemoving = removingUid === contact.uid
-
                 return (
-                  <li key={contact.uid} className={!isSearchMode ? 'group' : undefined}>
+                  <li key={contact.uid}>
                     <div
                       className={[
-                        'flex w-full items-start gap-2 rounded-md border-l-4 py-3 pl-2 pr-2 transition-colors duration-200',
-                        hasSignal && !isSearchMode
-                          ? 'animate-pulse border-lime-500 bg-lime-900/20'
+                        'flex w-full items-stretch gap-1 rounded-md border-l-2 transition-colors',
+                        hasUnread && !isSearchMode
+                          ? 'muhabere-unread-pulse border-l-amber-500'
                           : 'border-l-transparent',
-                        active ? 'bg-zinc-800 text-lime-400' : 'text-zinc-300',
+                        active ? 'bg-zinc-800/80' : 'hover:bg-amber-500/[0.06]',
                       ].join(' ')}
                     >
                       {showRequest ? (
-                        <div className="flex min-w-0 flex-1 items-start gap-3">
+                        <div className="flex min-w-0 flex-1 items-start gap-3 px-2 py-2.5">
                           <OperatorAvatar
                             uid={contact.uid}
                             size="sm"
@@ -1121,7 +1169,7 @@ export default function TaktikMuhabere() {
                           role="option"
                           aria-selected={active}
                           onClick={() => selectOperator(contact.uid)}
-                          className="flex min-w-0 flex-1 items-start gap-3 text-left hover:bg-zinc-800/80"
+                          className="flex min-w-0 flex-1 items-center gap-3 px-2 py-2.5 text-left"
                         >
                           <OperatorAvatar
                             uid={contact.uid}
@@ -1129,16 +1177,23 @@ export default function TaktikMuhabere() {
                             callsign={contact.callsign}
                             username={contact.username}
                             photoUrl={contact.photoURL ?? undefined}
-                            signal={hasSignal}
+                            signal={hasUnread}
                             online={inRoster ? presence?.online : null}
-                            className="mt-0.5"
                           />
                           <div className="min-w-0 flex-1">
-                            <CallsignProfileTrigger
-                              callsign={contact.callsign}
-                              operatorUid={contact.uid}
-                              onOpenProfile={setProfileUid}
-                            />
+                            <span className="flex items-center justify-between gap-2">
+                              <CallsignProfileTrigger
+                                callsign={contact.callsign}
+                                operatorUid={contact.uid}
+                                onOpenProfile={setProfileUid}
+                                className={active ? 'text-amber-300' : hasUnread ? 'text-amber-100' : 'text-zinc-200'}
+                              />
+                              {dmSummary?.lastMessageAt ? (
+                                <span className="shrink-0 text-[9px] text-zinc-600">
+                                  {formatConversationPreviewTime(dmSummary.lastMessageAt)}
+                                </span>
+                              ) : null}
+                            </span>
                             <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[10px] uppercase tracking-wider text-zinc-500">
                               {inRoster ? (
                                 <PresenceIndicator
@@ -1147,9 +1202,7 @@ export default function TaktikMuhabere() {
                                 />
                               ) : null}
                               {inRoster ? <span aria-hidden>·</span> : null}
-                              <span>
-                                {contact.role === 'instructor' ? 'Eğitmen' : 'Operatör'}
-                              </span>
+                              <span>{contact.role === 'instructor' ? 'Eğitmen' : 'Operatör'}</span>
                             </p>
                             {dmSummary?.lastMessage ? (
                               <p className="mt-0.5 truncate text-[9px] normal-case tracking-normal text-zinc-500">
@@ -1158,12 +1211,13 @@ export default function TaktikMuhabere() {
                               </p>
                             ) : null}
                           </div>
+                          {hasUnread ? <MuhabereUnreadBadge count={dmUnread} /> : null}
                         </button>
                       )}
 
                       {showRequest ? (
                         requestSent ? (
-                          <span className="shrink-0 px-1 py-1 text-[9px] font-bold uppercase tracking-wider text-zinc-500">
+                          <span className="shrink-0 self-center px-1 py-1 text-[9px] font-bold uppercase tracking-wider text-zinc-500">
                             [ İSTEK İLETİLDİ ]
                           </span>
                         ) : (
@@ -1171,7 +1225,7 @@ export default function TaktikMuhabere() {
                             type="button"
                             disabled={isSending}
                             onClick={() => handleSendRequest(contact)}
-                            className="inline-flex shrink-0 items-center gap-1 rounded border border-transparent px-1.5 py-1 text-[10px] font-bold uppercase tracking-wider text-lime-500 transition hover:border-lime-500/30 hover:bg-lime-950/40 hover:text-lime-400 disabled:opacity-40"
+                            className="inline-flex shrink-0 self-center items-center gap-1 rounded border border-transparent px-1.5 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-400 transition hover:border-amber-500/30 hover:bg-amber-950/40 disabled:opacity-40"
                             aria-label={`${contact.callsign} — istek gönder`}
                           >
                             {isSending ? (
@@ -1187,33 +1241,16 @@ export default function TaktikMuhabere() {
                       ) : null}
 
                       {!isSearchMode ? (
-                        <>
-                          <MuhabereConversationActions
-                            archiveBusy={archivingDmUid === contact.uid}
-                            deleteBusy={deletingDmUid === contact.uid}
-                            onArchive={() => setDmArchiveTarget(contact)}
-                            onDelete={() => setDmDeleteTarget(contact)}
-                            archiveLabel={`${contact.callsign} sohbetini arşivle`}
-                            deleteLabel={`${contact.callsign} sohbetini sil`}
-                          />
-                          <button
-                            type="button"
-                            disabled={isRemoving}
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              void handleDisconnect(contact)
-                            }}
-                            className="mt-0.5 shrink-0 rounded p-1 text-zinc-600 opacity-0 transition-all duration-200 hover:bg-red-950/30 hover:text-red-500 group-hover:opacity-100 disabled:opacity-40"
-                            aria-label={`${contact.callsign} — bağlantıyı kes`}
-                            title="Bağlantıyı kes"
-                          >
-                            {isRemoving ? (
-                              <Loader2 className="size-3.5 animate-spin" aria-hidden />
-                            ) : (
-                              <UserMinus className="size-3.5" strokeWidth={2} aria-hidden />
-                            )}
-                          </button>
-                        </>
+                        <MuhabereConversationMenu
+                          variant="dm"
+                          archiveBusy={archivingDmUid === contact.uid}
+                          deleteBusy={deletingDmUid === contact.uid}
+                          blockBusy={blockingUid === contact.uid}
+                          onArchive={() => setDmArchiveTarget(contact)}
+                          onDelete={() => setDmDeleteTarget(contact)}
+                          onBlock={() => setDmBlockTarget(contact)}
+                          menuLabel={`${contact.callsign} sohbet seçenekleri`}
+                        />
                       ) : null}
                     </div>
                   </li>
@@ -1243,7 +1280,7 @@ export default function TaktikMuhabere() {
 
         <section
           className={[
-            'flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-zinc-950',
+            'flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[#0a0b0d]',
             compact && !showMobileChat ? 'hidden' : '',
           ].join(' ')}
         >
@@ -1260,20 +1297,22 @@ export default function TaktikMuhabere() {
               refId={threadId}
               channelId={conversationMode === 'channel' ? (selectedChannelId ?? '') : ''}
               chatId={conversationMode === 'dm' ? chatId : ''}
+              peerUid={conversationMode === 'dm' ? (selectedUid ?? '') : ''}
               peerTyping={peerTyping}
               peerCallsign={selected?.callsign ?? 'OPERATÖR'}
+              senderNames={senderNames}
               burnGhosts={burnGhosts}
               hiddenMessageIds={hiddenMessageIds}
               onBurnDestroyed={handleBurnDestroyed}
               onHideMessage={handleHideMessage}
               hidingMessageId={hidingMessageId}
               header={
-              <header className="flex shrink-0 items-center gap-2 border-b border-zinc-800 px-2 py-2 sm:gap-3 sm:px-4 sm:py-3">
+              <header className="flex shrink-0 items-center gap-2 border-b border-zinc-800/90 bg-[#0a0b0d] px-2 py-2 sm:gap-3 sm:px-4 sm:py-3">
                 {compact && hasConversation ? (
                   <button
                     type="button"
                     onClick={clearMobileConversation}
-                    className="inline-flex size-9 shrink-0 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900 text-zinc-300 transition hover:border-lime-500/40 hover:text-lime-400"
+                    className="inline-flex size-9 shrink-0 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900 text-zinc-300 transition hover:border-amber-500/40 hover:text-amber-300"
                     aria-label="Sohbet listesine dön"
                   >
                     <ChevronLeft className="size-4" strokeWidth={2} aria-hidden />
@@ -1281,7 +1320,7 @@ export default function TaktikMuhabere() {
                 ) : null}
                 {conversationMode === 'channel' ? (
                   <div className="flex size-8 shrink-0 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900 sm:size-10">
-                    <Radio className="size-4 text-lime-400 sm:size-5" strokeWidth={1.75} aria-hidden />
+                    <Radio className="size-4 text-amber-400 sm:size-5" strokeWidth={1.75} aria-hidden />
                   </div>
                 ) : (
                   <OperatorAvatar
@@ -1304,14 +1343,10 @@ export default function TaktikMuhabere() {
                     {conversationMode === 'channel' ? (
                       <span>Tim kanalı · {selectedChannel?.members.length ?? 0} üye</span>
                     ) : (
-                      <>
-                        <PresenceIndicator
-                          online={presenceMap[selectedUid]?.online ?? false}
-                          label={presenceMap[selectedUid]?.label}
-                        />
-                        <span aria-hidden>·</span>
-                        <span>DM</span>
-                      </>
+                      <PresenceIndicator
+                        online={presenceMap[selectedUid]?.online ?? false}
+                        label={presenceMap[selectedUid]?.label}
+                      />
                     )}
                   </p>
                 </div>
@@ -1319,7 +1354,7 @@ export default function TaktikMuhabere() {
                   <button
                     type="button"
                     onClick={() => setShowChannelMembers(true)}
-                    className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-zinc-700 bg-zinc-900 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400 transition hover:border-lime-500/40 hover:text-lime-400"
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-zinc-700 bg-zinc-900 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400 transition hover:border-amber-500/40 hover:text-amber-300"
                     aria-label="Grup üyelerini göster"
                     title="Grup üyeleri"
                   >
@@ -1327,14 +1362,10 @@ export default function TaktikMuhabere() {
                     <span className="hidden sm:inline">Üyeler</span>
                   </button>
                 ) : null}
-                <span className="inline-flex items-center gap-1.5 rounded-md border border-lime-500/30 bg-lime-950/40 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-lime-400">
-                  <Shield className="size-3 shrink-0" strokeWidth={2} aria-hidden />
-                  Bağlantı güvenli
-                </span>
               </header>
               }
               footer={
-              <footer className="shrink-0 border-t border-zinc-800 p-2 sm:p-4">
+              <footer className="shrink-0 border-t border-zinc-800/90 bg-[#0a0b0d] p-2 sm:p-4">
                 {uploadProgress != null ? (
                   <div className="mb-3 rounded-md border border-lime-500/30 bg-lime-950/30 px-3 py-2">
                     <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-lime-400">
@@ -1395,14 +1426,14 @@ export default function TaktikMuhabere() {
                       'min-w-0 flex-1 rounded-md border bg-zinc-900 px-2 py-1.5 font-mono text-xs text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:ring-1 disabled:opacity-50 sm:px-3 sm:py-2.5 sm:text-sm',
                       burnMode
                         ? 'border-red-600/70 focus:border-red-500 focus:ring-red-500/25'
-                        : 'border-zinc-700 focus:border-zinc-600 focus:ring-lime-500/20',
+                        : 'border-zinc-700 focus:border-amber-500/60 focus:ring-amber-500/25',
                     ].join(' ')}
                     autoComplete="off"
                   />
                   <button
                     type="submit"
                     disabled={!draft.trim() || sending || uploadProgress != null}
-                    className="inline-flex shrink-0 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-zinc-400 transition duration-200 hover:border-lime-500/40 hover:bg-lime-900/50 hover:text-lime-400 disabled:cursor-not-allowed disabled:opacity-40 sm:px-4 sm:py-2.5 sm:text-sm"
+                    className="inline-flex shrink-0 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-zinc-400 transition duration-200 hover:border-amber-500/40 hover:bg-amber-950/40 hover:text-amber-300 disabled:cursor-not-allowed disabled:opacity-40 sm:px-4 sm:py-2.5 sm:text-sm"
                     aria-label="Gönder"
                   >
                     {sending ? (
@@ -1439,6 +1470,20 @@ export default function TaktikMuhabere() {
         onCreated={(channelId) => {
           selectChannel(channelId)
           pushSystemToast('TİM KANALI AÇILDI')
+        }}
+      />
+
+      <EditChannelModal
+        open={Boolean(editChannelTarget)}
+        channelId={editChannelTarget?.id ?? ''}
+        channelName={editChannelTarget?.name ?? ''}
+        uid={uid}
+        onClose={() => setEditChannelTarget(null)}
+        onUpdated={(name) => {
+          const cid = editChannelTarget?.id
+          if (!cid) return
+          setChannels((prev) => prev.map((c) => (c.id === cid ? { ...c, name } : c)))
+          pushSystemToast('KANAL GÜNCELLENDİ')
         }}
       />
 
@@ -1482,6 +1527,20 @@ export default function TaktikMuhabere() {
         onConfirm={() => {
           if (!dmDeleteTarget) return
           void handleDeleteDm(dmDeleteTarget).then(() => setDmDeleteTarget(null))
+        }}
+        onCancel={closeDmAlerts}
+      />
+
+      <TacticalAlert
+        open={Boolean(dmBlockTarget)}
+        title="Kullanıcıyı engelle"
+        message="Bu operatör engellenecek ve sohbet listenizden kaldırılacak. Karşı taraf size mesaj gönderemez. Onaylıyor musunuz?"
+        confirmLabel="Engelle"
+        cancelLabel="İptal"
+        busy={Boolean(blockingUid)}
+        onConfirm={() => {
+          if (!dmBlockTarget) return
+          void handleBlockUser(dmBlockTarget).then(() => setDmBlockTarget(null))
         }}
         onCancel={closeDmAlerts}
       />

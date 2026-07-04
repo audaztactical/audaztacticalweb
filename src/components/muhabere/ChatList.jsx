@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Loader2, Plus, Radio } from 'lucide-react'
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
-import { subscribeConversationSummaries } from '../../lib/firestoreTaktikMuhabere'
+import {
+  formatConversationPreviewTime,
+  subscribeConversationSummaries,
+} from '../../lib/firestoreTaktikMuhabere'
 import { indexConversationSummaries } from '../../lib/muhabereConversation'
-import MuhabereConversationActions from './MuhabereConversationActions'
+import MuhabereConversationMenu from './MuhabereConversationMenu'
+import MuhabereUnreadBadge from './MuhabereUnreadBadge'
 import TacticalAlert from './TacticalAlert'
 
 /** @typedef {import('../../lib/firestoreTaktikMuhabere').MuhabereChannel} MuhabereChannel */
 /** @typedef {import('../../lib/muhabereConversation').MuhabereConversationSummary} MuhabereConversationSummary */
 
 /**
- * Konuşma özetlerini (conversations/{id}) dinleyen kanal listesi.
  * @param {{
  *   uid: string
  *   channels: MuhabereChannel[]
@@ -20,9 +23,14 @@ import TacticalAlert from './TacticalAlert'
  *   selectedChannelId: string | null
  *   archivingChannelId: string | null
  *   deletingChannelId: string | null
+ *   destroyingChannelId?: string | null
+ *   editingChannelId?: string | null
  *   onSelectChannel: (channelId: string) => void
  *   onArchiveChannel: (channel: MuhabereChannel) => void | Promise<void>
  *   onDeleteChannel: (channel: MuhabereChannel) => void | Promise<void>
+ *   onLeaveChannel?: (channel: MuhabereChannel) => void | Promise<void>
+ *   onEditChannel?: (channel: MuhabereChannel) => void
+ *   onDestroyChannel?: (channel: MuhabereChannel) => void | Promise<void>
  *   onCreateChannel: () => void
  *   onSummariesChange?: (payload: ReturnType<typeof indexConversationSummaries>) => void
  * }} props
@@ -36,9 +44,14 @@ export default function ChatList({
   selectedChannelId,
   archivingChannelId,
   deletingChannelId,
+  destroyingChannelId = null,
+  editingChannelId = null,
   onSelectChannel,
   onArchiveChannel,
   onDeleteChannel,
+  onLeaveChannel,
+  onEditChannel,
+  onDestroyChannel,
   onCreateChannel,
   onSummariesChange,
 }) {
@@ -46,7 +59,8 @@ export default function ChatList({
   const [summariesError, setSummariesError] = useState(/** @type {string | null} */ (null))
 
   const [archiveTarget, setArchiveTarget] = useState(/** @type {MuhabereChannel | null} */ (null))
-  const [deleteTarget, setDeleteTarget] = useState(/** @type {MuhabereChannel | null} */ (null))
+  const [leaveTarget, setLeaveTarget] = useState(/** @type {MuhabereChannel | null} */ (null))
+  const [destroyTarget, setDestroyTarget] = useState(/** @type {MuhabereChannel | null} */ (null))
 
   const indexed = useMemo(() => indexConversationSummaries(summaries, uid), [summaries, uid])
 
@@ -75,27 +89,29 @@ export default function ChatList({
   }, [indexed, onSummariesChange])
 
   const busyArchive = Boolean(archivingChannelId)
-  const busyDelete = Boolean(deletingChannelId)
+  const busyLeave = Boolean(deletingChannelId)
+  const busyDestroy = Boolean(destroyingChannelId)
 
   const closeAlerts = () => {
-    if (busyArchive || busyDelete) return
+    if (busyArchive || busyLeave || busyDestroy) return
     setArchiveTarget(null)
-    setDeleteTarget(null)
+    setLeaveTarget(null)
+    setDestroyTarget(null)
   }
 
   const listError = channelsError || summariesError
 
   return (
     <>
-      <div className="shrink-0 border-b border-zinc-800 px-3 py-3">
+      <div className="shrink-0 border-b border-zinc-800/80 px-3 py-3">
         <div className="mb-2 flex items-center justify-between gap-2">
-          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-lime-500/90">
+          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400/90">
             Tim kanalları
           </h2>
           <button
             type="button"
             onClick={onCreateChannel}
-            className="inline-flex items-center gap-1 rounded border border-lime-500/30 bg-lime-950/30 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-lime-400 transition hover:bg-lime-900/50"
+            className="inline-flex items-center gap-1 rounded border border-amber-500/30 bg-amber-950/30 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-amber-300 transition hover:bg-amber-900/50"
           >
             <Plus className="size-3" strokeWidth={2.5} aria-hidden />
             Yeni kanal
@@ -113,59 +129,74 @@ export default function ChatList({
               : 'Aktif kanal yok — arşivi kontrol edin.'}
           </p>
         ) : (
-          <ul className="max-h-36 space-y-1 overflow-y-auto" role="listbox" aria-label="Tim kanalları">
+          <ul className="max-h-44 space-y-1 overflow-y-auto" role="listbox" aria-label="Tim kanalları">
             {channels.map((ch) => {
               const active = ch.id === selectedChannelId
               const summary = indexed.byChannelId[ch.id]
-              const unreadCount = summary?.unreadCount ?? 0
+              const unreadCount = active ? 0 : summary?.unreadCount ?? 0
+              const hasUnread = unreadCount > 0
+              const isOwner = ch.createdBy === uid
 
               return (
-                <li key={ch.id} className="flex items-stretch gap-1">
+                <li
+                  key={ch.id}
+                  className={[
+                    'flex items-stretch gap-1 rounded-md border-l-2 transition-colors',
+                    hasUnread ? 'muhabere-unread-pulse border-l-amber-500' : 'border-l-transparent',
+                    active ? 'bg-zinc-800/80' : 'hover:bg-amber-500/[0.06]',
+                  ].join(' ')}
+                >
                   <button
                     type="button"
                     role="option"
                     aria-selected={active}
                     onClick={() => onSelectChannel(ch.id)}
-                    className={[
-                      'min-w-0 flex-1 flex items-center gap-2 rounded-md border-l-4 px-2 py-2 text-left transition',
-                      active
-                        ? 'border-lime-500 bg-zinc-800 text-lime-400'
-                        : 'border-l-transparent text-zinc-400 hover:bg-zinc-800/70',
-                    ].join(' ')}
+                    className="flex min-w-0 flex-1 items-center gap-2 px-2 py-2.5 text-left"
                   >
-                    <Radio className="size-3 shrink-0 text-lime-500/70" aria-hidden />
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900/80">
+                      <Radio className="size-3.5 text-amber-400/80" aria-hidden />
+                    </span>
                     <span className="min-w-0 flex-1">
-                      <span
-                        className={[
-                          'block truncate text-xs font-semibold uppercase tracking-wide',
-                          unreadCount > 0 && !active ? 'blink text-lime-300' : '',
-                        ].join(' ')}
-                      >
-                        {ch.name}
+                      <span className="flex items-center justify-between gap-2">
+                        <span
+                          className={[
+                            'truncate text-xs font-semibold uppercase tracking-wide',
+                            active ? 'text-amber-300' : hasUnread ? 'text-amber-100' : 'text-zinc-300',
+                          ].join(' ')}
+                        >
+                          {ch.name}
+                        </span>
+                        {summary?.lastMessageAt ? (
+                          <span className="shrink-0 text-[9px] text-zinc-600">
+                            {formatConversationPreviewTime(summary.lastMessageAt)}
+                          </span>
+                        ) : null}
                       </span>
                       {summary?.lastMessage ? (
                         <span className="mt-0.5 block truncate text-[9px] normal-case tracking-normal text-zinc-500">
                           {summary.lastSender ? `${summary.lastSender}: ` : ''}
                           {summary.lastMessage}
                         </span>
-                      ) : null}
+                      ) : (
+                        <span className="mt-0.5 block text-[9px] text-zinc-600">{ch.members.length} üye</span>
+                      )}
                     </span>
-                    {unreadCount > 0 && !active ? (
-                      <span className="shrink-0 rounded-sm bg-lime-500/20 px-1.5 py-0.5 font-mono text-[9px] font-bold text-lime-400">
-                        {unreadCount > 99 ? '99+' : unreadCount}
-                      </span>
-                    ) : (
-                      <span className="shrink-0 text-[9px] text-zinc-500">{ch.members.length}</span>
-                    )}
+                    {hasUnread ? <MuhabereUnreadBadge count={unreadCount} /> : null}
                   </button>
 
-                  <MuhabereConversationActions
+                  <MuhabereConversationMenu
+                    variant="channel"
+                    isOwner={isOwner}
                     archiveBusy={archivingChannelId === ch.id}
-                    deleteBusy={deletingChannelId === ch.id}
+                    leaveBusy={deletingChannelId === ch.id}
+                    destroyBusy={destroyingChannelId === ch.id}
+                    editBusy={editingChannelId === ch.id}
                     onArchive={() => setArchiveTarget(ch)}
-                    onDelete={() => setDeleteTarget(ch)}
-                    archiveLabel={`${ch.name} kanalını arşivle`}
-                    deleteLabel={`${ch.name} grubundan çık`}
+                    onDelete={() => setLeaveTarget(ch)}
+                    onLeave={() => setLeaveTarget(ch)}
+                    onEdit={isOwner && onEditChannel ? () => onEditChannel(ch) : undefined}
+                    onDestroyChannel={isOwner && onDestroyChannel ? () => setDestroyTarget(ch) : undefined}
+                    menuLabel={`${ch.name} kanal seçenekleri`}
                   />
                 </li>
               )
@@ -189,15 +220,30 @@ export default function ChatList({
       />
 
       <TacticalAlert
-        open={Boolean(deleteTarget)}
-        title="Gruptan çık ve sohbeti sil"
+        open={Boolean(leaveTarget)}
+        title="Kanaldan ayrıl"
         message="Bu işlem sohbeti listenizden kaldırır ve sizi gruptan çıkarır. Diğer üyeler gruba ve mesajlara erişmeye devam eder. Onaylıyor musunuz?"
-        confirmLabel="Gruptan çık"
+        confirmLabel="Kanaldan ayrıl"
         cancelLabel="İptal"
-        busy={busyDelete}
+        busy={busyLeave}
         onConfirm={() => {
-          if (!deleteTarget) return
-          void onDeleteChannel(deleteTarget).then(() => setDeleteTarget(null))
+          if (!leaveTarget) return
+          const handler = onLeaveChannel ?? onDeleteChannel
+          void handler(leaveTarget).then(() => setLeaveTarget(null))
+        }}
+        onCancel={closeAlerts}
+      />
+
+      <TacticalAlert
+        open={Boolean(destroyTarget)}
+        title="Kanalı kalıcı olarak sil"
+        message="Kanal ve tüm mesajları kalıcı olarak silinecek. Bu işlem geri alınamaz. Onaylıyor musunuz?"
+        confirmLabel="Kanalı sil"
+        cancelLabel="İptal"
+        busy={busyDestroy}
+        onConfirm={() => {
+          if (!destroyTarget || !onDestroyChannel) return
+          void onDestroyChannel(destroyTarget).then(() => setDestroyTarget(null))
         }}
         onCancel={closeAlerts}
       />

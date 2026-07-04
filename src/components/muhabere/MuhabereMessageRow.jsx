@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { MoreHorizontal, Trash2 } from 'lucide-react'
+import { Check, CheckCheck, MoreHorizontal, Trash2 } from 'lucide-react'
 import { deleteBurnMessage, formatMessageTime, markMessageAsRead } from '../../lib/firestoreTaktikMuhabere'
 
 /** @typedef {import('../../lib/firestoreTaktikMuhabere').MuhabereMessage} MuhabereMessage */
@@ -9,6 +9,8 @@ import { deleteBurnMessage, formatMessageTime, markMessageAsRead } from '../../l
  *   msg: MuhabereMessage
  *   uid: string
  *   chatId: string
+ *   peerUid?: string
+ *   senderLabel?: string
  *   onBurnDestroyed: (msg: MuhabereMessage) => void
  *   onHideMessage?: (messageId: string) => void
  *   hideBusy?: boolean
@@ -19,6 +21,8 @@ export default function MuhabereMessageRow({
   msg,
   uid,
   chatId,
+  peerUid = '',
+  senderLabel = '',
   onBurnDestroyed,
   onHideMessage,
   hideBusy = false,
@@ -39,6 +43,11 @@ export default function MuhabereMessageRow({
   const isDm = Boolean(msg.receiverId)
   const msgType = msg.type ?? 'text'
   const canHide = Boolean(onHideMessage) && !displayDestroyed
+  const readByPeer =
+    outgoing &&
+    isDm &&
+    peerUid &&
+    (msg.readBy?.includes(peerUid) || msg.status === 'read')
 
   useEffect(() => {
     markedRef.current = false
@@ -69,13 +78,13 @@ export default function MuhabereMessageRow({
         const visible = entries.some((e) => e.isIntersecting)
         if (!visible || markedRef.current || msg.status === 'read') return
         markedRef.current = true
-        void markMessageAsRead(chatId, msg.id)
+        void markMessageAsRead(chatId, msg.id, uid)
       },
       { threshold: 0.6 },
     )
     observer.observe(el)
     return () => observer.disconnect()
-  }, [incoming, isDm, msg.id, msg.status, chatId, displayDestroyed])
+  }, [incoming, isDm, msg.id, msg.status, chatId, displayDestroyed, uid])
 
   useEffect(() => {
     if (!incoming || !msg.isBurn || msg.status !== 'read' || displayDestroyed) {
@@ -139,18 +148,6 @@ export default function MuhabereMessageRow({
     onHideMessage(msg.id)
   }
 
-  const receipt =
-    outgoing && !displayDestroyed && isDm ? (
-      <span
-        className={[
-          'text-[9px] font-bold uppercase tracking-wider',
-          msg.status === 'read' ? 'text-lime-500' : 'text-zinc-600',
-        ].join(' ')}
-      >
-        {msg.status === 'read' ? '[ GÖRÜLDÜ ]' : '[ İLETİLDİ ]'}
-      </span>
-    ) : null
-
   const burnBadge =
     msg.isBurn && !displayDestroyed ? (
       <span className="text-[9px] font-bold uppercase tracking-wider text-red-500/90">
@@ -174,7 +171,7 @@ export default function MuhabereMessageRow({
         <button
           type="button"
           onClick={() => setLightboxOpen(true)}
-          className="block overflow-hidden rounded-sm border border-zinc-700 transition hover:border-lime-500/40"
+          className="block overflow-hidden rounded-sm border border-zinc-700 transition hover:border-amber-500/40"
         >
           <img
             src={msg.imageUrl}
@@ -195,10 +192,10 @@ export default function MuhabereMessageRow({
           href={mapsUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="block rounded-sm border border-lime-900 bg-lime-900/20 p-2 font-mono text-lime-400 transition hover:border-lime-500/50 hover:bg-lime-900/30"
+          className="block rounded-sm border border-amber-900/50 bg-amber-950/30 p-2 font-mono text-amber-300 transition hover:border-amber-500/50 hover:bg-amber-950/40"
         >
           <p className="text-[10px] font-bold uppercase tracking-wider">[ STRATEJİK KOORDİNAT ALINDI ]</p>
-          <p className="mt-1 text-[10px] text-lime-300/90">
+          <p className="mt-1 text-[10px] text-amber-200/90">
             LAT: {msg.lat.toFixed(5)} | LNG: {msg.lng.toFixed(5)}
           </p>
         </a>
@@ -207,6 +204,16 @@ export default function MuhabereMessageRow({
 
     return <p className="min-w-0 max-w-full break-words [overflow-wrap:anywhere] text-inherit">{msg.text}</p>
   }
+
+  const bubbleClass = displayDestroyed
+    ? 'border-red-950/60 bg-black/70 text-red-500 rounded-2xl'
+    : outgoing
+      ? msg.isBurn
+        ? 'rounded-2xl rounded-br-sm border border-red-900/50 bg-red-950/30 text-red-100'
+        : 'rounded-2xl rounded-br-sm border border-amber-500/35 bg-amber-500/15 text-amber-50'
+      : msg.isBurn
+        ? 'rounded-2xl rounded-bl-sm border border-red-900/40 bg-red-950/20 text-red-100'
+        : 'rounded-2xl rounded-bl-sm border border-zinc-700 bg-zinc-800/95 text-zinc-200'
 
   return (
     <>
@@ -217,6 +224,12 @@ export default function MuhabereMessageRow({
           outgoing ? 'ml-auto items-end' : 'items-start',
         ].join(' ')}
       >
+        {incoming && senderLabel ? (
+          <span className="px-1 text-[9px] font-bold uppercase tracking-[0.18em] text-zinc-500">
+            {senderLabel}
+          </span>
+        ) : null}
+
         {canHide ? (
           <div
             ref={menuRef}
@@ -232,8 +245,8 @@ export default function MuhabereMessageRow({
               className={[
                 'inline-flex size-7 items-center justify-center rounded-md border transition disabled:opacity-40',
                 'border-zinc-600/80 bg-zinc-900 text-zinc-300',
-                'hover:border-lime-500/50 hover:bg-zinc-800 hover:text-lime-400',
-                menuOpen ? 'border-lime-500/50 text-lime-400' : '',
+                'hover:border-amber-500/50 hover:bg-zinc-800 hover:text-amber-300',
+                menuOpen ? 'border-amber-500/50 text-amber-300' : '',
               ].join(' ')}
               aria-label="Mesaj seçenekleri"
               aria-expanded={menuOpen}
@@ -243,7 +256,7 @@ export default function MuhabereMessageRow({
             {menuOpen ? (
               <div
                 className={[
-                  'absolute top-full z-20 mt-1 min-w-[12rem] overflow-hidden rounded-md border border-zinc-700 bg-zinc-950 py-1 shadow-xl',
+                  'absolute top-full z-20 mt-1 min-w-[12rem] overflow-hidden rounded-md border border-zinc-700 bg-[#0a0b0d] py-1 shadow-xl',
                   outgoing ? 'left-0' : 'right-0',
                 ].join(' ')}
                 role="menu"
@@ -258,33 +271,31 @@ export default function MuhabereMessageRow({
                   <Trash2 className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
                   Mesajı sil
                 </button>
-                <p className="border-t border-zinc-800 px-3 py-2 text-[9px] leading-relaxed text-zinc-600">
-                  Bu mesajı benim ekranımdan kaldır
-                </p>
               </div>
             ) : null}
           </div>
         ) : null}
 
+        <div className={['relative min-w-0 max-w-full overflow-hidden px-3 py-2 text-sm leading-relaxed', outgoing && isDm && !displayDestroyed ? 'pr-7' : '', bubbleClass].join(' ')}>
+          {renderBody()}
+          {outgoing && !displayDestroyed && isDm ? (
+            <span className="absolute bottom-1.5 right-2 inline-flex items-center" aria-label={readByPeer ? 'Okundu' : 'İletildi'}>
+              {readByPeer ? (
+                <CheckCheck className="size-3.5 text-cyan-400" strokeWidth={2.5} aria-hidden />
+              ) : (
+                <Check className="size-3.5 text-zinc-500" strokeWidth={2.5} aria-hidden />
+              )}
+            </span>
+          ) : null}
+        </div>
+
         <div
           className={[
-            'min-w-0 max-w-full overflow-hidden rounded-md border px-3 py-2 text-sm leading-relaxed',
-            displayDestroyed
-              ? 'border-red-950/60 bg-black/70 text-red-500'
-              : outgoing
-                ? msg.isBurn
-                  ? 'border-red-900/50 bg-red-950/30 text-red-200'
-                  : 'border-zinc-700 bg-zinc-800 text-zinc-300'
-                : msg.isBurn
-                  ? 'border-red-900/40 bg-red-950/20 text-red-100'
-                  : 'border-zinc-800 bg-zinc-900/80 text-zinc-400',
+            'flex flex-wrap items-center gap-2 px-1 font-mono text-[10px] text-zinc-500',
+            outgoing ? 'justify-end' : 'justify-start',
           ].join(' ')}
         >
-          {renderBody()}
-        </div>
-        <div className="flex flex-wrap items-center gap-2 font-mono text-xs text-zinc-500">
           <span>{formatMessageTime(msg.timestamp)}</span>
-          {receipt}
           {burnBadge}
         </div>
       </div>
@@ -297,7 +308,7 @@ export default function MuhabereMessageRow({
         >
           <button
             type="button"
-            className="absolute right-4 top-4 rounded border border-zinc-700 px-2 py-1 text-[10px] font-bold uppercase text-zinc-400 hover:text-lime-400"
+            className="absolute right-4 top-4 rounded border border-zinc-700 px-2 py-1 text-[10px] font-bold uppercase text-zinc-400 hover:text-amber-300"
             onClick={() => setLightboxOpen(false)}
           >
             Kapat

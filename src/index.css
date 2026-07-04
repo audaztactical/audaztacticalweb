@@ -186,6 +186,22 @@
   animation: blink 1.2s ease-in-out infinite;
 }
 
+@keyframes muhabere-unread-pulse {
+  0%,
+  100% {
+    border-left-color: rgb(245 158 11 / 0.95);
+    background-color: rgb(245 158 11 / 0.08);
+  }
+  50% {
+    border-left-color: rgb(34 197 94 / 0.95);
+    background-color: rgb(34 197 94 / 0.1);
+  }
+}
+
+.muhabere-unread-pulse {
+  animation: muhabere-unread-pulse 2s ease-in-out infinite;
+}
+
 .entry-gate__atmosphere {
   background:
     radial-gradient(ellipse 80% 50% at 50% 50%, color-mix(in srgb, var(--accent-color) calc(0.06 * 100%), transparent) 0%, transparent 70%),

@@ -32,6 +32,8 @@ const MuhabereTypingIndicator = memo(function MuhabereTypingIndicator({ callsign
  *   channelId?: string
  *   peerTyping?: boolean
  *   peerCallsign?: string
+ *   peerUid?: string
+ *   senderNames?: Record<string, string>
  *   burnGhosts?: Record<string, MuhabereMessage>
  *   hiddenMessageIds?: Set<string>
  *   onBurnDestroyed?: (msg: MuhabereMessage) => void
@@ -50,6 +52,8 @@ export default function ChatWindow({
   channelId = '',
   peerTyping = false,
   peerCallsign = 'OPERATÖR',
+  peerUid = '',
+  senderNames = {},
   burnGhosts = {},
   hiddenMessageIds = new Set(),
   onBurnDestroyed,
@@ -348,6 +352,12 @@ export default function ChatWindow({
               msg={msg}
               uid={uid}
               chatId={threadId}
+              peerUid={mode === 'dm' ? peerUid : ''}
+              senderLabel={
+                msg.senderId === uid
+                  ? ''
+                  : senderNames[msg.senderId] ?? (mode === 'dm' ? peerCallsign : 'OPERATÖR')
+              }
               onBurnDestroyed={onBurnDestroyed}
               onHideMessage={onHideMessage}
               hideBusy={hidingMessageId === msg.id}

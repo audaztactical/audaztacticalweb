@@ -104,6 +104,7 @@ function queueMuhabereMessageNotifications(senderId, recipientIds, preview) {
  *   timestamp: unknown
  *   read?: boolean
  *   status?: MuhabereMessageStatus
+ *   readBy?: string[]
  *   chatId?: string
  *   channelId?: string
  *   type?: MuhabereMessageType
@@ -676,6 +677,22 @@ export function formatMessageTime(ts) {
 }
 
 /**
+ * Konuşma listesinde son mesaj zamanı.
+ * @param {unknown} ts
+ */
+export function formatConversationPreviewTime(ts) {
+  const ms = timestampToMs(ts)
+  if (!ms) return ''
+  const d = new Date(ms)
+  const now = new Date()
+  if (d.toDateString() === now.toDateString()) return formatMessageTime(ts)
+  const yesterday = new Date(now)
+  yesterday.setDate(now.getDate() - 1)
+  if (d.toDateString() === yesterday.toDateString()) return 'Dün'
+  return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+
+/**
  * @param {import('firebase/firestore').DocumentSnapshot} docSnap
  * @param {string} [chatId]
  * @returns {MuhabereMessage}
@@ -692,14 +709,18 @@ function mapMessageDoc(docSnap, threadId) {
       ? /** @type {MuhabereMessageType} */ (rawType)
       : /** @type {MuhabereMessageType} */ ('text')
   const parentId = docSnap.ref.parent.parent?.id ?? ''
+  const readBy = Array.isArray(data.readBy)
+    ? data.readBy.map((id) => String(id ?? '').trim()).filter(Boolean)
+    : []
   return {
     id: docSnap.id,
     text: String(data.text ?? ''),
     senderId: String(data.senderId ?? ''),
     receiverId: String(data.receiverId ?? ''),
     timestamp: data.timestamp,
-    read: status === 'read',
+    read: status === 'read' || readBy.length > 0,
     status,
+    readBy,
     chatId: threadId || parentId,
     channelId: typeof data.channelId === 'string' ? data.channelId : parentId,
     type,
@@ -777,16 +798,19 @@ export function subscribeChatTypingStatus(chatId, peerUid, onData, onError) {
 /**
  * @param {string} chatId
  * @param {string} messageId
+ * @param {string} [readerUid]
  */
-export async function markMessageAsRead(chatId, messageId) {
+export async function markMessageAsRead(chatId, messageId, readerUid) {
   assertDb()
   const cid = String(chatId ?? '').trim()
   const mid = String(messageId ?? '').trim()
-  if (!cid || !mid) return
+  const reader = String(readerUid ?? '').trim()
+  if (!cid || !mid || !reader) return
 
   await updateDoc(doc(db, 'chats', cid, 'messages', mid), {
     status: 'read',
     read: true,
+    readBy: arrayUnion(reader),
   })
 }
 
@@ -868,9 +892,81 @@ export async function markChatMessagesAsRead(chatId, currentUid) {
 
   const batch = writeBatch(db)
   for (const d of snap.docs) {
-    batch.update(d.ref, { status: 'read', read: true })
+    batch.update(d.ref, { status: 'read', read: true, readBy: arrayUnion(me) })
   }
   await batch.commit()
+}
+
+/**
+ * Operatörü engeller — users/{uid}.blockedUsers
+ * @param {string} userId
+ * @param {string} targetUid
+ */
+export async function blockMuhabereUser(userId, targetUid) {
+  assertDb()
+  const me = String(userId ?? '').trim()
+  const target = String(targetUid ?? '').trim()
+  if (!me || !target || me === target) return
+
+  await updateDoc(doc(db, 'users', me), {
+    blockedUsers: arrayUnion(target),
+  })
+}
+
+/**
+ * Tim kanalı adını günceller (yalnızca kurucu).
+ * @param {string} channelId
+ * @param {string} userId
+ * @param {string} name
+ */
+export async function updateMuhabereChannelName(channelId, userId, name) {
+  assertDb()
+  const cid = String(channelId ?? '').trim()
+  const me = String(userId ?? '').trim()
+  const label = String(name ?? '').trim()
+  if (!cid || !me || !label) {
+    const e = new Error('Kanal adı geçersiz.')
+    e.code = 'invalid-argument'
+    throw e
+  }
+
+  const ref = doc(db, 'channels', cid)
+  const snap = await getDoc(ref)
+  if (!snap.exists()) {
+    const e = new Error('Kanal bulunamadı.')
+    e.code = 'not-found'
+    throw e
+  }
+  if (String(snap.data()?.createdBy ?? '') !== me) {
+    const e = new Error('Yalnızca kanal kurucusu düzenleyebilir.')
+    e.code = 'permission-denied'
+    throw e
+  }
+
+  await updateDoc(ref, { name: label.slice(0, 48) })
+}
+
+/**
+ * Tim kanalını kalıcı olarak siler (yalnızca kurucu).
+ * @param {string} channelId
+ * @param {string} userId
+ */
+export async function deleteMuhabereChannel(channelId, userId) {
+  assertDb()
+  const cid = String(channelId ?? '').trim()
+  const me = String(userId ?? '').trim()
+  if (!cid || !me) return
+
+  const ref = doc(db, 'channels', cid)
+  const snap = await getDoc(ref)
+  if (!snap.exists()) return
+  if (String(snap.data()?.createdBy ?? '') !== me) {
+    const e = new Error('Yalnızca kanal kurucusu silebilir.')
+    e.code = 'permission-denied'
+    throw e
+  }
+
+  await deleteDoc(ref)
 }
 
 /**
