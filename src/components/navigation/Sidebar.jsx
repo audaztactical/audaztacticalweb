@@ -18,7 +18,6 @@ import {
   Settings,
   Shield,
   ShieldAlert,
-  Target,
   User,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
@@ -68,7 +67,6 @@ export const NAV_GROUPS = [
     id: 'operations',
     title: '[ OPERASYON VE LOJİSTİK ]',
     items: [
-      { to: '/gorevler', label: 'Görevlerim', icon: Target },
       { to: '/antrenman', label: 'Antrenman ve Operasyon', icon: Crosshair },
       { to: '/tccc', label: 'TCCC & Sağlık', icon: HeartPulse },
       { to: '/cephanelik', label: 'Cephanelik', icon: Shield },

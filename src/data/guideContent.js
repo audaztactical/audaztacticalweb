@@ -214,7 +214,6 @@ export const GUIDE_SECTIONS = {
   missions: {
     title: 'Görevlerim ve değerlendirme raporu',
     opsCode: 'OPS-01',
-    pageLink: { to: '/gorevler', label: 'Görevlerim sayfasına git' },
     access: 'Giriş yapmış tüm operatörler.',
     purpose: 'Operasyon planlama, yürütme kaydı ve görev sonrası değerlendirme raporu.',
     steps: [

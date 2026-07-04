@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AlertCircle, Bell, ChevronRight, ClipboardList } from 'lucide-react'
+import { AlertCircle, Bell, ClipboardList } from 'lucide-react'
 import CommandSideWidgets from '../components/dashboard/CommandSideWidgets'
 import DashboardSystemLog from '../components/dashboard/DashboardSystemLog'
 import OperationalRadarChart from '../components/dashboard/OperationalRadarChart'
@@ -247,10 +247,6 @@ export default function Dashboard() {
                 <h2 className="cmd-panel__title">Operasyon akışı</h2>
                 <p className="cmd-panel__subtitle">Aktif ve bekleyen görevler</p>
               </div>
-              <Link to="/gorevler" className="cmd-panel__link">
-                Tümü
-                <ChevronRight className="size-4" strokeWidth={2} aria-hidden />
-              </Link>
             </div>
 
             <div className="cmd-panel__body">
@@ -261,9 +257,6 @@ export default function Dashboard() {
                   <ClipboardList className="size-8 text-app-text/45" strokeWidth={1.25} aria-hidden />
                   <p className="cmd-empty__title">Aktif görev kaydı yok</p>
                   <p className="cmd-empty__text">Yeni operasyon oluşturduğunuzda burada görünecek.</p>
-                  <Link to="/gorevler" className="cmd-action-btn cmd-action-btn--inline mt-2">
-                    Görevlere git
-                  </Link>
                 </div>
               ) : (
                 <ul className="cmd-mission-list cmd-mission-list--spacious">

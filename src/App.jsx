@@ -26,7 +26,6 @@ const ModulePlaceholder = lazy(() => import('./pages/ModulePlaceholder'))
 const Akademi = lazy(() => import('./pages/Akademi'))
 const Forum = lazy(() => import('./pages/Forum'))
 const IntelFeed = lazy(() => import('./pages/IntelFeed'))
-const Missions = lazy(() => import('./pages/Missions'))
 const Cephanelik = lazy(() => import('./pages/Cephanelik'))
 const Training = lazy(() => import('./pages/Training'))
 const TcccSuite = lazy(() => import('./pages/TcccSuite'))
@@ -65,7 +64,6 @@ export default function App() {
                   <Route path="akademi" element={<Akademi />} />
                   <Route path="forum" element={<Forum />} />
                   <Route path="istihbarat" element={<IntelFeed />} />
-                  <Route path="gorevler" element={<Missions />} />
                   <Route path="cephanelik" element={<Cephanelik />} />
                   <Route path="antrenman" element={<Training />} />
                   <Route path="tccc" element={<TcccSuite />} />

@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   MessageSquare,
   Shield,
-  Target,
 } from 'lucide-react'
 
 /** @typedef {{ id: string, label: string, sub: string, x: string, y: string, accent?: 'green' | 'gold' | 'cyan' }} SchematicNode */
@@ -50,7 +49,6 @@ const OPERATOR_TILES = [
   { to: '/dashboard', label: 'KOMUTA MERKEZİ', sub: 'ORS · görev · envanter', icon: LayoutDashboard },
   { to: '/antrenman', label: 'ANTRENMAN', sub: 'ATIŞ · CQB · FoF', icon: Crosshair },
   { to: '/mesajlar', label: 'MUHABERE', sub: 'Taktik kanallar', icon: MessageSquare },
-  { to: '/gorevler', label: 'GÖREVLER', sub: 'Aktif operasyonlar', icon: Target },
   { to: '/tccc', label: 'TCCC · SAĞLIK', sub: 'Medevac · IFAK', icon: HeartPulse },
   { to: '/cephanelik', label: 'CEPHANELİK', sub: 'Silah · mühimmat', icon: Shield },
 ]
