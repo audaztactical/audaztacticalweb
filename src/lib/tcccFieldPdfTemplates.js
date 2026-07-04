@@ -94,12 +94,63 @@ function initBlankFormPage(doc, margin, pageW, pageH, formId, logoDataUrl, logoD
  * @param {number} margin
  * @param {number} right
  * @param {number} y
- * @param {number} num
- * @param {string} label
- * @param {(doc: import('jspdf').jsPDF, margin: number, right: number, y: number) => number} [renderBody]
+ * @param {string} note
  * @returns {number}
  */
-function drawHatLine(doc, margin, right, y, num, label, renderBody) {
+function drawHatNote(doc, margin, right, y, note) {
+  setPdfFont(doc, 'normal')
+  doc.setFontSize(6.5)
+  doc.setTextColor(...PDF_COLORS.muted)
+  const noteText = `Not: ${note}`
+  const lines = doc.splitTextToSize(noteText, right - margin - 12)
+  doc.text(lines, margin + 12, y)
+  return y + lines.length * 3.1 + 2
+}
+
+/**
+ * @param {import('jspdf').jsPDF} doc
+ * @param {number} margin
+ * @param {number} pageW
+ * @param {number} right
+ * @param {number} y
+ * @returns {number}
+ */
+function draw9LineAbbreviationsSection(doc, margin, pageW, right, y) {
+  doc.setDrawColor(...PDF_COLORS.tableLine)
+  doc.setLineWidth(0.2)
+  doc.line(margin, y, right, y)
+  y += 5
+  y = drawSectionTitle(doc, margin, pageW, 'Kısaltmalar ve Protokol Notları', y)
+  const items = [
+    'MGRS: Military Grid Reference System (Askeri Izgara Referans Sistemi)',
+    'MEDEVAC: Medical Evacuation (Tıbbi Tahliye)',
+    'EPW: Enemy Prisoner of War (Düşman Savaş Esiri)',
+    'Tahliye öncelikleri: A=Acil (<1 saat) · B=Öncelikli (<4 saat) · C=Rutin (<24 saat)',
+    'Bu form doldurulduktan sonra telsizle okunur, kopyası taşınan personelde kalır',
+  ]
+  setPdfFont(doc, 'normal')
+  doc.setFontSize(6.5)
+  doc.setTextColor(...PDF_COLORS.muted)
+  for (const item of items) {
+    const lines = doc.splitTextToSize(`· ${item}`, right - margin)
+    doc.text(lines, margin, y)
+    y += lines.length * 3.1 + 1
+  }
+  return y
+}
+
+/**
+ * @param {import('jspdf').jsPDF} doc
+ * @param {number} margin
+ * @param {number} right
+ * @param {number} y
+ * @param {number} num
+ * @param {string} label
+ * @param {{ note?: string, renderBody?: (doc: import('jspdf').jsPDF, margin: number, right: number, y: number) => number }} [options]
+ * @returns {number}
+ */
+function drawHatLine(doc, margin, right, y, num, label, options = {}) {
+  const { note, renderBody } = options
   setPdfFont(doc, 'bold')
   doc.setFontSize(PDF_FONT_SIZE.body)
   doc.setTextColor(...PDF_COLORS.text)
@@ -109,14 +160,17 @@ function drawHatLine(doc, margin, right, y, num, label, renderBody) {
   doc.setTextColor(...PDF_COLORS.muted)
   const labelLines = doc.splitTextToSize(label, right - margin - 14)
   doc.text(labelLines, margin + 12, y)
-  y += Math.max(labelLines.length * 4, 4) + 3
+  y += Math.max(labelLines.length * 4, 4) + 2
+  if (note) {
+    y = drawHatNote(doc, margin, right, y, note)
+  }
   if (renderBody) {
     y = renderBody(doc, margin, right, y)
   } else {
     drawFormFieldLine(doc, margin, y, right - margin)
-    y += 8
+    y += 7
   }
-  return y + 2
+  return y + 1
 }
 
 /** NATO 9-LINE MEDEVAC boş şablon — jsPDF */
@@ -142,19 +196,37 @@ export async function generate9LineMedevacTemplate() {
 
   y = drawSectionTitle(doc, margin, pageW, '9-Line Tahliye Protokolü', y)
 
-  y = drawHatLine(doc, margin, right, y, 1, 'Koordinatlar (MGRS/GPS)')
-  y = drawHatLine(doc, margin, right, y, 2, 'Radyo frekansı ve çağrı işareti')
-  y = drawHatLine(doc, margin, right, y, 3, 'Hasta sayısı ve taşıma önceliği')
-  y = drawHatLine(doc, margin, right, y, 4, 'Gerekli ekipman')
-  y = drawHatLine(doc, margin, right, y, 5, 'Hasta sayısı (oturur / yatar)')
-  y = drawHatLine(doc, margin, right, y, 6, 'Güvenlik', (d, m, r, cy) =>
-    drawCheckboxRow(d, m + 12, cy, ['N', 'P', 'E', 'X'], r),
-  )
-  y = drawHatLine(doc, margin, right, y, 7, 'Bölge işareti yöntemi')
-  y = drawHatLine(doc, margin, right, y, 8, 'Hasta milliyeti', (d, m, r, cy) =>
-    drawCheckboxRow(d, m + 12, cy, ['Sivil', 'Askeri', 'EPW'], r),
-  )
-  y = drawHatLine(doc, margin, right, y, 9, 'Arazi özellikleri / engeller')
+  y = drawHatLine(doc, margin, right, y, 1, 'Koordinatlar (MGRS/GPS)', {
+    note: 'Tahliye noktasının tam koordinatını girin. MGRS formatı tercih edilir. Örn: 37S NA 12345 67890',
+  })
+  y = drawHatLine(doc, margin, right, y, 2, 'Radyo frekansı ve çağrı işareti', {
+    note: 'Tahliye aracıyla iletişim kurulacak frekans (MHz) ve çağrı işareti. Örn: 40.50 MHz · BRAVO-1',
+  })
+  y = drawHatLine(doc, margin, right, y, 3, 'Hasta sayısı ve taşıma önceliği', {
+    note: 'A=Acil (hayati tehlike), B=Öncelikli (1 saat içinde), C=Rutin (4 saat içinde). Örn: 2A 1B',
+  })
+  y = drawHatLine(doc, margin, right, y, 4, 'Gerekli ekipman', {
+    note: 'A=Vinç yok, B=Vinç gerekli, C=Paket vinç, D=Dalış ekipmanı, E=Diğer',
+  })
+  y = drawHatLine(doc, margin, right, y, 5, 'Hasta sayısı (oturur / yatar)', {
+    note: 'L=Sedyede yatar, A=Oturabilir. Örn: 1L 2A',
+  })
+  y = drawHatLine(doc, margin, right, y, 6, 'Güvenlik', {
+    note: 'N=Sıcak bölge (düşman ateşi), P=Olası tehdit, E=Soğuk bölge (güvenli), X=Silahlı eskort gerekli',
+    renderBody: (d, m, r, cy) => drawCheckboxRow(d, m + 12, cy, ['N', 'P', 'E', 'X'], r),
+  })
+  y = drawHatLine(doc, margin, right, y, 7, 'Bölge işareti yöntemi', {
+    note: 'A=Panel/bayrak, B=Piroteknik, C=Duman, D=El/kol işareti, E=Diğer. Rengi de belirtin.',
+  })
+  y = drawHatLine(doc, margin, right, y, 8, 'Hasta milliyeti', {
+    note: 'Sivil=Sivil kişi, Askeri=Dost kuvvet, EPW=Düşman savaş esiri',
+    renderBody: (d, m, r, cy) => drawCheckboxRow(d, m + 12, cy, ['Sivil', 'Askeri', 'EPW'], r),
+  })
+  y = drawHatLine(doc, margin, right, y, 9, 'Arazi özellikleri / engeller', {
+    note: 'İniş alanındaki engeller: ağaç, tel, eğim, irtifa vb. Rüzgar yönünü de ekleyin.',
+  })
+
+  y = draw9LineAbbreviationsSection(doc, margin, pageW, right, y + 2)
 
   stampPdfFooters(doc, formId)
   doc.save(`AUDAZ-9Line-Medevac-${formId}.pdf`)
