@@ -186,20 +186,23 @@
   animation: blink 1.2s ease-in-out infinite;
 }
 
-@keyframes muhabere-unread-pulse {
-  0%,
-  100% {
-    border-left-color: rgb(245 158 11 / 0.95);
-    background-color: rgb(245 158 11 / 0.08);
+@layer utilities {
+  @keyframes muhabere-unread-pulse {
+    0%,
+    100% {
+      background-color: rgb(245 158 11 / 0.14);
+      box-shadow: inset 3px 0 0 rgb(245 158 11 / 1), 0 0 14px rgb(245 158 11 / 0.12);
+    }
+    50% {
+      background-color: rgb(34 197 94 / 0.12);
+      box-shadow: inset 3px 0 0 rgb(34 197 94 / 1), 0 0 18px rgb(34 197 94 / 0.16);
+    }
   }
-  50% {
-    border-left-color: rgb(34 197 94 / 0.95);
-    background-color: rgb(34 197 94 / 0.1);
-  }
-}
 
-.muhabere-unread-pulse {
-  animation: muhabere-unread-pulse 2s ease-in-out infinite;
+  .muhabere-unread-pulse {
+    animation: muhabere-unread-pulse 1.8s ease-in-out infinite;
+    border-left-color: transparent !important;
+  }
 }
 
 .entry-gate__atmosphere {

@@ -8,6 +8,7 @@ import ChatWindow from '../components/muhabere/ChatWindow'
 import MuhabereChannelMembersModal from '../components/muhabere/MuhabereChannelMembersModal'
 import MuhabereArchiveSection from '../components/muhabere/MuhabereArchiveSection'
 import MuhabereAttachMenu from '../components/muhabere/MuhabereAttachMenu'
+import MuhabereEmptyState from '../components/muhabere/MuhabereEmptyState'
 import MuhabereConversationMenu from '../components/muhabere/MuhabereConversationMenu'
 import MuhabereUnreadBadge from '../components/muhabere/MuhabereUnreadBadge'
 import TacticalAlert from '../components/muhabere/TacticalAlert'
@@ -47,6 +48,7 @@ import {
   subscribeChatTypingStatus,
   subscribeDeletedMuhabereChannelIds,
   subscribeDeletedMuhabereDmIds,
+  subscribeDmUnreadByPeerId,
   subscribeIncomingContactRequests,
   subscribeOutgoingPendingRequests,
   subscribeHiddenMuhabereMessageIds,
@@ -152,6 +154,7 @@ export default function TaktikMuhabere() {
   const [peerTyping, setPeerTyping] = useState(false)
   const [burnGhosts, setBurnGhosts] = useState(/** @type {Record<string, MuhabereMessage>} */ ({}))
   const [conversationIndex, setConversationIndex] = useState(/** @type {ReturnType<import('../lib/muhabereConversation').indexConversationSummaries> | null} */ (null))
+  const [liveDmUnreadByPeerId, setLiveDmUnreadByPeerId] = useState(/** @type {Record<string, number>} */ ({}))
   const [hiddenMessageIds, setHiddenMessageIds] = useState(/** @type {Set<string>} */ (() => new Set()))
   const [archivedChannelIds, setArchivedChannelIds] = useState(/** @type {Set<string>} */ (() => new Set()))
   const [deletedChannelIds, setDeletedChannelIds] = useState(/** @type {Set<string>} */ (() => new Set()))
@@ -227,6 +230,27 @@ export default function TaktikMuhabere() {
   }, [])
 
   const dmUnreadByPeerId = conversationIndex?.dmUnreadByPeerId ?? {}
+
+  useEffect(() => {
+    if (!uid) {
+      setLiveDmUnreadByPeerId({})
+      return undefined
+    }
+
+    return subscribeDmUnreadByPeerId(
+      uid,
+      (counts) => setLiveDmUnreadByPeerId(counts),
+      (err) => emitFirebaseError(err),
+    )
+  }, [uid])
+
+  const resolveDmUnread = useCallback(
+    (/** @type {string} */ peerUid, /** @type {boolean} */ active) => {
+      if (active) return 0
+      return Math.max(dmUnreadByPeerId[peerUid] ?? 0, liveDmUnreadByPeerId[peerUid] ?? 0)
+    },
+    [dmUnreadByPeerId, liveDmUnreadByPeerId],
+  )
 
   const senderNames = useMemo(() => {
     /** @type {Record<string, string>} */
@@ -1087,6 +1111,7 @@ export default function TaktikMuhabere() {
               deletingChannelId={deletingChannelId}
               destroyingChannelId={destroyingChannelId}
               editingChannelId={editChannelTarget?.id ?? null}
+              channelUnreadById={channelUnreadById}
               onSelectChannel={selectChannel}
               onArchiveChannel={handleArchiveChannel}
               onDeleteChannel={handleDeleteChannel}
@@ -1121,7 +1146,7 @@ export default function TaktikMuhabere() {
             >
               {listItems.map((contact) => {
                 const active = !isSearchMode && contact.uid === selectedUid
-                const dmUnread = active ? 0 : dmUnreadByPeerId[contact.uid] ?? 0
+                const dmUnread = resolveDmUnread(contact.uid, active)
                 const dmSummary = conversationIndex?.byPeerUid[contact.uid]
                 const hasUnread = dmUnread > 0
                 const presence = presenceMap[contact.uid]
@@ -1134,9 +1159,9 @@ export default function TaktikMuhabere() {
                   <li key={contact.uid}>
                     <div
                       className={[
-                        'flex w-full items-stretch gap-1 rounded-md border-l-2 transition-colors',
+                        'flex w-full items-stretch gap-1 rounded-md border-l-2',
                         hasUnread && !isSearchMode
-                          ? 'muhabere-unread-pulse border-l-amber-500'
+                          ? 'muhabere-unread-pulse border-l-transparent'
                           : 'border-l-transparent',
                         active ? 'bg-zinc-800/80' : 'hover:bg-amber-500/[0.06]',
                       ].join(' ')}
@@ -1285,11 +1310,7 @@ export default function TaktikMuhabere() {
           ].join(' ')}
         >
           {!hasConversation ? (
-            <p className="flex flex-1 items-center justify-center px-6 text-center text-xs leading-relaxed text-zinc-600">
-              {roster.length === 0 && channels.length === 0
-                ? 'Aktif kanal yok — tim rehberine operatör ekleyin veya yeni tim kanalı oluşturun.'
-                : 'Sohbet için tim kanalı veya rehberden operatör seçin.'}
-            </p>
+            <MuhabereEmptyState hasContacts={roster.length > 0 || channels.length > 0} />
           ) : (
             <ChatWindow
               uid={uid}

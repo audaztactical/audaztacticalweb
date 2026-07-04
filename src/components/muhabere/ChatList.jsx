@@ -25,6 +25,7 @@ import TacticalAlert from './TacticalAlert'
  *   deletingChannelId: string | null
  *   destroyingChannelId?: string | null
  *   editingChannelId?: string | null
+ *   channelUnreadById?: Record<string, number>
  *   onSelectChannel: (channelId: string) => void
  *   onArchiveChannel: (channel: MuhabereChannel) => void | Promise<void>
  *   onDeleteChannel: (channel: MuhabereChannel) => void | Promise<void>
@@ -46,6 +47,7 @@ export default function ChatList({
   deletingChannelId,
   destroyingChannelId = null,
   editingChannelId = null,
+  channelUnreadById = {},
   onSelectChannel,
   onArchiveChannel,
   onDeleteChannel,
@@ -133,7 +135,9 @@ export default function ChatList({
             {channels.map((ch) => {
               const active = ch.id === selectedChannelId
               const summary = indexed.byChannelId[ch.id]
-              const unreadCount = active ? 0 : summary?.unreadCount ?? 0
+              const unreadCount = active
+                ? 0
+                : Math.max(summary?.unreadCount ?? 0, channelUnreadById[ch.id] ?? 0)
               const hasUnread = unreadCount > 0
               const isOwner = ch.createdBy === uid
 
@@ -141,8 +145,8 @@ export default function ChatList({
                 <li
                   key={ch.id}
                   className={[
-                    'flex items-stretch gap-1 rounded-md border-l-2 transition-colors',
-                    hasUnread ? 'muhabere-unread-pulse border-l-amber-500' : 'border-l-transparent',
+                    'flex items-stretch gap-1 rounded-md border-l-2',
+                    hasUnread ? 'muhabere-unread-pulse border-l-transparent' : 'border-l-transparent',
                     active ? 'bg-zinc-800/80' : 'hover:bg-amber-500/[0.06]',
                   ].join(' ')}
                 >
