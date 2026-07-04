@@ -19,125 +19,41 @@ import {
   getCqbThreatNeutralized,
 } from './cqbLogRegistry'
 import { formatMeteoOverviewRows, getLogMeteoData } from './meteoDataCapture'
-import { PDF_FONT_FAMILY, preparePdfAssets, setPdfFont } from './pdfFontLoader'
+import { preparePdfAssets, setPdfFont } from './pdfFontLoader'
+import {
+  PDF_COLORS,
+  PDF_FONT_SIZE,
+  PDF_LAYOUT,
+  drawSectionTitle,
+  getAutoTableOptions,
+  getErrorTableOptions,
+  setupReportContinuationPage,
+  setupReportFirstPage,
+  stampPdfFooters,
+} from './pdfDesignTokens'
 
 /** @typedef {{ callsign?: string, username?: string, email?: string, bloodType?: string }} OperatorInfo */
-
-const COLORS = {
-  bg: [10, 10, 10],
-  text: [203, 213, 225],
-  muted: [100, 116, 139],
-  accent: [255, 180, 0],
-  green: [0, 255, 65],
-  slate: [71, 85, 105],
-  amber: [245, 158, 11],
-}
-
-const TABLE_STYLES = {
-  font: PDF_FONT_FAMILY,
-  fontSize: 8,
-  textColor: COLORS.text,
-  fillColor: COLORS.bg,
-  lineColor: [51, 65, 85],
-  lineWidth: 0.1,
-}
-
-/**
- * @param {import('jspdf').jsPDF} doc
- * @param {number} pageW
- * @param {number} pageH
- */
-function paintPage(doc, pageW, pageH) {
-  doc.setFillColor(...COLORS.bg)
-  doc.rect(0, 0, pageW, pageH, 'F')
-}
-
-/**
- * @param {import('jspdf').jsPDF} doc
- * @param {string} logoDataUrl
- * @param {{ widthMm: number, heightMm: number }} logoDims
- * @param {number} margin
- */
-function drawReportHeader(doc, logoDataUrl, logoDims, margin) {
-  const logoY = 11
-  const textX = margin + logoDims.widthMm + 5
-
-  doc.addImage(logoDataUrl, 'PNG', margin, logoY, logoDims.widthMm, logoDims.heightMm)
-
-  setPdfFont(doc, 'bold')
-  doc.setFontSize(13)
-  doc.setTextColor(...COLORS.accent)
-  doc.text('CQB TACTICAL ASSESSMENT', textX, 17)
-
-  setPdfFont(doc, 'normal')
-  doc.setFontSize(8)
-  doc.setTextColor(...COLORS.green)
-  doc.text('AUDAZ TACTICAL · Close Quarters Battle', textX, 22)
-
-  doc.setTextColor(...COLORS.muted)
-  doc.text(`Rapor üretim: ${new Date().toLocaleString('tr-TR')}`, textX, 27)
-}
-
-/**
- * @param {import('jspdf').jsPDF} doc
- * @param {number} margin
- * @param {OperatorInfo | null | undefined} operator
- */
-function drawOperatorBlock(doc, margin, operator) {
-  const callsign = operator?.callsign || operator?.username || 'Operatör'
-  const email = operator?.email || '—'
-  const blood = operator?.bloodType || '—'
-
-  setPdfFont(doc, 'bold')
-  doc.setFontSize(9)
-  doc.setTextColor(...COLORS.text)
-  doc.text('Operatör kimliği', margin, 36)
-
-  setPdfFont(doc, 'normal')
-  doc.setFontSize(8)
-  doc.setTextColor(...COLORS.muted)
-  doc.text(`Çağrı işareti: ${callsign}`, margin, 42)
-  doc.text(`E-posta: ${email}`, margin, 47)
-  doc.text(`Kan grubu: ${blood}`, margin, 52)
-
-  return callsign
-}
 
 /**
  * @param {import('jspdf').jsPDF} doc
  * @param {number} startY
  * @param {number} margin
+ * @param {number} pageW
  * @param {Record<string, unknown>} log
  */
-function drawEnvironmentalConditions(doc, startY, margin, log) {
+function drawEnvironmentalConditions(doc, startY, margin, pageW, log) {
   const meteo = getLogMeteoData(log)
-
-  setPdfFont(doc, 'bold')
-  doc.setFontSize(9)
-  doc.setTextColor(...COLORS.green)
-  doc.text('Çevresel koşullar · Meteo-Data', margin, startY)
+  const tableStart = drawSectionTitle(doc, margin, pageW, 'Çevresel Koşullar · Meteo-Veri', startY)
 
   autoTable(doc, {
-    startY: startY + 4,
-    margin: { left: margin, right: margin },
+    startY: tableStart,
     head: [['Parametre', 'Değer']],
     body: formatMeteoOverviewRows(meteo),
-    theme: 'plain',
-    styles: TABLE_STYLES,
-    headStyles: {
-      fillColor: [8, 8, 8],
-      textColor: COLORS.accent,
-      fontStyle: 'bold',
-      font: PDF_FONT_FAMILY,
-    },
-    alternateRowStyles: {
-      fillColor: [15, 17, 21],
-    },
-    tableLineColor: [51, 65, 85],
+    ...getAutoTableOptions(margin),
   })
 
   // @ts-expect-error jspdf-autotable plugin
-  return (doc.lastAutoTable?.finalY ?? startY + 20) + 8
+  return (doc.lastAutoTable?.finalY ?? tableStart + 20) + 8
 }
 
 /**
@@ -153,9 +69,9 @@ function drawLogDetailSection(doc, margin, pageW, log, startY) {
   const errorCount = countCqbTacticalErrors(log)
   const note = getCqbOperationNote(log)
 
+  const detailStart = drawSectionTitle(doc, margin, pageW, 'Eğitim Detayları', startY)
   autoTable(doc, {
-    startY,
-    margin: { left: margin, right: margin },
+    startY: detailStart,
     head: [['Parametre', 'Değer']],
     body: [
       ['Tarih', formatCqbDateCell(log)],
@@ -165,35 +81,20 @@ function drawLogDetailSection(doc, margin, pageW, log, startY) {
       ['Kapı durumu', getCqbDoorState(log)],
       ['Takım boyutu', getCqbTeamSize(log)],
       ['Tehdit / Etkisiz', `${threats} / ${neutralized}`],
-      ['Clearance Time', formatCqbClearanceTime(log)],
-      ['Accuracy Score', `%${getCqbAccuracyScore(log).toLocaleString('tr-TR')}`],
-      ['Safety Violations', String(getCqbSafetyViolations(log))],
-      ['Tactical Decision', getCqbTacticalDecision(log)],
+      ['Temizleme süresi', formatCqbClearanceTime(log)],
+      ['İsabet skoru', `%${getCqbAccuracyScore(log).toLocaleString('tr-TR')}`],
+      ['Güvenlik ihlalleri', String(getCqbSafetyViolations(log))],
+      ['Taktik karar', getCqbTacticalDecision(log)],
       ['Başarı oranı', `%${getCqbSuccessPercent(log).toLocaleString('tr-TR')}`],
     ],
-    theme: 'plain',
-    styles: TABLE_STYLES,
-    headStyles: {
-      fillColor: [8, 8, 8],
-      textColor: COLORS.accent,
-      fontStyle: 'bold',
-      font: PDF_FONT_FAMILY,
-    },
-    alternateRowStyles: {
-      fillColor: [15, 17, 21],
-    },
-    tableLineColor: [51, 65, 85],
+    ...getAutoTableOptions(margin),
   })
 
   // @ts-expect-error jspdf-autotable plugin
-  let cursorY = (doc.lastAutoTable?.finalY ?? startY) + 8
+  let cursorY = (doc.lastAutoTable?.finalY ?? detailStart) + 8
 
   if (errorCount > 0) {
-    setPdfFont(doc, 'bold')
-    doc.setFontSize(8)
-    doc.setTextColor(...COLORS.amber)
-    doc.text(`Taktik hatalar · ${errorCount} kayıt`, margin, cursorY)
-    cursorY += 5
+    cursorY = drawSectionTitle(doc, margin, pageW, 'Taktik Hatalar', cursorY)
 
     const errorRows = errorGroups.flatMap((group) =>
       group.labels.map((label) => [group.phaseTitle, label])
@@ -201,32 +102,19 @@ function drawLogDetailSection(doc, margin, pageW, log, startY) {
 
     autoTable(doc, {
       startY: cursorY,
-      margin: { left: margin, right: margin },
       head: [['Faz', 'Hata']],
       body: errorRows,
-      theme: 'plain',
-      styles: { ...TABLE_STYLES, fontSize: 7 },
-      headStyles: {
-        fillColor: [20, 14, 4],
-        textColor: COLORS.amber,
-        fontStyle: 'bold',
-        font: PDF_FONT_FAMILY,
-      },
-      alternateRowStyles: {
-        fillColor: [15, 12, 8],
-      },
+      ...getErrorTableOptions(margin, { styles: { fontSize: PDF_FONT_SIZE.small } }),
     })
 
     // @ts-expect-error jspdf-autotable plugin
     cursorY = (doc.lastAutoTable?.finalY ?? cursorY) + 8
   }
 
-  setPdfFont(doc, 'bold')
-  doc.setTextColor(...COLORS.accent)
-  doc.text('Antrenman notu', margin, cursorY)
-  cursorY += 6
+  cursorY = drawSectionTitle(doc, margin, pageW, 'Değerlendirme Notları', cursorY)
   setPdfFont(doc, 'normal')
-  doc.setTextColor(...COLORS.text)
+  doc.setFontSize(PDF_FONT_SIZE.body)
+  doc.setTextColor(...PDF_COLORS.text)
 
   const noteLines = doc.splitTextToSize(note, pageW - margin * 2)
   doc.text(noteLines, margin, cursorY)
@@ -237,11 +125,13 @@ function drawLogDetailSection(doc, margin, pageW, log, startY) {
 /**
  * @param {import('jspdf').jsPDF} doc
  * @param {number} margin
+ * @param {number} pageW
+ * @param {number} startY
  * @param {Record<string, unknown>[]} logs
  * @param {boolean} filterActive
  * @param {string} filterLabel
  */
-function drawBulkSummaryPage(doc, margin, logs, filterActive, filterLabel) {
+function drawBulkSummaryPage(doc, margin, pageW, startY, logs, filterActive, filterLabel) {
   const avgAccuracy =
     logs.length > 0
       ? Math.round(
@@ -250,26 +140,26 @@ function drawBulkSummaryPage(doc, margin, logs, filterActive, filterLabel) {
       : 0
   const totalViolations = logs.reduce((sum, row) => sum + getCqbSafetyViolations(row), 0)
 
-  setPdfFont(doc, 'bold')
-  doc.setFontSize(10)
-  doc.setTextColor(...COLORS.accent)
-  doc.text('Toplu CQB Raporu — Özet', margin, 60)
+  let y = drawSectionTitle(doc, margin, pageW, 'Performans Özeti', startY)
 
   setPdfFont(doc, 'normal')
-  doc.setFontSize(8)
-  doc.setTextColor(...COLORS.muted)
-  doc.text(`Kayıt sayısı: ${logs.length}`, margin, 66)
-  doc.text(`Ortalama isabet skoru: %${avgAccuracy.toLocaleString('tr-TR')}`, margin, 71)
-  doc.text(`Toplam güvenlik ihlali: ${totalViolations}`, margin, 76)
+  doc.setFontSize(PDF_FONT_SIZE.body)
+  doc.setTextColor(...PDF_COLORS.muted)
+  doc.text(`Kayıt sayısı: ${logs.length}`, margin, y)
+  y += 5
+  doc.text(`Ortalama isabet skoru: %${avgAccuracy.toLocaleString('tr-TR')}`, margin, y)
+  y += 5
+  doc.text(`Toplam güvenlik ihlali: ${totalViolations}`, margin, y)
+  y += 5
   doc.text(
     filterActive ? `Filtre: ${filterLabel}` : 'Filtre: Yok — tüm kayıtlar',
     margin,
-    81
+    y
   )
+  y += 8
 
   autoTable(doc, {
-    startY: 88,
-    margin: { left: margin, right: margin },
+    startY: y,
     head: [['Tarih', 'Topoloji', 'Clearance', 'İsabet %', 'İhlal', 'Karar', 'Başarı %']],
     body: logs.map((row) => [
       formatCqbDateCell(row),
@@ -280,18 +170,7 @@ function drawBulkSummaryPage(doc, margin, logs, filterActive, filterLabel) {
       getCqbTacticalDecision(row),
       `%${getCqbSuccessPercent(row).toLocaleString('tr-TR')}`,
     ]),
-    theme: 'plain',
-    styles: { ...TABLE_STYLES, fontSize: 7 },
-    headStyles: {
-      fillColor: [8, 8, 8],
-      textColor: COLORS.green,
-      fontStyle: 'bold',
-      font: PDF_FONT_FAMILY,
-    },
-    alternateRowStyles: {
-      fillColor: [15, 17, 21],
-    },
-    tableLineColor: [51, 65, 85],
+    ...getAutoTableOptions(margin, { styles: { fontSize: PDF_FONT_SIZE.small } }),
   })
 }
 
@@ -331,33 +210,42 @@ export async function generateCqbTacticalReportPdf({
 
   const pageW = doc.internal.pageSize.getWidth()
   const pageH = doc.internal.pageSize.getHeight()
-  const margin = 14
+  const margin = PDF_LAYOUT.margin
   const isBulk = rows.length > 1
 
-  paintPage(doc, pageW, pageH)
-  drawReportHeader(doc, logoDataUrl, logoDims, margin)
-  const callsign = drawOperatorBlock(doc, margin, operator)
+  const { reportId, callsign, contentStartY, reportTitle } = setupReportFirstPage(
+    doc,
+    pageW,
+    pageH,
+    logoDataUrl,
+    logoDims,
+    'cqb',
+    operator,
+  )
 
   if (isBulk) {
-    drawBulkSummaryPage(doc, margin, rows, filterActive, filterLabel)
+    drawBulkSummaryPage(doc, margin, pageW, contentStartY, rows, filterActive, filterLabel)
   }
 
   rows.forEach((log, index) => {
+    let startY = contentStartY
     if (isBulk) {
       doc.addPage()
-      paintPage(doc, pageW, pageH)
-      drawReportHeader(doc, logoDataUrl, logoDims, margin)
-
-      setPdfFont(doc, 'bold')
-      doc.setFontSize(9)
-      doc.setTextColor(...COLORS.text)
-      doc.text(`Kayıt ${index + 1} / ${rows.length}`, margin, 36)
+      startY = setupReportContinuationPage(
+        doc,
+        pageW,
+        pageH,
+        logoDataUrl,
+        logoDims,
+        reportTitle,
+        `Kayıt ${index + 1} / ${rows.length}`,
+      )
     }
 
-    const overviewStart = isBulk ? 42 : 58
-    let cursorY = drawEnvironmentalConditions(doc, overviewStart, margin, log)
+    let cursorY = drawEnvironmentalConditions(doc, startY, margin, pageW, log)
     drawLogDetailSection(doc, margin, pageW, log, cursorY)
   })
 
+  stampPdfFooters(doc, reportId)
   doc.save(buildPdfFilename(rows, callsign))
 }

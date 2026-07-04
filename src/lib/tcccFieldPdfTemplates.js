@@ -1,3 +1,5 @@
+import { buildPdfHtmlBaseStyles } from './pdfDesignTokens'
+
 /**
  * @param {'nine_line' | 'casevac_mist'} templateId
  */
@@ -15,22 +17,33 @@ export function openTcccFieldPdfTemplate(templateId) {
   }
 }
 
+function buildHtmlHeader(title) {
+  const now = new Date().toLocaleString('tr-TR')
+  return `<div class="header-bar">
+  <div class="header-left">
+    <div class="brand">AUDAZ TACTICAL</div>
+    <div class="sub">Operasyonel Kayıt Sistemi</div>
+  </div>
+  <div class="header-right">
+    <div class="title">${title}</div>
+    <div class="date">${now}</div>
+  </div>
+</div>`
+}
+
 function buildNineLineTemplateHtml() {
+  const styles = buildPdfHtmlBaseStyles()
+  const header = buildHtmlHeader('NATO 9-LINE MEDEVAC TAHLİYE TALEBİ · BOŞ ŞABLON')
   return `<!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="utf-8"/>
 <title>9-LINE MEDEVAC ŞABLONU</title>
-<style>
-  body { font-family: "Courier New", monospace; margin: 24px; color: #111; }
-  h1 { font-size: 14px; letter-spacing: 0.12em; border-bottom: 2px solid #b45309; padding-bottom: 8px; }
-  .line { margin: 12px 0; font-size: 11px; }
-  .blank { border-bottom: 1px solid #333; min-height: 18px; margin-top: 4px; }
-  .footer { margin-top: 32px; font-size: 9px; color: #666; }
-</style>
+<style>${styles}</style>
 </head>
 <body>
-<h1>NATO 9-LINE MEDEVAC TAHLİYE TALEBİ · BOŞ ŞABLON</h1>
+${header}
+<div class="page">
 <p class="line"><strong>HAT 1 · KOORDİNAT (MGRS):</strong><div class="blank"></div></p>
 <p class="line"><strong>HAT 2 · FREKANS / ÇAĞRI ADI:</strong><div class="blank"></div></p>
 <p class="line"><strong>HAT 3 · ACİLİYET (A/B/C/D/E):</strong><div class="blank"></div></p>
@@ -40,28 +53,25 @@ function buildNineLineTemplateHtml() {
 <p class="line"><strong>HAT 7 · İŞARETLEME:</strong><div class="blank"></div></p>
 <p class="line"><strong>HAT 8 · UYRUK / STATÜ:</strong><div class="blank"></div></p>
 <p class="line"><strong>HAT 9 · KBRN / ARAZİ:</strong><div class="blank"></div></p>
-<p class="footer">AUDAZ TACTICAL · TCCC PDF ŞABLON MERKEZİ · YAZDIR → PDF OLARAK KAYDET</p>
+<div class="footer"><span>AUDAZ TACTICAL · TCCC PDF ŞABLON MERKEZİ</span><span>YAZDIR → PDF OLARAK KAYDET</span></div>
+</div>
 </body>
 </html>`
 }
 
 function buildCasevacMistTemplateHtml() {
+  const styles = buildPdfHtmlBaseStyles()
+  const header = buildHtmlHeader('CASEVAC · MIST PROTOKOLÜ · SICAK BÖLGE TAHLİYE ŞABLONU')
   return `<!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="utf-8"/>
 <title>CASEVAC MIST ŞABLONU</title>
-<style>
-  body { font-family: "Courier New", monospace; margin: 24px; color: #111; }
-  h1 { font-size: 14px; letter-spacing: 0.12em; border-bottom: 2px solid #b91c1c; padding-bottom: 8px; }
-  .line { margin: 14px 0; font-size: 11px; }
-  .opts { font-size: 10px; color: #444; margin-top: 6px; line-height: 1.6; }
-  .blank { border-bottom: 1px solid #333; min-height: 18px; margin-top: 4px; }
-  .footer { margin-top: 32px; font-size: 9px; color: #666; }
-</style>
+<style>${styles}</style>
 </head>
 <body>
-<h1>CASEVAC · MIST PROTOKOLÜ · SICAK BÖLGE TAHLİYE ŞABLONU</h1>
+${header}
+<div class="page">
 <p class="line"><strong>TOPLAM YARALI SAYISI:</strong><div class="blank"></div></p>
 <p class="line"><strong>M — METRIC / YARALANMA TİPİ:</strong><div class="blank"></div>
 <span class="opts">□ Kurşun yarası &nbsp; □ Şarapnel &nbsp; □ Amputasyon &nbsp; □ Yanık</span></p>
@@ -72,7 +82,8 @@ function buildCasevacMistTemplateHtml() {
 <p class="line"><strong>T — TREATMENT / MÜDAHALE:</strong><div class="blank"></div>
 <span class="opts">□ Turnike &nbsp; □ Göğüs Mührü &nbsp; □ Hava Yolu &nbsp; □ Morfin</span></p>
 <p class="line"><strong>SICAK BÖLGE ÇAĞRI / FREKANS:</strong><div class="blank"></div></p>
-<p class="footer">AUDAZ TACTICAL · CASEVAC MIST ŞABLONU · 30 SN İLETİM PENCERESİ · YAZDIR → PDF</p>
+<div class="footer"><span>AUDAZ TACTICAL · CASEVAC MIST ŞABLONU · 30 SN İLETİM PENCERESİ</span><span>YAZDIR → PDF</span></div>
+</div>
 </body>
 </html>`
 }

@@ -18,117 +18,61 @@ import {
   getTcccTourniquetLocation,
 } from './tcccLogRegistry'
 import { formatMeteoOverviewRows, getLogMeteoData } from './meteoDataCapture'
-import { PDF_FONT_FAMILY, preparePdfAssets, setPdfFont } from './pdfFontLoader'
+import { preparePdfAssets, setPdfFont } from './pdfFontLoader'
+import {
+  PDF_COLORS,
+  PDF_FONT_SIZE,
+  PDF_LAYOUT,
+  drawSectionTitle,
+  getAutoTableOptions,
+  setupReportContinuationPage,
+  setupReportFirstPage,
+  stampPdfFooters,
+} from './pdfDesignTokens'
 
 /** @typedef {{ callsign?: string, username?: string, email?: string, bloodType?: string }} OperatorInfo */
 
-const COLORS = {
-  bg: [10, 10, 10],
-  text: [203, 213, 225],
-  muted: [100, 116, 139],
-  accent: [255, 180, 0],
-  green: [0, 255, 65],
-}
-
-const TABLE_STYLES = {
-  font: PDF_FONT_FAMILY,
-  fontSize: 8,
-  textColor: COLORS.text,
-  fillColor: COLORS.bg,
-  lineColor: [51, 65, 85],
-  lineWidth: 0.1,
-}
-
-function paintPage(doc, pageW, pageH) {
-  doc.setFillColor(...COLORS.bg)
-  doc.rect(0, 0, pageW, pageH, 'F')
-}
-
-function drawReportHeader(doc, logoDataUrl, logoDims, margin) {
-  const logoY = 11
-  const textX = margin + logoDims.widthMm + 5
-
-  doc.addImage(logoDataUrl, 'PNG', margin, logoY, logoDims.widthMm, logoDims.heightMm)
-
-  setPdfFont(doc, 'bold')
-  doc.setFontSize(11)
-  doc.setTextColor(...COLORS.accent)
-  doc.text('TCCC CLINICAL & TACTICAL REPORT', textX, 17)
-
-  setPdfFont(doc, 'normal')
-  doc.setFontSize(8)
-  doc.setTextColor(...COLORS.green)
-  doc.text('AUDAZ TACTICAL · Hayatta Kalma', textX, 22)
-
-  doc.setTextColor(...COLORS.muted)
-  doc.text(`Rapor üretim: ${new Date().toLocaleString('tr-TR')}`, textX, 27)
-}
-
-function drawOperatorBlock(doc, margin, operator) {
-  const callsign = operator?.callsign || operator?.username || 'Operatör'
-  const email = operator?.email || '—'
-  const blood = operator?.bloodType || '—'
-
-  setPdfFont(doc, 'bold')
-  doc.setFontSize(9)
-  doc.setTextColor(...COLORS.text)
-  doc.text('Operatör kimliği', margin, 36)
-
-  setPdfFont(doc, 'normal')
-  doc.setFontSize(8)
-  doc.setTextColor(...COLORS.muted)
-  doc.text(`Çağrı işareti: ${callsign}`, margin, 42)
-  doc.text(`E-posta: ${email}`, margin, 47)
-  doc.text(`Kan grubu: ${blood}`, margin, 52)
-
-  return callsign
-}
-
-function drawEnvironmentalConditions(doc, startY, margin, log) {
+/**
+ * @param {import('jspdf').jsPDF} doc
+ * @param {number} startY
+ * @param {number} margin
+ * @param {number} pageW
+ * @param {Record<string, unknown>} log
+ */
+function drawEnvironmentalConditions(doc, startY, margin, pageW, log) {
   const meteo = getLogMeteoData(log)
-
-  setPdfFont(doc, 'bold')
-  doc.setFontSize(9)
-  doc.setTextColor(...COLORS.green)
-  doc.text('Çevresel koşullar · Meteo-Data', margin, startY)
+  const tableStart = drawSectionTitle(doc, margin, pageW, 'Çevresel Koşullar · Meteo-Veri', startY)
 
   autoTable(doc, {
-    startY: startY + 4,
-    margin: { left: margin, right: margin },
+    startY: tableStart,
     head: [['Parametre', 'Değer']],
     body: formatMeteoOverviewRows(meteo),
-    theme: 'plain',
-    styles: TABLE_STYLES,
-    headStyles: {
-      fillColor: [8, 8, 8],
-      textColor: COLORS.accent,
-      fontStyle: 'bold',
-      font: PDF_FONT_FAMILY,
-    },
-    alternateRowStyles: { fillColor: [15, 17, 21] },
-    tableLineColor: [51, 65, 85],
+    ...getAutoTableOptions(margin),
   })
 
   // @ts-expect-error jspdf-autotable plugin
-  return (doc.lastAutoTable?.finalY ?? startY + 20) + 8
+  return (doc.lastAutoTable?.finalY ?? tableStart + 20) + 8
 }
 
+/**
+ * @param {import('jspdf').jsPDF} doc
+ * @param {number} margin
+ * @param {number} pageW
+ * @param {Record<string, unknown>} log
+ * @param {number} startY
+ */
 function drawClinicalSummary(doc, margin, pageW, log, startY) {
-  setPdfFont(doc, 'bold')
-  doc.setFontSize(9)
-  doc.setTextColor(...COLORS.accent)
-  doc.text('Clinical & Tactical Summary', margin, startY)
+  const summaryStart = drawSectionTitle(doc, margin, pageW, 'Klinik ve Taktik Özet', startY)
 
   autoTable(doc, {
-    startY: startY + 4,
-    margin: { left: margin, right: margin },
+    startY: summaryStart,
     head: [['Parametre', 'Değer']],
     body: [
       ['Tarih', formatTcccDateCell(log)],
-      ['Casualty Type', getTcccCasualtyType(log)],
-      ['Intervention Time', formatTcccInterventionTime(log)],
-      ['Procedure Performed', getTcccProcedurePerformed(log)],
-      ['Outcome', getTcccOutcome(log)],
+      ['Yaralı tipi', getTcccCasualtyType(log)],
+      ['Müdahale süresi', formatTcccInterventionTime(log)],
+      ['Uygulanan prosedür', getTcccProcedurePerformed(log)],
+      ['Sonuç', getTcccOutcome(log)],
       ['Yaralanma tipi', getTcccInjuryType(log)],
       ['TCCC fazı', getTcccPhase(log)],
       ['Turnike konumu', getTcccTourniquetLocation(log)],
@@ -136,43 +80,21 @@ function drawClinicalSummary(doc, margin, pageW, log, startY) {
       ['Sistolik BP', formatTcccSystolicBp(log)],
       ['Başarı oranı', `%${getTcccSuccessPercent(log).toLocaleString('tr-TR')}`],
     ],
-    theme: 'plain',
-    styles: TABLE_STYLES,
-    headStyles: {
-      fillColor: [8, 8, 8],
-      textColor: COLORS.green,
-      fontStyle: 'bold',
-      font: PDF_FONT_FAMILY,
-    },
-    alternateRowStyles: { fillColor: [15, 17, 21] },
-    tableLineColor: [51, 65, 85],
+    ...getAutoTableOptions(margin),
   })
 
   // @ts-expect-error jspdf-autotable plugin
-  let cursorY = (doc.lastAutoTable?.finalY ?? startY) + 8
+  let cursorY = (doc.lastAutoTable?.finalY ?? summaryStart) + 8
 
   const marchSections = getTcccMarchSectionsForReport(log)
   if (marchSections.length > 0) {
-    setPdfFont(doc, 'bold')
-    doc.setTextColor(...COLORS.accent)
-    doc.text('MARCH müdahale özeti', margin, cursorY)
-    cursorY += 6
+    cursorY = drawSectionTitle(doc, margin, pageW, 'MARCH müdahale özeti', cursorY)
 
     autoTable(doc, {
       startY: cursorY,
-      margin: { left: margin, right: margin },
       head: [['Faz', 'Uygulanan müdahaleler']],
       body: marchSections.map((section) => [section.step, section.items.join(' · ')]),
-      theme: 'plain',
-      styles: { ...TABLE_STYLES, fontSize: 7 },
-      headStyles: {
-        fillColor: [8, 8, 8],
-        textColor: COLORS.green,
-        fontStyle: 'bold',
-        font: PDF_FONT_FAMILY,
-      },
-      alternateRowStyles: { fillColor: [15, 17, 21] },
-      tableLineColor: [51, 65, 85],
+      ...getAutoTableOptions(margin, { styles: { fontSize: PDF_FONT_SIZE.table } }),
     })
     // @ts-expect-error jspdf-autotable plugin
     cursorY = (doc.lastAutoTable?.finalY ?? cursorY) + 8
@@ -181,27 +103,25 @@ function drawClinicalSummary(doc, margin, pageW, log, startY) {
   const treatments = getTcccAppliedTreatmentsSummary(log)
   const note = getTcccOperationNote(log)
 
-  setPdfFont(doc, 'bold')
-  doc.setTextColor(...COLORS.accent)
-  doc.text('Tıbbi notlar', margin, cursorY)
-  cursorY += 6
+  cursorY = drawSectionTitle(doc, margin, pageW, 'Tıbbi Notlar', cursorY)
   setPdfFont(doc, 'normal')
-  doc.setTextColor(...COLORS.text)
+  doc.setFontSize(PDF_FONT_SIZE.body)
+  doc.setTextColor(...PDF_COLORS.text)
 
   if (treatments !== '—') {
-    doc.setTextColor(...COLORS.muted)
+    doc.setTextColor(...PDF_COLORS.muted)
     doc.text('Uygulanan tedaviler:', margin, cursorY)
     cursorY += 5
-    doc.setTextColor(...COLORS.text)
+    doc.setTextColor(...PDF_COLORS.text)
     const treatmentLines = doc.splitTextToSize(treatments, pageW - margin * 2)
     doc.text(treatmentLines, margin, cursorY)
     cursorY += treatmentLines.length * 5 + 4
   }
 
-  doc.setTextColor(...COLORS.muted)
+  doc.setTextColor(...PDF_COLORS.muted)
   doc.text('Operasyon notu:', margin, cursorY)
   cursorY += 5
-  doc.setTextColor(...COLORS.text)
+  doc.setTextColor(...PDF_COLORS.text)
 
   const noteLines = doc.splitTextToSize(note, pageW - margin * 2)
   doc.text(noteLines, margin, cursorY)
@@ -209,32 +129,40 @@ function drawClinicalSummary(doc, margin, pageW, log, startY) {
   return cursorY + noteLines.length * 5
 }
 
-function drawBulkSummaryPage(doc, margin, logs, filterActive, filterLabel) {
+/**
+ * @param {import('jspdf').jsPDF} doc
+ * @param {number} margin
+ * @param {number} pageW
+ * @param {number} startY
+ * @param {Record<string, unknown>[]} logs
+ * @param {boolean} filterActive
+ * @param {string} filterLabel
+ */
+function drawBulkSummaryPage(doc, margin, pageW, startY, logs, filterActive, filterLabel) {
   const avgSuccess =
     logs.length > 0
       ? Math.round((logs.reduce((sum, row) => sum + getTcccSuccessPercent(row), 0) / logs.length) * 10) /
         10
       : 0
 
-  setPdfFont(doc, 'bold')
-  doc.setFontSize(10)
-  doc.setTextColor(...COLORS.accent)
-  doc.text('Toplu TCCC Raporu — Özet', margin, 60)
+  let y = drawSectionTitle(doc, margin, pageW, 'Performans Özeti', startY)
 
   setPdfFont(doc, 'normal')
-  doc.setFontSize(8)
-  doc.setTextColor(...COLORS.muted)
-  doc.text(`Kayıt sayısı: ${logs.length}`, margin, 66)
-  doc.text(`Ortalama başarı: %${avgSuccess.toLocaleString('tr-TR')}`, margin, 71)
+  doc.setFontSize(PDF_FONT_SIZE.body)
+  doc.setTextColor(...PDF_COLORS.muted)
+  doc.text(`Kayıt sayısı: ${logs.length}`, margin, y)
+  y += 5
+  doc.text(`Ortalama başarı: %${avgSuccess.toLocaleString('tr-TR')}`, margin, y)
+  y += 5
   doc.text(
     filterActive ? `Filtre: ${filterLabel}` : 'Filtre: Yok — tüm kayıtlar',
     margin,
-    76
+    y
   )
+  y += 8
 
   autoTable(doc, {
-    startY: 88,
-    margin: { left: margin, right: margin },
+    startY: y,
     head: [['Tarih', 'Yaralı Tipi', 'Müdahale', 'Prosedür', 'Sonuç', 'Başarı %']],
     body: logs.map((row) => [
       formatTcccDateCell(row),
@@ -244,16 +172,7 @@ function drawBulkSummaryPage(doc, margin, logs, filterActive, filterLabel) {
       getTcccOutcome(row),
       `%${getTcccSuccessPercent(row).toLocaleString('tr-TR')}`,
     ]),
-    theme: 'plain',
-    styles: { ...TABLE_STYLES, fontSize: 7 },
-    headStyles: {
-      fillColor: [8, 8, 8],
-      textColor: COLORS.green,
-      fontStyle: 'bold',
-      font: PDF_FONT_FAMILY,
-    },
-    alternateRowStyles: { fillColor: [15, 17, 21] },
-    tableLineColor: [51, 65, 85],
+    ...getAutoTableOptions(margin, { styles: { fontSize: PDF_FONT_SIZE.table } }),
   })
 }
 
@@ -289,33 +208,42 @@ export async function generateTcccTacticalReportPdf({
 
   const pageW = doc.internal.pageSize.getWidth()
   const pageH = doc.internal.pageSize.getHeight()
-  const margin = 14
+  const margin = PDF_LAYOUT.margin
   const isBulk = rows.length > 1
 
-  paintPage(doc, pageW, pageH)
-  drawReportHeader(doc, logoDataUrl, logoDims, margin)
-  const callsign = drawOperatorBlock(doc, margin, operator)
+  const { reportId, callsign, contentStartY, reportTitle } = setupReportFirstPage(
+    doc,
+    pageW,
+    pageH,
+    logoDataUrl,
+    logoDims,
+    'tccc',
+    operator,
+  )
 
   if (isBulk) {
-    drawBulkSummaryPage(doc, margin, rows, filterActive, filterLabel)
+    drawBulkSummaryPage(doc, margin, pageW, contentStartY, rows, filterActive, filterLabel)
   }
 
   rows.forEach((log, index) => {
+    let startY = contentStartY
     if (isBulk) {
       doc.addPage()
-      paintPage(doc, pageW, pageH)
-      drawReportHeader(doc, logoDataUrl, logoDims, margin)
-
-      setPdfFont(doc, 'bold')
-      doc.setFontSize(9)
-      doc.setTextColor(...COLORS.text)
-      doc.text(`Kayıt ${index + 1} / ${rows.length}`, margin, 36)
+      startY = setupReportContinuationPage(
+        doc,
+        pageW,
+        pageH,
+        logoDataUrl,
+        logoDims,
+        reportTitle,
+        `Kayıt ${index + 1} / ${rows.length}`,
+      )
     }
 
-    const meteoStart = isBulk ? 42 : 58
-    let cursorY = drawEnvironmentalConditions(doc, meteoStart, margin, log)
+    let cursorY = drawEnvironmentalConditions(doc, startY, margin, pageW, log)
     drawClinicalSummary(doc, margin, pageW, log, cursorY)
   })
 
+  stampPdfFooters(doc, reportId)
   doc.save(buildPdfFilename(rows, callsign))
 }

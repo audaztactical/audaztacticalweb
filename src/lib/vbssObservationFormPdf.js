@@ -3,30 +3,21 @@ import { PDF_FONT_FAMILY, preparePdfAssets, setPdfFont } from './pdfFontLoader'
 import { VBSS_EVALUATION_PHASES } from './vbssEvaluationPayload'
 import { VBSS_PHASE_SUB_CRITERIA } from './evaluationPhaseCriteria'
 import { VBSS_OBSERVED_PDF_FORM_VERSION } from './observedEvalConstants'
+import {
+  PDF_COLORS,
+  PDF_FONT_SIZE,
+  PDF_LAYOUT,
+  PDF_REPORT_TITLES,
+  drawEmptyFormBox,
+  drawFormFieldLine,
+  drawObservationFormHeader,
+  drawPdfHeader,
+  drawSectionTitle,
+  paintPdfPage,
+  stampPdfFooters,
+} from './pdfDesignTokens'
 
 /** @typedef {{ callsign?: string; username?: string; displayName?: string }} OperatorPrefill */
-
-const COLORS = {
-  bg: [10, 10, 10],
-  text: [203, 213, 225],
-  muted: [100, 116, 139],
-  accent: [255, 180, 0],
-  green: [0, 255, 65],
-}
-
-const MARGIN = 14
-
-/**
- * @param {import('jspdf').jsPDF} doc
- * @param {number} x
- * @param {number} y
- * @param {number} size
- */
-function drawEmptyBox(doc, x, y, size = 4) {
-  doc.setDrawColor(...COLORS.muted)
-  doc.setLineWidth(0.2)
-  doc.rect(x, y, size, size)
-}
 
 /**
  * @param {import('jspdf').jsPDF} doc
@@ -39,85 +30,50 @@ function drawScoreBoxes(doc, startX, y, count, startIndex = 0) {
   const box = 5
   const gap = 1.5
   setPdfFont(doc, 'normal')
-  doc.setFontSize(7)
-  doc.setTextColor(...COLORS.muted)
+  doc.setFontSize(PDF_FONT_SIZE.small)
+  doc.setTextColor(...PDF_COLORS.muted)
   for (let i = 0; i < count; i++) {
     const n = startIndex + i
     const x = startX + i * (box + gap)
-    drawEmptyBox(doc, x, y, box)
+    drawEmptyFormBox(doc, x, y, box)
     doc.text(String(n), x + box / 2, y + box + 3.5, { align: 'center' })
   }
 }
 
 /**
  * @param {import('jspdf').jsPDF} doc
- * @param {number} pageW
- * @param {number} pageH
- */
-function paintPage(doc, pageW, pageH) {
-  doc.setFillColor(...COLORS.bg)
-  doc.rect(0, 0, pageW, pageH, 'F')
-}
-
-/**
- * @param {import('jspdf').jsPDF} doc
- * @param {string} logoDataUrl
- * @param {{ widthMm: number; heightMm: number }} logoDims
- * @param {string} formId
- */
-function drawHeader(doc, logoDataUrl, logoDims, formId) {
-  doc.addImage(logoDataUrl, 'PNG', MARGIN, 10, logoDims.widthMm, logoDims.heightMm)
-  const textX = MARGIN + logoDims.widthMm + 4
-
-  setPdfFont(doc, 'bold')
-  doc.setFontSize(11)
-  doc.setTextColor(...COLORS.accent)
-  doc.text('VBSS PEER OBSERVATION FORM', textX, 16)
-
-  setPdfFont(doc, 'normal')
-  doc.setFontSize(8)
-  doc.setTextColor(...COLORS.green)
-  doc.text('AUDAZ TACTICAL · Gemi Operasyonu Gözlem Formu', textX, 21)
-  doc.setTextColor(...COLORS.muted)
-  doc.text(`Form: ${formId} · ${VBSS_OBSERVED_PDF_FORM_VERSION}`, textX, 26)
-}
-
-/**
- * @param {import('jspdf').jsPDF} doc
  * @param {number} y
+ * @param {number} pageW
  * @param {OperatorPrefill} [operator]
  */
-function drawMetaBlock(doc, y, operator) {
+function drawMetaBlock(doc, y, pageW, operator) {
+  const margin = PDF_LAYOUT.margin
   const operatorName = operator?.callsign || operator?.username || operator?.displayName || ''
-  setPdfFont(doc, 'bold')
-  doc.setFontSize(9)
-  doc.setTextColor(...COLORS.text)
-  doc.text('Operatör / Gözlemci bilgileri', MARGIN, y)
+  let cursor = drawSectionTitle(doc, margin, pageW, 'Operatör / Gözlemci Bilgileri', y)
 
   setPdfFont(doc, 'normal')
-  doc.setFontSize(8)
-  doc.setTextColor(...COLORS.muted)
-  let cursor = y + 6
-  doc.text('Operatör (callsign / ad):', MARGIN, cursor)
-  doc.setTextColor(...COLORS.text)
-  doc.text(operatorName || '________________________________', MARGIN + 48, cursor)
+  doc.setFontSize(PDF_FONT_SIZE.body)
+  doc.setTextColor(...PDF_COLORS.muted)
+  doc.text('Operatör (callsign / ad):', margin, cursor)
+  doc.setTextColor(...PDF_COLORS.text)
+  doc.text(operatorName || '________________________________', margin + 48, cursor)
   cursor += 7
-  doc.setTextColor(...COLORS.muted)
-  doc.text('Gözlemci adı:', MARGIN, cursor)
-  doc.text('________________________________', MARGIN + 48, cursor)
+  doc.setTextColor(...PDF_COLORS.muted)
+  doc.text('Gözlemci adı:', margin, cursor)
+  doc.text('________________________________', margin + 48, cursor)
   cursor += 7
-  doc.text('Gözlemci callsign:', MARGIN, cursor)
-  doc.text('________________________', MARGIN + 48, cursor)
+  doc.text('Gözlemci callsign:', margin, cursor)
+  doc.text('________________________', margin + 48, cursor)
   cursor += 7
-  doc.text('Saha tarihi:', MARGIN, cursor)
-  doc.text('____ / ____ / ______', MARGIN + 48, cursor)
-  doc.text('Lokasyon:', MARGIN + 95, cursor)
-  doc.text('____________________', MARGIN + 115, cursor)
+  doc.text('Saha tarihi:', margin, cursor)
+  doc.text('____ / ____ / ______', margin + 48, cursor)
+  doc.text('Lokasyon:', margin + 95, cursor)
+  doc.text('____________________', margin + 115, cursor)
   cursor += 7
-  doc.text('Gözlemci imza:', MARGIN, cursor)
-  doc.line(MARGIN + 48, cursor, MARGIN + 120, cursor)
+  doc.text('Gözlemci imza:', margin, cursor)
+  drawFormFieldLine(doc, margin + 48, cursor, 72)
   cursor += 8
-  doc.text('☐ Zamanlı oturum    Hedef operasyon süresi (sn): ________', MARGIN, cursor)
+  doc.text('☐ Zamanlı oturum    Hedef operasyon süresi (sn): ________', margin, cursor)
 
   return cursor + 8
 }
@@ -127,55 +83,55 @@ function drawMetaBlock(doc, y, operator) {
  * @param {number} startY
  * @param {number} pageW
  * @param {number} pageH
+ * @param {string} logoDataUrl
+ * @param {{ widthMm: number; heightMm: number }} logoDims
+ * @param {string} formTitle
  */
-function drawPhases(doc, startY, pageW, pageH) {
+function drawPhases(doc, startY, pageW, pageH, logoDataUrl, logoDims, formTitle) {
+  const margin = PDF_LAYOUT.margin
   let y = startY
 
   setPdfFont(doc, 'normal')
-  doc.setFontSize(7)
-  doc.setTextColor(...COLORS.muted)
+  doc.setFontSize(PDF_FONT_SIZE.small)
+  doc.setTextColor(...PDF_COLORS.muted)
   const instr = doc.splitTextToSize(
     'Talimat: Gözlemci sahadaki performansı işaretler. Operatör, işaretlemeleri uygulamaya kendi eliyle girer.',
-    pageW - MARGIN * 2,
+    pageW - margin * 2,
   )
-  doc.text(instr, MARGIN, y)
+  doc.text(instr, margin, y)
   y += instr.length * 4 + 6
 
   for (const meta of VBSS_EVALUATION_PHASES) {
     if (y > pageH - 45) {
       doc.addPage()
-      paintPage(doc, pageW, pageH)
-      y = 20
+      paintPdfPage(doc, pageW, pageH)
+      drawPdfHeader(doc, pageW, logoDataUrl, logoDims, formTitle)
+      y = PDF_LAYOUT.headerHeight + 6
     }
 
-    setPdfFont(doc, 'bold')
-    doc.setFontSize(9)
-    doc.setTextColor(...COLORS.accent)
-    doc.text(meta.title, MARGIN, y)
-    y += 5
+    y = drawSectionTitle(doc, margin, pageW, meta.title, y)
     setPdfFont(doc, 'normal')
-    doc.setFontSize(7)
-    doc.setTextColor(...COLORS.muted)
-    doc.text(meta.subtitle, MARGIN, y)
+    doc.setFontSize(PDF_FONT_SIZE.small)
+    doc.setTextColor(...PDF_COLORS.muted)
+    doc.text(meta.subtitle, margin, y)
     y += 6
 
     const criteria = VBSS_PHASE_SUB_CRITERIA[meta.id] ?? []
     for (const criterion of criteria) {
-      doc.text(`${criterion.label} (0–10):`, MARGIN, y)
-      drawScoreBoxes(doc, MARGIN + 48, y - 3.5, 11, 0)
+      doc.text(`${criterion.label} (0–10):`, margin, y)
+      drawScoreBoxes(doc, margin + 48, y - 3.5, 11, 0)
       y += 10
     }
     if (!criteria.length) {
-      doc.text('SKOR (0–10):', MARGIN, y)
-      drawScoreBoxes(doc, MARGIN + 28, y - 3.5, 11, 0)
+      doc.text('SKOR (0–10):', margin, y)
+      drawScoreBoxes(doc, margin + 28, y - 3.5, 11, 0)
       y += 10
     }
 
-    doc.text('GÖZLEM NOTU:', MARGIN, y)
+    doc.text('GÖZLEM NOTU:', margin, y)
     y += 4
-    doc.setDrawColor(...COLORS.muted)
-    doc.line(MARGIN, y + 8, pageW - MARGIN, y + 8)
-    doc.line(MARGIN, y + 16, pageW - MARGIN, y + 16)
+    drawFormFieldLine(doc, margin, y + 8, pageW - margin * 2)
+    drawFormFieldLine(doc, margin, y + 16, pageW - margin * 2)
     y += 22
   }
 
@@ -190,23 +146,34 @@ export async function generateVbssObservationFormPdf(operator = {}) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
   const pageW = doc.internal.pageSize.getWidth()
   const pageH = doc.internal.pageSize.getHeight()
+  const margin = PDF_LAYOUT.margin
+  const formTitle = PDF_REPORT_TITLES.vbssObsForm
 
   const { logoDataUrl, logoDims } = await preparePdfAssets(doc)
-  paintPage(doc, pageW, pageH)
-  drawHeader(doc, logoDataUrl, logoDims, formId)
-
-  const metaEnd = drawMetaBlock(doc, 34, operator)
-  drawPhases(doc, metaEnd, pageW, pageH)
-
-  setPdfFont(doc, 'normal')
-  doc.setFontSize(7)
-  doc.setTextColor(...COLORS.muted)
-  doc.text(
-    'Bu form doğrulanmamış gözlem kaydı içindir · Eğitmen onayı ayrı kanaldan yapılır.',
-    MARGIN,
-    pageH - 10,
+  const headerEnd = drawObservationFormHeader(
+    doc,
+    pageW,
+    pageH,
+    logoDataUrl,
+    logoDims,
+    formTitle,
+    formId,
+    VBSS_OBSERVED_PDF_FORM_VERSION,
   )
 
+  const metaEnd = drawMetaBlock(doc, headerEnd, pageW, operator)
+  const phasesEnd = drawPhases(doc, metaEnd, pageW, pageH, logoDataUrl, logoDims, formTitle)
+
+  setPdfFont(doc, 'normal')
+  doc.setFontSize(PDF_FONT_SIZE.small)
+  doc.setTextColor(...PDF_COLORS.muted)
+  doc.text(
+    'Bu form doğrulanmamış gözlem kaydı içindir · Eğitmen onayı ayrı kanaldan yapılır.',
+    margin,
+    phasesEnd,
+  )
+
+  stampPdfFooters(doc, formId)
   doc.save(`VBSS-Gozlem-Formu-${formId}.pdf`)
   return formId
 }
