@@ -1,9 +1,9 @@
 import HudTicker from '../ui/HudTicker'
 import TacticalPanel from '../ui/TacticalPanel'
 
-export default function PageShell({ title, subtitle, headerAction, children }) {
+export default function PageShell({ title, subtitle, headerAction, children, fullWidth = false }) {
   return (
-    <div className="relative mx-auto max-w-5xl space-y-6">
+    <div className={fullWidth ? 'relative w-full max-w-none space-y-6' : 'relative mx-auto max-w-5xl space-y-6'}>
       <header className="flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
         <div className="min-w-0 space-y-2">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -20,7 +20,7 @@ export default function PageShell({ title, subtitle, headerAction, children }) {
         {headerAction ? <div className="shrink-0">{headerAction}</div> : null}
       </header>
       <HudTicker className="sm:hidden" />
-      <TacticalPanel className="min-h-[min(50vh,280px)] p-6" scanning={false}>
+      <TacticalPanel className={fullWidth ? 'min-h-[min(50vh,280px)] p-0' : 'min-h-[min(50vh,280px)] p-6'} scanning={false}>
         {children}
       </TacticalPanel>
     </div>

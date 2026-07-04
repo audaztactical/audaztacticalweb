@@ -148,9 +148,13 @@ function AutoSaveStatusIndicator({ status }) {
 }
 
 /**
- * @param {{ className?: string }} [props]
+ * @param {{
+ *   className?: string
+ *   bare?: boolean
+ *   sections?: ('theme' | 'notifications')[]
+ * }} [props]
  */
-export default function SettingsPanel({ className = '' }) {
+export default function SettingsPanel({ className = '', bare = false, sections = ['theme', 'notifications'] }) {
   const { user } = useAuth()
   const { settings, loading, saving, ready, updateSettings, setTheme } = useTheme()
   const [draft, setDraft] = useState(settings)
@@ -302,12 +306,14 @@ export default function SettingsPanel({ className = '' }) {
   )
 
   const controlsDisabled = saving || saveStatus === 'saving' || pushRegistering
+  const showTheme = sections.includes('theme')
+  const showNotifications = sections.includes('notifications')
 
   if (loading) {
     return (
       <section
         className={[
-          'flex min-h-[280px] items-center justify-center rounded-xl border border-accent/20 bg-app-bg',
+          bare ? 'flex min-h-[120px] items-center justify-center' : 'flex min-h-[280px] items-center justify-center rounded-xl border border-accent/20 bg-app-bg',
           className,
         ]
           .filter(Boolean)
@@ -323,7 +329,7 @@ export default function SettingsPanel({ className = '' }) {
     return (
       <section
         className={[
-          'rounded-xl border border-accent/20 bg-app-bg px-5 py-8 text-center',
+          bare ? 'py-4 text-center' : 'rounded-xl border border-accent/20 bg-app-bg px-5 py-8 text-center',
           className,
         ]
           .filter(Boolean)
@@ -336,38 +342,9 @@ export default function SettingsPanel({ className = '' }) {
     )
   }
 
-  return (
-    <section
-      aria-label="Operatör ayarları"
-      className={[
-        'relative overflow-hidden rounded-xl border border-accent/30 bg-app-bg shadow-[0_0_40px_-12px_color-mix(in_srgb,var(--accent-color)_12%,transparent)]',
-        className,
-      ]
-        .filter(Boolean)
-        .join(' ')}
-    >
-      <span className="pointer-events-none absolute left-2 top-2 h-3 w-3 border-l border-t border-accent/45" aria-hidden />
-      <span className="pointer-events-none absolute right-2 top-2 h-3 w-3 border-r border-t border-accent/45" aria-hidden />
-      <span className="pointer-events-none absolute bottom-2 left-2 h-3 w-3 border-b border-l border-accent/45" aria-hidden />
-      <span className="pointer-events-none absolute bottom-2 right-2 h-3 w-3 border-b border-r border-accent/45" aria-hidden />
-
-      <header className="border-b border-accent/15 bg-app-bg px-5 py-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-start gap-3">
-            <Settings2 className="mt-0.5 size-5 shrink-0 text-accent" strokeWidth={1.75} aria-hidden />
-            <div>
-              <h2 className="font-mono-technical text-xs font-bold uppercase tracking-[0.28em] text-accent">
-                OPERATÖR TERCİHLERİ
-              </h2>
-              <p className="mt-1 font-mono-technical text-[9px] uppercase tracking-wider text-app-text/55">
-                AUTO-SAVE · {DEBOUNCE_MS}MS DEBOUNCE · FIRESTORE
-              </p>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="space-y-6 p-5">
+  const body = (
+    <div className={bare ? 'space-y-6' : 'space-y-6 p-5'}>
+      {showTheme ? (
         <div>
           <label htmlFor="audaz-theme" className={labelClass}>
             <span className="inline-flex items-center gap-1.5">
@@ -400,7 +377,9 @@ export default function SettingsPanel({ className = '' }) {
             )}
           </p>
         </div>
+      ) : null}
 
+      {showNotifications ? (
         <div className="space-y-3">
           <p className={labelClass}>
             <span className="inline-flex items-center gap-1.5">
@@ -448,15 +427,58 @@ export default function SettingsPanel({ className = '' }) {
             </p>
           ) : null}
         </div>
+      ) : null}
 
-        <AutoSaveStatusIndicator status={saveStatus} />
+      <AutoSaveStatusIndicator status={saveStatus} />
 
-        {saveStatus === 'error' ? (
-          <p className="font-mono-technical text-[9px] uppercase leading-relaxed text-red-400/90">
-            Senkronizasyon başarısız — değişikliği tekrar deneyin veya ağ bağlantınızı kontrol edin.
-          </p>
-        ) : null}
-      </div>
+      {saveStatus === 'error' ? (
+        <p className="font-mono-technical text-[9px] uppercase leading-relaxed text-red-400/90">
+          Senkronizasyon başarısız — değişikliği tekrar deneyin veya ağ bağlantınızı kontrol edin.
+        </p>
+      ) : null}
+    </div>
+  )
+
+  if (bare) {
+    return (
+      <section aria-label="Operatör ayarları" className={className}>
+        {body}
+      </section>
+    )
+  }
+
+  return (
+    <section
+      aria-label="Operatör ayarları"
+      className={[
+        'relative overflow-hidden rounded-xl border border-accent/30 bg-app-bg shadow-[0_0_40px_-12px_color-mix(in_srgb,var(--accent-color)_12%,transparent)]',
+        className,
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
+      <span className="pointer-events-none absolute left-2 top-2 h-3 w-3 border-l border-t border-accent/45" aria-hidden />
+      <span className="pointer-events-none absolute right-2 top-2 h-3 w-3 border-r border-t border-accent/45" aria-hidden />
+      <span className="pointer-events-none absolute bottom-2 left-2 h-3 w-3 border-b border-l border-accent/45" aria-hidden />
+      <span className="pointer-events-none absolute bottom-2 right-2 h-3 w-3 border-b border-r border-accent/45" aria-hidden />
+
+      <header className="border-b border-accent/15 bg-app-bg px-5 py-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <Settings2 className="mt-0.5 size-5 shrink-0 text-accent" strokeWidth={1.75} aria-hidden />
+            <div>
+              <h2 className="font-mono-technical text-xs font-bold uppercase tracking-[0.28em] text-accent">
+                OPERATÖR TERCİHLERİ
+              </h2>
+              <p className="mt-1 font-mono-technical text-[9px] uppercase tracking-wider text-app-text/55">
+                AUTO-SAVE · {DEBOUNCE_MS}MS DEBOUNCE · FIRESTORE
+              </p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {body}
     </section>
   )
 }

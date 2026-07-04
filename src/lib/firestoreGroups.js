@@ -1,7 +1,7 @@
 import { collection, deleteDoc, doc, getDoc, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore'
 import { safeOnSnapshot } from './firestoreSnapshot'
 import { db, isFirebaseConfigured } from './firebase'
-import { callJoinGroupByPassword } from './cloudFunctions'
+import { callJoinGroupByPassword, callLeaveGroup } from './cloudFunctions'
 import { fetchGroupActivityLogsByGroup } from './firestoreGroupTraining'
 import { buildGroupLeaderboardRowFromActivity, sortGroupLeaderboardRows } from './groupLeaderboard'
 import { syncUserGroupFields } from './operatorGroupMembership'
@@ -130,6 +130,16 @@ export async function joinGroupByPassword(operatorUid, password) {
     }
     throw err
   }
+}
+
+/**
+ * @param {string} operatorUid
+ */
+export async function leaveTacticalGroup(operatorUid) {
+  assertDb()
+  if (!operatorUid) throw new Error('Oturum gerekli')
+
+  await callLeaveGroup()
 }
 
 /**

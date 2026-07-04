@@ -16,9 +16,9 @@ const labelClass =
 /** @typedef {(typeof FEEDBACK_ISSUE_TYPES)[number]} FeedbackIssueType */
 
 /**
- * @param {{ className?: string; onSubmitted?: () => void }} [props]
+ * @param {{ className?: string; onSubmitted?: () => void; bare?: boolean }} [props]
  */
-export default function FeedbackForm({ className = '', onSubmitted }) {
+export default function FeedbackForm({ className = '', onSubmitted, bare = false }) {
   const { user, userData } = useAuth()
   const [issueType, setIssueType] = useState(/** @type {FeedbackIssueType} */ ('Hata'))
   const [description, setDescription] = useState('')
@@ -60,6 +60,94 @@ export default function FeedbackForm({ className = '', onSubmitted }) {
     }
   }
 
+  const formBody = (
+    <form onSubmit={handleSubmit} className={bare ? 'space-y-5' : 'space-y-5 p-5'}>
+      <div>
+        <label htmlFor="feedback-issue-type" className={labelClass}>
+          Bildirim türü
+        </label>
+        <select
+          id="feedback-issue-type"
+          value={issueType}
+          disabled={busy}
+          onChange={(e) => setIssueType(/** @type {FeedbackIssueType} */ (e.target.value))}
+          className={`${inputClass} cursor-pointer`}
+        >
+          {FEEDBACK_ISSUE_TYPES.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label htmlFor="feedback-description" className={labelClass}>
+          Açıklama
+        </label>
+        <textarea
+          id="feedback-description"
+          rows={5}
+          required
+          maxLength={4000}
+          disabled={busy}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Hata adımları, öneri detayı veya bug reproduksiyonu…"
+          className={`${inputClass} min-h-[7rem] resize-y`}
+        />
+      </div>
+
+      <div>
+        <label htmlFor="feedback-screenshot" className={labelClass}>
+          Ekran görüntüsü URL (opsiyonel)
+        </label>
+        <input
+          id="feedback-screenshot"
+          type="url"
+          disabled={busy}
+          value={screenshotURL}
+          onChange={(e) => setScreenshotURL(e.target.value)}
+          placeholder="https://…"
+          className={inputClass}
+          autoComplete="off"
+        />
+      </div>
+
+      {msg ? (
+        <p
+          role="status"
+          className={`font-mono-technical text-[10px] font-bold uppercase tracking-wider ${
+            msg.type === 'ok' ? 'text-accent/90' : 'text-amber-400'
+          }`}
+        >
+          {msg.text}
+        </p>
+      ) : null}
+
+      <button
+        type="submit"
+        disabled={busy || !description.trim() || !user?.uid}
+        className="inline-flex w-full items-center justify-center gap-2 rounded border border-accent/45 bg-accent/10 px-4 py-2.5 font-mono-technical text-[10px] font-bold uppercase tracking-[0.22em] text-accent transition hover:border-accent/70 hover:bg-accent/15 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {busy ? (
+          <Loader2 className="size-4 animate-spin" aria-hidden />
+        ) : (
+          <Send className="size-4" strokeWidth={1.75} aria-hidden />
+        )}
+        {busy ? 'GÖNDERİLİYOR…' : 'GERİ BİLDİRİM GÖNDER'}
+      </button>
+    </form>
+  )
+
+  if (bare) {
+    return (
+      <section aria-label="Operatör geri bildirim formu" className={className}>
+        {formBody}
+      </section>
+    )
+  }
+
   return (
     <section
       aria-label="Operatör geri bildirim formu"
@@ -89,83 +177,7 @@ export default function FeedbackForm({ className = '', onSubmitted }) {
         </div>
       </header>
 
-      <form onSubmit={handleSubmit} className="space-y-5 p-5">
-        <div>
-          <label htmlFor="feedback-issue-type" className={labelClass}>
-            Bildirim türü
-          </label>
-          <select
-            id="feedback-issue-type"
-            value={issueType}
-            disabled={busy}
-            onChange={(e) => setIssueType(/** @type {FeedbackIssueType} */ (e.target.value))}
-            className={`${inputClass} cursor-pointer`}
-          >
-            {FEEDBACK_ISSUE_TYPES.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label htmlFor="feedback-description" className={labelClass}>
-            Açıklama
-          </label>
-          <textarea
-            id="feedback-description"
-            rows={5}
-            required
-            maxLength={4000}
-            disabled={busy}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Hata adımları, öneri detayı veya bug reproduksiyonu…"
-            className={`${inputClass} min-h-[7rem] resize-y`}
-          />
-        </div>
-
-        <div>
-          <label htmlFor="feedback-screenshot" className={labelClass}>
-            Ekran görüntüsü URL (opsiyonel)
-          </label>
-          <input
-            id="feedback-screenshot"
-            type="url"
-            disabled={busy}
-            value={screenshotURL}
-            onChange={(e) => setScreenshotURL(e.target.value)}
-            placeholder="https://…"
-            className={inputClass}
-            autoComplete="off"
-          />
-        </div>
-
-        {msg ? (
-          <p
-            role="status"
-            className={`font-mono-technical text-[10px] font-bold uppercase tracking-wider ${
-              msg.type === 'ok' ? 'text-accent/90' : 'text-amber-400'
-            }`}
-          >
-            {msg.text}
-          </p>
-        ) : null}
-
-        <button
-          type="submit"
-          disabled={busy || !description.trim() || !user?.uid}
-          className="inline-flex w-full items-center justify-center gap-2 rounded border border-accent/45 bg-accent/10 px-4 py-2.5 font-mono-technical text-[10px] font-bold uppercase tracking-[0.22em] text-accent transition hover:border-accent/70 hover:bg-accent/15 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {busy ? (
-            <Loader2 className="size-4 animate-spin" aria-hidden />
-          ) : (
-            <Send className="size-4" strokeWidth={1.75} aria-hidden />
-          )}
-          {busy ? 'GÖNDERİLİYOR…' : 'GERİ BİLDİRİM GÖNDER'}
-        </button>
-      </form>
+      {formBody}
     </section>
   )
 }

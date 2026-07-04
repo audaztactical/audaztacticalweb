@@ -9,9 +9,9 @@ const inputClass =
   'w-full rounded border border-accent/25 bg-app-bg px-3 py-2.5 font-mono-technical text-sm uppercase tracking-wider text-app-text outline-none transition focus:border-accent/55 focus:ring-1 focus:ring-accent/20'
 
 /**
- * @param {{ className?: string }} [props]
+ * @param {{ className?: string; bare?: boolean }} [props]
  */
-export default function AccessCodeRedeemPanel({ className = '' }) {
+export default function AccessCodeRedeemPanel({ className = '', bare = false }) {
   const { user, refreshUserProfile } = useAuth()
   const [code, setCode] = useState('')
   const [busy, setBusy] = useState(false)
@@ -68,20 +68,15 @@ export default function AccessCodeRedeemPanel({ className = '' }) {
     return null
   }
 
-  return (
-    <section
-      className={[
-        'rounded-xl border border-accent/30 bg-app-bg p-4 shadow-[0_0_32px_-12px_color-mix(in_srgb,var(--accent-color)_18%,transparent)]',
-        className,
-      ]
-        .filter(Boolean)
-        .join(' ')}
-    >
-      <p className="mb-3 flex items-center gap-2 font-mono-technical text-[10px] font-bold uppercase tracking-[0.22em] text-accent">
-        <KeyRound className="size-4 shrink-0" strokeWidth={1.5} aria-hidden />
-        [ ERİŞİM KODU KULLAN ]
-      </p>
-      <p className="mb-4 font-mono-technical text-[9px] uppercase leading-relaxed text-app-text/55">
+  const content = (
+    <>
+      {!bare ? (
+        <p className="mb-3 flex items-center gap-2 font-mono-technical text-[10px] font-bold uppercase tracking-[0.22em] text-accent">
+          <KeyRound className="size-4 shrink-0" strokeWidth={1.5} aria-hidden />
+          [ ERİŞİM KODU KULLAN ]
+        </p>
+      ) : null}
+      <p className={`font-mono-technical text-[9px] uppercase leading-relaxed text-app-text/55 ${bare ? 'mb-3' : 'mb-4'}`}>
         Admin tarafından verilen Premium veya Pro-Eğitmen erişim kodunu girin. Kod, hesabınızın
         planını yükseltir — grup üyeliği ile karıştırmayın.
       </p>
@@ -119,6 +114,23 @@ export default function AccessCodeRedeemPanel({ className = '' }) {
           {message}
         </p>
       ) : null}
+    </>
+  )
+
+  if (bare) {
+    return <div className={className}>{content}</div>
+  }
+
+  return (
+    <section
+      className={[
+        'rounded-xl border border-accent/30 bg-app-bg p-4 shadow-[0_0_32px_-12px_color-mix(in_srgb,var(--accent-color)_18%,transparent)]',
+        className,
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
+      {content}
     </section>
   )
 }

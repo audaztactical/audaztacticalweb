@@ -170,6 +170,13 @@ export function callJoinGroupByPassword(password) {
 }
 
 /**
+ * Operatörün aktif taktik grubundan ayrılması (Admin SDK).
+ */
+export function callLeaveGroup() {
+  return callFunction('leaveGroup')
+}
+
+/**
  * Kayıt profili — yalnızca HTTP callable (çift istek / SDK tekrarı önlenir).
  * @param {Record<string, unknown>} payload
  */

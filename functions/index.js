@@ -13,6 +13,7 @@ const { ensureAdminClaimHandler } = require('./lib/adminClaims')
 const { adminDeleteUserHandler } = require('./lib/adminDeleteUser')
 const { claimInstructorRoleHandler } = require('./lib/instructorClaim')
 const { joinGroupByPasswordHandler } = require('./lib/joinGroup')
+const { leaveGroupHandler } = require('./lib/leaveGroup')
 const { completePremiumUpgradeHandler } = require('./lib/premiumUpgrade')
 const { redeemAccessCodeHandler } = require('./lib/redeemAccessCode')
 const { registerOperatorProfileHandler } = require('./lib/registerOperatorProfile')
@@ -183,6 +184,18 @@ exports.joinGroupByPassword = onCall(
     cors: true,
   },
   joinGroupByPasswordHandler,
+)
+
+/**
+ * Callable: operatörün taktik grubundan ayrılması (Admin SDK).
+ */
+exports.leaveGroup = onCall(
+  {
+    memory: '128MiB',
+    timeoutSeconds: 30,
+    cors: true,
+  },
+  leaveGroupHandler,
 )
 
 /**
