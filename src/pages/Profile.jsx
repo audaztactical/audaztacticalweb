@@ -56,20 +56,20 @@ function humanizeActivity(e) {
     return `Cephanelik güncellendi · ${msg.slice(0, 48)}`
   }
   if (code === 'CEP') {
-    const tail = msg.replace(/^[\s\S]*Δ · /, '').trim() || 'kayıt'
+    const tail = msg.replace(/^[\s\S]*·\s*/, '').trim() || 'kayıt'
     return `Envanter güncellendi · ${tail.slice(0, 42)}`
   }
   if (code === 'SHT') {
-    if (msg.includes('SAHA_KAYIT') || msg.includes('BÖLGE')) return `TCCC saha kaydı · ${msg.slice(0, 48)}`
-    const tail = msg.replace(/^TIBBİ_SENK · /, '').trim() || 'kayıt'
+    if (msg.includes('Saha kaydı') || msg.includes('Bölge')) return `TCCC saha kaydı · ${msg.slice(0, 48)}`
+    const tail = msg.replace(/^Tıbbi kayıt · /, '').trim() || 'kayıt'
     return `TCCC kaydı girildi · ${tail.slice(0, 42)}`
   }
   if (code === 'EĞT') {
-    const tail = msg.replace(/^TATBİKAT_IX · /, '').trim() || '—'
+    const tail = msg.replace(/^Tatbikat · /, '').trim() || '—'
     return `Eğitim / tatbikat · ${tail.slice(0, 42)}`
   }
   if (code === 'OPS') {
-    const tail = msg.replace(/^GÖREV_SENK · /, '').trim() || '—'
+    const tail = msg.replace(/^Görev · /, '').trim() || '—'
     return `Görev senkronu · ${tail.slice(0, 42)}`
   }
   if (code === 'GÜV') return 'Sisteme giriş · oturum aktif'
@@ -97,22 +97,6 @@ function hasPasswordProvider(u) {
 /** @param {import('firebase/auth').User | null} u */
 function hasGoogleProvider(u) {
   return Boolean(u?.providerData?.some((p) => p.providerId === 'google.com'))
-}
-
-/** @param {string | undefined} uid */
-function persKodu(uid) {
-  const raw = (uid || 'XXXXXXXX').replace(/-/g, '').slice(0, 8).toUpperCase()
-  return `AUDAZ-${raw}`
-}
-
-/** @param {string | undefined} uid */
-function kutuRefFromUid(uid) {
-  const s = (uid || '0').replace(/-/g, '')
-  let h = 0
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0
-  const g1 = 2400 + (h % 90)
-  const g2 = 8900 + ((h >> 4) % 80)
-  return `36S ST ${g1} ${g2}`
 }
 
 /** @param {number | null} score */
@@ -155,21 +139,21 @@ function roleLabel(role) {
 
 function DataLoadingScreen() {
   return (
-    <div className="dashboard-hud-shell relative mx-auto flex min-h-[50vh] max-w-[1480px] flex-col items-center justify-center gap-3 px-3 py-5 pt-12 sm:px-4 sm:pt-14 md:px-6">
+    <div className="dashboard-hud-shell relative mx-auto flex min-h-[50vh] max-w-[1480px] flex-col items-center justify-center gap-3 px-5 py-5 pt-12 sm:px-6 sm:pt-14 md:px-8">
       <div
         className="relative h-11 w-full max-w-md overflow-hidden rounded-lg border border-[#004DFF]/35 bg-[#2A2D34]/60 px-4 backdrop-blur-md"
         role="status"
         aria-live="polite"
       >
         <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-mono-technical text-[10px] uppercase tracking-widest text-[#004DFF]/90">
-          DOSSIER_SYNC
+          Profil yükleniyor
         </span>
         <span
           className="absolute right-3 top-1/2 inline-block size-3.5 -translate-y-1/2 animate-spin rounded-full border-2 border-[#004DFF] border-t-transparent"
           aria-hidden
         />
       </div>
-      <p className="font-mono-technical text-[10px] font-semibold tracking-[0.3em] text-app-text/55">KİMLİK_VERİSİ_YÜKLENİYOR</p>
+      <p className="font-mono-technical text-[10px] font-semibold tracking-[0.3em] text-app-text/55">Kimlik verisi yükleniyor</p>
     </div>
   )
 }
@@ -523,7 +507,7 @@ export default function Profile() {
     try {
       await updateUserBloodType(user.uid, bloodDraft === 'BELİRTİLMEDİ' ? '' : bloodDraft)
       await refreshUserProfile()
-      setBloodMsg({ type: 'ok', text: '✓ KAN_GRUBU_KAYIT' })
+      setBloodMsg({ type: 'ok', text: '✓ Kan grubu kaydedildi' })
     } catch (err) {
       reportFirebaseError(err)
       setBloodMsg({ type: 'err', text: err?.message || 'Kayıt başarısız.' })
@@ -621,13 +605,13 @@ export default function Profile() {
   const criticalPulse = ohpScore != null && ohpScore < 50
 
   return (
-    <div className="dashboard-hud-shell relative mx-auto max-w-[1480px] px-3 py-5 pt-12 sm:px-4 sm:pt-14 md:px-6">
+    <div className="dashboard-hud-shell relative mx-auto max-w-[1480px] px-5 py-5 pt-12 sm:px-6 sm:pt-14 md:px-8">
       <HudFluffDecor />
 
       <div className="relative z-[2] mb-4 flex flex-wrap items-end justify-between gap-3 border-b border-white/10 pb-3">
         <div>
-          <p className="font-mono-technical text-[9px] font-semibold uppercase tracking-[0.34em] text-app-text/55">[ OPERATÖR_TAKTİK_EKRANI ]</p>
-          <h1 className="op-terminal-title mt-1 text-sm tracking-[0.2em]">TAKTİK VERİ TERMİNALİ</h1>
+          <p className="font-mono-technical text-[9px] font-semibold uppercase tracking-[0.34em] text-app-text/55">Operatör Profili</p>
+          <h1 className="op-terminal-title mt-1 text-sm tracking-[0.2em]">Profil</h1>
         </div>
         <div className="font-mono-technical text-[9px] uppercase tracking-wider text-app-text/45">
           OHP{' '}
@@ -682,8 +666,7 @@ export default function Profile() {
         <aside className="op-identity-sticky">
           <section className="op-terminal-card">
             <header className="op-terminal-card__head">
-              <TerminalTitle>TAKTİK KİMLİK</TerminalTitle>
-              <span className="op-terminal-card__code">ID_NODE_01</span>
+              <TerminalTitle>Taktik Kimlik</TerminalTitle>
             </header>
             <div className="op-terminal-card__body space-y-3">
               <div className="op-avatar-frame lg:mx-0">
@@ -703,7 +686,7 @@ export default function Profile() {
                   />
                 </div>
                 <p className="mt-1.5 text-center font-mono-technical text-[7px] uppercase tracking-[0.22em] text-accent/75 lg:text-left">
-                  ROZET_AKTİF · {photoUrl ? 'GÖRSEL' : 'OTOMATİK'}
+                  Rozet aktif · {photoUrl ? 'Görsel' : 'Otomatik'}
                 </p>
                 <input
                   ref={avatarInputRef}
@@ -725,7 +708,7 @@ export default function Profile() {
                 {avatarUploading ? (
                   <TacticalUploadProgress
                     progress={avatarProgress}
-                    label="GÖRSEL_SYNC"
+                    label="Görsel yükleniyor"
                     error={avatarUploadError}
                     className="mt-2"
                   />
@@ -743,7 +726,7 @@ export default function Profile() {
               </div>
 
               <div className="space-y-0.5 border-t border-white/10 pt-2">
-                <p className="font-mono-technical text-[8px] uppercase tracking-[0.28em] text-app-text/55">ÇAĞRI_ADI</p>
+                <p className="font-mono-technical text-[8px] uppercase tracking-[0.28em] text-app-text/55">Çağrı adı</p>
                 <p
                   className="font-mono-technical text-lg font-bold uppercase leading-tight tracking-tight"
                   style={{ color: accent.rgb, textShadow: `0 0 14px ${accent.rgb}55` }}
@@ -762,23 +745,21 @@ export default function Profile() {
               </div>
 
               <dl className="space-y-0 border-t border-white/10 pt-2">
-                <TechLine k="PERS_KODU" v={persKodu(user?.uid)} accentRgb={accent.rgb} />
-                <TechLine k="KUTUP_REF" v={kutuRefFromUid(user?.uid)} accentRgb={accent.rgb} />
-                <TechLine k="STATÜ" v={status} accentRgb={accent.rgb} />
+                <TechLine k="Statü" v={status} accentRgb={accent.rgb} />
               </dl>
             </div>
           </section>
         </aside>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <OpTacticalCard title="OPERATÖR ÖZETİ" code="METRICS_CORE" wide>
+          <OpTacticalCard title="Operatör Özeti" wide>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-              <DataStat label="TAMAMLANAN_GÖREV" value={missionN} accentRgb={accent.rgb} fillPct={statFillPct(missionN, statMax)} />
-              <DataStat label="EĞİTİM_SAYISI" value={trainN} accentRgb={accent.rgb} fillPct={statFillPct(trainN, statMax)} />
-              <DataStat label="SIHHİ_OLAY" value={sihhiN} accentRgb={accent.rgb} fillPct={statFillPct(sihhiN, statMax)} />
+              <DataStat label="Tamamlanan görev" value={missionN} accentRgb={accent.rgb} fillPct={statFillPct(missionN, statMax)} />
+              <DataStat label="Eğitim sayısı" value={trainN} accentRgb={accent.rgb} fillPct={statFillPct(trainN, statMax)} />
+              <DataStat label="Sıhhî olay" value={sihhiN} accentRgb={accent.rgb} fillPct={statFillPct(sihhiN, statMax)} />
             </div>
             <div className="mt-3 rounded-sm border border-accent/22 bg-app-bg/80 p-2.5">
-              <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.18em] text-accent/85">KAN_GRUBU</p>
+              <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.18em] text-accent/85">Kan Grubu</p>
               <div className="mt-2 flex flex-wrap items-end gap-2">
                 <select
                   value={bloodOptions.includes(bloodDraft) ? bloodDraft : 'BELİRTİLMEDİ'}
@@ -806,10 +787,10 @@ export default function Profile() {
             </div>
           </OpTacticalCard>
 
-          <OpTacticalCard title="AKTİVİTE AKIŞI" code="LIVE_FEED">
+          <OpTacticalCard title="Canlı Akış">
             <ul className="space-y-1.5">
               {activityTop3.length === 0 ? (
-                <li className="font-mono-technical text-[9px] text-app-text/45">AKTİVİTE_BEKLENİYOR · VERİ_YOK</li>
+                <li className="font-mono-technical text-[9px] text-app-text/45">Henüz aktivite yok</li>
               ) : (
                 activityTop3.map((row, i) => (
                   <li key={`${row.ms}-${i}-${row.line.slice(0, 12)}`} className="flex flex-col gap-0.5 border-b border-white/[0.06] pb-1.5 last:border-0 last:pb-0">
@@ -821,28 +802,28 @@ export default function Profile() {
             </ul>
           </OpTacticalCard>
 
-          <OpTacticalCard title="HESAP KAYDI" code="REGISTRY">
+          <OpTacticalCard title="Kayıt Bilgileri">
             <dl className="grid gap-0 font-mono-technical text-[10px] text-app-text/70">
               <div className="flex justify-between gap-2 border-b border-white/[0.05] py-1.5">
-                <dt className="text-app-text/45">@HANDLE</dt>
+                <dt className="text-app-text/45">@kullanıcı adı</dt>
                 <dd className="truncate text-app-text/90">{rawUsername ? `@${rawUsername}` : '—'}</dd>
               </div>
               <div className="flex justify-between gap-2 border-b border-white/[0.05] py-1.5">
-                <dt className="text-app-text/45">E_POSTA</dt>
+                <dt className="text-app-text/45">E-posta</dt>
                 <dd className="truncate text-app-text/90">{email || '—'}</dd>
               </div>
               <div className="flex justify-between gap-2 border-b border-white/[0.05] py-1.5">
-                <dt className="text-app-text/45">KAYIT</dt>
+                <dt className="text-app-text/45">Kayıt</dt>
                 <dd className="text-app-text/90">{enrolled}</dd>
               </div>
               <div className="flex justify-between gap-2 py-1.5">
-                <dt className="text-app-text/45">STATÜ</dt>
+                <dt className="text-app-text/45">Statü</dt>
                 <dd className="text-app-text/90">{status}</dd>
               </div>
             </dl>
 
             <div className="mt-3 space-y-2 border-t border-white/10 pt-3">
-              <DossierField label="KOD_ADI_GÜNCELLE">
+              <DossierField label="Çağrı Adı Güncelle">
                 <div className="flex flex-col gap-1.5 sm:flex-row sm:items-end">
                   <input
                     name="callsign"
@@ -875,7 +856,7 @@ export default function Profile() {
             </div>
           </OpTacticalCard>
 
-          <OpTacticalCard title="HESAP GÜVENLİĞİ" code="SEC_PERIMETER" wide>
+          <OpTacticalCard title="Hesap Güvenliği" wide>
             <button
               type="button"
               onClick={() => setSecurityOpen((o) => !o)}
@@ -884,7 +865,7 @@ export default function Profile() {
             >
               <div>
                 <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.2em] text-[#8eb7ff]">
-                  {securityOpen ? 'GÜVENLİK_PANELİ_AÇIK' : 'GÜVENLİK_PANELİ_KAPALI'}
+                  {securityOpen ? 'Güvenlik ayarları açık' : 'Güvenlik Ayarları'}
                 </p>
                 <p className="mt-0.5 font-mono-technical text-[8px] uppercase tracking-wider text-app-text/55">
                   Şifre değiştir · hesap bağla · MFA
@@ -906,7 +887,7 @@ export default function Profile() {
                   pwdLinked ? 'border-emerald-500/40 text-emerald-300/90' : 'border-[#004DFF]/35 bg-[#2A2D34]/90 text-[#7aa3ff]'
                 }`}
               >
-                E_POSTA+ŞİFRE {pwdLinked ? '●' : '○'}
+                E-posta + şifre {pwdLinked ? '●' : '○'}
               </span>
             </div>
 
@@ -917,7 +898,7 @@ export default function Profile() {
                     <div className="flex items-start gap-2">
                       <Link2 className="mt-0.5 size-3.5 shrink-0 text-[#5b8cff]" strokeWidth={1.5} aria-hidden />
                       <div className="min-w-0 flex-1 space-y-1.5">
-                        <p className="font-mono-technical text-[9px] font-bold uppercase tracking-wide text-[#b8ccff]">HESAP_ŞİFRE_BAĞLA</p>
+                        <p className="font-mono-technical text-[9px] font-bold uppercase tracking-wide text-[#b8ccff]">Hesap şifresi bağla</p>
                         <DossierField label="E_POSTA (SABİT)">
                           <input type="email" readOnly value={email} className={`${inputTactical} opacity-70`} />
                         </DossierField>
@@ -967,7 +948,7 @@ export default function Profile() {
                     <div className="flex items-start gap-2">
                       <KeyRound className="mt-0.5 size-3.5 shrink-0 text-[#5b8cff]" strokeWidth={1.5} aria-hidden />
                       <div className="min-w-0 flex-1 space-y-1.5">
-                        <p className="font-mono-technical text-[9px] font-bold uppercase tracking-wide text-[#b8ccff]">ŞİFRE_DEĞİŞİM</p>
+                        <p className="font-mono-technical text-[9px] font-bold uppercase tracking-wide text-[#b8ccff]">Şifre değiştir</p>
                         {!googleLinked ? (
                           <DossierField label="MEVCUT_ŞİFRE">
                             <input
@@ -1013,7 +994,7 @@ export default function Profile() {
                     <div className="flex items-start gap-2">
                       <Phone className="mt-0.5 size-3.5 shrink-0 text-[#5b8cff]" strokeWidth={1.5} aria-hidden />
                       <div className="min-w-0 flex-1">
-                        <p className="font-mono-technical text-[9px] font-bold uppercase text-[#b8ccff]">TELEFON_KANALI</p>
+                        <p className="font-mono-technical text-[9px] font-bold uppercase text-[#b8ccff]">Telefon kanalı</p>
                         <p className="mt-0.5 font-mono-technical text-[8px] uppercase leading-snug text-app-text/55">İleride SMS / kurtarma.</p>
                         <input type="tel" readOnly disabled placeholder="+90 …" className={`${inputTactical} mt-1 cursor-not-allowed opacity-45`} aria-label="Telefon (pasif)" />
                         <button type="button" disabled className="mt-1 rounded-sm border border-[#2A2D34] px-1.5 py-0.5 font-mono-technical text-[8px] uppercase text-app-text/45">
@@ -1027,12 +1008,12 @@ export default function Profile() {
                     <div className="flex items-start gap-2">
                       <Shield className="mt-0.5 size-3.5 shrink-0 text-[#5b8cff]" strokeWidth={1.5} aria-hidden />
                       <div className="min-w-0 flex-1">
-                        <p className="font-mono-technical text-[9px] font-bold uppercase text-[#b8ccff]">TELEFON_VE_SMS_MFA</p>
+                        <p className="font-mono-technical text-[9px] font-bold uppercase text-[#b8ccff]">Telefon · SMS doğrulama</p>
                         <p className="mt-0.5 font-mono-technical text-[8px] uppercase leading-snug text-app-text/55">Firebase Phone Auth · ücretli katman.</p>
                         <label className="mt-2 flex cursor-not-allowed items-center gap-1.5 opacity-65">
                           <input type="checkbox" disabled className="size-3 rounded-sm border-white/20" />
                           <span className="font-mono-technical text-[8px] uppercase leading-snug tracking-wide text-app-text/55">
-                            DURUM: PASİF · OPERASYONEL_GEREKLİLİK
+                            Durum: Pasif · operasyonel gereklilik
                           </span>
                         </label>
                       </div>
