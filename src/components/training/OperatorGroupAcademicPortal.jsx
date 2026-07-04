@@ -57,7 +57,7 @@ export default function OperatorGroupAcademicPortal({
       <section className="rounded-xl border border-slate-800 bg-slate-950/60 p-8 text-center">
         <p className="font-mono-technical text-[10px] uppercase text-app-text/55">
           Eğitmen kayıtlarını görüntülemek için bir taktik grubuna dahil olmalısınız.{' '}
-          <Link to="/takim" className="text-accent hover:text-accent/80">
+          <Link to="/ayarlar" className="text-accent hover:text-accent/80">
             Taktik Timim →
           </Link>
         </p>

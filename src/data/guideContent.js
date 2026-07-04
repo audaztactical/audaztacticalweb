@@ -409,7 +409,7 @@ export const GUIDE_SECTIONS = {
   'group-join': {
     title: 'Gruba katılım',
     opsCode: 'GRP-JOIN',
-    pageLink: { to: '/takim', label: 'Taktik Timim sayfasına git' },
+    pageLink: { to: '/ayarlar', label: 'Taktik Timim sayfasına git' },
     access: 'Henüz gruba dahil olmayan operatörler.',
     purpose: 'Eğitmenin verdiği grup şifresiyle takıma katılmak.',
     steps: [

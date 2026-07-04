@@ -38,8 +38,6 @@ const AdminPanel = lazy(() => import('./pages/AdminPanel'))
 const PremiumTransition = lazy(() => import('./pages/PremiumTransition'))
 const SiteMaintenance = lazy(() => import('./pages/SiteMaintenance'))
 const UsageGuide = lazy(() => import('./pages/UsageGuide'))
-const Takim = lazy(() => import('./pages/Takim'))
-
 export default function App() {
   return (
     <AuthProvider>
@@ -72,7 +70,6 @@ export default function App() {
                   <Route path="antrenman" element={<Training />} />
                   <Route path="tccc" element={<TcccSuite />} />
                   <Route path="basarilar" element={<ProgressTracker />} />
-                  <Route path="takim" element={<Takim />} />
                   <Route path="kilavuz" element={<UsageGuide />} />
                   <Route
                     path="egitmen-komuta"

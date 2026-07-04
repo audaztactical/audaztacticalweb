@@ -466,7 +466,7 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
         </button>
         <AmberAlert label="[ GRUP_GEREKLİ ]">
           Grup eğitimine katılmak için önce bir taktik grubuna dahil olmalısınız.{' '}
-          <Link to="/takim" className="font-bold text-accent underline-offset-2 hover:underline">
+          <Link to="/ayarlar" className="font-bold text-accent underline-offset-2 hover:underline">
             Taktik Timim →
           </Link>
         </AmberAlert>

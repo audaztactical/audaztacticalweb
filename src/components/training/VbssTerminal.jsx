@@ -269,7 +269,7 @@ export default function VbssTerminal({
       ) : !isMember || !groupId ? (
         <AmberAlert label="[ GRUP ÜYELİĞİ ]">
           Canlı değerlendirme için bir taktik grubuna dahil olmalısınız.{' '}
-          <Link to="/takim" className="font-bold text-accent underline-offset-2 hover:underline">
+          <Link to="/ayarlar" className="font-bold text-accent underline-offset-2 hover:underline">
             Taktik Timim →
           </Link>
         </AmberAlert>

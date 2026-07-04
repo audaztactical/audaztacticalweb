@@ -97,7 +97,7 @@ export default function TrainingCategoryHub({ onCategorySelect }) {
       {!profileLoading && visibleCategories.length < TRAINING_CATEGORIES.length && !isInstructor ? (
         <p className="font-mono-technical text-[8px] uppercase tracking-[0.2em] text-app-text/45">
           Kişisel sektörler açık ·{' '}
-          <Link to="/takim" className="text-accent/80 transition hover:text-accent">
+          <Link to="/ayarlar" className="text-accent/80 transition hover:text-accent">
             grup eğitimi için Taktik Timim →
           </Link>
         </p>

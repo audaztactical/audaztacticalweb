@@ -688,7 +688,7 @@ export default function ProgressTracker({ onBack }) {
             ) : null}
 
             <Link
-              to="/takim"
+              to="/ayarlar"
               className="group flex items-center gap-3 rounded-xl border border-emerald-900/35 bg-slate-950/80 px-4 py-3 transition hover:border-emerald-600/45 hover:bg-emerald-950/20"
             >
               <span className="flex size-10 shrink-0 items-center justify-center rounded border border-emerald-600/35 bg-emerald-950/40 text-emerald-400">
