@@ -220,14 +220,14 @@ export default function MuhabereMessageRow({
       <div
         ref={rowRef}
         className={[
-          'group/msg flex min-w-0 max-w-[85%] items-start gap-1',
-          outgoing ? 'ml-auto' : '',
+          'group/msg flex w-fit max-w-[85%] items-start gap-1.5',
+          outgoing ? 'ml-auto flex-row-reverse' : 'flex-row',
         ].join(' ')}
       >
         <div
           className={[
-            'flex min-w-0 flex-1 flex-col gap-1',
-            outgoing ? 'order-2 items-end' : 'order-1 items-start',
+            'flex min-w-0 flex-col gap-1',
+            outgoing ? 'items-end' : 'items-start',
           ].join(' ')}
         >
           {incoming && senderLabel ? (
@@ -270,13 +270,7 @@ export default function MuhabereMessageRow({
         </div>
 
         {canHide ? (
-          <div
-            ref={menuRef}
-            className={[
-              'relative shrink-0 self-center',
-              outgoing ? 'order-1' : 'order-2',
-            ].join(' ')}
-          >
+          <div ref={menuRef} className="relative shrink-0 self-center">
             <button
               type="button"
               disabled={hideBusy}

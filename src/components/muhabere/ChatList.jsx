@@ -135,13 +135,17 @@ export default function ChatList({
         ) : (
           <ul className="max-h-44 space-y-1 overflow-y-auto" role="listbox" aria-label="Tim kanalları">
             {channels.map((ch) => {
+              const activeChannelId =
+                openChannelId != null && openChannelId !== ''
+                  ? openChannelId
+                  : selectedChannelId
               const isActiveRow =
-                openChannelId != null && ch.id === openChannelId
+                activeChannelId != null && activeChannelId !== '' && ch.id === activeChannelId
               const summary = indexed.byChannelId[ch.id]
               const unreadCount = isActiveRow
                 ? 0
                 : Math.max(summary?.unreadCount ?? 0, channelUnreadById[ch.id] ?? 0)
-              const hasUnread = unreadCount > 0
+              const hasUnread = !isActiveRow && unreadCount > 0
               const isOwner = ch.createdBy === uid
 
               return (

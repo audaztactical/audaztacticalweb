@@ -247,10 +247,12 @@ export default function TaktikMuhabere() {
   const resolveDmUnread = useCallback(
     (/** @type {string} */ peerUid, /** @type {boolean} */ isActiveRow) => {
       if (isActiveRow) return 0
-      if (hasConversation && conversationMode === 'dm' && selectedUid === peerUid) return 0
+      if (selectedUid != null && selectedUid !== '' && selectedUid === peerUid && selectedChannelId == null) {
+        return 0
+      }
       return Math.max(dmUnreadByPeerId[peerUid] ?? 0, liveDmUnreadByPeerId[peerUid] ?? 0)
     },
-    [dmUnreadByPeerId, liveDmUnreadByPeerId, hasConversation, conversationMode, selectedUid],
+    [dmUnreadByPeerId, liveDmUnreadByPeerId, selectedUid, selectedChannelId],
   )
 
   const senderNames = useMemo(() => {
@@ -1143,12 +1145,13 @@ export default function TaktikMuhabere() {
               {listItems.map((contact) => {
                 const isActiveRow =
                   !isSearchMode &&
-                  hasConversation &&
-                  conversationMode === 'dm' &&
-                  contact.uid === selectedUid
-                const dmUnread = resolveDmUnread(contact.uid, isActiveRow)
+                  selectedUid != null &&
+                  selectedUid !== '' &&
+                  contact.uid === selectedUid &&
+                  selectedChannelId == null
+                const dmUnread = isActiveRow ? 0 : resolveDmUnread(contact.uid, isActiveRow)
                 const dmSummary = conversationIndex?.byPeerUid[contact.uid]
-                const hasUnread = dmUnread > 0
+                const hasUnread = !isActiveRow && dmUnread > 0
                 const presence = presenceMap[contact.uid]
                 const inRoster = rosterUidSet.has(contact.uid)
                 const showRequest = isSearchMode && !inRoster

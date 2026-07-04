@@ -131,6 +131,35 @@ service cloud.firestore {
         ]);
     }
 
+    /**
+     * Taktik Muhabere — engellenen operatörler (yalnızca kendi profili).
+     * arrayUnion / arrayRemove: liste yalnızca büyür veya küçülür; kendi uid eklenemez.
+     */
+    function isOwnerBlockedUsersOnlyUpdate(uid) {
+      let prior = resource.data.get('blockedUsers', []);
+      let next = request.resource.data.get('blockedUsers', []);
+      return isOwnerUid(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['blockedUsers'])
+        && next is list
+        && next.size() <= 256
+        && !(request.auth.uid in next)
+        && (
+          (next.hasAll(prior) && next.size() >= prior.size())
+          || (prior.hasAll(next) && prior.size() >= next.size())
+        );
+    }
+
+    /** DM mesajı — alıcı okundu işaretler (status/read + readBy arrayUnion). */
+    function isMuhabereMessageMarkedReadByReceiver() {
+      return resource.data.receiverId == request.auth.uid
+        && request.resource.data.status == 'read'
+        && request.resource.data.read == true
+        && request.resource.data.readBy is list
+        && request.auth.uid in request.resource.data.readBy
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status', 'read', 'readBy']);
+    }
+
     match /users/{userId} {
       allow read: if isOwnerUid(userId)
         || isContentAdmin()
@@ -147,6 +176,7 @@ service cloud.firestore {
         || (isOwnerUid(userId) && isOwnerTermsAckOnly())
         || (isOwnerUid(userId) && isOwnerPresenceOnlyUpdate(userId))
         || (isOwnerUid(userId) && isOwnerFcmTokensOnlyUpdate(userId))
+        || (isOwnerUid(userId) && isOwnerBlockedUsersOnlyUpdate(userId))
         || (isOwnerUid(userId) && ownerPrivilegedFieldsUnchanged());
       allow delete: if false;
     }
@@ -1001,13 +1031,12 @@ service cloud.firestore {
       allow delete: if false;
 
       match /messages/{messageId} {
-        allow read: if canReadMuhabereMessage(chatId);
+        allow get: if canReadMuhabereMessage(chatId);
+        /** Katılımcı tüm DM geçmişini dinleyebilir; unread sorgusu receiverId ile filtrelenir. */
+        allow list: if isChatParticipant(chatId);
         allow create: if isChatParticipant(chatId) && isValidMuhabereDmMessageCreate() && isNotSuspended();
         allow update: if isChatParticipant(chatId)
-          && resource.data.receiverId == request.auth.uid
-          && request.resource.data.status == 'read'
-          && request.resource.data.read == true
-          && request.writeFields.hasOnly(['status', 'read']);
+          && isMuhabereMessageMarkedReadByReceiver();
         allow delete: if isChatParticipant(chatId)
           && resource.data.isBurn == true;
       }
