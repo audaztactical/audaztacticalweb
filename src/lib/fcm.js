@@ -410,33 +410,11 @@ export function enableGlobalIntel() {
 }
 
 /**
- * Mevcut FCM token ile intel_updates / forum_updates topic aboneliklerini günceller.
- * @param {string} token
- * @param {{ intel?: boolean }} [options]
+ * Push topic abonelikleri artık kullanılmıyor (fan-out → onNotificationCreatedPush).
+ * Geriye dönük uyumluluk için no-op.
+ * @param {string} _token
+ * @param {{ intel?: boolean }} [_options]
  */
-export async function syncPushTopicSubscriptions(token, options = {}) {
-  const fcmToken = String(token ?? '').trim()
-  const functions = getAudazFunctions()
-  if (!fcmToken || !functions) return { ok: false, reason: 'not_configured' }
-
-  /** @type {Array<'subscribeToIntelUpdates' | 'subscribeToForumUpdates'>} */
-  const callables = ['subscribeToForumUpdates']
-  if (options.intel !== false) {
-    callables.push('subscribeToIntelUpdates')
-  }
-
-  try {
-    await Promise.all(
-      callables.map(async (callableName) => {
-        const subscribe = httpsCallable(functions, callableName)
-        const result = await subscribe({ token: fcmToken })
-        if (!result.data || result.data.success !== true) {
-          throw new Error(`${callableName}_failed`)
-        }
-      }),
-    )
-    return { ok: true }
-  } catch {
-    return { ok: false, reason: 'subscribe_failed' }
-  }
+export async function syncPushTopicSubscriptions(_token, _options = {}) {
+  return { ok: true, skipped: true }
 }

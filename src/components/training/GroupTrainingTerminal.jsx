@@ -242,14 +242,22 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
   const uid = user?.uid ?? ''
   const groupId = membership?.groupId ?? ''
 
-  const visibleTrainings = useMemo(
-    () => filterOperatorVisibleTrainings(trainings, groupId, { includeCompleted: true }),
+  const accessibleTrainings = useMemo(
+    () =>
+      filterOperatorVisibleTrainings(trainings, groupId, {
+        includeCompleted: true,
+        includeExpired: true,
+      }),
     [trainings, groupId],
   )
 
   const activeTrainings = useMemo(
-    () => visibleTrainings.filter((t) => t.status === 'active'),
-    [visibleTrainings],
+    () =>
+      filterOperatorVisibleTrainings(trainings, groupId, {
+        includeCompleted: false,
+        includeExpired: false,
+      }).filter((t) => t.status === 'active'),
+    [trainings, groupId],
   )
 
   const openActiveTrainings = useMemo(
@@ -260,11 +268,14 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
     [activeTrainings, results, uid],
   )
 
-  const historyTrainings = useMemo(() => visibleTrainings, [visibleTrainings])
+  const historyTrainings = useMemo(
+    () => accessibleTrainings.filter((t) => t.status === 'completed'),
+    [accessibleTrainings],
+  )
 
   const selected = useMemo(
-    () => visibleTrainings.find((t) => t.id === selectedId) ?? null,
-    [visibleTrainings, selectedId],
+    () => accessibleTrainings.find((t) => t.id === selectedId) ?? null,
+    [accessibleTrainings, selectedId],
   )
 
   const selectedSessionStatus = useMemo(() => {
@@ -273,8 +284,8 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
   }, [selected, results, uid])
 
   const detailTraining = useMemo(
-    () => visibleTrainings.find((t) => t.id === detailId) ?? null,
-    [visibleTrainings, detailId],
+    () => accessibleTrainings.find((t) => t.id === detailId) ?? null,
+    [accessibleTrainings, detailId],
   )
 
   const myResultForSelected = useMemo(() => {
@@ -310,6 +321,7 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
         emitFirebaseError(err)
         setLoading(false)
       },
+      { nonExpiredOnly: false },
     )
 
     const unsubResults = subscribeGroupTrainingResults(
@@ -337,7 +349,7 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
 
     const applyDeepLink = async () => {
       setDeepLinkBlocked(null)
-      let training = visibleTrainings.find((t) => t.id === preferredId) ?? null
+      let training = accessibleTrainings.find((t) => t.id === preferredId) ?? null
       if (!training) {
         try {
           training = await fetchGroupTrainingForOperator(preferredId, groupId)
@@ -369,7 +381,7 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
     }
 
     void applyDeepLink()
-  }, [initialTrainingId, visibleTrainings, loading, groupId])
+  }, [initialTrainingId, accessibleTrainings, loading, groupId])
 
   useEffect(() => {
     setHits('')

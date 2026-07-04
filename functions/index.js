@@ -264,7 +264,7 @@ exports.onNotificationCreatedPush = onDocumentCreated(
 )
 
 /**
- * Firestore trigger: news_feed/{itemId} oluşturulunca intel_updates topic + in-app fan-out.
+ * Firestore trigger: news_feed/{itemId} oluşturulunca notifications fan-out (FCM: onNotificationCreatedPush).
  */
 exports.onNewsFeedItemCreated = onDocumentCreated(
   {
@@ -276,7 +276,7 @@ exports.onNewsFeedItemCreated = onDocumentCreated(
 )
 
 /**
- * Firestore trigger: forum_posts/{postId} oluşturulunca forum_updates topic + in-app fan-out.
+ * Firestore trigger: forum_posts/{postId} oluşturulunca notifications fan-out (FCM: onNotificationCreatedPush).
  */
 exports.onForumPostCreated = onDocumentCreated(
   {

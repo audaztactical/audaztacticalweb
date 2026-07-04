@@ -424,7 +424,7 @@ export function subscribeGroupTrainings(groupId, onData, onError, opts = {}) {
     return () => {}
   }
 
-  const { autoCloseExpired = false } = opts
+  const { autoCloseExpired = false, nonExpiredOnly = true } = opts
 
   return subscribeMergedGroupTrainings(
     gid,
@@ -433,7 +433,7 @@ export function subscribeGroupTrainings(groupId, onData, onError, opts = {}) {
       if (autoCloseExpired) void closeExpiredGroupTrainings(rows)
     },
     onError,
-    { nonExpiredOnly: true },
+    { nonExpiredOnly },
   )
 }
 

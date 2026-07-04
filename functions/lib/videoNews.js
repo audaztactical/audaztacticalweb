@@ -187,7 +187,9 @@ async function sendGlobalIntelVideoAlert(newVideosCount) {
   }
 
   try {
+    const targetId = `video_batch_${Math.floor(Date.now() / 3_600_000)}`
     return broadcastIntelNotification({
+      targetId,
       title: 'Yeni İstihbarat',
       message: `Küresel Haber Ağı'na ${newVideosCount} yeni video eklendi.`,
       link: '/istihbarat',
