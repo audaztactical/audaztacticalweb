@@ -51,10 +51,10 @@ export default function CommandSideWidgets({ signalSeries: _legacySignal }) {
 
   const widgets = useMemo(
     () => [
-      { id: 'weather', label: 'Weather Sat-Map', desc: 'Meteorolojik durum', icon: CloudRain, glow: 'cmd-widget--sky' },
+      { id: 'weather', label: 'Hava Durumu', desc: 'Meteorolojik durum', icon: CloudRain, glow: 'cmd-widget--sky' },
       { id: 'signal', label: 'Rüzgar Trendi', desc: 'Saatlik rüzgar hızı', icon: Radio, glow: 'cmd-widget--green', chart: true },
-      { id: 'geo', label: 'Geographic Overlay', desc: 'Koordinat ve bölge', icon: Map, glow: 'cmd-widget--slate', geo: true },
-      { id: 'globe', label: 'Global Intel', desc: 'Atmosferik parametreler', icon: Globe2, glow: 'cmd-widget--sky', intel: true },
+      { id: 'geo', label: 'Konum Haritası', desc: 'Koordinat ve bölge', icon: Map, glow: 'cmd-widget--slate', geo: true },
+      { id: 'globe', label: 'Atmosfer Verisi', desc: 'Nem, basınç ve kaynak', icon: Globe2, glow: 'cmd-widget--sky', intel: true },
     ],
     []
   )

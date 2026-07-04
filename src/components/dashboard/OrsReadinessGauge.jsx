@@ -2,6 +2,7 @@ import { useId, useMemo } from 'react'
 import TacticalPanel from '../ui/TacticalPanel'
 import { useTheme } from '../../contexts/ThemeContext'
 import { getAccentColor } from '../../lib/themeColors'
+import { humanizeOrsPenaltyCode, humanizeOrsPenaltyDetail } from '../../lib/dashboardDisplayText'
 
 const TACTIC_AMBER = '#f59e0b'
 const COMBAT_RED = '#FF0000'
@@ -57,14 +58,14 @@ export default function OrsReadinessGauge({ score, penalties, loading, embedded 
       <div className="pointer-events-none flex flex-col items-center text-center">
         <p className={`font-mono-technical text-[10px] font-bold uppercase tracking-[0.32em] sm:tracking-[0.45em] ${titleAccent}`}>OHP</p>
         <p className="mt-1 font-mono-technical text-[9px] uppercase tracking-[0.16em] text-app-text/45 sm:tracking-[0.22em]">
-          OPERASYONEL_HAZIRLIK_PUANI
+          Operasyonel Hazırlık Puanı
         </p>
       </div>
 
       <div className="relative mx-auto mt-1 flex h-[148px] w-full max-w-[300px] items-start justify-center">
         {loading ? (
           <div className="absolute inset-0 z-[2] flex items-center justify-center rounded-lg bg-black/35 font-mono-technical text-[10px] uppercase tracking-widest text-app-text/55 backdrop-blur-[1px]">
-            HESAPLANIYOR...
+            HESAPLANIYOR…
           </div>
         ) : null}
         <svg width="300" height="145" viewBox="0 0 200 120" className="h-auto w-full max-w-[300px] overflow-visible" aria-hidden>
@@ -105,7 +106,7 @@ export default function OrsReadinessGauge({ score, penalties, loading, embedded 
       <div className="mt-4 space-y-1 border-t border-white/10 pt-3">
         {penalties.length === 0 ? (
           <p className="text-center font-mono-technical text-[10px] uppercase tracking-wider text-accent/75 sm:text-[9px]">
-            HATA_KUYRUĞU: TEMİZ · PUAN_KESİNTİSİ_YOK
+            Kesinti yok · hata kuyruğu temiz
           </p>
         ) : (
           penalties.slice(0, 3).map((pen, i) => (
@@ -113,8 +114,8 @@ export default function OrsReadinessGauge({ score, penalties, loading, embedded 
               key={`${pen.code}-${i}`}
               className="grid grid-cols-1 gap-1 text-[10px] sm:flex sm:flex-wrap sm:items-baseline sm:justify-between sm:gap-x-2 sm:gap-y-1 sm:text-[9px]"
             >
-              <span className="font-mono-technical text-[#FF0000]/95 break-words">{pen.code}</span>
-              <span className="font-mono-technical tabular-nums text-app-text/55">{pen.detail}</span>
+              <span className="font-mono-technical text-[#FF0000]/95 break-words">{humanizeOrsPenaltyCode(pen.code)}</span>
+              <span className="font-mono-technical tabular-nums text-app-text/55">{humanizeOrsPenaltyDetail(pen.detail)}</span>
               <span className="font-mono-technical tabular-nums text-app-text/45 sm:text-right">{pen.delta} PUAN</span>
             </div>
           ))

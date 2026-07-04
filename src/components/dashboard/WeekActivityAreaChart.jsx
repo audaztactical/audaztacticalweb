@@ -11,7 +11,7 @@ export default function WeekActivityAreaChart({ data, loading }) {
     <div className="relative mt-3 h-[188px] min-h-[188px] w-full min-w-0 md:h-[200px] md:min-h-[200px]">
       {loading ? (
         <div className="pointer-events-none absolute inset-0 z-[1] flex items-center justify-center bg-black/20 font-mono-technical text-[10px] uppercase tracking-widest text-app-text/55">
-          TOPLANIYOR...
+          TOPLANIYOR…
         </div>
       ) : null}
       {!loading && data.length > 0 ? (

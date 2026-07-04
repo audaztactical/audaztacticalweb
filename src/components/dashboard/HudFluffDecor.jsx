@@ -30,7 +30,7 @@ export default function HudFluffDecor({ className = '' }) {
   return (
     <div className={`pointer-events-none absolute inset-0 z-0 ${className}`.trim()}>
       <div className={`${box} absolute left-0 top-0 z-0 max-w-[11rem]`} aria-hidden>
-        <p className="text-accent/65">IZGARA_A</p>
+        <p className="text-accent/65">Konum ızgarası</p>
         <p>
           KONUM {lat}°N {lon}°E
         </p>
@@ -42,21 +42,16 @@ export default function HudFluffDecor({ className = '' }) {
         </p>
       </div>
       <div className={`${box} absolute right-0 top-0 z-0 max-w-[10rem] text-right`} aria-hidden>
-        <p className="text-emerald-500/55">SİSTEM_YÜKÜ (SIM)</p>
-        <p>CPU {cpu}%</p>
-        <p>MEM {ram}%</p>
-        <p>I/O {bus}%</p>
+        <p className="text-emerald-500/55">Sistem yükü (sim)</p>
+        <p>İşlemci {cpu}%</p>
+        <p>Bellek {ram}%</p>
+        <p>G/Ç {bus}%</p>
       </div>
       <div className={`${box} absolute bottom-0 left-0 z-0`} aria-hidden>
-        <p className="text-app-text/45">
-          LAT_ms ~{(((coordTick % 17) + 8) * 3)
-            .toString()
-            .padStart(2, '0')}
-        </p>
+        <p className="text-app-text/45">Bağlantı aktif</p>
       </div>
       <div className={`${box} absolute bottom-0 right-0 z-0 text-right`} aria-hidden>
-        <p>FREQ_LNK ●</p>
-        <p className="text-amber-500/55">RNG_OK</p>
+        <p className="text-amber-500/55">Veri akışı ●</p>
       </div>
     </div>
   )

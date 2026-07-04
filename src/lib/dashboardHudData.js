@@ -1,3 +1,5 @@
+import { humanizeDashboardLogMessage } from './dashboardDisplayText'
+
 /** @param {unknown} row */
 export function rowMillis(row) {
   const u = row.updatedAt ?? row.createdAt ?? row.recordedAt ?? row.performedAt ?? row.dueAt
@@ -35,7 +37,7 @@ export function buildSystemLogEntries(p) {
     raw.push({
       ms,
       code: 'OPS',
-      msg: `GÖREV_SENK · ${title}`,
+      msg: `Görev · ${title}`,
     })
   }
 
@@ -46,7 +48,7 @@ export function buildSystemLogEntries(p) {
     raw.push({
       ms,
       code: 'EĞT',
-      msg: `TATBİKAT_IX · ${title}`,
+      msg: `Tatbikat · ${title}`,
     })
   }
 
@@ -56,7 +58,11 @@ export function buildSystemLogEntries(p) {
     const auditCode = str(row.auditLogCode).trim()
     const auditMsg = str(row.auditLogMsg).trim()
     if (auditCode && auditMsg) {
-      raw.push({ ms, code: auditCode.slice(0, 12), msg: auditMsg.slice(0, 64) })
+      raw.push({
+        ms,
+        code: auditCode === 'CEP_GNC' ? 'CEP' : auditCode.slice(0, 12),
+        msg: humanizeDashboardLogMessage(auditMsg).slice(0, 72),
+      })
       continue
     }
     const name = str(row.name).slice(0, 38) || '—'
@@ -64,7 +70,7 @@ export function buildSystemLogEntries(p) {
     raw.push({
       ms,
       code: 'CEP',
-      msg: `${cat ? `${cat}` : 'IX'} Δ · ${name}`,
+      msg: cat ? `${cat} · ${name}` : name,
     })
   }
 
@@ -74,11 +80,11 @@ export function buildSystemLogEntries(p) {
     if (ms <= 0) continue
     const k = str(row.kind)
     if (k === INC || str(row.injuryZone)) {
-      const z = str(row.injuryZone) || 'UNK'
-      raw.push({ ms, code: 'SHT', msg: `SAHA_KAYIT · BÖLGE ${z}` })
+      const z = str(row.injuryZone) || 'Bilinmiyor'
+      raw.push({ ms, code: 'SHT', msg: `Saha kaydı · Bölge ${z}` })
     } else {
-      const name = str(row.name).slice(0, 36) || 'IFAK_IX'
-      raw.push({ ms, code: 'SHT', msg: `TIBBİ_SENK · ${name}` })
+      const name = str(row.name).slice(0, 36) || 'IFAK'
+      raw.push({ ms, code: 'SHT', msg: `Tıbbi kayıt · ${name}` })
     }
   }
 
@@ -88,11 +94,14 @@ export function buildSystemLogEntries(p) {
     raw.unshift({
       ms: sessionOpenMs,
       code: 'GÜV',
-      msg: 'KANAL_AÇIK · OTURUM_AKTİF',
+      msg: 'Kanal açık · Oturum aktif',
     })
   }
 
-  return raw.slice(0, 64)
+  return raw.slice(0, 64).map((entry) => ({
+    ...entry,
+    msg: humanizeDashboardLogMessage(entry.msg),
+  }))
 }
 
 /** UTC gün başlangıcı için kısa gün adı (Pzt, Sal, …) */

@@ -6,13 +6,14 @@ import {
   ShieldAlert,
 } from 'lucide-react'
 import { utcHms } from '../../lib/dashboardHudData'
+import { humanizeDashboardLogCode } from '../../lib/dashboardDisplayText'
 
 /** @param {string} code @param {string} msg */
 function logSeverity(code, msg) {
   const c = code.toUpperCase()
   const m = msg.toUpperCase()
   if (c === 'SHT' || m.includes('OLAY') || m.includes('KRİT') || m.includes('HATA')) return 'critical'
-  if (c === 'CEP' || c === 'CEP_GNC' || m.includes('UYARI') || m.includes('Δ')) return 'warning'
+  if (c === 'CEP' || c === 'CEP GNC' || m.includes('UYARI') || m.includes('Δ')) return 'warning'
   if (c === 'OPS' || c === 'EĞT' || c === 'GÜV') return 'active'
   return 'neutral'
 }
@@ -54,7 +55,7 @@ export default function DashboardSystemLog({ entries }) {
                     <SevIcon className="size-3.5" strokeWidth={2} />
                   </span>
                   <span className="cmd-log-entry-rich__badge">{meta.label}</span>
-                  <span className="cmd-log-entry-rich__code">{e.code}</span>
+                  <span className="cmd-log-entry-rich__code">{humanizeDashboardLogCode(e.code)}</span>
                   <span className="cmd-log-entry-rich__time">{utcHms(e.ms)}</span>
                 </div>
                 <p className="cmd-log-entry-rich__msg">{e.msg}</p>
