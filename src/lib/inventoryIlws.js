@@ -2,8 +2,8 @@
 
 export const ILWS_FILTERS = [
   { id: /** @type {IlwsFilterId} */ ('ALL'), code: 'Tümü' },
-  { id: 'P_TFK', code: 'Tabanca' },
-  { id: 'T_TAB', code: 'Tüfek' },
+  { id: 'P_TFK', code: 'Tüfek' },
+  { id: 'T_TAB', code: 'Tabanca' },
   { id: 'AV_TFK', code: 'Av Tüfeği' },
   { id: 'OPT', code: 'Aksesuar' },
   { id: 'MHM', code: 'Mühimmat' },
@@ -40,13 +40,14 @@ export function stokKodu(id) {
 /** @param {Record<string, unknown>} row */
 export function getTacticalCategory(row) {
   const tc = invStr(row.tacticalCategory).toUpperCase()
-  if (['P_TFK', 'T_TAB', 'OPT', 'MHM'].includes(tc)) return tc
+  if (['P_TFK', 'T_TAB', 'AV_TFK', 'OPT', 'MHM'].includes(tc)) return tc
   const legacy = invStr(row.category)
   if (legacy === 'Mühimmat') return 'MHM'
   if (legacy === 'Optik') return 'OPT'
   if (legacy === 'Silah') {
     const wt = invStr(row.weaponType).toLowerCase()
     if (wt.includes('tabanca') || wt === 'pistol' || wt === 't_tab') return 'T_TAB'
+    if (wt.includes('av') || wt === 'av_tfk') return 'AV_TFK'
     return 'P_TFK'
   }
   if (legacy === 'Ekipman') return 'OPT'
