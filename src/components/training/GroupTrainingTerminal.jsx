@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowLeft,
   CheckCircle2,
+  ChevronDown,
   Crosshair,
   Eye,
   History,
@@ -56,13 +57,6 @@ function formatTrainingDate(ts) {
 }
 
 /**
- * @param {{
- *   training: GroupTraining
- *   results: TrainingResult[]
- *   currentUid: string
- * }} props
- */
-/**
  * @param {TrainingResult} result
  * @param {GroupTraining} training
  */
@@ -77,7 +71,15 @@ function resolveResultAssessment(result, training) {
   })
 }
 
-function GroupTrainingDetailPanel({ training, results, currentUid }) {
+/**
+ * @param {{
+ *   training: GroupTraining
+ *   results: TrainingResult[]
+ *   currentUid: string
+ *   selfOnly?: boolean
+ * }} props
+ */
+function GroupTrainingDetailPanel({ training, results, currentUid, selfOnly = false }) {
   const trainingResults = results.filter((r) => r.trainingId === training.id)
   const myResult = trainingResults.find((r) => r.operatorId === currentUid) ?? null
   const isActive = training.status === 'active'
@@ -147,74 +149,76 @@ function GroupTrainingDetailPanel({ training, results, currentUid }) {
         </TacticalPanel>
       )}
 
-      <TacticalPanel className="overflow-hidden p-0">
-        <div className="border-b border-accent/15 px-4 py-2.5">
-          <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-accent/80">
-            [ GRUP SONUÇLARI · SALT OKUNUR ]
-          </p>
-        </div>
-        {trainingResults.length === 0 ? (
-          <p className="px-4 py-6 text-center font-mono-technical text-xs text-app-text/55">
-            Henüz sonuç bildirilmedi.
-          </p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[28rem] text-left font-mono-technical text-[10px]">
-              <thead className="border-b border-white/10 bg-black/40 text-app-text/55">
-                <tr>
-                  <th className="px-3 py-2 font-bold uppercase tracking-wider">Operatör</th>
-                  <th className="px-3 py-2 font-bold uppercase tracking-wider">Vuruş</th>
-                  <th className="px-3 py-2 font-bold uppercase tracking-wider">Süre</th>
-                  <th className="px-3 py-2 font-bold uppercase tracking-wider">Sonuç</th>
-                  <th className="px-3 py-2 font-bold uppercase tracking-wider">Tarih</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {trainingResults.map((row) => {
-                  const rowAssessment = resolveResultAssessment(row, training)
-                  const rowLabel = formatGroupTrainingStatusLabel(
-                    rowAssessment.statusResult,
-                    rowAssessment.isPassed,
-                  )
-                  return (
-                  <tr
-                    key={row.id}
-                    className={row.operatorId === currentUid ? 'bg-accent/[0.06]' : 'text-app-text/90'}
-                  >
-                    <td className="px-3 py-2.5">
-                      {row.operatorName}
-                      {row.operatorId === currentUid ? (
-                        <span className="ml-1 text-accent/70">(siz)</span>
-                      ) : null}
-                    </td>
-                    <td className="px-3 py-2.5 tabular-nums">
-                      {row.hits}/{training.totalAmmo}
-                    </td>
-                    <td className="px-3 py-2.5 tabular-nums">
-                      {training.isTimed && row.time != null ? `${row.time}s` : '—'}
-                    </td>
-                    <td className="px-3 py-2.5">
-                      <span
-                        className={
-                          rowAssessment.isPassed
-                            ? 'text-lime-400'
-                            : rowAssessment.statusResult === 'SÜRE İHLALİ'
-                              ? 'text-amber-400'
-                              : 'text-red-400'
-                        }
-                      >
-                        {rowLabel}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2.5 text-app-text/55">{formatTrainingDate(row.submittedAt)}</td>
-                  </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+      {!selfOnly ? (
+        <TacticalPanel className="overflow-hidden p-0">
+          <div className="border-b border-accent/15 px-4 py-2.5">
+            <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-accent/80">
+              [ GRUP SONUÇLARI · SALT OKUNUR ]
+            </p>
           </div>
-        )}
-      </TacticalPanel>
+          {trainingResults.length === 0 ? (
+            <p className="px-4 py-6 text-center font-mono-technical text-xs text-app-text/55">
+              Henüz sonuç bildirilmedi.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[28rem] text-left font-mono-technical text-[10px]">
+                <thead className="border-b border-white/10 bg-black/40 text-app-text/55">
+                  <tr>
+                    <th className="px-3 py-2 font-bold uppercase tracking-wider">Operatör</th>
+                    <th className="px-3 py-2 font-bold uppercase tracking-wider">Vuruş</th>
+                    <th className="px-3 py-2 font-bold uppercase tracking-wider">Süre</th>
+                    <th className="px-3 py-2 font-bold uppercase tracking-wider">Sonuç</th>
+                    <th className="px-3 py-2 font-bold uppercase tracking-wider">Tarih</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {trainingResults.map((row) => {
+                    const rowAssessment = resolveResultAssessment(row, training)
+                    const rowLabel = formatGroupTrainingStatusLabel(
+                      rowAssessment.statusResult,
+                      rowAssessment.isPassed,
+                    )
+                    return (
+                      <tr
+                        key={row.id}
+                        className={row.operatorId === currentUid ? 'bg-accent/[0.06]' : 'text-app-text/90'}
+                      >
+                        <td className="px-3 py-2.5">
+                          {row.operatorName}
+                          {row.operatorId === currentUid ? (
+                            <span className="ml-1 text-accent/70">(siz)</span>
+                          ) : null}
+                        </td>
+                        <td className="px-3 py-2.5 tabular-nums">
+                          {row.hits}/{training.totalAmmo}
+                        </td>
+                        <td className="px-3 py-2.5 tabular-nums">
+                          {training.isTimed && row.time != null ? `${row.time}s` : '—'}
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <span
+                            className={
+                              rowAssessment.isPassed
+                                ? 'text-lime-400'
+                                : rowAssessment.statusResult === 'SÜRE İHLALİ'
+                                  ? 'text-amber-400'
+                                  : 'text-red-400'
+                            }
+                          >
+                            {rowLabel}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5 text-app-text/55">{formatTrainingDate(row.submittedAt)}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </TacticalPanel>
+      ) : null}
     </div>
   )
 }
@@ -282,11 +286,6 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
     if (!selected) return null
     return getOperatorTrainingSessionStatus(selected, results, uid)
   }, [selected, results, uid])
-
-  const detailTraining = useMemo(
-    () => accessibleTrainings.find((t) => t.id === detailId) ?? null,
-    [accessibleTrainings, detailId],
-  )
 
   const myResultForSelected = useMemo(() => {
     if (!selectedId || !uid) return null
@@ -441,9 +440,9 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
     [selected, uid, operatorName, hits, timeSec, myResultForSelected],
   )
 
-  const openDetail = (/** @type {GroupTraining} */ training) => {
-    setDetailId(training.id)
-  }
+  const toggleHistoryDetail = useCallback((/** @type {string} */ trainingId) => {
+    setDetailId((prev) => (prev === trainingId ? '' : trainingId))
+  }, [])
 
   if (groupLoading) {
     return (
@@ -712,66 +711,107 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
                       const count = results.filter((r) => r.trainingId === training.id).length
                       const sessionStatus = getOperatorTrainingSessionStatus(training, results, uid)
                       const sessionStyles = getOperatorSessionStatusStyles(sessionStatus.key)
+                      const isExpanded = detailId === training.id
                       return (
-                        <tr
-                          key={training.id}
-                          className={[
-                            detailId === training.id ? 'bg-accent/[0.06]' : '',
-                            sessionStatus.key === 'closed_for_me' ? 'bg-zinc-950/45 text-zinc-400' : '',
-                            sessionStatus.key === 'completed' ? 'bg-slate-950/35 text-app-text/70' : '',
-                            sessionStatus.key === 'open' ? 'text-app-text/90' : '',
-                          ].join(' ')}
-                        >
-                          <td className="px-3 py-2.5">
-                            <span className="font-semibold text-app-text">{training.trainingName}</span>
-                            {training.level && training.level !== '—' ? (
-                              <span className="mt-0.5 block text-app-text/55">{training.level}</span>
-                            ) : null}
-                          </td>
-                          <td className="px-3 py-2.5">
-                            <span
-                              className={[
-                                'inline-flex rounded border px-2 py-0.5 font-mono-technical text-[8px] font-bold uppercase tracking-wider',
-                                sessionStyles.badge,
-                              ].join(' ')}
-                            >
-                              {sessionStatus.label}
-                            </span>
-                          </td>
-                          <td className="px-3 py-2.5 text-app-text/55">{formatTrainingDate(training.createdAt)}</td>
-                          <td className="px-3 py-2.5">
-                            {mine && mineAssessment ? (
+                        <Fragment key={training.id}>
+                          <tr
+                            className={[
+                              isExpanded
+                                ? 'border-l-2 border-amber-500/70 bg-amber-950/20 shadow-[inset_0_0_0_1px_rgba(245,158,11,0.12)]'
+                                : '',
+                              !isExpanded && sessionStatus.key === 'closed_for_me'
+                                ? 'bg-zinc-950/45 text-zinc-400'
+                                : '',
+                              !isExpanded && sessionStatus.key === 'completed'
+                                ? 'bg-slate-950/35 text-app-text/70'
+                                : '',
+                              !isExpanded && sessionStatus.key === 'open' ? 'text-app-text/90' : '',
+                            ].join(' ')}
+                          >
+                            <td className="px-3 py-2.5">
+                              <span className="font-semibold text-app-text">{training.trainingName}</span>
+                              {training.level && training.level !== '—' ? (
+                                <span className="mt-0.5 block text-app-text/55">{training.level}</span>
+                              ) : null}
+                            </td>
+                            <td className="px-3 py-2.5">
                               <span
-                                className={
-                                  mineAssessment.isPassed
-                                    ? 'text-lime-400'
-                                    : mineAssessment.statusResult === 'SÜRE İHLALİ'
-                                      ? 'text-amber-400'
-                                      : 'text-red-400'
-                                }
+                                className={[
+                                  'inline-flex rounded border px-2 py-0.5 font-mono-technical text-[8px] font-bold uppercase tracking-wider',
+                                  sessionStyles.badge,
+                                ].join(' ')}
                               >
-                                {mine.hits}/{training.totalAmmo} ·{' '}
-                                {formatGroupTrainingStatusLabel(
-                                  mineAssessment.statusResult,
-                                  mineAssessment.isPassed,
-                                )}
+                                {sessionStatus.label}
                               </span>
-                            ) : (
-                              <span className="text-app-text/45">—</span>
-                            )}
-                          </td>
-                          <td className="px-3 py-2.5 tabular-nums">{count} operatör</td>
-                          <td className="px-3 py-2.5">
-                            <button
-                              type="button"
-                              onClick={() => openDetail(training)}
-                              className="inline-flex items-center gap-1 rounded border border-white/10 px-2 py-1 text-[9px] uppercase tracking-wider text-app-text/70 transition hover:border-accent/40 hover:text-accent"
-                            >
-                              <Eye className="size-3" aria-hidden />
-                              Detay
-                            </button>
-                          </td>
-                        </tr>
+                            </td>
+                            <td className="px-3 py-2.5 text-app-text/55">{formatTrainingDate(training.createdAt)}</td>
+                            <td className="px-3 py-2.5">
+                              {mine && mineAssessment ? (
+                                <span
+                                  className={
+                                    mineAssessment.isPassed
+                                      ? 'text-lime-400'
+                                      : mineAssessment.statusResult === 'SÜRE İHLALİ'
+                                        ? 'text-amber-400'
+                                        : 'text-red-400'
+                                  }
+                                >
+                                  {mine.hits}/{training.totalAmmo} ·{' '}
+                                  {formatGroupTrainingStatusLabel(
+                                    mineAssessment.statusResult,
+                                    mineAssessment.isPassed,
+                                  )}
+                                </span>
+                              ) : (
+                                <span className="text-app-text/45">—</span>
+                              )}
+                            </td>
+                            <td className="px-3 py-2.5 tabular-nums">{count} operatör</td>
+                            <td className="px-3 py-2.5">
+                              <button
+                                type="button"
+                                onClick={() => toggleHistoryDetail(training.id)}
+                                aria-expanded={isExpanded}
+                                aria-controls={`grp-history-detail-${training.id}`}
+                                className={[
+                                  'inline-flex items-center gap-1 rounded border px-2 py-1 text-[9px] uppercase tracking-wider transition',
+                                  isExpanded
+                                    ? 'border-amber-500/50 bg-amber-950/30 text-amber-300'
+                                    : 'border-white/10 text-app-text/70 hover:border-accent/40 hover:text-accent',
+                                ].join(' ')}
+                              >
+                                <Eye className="size-3" aria-hidden />
+                                Detay
+                                <ChevronDown
+                                  className={[
+                                    'size-3 transition-transform duration-200',
+                                    isExpanded ? 'rotate-180' : '',
+                                  ].join(' ')}
+                                  aria-hidden
+                                />
+                              </button>
+                            </td>
+                          </tr>
+                          {isExpanded ? (
+                            <tr className="bg-black/35">
+                              <td
+                                id={`grp-history-detail-${training.id}`}
+                                colSpan={6}
+                                className="border-l-2 border-b border-amber-500/70 border-b-amber-500/20 px-4 py-4"
+                              >
+                                <p className="mb-3 font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-amber-400/85">
+                                  [ KAYIT DETAYI · {training.trainingName} ]
+                                </p>
+                                <GroupTrainingDetailPanel
+                                  training={training}
+                                  results={results}
+                                  currentUid={uid}
+                                  selfOnly
+                                />
+                              </td>
+                            </tr>
+                          ) : null}
+                        </Fragment>
                       )
                     })}
                   </tbody>
@@ -779,15 +819,6 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
               </div>
             </TacticalPanel>
           )}
-
-          {detailTraining ? (
-            <div className="space-y-3">
-              <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-accent/75">
-                [ DETAY · {detailTraining.trainingName} ]
-              </p>
-              <GroupTrainingDetailPanel training={detailTraining} results={results} currentUid={uid} />
-            </div>
-          ) : null}
         </div>
       )}
     </div>
