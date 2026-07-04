@@ -1,17 +1,12 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Loader2, Plus, Radio } from 'lucide-react'
-import { emitFirebaseError } from '../../lib/firebaseErrorBus'
-import {
-  formatConversationPreviewTime,
-  subscribeConversationSummaries,
-} from '../../lib/firestoreTaktikMuhabere'
-import { indexConversationSummaries } from '../../lib/muhabereConversation'
+import { useMemo, useState } from 'react'
+import { Plus, Radio } from 'lucide-react'
+import { formatConversationPreviewTime } from '../../lib/firestoreTaktikMuhabere'
+import { getConversationSortMs } from '../../lib/muhabereConversation'
 import MuhabereConversationMenu from './MuhabereConversationMenu'
 import MuhabereUnreadBadge from './MuhabereUnreadBadge'
 import TacticalAlert from './TacticalAlert'
 
 /** @typedef {import('../../lib/firestoreTaktikMuhabere').MuhabereChannel} MuhabereChannel */
-/** @typedef {import('../../lib/muhabereConversation').MuhabereConversationSummary} MuhabereConversationSummary */
 
 /**
  * @param {{
@@ -27,6 +22,8 @@ import TacticalAlert from './TacticalAlert'
  *   editingChannelId?: string | null
  *   channelUnreadById?: Record<string, number>
  *   openChannelId?: string | null
+ *   conversationIndex?: ReturnType<typeof import('../../lib/muhabereConversation').indexConversationSummaries> | null
+ *   summariesError?: string | null
  *   onSelectChannel: (channelId: string) => void
  *   onArchiveChannel: (channel: MuhabereChannel) => void | Promise<void>
  *   onDeleteChannel: (channel: MuhabereChannel) => void | Promise<void>
@@ -34,7 +31,6 @@ import TacticalAlert from './TacticalAlert'
  *   onEditChannel?: (channel: MuhabereChannel) => void
  *   onDestroyChannel?: (channel: MuhabereChannel) => void | Promise<void>
  *   onCreateChannel: () => void
- *   onSummariesChange?: (payload: ReturnType<typeof indexConversationSummaries>) => void
  *   fillHeight?: boolean
  * }} props
  */
@@ -51,6 +47,8 @@ export default function ChatList({
   editingChannelId = null,
   channelUnreadById = {},
   openChannelId = null,
+  conversationIndex = null,
+  summariesError = null,
   onSelectChannel,
   onArchiveChannel,
   onDeleteChannel,
@@ -58,41 +56,22 @@ export default function ChatList({
   onEditChannel,
   onDestroyChannel,
   onCreateChannel,
-  onSummariesChange,
   fillHeight = false,
 }) {
-  const [summaries, setSummaries] = useState(/** @type {MuhabereConversationSummary[]} */ ([]))
-  const [summariesError, setSummariesError] = useState(/** @type {string | null} */ (null))
-
   const [archiveTarget, setArchiveTarget] = useState(/** @type {MuhabereChannel | null} */ (null))
   const [leaveTarget, setLeaveTarget] = useState(/** @type {MuhabereChannel | null} */ (null))
   const [destroyTarget, setDestroyTarget] = useState(/** @type {MuhabereChannel | null} */ (null))
 
-  const indexed = useMemo(() => indexConversationSummaries(summaries, uid), [summaries, uid])
+  const byChannelId = conversationIndex?.byChannelId ?? {}
 
-  useEffect(() => {
-    if (!uid) {
-      setSummaries([])
-      setSummariesError(null)
-      return undefined
-    }
-
-    return subscribeConversationSummaries(
-      uid,
-      (rows) => {
-        setSummaries(rows)
-        setSummariesError(null)
-      },
-      (err) => {
-        emitFirebaseError(err)
-        setSummariesError(err instanceof Error ? err.message : 'Özet kanalı kesildi.')
-      },
-    )
-  }, [uid])
-
-  useEffect(() => {
-    onSummariesChange?.(indexed)
-  }, [indexed, onSummariesChange])
+  const sortedChannels = useMemo(() => {
+    return [...channels].sort((a, b) => {
+      const msA = getConversationSortMs(byChannelId[a.id])
+      const msB = getConversationSortMs(byChannelId[b.id])
+      if (msB !== msA) return msB - msA
+      return a.name.localeCompare(b.name, 'tr')
+    })
+  }, [channels, byChannelId, conversationIndex])
 
   const busyArchive = Boolean(archivingChannelId)
   const busyLeave = Boolean(deletingChannelId)
@@ -140,14 +119,14 @@ export default function ChatList({
             </p>
           ) : (
             <ul className="space-y-1.5" role="listbox" aria-label="Tim kanalları">
-              {channels.map((ch) => {
+              {sortedChannels.map((ch) => {
                 const activeChannelId =
                   openChannelId != null && openChannelId !== ''
                     ? openChannelId
                     : selectedChannelId
                 const isActiveRow =
                   activeChannelId != null && activeChannelId !== '' && ch.id === activeChannelId
-                const summary = indexed.byChannelId[ch.id]
+                const summary = byChannelId[ch.id]
                 const unreadCount = isActiveRow
                   ? 0
                   : Math.max(summary?.unreadCount ?? 0, channelUnreadById[ch.id] ?? 0)
@@ -209,21 +188,21 @@ export default function ChatList({
                     ) : null}
 
                     <MuhabereConversationMenu
-                    variant="channel"
-                    isOwner={isOwner}
-                    archiveBusy={archivingChannelId === ch.id}
-                    leaveBusy={deletingChannelId === ch.id}
-                    destroyBusy={destroyingChannelId === ch.id}
-                    editBusy={editingChannelId === ch.id}
-                    onArchive={() => setArchiveTarget(ch)}
-                    onDelete={() => setLeaveTarget(ch)}
-                    onLeave={() => setLeaveTarget(ch)}
-                    onEdit={isOwner && onEditChannel ? () => onEditChannel(ch) : undefined}
-                    onDestroyChannel={isOwner && onDestroyChannel ? () => setDestroyTarget(ch) : undefined}
-                    menuLabel={`${ch.name} kanal seçenekleri`}
-                  />
-                </li>
-              )
+                      variant="channel"
+                      isOwner={isOwner}
+                      archiveBusy={archivingChannelId === ch.id}
+                      leaveBusy={deletingChannelId === ch.id}
+                      destroyBusy={destroyingChannelId === ch.id}
+                      editBusy={editingChannelId === ch.id}
+                      onArchive={() => setArchiveTarget(ch)}
+                      onDelete={() => setLeaveTarget(ch)}
+                      onLeave={() => setLeaveTarget(ch)}
+                      onEdit={isOwner && onEditChannel ? () => onEditChannel(ch) : undefined}
+                      onDestroyChannel={isOwner && onDestroyChannel ? () => setDestroyTarget(ch) : undefined}
+                      menuLabel={`${ch.name} kanal seçenekleri`}
+                    />
+                  </li>
+                )
               })}
             </ul>
           )}

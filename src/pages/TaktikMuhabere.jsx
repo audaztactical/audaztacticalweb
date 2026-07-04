@@ -52,8 +52,10 @@ import {
   subscribeIncomingContactRequests,
   subscribeOutgoingPendingRequests,
   subscribeHiddenMuhabereMessageIds,
+  subscribeConversationSummaries,
   subscribeUserMuhabereChannels,
 } from '../lib/firestoreTaktikMuhabere'
+import { getConversationSortMs, indexConversationSummaries } from '../lib/muhabereConversation'
 import { MUHABERE_CONTENT_VIOLATION } from '../lib/muhabereContentFilter'
 import { useOperatorsPresenceMap } from '../hooks/useOperatorsPresenceMap'
 import { useCompactShell } from '../hooks/useCompactShell'
@@ -154,7 +156,8 @@ export default function TaktikMuhabere() {
   const [burnMode, setBurnMode] = useState(false)
   const [peerTyping, setPeerTyping] = useState(false)
   const [burnGhosts, setBurnGhosts] = useState(/** @type {Record<string, MuhabereMessage>} */ ({}))
-  const [conversationIndex, setConversationIndex] = useState(/** @type {ReturnType<import('../lib/muhabereConversation').indexConversationSummaries> | null} */ (null))
+  const [conversationIndex, setConversationIndex] = useState(/** @type {ReturnType<typeof indexConversationSummaries> | null} */ (null))
+  const [summariesError, setSummariesError] = useState(/** @type {string | null} */ (null))
   const [liveDmUnreadByPeerId, setLiveDmUnreadByPeerId] = useState(/** @type {Record<string, number>} */ ({}))
   const [hiddenMessageIds, setHiddenMessageIds] = useState(/** @type {Set<string>} */ (() => new Set()))
   const [archivedChannelIds, setArchivedChannelIds] = useState(/** @type {Set<string>} */ (() => new Set()))
@@ -271,9 +274,25 @@ export default function TaktikMuhabere() {
     return map
   }, [roster, uid, userData?.callsign, user?.displayName])
 
-  const handleConversationSummariesChange = useCallback((/** @type {import('../lib/muhabereConversation').ReturnType<import('../lib/muhabereConversation').indexConversationSummaries>} */ index) => {
-    setConversationIndex(index)
-  }, [])
+  useEffect(() => {
+    if (!uid) {
+      setConversationIndex(null)
+      setSummariesError(null)
+      return undefined
+    }
+
+    return subscribeConversationSummaries(
+      uid,
+      (rows) => {
+        setConversationIndex(indexConversationSummaries(rows, uid))
+        setSummariesError(null)
+      },
+      (err) => {
+        emitFirebaseError(err)
+        setSummariesError(err instanceof Error ? err.message : 'Özet kanalı kesildi.')
+      },
+    )
+  }, [uid])
 
   const handleBurnDestroyed = useCallback((/** @type {MuhabereMessage} */ msg) => {
     setBurnGhosts((prev) => ({
@@ -981,9 +1000,19 @@ export default function TaktikMuhabere() {
     }
   }
 
+  const sortedActiveRoster = useMemo(() => {
+    const byPeerUid = conversationIndex?.byPeerUid ?? {}
+    return [...activeRoster].sort((a, b) => {
+      const msA = getConversationSortMs(byPeerUid[a.uid])
+      const msB = getConversationSortMs(byPeerUid[b.uid])
+      if (msB !== msA) return msB - msA
+      return a.callsign.localeCompare(b.callsign, 'tr')
+    })
+  }, [activeRoster, conversationIndex])
+
   const listLoading = isSearchMode ? searchLoading : rosterLoading
   const listError = isSearchMode ? searchError : rosterError
-  const listItems = isSearchMode ? searchResults : activeRoster
+  const listItems = isSearchMode ? searchResults : sortedActiveRoster
 
   const dmAlertsBusy = Boolean(archivingDmUid || deletingDmUid || blockingUid)
   const closeDmAlerts = () => {
@@ -1133,7 +1162,8 @@ export default function TaktikMuhabere() {
               onEditChannel={(channel) => setEditChannelTarget(channel)}
               onDestroyChannel={handleDestroyChannel}
               onCreateChannel={() => setShowCreateChannel(true)}
-              onSummariesChange={handleConversationSummariesChange}
+              conversationIndex={conversationIndex}
+              summariesError={summariesError}
               fillHeight
             />
             </div>

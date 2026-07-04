@@ -3,6 +3,12 @@ import { Crosshair, Home, MessageSquare, Shield, User } from 'lucide-react'
 import { useMuhabereNotify } from '../context/MuhabereNotifyContext'
 import { scheduleScrollAppToTop } from '../lib/scrollAppToTop'
 
+/** @param {number} count */
+function formatMesajlarBadgeCount(count) {
+  if (!count || count <= 0) return null
+  return count > 9 ? '9+' : String(count)
+}
+
 /** @type {{ to: string; label: string; icon: import('lucide-react').LucideIcon; end?: boolean }[]} */
 export const BOTTOM_TAB_ITEMS = [
   { to: '/dashboard', label: 'Ana Sayfa', icon: Home, end: true },
@@ -13,8 +19,17 @@ export const BOTTOM_TAB_ITEMS = [
 ]
 
 export default function BottomTabBar() {
-  const { sidebarMuhabereBadgeCount } = useMuhabereNotify()
+  const { unreadMuhabereMessagesTotal, unreadChannelMessageCount, unreadMessageCount } =
+    useMuhabereNotify()
   const location = useLocation()
+
+  const totalUnreadCount =
+    unreadMuhabereMessagesTotal > 0
+      ? unreadMuhabereMessagesTotal
+      : unreadChannelMessageCount + unreadMessageCount
+
+  const onMesajlarRoute =
+    location.pathname === '/mesajlar' || location.pathname.startsWith('/mesajlar/')
 
   return (
     <nav
@@ -23,7 +38,10 @@ export default function BottomTabBar() {
     >
       <ul className="mx-auto flex h-14 max-w-lg items-stretch justify-around px-1">
         {BOTTOM_TAB_ITEMS.map(({ to, label, icon: Icon, end }) => {
-          const badge = to === '/mesajlar' ? sidebarMuhabereBadgeCount : 0
+          const mesajlarBadgeLabel =
+            to === '/mesajlar' && !onMesajlarRoute
+              ? formatMesajlarBadgeCount(totalUnreadCount)
+              : null
 
           return (
             <li key={to} className="flex min-w-0 flex-1">
@@ -54,9 +72,12 @@ export default function BottomTabBar() {
                         strokeWidth={isActive ? 2 : 1.75}
                         aria-hidden
                       />
-                      {badge > 0 ? (
-                        <span className="absolute -right-2 -top-1.5 min-w-[1rem] rounded-full bg-accent px-1 text-center font-mono text-[9px] font-bold leading-4 text-black">
-                          {badge > 99 ? '99+' : badge}
+                      {mesajlarBadgeLabel ? (
+                        <span
+                          className="absolute -right-2.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-center font-mono text-[9px] font-bold leading-none text-black shadow-[0_0_10px_rgba(245,158,11,0.55)]"
+                          aria-label={`${totalUnreadCount} okunmamış mesaj`}
+                        >
+                          {mesajlarBadgeLabel}
                         </span>
                       ) : null}
                     </span>

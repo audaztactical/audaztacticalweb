@@ -11,6 +11,7 @@
  *   lastSender: string
  *   lastSenderId: string
  *   lastMessageAt: unknown
+ *   updatedAt?: unknown
  *   unreadCount: number
  * }} MuhabereConversationSummary */
 
@@ -75,8 +76,48 @@ export function mapConversationSummaryDoc(docSnap, currentUid) {
     lastSender: String(data.lastSender ?? ''),
     lastSenderId: String(data.lastSenderId ?? ''),
     lastMessageAt: data.lastMessageAt ?? null,
+    updatedAt: data.updatedAt ?? null,
     unreadCount: me ? Number(unreadByUser[me]) || 0 : 0,
   }
+}
+
+/**
+ * @param {unknown} value
+ * @returns {number}
+ */
+export function resolveMuhabereTimestampMs(value) {
+  if (value == null) return 0
+  if (typeof value === 'object' && value !== null) {
+    const obj = /** @type {{ toMillis?: () => number; seconds?: number; _seconds?: number }} */ (value)
+    if (typeof obj.toMillis === 'function') return obj.toMillis()
+    const sec = Number(obj.seconds ?? obj._seconds)
+    if (Number.isFinite(sec)) return sec * 1000
+  }
+  if (value instanceof Date) return value.getTime()
+  const n = Number(value)
+  if (Number.isFinite(n)) return (n > 1e12 ? n : n * 1000)
+  return 0
+}
+
+/**
+ * @param {MuhabereConversationSummary | null | undefined} summary
+ * @returns {number}
+ */
+export function getConversationSortMs(summary) {
+  if (!summary) return 0
+
+  const fromLastMessageAt = resolveMuhabereTimestampMs(summary.lastMessageAt)
+  if (fromLastMessageAt > 0) return fromLastMessageAt
+
+  const fromUpdatedAt = resolveMuhabereTimestampMs(summary.updatedAt)
+  if (fromUpdatedAt > 0) return fromUpdatedAt
+
+  const nested = summary.lastMessage
+  if (nested && typeof nested === 'object') {
+    return resolveMuhabereTimestampMs(/** @type {{ timestamp?: unknown }} */ (nested).timestamp)
+  }
+
+  return 0
 }
 
 /**
@@ -108,6 +149,8 @@ export function indexConversationSummaries(summaries, currentUid) {
   const latest = [...summaries]
     .filter((row) => row.lastMessage)
     .sort((a, b) => {
+      const diff = getConversationSortMs(b) - getConversationSortMs(a)
+      if (diff !== 0) return diff
       const ta = typeof a.lastMessageAt?.toMillis === 'function' ? a.lastMessageAt.toMillis() : 0
       const tb = typeof b.lastMessageAt?.toMillis === 'function' ? b.lastMessageAt.toMillis() : 0
       return tb - ta
