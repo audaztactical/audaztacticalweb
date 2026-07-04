@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AlertCircle, Bell, ClipboardList } from 'lucide-react'
+import { AlertCircle, Bell } from 'lucide-react'
 import CommandSideWidgets from '../components/dashboard/CommandSideWidgets'
 import DashboardSystemLog from '../components/dashboard/DashboardSystemLog'
 import OperationalRadarChart from '../components/dashboard/OperationalRadarChart'
 import OrsReadinessGauge from '../components/dashboard/OrsReadinessGauge'
 import { WeaponMaintenanceAlarmFromInventory } from '../components/armory/WeaponMaintenanceAlarmPanel'
-import { RowSkeleton } from '../components/ui/DataSkeleton'
 import { useAuth } from '../context/AuthContext'
 import { useMuhabereNotify } from '../context/MuhabereNotifyContext'
 import { useAudazData } from '../hooks/useAudazData'
@@ -26,35 +25,6 @@ function statusLooksComplete(status) {
     s.includes('kapalı') ||
     s === 'closed'
   )
-}
-
-/** @param {string | undefined} status */
-function missionStatusLabel(status) {
-  if (statusLooksComplete(status)) return 'Kapalı'
-  const s = String(status ?? '').toLowerCase()
-  if (!s) return 'Beklemede'
-  if (s.includes('bekle') || s.includes('pending') || s.includes('plan')) return 'Beklemede'
-  if (s.includes('aktif') || s.includes('devam') || s.includes('open')) return 'Aktif'
-  return String(status).slice(0, 24)
-}
-
-/** @param {string | undefined} status */
-function missionSeverity(status) {
-  const s = String(status ?? '').toLowerCase()
-  if (s.includes('krit') || s.includes('acil') || s.includes('critical') || s.includes('alarm')) {
-    return 'critical'
-  }
-  if (s.includes('aktif') || s.includes('devam') || s.includes('open')) return 'active'
-  if (!s || s.includes('bekle') || s.includes('pending') || s.includes('plan')) return 'warning'
-  return 'warning'
-}
-
-function formatShortDate(row) {
-  const u = row.updatedAt ?? row.createdAt ?? row.performedAt ?? row.dueAt
-  if (u && typeof u.toMillis === 'function') {
-    return new Date(u.toMillis()).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })
-  }
-  return '—'
 }
 
 export default function Dashboard() {
@@ -188,8 +158,6 @@ export default function Dashboard() {
     }))
   }, [orsResult?.score, totalNotifications])
 
-  const displayMissions = activeMissions.length > 0 ? activeMissions.slice(0, 6) : m.items.slice(0, 4)
-
   return (
     <div className="dashboard-hud-shell cmd-center relative mx-auto h-auto min-h-0 max-w-[1440px] px-5 py-8 pt-14 sm:px-6 md:px-8 sm:pt-16">
       <WeaponMaintenanceAlarmFromInventory
@@ -241,58 +209,6 @@ export default function Dashboard() {
 
       <div className="cmd-main-grid relative z-[1] grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(200px,220px)] xl:grid-cols-[minmax(0,1fr)_240px] lg:items-start">
         <div className="cmd-left-column flex flex-col gap-6">
-          <section className="cmd-panel cmd-glass-panel" aria-label="Aktif görevler">
-            <div className="cmd-panel__head">
-              <div>
-                <h2 className="cmd-panel__title">Operasyon akışı</h2>
-                <p className="cmd-panel__subtitle">Aktif ve bekleyen görevler</p>
-              </div>
-            </div>
-
-            <div className="cmd-panel__body">
-              {!m.ready || m.loading ? (
-                <RowSkeleton rows={4} />
-              ) : displayMissions.length === 0 ? (
-                <div className="cmd-empty">
-                  <ClipboardList className="size-8 text-app-text/45" strokeWidth={1.25} aria-hidden />
-                  <p className="cmd-empty__title">Aktif görev kaydı yok</p>
-                  <p className="cmd-empty__text">Yeni operasyon oluşturduğunuzda burada görünecek.</p>
-                </div>
-              ) : (
-                <ul className="cmd-mission-list cmd-mission-list--spacious">
-                  {displayMissions.map((row) => {
-                    const status = missionStatusLabel(/** @type {string} */ (row.status))
-                    const sev = missionSeverity(/** @type {string} */ (row.status))
-                    return (
-                      <li key={row.id} className={['cmd-mission-item', `cmd-mission-item--${sev}`].join(' ')}>
-                        <div className="min-w-0 flex-1">
-                          <p className="cmd-mission-item__title">
-                            {typeof row.title === 'string' && row.title ? row.title : 'Adsız görev'}
-                          </p>
-                          <p className="cmd-mission-item__meta">
-                            Son güncelleme · {formatShortDate(row)}
-                          </p>
-                        </div>
-                        <span
-                          className={[
-                            'cmd-mission-item__badge',
-                            sev === 'active'
-                              ? 'cmd-mission-item__badge--active'
-                              : sev === 'critical'
-                                ? 'cmd-mission-item__badge--critical'
-                                : 'cmd-mission-item__badge--warning',
-                          ].join(' ')}
-                        >
-                          {status}
-                        </span>
-                      </li>
-                    )
-                  })}
-                </ul>
-              )}
-            </div>
-          </section>
-
           <DashboardSystemLog entries={logEntries} />
         </div>
 
