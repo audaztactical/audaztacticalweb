@@ -53,11 +53,13 @@ import {
   subscribeOutgoingPendingRequests,
   subscribeHiddenMuhabereMessageIds,
   subscribeConversationSummaries,
+  subscribeUserChannelUnreadCounts,
   subscribeUserMuhabereChannels,
 } from '../lib/firestoreTaktikMuhabere'
 import {
-  getConversationSortMs,
   indexConversationSummaries,
+  isActiveChannelRow,
+  resolveChannelUnreadCount,
   resolveContactConversationSummary,
   sortMuhabereContactsByRecency,
 } from '../lib/muhabereConversation'
@@ -164,6 +166,7 @@ export default function TaktikMuhabere() {
   const [conversationIndex, setConversationIndex] = useState(/** @type {ReturnType<typeof indexConversationSummaries> | null} */ (null))
   const [summariesError, setSummariesError] = useState(/** @type {string | null} */ (null))
   const [liveDmUnreadByPeerId, setLiveDmUnreadByPeerId] = useState(/** @type {Record<string, number>} */ ({}))
+  const [liveChannelUnreadById, setLiveChannelUnreadById] = useState(/** @type {Record<string, number>} */ ({}))
   const [hiddenMessageIds, setHiddenMessageIds] = useState(/** @type {Set<string>} */ (() => new Set()))
   const [archivedChannelIds, setArchivedChannelIds] = useState(/** @type {Set<string>} */ (() => new Set()))
   const [deletedChannelIds, setDeletedChannelIds] = useState(/** @type {Set<string>} */ (() => new Set()))
@@ -256,6 +259,35 @@ export default function TaktikMuhabere() {
       (err) => emitFirebaseError(err),
     )
   }, [uid])
+
+  useEffect(() => {
+    if (!uid) {
+      setLiveChannelUnreadById({})
+      return undefined
+    }
+
+    return subscribeUserChannelUnreadCounts(
+      uid,
+      (counts) => setLiveChannelUnreadById(counts),
+      (err) => emitFirebaseError(err),
+    )
+  }, [uid])
+
+  const openChannelId = conversationMode === 'channel' ? selectedChannelId : null
+
+  const resolveChannelUnread = useCallback(
+    (/** @type {string} */ channelId, /** @type {boolean} */ isActiveRow) => {
+      if (isActiveRow) return 0
+      if (openChannelId != null && openChannelId !== '' && openChannelId === channelId) return 0
+      return resolveChannelUnreadCount(
+        conversationIndex,
+        channelId,
+        channelUnreadById,
+        liveChannelUnreadById,
+      )
+    },
+    [conversationIndex, channelUnreadById, liveChannelUnreadById, openChannelId],
+  )
 
   const resolveDmUnread = useCallback(
     (/** @type {string} */ peerUid, /** @type {boolean} */ isActiveRow) => {
@@ -1032,15 +1064,12 @@ export default function TaktikMuhabere() {
   const showOperatorsPanel = sidebarTab === 'operators'
 
   const totalActiveChannelUnread = useMemo(() => {
-    const openChannelId = conversationMode === 'channel' ? selectedChannelId : null
     return activeChannels.reduce((sum, ch) => {
-      const isActiveRow =
-        openChannelId != null && openChannelId !== '' && ch.id === openChannelId
+      const isActiveRow = isActiveChannelRow(openChannelId, ch.id)
       if (isActiveRow) return sum
-      const summary = conversationIndex?.byChannelId[ch.id]
-      return sum + Math.max(summary?.unreadCount ?? 0, channelUnreadById[ch.id] ?? 0)
+      return sum + resolveChannelUnread(ch.id, false)
     }, 0)
-  }, [activeChannels, conversationIndex, channelUnreadById, conversationMode, selectedChannelId])
+  }, [activeChannels, openChannelId, resolveChannelUnread])
 
   const totalActiveDmUnread = useMemo(() => {
     return activeRoster.reduce((sum, contact) => {
@@ -1157,7 +1186,8 @@ export default function TaktikMuhabere() {
               destroyingChannelId={destroyingChannelId}
               editingChannelId={editChannelTarget?.id ?? null}
               channelUnreadById={channelUnreadById}
-              openChannelId={conversationMode === 'channel' ? selectedChannelId : null}
+              openChannelId={openChannelId}
+              resolveChannelUnread={resolveChannelUnread}
               onSelectChannel={selectChannel}
               onArchiveChannel={handleArchiveChannel}
               onDeleteChannel={handleDeleteChannel}

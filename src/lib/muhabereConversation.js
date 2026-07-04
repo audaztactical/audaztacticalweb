@@ -152,6 +152,41 @@ export function resolveContactConversationSummary(index, currentUid, contactUid)
 }
 
 /**
+ * @param {ReturnType<typeof indexConversationSummaries> | null | undefined} index
+ * @param {string} channelId
+ * @param {Record<string, number>} [contextChannelUnreadById]
+ * @param {Record<string, number>} [liveChannelUnreadById]
+ * @returns {number}
+ */
+export function resolveChannelUnreadCount(
+  index,
+  channelId,
+  contextChannelUnreadById = {},
+  liveChannelUnreadById = {},
+) {
+  const id = String(channelId ?? '').trim()
+  if (!id) return 0
+
+  const summary = index?.byChannelId?.[id]
+  return Math.max(
+    summary?.unreadCount ?? 0,
+    index?.channelUnreadById?.[id] ?? 0,
+    contextChannelUnreadById[id] ?? 0,
+    liveChannelUnreadById[id] ?? 0,
+  )
+}
+
+/**
+ * @param {string | null | undefined} activeChannelId
+ * @param {string} channelId
+ */
+export function isActiveChannelRow(activeChannelId, channelId) {
+  const active = String(activeChannelId ?? '').trim()
+  const id = String(channelId ?? '').trim()
+  return active !== '' && active === id
+}
+
+/**
  * @param {{ id: string; name: string }}[] channels
  * @param {ReturnType<typeof indexConversationSummaries> | null | undefined} index
  */

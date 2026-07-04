@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Plus, Radio } from 'lucide-react'
 import { formatConversationPreviewTime } from '../../lib/firestoreTaktikMuhabere'
-import { sortMuhabereChannelsByRecency } from '../../lib/muhabereConversation'
+import { isActiveChannelRow, sortMuhabereChannelsByRecency } from '../../lib/muhabereConversation'
 import MuhabereConversationMenu from './MuhabereConversationMenu'
 import MuhabereUnreadBadge from './MuhabereUnreadBadge'
 import TacticalAlert from './TacticalAlert'
@@ -22,6 +22,7 @@ import TacticalAlert from './TacticalAlert'
  *   editingChannelId?: string | null
  *   channelUnreadById?: Record<string, number>
  *   openChannelId?: string | null
+ *   resolveChannelUnread?: (channelId: string, isActiveRow: boolean) => number
  *   conversationIndex?: ReturnType<typeof import('../../lib/muhabereConversation').indexConversationSummaries> | null
  *   summariesError?: string | null
  *   onSelectChannel: (channelId: string) => void
@@ -47,6 +48,7 @@ export default function ChatList({
   editingChannelId = null,
   channelUnreadById = {},
   openChannelId = null,
+  resolveChannelUnread,
   conversationIndex = null,
   summariesError = null,
   onSelectChannel,
@@ -116,16 +118,13 @@ export default function ChatList({
           ) : (
             <ul className="space-y-1.5" role="listbox" aria-label="Tim kanalları">
               {sortedChannels.map((ch) => {
-                const activeChannelId =
-                  openChannelId != null && openChannelId !== ''
-                    ? openChannelId
-                    : selectedChannelId
-                const isActiveRow =
-                  activeChannelId != null && activeChannelId !== '' && ch.id === activeChannelId
+                const isActiveRow = isActiveChannelRow(openChannelId, ch.id)
                 const summary = byChannelId[ch.id]
-                const unreadCount = isActiveRow
-                  ? 0
-                  : Math.max(summary?.unreadCount ?? 0, channelUnreadById[ch.id] ?? 0)
+                const unreadCount = resolveChannelUnread
+                  ? resolveChannelUnread(ch.id, isActiveRow)
+                  : isActiveRow
+                    ? 0
+                    : Math.max(summary?.unreadCount ?? 0, channelUnreadById[ch.id] ?? 0)
                 const hasUnread = !isActiveRow && unreadCount > 0
                 const isOwner = ch.createdBy === uid
 
