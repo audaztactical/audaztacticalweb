@@ -83,7 +83,7 @@ export default function OperatorGroupAcademicPortal({
           ) : null}
           <h2 className={`${ctHeaderTitle} ${embedded ? '' : 'mt-4'}`}>Grup eğitmen kayıtları</h2>
           <p className={ctHeaderSubtitle}>
-            {groupName ? `${groupName} · ` : ''}Sektör seçin — tüm kayıtlar salt okunurdur
+            {groupName ? `${groupName} · ` : ''}Sektör seçin — yalnızca kendi kayıtlarınız salt okunurdur
           </p>
         </header>
         <InstructorCategoryBento onSelect={onSelectedCategoryChange} />
@@ -111,6 +111,7 @@ export default function OperatorGroupAcademicPortal({
         groupId={groupId}
         groupName={groupName}
         currentOperatorId={user?.uid ?? ''}
+        selfOnly
       />
     </CleanFade>
   )

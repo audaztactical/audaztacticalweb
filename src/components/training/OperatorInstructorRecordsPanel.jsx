@@ -34,6 +34,7 @@ const DISCIPLINE_TITLES = {
  *   groupId: string
  *   groupName?: string
  *   currentOperatorId?: string
+ *   selfOnly?: boolean
  * }} props
  */
 export default function OperatorInstructorRecordsPanel({
@@ -41,6 +42,7 @@ export default function OperatorInstructorRecordsPanel({
   groupId,
   groupName,
   currentOperatorId = '',
+  selfOnly = false,
 }) {
   const [activityLogs, setActivityLogs] = useState(/** @type {GroupActivityLog[]} */ ([]))
   const [vbssRows, setVbssRows] = useState(/** @type {VbssEvaluation[]} */ ([]))
@@ -48,10 +50,21 @@ export default function OperatorInstructorRecordsPanel({
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState('')
 
-  const instructorLogs = useMemo(
-    () => filterInstructorGroupActivityLogs(activityLogs, discipline),
-    [activityLogs, discipline],
-  )
+  const instructorLogs = useMemo(() => {
+    const logs = filterInstructorGroupActivityLogs(activityLogs, discipline)
+    if (!selfOnly || !currentOperatorId) return logs
+    return logs.filter((log) => log.operatorId === currentOperatorId)
+  }, [activityLogs, discipline, selfOnly, currentOperatorId])
+
+  const visibleVbssRows = useMemo(() => {
+    if (!selfOnly || !currentOperatorId) return vbssRows
+    return vbssRows.filter((row) => row.operatorId === currentOperatorId)
+  }, [vbssRows, selfOnly, currentOperatorId])
+
+  const visibleTcccRows = useMemo(() => {
+    if (!selfOnly || !currentOperatorId) return tcccRows
+    return tcccRows.filter((row) => row.operatorId === currentOperatorId)
+  }, [tcccRows, selfOnly, currentOperatorId])
 
   useEffect(() => {
     if (!groupId) {
@@ -118,6 +131,7 @@ export default function OperatorInstructorRecordsPanel({
   }, [groupId, discipline])
 
   const resolveOperatorLabel = (operatorId, fallbackName = '') => {
+    if (selfOnly) return 'SİZ'
     if (fallbackName.trim()) return fallbackName.trim()
     if (operatorId === currentOperatorId) return 'SİZ'
     return operatorId ? operatorId.slice(0, 8).toUpperCase() : '—'
@@ -319,9 +333,9 @@ export default function OperatorInstructorRecordsPanel({
 
   const recordCount =
     discipline === 'vbss'
-      ? vbssRows.length
+      ? visibleVbssRows.length
       : discipline === 'tccc'
-        ? tcccRows.length
+        ? visibleTcccRows.length
         : instructorLogs.length
 
   return (
@@ -347,14 +361,16 @@ export default function OperatorInstructorRecordsPanel({
         </p>
       ) : recordCount === 0 ? (
         <p className="py-8 text-center font-mono-technical text-[10px] uppercase text-app-text/45">
-          Bu sektörde henüz eğitmen kaydı yok
+          {selfOnly
+            ? 'Bu sektörde size ait eğitmen kaydı yok'
+            : 'Bu sektörde henüz eğitmen kaydı yok'}
         </p>
       ) : (
         <div className="space-y-2">
           {discipline === 'vbss'
-            ? vbssRows.map(renderVbssRecord)
+            ? visibleVbssRows.map(renderVbssRecord)
             : discipline === 'tccc'
-              ? tcccRows.map(renderTcccRecord)
+              ? visibleTcccRows.map(renderTcccRecord)
               : instructorLogs.map(renderActivityRecord)}
         </div>
       )}
