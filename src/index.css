@@ -839,6 +839,11 @@
 
 .cmd-focus-radar {
   min-height: 320px;
+  overflow: visible;
+}
+
+.cmd-focus-radar.cmd-glass-panel {
+  overflow: visible;
 }
 
 .cmd-main-grid {
@@ -1146,15 +1151,23 @@
   min-height: 300px;
 }
 
-/* Sabit boyutlu viewport — sonar ve grafik ayrı compositor katmanları */
+/* Viewport ortalar; stage orantılı ölçeklenir */
 .cmd-radar__viewport {
   position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 0;
+  overflow: visible;
+}
+
+.cmd-radar__stage {
+  position: relative;
   width: min(300px, 100%);
-  height: auto;
   aspect-ratio: 300 / 248;
-  margin-inline: auto;
   flex-shrink: 0;
-  contain: layout style;
 }
 
 .cmd-radar__sonar-layer {
@@ -1163,7 +1176,6 @@
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
-  contain: strict;
   transform: translateZ(0);
   isolation: isolate;
 }
@@ -1172,7 +1184,10 @@
   position: absolute;
   inset: 0;
   z-index: 2;
-  contain: layout style paint;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
   transform: translateZ(0);
   isolation: isolate;
 }
@@ -1180,6 +1195,16 @@
 .cmd-radar__chart-layer .recharts-wrapper,
 .cmd-radar__chart-layer .recharts-surface {
   overflow: visible !important;
+}
+
+.cmd-radar__chart-layer .recharts-wrapper {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.cmd-radar__chart-layer svg.recharts-surface {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .cmd-radar__labels {
@@ -1269,14 +1294,16 @@
 }
 
 .cmd-radar__sonar-ring--outer {
-  width: 276px;
-  height: 276px;
+  width: 92%;
+  aspect-ratio: 1;
+  height: auto;
   opacity: 0.45;
 }
 
 .cmd-radar__sonar-ring--mid {
-  width: 186px;
-  height: 186px;
+  width: 62%;
+  aspect-ratio: 1;
+  height: auto;
   border-color: rgb(0 255 136 / 0.05);
   opacity: 0.3;
 }
@@ -1286,8 +1313,9 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 264px;
-  height: 264px;
+  width: 88%;
+  aspect-ratio: 1;
+  height: auto;
   translate: -50% -50%;
   border-radius: 50%;
   overflow: hidden;
@@ -2047,8 +2075,8 @@
   position: static;
 }
 
-.compact-shell .cmd-radar__viewport {
-  width: min(280px, calc(100vw - 3rem));
+.compact-shell .cmd-radar__stage {
+  width: min(280px, 100%);
 }
 
 .compact-shell .muhabere-floating-widget {

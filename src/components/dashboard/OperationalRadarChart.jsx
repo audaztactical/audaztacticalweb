@@ -195,41 +195,43 @@ export default function OperationalRadarChart({ data, loading }) {
   const hasSignal = chartData.some((row) => row.rawValue > 0)
 
   return (
-    <div className="cmd-radar relative flex h-full min-h-[220px] flex-col sm:min-h-[300px]">
+    <div className="cmd-radar relative flex h-full w-full min-h-[220px] flex-col sm:min-h-[300px]">
       <div className="mb-2 shrink-0 sm:mb-3">
         <p className="cmd-panel__title text-xs sm:text-[13px]">Kapasite radarı</p>
         <p className="cmd-panel__subtitle text-[10px] sm:text-[13px]">Personel · lojistik · ekipman karşılaştırması</p>
       </div>
 
       <div className="cmd-radar__viewport">
-        <RadarSonarLayer />
+        <div className="cmd-radar__stage">
+          <RadarSonarLayer />
 
-        <div className="cmd-radar__chart-layer">
-          <RadarChartLayer chartData={chartData} accent={accent} gid={gid} />
-        </div>
-
-        <div className="cmd-radar__labels" aria-hidden={loading}>
-          {chartData.map((row) => (
-            <span
-              key={row.subject}
-              className={['cmd-radar__label', LABEL_SLOT[row.subject] ?? 'cmd-radar__label--n'].join(' ')}
-            >
-              {row.subject}
-            </span>
-          ))}
-        </div>
-
-        {loading ? (
-          <div className="cmd-radar__overlay cmd-radar__overlay--loading">
-            Hesaplanıyor…
+          <div className="cmd-radar__chart-layer">
+            <RadarChartLayer chartData={chartData} accent={accent} gid={gid} />
           </div>
-        ) : null}
 
-        {!loading && !hasSignal ? (
-          <div className="cmd-radar__overlay cmd-radar__overlay--hint">
-            Veri bekleniyor — antrenman ve cephanelik kayıtları radarı doldurur.
+          <div className="cmd-radar__labels" aria-hidden={loading}>
+            {chartData.map((row) => (
+              <span
+                key={row.subject}
+                className={['cmd-radar__label', LABEL_SLOT[row.subject] ?? 'cmd-radar__label--n'].join(' ')}
+              >
+                {row.subject}
+              </span>
+            ))}
           </div>
-        ) : null}
+
+          {loading ? (
+            <div className="cmd-radar__overlay cmd-radar__overlay--loading">
+              Hesaplanıyor…
+            </div>
+          ) : null}
+
+          {!loading && !hasSignal ? (
+            <div className="cmd-radar__overlay cmd-radar__overlay--hint">
+              Veri bekleniyor — antrenman ve cephanelik kayıtları radarı doldurur.
+            </div>
+          ) : null}
+        </div>
       </div>
 
       {!loading ? (
