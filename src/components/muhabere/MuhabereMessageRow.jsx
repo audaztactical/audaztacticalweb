@@ -220,22 +220,61 @@ export default function MuhabereMessageRow({
       <div
         ref={rowRef}
         className={[
-          'group/msg relative flex min-w-0 max-w-[85%] flex-col gap-1',
-          outgoing ? 'ml-auto items-end' : 'items-start',
+          'group/msg flex min-w-0 max-w-[85%] items-start gap-1',
+          outgoing ? 'ml-auto' : '',
         ].join(' ')}
       >
-        {incoming && senderLabel ? (
-          <span className="px-1 text-[9px] font-bold uppercase tracking-[0.18em] text-zinc-500">
-            {senderLabel}
-          </span>
-        ) : null}
+        <div
+          className={[
+            'flex min-w-0 flex-1 flex-col gap-1',
+            outgoing ? 'order-2 items-end' : 'order-1 items-start',
+          ].join(' ')}
+        >
+          {incoming && senderLabel ? (
+            <span className="px-1 text-[9px] font-bold uppercase tracking-[0.18em] text-zinc-500">
+              {senderLabel}
+            </span>
+          ) : null}
+
+          <div
+            className={[
+              'relative min-w-0 max-w-full overflow-hidden px-3 py-2 text-sm leading-relaxed',
+              outgoing && isDm && !displayDestroyed ? 'pr-7' : '',
+              bubbleClass,
+            ].join(' ')}
+          >
+            {renderBody()}
+            {outgoing && !displayDestroyed && isDm ? (
+              <span
+                className="absolute bottom-1.5 right-2 inline-flex items-center"
+                aria-label={readByPeer ? 'Okundu' : 'İletildi'}
+              >
+                {readByPeer ? (
+                  <CheckCheck className="size-3.5 text-cyan-400" strokeWidth={2.5} aria-hidden />
+                ) : (
+                  <Check className="size-3.5 text-zinc-500" strokeWidth={2.5} aria-hidden />
+                )}
+              </span>
+            ) : null}
+          </div>
+
+          <div
+            className={[
+              'flex flex-wrap items-center gap-2 px-1 font-mono text-[10px] text-zinc-500',
+              outgoing ? 'justify-end' : 'justify-start',
+            ].join(' ')}
+          >
+            <span>{formatMessageTime(msg.timestamp)}</span>
+            {burnBadge}
+          </div>
+        </div>
 
         {canHide ? (
           <div
             ref={menuRef}
             className={[
-              'absolute top-0 z-10',
-              outgoing ? 'left-0 -translate-x-full pr-1' : 'right-0 translate-x-full pl-1',
+              'relative shrink-0 self-center',
+              outgoing ? 'order-1' : 'order-2',
             ].join(' ')}
           >
             <button
@@ -257,7 +296,7 @@ export default function MuhabereMessageRow({
               <div
                 className={[
                   'absolute top-full z-20 mt-1 min-w-[12rem] overflow-hidden rounded-md border border-zinc-700 bg-[#0a0b0d] py-1 shadow-xl',
-                  outgoing ? 'left-0' : 'right-0',
+                  outgoing ? 'right-0' : 'left-0',
                 ].join(' ')}
                 role="menu"
               >
@@ -275,29 +314,6 @@ export default function MuhabereMessageRow({
             ) : null}
           </div>
         ) : null}
-
-        <div className={['relative min-w-0 max-w-full overflow-hidden px-3 py-2 text-sm leading-relaxed', outgoing && isDm && !displayDestroyed ? 'pr-7' : '', bubbleClass].join(' ')}>
-          {renderBody()}
-          {outgoing && !displayDestroyed && isDm ? (
-            <span className="absolute bottom-1.5 right-2 inline-flex items-center" aria-label={readByPeer ? 'Okundu' : 'İletildi'}>
-              {readByPeer ? (
-                <CheckCheck className="size-3.5 text-cyan-400" strokeWidth={2.5} aria-hidden />
-              ) : (
-                <Check className="size-3.5 text-zinc-500" strokeWidth={2.5} aria-hidden />
-              )}
-            </span>
-          ) : null}
-        </div>
-
-        <div
-          className={[
-            'flex flex-wrap items-center gap-2 px-1 font-mono text-[10px] text-zinc-500',
-            outgoing ? 'justify-end' : 'justify-start',
-          ].join(' ')}
-        >
-          <span>{formatMessageTime(msg.timestamp)}</span>
-          {burnBadge}
-        </div>
       </div>
 
       {lightboxOpen && msg.imageUrl ? (

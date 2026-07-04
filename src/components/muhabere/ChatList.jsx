@@ -26,6 +26,7 @@ import TacticalAlert from './TacticalAlert'
  *   destroyingChannelId?: string | null
  *   editingChannelId?: string | null
  *   channelUnreadById?: Record<string, number>
+ *   openChannelId?: string | null
  *   onSelectChannel: (channelId: string) => void
  *   onArchiveChannel: (channel: MuhabereChannel) => void | Promise<void>
  *   onDeleteChannel: (channel: MuhabereChannel) => void | Promise<void>
@@ -48,6 +49,7 @@ export default function ChatList({
   destroyingChannelId = null,
   editingChannelId = null,
   channelUnreadById = {},
+  openChannelId = null,
   onSelectChannel,
   onArchiveChannel,
   onDeleteChannel,
@@ -133,9 +135,10 @@ export default function ChatList({
         ) : (
           <ul className="max-h-44 space-y-1 overflow-y-auto" role="listbox" aria-label="Tim kanalları">
             {channels.map((ch) => {
-              const active = ch.id === selectedChannelId
+              const isActiveRow =
+                openChannelId != null && ch.id === openChannelId
               const summary = indexed.byChannelId[ch.id]
-              const unreadCount = active
+              const unreadCount = isActiveRow
                 ? 0
                 : Math.max(summary?.unreadCount ?? 0, channelUnreadById[ch.id] ?? 0)
               const hasUnread = unreadCount > 0
@@ -147,13 +150,13 @@ export default function ChatList({
                   className={[
                     'flex items-stretch gap-1 rounded-md border-l-2',
                     hasUnread ? 'muhabere-unread-pulse border-l-transparent' : 'border-l-transparent',
-                    active ? 'bg-zinc-800/80' : 'hover:bg-amber-500/[0.06]',
+                    isActiveRow ? 'bg-zinc-800/80' : 'hover:bg-amber-500/[0.06]',
                   ].join(' ')}
                 >
                   <button
                     type="button"
                     role="option"
-                    aria-selected={active}
+                    aria-selected={isActiveRow}
                     onClick={() => onSelectChannel(ch.id)}
                     className="flex min-w-0 flex-1 items-center gap-2 px-2 py-2.5 text-left"
                   >
@@ -165,7 +168,7 @@ export default function ChatList({
                         <span
                           className={[
                             'truncate text-xs font-semibold uppercase tracking-wide',
-                            active ? 'text-amber-300' : hasUnread ? 'text-amber-100' : 'text-zinc-300',
+                            isActiveRow ? 'text-amber-300' : hasUnread ? 'text-amber-100' : 'text-zinc-300',
                           ].join(' ')}
                         >
                           {ch.name}

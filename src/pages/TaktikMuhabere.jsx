@@ -245,11 +245,12 @@ export default function TaktikMuhabere() {
   }, [uid])
 
   const resolveDmUnread = useCallback(
-    (/** @type {string} */ peerUid, /** @type {boolean} */ active) => {
-      if (active) return 0
+    (/** @type {string} */ peerUid, /** @type {boolean} */ isActiveRow) => {
+      if (isActiveRow) return 0
+      if (hasConversation && conversationMode === 'dm' && selectedUid === peerUid) return 0
       return Math.max(dmUnreadByPeerId[peerUid] ?? 0, liveDmUnreadByPeerId[peerUid] ?? 0)
     },
-    [dmUnreadByPeerId, liveDmUnreadByPeerId],
+    [dmUnreadByPeerId, liveDmUnreadByPeerId, hasConversation, conversationMode, selectedUid],
   )
 
   const senderNames = useMemo(() => {
@@ -434,9 +435,7 @@ export default function TaktikMuhabere() {
       setSelectedUid((prev) => {
         if (peerTarget && rows.some((c) => c.uid === peerTarget)) return peerTarget
         if (prev && rows.some((c) => c.uid === prev)) return prev
-        if (compact) return null
-        const active = splitMuhabereContacts(rows, archivedDmIds, deletedDmIds).active
-        return active[0]?.uid ?? null
+        return null
       })
       if (peerFromNav?.peerId) {
         navigate('/mesajlar', { replace: true, state: {} })
@@ -456,7 +455,7 @@ export default function TaktikMuhabere() {
     return () => {
       active = false
     }
-  }, [uid, peerTarget, peerFromNav?.peerId, peerFromQuery, navigate, loadRoster, setSearchParams, archivedDmIds, deletedDmIds, compact])
+  }, [uid, peerTarget, peerFromNav?.peerId, peerFromQuery, navigate, loadRoster, setSearchParams])
 
   useEffect(() => {
     if (!uid) {
@@ -557,12 +556,8 @@ export default function TaktikMuhabere() {
     (/** @type {string} */ channelId) => {
       if (selectedChannelId !== channelId) return
       setSelectedChannelId(null)
-      setSelectedUid((prev) => {
-        if (prev && rosterUidSet.has(prev)) return prev
-        return activeRoster[0]?.uid ?? null
-      })
     },
-    [selectedChannelId, rosterUidSet, activeRoster],
+    [selectedChannelId],
   )
 
   const clearDmSelection = useCallback(
@@ -1112,6 +1107,7 @@ export default function TaktikMuhabere() {
               destroyingChannelId={destroyingChannelId}
               editingChannelId={editChannelTarget?.id ?? null}
               channelUnreadById={channelUnreadById}
+              openChannelId={conversationMode === 'channel' ? selectedChannelId : null}
               onSelectChannel={selectChannel}
               onArchiveChannel={handleArchiveChannel}
               onDeleteChannel={handleDeleteChannel}
@@ -1145,8 +1141,12 @@ export default function TaktikMuhabere() {
               aria-label={isSearchMode ? 'Arama sonuçları' : 'Tim rehberi'}
             >
               {listItems.map((contact) => {
-                const active = !isSearchMode && contact.uid === selectedUid
-                const dmUnread = resolveDmUnread(contact.uid, active)
+                const isActiveRow =
+                  !isSearchMode &&
+                  hasConversation &&
+                  conversationMode === 'dm' &&
+                  contact.uid === selectedUid
+                const dmUnread = resolveDmUnread(contact.uid, isActiveRow)
                 const dmSummary = conversationIndex?.byPeerUid[contact.uid]
                 const hasUnread = dmUnread > 0
                 const presence = presenceMap[contact.uid]
@@ -1163,7 +1163,7 @@ export default function TaktikMuhabere() {
                         hasUnread && !isSearchMode
                           ? 'muhabere-unread-pulse border-l-transparent'
                           : 'border-l-transparent',
-                        active ? 'bg-zinc-800/80' : 'hover:bg-amber-500/[0.06]',
+                        isActiveRow ? 'bg-zinc-800/80' : 'hover:bg-amber-500/[0.06]',
                       ].join(' ')}
                     >
                       {showRequest ? (
@@ -1192,7 +1192,7 @@ export default function TaktikMuhabere() {
                         <button
                           type="button"
                           role="option"
-                          aria-selected={active}
+                          aria-selected={isActiveRow}
                           onClick={() => selectOperator(contact.uid)}
                           className="flex min-w-0 flex-1 items-center gap-3 px-2 py-2.5 text-left"
                         >
@@ -1211,7 +1211,7 @@ export default function TaktikMuhabere() {
                                 callsign={contact.callsign}
                                 operatorUid={contact.uid}
                                 onOpenProfile={setProfileUid}
-                                className={active ? 'text-amber-300' : hasUnread ? 'text-amber-100' : 'text-zinc-200'}
+                                className={isActiveRow ? 'text-amber-300' : hasUnread ? 'text-amber-100' : 'text-zinc-200'}
                               />
                               {dmSummary?.lastMessageAt ? (
                                 <span className="shrink-0 text-[9px] text-zinc-600">
