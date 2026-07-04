@@ -1002,6 +1002,32 @@ export default function TaktikMuhabere() {
   const showChannelsPanel = sidebarTab === 'channels'
   const showOperatorsPanel = sidebarTab === 'operators'
 
+  const totalActiveChannelUnread = useMemo(() => {
+    const openChannelId = conversationMode === 'channel' ? selectedChannelId : null
+    return activeChannels.reduce((sum, ch) => {
+      const isActiveRow =
+        openChannelId != null && openChannelId !== '' && ch.id === openChannelId
+      if (isActiveRow) return sum
+      const summary = conversationIndex?.byChannelId[ch.id]
+      return sum + Math.max(summary?.unreadCount ?? 0, channelUnreadById[ch.id] ?? 0)
+    }, 0)
+  }, [activeChannels, conversationIndex, channelUnreadById, conversationMode, selectedChannelId])
+
+  const totalActiveDmUnread = useMemo(() => {
+    return activeRoster.reduce((sum, contact) => {
+      const isActiveRow =
+        selectedUid != null &&
+        selectedUid !== '' &&
+        contact.uid === selectedUid &&
+        selectedChannelId == null
+      if (isActiveRow) return sum
+      return sum + resolveDmUnread(contact.uid, false)
+    }, 0)
+  }, [activeRoster, selectedUid, selectedChannelId, resolveDmUnread])
+
+  const showChannelsTabUnread = sidebarTab === 'operators' && totalActiveChannelUnread > 0
+  const showOperatorsTabUnread = sidebarTab === 'channels' && totalActiveDmUnread > 0
+
   return (
     <div
       className={[
@@ -1050,13 +1076,15 @@ export default function TaktikMuhabere() {
               aria-controls="muhabere-panel-channels"
               onClick={() => setSidebarTab('channels')}
               className={[
-                'flex-1 border-b-2 px-3 py-2.5 font-mono-technical text-[10px] font-bold uppercase tracking-[0.18em] transition',
-                showChannelsPanel
+                'flex flex-1 items-center justify-center gap-1.5 border-b-2 px-3 py-2.5 font-mono-technical text-[10px] font-bold uppercase tracking-[0.18em] transition',
+                showChannelsTabUnread ? 'muhabere-unread-pulse' : '',
+                sidebarTab === 'channels'
                   ? 'border-amber-500 text-zinc-100'
                   : 'border-transparent text-zinc-500 hover:text-zinc-400',
               ].join(' ')}
             >
-              Kanallar
+              <span>Kanallar</span>
+              {showChannelsTabUnread ? <MuhabereUnreadBadge count={totalActiveChannelUnread} /> : null}
             </button>
             <button
               type="button"
@@ -1066,13 +1094,15 @@ export default function TaktikMuhabere() {
               aria-controls="muhabere-panel-operators"
               onClick={() => setSidebarTab('operators')}
               className={[
-                'flex-1 border-b-2 px-3 py-2.5 font-mono-technical text-[10px] font-bold uppercase tracking-[0.18em] transition',
+                'flex flex-1 items-center justify-center gap-1.5 border-b-2 px-3 py-2.5 font-mono-technical text-[10px] font-bold uppercase tracking-[0.18em] transition',
+                showOperatorsTabUnread ? 'muhabere-unread-pulse' : '',
                 sidebarTab === 'operators'
                   ? 'border-amber-500 text-zinc-100'
                   : 'border-transparent text-zinc-500 hover:text-zinc-400',
               ].join(' ')}
             >
-              Operatörler
+              <span>Operatörler</span>
+              {showOperatorsTabUnread ? <MuhabereUnreadBadge count={totalActiveDmUnread} /> : null}
             </button>
           </div>
 
