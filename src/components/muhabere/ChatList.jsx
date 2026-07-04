@@ -35,6 +35,7 @@ import TacticalAlert from './TacticalAlert'
  *   onDestroyChannel?: (channel: MuhabereChannel) => void | Promise<void>
  *   onCreateChannel: () => void
  *   onSummariesChange?: (payload: ReturnType<typeof indexConversationSummaries>) => void
+ *   fillHeight?: boolean
  * }} props
  */
 export default function ChatList({
@@ -58,6 +59,7 @@ export default function ChatList({
   onDestroyChannel,
   onCreateChannel,
   onSummariesChange,
+  fillHeight = false,
 }) {
   const [summaries, setSummaries] = useState(/** @type {MuhabereConversationSummary[]} */ ([]))
   const [summariesError, setSummariesError] = useState(/** @type {string | null} */ (null))
@@ -108,23 +110,21 @@ export default function ChatList({
   return (
     <>
       <section
-        className="flex min-h-[180px] max-h-[40%] shrink-0 flex-col overflow-hidden"
+        className={[
+          'flex flex-col overflow-hidden',
+          fillHeight ? 'min-h-0 flex-1' : 'max-h-[40%] min-h-[180px] shrink-0',
+        ].join(' ')}
         aria-label="Tim kanalları"
       >
-        <div className="shrink-0 border-b border-zinc-800/60 px-3 py-2.5">
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400/90">
-              [ Tim kanalları ]
-            </h2>
-            <button
-              type="button"
-              onClick={onCreateChannel}
-              className="inline-flex items-center gap-1 rounded border border-amber-500/30 bg-amber-950/30 px-2 py-1 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-amber-300 transition hover:bg-amber-900/50"
-            >
-              <Plus className="size-3" strokeWidth={2.5} aria-hidden />
-              + Yeni kanal
-            </button>
-          </div>
+        <div className="flex shrink-0 items-center justify-end border-b border-zinc-800/60 px-3 py-2.5">
+          <button
+            type="button"
+            onClick={onCreateChannel}
+            className="inline-flex items-center gap-1 rounded border border-amber-500/30 bg-amber-950/30 px-2 py-1 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-amber-300 transition hover:bg-amber-900/50"
+          >
+            <Plus className="size-3" strokeWidth={2.5} aria-hidden />
+            + Yeni kanal
+          </button>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">

@@ -126,6 +126,7 @@ export default function TaktikMuhabere() {
   const [rosterError, setRosterError] = useState(/** @type {string | null} */ (null))
 
   const [searchQuery, setSearchQuery] = useState('')
+  const [sidebarTab, setSidebarTab] = useState(/** @type {'channels' | 'operators'} */ ('channels'))
   const [searchResults, setSearchResults] = useState(/** @type {MuhabereContact[]} */ ([]))
   const [searchLoading, setSearchLoading] = useState(false)
   const [searchError, setSearchError] = useState(/** @type {string | null} */ (null))
@@ -182,6 +183,10 @@ export default function TaktikMuhabere() {
 
   const searchTrimmed = searchQuery.trim()
   const isSearchMode = searchTrimmed.length >= 2
+
+  useEffect(() => {
+    if (isSearchMode) setSidebarTab('operators')
+  }, [isSearchMode])
 
   const rosterUidSet = useMemo(() => new Set(roster.map((c) => c.uid)), [roster])
 
@@ -992,7 +997,10 @@ export default function TaktikMuhabere() {
     ? searchTrimmed.length < 2
       ? 'Arama için en az 2 karakter girin.'
       : 'Ağda operatör bulunamadı — çağrı adını kontrol edin.'
-    : 'Tim rehberi boş — üstten operatör arayıp katılım isteği gönderin.'
+    : 'Tim rehberi boş — operatör arayıp katılım isteği gönderin.'
+
+  const showChannelsPanel = sidebarTab === 'channels'
+  const showOperatorsPanel = sidebarTab === 'operators'
 
   return (
     <div
@@ -1029,7 +1037,52 @@ export default function TaktikMuhabere() {
             compact ? (showMobileRoster ? 'w-full min-w-0' : 'hidden') : 'w-72',
           ].join(' ')}
         >
-          {!isSearchMode ? (
+          <div
+            className="flex shrink-0 border-b border-zinc-800/80"
+            role="tablist"
+            aria-label="Sol panel sekmeleri"
+          >
+            <button
+              type="button"
+              role="tab"
+              id="muhabere-tab-channels"
+              aria-selected={sidebarTab === 'channels'}
+              aria-controls="muhabere-panel-channels"
+              onClick={() => setSidebarTab('channels')}
+              className={[
+                'flex-1 border-b-2 px-3 py-2.5 font-mono-technical text-[10px] font-bold uppercase tracking-[0.18em] transition',
+                showChannelsPanel
+                  ? 'border-amber-500 text-zinc-100'
+                  : 'border-transparent text-zinc-500 hover:text-zinc-400',
+              ].join(' ')}
+            >
+              Kanallar
+            </button>
+            <button
+              type="button"
+              role="tab"
+              id="muhabere-tab-operators"
+              aria-selected={sidebarTab === 'operators'}
+              aria-controls="muhabere-panel-operators"
+              onClick={() => setSidebarTab('operators')}
+              className={[
+                'flex-1 border-b-2 px-3 py-2.5 font-mono-technical text-[10px] font-bold uppercase tracking-[0.18em] transition',
+                sidebarTab === 'operators'
+                  ? 'border-amber-500 text-zinc-100'
+                  : 'border-transparent text-zinc-500 hover:text-zinc-400',
+              ].join(' ')}
+            >
+              Operatörler
+            </button>
+          </div>
+
+          {showChannelsPanel ? (
+            <div
+              id="muhabere-panel-channels"
+              role="tabpanel"
+              aria-labelledby="muhabere-tab-channels"
+              className="flex min-h-0 flex-1 flex-col overflow-hidden"
+            >
             <ChatList
               uid={uid}
               channels={activeChannels}
@@ -1051,23 +1104,19 @@ export default function TaktikMuhabere() {
               onDestroyChannel={handleDestroyChannel}
               onCreateChannel={() => setShowCreateChannel(true)}
               onSummariesChange={handleConversationSummariesChange}
+              fillHeight
             />
-          ) : null}
-
-          {!isSearchMode ? (
-            <div className="relative shrink-0 px-3 py-2" aria-hidden>
-              <div className="absolute inset-x-3 top-1/2 border-t border-amber-500/35" />
-              <span className="relative mx-auto block w-fit bg-[#0a0b0d] px-3 font-mono-technical text-[9px] font-bold uppercase tracking-[0.22em] text-amber-500/75">
-                Operatörler
-              </span>
             </div>
           ) : null}
 
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          {showOperatorsPanel ? (
+          <div
+            id="muhabere-panel-operators"
+            role="tabpanel"
+            aria-labelledby="muhabere-tab-operators"
+            className="flex min-h-0 flex-1 flex-col overflow-hidden"
+          >
             <div className="shrink-0 border-b border-zinc-800/80 px-3 py-2.5">
-              <h2 className="mb-2 font-mono-technical text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">
-                {isSearchMode ? '[ Arama sonuçları ]' : '[ Tim rehberi ]'}
-              </h2>
               <label className="relative block">
                 <Search
                   className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-zinc-500"
@@ -1312,6 +1361,7 @@ export default function TaktikMuhabere() {
             />
           ) : null}
           </div>
+          ) : null}
         </aside>
 
         <section
