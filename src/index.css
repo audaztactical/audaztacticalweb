@@ -1974,6 +1974,13 @@
   max-height: none;
 }
 
+.compact-shell .muhabere-page--roster {
+  height: calc(100dvh - 3.5rem - var(--mobile-tab-bar-h) - var(--safe-top) - var(--safe-bottom));
+  max-height: calc(100dvh - 3.5rem - var(--mobile-tab-bar-h) - var(--safe-top) - var(--safe-bottom));
+  min-height: 0;
+  overflow: hidden;
+}
+
 .compact-shell .muhabere-page--chat {
   height: calc(100dvh - 3.5rem - var(--mobile-tab-bar-h) - var(--safe-top) - var(--safe-bottom));
   max-height: calc(100dvh - 3.5rem - var(--mobile-tab-bar-h) - var(--safe-top) - var(--safe-bottom));

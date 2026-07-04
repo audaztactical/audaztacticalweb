@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Plus, Radio } from 'lucide-react'
 import { formatConversationPreviewTime } from '../../lib/firestoreTaktikMuhabere'
-import { getConversationSortMs } from '../../lib/muhabereConversation'
+import { sortMuhabereChannelsByRecency } from '../../lib/muhabereConversation'
 import MuhabereConversationMenu from './MuhabereConversationMenu'
 import MuhabereUnreadBadge from './MuhabereUnreadBadge'
 import TacticalAlert from './TacticalAlert'
@@ -64,14 +64,10 @@ export default function ChatList({
 
   const byChannelId = conversationIndex?.byChannelId ?? {}
 
-  const sortedChannels = useMemo(() => {
-    return [...channels].sort((a, b) => {
-      const msA = getConversationSortMs(byChannelId[a.id])
-      const msB = getConversationSortMs(byChannelId[b.id])
-      if (msB !== msA) return msB - msA
-      return a.name.localeCompare(b.name, 'tr')
-    })
-  }, [channels, byChannelId, conversationIndex])
+  const sortedChannels = useMemo(
+    () => sortMuhabereChannelsByRecency(channels, conversationIndex),
+    [channels, conversationIndex],
+  )
 
   const busyArchive = Boolean(archivingChannelId)
   const busyLeave = Boolean(deletingChannelId)

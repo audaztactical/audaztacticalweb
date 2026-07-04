@@ -55,7 +55,12 @@ import {
   subscribeConversationSummaries,
   subscribeUserMuhabereChannels,
 } from '../lib/firestoreTaktikMuhabere'
-import { getConversationSortMs, indexConversationSummaries } from '../lib/muhabereConversation'
+import {
+  getConversationSortMs,
+  indexConversationSummaries,
+  resolveContactConversationSummary,
+  sortMuhabereContactsByRecency,
+} from '../lib/muhabereConversation'
 import { MUHABERE_CONTENT_VIOLATION } from '../lib/muhabereContentFilter'
 import { useOperatorsPresenceMap } from '../hooks/useOperatorsPresenceMap'
 import { useCompactShell } from '../hooks/useCompactShell'
@@ -1000,15 +1005,10 @@ export default function TaktikMuhabere() {
     }
   }
 
-  const sortedActiveRoster = useMemo(() => {
-    const byPeerUid = conversationIndex?.byPeerUid ?? {}
-    return [...activeRoster].sort((a, b) => {
-      const msA = getConversationSortMs(byPeerUid[a.uid])
-      const msB = getConversationSortMs(byPeerUid[b.uid])
-      if (msB !== msA) return msB - msA
-      return a.callsign.localeCompare(b.callsign, 'tr')
-    })
-  }, [activeRoster, conversationIndex])
+  const sortedActiveRoster = useMemo(
+    () => sortMuhabereContactsByRecency(activeRoster, conversationIndex, uid),
+    [activeRoster, conversationIndex, uid],
+  )
 
   const listLoading = isSearchMode ? searchLoading : rosterLoading
   const listError = isSearchMode ? searchError : rosterError
@@ -1064,7 +1064,7 @@ export default function TaktikMuhabere() {
         compact
           ? hasConversation
             ? 'muhabere-page--chat min-h-0 flex-1 overflow-hidden'
-            : 'min-h-0 flex-1'
+            : 'muhabere-page--roster min-h-0 flex-1 overflow-hidden'
           : 'h-full min-h-0 flex-1 overflow-hidden',
       ].join(' ')}
     >
@@ -1135,13 +1135,16 @@ export default function TaktikMuhabere() {
             </button>
           </div>
 
-          {showChannelsPanel ? (
-            <div
-              id="muhabere-panel-channels"
-              role="tabpanel"
-              aria-labelledby="muhabere-tab-channels"
-              className="flex min-h-0 flex-1 flex-col overflow-hidden"
-            >
+          <div
+            id="muhabere-panel-channels"
+            role="tabpanel"
+            aria-labelledby="muhabere-tab-channels"
+            hidden={!showChannelsPanel}
+            className={[
+              'min-h-0 flex-col overflow-hidden',
+              showChannelsPanel ? 'flex flex-1' : 'hidden',
+            ].join(' ')}
+          >
             <ChatList
               uid={uid}
               channels={activeChannels}
@@ -1166,15 +1169,17 @@ export default function TaktikMuhabere() {
               summariesError={summariesError}
               fillHeight
             />
-            </div>
-          ) : null}
+          </div>
 
-          {showOperatorsPanel ? (
           <div
             id="muhabere-panel-operators"
             role="tabpanel"
             aria-labelledby="muhabere-tab-operators"
-            className="flex min-h-0 flex-1 flex-col overflow-hidden"
+            hidden={!showOperatorsPanel}
+            className={[
+              'min-h-0 flex-col overflow-hidden',
+              showOperatorsPanel ? 'flex flex-1' : 'hidden',
+            ].join(' ')}
           >
             <div className="shrink-0 border-b border-zinc-800/80 px-3 py-2.5">
               <label className="relative block">
@@ -1266,7 +1271,7 @@ export default function TaktikMuhabere() {
                   contact.uid === selectedUid &&
                   selectedChannelId == null
                 const dmUnread = isActiveRow ? 0 : resolveDmUnread(contact.uid, isActiveRow)
-                const dmSummary = conversationIndex?.byPeerUid[contact.uid]
+                const dmSummary = resolveContactConversationSummary(conversationIndex, uid, contact.uid)
                 const hasUnread = !isActiveRow && dmUnread > 0
                 const presence = presenceMap[contact.uid]
                 const inRoster = rosterUidSet.has(contact.uid)
@@ -1421,7 +1426,6 @@ export default function TaktikMuhabere() {
             />
           ) : null}
           </div>
-          ) : null}
         </aside>
 
         <section

@@ -121,6 +121,65 @@ export function getConversationSortMs(summary) {
 }
 
 /**
+ * @param {string} uidA
+ * @param {string} uidB
+ */
+export function buildDmChatId(uidA, uidB) {
+  const a = String(uidA ?? '').trim()
+  const b = String(uidB ?? '').trim()
+  if (!a || !b || a === b) return ''
+  return a < b ? `${a}_${b}` : `${b}_${a}`
+}
+
+/**
+ * @param {ReturnType<typeof indexConversationSummaries> | null | undefined} index
+ * @param {string} currentUid
+ * @param {string} contactUid
+ * @returns {MuhabereConversationSummary | null}
+ */
+export function resolveContactConversationSummary(index, currentUid, contactUid) {
+  if (!index) return null
+  const peer = String(contactUid ?? '').trim()
+  if (!peer) return null
+
+  const fromPeer = index.byPeerUid?.[peer]
+  if (fromPeer) return fromPeer
+
+  const chatId = buildDmChatId(currentUid, peer)
+  if (chatId && index.byDmChatId?.[chatId]) return index.byDmChatId[chatId]
+
+  return null
+}
+
+/**
+ * @param {{ id: string; name: string }}[] channels
+ * @param {ReturnType<typeof indexConversationSummaries> | null | undefined} index
+ */
+export function sortMuhabereChannelsByRecency(channels, index) {
+  const byChannelId = index?.byChannelId ?? {}
+  return [...channels].sort((a, b) => {
+    const msA = getConversationSortMs(byChannelId[a.id])
+    const msB = getConversationSortMs(byChannelId[b.id])
+    if (msB !== msA) return msB - msA
+    return a.name.localeCompare(b.name, 'tr')
+  })
+}
+
+/**
+ * @param {{ uid: string; callsign: string }}[] contacts
+ * @param {ReturnType<typeof indexConversationSummaries> | null | undefined} index
+ * @param {string} currentUid
+ */
+export function sortMuhabereContactsByRecency(contacts, index, currentUid) {
+  return [...contacts].sort((a, b) => {
+    const msA = getConversationSortMs(resolveContactConversationSummary(index, currentUid, a.uid))
+    const msB = getConversationSortMs(resolveContactConversationSummary(index, currentUid, b.uid))
+    if (msB !== msA) return msB - msA
+    return a.callsign.localeCompare(b.callsign, 'tr')
+  })
+}
+
+/**
  * @param {MuhabereConversationSummary[]} summaries
  * @param {string} currentUid
  */
@@ -129,6 +188,8 @@ export function indexConversationSummaries(summaries, currentUid) {
   const byChannelId = {}
   /** @type {Record<string, MuhabereConversationSummary>} */
   const byPeerUid = {}
+  /** @type {Record<string, MuhabereConversationSummary>} */
+  const byDmChatId = {}
   /** @type {Record<string, number>} */
   const channelUnreadById = {}
   /** @type {Record<string, number>} */
@@ -138,9 +199,19 @@ export function indexConversationSummaries(summaries, currentUid) {
     if (row.type === 'channel') {
       byChannelId[row.refId] = row
       if (row.unreadCount > 0) channelUnreadById[row.refId] = row.unreadCount
-    } else if (row.peerUid) {
-      byPeerUid[row.peerUid] = row
-      if (row.unreadCount > 0) dmUnreadByPeerId[row.peerUid] = row.unreadCount
+      continue
+    }
+
+    if (row.refId) byDmChatId[row.refId] = row
+
+    const peerUid =
+      row.peerUid ||
+      row.members.find((memberUid) => memberUid && memberUid !== currentUid) ||
+      ''
+
+    if (peerUid) {
+      byPeerUid[peerUid] = row
+      if (row.unreadCount > 0) dmUnreadByPeerId[peerUid] = row.unreadCount
     }
   }
 
@@ -159,6 +230,7 @@ export function indexConversationSummaries(summaries, currentUid) {
   return {
     byChannelId,
     byPeerUid,
+    byDmChatId,
     channelUnreadById,
     dmUnreadByPeerId,
     totalUnread,
