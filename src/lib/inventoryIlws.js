@@ -1,12 +1,12 @@
 /** @typedef {'ALL' | 'P_TFK' | 'T_TAB' | 'AV_TFK' | 'OPT' | 'MHM'} IlwsFilterId */
 
 export const ILWS_FILTERS = [
-  { id: /** @type {IlwsFilterId} */ ('ALL'), code: 'KOD: TÜMÜ' },
-  { id: 'P_TFK', code: 'KOD: P_TFK' },
-  { id: 'T_TAB', code: 'KOD: T_TAB' },
-  { id: 'AV_TFK', code: 'KOD: AV_TFK' },
-  { id: 'OPT', code: 'KOD: OPT' },
-  { id: 'MHM', code: 'KOD: MHM' },
+  { id: /** @type {IlwsFilterId} */ ('ALL'), code: 'Tümü' },
+  { id: 'P_TFK', code: 'Tabanca' },
+  { id: 'T_TAB', code: 'Tüfek' },
+  { id: 'AV_TFK', code: 'Av Tüfeği' },
+  { id: 'OPT', code: 'Aksesuar' },
+  { id: 'MHM', code: 'Mühimmat' },
 ]
 
 export const TACTICAL_CATEGORIES = [

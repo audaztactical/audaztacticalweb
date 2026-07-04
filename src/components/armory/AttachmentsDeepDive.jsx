@@ -409,7 +409,7 @@ export default function AttachmentsDeepDive({
 
         <TacticalPanel className="flex min-h-0 flex-col overflow-hidden border-white/10 bg-black/40 p-0">
           <p className="shrink-0 border-b border-white/10 bg-app-bg px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-accent/80">
-            {isViewingLogs ? 'TAKTİK_MONİTÖR · KAYIT_DEFTERİ' : 'TAKTİK_MONİTÖR · 3D_ANALİTİK'}
+            {isViewingLogs ? 'Kayıt Defteri' : '3D Görünüm'}
           </p>
           {selected ? (
             <div className="flex min-h-0 flex-1 flex-col">
@@ -528,10 +528,10 @@ export default function AttachmentsDeepDive({
                 </>
               ) : (
                 <>
-                  <MatrixWireVisualizer variant="reddot" imageSrc={imageSrc} imageAlt={accessoryDisplayName(selected)} label={accessoryStokKodu(String(selected.id))} />
+                  <MatrixWireVisualizer variant="reddot" imageSrc={imageSrc} imageAlt={accessoryDisplayName(selected)} label="" />
                   <div className="shrink-0 space-y-1 border-t border-white/10 px-3 py-2 font-mono-technical text-[9px] uppercase">
                     <p className="text-app-text/55">AKSESUAR TÜRÜ: <span className="text-accent">{typeLabel}</span></p>
-                    <p className="font-mono-technical text-[9px] uppercase tracking-[0.12em] text-accent">ENVANTERE GİRİŞ TARİHİ: <span className="tabular-nums">{entryDate}</span></p>
+                    <p className="font-mono-technical text-[9px] uppercase tracking-[0.12em] text-accent">Envantere Giriş Tarihi: <span className="tabular-nums">{entryDate}</span></p>
                   </div>
                   <div className="mt-auto shrink-0 border-t border-accent/25 bg-app-bg px-3 py-2">
                     <p className={`font-mono-technical text-[9px] font-bold uppercase ${mounted ? 'text-accent' : 'animate-pulse text-accent'}`}>

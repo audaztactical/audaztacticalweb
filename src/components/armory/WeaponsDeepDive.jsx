@@ -9,18 +9,14 @@ import {
   formatConditionBar,
   getAttachedAccessoryId,
   getEffectiveTotalRoundsFired,
-  getManualRoundsFired,
-  getMaxBarrelLife,
   getRoundsSinceLastMaintenance,
   getWeaponCreatedAt,
   getWeaponMaintenanceLogs,
   getYivConditionPercent,
   isOpticIdle,
-  sumRangeLogRoundsForWeapon,
   weaponDisplayName,
   weaponStokKodu,
 } from '../../lib/weaponIlws'
-import { buildManualRoundsPatch } from '../../lib/weaponRoundSync'
 import { submitWeaponMaintenanceLog } from '../../lib/weaponMaintenanceService'
 import { isMaintenanceRequired } from '../../lib/weaponMaintenanceAlarm'
 import WeaponMaintenanceCenterAlert from './WeaponMaintenanceCenterAlert'
@@ -102,8 +98,6 @@ export default function WeaponsDeepDive({
   }, [selected, optics, allItems])
 
   const totalRounds = selected ? getEffectiveTotalRoundsFired(selected, rangeLogs) : 0
-  const rangeLogRounds = selected ? sumRangeLogRoundsForWeapon(String(selected.id), rangeLogs) : 0
-  const maxBarrel = selected ? getMaxBarrelLife(selected) : 15000
   const yivPercent = selected ? getYivConditionPercent(selected, rangeLogs) : 100
   const roundsSinceMaint = selected ? getRoundsSinceLastMaintenance(selected, rangeLogs) : 0
   const maintenanceLogs = selected ? getWeaponMaintenanceLogs(selected) : []
@@ -111,37 +105,6 @@ export default function WeaponsDeepDive({
 
   const periodicAlert = roundsSinceMaint > 500
   const criticalAlert = yivPercent < 30
-
-  const patchWeapon = useCallback(
-    async (id, patch) => {
-      setBusy(true)
-      try {
-        const row = weapons.find((w) => String(w.id) === id)
-        const label = row ? weaponDisplayName(row) : 'SİLAH'
-        await updateItem(id, {
-          ...patch,
-          auditLogCode: 'CEP_GNC',
-          auditLogMsg: `${label} · ${invStr(patch.auditLogMsg) || 'GÜNCELLEME'}`,
-        })
-      } finally {
-        setBusy(false)
-      }
-    },
-    [updateItem, weapons]
-  )
-
-  const bumpRounds = useCallback(
-    async (delta) => {
-      if (!selected?.id) return
-      const id = String(selected.id)
-      const manual = getManualRoundsFired(selected, rangeLogs) + delta
-      await patchWeapon(id, {
-        ...buildManualRoundsPatch(selected, manual, rangeLogs),
-        auditLogMsg: `MANUEL_ATIM ${manual + rangeLogRounds}`,
-      })
-    },
-    [selected, rangeLogs, rangeLogRounds, patchWeapon]
-  )
 
   const deleteWeapon = useCallback(
     async (weaponRow, e) => {
@@ -245,9 +208,6 @@ export default function WeaponsDeepDive({
     [selected, rangeLogs, maintType, maintDate, maintNote, updateItem]
   )
 
-  const btnMini =
-    'rounded border border-white/15 px-1.5 py-0.5 font-mono text-[11px] text-app-text/70 hover:border-accent/40 hover:text-accent disabled:opacity-40'
-
   return (
     <div className="space-y-3">
       <button
@@ -270,7 +230,7 @@ export default function WeaponsDeepDive({
         {/* Sol — silah rafı */}
         <TacticalPanel className="flex min-h-0 flex-col border-white/10 bg-black/40 p-0">
           <p className="border-b border-white/10 bg-app-bg px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-accent/85">
-            SİLAH_RAFI
+            Silah Rafı
           </p>
           <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2 op-detay-col-scroll">
             {weapons.length === 0 ? (
@@ -293,7 +253,6 @@ export default function WeaponsDeepDive({
                       {active ? (
                         <span className="mb-1 block animate-pulse text-accent">[ ➔ ]</span>
                       ) : null}
-                      <span className="block text-[8px] text-app-text/55">[{weaponStokKodu(id)}]</span>
                       <span className="block truncate text-[10px] font-bold uppercase text-inherit">{weaponDisplayName(w)}</span>
                     </button>
                     <button
@@ -325,7 +284,7 @@ export default function WeaponsDeepDive({
         {/* Orta — monitör */}
         <TacticalPanel className="flex min-h-0 flex-col border-white/10 bg-black/40 p-0">
           <p className="border-b border-white/10 bg-app-bg px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-accent/80">
-            TAKTİK_MONİTÖR · 3D_ANALİTİK
+            3D Silah Görünümü
           </p>
           {selected ? (
             <>
@@ -334,34 +293,22 @@ export default function WeaponsDeepDive({
                 variant="pistol"
                 imageSrc={imageSrc}
                 imageAlt={weaponDisplayName(selected)}
-                label={weaponStokKodu(String(selected.id))}
+                label=""
               />
               <div className="space-y-3 border-t border-white/10 p-3 font-mono-technical text-[9px] uppercase">
                 <div>
-                  <p className="mb-1 text-app-text/55">Yiv-Set Kondisyonu</p>
+                  <p className="mb-1 text-app-text/55">Yiv-Set Durumu</p>
                   <p className="text-accent">
-                    KONDİSYON: [{formatConditionBar(yivPercent)}] %{yivPercent}
+                    Durum: [{formatConditionBar(yivPercent)}] %{yivPercent}
                   </p>
                 </div>
-                <div className="flex flex-wrap items-center justify-between gap-2 text-app-text/55">
+                <div className="text-app-text/55">
                   <span>
                     TOPLAM ATIM SAYISI: <span className="tabular-nums text-app-text">{totalRounds.toLocaleString('tr-TR')}</span>
                   </span>
-                  <div className="flex gap-1">
-                    <button type="button" className={btnMini} disabled={busy} onClick={() => bumpRounds(-50)}>
-                      [ − ]
-                    </button>
-                    <button type="button" className={btnMini} disabled={busy} onClick={() => bumpRounds(50)}>
-                      [ + ]
-                    </button>
-                  </div>
                 </div>
                 <p className="font-mono-technical text-[9px] uppercase tracking-[0.12em] text-accent">
-                  ENVANTERE GİRİŞ TARİHİ: <span className="tabular-nums">{inventoryEntryDate}</span>
-                </p>
-                <p className="text-[7px] text-app-text/45">
-                  MAX_NAMLU_ÖMÜR: {maxBarrel.toLocaleString('tr-TR')} · ATIŞ_GÜNLÜĞÜ: {rangeLogRounds.toLocaleString('tr-TR')} ·
-                  FORMÜL: 100−((ATIM/ÖMÜR)×100)
+                  Envantere Giriş Tarihi: <span className="tabular-nums">{inventoryEntryDate}</span>
                 </p>
               </div>
             </>
@@ -375,7 +322,7 @@ export default function WeaponsDeepDive({
         {/* Sağ — lojistik */}
         <TacticalPanel className="flex min-h-0 flex-col border-white/10 bg-black/40 p-0">
           <p className="border-b border-white/10 bg-app-bg px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-[#7ab4ff]/85">
-            LOJİSTİK · BAKIM_TERMİNALİ
+            Bakım Terminali
           </p>
           {!selected ? (
             <p className="p-6 font-mono-technical text-[9px] uppercase text-app-text/45">TERMİNAL_BEKLEMEDE</p>
@@ -414,7 +361,7 @@ export default function WeaponsDeepDive({
                       onChange={(e) => setAttachId(e.target.value)}
                       disabled={busy || idleOptics.length === 0}
                     >
-                      <option value="">— BOŞTA AKSESUAR —</option>
+                      <option value="">— Aksesuar Seç —</option>
                       {idleOptics.map((o) => (
                         <option key={String(o.id)} value={String(o.id)}>
                           {invStr(o.name) || String(o.id)}
@@ -435,17 +382,14 @@ export default function WeaponsDeepDive({
 
               <div ref={maintFormRef} className="space-y-2">
                 <p className="font-mono-technical text-[8px] font-bold uppercase tracking-wider text-app-text/55">
-                  SİLAH BAKIM GÜNLÜĞÜ
+                  Bakım Günlüğü
                 </p>
                 <p className="font-mono text-[8px] text-app-text/45">
                   SON_BAKIMDAN_ATIM: <span className="text-accent">{roundsSinceMaint.toLocaleString('tr-TR')}</span>
                 </p>
 
                 <form onSubmit={submitMaintenance} className="space-y-2 rounded border border-white/10 bg-black/50 p-2">
-                  <p className="font-mono-technical text-[7px] font-bold uppercase text-accent/80">+ YENİ BAKIM KAYDI</p>
-                  <p className="font-mono text-[7px] text-app-text/45">
-                    KİLİTLİ_ATIM: {totalRounds.toLocaleString('tr-TR')} (mevcut toplam)
-                  </p>
+                  <p className="font-mono-technical text-[7px] font-bold uppercase text-accent/80">Yeni Bakım Kaydı</p>
                   <label className="block">
                     <span className="font-mono-technical text-[7px] font-bold uppercase tracking-wider text-app-text/55">
                       BAKIM TARİHİ:

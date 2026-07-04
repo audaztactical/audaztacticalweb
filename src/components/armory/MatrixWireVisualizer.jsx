@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { defaultAnalysisLines, streamGlyphs } from './matrixWireModels'
+import { streamGlyphs } from './matrixWireModels'
 
 /** @typedef {'pistol' | 'reddot' | 'cartridge'} MatrixModelVariant */
 
@@ -27,7 +27,6 @@ export default function MatrixWireVisualizer({
   label,
   imageSrc,
   imageAlt = '',
-  analysisLines = [],
   hubMode = false,
   imagePriority = 'auto',
   className = '',
@@ -35,7 +34,6 @@ export default function MatrixWireVisualizer({
   const wrapRef = useRef(/** @type {HTMLDivElement | null} */ (null))
   const [tilt, setTilt] = useState({ rx: 0, ry: 0 })
   const [hovering, setHovering] = useState(false)
-  const [hud, setHud] = useState('SENKRON · BEKLEMEDE')
   const [tick, setTick] = useState(0)
   const [imageReady, setImageReady] = useState(false)
 
@@ -43,21 +41,12 @@ export default function MatrixWireVisualizer({
     setImageReady(false)
   }, [imageSrc])
 
-  const lines = useMemo(
-    () => (analysisLines.length ? analysisLines : defaultAnalysisLines(variant)),
-    [analysisLines, variant]
-  )
   const glyphs = useMemo(() => streamGlyphs(variant), [variant])
 
   useEffect(() => {
     const id = window.setInterval(() => setTick((t) => t + 1), 400)
     return () => window.clearInterval(id)
   }, [])
-
-  useEffect(() => {
-    if (hubMode) return
-    setHud(`${lines[tick % lines.length]} · HD_${variant.toUpperCase()}`)
-  }, [tick, lines, variant, hubMode])
 
   const onMove = useCallback((e) => {
     const el = wrapRef.current
@@ -164,27 +153,9 @@ export default function MatrixWireVisualizer({
       </div>
 
       {!hubMode && label ? (
-        <div className="pointer-events-none absolute inset-x-0 top-2 z-[3] flex justify-between px-2 font-mono-technical text-[7px] uppercase tracking-widest text-accent/75">
+        <div className="pointer-events-none absolute inset-x-0 top-2 z-[3] px-2 font-mono-technical text-[7px] uppercase tracking-widest text-accent/75">
           <span>{label}</span>
-          <span className="max-w-[55%] truncate text-right tabular-nums">{hud}</span>
         </div>
-      ) : null}
-
-      {!hubMode ? (
-        <>
-          <div className="pointer-events-none absolute bottom-2 left-2 right-2 z-[3] flex justify-between font-mono text-[6px] text-accent/50">
-            <span>MATRIX_IX · HD_ASSET</span>
-            <span className="tabular-nums">01001100 · İNTERAKTİF</span>
-          </div>
-          <div className="pointer-events-none absolute right-2 top-8 z-[3] hidden w-[4.5rem] border border-accent/15 bg-black/50 p-1.5 font-mono text-[6px] text-accent/45 sm:block">
-            <p className="mb-1 text-accent/65">GEO_ANALİZ</p>
-            {lines.slice(0, 4).map((line, i) => (
-              <p key={line} className={i === tick % 4 ? 'text-accent' : ''}>
-                {i === tick % 4 ? '▸' : '·'} {line}
-              </p>
-            ))}
-          </div>
-        </>
       ) : null}
     </div>
   )

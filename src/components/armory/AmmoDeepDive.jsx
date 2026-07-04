@@ -245,7 +245,7 @@ export default function AmmoDeepDive({
 
         <TacticalPanel className="flex min-h-0 flex-col overflow-hidden border-white/10 bg-black/40 p-0">
           <p className="shrink-0 border-b border-white/10 bg-app-bg px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-accent/80">
-            {isViewingLogs ? 'TAKTİK_MONİTÖR · HARCAMA_DEFTERİ' : 'TAKTİK_MONİTÖR · 3D_ANALİTİK'}
+            {isViewingLogs ? 'Harcama Defteri' : '3D Görünüm'}
           </p>
           {selected ? (
             <div className="flex min-h-0 flex-1 flex-col">
@@ -340,14 +340,14 @@ export default function AmmoDeepDive({
                     variant="cartridge"
                     imageSrc={imageSrc}
                     imageAlt={getCaliberName(selected)}
-                    label={ammoStokKodu(String(selected.id))}
+                    label=""
                   />
                   <div className="shrink-0 space-y-3 border-t border-white/10 px-3 py-3">
                     <p className="font-mono-technical text-[9px] uppercase text-app-text/55">
                       KALİBRE: <span className="text-accent">{getCaliberName(selected)}</span>
                     </p>
                     <p className="font-mono-technical text-[9px] uppercase tracking-[0.12em] text-accent">
-                      ENVANTERE GİRİŞ: <span className="tabular-nums">{entryDate}</span>
+                      Envantere Giriş: <span className="tabular-nums">{entryDate}</span>
                     </p>
                     <p className="font-mono-technical text-2xl font-bold tabular-nums tracking-wider text-accent sm:text-3xl">
                       MEVCUT STOK: <span className="text-app-text">{totalStock.toLocaleString('tr-TR')}</span>{' '}

@@ -432,15 +432,9 @@ export default function Cephanelik() {
       <div className="relative z-[2] w-full min-w-0 space-y-3">
         <div className="flex flex-col gap-3 border-b border-white/10 pb-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
           <div className="min-w-0 flex-1">
-            <p className="font-mono-technical text-[9px] font-semibold uppercase tracking-[0.22em] text-accent/85 sm:text-[10px] sm:tracking-[0.32em]">
-              [ ENVANTER VE LOJİSTİK ]
-            </p>
-            <h1 className="font-display mt-1 text-base font-bold tracking-[0.08em] text-app-text sm:text-lg md:text-xl">
-              ILWS TERMINAL
+            <h1 className="font-display text-base font-bold tracking-[0.08em] text-app-text sm:text-lg md:text-xl">
+              Cephanelik
             </h1>
-            <p className="mt-0.5 max-w-xl font-mono-technical text-[9px] leading-snug text-app-text/55">
-              Integrated Logistics &amp; Weapon System · cephanelik ve teçhizat yönetimi
-            </p>
           </div>
           <div className="flex w-full min-w-0 flex-col items-stretch gap-2 sm:w-auto sm:shrink-0 sm:items-end">
             <HudTicker className="text-left sm:text-right" />
