@@ -11,7 +11,6 @@ const { runLocalAlertsIngest } = require('./lib/localAlerts')
 const { runVideoNewsIngest } = require('./lib/videoNews')
 const { ensureAdminClaimHandler } = require('./lib/adminClaims')
 const { adminDeleteUserHandler } = require('./lib/adminDeleteUser')
-const { claimInstructorRoleHandler } = require('./lib/instructorClaim')
 const { joinGroupByPasswordHandler } = require('./lib/joinGroup')
 const { leaveGroupHandler } = require('./lib/leaveGroup')
 const { completePremiumUpgradeHandler } = require('./lib/premiumUpgrade')
@@ -160,18 +159,6 @@ exports.adminDeleteUser = onCall(
     cors: true,
   },
   adminDeleteUserHandler,
-)
-
-/**
- * Callable: eğitmen davet kodu yakma + users.role = instructor (yalnızca Admin SDK).
- */
-exports.claimInstructorRole = onCall(
-  {
-    memory: '128MiB',
-    timeoutSeconds: 30,
-    cors: true,
-  },
-  claimInstructorRoleHandler,
 )
 
 /**

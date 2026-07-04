@@ -156,13 +156,6 @@ export function callEnsureAdminClaim() {
 }
 
 /**
- * @param {string} tokenId instructor_tokens belge kimliği
- */
-export function callClaimInstructorRole(tokenId) {
-  return callFunction('claimInstructorRole', { tokenId })
-}
-
-/**
  * @param {string} password
  */
 export function callJoinGroupByPassword(password) {

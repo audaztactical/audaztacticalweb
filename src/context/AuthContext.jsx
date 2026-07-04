@@ -23,13 +23,9 @@ import {
 } from '../lib/googleRedirectAuth'
 import { hasPendingGoogleAuthRedirectPath } from '../lib/googleAuth'
 import { emitFirebaseError } from '../lib/firebaseErrorBus'
-import { callClaimInstructorRole, callEnsureAdminClaim, isCloudFunctionUnavailableError, isEnsureAdminClaimDenied } from '../lib/cloudFunctions'
+import { callEnsureAdminClaim, isCloudFunctionUnavailableError, isEnsureAdminClaimDenied } from '../lib/cloudFunctions'
 import { isPlatformInBetaPeriod } from '../lib/registrationPolicy'
 import { isInstructorRole, isPremiumMemberRole, normalizeAccountStatus, normalizeUserRole } from '../lib/authRoles'
-import {
-  INSTRUCTOR_TOKEN_INVALID_MESSAGE,
-  validateInstructorInviteToken,
-} from '../lib/firestoreInstructorTokens'
 import {
   createOperatorProfile,
   fetchUserProfile,
@@ -313,26 +309,11 @@ export function AuthProvider({ children }) {
       callsign,
       bloodType,
       status,
-      instructorInviteCode = '',
       role = 'member',
       accountStatus = 'active',
       premiumPaymentId = '',
     }) => {
       if (!isFirebaseConfigured() || !auth) throw new Error('Firebase yapılandırılmadı')
-
-      const inviteRaw = typeof instructorInviteCode === 'string' ? instructorInviteCode.trim() : ''
-      /** @type {import('firebase/firestore').DocumentReference | null} */
-      let tokenRef = null
-
-      if (inviteRaw) {
-        const check = await validateInstructorInviteToken(inviteRaw)
-        if (!check.valid || !check.ref) {
-          const e = new Error(INSTRUCTOR_TOKEN_INVALID_MESSAGE)
-          e.code = 'instructor-token-invalid'
-          throw e
-        }
-        tokenRef = check.ref
-      }
 
       let credUser = null
       setRegistrationInProgress(true)
@@ -362,9 +343,6 @@ export function AuthProvider({ children }) {
           premiumPaymentId,
         })
         clearPendingOperatorProfile()
-        if (tokenRef) {
-          await callClaimInstructorRole(tokenRef.id)
-        }
         if (!isPlatformInBetaPeriod()) {
           await sendEmailVerification(credUser)
         }

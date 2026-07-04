@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { signOut } from 'firebase/auth'
 import {
   Bell,
-  Copy,
   CreditCard,
   KeyRound,
   Loader2,
@@ -23,8 +22,6 @@ import SettingsAccordionSection from '../components/settings/SettingsAccordionSe
 import SettingsGroupSection from '../components/settings/SettingsGroupSection'
 import { useAuth } from '../context/AuthContext'
 import { auth } from '../lib/firebase'
-import { createInstructorInviteToken } from '../lib/firestoreInstructorTokens'
-import { emitFirebaseError } from '../lib/firebaseErrorBus'
 
 function formatRoleLabel(role) {
   if (role === 'instructor') return 'Eğitmen'
@@ -35,39 +32,7 @@ function formatRoleLabel(role) {
 export default function Settings() {
   const { isAdmin, showAdminPanel, user, userData, role, isPremiumMember } = useAuth()
   const showPricingLink = showAdminPanel || isAdmin
-  const [generatedToken, setGeneratedToken] = useState('')
-  const [tokenBusy, setTokenBusy] = useState(false)
-  const [tokenMsg, setTokenMsg] = useState('')
-  const [copied, setCopied] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
-
-  const handleGenerateInstructorToken = async () => {
-    setTokenBusy(true)
-    setTokenMsg('')
-    setCopied(false)
-    try {
-      const { token } = await createInstructorInviteToken()
-      setGeneratedToken(token)
-      setTokenMsg('Tek kullanımlık kod Firestore instructor_tokens koleksiyonuna yazıldı.')
-    } catch (err) {
-      emitFirebaseError(err)
-      setGeneratedToken('')
-      setTokenMsg(err instanceof Error ? err.message : 'Kod üretilemedi.')
-    } finally {
-      setTokenBusy(false)
-    }
-  }
-
-  const handleCopyToken = async () => {
-    if (!generatedToken) return
-    try {
-      await navigator.clipboard.writeText(generatedToken)
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 2000)
-    } catch {
-      setTokenMsg('Panoya kopyalanamadı — kodu manuel seçin.')
-    }
-  }
 
   const handleSignOut = async () => {
     if (!auth || signingOut) return
@@ -196,55 +161,6 @@ export default function Settings() {
             </button>
           </div>
         </SettingsAccordionSection>
-
-        {isAdmin ? (
-          <section className="w-full border-t border-white/10 px-4 py-5">
-            <div className="rounded-xl border border-amber-900/40 bg-slate-950/80 p-4 shadow-[0_0_32px_-12px_rgba(255,180,0,0.2)]">
-              <p className="mb-3 flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-amber-400">
-                <KeyRound className="size-4 shrink-0" strokeWidth={1.5} aria-hidden />
-                [ 🔐 EĞİTMEN DAVETİYE KODU SİSTEM YÖNETİMİ ]
-              </p>
-              <p className="mb-4 font-mono text-[9px] uppercase leading-relaxed text-app-text/55">
-                Tek kullanımlık eğitmen kayıt kodu üretin. Kod yalnızca bir kez, kayıt sırasında
-                yakılır (isUsed · usedBy).
-              </p>
-              <button
-                type="button"
-                disabled={tokenBusy}
-                onClick={handleGenerateInstructorToken}
-                className="w-full rounded-lg border border-amber-500/45 bg-amber-950/40 px-4 py-2.5 font-mono text-[10px] font-bold uppercase tracking-wider text-amber-300 transition hover:border-amber-400/70 hover:bg-amber-950/60 disabled:opacity-50 sm:w-auto"
-              >
-                {tokenBusy ? 'ÜRETİLİYOR…' : 'YENİ EĞİTMEN KODU ÜRET'}
-              </button>
-
-              {generatedToken ? (
-                <div
-                  className="mt-4 border border-amber-500/50 bg-amber-950/40 p-2 font-mono"
-                  role="status"
-                >
-                  <p className="text-[9px] font-bold uppercase tracking-wider text-amber-500/80">
-                    AKTİF DAVETİYE KODU
-                  </p>
-                  <p className="mt-1 break-all text-sm font-bold tracking-[0.2em] text-amber-200">
-                    {generatedToken}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleCopyToken}
-                    className="mt-2 inline-flex items-center gap-1.5 font-mono text-[9px] font-bold uppercase text-amber-400 hover:text-amber-300"
-                  >
-                    <Copy className="size-3.5" strokeWidth={1.5} aria-hidden />
-                    {copied ? 'KOPYALANDI' : 'KODU KOPYALA'}
-                  </button>
-                </div>
-              ) : null}
-
-              {tokenMsg ? (
-                <p className="mt-3 font-mono text-[9px] uppercase text-app-text/55">{tokenMsg}</p>
-              ) : null}
-            </div>
-          </section>
-        ) : null}
       </div>
     </PageShell>
   )

@@ -16,7 +16,7 @@
     "deploy:firebase-preview": "npm run build && firebase deploy --only hosting",
     "deploy:hosting": "npm run deploy:firebase-preview",
     "deploy:functions": "node scripts/inject-functions-env.mjs && firebase deploy --only functions",
-    "deploy:functions:admin": "firebase deploy --only functions:ensureAdminClaim,functions:claimInstructorRole,functions:adminDeleteUser",
+    "deploy:functions:admin": "firebase deploy --only functions:ensureAdminClaim,functions:adminDeleteUser",
     "open:auth-providers": "firebase open auth",
     "sync-firestore-rules": "node scripts/inject-firestore-admin.mjs",
     "admin:upgrade-trial": "node scripts/admin_upgrade.js --lock-expired",
