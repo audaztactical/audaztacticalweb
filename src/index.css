@@ -2593,6 +2593,16 @@
   overflow: visible;
 }
 
+.profile-dossier-shell .profile-security-section .op-terminal-card {
+  overflow: visible;
+}
+
+.profile-dossier-shell .profile-security-section .op-terminal-card__body {
+  flex: none;
+  min-height: auto;
+  overflow: visible;
+}
+
 /* MÜŞTEREK HAREKAT KONSOLU — ince taktik sütun kaydırması */
 .op-detay-col-scroll {
   scrollbar-width: thin;

@@ -343,7 +343,6 @@ export default function Profile() {
   const [currentPassForChange, setCurrentPassForChange] = useState('')
   const [changeBusy, setChangeBusy] = useState(false)
   const [changeError, setChangeError] = useState('')
-  const [securityOpen, setSecurityOpen] = useState(false)
   const [avatarMsg, setAvatarMsg] = useState(null)
   const [profileRepairBusy, setProfileRepairBusy] = useState(false)
   const [profileRepairMsg, setProfileRepairMsg] = useState(null)
@@ -863,176 +862,168 @@ export default function Profile() {
               ) : null}
             </div>
           </OpTacticalCard>
+        </div>
+      </div>
 
-          <OpTacticalCard title="Hesap Güvenliği">
-            <button
-              type="button"
-              onClick={() => setSecurityOpen((o) => !o)}
-              className="op-security-toggle rounded-sm"
-              aria-expanded={securityOpen}
+      <section className="profile-security-section mt-6 w-full" aria-labelledby="profile-security-heading">
+        <header className="mb-4 border-b border-white/10 pb-3">
+          <h2 id="profile-security-heading" className="op-terminal-title text-xs uppercase tracking-wider">
+            Hesap Güvenliği
+          </h2>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            <span
+              className={`inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 font-mono-technical text-[8px] font-bold uppercase tracking-widest ${
+                googleLinked ? 'border-emerald-500/40 text-emerald-300/90' : 'border-[#2A2D34] bg-[#2A2D34]/80 text-app-text/55'
+              }`}
             >
-              <div>
-                <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.2em] text-[#8eb7ff]">
-                  {securityOpen ? 'Güvenlik ayarları açık' : 'Güvenlik Ayarları'}
-                </p>
-                <p className="mt-0.5 font-mono-technical text-[8px] uppercase tracking-wider text-app-text/55">
-                  Şifre değiştir · hesap bağla · MFA
-                </p>
-              </div>
-              <span className="font-mono-technical text-[10px] text-accent">{securityOpen ? '▲' : '▼'}</span>
-            </button>
+              Google {googleLinked ? '●' : '○'}
+            </span>
+            <span
+              className={`inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 font-mono-technical text-[8px] font-bold uppercase tracking-widest ${
+                pwdLinked ? 'border-emerald-500/40 text-emerald-300/90' : 'border-[#004DFF]/35 bg-[#2A2D34]/90 text-[#7aa3ff]'
+              }`}
+            >
+              E-posta + şifre {pwdLinked ? '●' : '○'}
+            </span>
+          </div>
+        </header>
 
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              <span
-                className={`inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 font-mono-technical text-[8px] font-bold uppercase tracking-widest ${
-                  googleLinked ? 'border-emerald-500/40 text-emerald-300/90' : 'border-[#2A2D34] bg-[#2A2D34]/80 text-app-text/55'
-                }`}
-              >
-                Google {googleLinked ? '●' : '○'}
-              </span>
-              <span
-                className={`inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 font-mono-technical text-[8px] font-bold uppercase tracking-widest ${
-                  pwdLinked ? 'border-emerald-500/40 text-emerald-300/90' : 'border-[#004DFF]/35 bg-[#2A2D34]/90 text-[#7aa3ff]'
-                }`}
-              >
-                E-posta + şifre {pwdLinked ? '●' : '○'}
-              </span>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <OpTacticalCard title="Şifre Değiştir">
+            <div className="space-y-3">
+              {!pwdLinked && googleLinked && email ? (
+                <form onSubmit={linkEmailPassword} className={`space-y-2.5 rounded-sm p-3 ${secPanelClass}`}>
+                  <div className="flex items-start gap-2">
+                    <Link2 className="mt-0.5 size-3.5 shrink-0 text-[#5b8cff]" strokeWidth={1.5} aria-hidden />
+                    <div className="min-w-0 flex-1 space-y-1.5">
+                      <p className="font-mono-technical text-[9px] font-bold uppercase tracking-wide text-[#b8ccff]">Hesap şifresi bağla</p>
+                      <DossierField label="E_POSTA (SABİT)">
+                        <input type="email" readOnly value={email} className={`${inputTactical} opacity-70`} />
+                      </DossierField>
+                      <DossierField label="ŞİFRE">
+                        <input
+                          type="password"
+                          autoComplete="new-password"
+                          value={linkPass}
+                          onChange={(e) => setLinkPass(e.target.value)}
+                          className={inputTactical}
+                          style={{ borderBottomColor: 'rgba(0,77,255,0.35)' }}
+                        />
+                      </DossierField>
+                      <DossierField label="ŞİFRE_TEKRAR">
+                        <input
+                          type="password"
+                          autoComplete="new-password"
+                          value={linkConfirm}
+                          onChange={(e) => setLinkConfirm(e.target.value)}
+                          className={inputTactical}
+                          style={{ borderBottomColor: 'rgba(0,77,255,0.35)' }}
+                        />
+                      </DossierField>
+                      {linkError ? <AmberAlert>{linkError}</AmberAlert> : null}
+                      <button
+                        type="submit"
+                        disabled={linkBusy}
+                        className="rounded-sm border border-[#004DFF]/50 bg-[#004DFF]/15 px-2.5 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#8eb7ff] hover:bg-[#004DFF]/22 disabled:opacity-50"
+                      >
+                        {linkBusy ? '…' : 'BAĞLA'}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              ) : null}
+
+              {!pwdLinked && googleLinked && !email ? (
+                <AmberAlert>Hesapta e-posta yok; şifre çiti bu oturum için kapalı.</AmberAlert>
+              ) : null}
+
+              {!googleLinked && !pwdLinked && email ? (
+                <AmberAlert>Oturum sağlayıcı bilgisi alınamadı; çıkış / yeniden giriş önerilir.</AmberAlert>
+              ) : null}
+
+              {pwdLinked ? (
+                <form onSubmit={submitPasswordChange} className={`space-y-2.5 rounded-sm p-3 ${secPanelClass}`}>
+                  <div className="flex items-start gap-2">
+                    <KeyRound className="mt-0.5 size-3.5 shrink-0 text-[#5b8cff]" strokeWidth={1.5} aria-hidden />
+                    <div className="min-w-0 flex-1 space-y-1.5">
+                      <p className="font-mono-technical text-[9px] font-bold uppercase tracking-wide text-[#b8ccff]">Şifre değiştir</p>
+                      {!googleLinked ? (
+                        <DossierField label="MEVCUT_ŞİFRE">
+                          <input
+                            type="password"
+                            autoComplete="current-password"
+                            value={currentPassForChange}
+                            onChange={(e) => setCurrentPassForChange(e.target.value)}
+                            className={inputTactical}
+                            style={{ borderBottomColor: 'rgba(0,77,255,0.35)' }}
+                          />
+                        </DossierField>
+                      ) : (
+                        <p className="font-mono-technical text-[8px] text-app-text/55">Google ile yeniden doğrulama penceresi açılabilir.</p>
+                      )}
+                      <DossierField label="Yeni şifre">
+                        <input type="password" autoComplete="new-password" value={newPass} onChange={(e) => setNewPass(e.target.value)} className={inputTactical} style={{ borderBottomColor: 'rgba(0,77,255,0.35)' }} />
+                      </DossierField>
+                      <DossierField label="Yeni şifre (tekrar)">
+                        <input
+                          type="password"
+                          autoComplete="new-password"
+                          value={newPassConfirm}
+                          onChange={(e) => setNewPassConfirm(e.target.value)}
+                          className={inputTactical}
+                          style={{ borderBottomColor: 'rgba(0,77,255,0.35)' }}
+                        />
+                      </DossierField>
+                      {changeError ? <AmberAlert>{changeError}</AmberAlert> : null}
+                      <button
+                        type="submit"
+                        disabled={changeBusy}
+                        className="rounded-sm border border-[#004DFF]/40 bg-[#2A2D34] px-2.5 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#9db6e8] hover:border-[#004DFF]/55 disabled:opacity-50"
+                      >
+                        {changeBusy ? '…' : 'GÜNCELLE'}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              ) : null}
             </div>
+          </OpTacticalCard>
 
-            <div className={['op-security-panel mt-3', securityOpen ? 'op-security-panel--open' : 'op-security-panel--closed'].join(' ')}>
-              <div className="space-y-3 border-t border-[#004DFF]/20 pt-3">
-                {!pwdLinked && googleLinked && email ? (
-                  <form onSubmit={linkEmailPassword} className={`space-y-2.5 rounded-sm p-3 ${secPanelClass}`}>
-                    <div className="flex items-start gap-2">
-                      <Link2 className="mt-0.5 size-3.5 shrink-0 text-[#5b8cff]" strokeWidth={1.5} aria-hidden />
-                      <div className="min-w-0 flex-1 space-y-1.5">
-                        <p className="font-mono-technical text-[9px] font-bold uppercase tracking-wide text-[#b8ccff]">Hesap şifresi bağla</p>
-                        <DossierField label="E_POSTA (SABİT)">
-                          <input type="email" readOnly value={email} className={`${inputTactical} opacity-70`} />
-                        </DossierField>
-                        <DossierField label="ŞİFRE">
-                          <input
-                            type="password"
-                            autoComplete="new-password"
-                            value={linkPass}
-                            onChange={(e) => setLinkPass(e.target.value)}
-                            className={inputTactical}
-                            style={{ borderBottomColor: 'rgba(0,77,255,0.35)' }}
-                          />
-                        </DossierField>
-                        <DossierField label="ŞİFRE_TEKRAR">
-                          <input
-                            type="password"
-                            autoComplete="new-password"
-                            value={linkConfirm}
-                            onChange={(e) => setLinkConfirm(e.target.value)}
-                            className={inputTactical}
-                            style={{ borderBottomColor: 'rgba(0,77,255,0.35)' }}
-                          />
-                        </DossierField>
-                        {linkError ? <AmberAlert>{linkError}</AmberAlert> : null}
-                        <button
-                          type="submit"
-                          disabled={linkBusy}
-                          className="rounded-sm border border-[#004DFF]/50 bg-[#004DFF]/15 px-2.5 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#8eb7ff] hover:bg-[#004DFF]/22 disabled:opacity-50"
-                        >
-                          {linkBusy ? '…' : 'BAĞLA'}
-                        </button>
-                      </div>
-                    </div>
-                  </form>
-                ) : null}
+          <OpTacticalCard title="Telefon Kanalı">
+            <div className={`rounded-sm p-3 ${secPanelClass}`}>
+              <div className="flex items-start gap-2">
+                <Phone className="mt-0.5 size-3.5 shrink-0 text-[#5b8cff]" strokeWidth={1.5} aria-hidden />
+                <div className="min-w-0 flex-1">
+                  <p className="font-mono-technical text-[9px] font-bold uppercase text-[#b8ccff]">Telefon kanalı</p>
+                  <p className="mt-0.5 font-mono-technical text-[8px] uppercase leading-snug text-app-text/55">İleride SMS / kurtarma.</p>
+                  <input type="tel" readOnly disabled placeholder="+90 …" className={`${inputTactical} mt-1 cursor-not-allowed opacity-45`} aria-label="Telefon (pasif)" />
+                  <button type="button" disabled className="mt-1 rounded-sm border border-[#2A2D34] px-1.5 py-0.5 font-mono-technical text-[8px] uppercase text-app-text/45">
+                    Kilitli
+                  </button>
+                </div>
+              </div>
+            </div>
+          </OpTacticalCard>
 
-                {!pwdLinked && googleLinked && !email ? (
-                  <AmberAlert>Hesapta e-posta yok; şifre çiti bu oturum için kapalı.</AmberAlert>
-                ) : null}
-
-                {!googleLinked && !pwdLinked && email ? (
-                  <AmberAlert>Oturum sağlayıcı bilgisi alınamadı; çıkış / yeniden giriş önerilir.</AmberAlert>
-                ) : null}
-
-                {pwdLinked ? (
-                  <form onSubmit={submitPasswordChange} className={`space-y-2.5 rounded-sm p-3 ${secPanelClass}`}>
-                    <div className="flex items-start gap-2">
-                      <KeyRound className="mt-0.5 size-3.5 shrink-0 text-[#5b8cff]" strokeWidth={1.5} aria-hidden />
-                      <div className="min-w-0 flex-1 space-y-1.5">
-                        <p className="font-mono-technical text-[9px] font-bold uppercase tracking-wide text-[#b8ccff]">Şifre değiştir</p>
-                        {!googleLinked ? (
-                          <DossierField label="MEVCUT_ŞİFRE">
-                            <input
-                              type="password"
-                              autoComplete="current-password"
-                              value={currentPassForChange}
-                              onChange={(e) => setCurrentPassForChange(e.target.value)}
-                              className={inputTactical}
-                              style={{ borderBottomColor: 'rgba(0,77,255,0.35)' }}
-                            />
-                          </DossierField>
-                        ) : (
-                          <p className="font-mono-technical text-[8px] text-app-text/55">Google ile yeniden doğrulama penceresi açılabilir.</p>
-                        )}
-                        <DossierField label="Yeni şifre">
-                          <input type="password" autoComplete="new-password" value={newPass} onChange={(e) => setNewPass(e.target.value)} className={inputTactical} style={{ borderBottomColor: 'rgba(0,77,255,0.35)' }} />
-                        </DossierField>
-                        <DossierField label="Yeni şifre (tekrar)">
-                          <input
-                            type="password"
-                            autoComplete="new-password"
-                            value={newPassConfirm}
-                            onChange={(e) => setNewPassConfirm(e.target.value)}
-                            className={inputTactical}
-                            style={{ borderBottomColor: 'rgba(0,77,255,0.35)' }}
-                          />
-                        </DossierField>
-                        {changeError ? <AmberAlert>{changeError}</AmberAlert> : null}
-                        <button
-                          type="submit"
-                          disabled={changeBusy}
-                          className="rounded-sm border border-[#004DFF]/40 bg-[#2A2D34] px-2.5 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#9db6e8] hover:border-[#004DFF]/55 disabled:opacity-50"
-                        >
-                          {changeBusy ? '…' : 'GÜNCELLE'}
-                        </button>
-                      </div>
-                    </div>
-                  </form>
-                ) : null}
-
-                <div className="grid gap-2.5 sm:grid-cols-2">
-                  <div className={`rounded-sm p-3 ${secPanelClass}`}>
-                    <div className="flex items-start gap-2">
-                      <Phone className="mt-0.5 size-3.5 shrink-0 text-[#5b8cff]" strokeWidth={1.5} aria-hidden />
-                      <div className="min-w-0 flex-1">
-                        <p className="font-mono-technical text-[9px] font-bold uppercase text-[#b8ccff]">Telefon kanalı</p>
-                        <p className="mt-0.5 font-mono-technical text-[8px] uppercase leading-snug text-app-text/55">İleride SMS / kurtarma.</p>
-                        <input type="tel" readOnly disabled placeholder="+90 …" className={`${inputTactical} mt-1 cursor-not-allowed opacity-45`} aria-label="Telefon (pasif)" />
-                        <button type="button" disabled className="mt-1 rounded-sm border border-[#2A2D34] px-1.5 py-0.5 font-mono-technical text-[8px] uppercase text-app-text/45">
-                          Kilitli
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className={`rounded-sm p-3 ${secPanelClass}`}>
-                    <div className="flex items-start gap-2">
-                      <Shield className="mt-0.5 size-3.5 shrink-0 text-[#5b8cff]" strokeWidth={1.5} aria-hidden />
-                      <div className="min-w-0 flex-1">
-                        <p className="font-mono-technical text-[9px] font-bold uppercase text-[#b8ccff]">Telefon · SMS doğrulama</p>
-                        <p className="mt-0.5 font-mono-technical text-[8px] uppercase leading-snug text-app-text/55">Firebase Phone Auth · ücretli katman.</p>
-                        <label className="mt-2 flex cursor-not-allowed items-center gap-1.5 opacity-65">
-                          <input type="checkbox" disabled className="size-3 rounded-sm border-white/20" />
-                          <span className="font-mono-technical text-[8px] uppercase leading-snug tracking-wide text-app-text/55">
-                            Durum: Pasif · operasyonel gereklilik
-                          </span>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
+          <OpTacticalCard title="SMS / MFA">
+            <div className={`rounded-sm p-3 ${secPanelClass}`}>
+              <div className="flex items-start gap-2">
+                <Shield className="mt-0.5 size-3.5 shrink-0 text-[#5b8cff]" strokeWidth={1.5} aria-hidden />
+                <div className="min-w-0 flex-1">
+                  <p className="font-mono-technical text-[9px] font-bold uppercase text-[#b8ccff]">Telefon · SMS doğrulama</p>
+                  <p className="mt-0.5 font-mono-technical text-[8px] uppercase leading-snug text-app-text/55">Firebase Phone Auth · ücretli katman.</p>
+                  <label className="mt-2 flex cursor-not-allowed items-center gap-1.5 opacity-65">
+                    <input type="checkbox" disabled className="size-3 rounded-sm border-white/20" />
+                    <span className="font-mono-technical text-[8px] uppercase leading-snug tracking-wide text-app-text/55">
+                      Durum: Pasif · operasyonel gereklilik
+                    </span>
+                  </label>
                 </div>
               </div>
             </div>
           </OpTacticalCard>
         </div>
-      </div>
+      </section>
     </div>
   )
 }
