@@ -15,11 +15,11 @@ const MIN_DISPLAY_VALUE = 8
 const NEON_FALLBACK = '#00ff88'
 
 /** Sabit sahne — ResponsiveContainer resize döngüsünü engeller */
-const STAGE_W = 300
-const STAGE_H = 248
+const STAGE_W = 280
+const STAGE_H = 220
 const CHART_CX = STAGE_W / 2
 const CHART_CY = STAGE_H / 2
-const OUTER_R = 68
+const OUTER_R = 62
 
 /** @type {Record<string, string>} */
 const LABEL_SLOT = {
@@ -87,15 +87,16 @@ function HudRadarTooltip({ active, payload, accent }) {
  */
 const RadarChartLayer = memo(function RadarChartLayer({ chartData, accent, gid }) {
   return (
-    <RadarChart
-      width={STAGE_W}
-      height={STAGE_H}
-      cx={CHART_CX}
-      cy={CHART_CY}
-      outerRadius={OUTER_R}
-      data={chartData}
-      margin={{ top: 16, right: 16, bottom: 16, left: 16 }}
-    >
+    <div className="cmd-radar__chart-center">
+      <RadarChart
+        width={STAGE_W}
+        height={STAGE_H}
+        cx={CHART_CX}
+        cy={CHART_CY}
+        outerRadius={OUTER_R}
+        data={chartData}
+        margin={{ top: 10, right: 30, bottom: 10, left: 30 }}
+      >
       <defs>
         <linearGradient id={`radarFill-${gid}`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={accent} stopOpacity={0.42} />
@@ -167,6 +168,7 @@ const RadarChartLayer = memo(function RadarChartLayer({ chartData, accent, gid }
         wrapperStyle={{ outline: 'none', zIndex: 20 }}
       />
     </RadarChart>
+    </div>
   )
 })
 

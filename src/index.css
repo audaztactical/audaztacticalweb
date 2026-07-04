@@ -1165,9 +1165,11 @@
 
 .cmd-radar__stage {
   position: relative;
-  width: min(300px, 100%);
-  aspect-ratio: 300 / 248;
+  width: min(280px, 100%);
+  min-height: 220px;
+  aspect-ratio: 280 / 220;
   flex-shrink: 0;
+  isolation: isolate;
 }
 
 .cmd-radar__sonar-layer {
@@ -1176,7 +1178,6 @@
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
-  transform: translateZ(0);
   isolation: isolate;
 }
 
@@ -1188,23 +1189,20 @@
   align-items: center;
   justify-content: center;
   overflow: visible;
-  transform: translateZ(0);
   isolation: isolate;
+}
+
+.cmd-radar__chart-center {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
 }
 
 .cmd-radar__chart-layer .recharts-wrapper,
 .cmd-radar__chart-layer .recharts-surface {
   overflow: visible !important;
-}
-
-.cmd-radar__chart-layer .recharts-wrapper {
-  width: 100% !important;
-  height: 100% !important;
-}
-
-.cmd-radar__chart-layer svg.recharts-surface {
-  width: 100% !important;
-  height: 100% !important;
 }
 
 .cmd-radar__labels {
@@ -1276,20 +1274,14 @@
   color: rgb(148 163 184 / 0.45);
 }
 
-.cmd-radar__stage {
-  min-height: 248px;
-  isolation: isolate;
-}
-
 .cmd-radar__sonar-ring {
   pointer-events: none;
   position: absolute;
   left: 50%;
   top: 50%;
-  translate: -50% -50%;
   border-radius: 50%;
   border: 1px solid rgb(0 255 136 / 0.08);
-  transform: translateZ(0);
+  transform: translate(-50%, -50%);
   backface-visibility: hidden;
 }
 
@@ -1316,12 +1308,11 @@
   width: 88%;
   aspect-ratio: 1;
   height: auto;
-  translate: -50% -50%;
   border-radius: 50%;
   overflow: hidden;
   opacity: 0.55;
   mask-image: radial-gradient(circle, black 0%, black 55%, transparent 72%);
-  transform: translateZ(0);
+  transform: translate(-50%, -50%);
 }
 
 .cmd-radar__sonar-sweep-arm {
