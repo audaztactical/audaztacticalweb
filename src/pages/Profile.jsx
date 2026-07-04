@@ -948,7 +948,7 @@ export default function Profile() {
                     <div className="min-w-0 flex-1 space-y-1.5">
                       <p className="font-mono-technical text-[9px] font-bold uppercase tracking-wide text-[#b8ccff]">Şifre değiştir</p>
                       {!googleLinked ? (
-                        <DossierField label="MEVCUT_ŞİFRE">
+                        <DossierField label="Mevcut şifre">
                           <input
                             type="password"
                             autoComplete="current-password"
@@ -995,7 +995,7 @@ export default function Profile() {
                 <Phone className="mt-0.5 size-3.5 shrink-0 text-[#5b8cff]" strokeWidth={1.5} aria-hidden />
                 <div className="min-w-0 flex-1">
                   <p className="font-mono-technical text-[9px] font-bold uppercase text-[#b8ccff]">Telefon kanalı</p>
-                  <p className="mt-0.5 font-mono-technical text-[8px] uppercase leading-snug text-app-text/55">İleride SMS / kurtarma.</p>
+                  <p className="mt-0.5 font-mono-technical text-[8px] uppercase leading-snug text-app-text/55">SMS ve kurtarma için</p>
                   <input type="tel" readOnly disabled placeholder="+90 …" className={`${inputTactical} mt-1 cursor-not-allowed opacity-45`} aria-label="Telefon (pasif)" />
                   <button type="button" disabled className="mt-1 rounded-sm border border-[#2A2D34] px-1.5 py-0.5 font-mono-technical text-[8px] uppercase text-app-text/45">
                     Kilitli
@@ -1011,11 +1011,11 @@ export default function Profile() {
                 <Shield className="mt-0.5 size-3.5 shrink-0 text-[#5b8cff]" strokeWidth={1.5} aria-hidden />
                 <div className="min-w-0 flex-1">
                   <p className="font-mono-technical text-[9px] font-bold uppercase text-[#b8ccff]">Telefon · SMS doğrulama</p>
-                  <p className="mt-0.5 font-mono-technical text-[8px] uppercase leading-snug text-app-text/55">Firebase Phone Auth · ücretli katman.</p>
+                  <p className="mt-0.5 font-mono-technical text-[8px] uppercase leading-snug text-app-text/55">SMS doğrulama</p>
                   <label className="mt-2 flex cursor-not-allowed items-center gap-1.5 opacity-65">
                     <input type="checkbox" disabled className="size-3 rounded-sm border-white/20" />
                     <span className="font-mono-technical text-[8px] uppercase leading-snug tracking-wide text-app-text/55">
-                      Durum: Pasif · operasyonel gereklilik
+                      Durum: Pasif
                     </span>
                   </label>
                 </div>
