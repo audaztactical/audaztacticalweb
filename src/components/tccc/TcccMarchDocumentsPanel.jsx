@@ -7,9 +7,10 @@ import TcccMedicalHistoryTab from './TcccMedicalHistoryTab'
 import { CASUALTY_DD1380_INITIAL } from '../../lib/casualtyCardPayload'
 import { submitCasualtyDd1380Card } from '../../lib/casualtyCardSubmit'
 import {
+  generate9LineMedevacTemplate,
+  generateCasevacMistTemplate,
   generateDD1380BlankTemplate,
   generateTcccFieldCardTemplate,
-  openTcccFieldPdfTemplate,
 } from '../../lib/tcccFieldPdfTemplates'
 
 /** @typedef {'march_dd1380' | 'medevac_9line' | 'simulation_history' | 'casualty_archive' | 'field_templates'} DocTab */
@@ -31,8 +32,8 @@ const FIELD_TEMPLATES = [
 
 /** @param {string} templateId */
 async function handleTemplateDownload(templateId) {
-  if (templateId === 'nine_line') openTcccFieldPdfTemplate('nine_line')
-  else if (templateId === 'casevac_mist') openTcccFieldPdfTemplate('casevac_mist')
+  if (templateId === 'nine_line') await generate9LineMedevacTemplate()
+  else if (templateId === 'casevac_mist') await generateCasevacMistTemplate()
   else if (templateId === 'dd1380') await generateDD1380BlankTemplate()
   else if (templateId === 'tccc_card') await generateTcccFieldCardTemplate()
 }
@@ -208,11 +209,7 @@ export default function TcccMarchDocumentsPanel({
                           ? 'border-slate-800 bg-slate-900 text-app-text/45'
                           : 'border-red-800/60 bg-red-950/40 text-red-300 hover:border-red-600/60 hover:bg-red-950/60',
                       ].join(' ')}
-                      title={
-                        tpl.id === 'nine_line' || tpl.id === 'casevac_mist'
-                          ? 'Yazdır ile PDF olarak kaydedin'
-                          : 'PDF şablonu indir'
-                      }
+                      title="PDF şablonu indir"
                     >
                       {busy ? 'HAZIRLANIYOR…' : TEMPLATE_BUTTON_LABELS[tpl.id] ?? 'İNDİR'}
                     </button>

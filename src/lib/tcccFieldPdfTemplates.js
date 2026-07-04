@@ -1,7 +1,6 @@
 import { jsPDF } from 'jspdf'
 import { preparePdfAssets, setPdfFont } from './pdfFontLoader'
 import {
-  buildPdfHtmlBaseStyles,
   PDF_COLORS,
   PDF_FONT_SIZE,
   PDF_LAYOUT,
@@ -88,6 +87,144 @@ function initBlankFormPage(doc, margin, pageW, pageH, formId, logoDataUrl, logoD
   doc.setTextColor(...PDF_COLORS.muted)
   doc.text(`Form ID: ${formId} · Boş şablon · Kalemle doldurun`, margin, y)
   return y + 8
+}
+
+/**
+ * @param {import('jspdf').jsPDF} doc
+ * @param {number} margin
+ * @param {number} right
+ * @param {number} y
+ * @param {number} num
+ * @param {string} label
+ * @param {(doc: import('jspdf').jsPDF, margin: number, right: number, y: number) => number} [renderBody]
+ * @returns {number}
+ */
+function drawHatLine(doc, margin, right, y, num, label, renderBody) {
+  setPdfFont(doc, 'bold')
+  doc.setFontSize(PDF_FONT_SIZE.body)
+  doc.setTextColor(...PDF_COLORS.text)
+  doc.text(`Hat ${num}`, margin, y)
+  setPdfFont(doc, 'normal')
+  doc.setFontSize(PDF_FONT_SIZE.small)
+  doc.setTextColor(...PDF_COLORS.muted)
+  const labelLines = doc.splitTextToSize(label, right - margin - 14)
+  doc.text(labelLines, margin + 12, y)
+  y += Math.max(labelLines.length * 4, 4) + 3
+  if (renderBody) {
+    y = renderBody(doc, margin, right, y)
+  } else {
+    drawFormFieldLine(doc, margin, y, right - margin)
+    y += 8
+  }
+  return y + 2
+}
+
+/** NATO 9-LINE MEDEVAC boş şablon — jsPDF */
+export async function generate9LineMedevacTemplate() {
+  const formId = generateReportId('9LINE')
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  const pageW = doc.internal.pageSize.getWidth()
+  const pageH = doc.internal.pageSize.getHeight()
+  const margin = PDF_LAYOUT.margin
+  const right = pageW - margin
+
+  const { logoDataUrl, logoDims } = await preparePdfAssets(doc)
+  let y = initBlankFormPage(
+    doc,
+    margin,
+    pageW,
+    pageH,
+    formId,
+    logoDataUrl,
+    logoDims,
+    '9-LINE TAHLİYE TALEBİ · MEDEVAC',
+  )
+
+  y = drawSectionTitle(doc, margin, pageW, '9-Line Tahliye Protokolü', y)
+
+  y = drawHatLine(doc, margin, right, y, 1, 'Koordinatlar (MGRS/GPS)')
+  y = drawHatLine(doc, margin, right, y, 2, 'Radyo frekansı ve çağrı işareti')
+  y = drawHatLine(doc, margin, right, y, 3, 'Hasta sayısı ve taşıma önceliği')
+  y = drawHatLine(doc, margin, right, y, 4, 'Gerekli ekipman')
+  y = drawHatLine(doc, margin, right, y, 5, 'Hasta sayısı (oturur / yatar)')
+  y = drawHatLine(doc, margin, right, y, 6, 'Güvenlik', (d, m, r, cy) =>
+    drawCheckboxRow(d, m + 12, cy, ['N', 'P', 'E', 'X'], r),
+  )
+  y = drawHatLine(doc, margin, right, y, 7, 'Bölge işareti yöntemi')
+  y = drawHatLine(doc, margin, right, y, 8, 'Hasta milliyeti', (d, m, r, cy) =>
+    drawCheckboxRow(d, m + 12, cy, ['Sivil', 'Askeri', 'EPW'], r),
+  )
+  y = drawHatLine(doc, margin, right, y, 9, 'Arazi özellikleri / engeller')
+
+  stampPdfFooters(doc, formId)
+  doc.save(`AUDAZ-9Line-Medevac-${formId}.pdf`)
+  return formId
+}
+
+/** CASEVAC MIST boş şablon — jsPDF */
+export async function generateCasevacMistTemplate() {
+  const formId = generateReportId('CASEVAC-MIST')
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  const pageW = doc.internal.pageSize.getWidth()
+  const pageH = doc.internal.pageSize.getHeight()
+  const margin = PDF_LAYOUT.margin
+  const right = pageW - margin
+
+  const { logoDataUrl, logoDims } = await preparePdfAssets(doc)
+  let y = initBlankFormPage(doc, margin, pageW, pageH, formId, logoDataUrl, logoDims, 'CASEVAC MIST RAPORU')
+
+  y = drawSectionTitle(doc, margin, pageW, 'Hasta Bilgileri', y)
+  y = drawLabeledField(doc, margin, y, 'Hasta adı / callsign', 90)
+  y = drawLabeledField(doc, margin + 98, y - 6, 'Zaman', right - margin - 98)
+  y = drawLabeledField(doc, margin, y, 'Koordinat (MGRS/GPS)', right - margin)
+  y += 2
+
+  y = drawSectionTitle(doc, margin, pageW, 'MIST Protokolü', y)
+
+  setPdfFont(doc, 'bold')
+  doc.setFontSize(PDF_FONT_SIZE.body)
+  doc.setTextColor(...PDF_COLORS.text)
+  doc.text('M (Mekanizma)', margin, y)
+  y += 5
+  y = drawCheckboxRow(doc, margin + 2, y, ['Ateşli', 'Patlama', 'Düşme', 'Diğer'], right)
+  drawFormFieldLine(doc, margin + 72, y - 4, right - margin - 72)
+  y += 4
+
+  setPdfFont(doc, 'bold')
+  doc.setFontSize(PDF_FONT_SIZE.body)
+  doc.setTextColor(...PDF_COLORS.text)
+  doc.text('I (Yaralanma)', margin, y)
+  y += 5
+  drawFormFieldLine(doc, margin, y + 2, right - margin)
+  y += 10
+
+  setPdfFont(doc, 'bold')
+  doc.setFontSize(PDF_FONT_SIZE.body)
+  doc.setTextColor(...PDF_COLORS.text)
+  doc.text('S (Semptomlar / Bulgular)', margin, y)
+  y += 5
+  y = drawLabeledField(doc, margin, y, 'Nabız', 35)
+  y = drawLabeledField(doc, margin + 42, y - 6, 'SpO2', 30)
+  y = drawLabeledField(doc, margin + 80, y - 6, 'Bilinç', right - margin - 80)
+  y += 2
+
+  setPdfFont(doc, 'bold')
+  doc.setFontSize(PDF_FONT_SIZE.body)
+  doc.setTextColor(...PDF_COLORS.text)
+  doc.text('T (Yapılan Tedavi)', margin, y)
+  y += 5
+  y = drawCheckboxRow(doc, margin + 2, y, ['Turnike', 'Hava yolu', 'IV'], right)
+  y += 4
+
+  y = drawSectionTitle(doc, margin, pageW, 'Ek Notlar', y)
+  for (let i = 0; i < 3; i++) {
+    drawFormFieldLine(doc, margin, y + 4, right - margin)
+    y += 8
+  }
+
+  stampPdfFooters(doc, formId)
+  doc.save(`AUDAZ-CASEVAC-MIST-${formId}.pdf`)
+  return formId
 }
 
 /** DD FORM 1380 boş taktik saha kartı — jsPDF */
@@ -326,92 +463,4 @@ export async function generateTcccFieldCardTemplate() {
   stampPdfFooters(doc, formId)
   doc.save(`AUDAZ-TCCC-Saha-Karti-${formId}.pdf`)
   return formId
-}
-
-/**
- * @param {'nine_line' | 'casevac_mist'} templateId
- */
-export function openTcccFieldPdfTemplate(templateId) {
-  const html =
-    templateId === 'casevac_mist' ? buildCasevacMistTemplateHtml() : buildNineLineTemplateHtml()
-  const win = window.open('', '_blank', 'noopener,noreferrer')
-  if (!win) return
-  win.document.open()
-  win.document.write(html)
-  win.document.close()
-  win.focus()
-  win.onload = () => {
-    win.print()
-  }
-}
-
-function buildHtmlHeader(title) {
-  const now = new Date().toLocaleString('tr-TR')
-  return `<div class="header-bar">
-  <div class="header-left">
-    <div class="brand">AUDAZ TACTICAL</div>
-    <div class="sub">Operasyonel Kayıt Sistemi</div>
-  </div>
-  <div class="header-right">
-    <div class="title">${title}</div>
-    <div class="date">${now}</div>
-  </div>
-</div>`
-}
-
-function buildNineLineTemplateHtml() {
-  const styles = buildPdfHtmlBaseStyles()
-  const header = buildHtmlHeader('NATO 9-LINE MEDEVAC TAHLİYE TALEBİ · BOŞ ŞABLON')
-  return `<!DOCTYPE html>
-<html lang="tr">
-<head>
-<meta charset="utf-8"/>
-<title>9-LINE MEDEVAC ŞABLONU</title>
-<style>${styles}</style>
-</head>
-<body>
-${header}
-<div class="page">
-<p class="line"><strong>HAT 1 · KOORDİNAT (MGRS):</strong><div class="blank"></div></p>
-<p class="line"><strong>HAT 2 · FREKANS / ÇAĞRI ADI:</strong><div class="blank"></div></p>
-<p class="line"><strong>HAT 3 · ACİLİYET (A/B/C/D/E):</strong><div class="blank"></div></p>
-<p class="line"><strong>HAT 4 · ÖZEL EKİPMAN:</strong><div class="blank"></div></p>
-<p class="line"><strong>HAT 5 · TAŞIMA TİPİ (L/A):</strong><div class="blank"></div></p>
-<p class="line"><strong>HAT 6 · LZ GÜVENLİK (N/P/E/X):</strong><div class="blank"></div></p>
-<p class="line"><strong>HAT 7 · İŞARETLEME:</strong><div class="blank"></div></p>
-<p class="line"><strong>HAT 8 · UYRUK / STATÜ:</strong><div class="blank"></div></p>
-<p class="line"><strong>HAT 9 · KBRN / ARAZİ:</strong><div class="blank"></div></p>
-<div class="footer"><span>AUDAZ TACTICAL · TCCC PDF ŞABLON MERKEZİ</span><span>YAZDIR → PDF OLARAK KAYDET</span></div>
-</div>
-</body>
-</html>`
-}
-
-function buildCasevacMistTemplateHtml() {
-  const styles = buildPdfHtmlBaseStyles()
-  const header = buildHtmlHeader('CASEVAC · MIST PROTOKOLÜ · SICAK BÖLGE TAHLİYE ŞABLONU')
-  return `<!DOCTYPE html>
-<html lang="tr">
-<head>
-<meta charset="utf-8"/>
-<title>CASEVAC MIST ŞABLONU</title>
-<style>${styles}</style>
-</head>
-<body>
-${header}
-<div class="page">
-<p class="line"><strong>TOPLAM YARALI SAYISI:</strong><div class="blank"></div></p>
-<p class="line"><strong>M — METRIC / YARALANMA TİPİ:</strong><div class="blank"></div>
-<span class="opts">□ Kurşun yarası &nbsp; □ Şarapnel &nbsp; □ Amputasyon &nbsp; □ Yanık</span></p>
-<p class="line"><strong>I — INJURY / YARANIN YERİ:</strong><div class="blank"></div>
-<span class="opts">□ Baş/Boyun &nbsp; □ Göğüs &nbsp; □ Batın &nbsp; □ Uzuvlar</span></p>
-<p class="line"><strong>S — SIGNS / VİTAL:</strong><div class="blank"></div>
-<span class="opts">□ Bilinç Açık &nbsp; □ Bilinç Kapalı &nbsp; □ Şok VAR &nbsp; □ Şok YOK</span></p>
-<p class="line"><strong>T — TREATMENT / MÜDAHALE:</strong><div class="blank"></div>
-<span class="opts">□ Turnike &nbsp; □ Göğüs Mührü &nbsp; □ Hava Yolu &nbsp; □ Morfin</span></p>
-<p class="line"><strong>SICAK BÖLGE ÇAĞRI / FREKANS:</strong><div class="blank"></div></p>
-<div class="footer"><span>AUDAZ TACTICAL · CASEVAC MIST ŞABLONU · 30 SN İLETİM PENCERESİ</span><span>YAZDIR → PDF</span></div>
-</div>
-</body>
-</html>`
 }
