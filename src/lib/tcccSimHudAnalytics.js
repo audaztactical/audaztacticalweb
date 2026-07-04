@@ -41,7 +41,7 @@ export function getTcccSimRejectionSnippet(row) {
   const reasons = getStoredRejectionReasons(row)
   if (reasons.length > 0) return reasons[0].replace(/^•\s*/, '')
   if (isTcccSimulationFailed(row)) {
-    return invStr(row.medevacFailureReason).trim() || 'TRANSMISSION FAILURE'
+    return invStr(row.medevacFailureReason).trim() || 'İletim hatası'
   }
   return 'TEMİZ / HATA YOK'
 }

@@ -536,7 +536,7 @@ export const DISCIPLINE_OPTIONS = [
   { id: 'atis', label: 'ATIŞ BECERİSİ (ATIS)' },
   { id: 'cqb', label: 'YAKIN MESAFE MUHAREBESİ (CQB)' },
   { id: 'tccc', label: 'TAKTİK SAĞLIK (TCCC)' },
-  { id: 'fof', label: 'FORCE-ON-FORCE (FOF)' },
+  { id: 'fof', label: 'KUVVET KARŞILAŞMASI (FOF)' },
   { id: 'vbss', label: 'VBSS / MARITIME (VBSS)' },
 ]
 

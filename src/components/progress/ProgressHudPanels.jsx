@@ -201,7 +201,7 @@ export function TcccHudTooltipContent({ logRow }) {
               ))
             ) : (
               <p className="mt-1 border-t border-red-900/50 pt-1 font-mono text-[10px] uppercase text-red-400">
-                • TRANSMISSION FAILURE · AYRINTI ARŞİVLENMEDİ
+                • İletim hatası · ayrıntı arşivlenmedi
               </p>
             )}
           </div>
@@ -1141,9 +1141,9 @@ export default function ProgressHudPanels({
       <header className="flex items-center gap-2 border-b border-emerald-900/30 pb-2">
         <Radio className="size-4 text-emerald-500" aria-hidden />
         <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-emerald-400/90 sm:text-[10px] sm:tracking-[0.28em]">
-          İSTİHBARAT ANALİTİK MERKEZİ · HUD MODÜLLERİ
+          Analitik Modüller
           {focusedLogId ? (
-            <span className="ml-2 text-amber-400/90">· DRILL-DOWN AKTİF</span>
+            <span className="ml-2 text-amber-400/90">· detay modu</span>
           ) : null}
         </p>
       </header>

@@ -191,7 +191,7 @@ function OrsHudReadout({ score, loading = false, penaltyCount = 0, tcccPenaltyAc
       </p>
       {tcccPenaltyActive && !loading ? (
         <p className="mt-1 font-mono text-[8px] font-bold uppercase tracking-wider text-rose-400 animate-pulse">
-          HATA_KODU: TCCC EŞİK ALTINDA · −14 ORS
+          TCCC eşik altında · −14 ORS
         </p>
       ) : null}
     </div>
@@ -250,6 +250,14 @@ function KpiCard({ label, value, sub, accent = 'emerald', progress, animate = fa
 
 /** @typedef {typeof EXPANDED_HUD_PANEL_IDS[number]} ExpandedHudPanelId */
 
+/** @param {string} title */
+function humanizeFeedTitle(title) {
+  return String(title ?? '')
+    .replace(/\s·\sTRANSMISSION OK\b/gi, ' · İletim Aktif')
+    .replace(/\bTRANSMISSION OK\b/gi, 'İletim Aktif')
+    .replace(/\bTRANSMISSION FAILURE\b/gi, 'İletim Hatası')
+}
+
 /**
  * @param {{ feed: { id: string; tag: string; title: string; timestampMs: number; success: number | null; unverified?: boolean }[] }} props
  */
@@ -295,7 +303,7 @@ function ActivityFeedPanel({ feed, selectedLogId = null, onSelectLog }) {
               [{item.tag}]
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate font-mono text-[11px] font-bold uppercase text-app-text">{item.title}</p>
+              <p className="truncate font-mono text-[11px] font-bold uppercase text-app-text">{humanizeFeedTitle(item.title)}</p>
               <p className="mt-0.5 font-mono text-[9px] text-app-text/55">{when}</p>
               {item.unverified ? (
                 <p className="mt-1 font-mono text-[8px] font-bold uppercase tracking-wider text-amber-500/85">
@@ -558,9 +566,10 @@ export default function ProgressTracker({ onBack }) {
   const syncing = waitingUser || logsLoading
 
   return (
+    <div className="px-4 sm:px-6 md:px-8">
     <PageShell
       title="Başarı Takibi"
-      subtitle="TACTICAL ANALYTICS HUB · OPERASYONEL PERFORMANS İSTİHBARATI"
+      subtitle="Kişisel Performans Analizi"
       headerAction={<BarChart2 className="size-6 text-emerald-500/80" strokeWidth={1.5} aria-hidden />}
     >
       <div className="space-y-5 font-mono text-slate-100">
@@ -590,7 +599,7 @@ export default function ProgressTracker({ onBack }) {
         {syncing ? (
           <div className="space-y-4 animate-pulse">
             <p className="font-mono text-[10px] font-bold uppercase tracking-[0.28em] text-emerald-500/80">
-              SYNCHRONIZING OPERATOR DATA...
+              Operatör verisi senkronize ediliyor…
             </p>
             <div className="h-14 rounded-lg border border-slate-800 bg-slate-900/50" />
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -649,7 +658,7 @@ export default function ProgressTracker({ onBack }) {
                       </p>
                     ) : (
                       <p className="font-mono text-[8px] uppercase tracking-wider text-emerald-600/70">
-                        {subTopics.length - 1} GÖREV · RANGE_LOGS SENKRON
+                        {subTopics.length - 1} görev · senkron
                       </p>
                     )
                   }
@@ -711,10 +720,10 @@ export default function ProgressTracker({ onBack }) {
                 value={`%${displayOverallSuccess}`}
                 sub={
                   focusedLog
-                    ? 'TEK OTURUM · LOCK_ON_TARGET'
+                    ? 'Tek oturum · hedef kilitli'
                     : discipline === 'all'
-                      ? `${filteredLogs.length} OTURUM · ATIS+CQB+FOF+TCCC`
-                      : `${filteredLogs.length} OTURUM · FİLTRELİ`
+                      ? `${filteredLogs.length} oturum · Tüm Kategoriler`
+                      : `${filteredLogs.length} oturum · filtrelenmiş`
                 }
                 progress={displayOverallSuccess}
                 animate={barsAnimate}
@@ -723,7 +732,7 @@ export default function ProgressTracker({ onBack }) {
               <KpiCard
                 label="TOPLAM KAYITLI OLAY"
                 value={displayStats.totalEvents}
-                sub={focusedLog ? 'İZOLE OTURUM' : 'RANGE_LOGS · FIRESTORE'}
+                sub={focusedLog ? 'İzole oturum' : 'Kayıtlı oturumlar'}
                 accent="slate"
               />
               <KpiCard
@@ -741,7 +750,7 @@ export default function ProgressTracker({ onBack }) {
                     ? focusedLog
                       ? 'BU GÖREVDE İHLAL'
                       : 'GÜVENLİK İHLALİ TESPİT EDİLDİ'
-                    : 'EŞİK İÇİ · TEMİZ'
+                    : 'Hedef Dahilinde'
                 }
                 accent="rose"
                 warning={displayStats.criticalErrors > 0}
@@ -769,7 +778,7 @@ export default function ProgressTracker({ onBack }) {
                 <KpiCard
                   label="FOF BAŞARI ORANI"
                   value={`%${displayStats.disciplineSuccess.fof}`}
-                  sub={`${displayStats.categoryTotals?.fof ?? 0} OTURUM · FORCE-ON-FORCE`}
+                  sub={`${displayStats.categoryTotals?.fof ?? 0} oturum · FOF`}
                   progress={displayStats.disciplineSuccess.fof}
                   animate={barsAnimate}
                   accent="slate"
@@ -841,15 +850,15 @@ export default function ProgressTracker({ onBack }) {
               <div className="flex flex-wrap items-center gap-4 text-[9px] uppercase tracking-wider text-app-text/45">
                 <span className="inline-flex items-center gap-1.5">
                   <Target className="size-3.5 text-emerald-500" aria-hidden />
-                  {isConfigured ? 'FIRESTORE · CANLI' : 'OFFLINE MOD'}
+                  {isConfigured ? 'Canlı bağlantı' : 'Çevrimdışı'}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <Shield className="size-3.5 text-amber-500" aria-hidden />
-                  TOPLAM HAM: {logs.length}
+                  Toplam: {logs.length}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <Award className="size-3.5 text-rose-500" aria-hidden />
-                  FİLTRELİ: {filteredLogs.length}
+                  Filtrelenen: {filteredLogs.length}
                 </span>
               </div>
             </div>
@@ -857,5 +866,6 @@ export default function ProgressTracker({ onBack }) {
         )}
       </div>
     </PageShell>
+    </div>
   )
 }
