@@ -6,7 +6,11 @@ import SimulationHistory from './SimulationHistory'
 import TcccMedicalHistoryTab from './TcccMedicalHistoryTab'
 import { CASUALTY_DD1380_INITIAL } from '../../lib/casualtyCardPayload'
 import { submitCasualtyDd1380Card } from '../../lib/casualtyCardSubmit'
-import { openTcccFieldPdfTemplate } from '../../lib/tcccFieldPdfTemplates'
+import {
+  generateDD1380BlankTemplate,
+  generateTcccFieldCardTemplate,
+  openTcccFieldPdfTemplate,
+} from '../../lib/tcccFieldPdfTemplates'
 
 /** @typedef {'march_dd1380' | 'medevac_9line' | 'simulation_history' | 'casualty_archive' | 'field_templates'} DocTab */
 
@@ -26,9 +30,18 @@ const FIELD_TEMPLATES = [
 ]
 
 /** @param {string} templateId */
-function handleTemplateDownload(templateId) {
+async function handleTemplateDownload(templateId) {
   if (templateId === 'nine_line') openTcccFieldPdfTemplate('nine_line')
   else if (templateId === 'casevac_mist') openTcccFieldPdfTemplate('casevac_mist')
+  else if (templateId === 'dd1380') await generateDD1380BlankTemplate()
+  else if (templateId === 'tccc_card') await generateTcccFieldCardTemplate()
+}
+
+const TEMPLATE_BUTTON_LABELS = {
+  dd1380: '📄 DD FORM 1380 İNDİR',
+  nine_line: '📄 9-LINE TAHLİYE',
+  casevac_mist: '📄 CASEVAC MIST ŞABLONU',
+  tccc_card: '📄 TCCC SAHA KARTI İNDİR',
 }
 
 const tabBtnClass = (on) =>
@@ -68,6 +81,7 @@ export default function TcccMarchDocumentsPanel({
   const [savingCard, setSavingCard] = useState(false)
   const [saveCardOk, setSaveCardOk] = useState(false)
   const [saveCardError, setSaveCardError] = useState(/** @type {string | null} */ (null))
+  const [templateBusy, setTemplateBusy] = useState(/** @type {string | null} */ (null))
 
   const patchDd1380 = (/** @type {Partial<typeof CASUALTY_DD1380_INITIAL>} */ patch) => {
     setDd1380Form((f) => ({ ...f, ...patch }))
@@ -165,7 +179,7 @@ export default function TcccMarchDocumentsPanel({
             </p>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {FIELD_TEMPLATES.map((tpl) => {
-                const pdfReady = tpl.id === 'nine_line' || tpl.id === 'casevac_mist'
+                const busy = templateBusy === tpl.id
                 return (
                   <div
                     key={tpl.id}
@@ -179,25 +193,28 @@ export default function TcccMarchDocumentsPanel({
                     </div>
                     <button
                       type="button"
-                      disabled={!pdfReady}
-                      onClick={() => handleTemplateDownload(tpl.id)}
+                      disabled={busy}
+                      onClick={async () => {
+                        setTemplateBusy(tpl.id)
+                        try {
+                          await handleTemplateDownload(tpl.id)
+                        } finally {
+                          setTemplateBusy(null)
+                        }
+                      }}
                       className={[
                         'mt-4 w-full rounded border px-2 py-2 font-mono text-[9px] font-bold uppercase tracking-wider transition',
-                        pdfReady
-                          ? 'border-red-800/60 bg-red-950/40 text-red-300 hover:border-red-600/60 hover:bg-red-950/60'
-                          : 'border-slate-800 bg-slate-900 text-app-text/45',
+                        busy
+                          ? 'border-slate-800 bg-slate-900 text-app-text/45'
+                          : 'border-red-800/60 bg-red-950/40 text-red-300 hover:border-red-600/60 hover:bg-red-950/60',
                       ].join(' ')}
                       title={
-                        pdfReady
+                        tpl.id === 'nine_line' || tpl.id === 'casevac_mist'
                           ? 'Yazdır ile PDF olarak kaydedin'
-                          : 'Şablon dosyası yakında eklenecek'
+                          : 'PDF şablonu indir'
                       }
                     >
-                      {pdfReady
-                        ? tpl.id === 'casevac_mist'
-                          ? '📄 CASEVAC MIST ŞABLONU'
-                          : '📄 9-LINE TAHLİYE'
-                        : 'İNDİR · YAKINDA'}
+                      {busy ? 'HAZIRLANIYOR…' : TEMPLATE_BUTTON_LABELS[tpl.id] ?? 'İNDİR'}
                     </button>
                   </div>
                 )
