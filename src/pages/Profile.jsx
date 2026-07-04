@@ -9,7 +9,6 @@ import {
   updateProfile,
 } from 'firebase/auth'
 import { Camera, KeyRound, Link2, Phone, Shield } from 'lucide-react'
-import HudFluffDecor from '../components/dashboard/HudFluffDecor'
 import AmberAlert from '../components/common/AmberAlert'
 import TacticalUploadProgress from '../components/common/TacticalUploadProgress'
 import OperatorAvatar from '../components/ui/OperatorAvatar'
@@ -139,7 +138,7 @@ function roleLabel(role) {
 
 function DataLoadingScreen() {
   return (
-    <div className="dashboard-hud-shell relative mx-auto flex min-h-[50vh] max-w-[1480px] flex-col items-center justify-center gap-3 px-5 py-5 pt-12 sm:px-6 sm:pt-14 md:px-8">
+    <div className="dashboard-hud-shell relative mx-auto flex min-h-[50vh] max-w-[1480px] flex-col items-center justify-center gap-3 px-6 py-5 pt-12 sm:px-8 sm:pt-14">
       <div
         className="relative h-11 w-full max-w-md overflow-hidden rounded-lg border border-[#004DFF]/35 bg-[#2A2D34]/60 px-4 backdrop-blur-md"
         role="status"
@@ -605,23 +604,23 @@ export default function Profile() {
   const criticalPulse = ohpScore != null && ohpScore < 50
 
   return (
-    <div className="dashboard-hud-shell relative mx-auto max-w-[1480px] px-5 py-5 pt-12 sm:px-6 sm:pt-14 md:px-8">
-      <HudFluffDecor />
-
-      <div className="relative z-[2] mb-4 flex flex-wrap items-end justify-between gap-3 border-b border-white/10 pb-3">
+    <div className="dashboard-hud-shell relative mx-auto max-w-[1480px] px-6 py-5 pt-12 sm:px-8 sm:pt-14">
+      <div className="relative mb-6 flex flex-wrap items-end gap-4 border-b border-white/10 pb-3">
         <div>
           <p className="font-mono-technical text-[9px] font-semibold uppercase tracking-[0.34em] text-app-text/55">Operatör Profili</p>
-          <h1 className="op-terminal-title mt-1 text-sm tracking-[0.2em]">Profil</h1>
-        </div>
-        <div className="font-mono-technical text-[9px] uppercase tracking-wider text-app-text/45">
-          OHP{' '}
-          <span style={{ color: accent.rgb, textShadow: `0 0 8px ${accent.rgb}55` }}>{ohpScore != null ? `${ohpScore}` : '—'}</span>
-          <span className="text-app-text/45">/100</span>
+          <div className="mt-1 flex flex-wrap items-baseline gap-3">
+            <h1 className="op-terminal-title text-sm tracking-[0.2em]">Profil</h1>
+            <span className="font-mono-technical text-[9px] uppercase tracking-wider text-app-text/45">
+              OHP{' '}
+              <span style={{ color: accent.rgb, textShadow: `0 0 8px ${accent.rgb}55` }}>{ohpScore != null ? `${ohpScore}` : '—'}</span>
+              <span className="text-app-text/45">/100</span>
+            </span>
+          </div>
         </div>
       </div>
 
       {!rawUsername && user?.uid ? (
-        <div className="relative z-[2] mb-4 rounded-lg border border-amber-500/40 bg-amber-950/30 px-4 py-3">
+        <div className="relative mb-6 rounded-lg border border-amber-500/40 bg-amber-950/30 px-4 py-3">
           <p className="font-mono-technical text-xs font-bold uppercase tracking-wider text-amber-300">
             Profil kaydı eksik
           </p>
@@ -662,9 +661,9 @@ export default function Profile() {
         </div>
       ) : null}
 
-      <div className={`grid gap-4 lg:grid-cols-[minmax(220px,280px)_1fr] ${criticalPulse ? 'rounded-sm ring-1 ring-red-500/20' : ''}`}>
-        <aside className="op-identity-sticky">
-          <section className="op-terminal-card">
+      <div className={`grid gap-6 lg:grid-cols-[18rem_minmax(0,1fr)] lg:items-stretch ${criticalPulse ? 'rounded-sm ring-1 ring-red-500/20' : ''}`}>
+        <aside className="op-identity-sticky w-full lg:w-72">
+          <section className="op-terminal-card h-full">
             <header className="op-terminal-card__head">
               <TerminalTitle>Taktik Kimlik</TerminalTitle>
             </header>
@@ -751,7 +750,7 @@ export default function Profile() {
           </section>
         </aside>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid min-w-0 flex-1 gap-4 md:grid-cols-2">
           <OpTacticalCard title="Operatör Özeti" wide>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <DataStat label="Tamamlanan görev" value={missionN} accentRgb={accent.rgb} fillPct={statFillPct(missionN, statMax)} />

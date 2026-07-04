@@ -2557,7 +2557,7 @@
 .op-identity-sticky {
   position: sticky;
   top: 4.5rem;
-  align-self: start;
+  align-self: stretch;
 }
 
 /* MÜŞTEREK HAREKAT KONSOLU — ince taktik sütun kaydırması */
