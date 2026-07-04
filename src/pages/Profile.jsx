@@ -189,7 +189,7 @@ function DossierField({ label, children }) {
 function TerminalTitle({ children }) {
   return (
     <div className="op-terminal-title-wrap">
-      <h2 className="op-terminal-title text-sm uppercase tracking-wider">{children}</h2>
+      <h2 className="op-terminal-title text-xs uppercase tracking-wider">{children}</h2>
       <span className="op-terminal-scanner" aria-hidden />
     </div>
   )
@@ -224,7 +224,7 @@ function DataStat({ label, value, accentRgb, fillPct = 50 }) {
     <div className="op-data-stat group">
       <div className="op-data-stat__frame">
         <p className="op-data-stat__label">{label}</p>
-        <p className="op-data-stat__value text-3xl" style={{ color: accentRgb, textShadow: `0 0 10px ${accentRgb}44` }}>
+        <p className="op-data-stat__value text-2xl" style={{ color: accentRgb, textShadow: `0 0 10px ${accentRgb}44` }}>
           {value}
         </p>
         <div className="op-data-stat__bar-track" aria-hidden>
@@ -442,7 +442,7 @@ export default function Profile() {
   const googleLinked = hasGoogleProvider(sessionUser)
 
   const inputTactical =
-    'w-full border-0 border-b border-white/20 bg-transparent py-1.5 font-mono-technical text-base text-slate-100 outline-none ring-0 transition placeholder:text-app-text/45 focus:border-b'
+    'w-full border-0 border-b border-white/20 bg-transparent py-1.5 font-mono-technical text-sm text-slate-100 outline-none ring-0 transition placeholder:text-app-text/45 focus:border-b'
 
   const secPanelClass = 'rounded-md border border-[#004DFF]/28 bg-[#2A2D34]/88'
 
@@ -674,9 +674,9 @@ export default function Profile() {
             <header className="op-terminal-card__head shrink-0">
               <TerminalTitle>Taktik Kimlik</TerminalTitle>
             </header>
-            <div className="op-terminal-card__body space-y-4 text-base">
+            <div className="op-terminal-card__body space-y-4 text-sm">
               <div className="op-avatar-frame mx-auto w-auto max-w-none lg:mx-0">
-                <div className="op-avatar-frame__inner mx-auto flex h-48 w-48 items-center justify-center lg:mx-0">
+                <div className="op-avatar-frame__inner mx-auto flex h-36 w-36 items-center justify-center lg:mx-0">
                   <span className="op-avatar-frame__corner op-avatar-frame__corner--tl" aria-hidden />
                   <span className="op-avatar-frame__corner op-avatar-frame__corner--tr" aria-hidden />
                   <span className="op-avatar-frame__corner op-avatar-frame__corner--bl" aria-hidden />
@@ -734,12 +734,12 @@ export default function Profile() {
               <div className="space-y-1 border-t border-white/10 pt-3">
                 <p className="font-mono-technical text-sm uppercase tracking-[0.28em] text-app-text/55">Çağrı adı</p>
                 <p
-                  className="font-mono-technical text-3xl font-bold uppercase leading-tight tracking-tight"
+                  className="font-mono-technical text-2xl font-bold uppercase leading-tight tracking-tight"
                   style={{ color: accent.rgb, textShadow: `0 0 14px ${accent.rgb}55` }}
                 >
                   {callsign}
                 </p>
-                <p className="font-mono-technical text-base font-semibold text-app-text/70">{roleLabel(userData?.role)}</p>
+                <p className="font-mono-technical text-sm font-semibold text-app-text/70">{roleLabel(userData?.role)}</p>
                 {showPricingLink ? (
                   <Link
                     to="/fiyatlandirma"
@@ -770,7 +770,7 @@ export default function Profile() {
                 <select
                   value={bloodOptions.includes(bloodDraft) ? bloodDraft : 'BELİRTİLMEDİ'}
                   onChange={(e) => setBloodDraft(e.target.value)}
-                  className="dossier-blood-select min-w-0 flex-1 rounded-sm border border-accent/35 py-2 pl-2 pr-1 font-mono-technical text-base font-medium text-app-text outline-none"
+                  className="dossier-blood-select min-w-0 flex-1 rounded-sm border border-accent/35 py-2 pl-2 pr-1 font-mono-technical text-sm font-medium text-app-text outline-none"
                 >
                   {bloodOptions.map((opt) => (
                     <option key={opt} value={opt}>
@@ -794,14 +794,14 @@ export default function Profile() {
           </OpTacticalCard>
 
           <OpTacticalCard title="Canlı Akış">
-            <ul className="space-y-2 text-base">
+            <ul className="space-y-2 text-sm">
               {activityTop3.length === 0 ? (
                 <li className="font-mono-technical text-sm text-app-text/45">Henüz aktivite yok</li>
               ) : (
                 activityTop3.map((row, i) => (
                   <li key={`${row.ms}-${i}-${row.line.slice(0, 12)}`} className="flex flex-col gap-1 border-b border-white/[0.06] pb-2 last:border-0 last:pb-0">
                     <span className="font-mono-technical text-xs tabular-nums text-[#004DFF]/80">{fmtActivityTs(row.ms)}</span>
-                    <span className="font-mono-technical text-base leading-snug text-app-text/90">{row.line}</span>
+                    <span className="font-mono-technical text-sm leading-snug text-app-text/90">{row.line}</span>
                   </li>
                 ))
               )}
@@ -811,7 +811,7 @@ export default function Profile() {
 
         <div className="flex min-w-0 w-full shrink-0 flex-col gap-6 lg:w-80">
           <OpTacticalCard title="Kayıt Bilgileri" className="min-h-0 flex-1">
-            <dl className="grid gap-0 font-mono-technical text-base text-app-text/70">
+            <dl className="grid gap-0 font-mono-technical text-sm text-app-text/70">
               <div className="flex justify-between gap-2 border-b border-white/[0.05] py-1.5">
                 <dt className="text-app-text/45">@kullanıcı adı</dt>
                 <dd className="truncate text-app-text/90">{rawUsername ? `@${rawUsername}` : '—'}</dd>
