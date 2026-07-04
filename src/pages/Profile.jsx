@@ -129,16 +129,21 @@ function ohpAccent(score) {
 
 /** @param {unknown} role */
 function roleLabel(role) {
-  const r = String(role || 'operator').toLowerCase()
-  if (r === 'admin') return 'YÖNETİCİ'
-  if (r === 'commander' || r === 'komutan') return 'KOMUTAN'
-  if (r === 'operator') return 'OPERATÖR'
-  return String(role || 'OPERATÖR').toUpperCase()
+  const r = String(role || 'member')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '_')
+  if (r === 'admin') return 'Yönetici'
+  if (r === 'instructor') return 'Eğitmen'
+  if (r === 'premium_member' || r === 'premium') return 'Premium Üye'
+  if (r === 'member' || r === 'operator' || r === 'operatör') return 'Üye'
+  if (r === 'commander' || r === 'komutan' || r === 'command' || r === 'cmd') return 'Komutan'
+  return 'Üye'
 }
 
 function DataLoadingScreen() {
   return (
-    <div className="dashboard-hud-shell relative mx-auto flex min-h-[50vh] max-w-[1480px] flex-col items-center justify-center gap-3 px-6 py-5 pt-12 sm:px-8 sm:pt-14">
+    <div className="dashboard-hud-shell relative mx-auto flex min-h-[50vh] max-w-[1480px] flex-col items-center justify-center gap-3 px-6 pb-5 pt-6 sm:px-8 lg:px-10">
       <div
         className="relative h-11 w-full max-w-md overflow-hidden rounded-lg border border-[#004DFF]/35 bg-[#2A2D34]/60 px-4 backdrop-blur-md"
         role="status"
@@ -604,7 +609,7 @@ export default function Profile() {
   const criticalPulse = ohpScore != null && ohpScore < 50
 
   return (
-    <div className="dashboard-hud-shell relative mx-auto max-w-[1480px] px-6 py-5 pt-12 sm:px-8 sm:pt-14">
+    <div className="dashboard-hud-shell relative mx-auto max-w-[1480px] px-6 pb-5 pt-6 sm:px-8 lg:px-10">
       <div className="relative mb-6 flex flex-wrap items-end gap-4 border-b border-white/10 pb-3">
         <div>
           <p className="font-mono-technical text-[9px] font-semibold uppercase tracking-[0.34em] text-app-text/55">Operatör Profili</p>
