@@ -134,7 +134,7 @@ export default function LandingPage() {
       <div className="app-atmosphere" aria-hidden />
 
       <header className="relative z-10 border-b border-emerald-500/15 bg-black/50 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4 sm:px-8">
           <Link
             to="/"
             state={{ skipIntro: true }}
@@ -189,7 +189,7 @@ export default function LandingPage() {
 
       <main className="relative z-10">
         {/* Hero + operasyon grid */}
-        <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
+        <section className="mx-auto max-w-7xl px-6 py-10 sm:px-8 sm:py-14">
           <div className="text-center lg:text-left">
             <p className="font-mono-technical text-xs font-semibold uppercase tracking-[0.4em] text-emerald-400/90">
               <span className="text-app-text/30">[ </span>
@@ -217,7 +217,7 @@ export default function LandingPage() {
 
         {/* HABER AKIŞI / DOKTRİN + haber teaser ızgarası */}
         <section className="border-t border-emerald-500/10 bg-black/25 py-14">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <div className="mx-auto max-w-7xl px-6 sm:px-8">
             <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
               <div className="max-w-3xl">
                 <div className="flex flex-wrap items-center gap-3">
@@ -235,7 +235,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <footer className="border-t border-white/10 py-8 text-center">
+        <footer className="border-t border-white/10 px-6 py-8 text-center sm:px-8">
           <p className="font-mono-technical text-[10px] uppercase tracking-widest text-app-text/45">
             © AUDAZ TACTICAL – YETKİLİ KULLANIM
           </p>

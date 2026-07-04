@@ -12,13 +12,13 @@ import {
 
 /** @type {SchematicNode[]} */
 const NODES = [
-  { id: 'siber_savunma', label: 'SIBER_SAVUNMA', sub: 'IDS · FW · AES-256', x: '50%', y: '12%', accent: 'green' },
-  { id: 'istihbarat', label: 'KÜRESEL_HABER', sub: 'OSINT · FEED', x: '82%', y: '22%', accent: 'cyan' },
-  { id: 'muhabere', label: 'MUHABERE', sub: 'TAC-03 · ŞİFRELİ', x: '14%', y: '38%', accent: 'gold' },
-  { id: 'task_matrix', label: 'TASK_MATRIX', sub: 'GÖREV · SENKRON', x: '50%', y: '42%', accent: 'green' },
-  { id: 'cephanelik', label: 'CEPHANELIK', sub: 'ENVANTER · %87', x: '86%', y: '48%', accent: 'gold' },
-  { id: 'tccc', label: 'TCCC', sub: 'MEDEVAC · 9-LINE', x: '18%', y: '68%', accent: 'cyan' },
-  { id: 'ors', label: 'ORS', sub: 'RİSK · SKOR', x: '78%', y: '72%', accent: 'green' },
+  { id: 'siber_savunma', label: 'Siber Savunma', sub: 'Tehdit kalkanı', x: '50%', y: '12%', accent: 'green' },
+  { id: 'istihbarat', label: 'Küresel Haber', sub: 'Canlı akış', x: '82%', y: '22%', accent: 'cyan' },
+  { id: 'muhabere', label: 'Muhabere', sub: 'Şifreli', x: '14%', y: '38%', accent: 'gold' },
+  { id: 'task_matrix', label: 'Görev Merkezi', sub: 'Görev · senkron', x: '50%', y: '42%', accent: 'green' },
+  { id: 'cephanelik', label: 'Cephanelik', sub: 'Envanter · %87', x: '86%', y: '48%', accent: 'gold' },
+  { id: 'tccc', label: 'TCCC', sub: 'Tahliye', x: '18%', y: '68%', accent: 'cyan' },
+  { id: 'ors', label: 'ORS', sub: 'Risk Skoru', x: '78%', y: '72%', accent: 'green' },
 ]
 
 const EDGES = [
@@ -46,25 +46,15 @@ const TASK_ROWS = [
 ]
 
 const OPERATOR_TILES = [
-  { to: '/dashboard', label: 'KOMUTA MERKEZİ', sub: 'ORS · görev · envanter', icon: LayoutDashboard },
-  { to: '/antrenman', label: 'ANTRENMAN', sub: 'ATIŞ · CQB · FoF', icon: Crosshair },
-  { to: '/mesajlar', label: 'MUHABERE', sub: 'Taktik kanallar', icon: MessageSquare },
-  { to: '/tccc', label: 'TCCC · SAĞLIK', sub: 'Medevac · IFAK', icon: HeartPulse },
-  { to: '/cephanelik', label: 'CEPHANELİK', sub: 'Silah · mühimmat', icon: Shield },
+  { to: '/dashboard', label: 'Ana Sayfa', sub: 'ORS · envanter · hazırlık', icon: LayoutDashboard },
+  { to: '/antrenman', label: 'Antrenman', sub: 'Atış · CQB · FoF', icon: Crosshair },
+  { to: '/mesajlar', label: 'Muhabere', sub: 'Taktik kanallar', icon: MessageSquare },
+  { to: '/tccc', label: 'TCCC · Sağlık', sub: 'Tahliye · IFAK', icon: HeartPulse },
+  { to: '/cephanelik', label: 'Cephanelik', sub: 'Silah · mühimmat', icon: Shield },
 ]
 
-const TICKER_TEXT = [
-  '>> IDS_SCAN :: NO CRITICAL THREATS',
-  '>> TASK_MATRIX :: 3 MISSIONS ACTIVE',
-  '>> MUHABERE :: ENCRYPTED CHANNEL OPEN',
-  '>> OSINT :: FEED SYNC OK',
-]
-  .concat([
-    '>> IDS_SCAN :: NO CRITICAL THREATS',
-    '>> TASK_MATRIX :: 3 MISSIONS ACTIVE',
-    '>> MUHABERE :: ENCRYPTED CHANNEL OPEN',
-    '>> OSINT :: FEED SYNC OK',
-  ])
+const TICKER_TEXT = ['Güvenli Bağlantı · Audaz Tactical', 'Operasyonel veri ağı · şifreli']
+  .concat(['Güvenli Bağlantı · Audaz Tactical', 'Operasyonel veri ağı · şifreli'])
   .join(' · ')
 
 /**
@@ -109,10 +99,7 @@ function OperatorKarargahPanel() {
     <div className="flex h-full flex-col border-t border-emerald-500/15 bg-[#050607] lg:border-l lg:border-t-0">
       <div className="border-b border-emerald-500/10 px-3 py-2 sm:px-4">
         <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.28em] text-[#ffaa00] sm:text-[9px]">
-          OPERATÖR KARARGÂH
-        </p>
-        <p className="mt-0.5 font-mono-technical text-[7px] uppercase tracking-wider text-app-text/45">
-          OTURUM AKTİF · MODÜL ERİŞİMİ
+          Operatör Karargâh
         </p>
       </div>
 
@@ -143,7 +130,7 @@ function OperatorKarargahPanel() {
 
       <div className="border-t border-emerald-500/10 px-3 py-3 sm:px-4">
         <p className="font-mono-technical text-[7px] uppercase tracking-wider text-app-text/40">
-          NODE_SYNC OK · ENCRYPTED · AUDAZ TACTICAL NET
+          Güvenli Bağlantı · Audaz Tactical
         </p>
       </div>
     </div>
@@ -227,7 +214,7 @@ function ThreatMatrixPanel() {
   return (
     <div className="border-b border-emerald-500/10 p-3 sm:p-4 md:border-b-0 md:border-r">
       <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-emerald-400 sm:text-[9px]">
-        SİBER SAVUNMA TEHDİT ANALİZ MATRİSİ
+        Siber Tehdit Matrisi
       </p>
       <div className="mt-3 inline-grid grid-cols-4 gap-1.5">
         {THREAT_MATRIX.flatMap((row, ri) =>
@@ -246,7 +233,7 @@ function ThreatMatrixPanel() {
           )),
         )}
       </div>
-      <p className="mt-2 font-mono-technical text-[7px] text-app-text/45">IDS: 0 KRİTİK · FW: AKTİF · UPTIME 99.9%</p>
+      <p className="mt-2 font-mono-technical text-[7px] text-app-text/45">Tehdit: düşük · koruma aktif</p>
     </div>
   )
 }
@@ -289,8 +276,8 @@ function NetworkStatusPanel() {
           <span className="text-emerald-400">ŞİFRELİ</span>
         </li>
         <li className="flex justify-between gap-2">
-          <span>OSINT feed</span>
-          <span className="text-emerald-400">CANLI</span>
+          <span>Küresel haber</span>
+          <span className="text-emerald-400">Canlı</span>
         </li>
         <li className="flex justify-between gap-2">
           <span>ORS motoru</span>
@@ -334,7 +321,7 @@ export default function LandingHeroGraphic({ expanded = false }) {
           AUDAZ · TAKTİK VERİ TOPOLOJİSİ
         </p>
         <p className="mt-0.5 font-mono-technical text-[7px] uppercase tracking-wider text-app-text/40">
-          {expanded ? 'OTURUM AKTİF · GENİŞLETİLMİŞ TOPOLOJİ · NODE_SYNC OK' : 'CANLI · SIM · NODE_SYNC OK'}
+          {expanded ? 'Genişletilmiş topoloji · oturum aktif' : 'Canlı simülasyon'}
         </p>
       </div>
 
