@@ -159,15 +159,15 @@ export default function Dashboard() {
   }, [orsResult?.score, totalNotifications])
 
   return (
-    <div className="dashboard-hud-shell cmd-center relative mx-auto h-auto min-h-0 max-w-[1440px] px-5 py-8 pt-14 sm:px-6 md:px-8 sm:pt-16">
-      <WeaponMaintenanceAlarmFromInventory
-        inventory={inv.items}
-        rangeLogs={rangeLogs.items}
-        updateItem={inv.updateItem}
-        className="mb-6"
-      />
+    <div className="dashboard-hud-shell cmd-center relative mx-auto h-auto min-h-0 w-full max-w-[1440px] px-6 py-8 pt-14 sm:px-8 sm:pt-16 lg:px-10">
+      <div className="relative z-[1] flex flex-col gap-6">
+        <WeaponMaintenanceAlarmFromInventory
+          inventory={inv.items}
+          rangeLogs={rangeLogs.items}
+          updateItem={inv.updateItem}
+        />
 
-      <header className="relative z-[1] mb-6 flex flex-wrap items-end justify-between gap-4">
+        <header className="relative flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-2">
           <p className="cmd-kicker">Operasyonel Komuta Merkezi</p>
           <h1 className="cmd-page-title">
@@ -183,38 +183,41 @@ export default function Dashboard() {
         ) : null}
       </header>
 
-      {anyErr ? (
-        <div className="cmd-alert relative z-[1] mb-6" role="status">
-          <AlertCircle className="size-4 shrink-0 text-amber-400/90" strokeWidth={1.5} aria-hidden />
-          <span>Veri akışında geçici kesinti. Bağlantı yenileniyor.</span>
-        </div>
-      ) : null}
+        {anyErr ? (
+          <div className="cmd-alert relative" role="status">
+            <AlertCircle className="size-4 shrink-0 text-amber-400/90" strokeWidth={1.5} aria-hidden />
+            <span>Veri akışında geçici kesinti. Bağlantı yenileniyor.</span>
+          </div>
+        ) : null}
 
-      <section
-        className="cmd-focus-row relative z-[1] mb-6 grid gap-4 lg:grid-cols-[minmax(280px,0.95fr)_minmax(0,1.15fr)] lg:items-stretch"
-        aria-label="Operasyonel hazırlık ve kapasite radarı"
-      >
-        <div className="cmd-glass-panel cmd-focus-gauge flex items-center justify-center p-4 sm:p-5">
-          <OrsReadinessGauge
-            embedded
-            loading={orsLoading}
-            score={orsResult?.score ?? 0}
-            penalties={orsResult?.penalties ?? []}
-          />
-        </div>
-        <div className="cmd-glass-panel cmd-focus-radar p-4 sm:p-5">
-          <OperationalRadarChart data={radarData} loading={orsLoading} />
-        </div>
-      </section>
+        <section
+          className="cmd-focus-row grid gap-6 lg:grid-cols-2 lg:items-stretch"
+          aria-label="Operasyonel hazırlık ve kapasite radarı"
+        >
+          <div className="cmd-glass-panel cmd-focus-gauge flex h-full min-h-[320px] items-center justify-center p-5">
+            <OrsReadinessGauge
+              embedded
+              loading={orsLoading}
+              score={orsResult?.score ?? 0}
+              penalties={orsResult?.penalties ?? []}
+            />
+          </div>
+          <div className="cmd-glass-panel cmd-focus-radar flex h-full min-h-[320px] flex-col p-5">
+            <OperationalRadarChart data={radarData} loading={orsLoading} />
+          </div>
+        </section>
 
-      <div className="cmd-main-grid relative z-[1] grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(200px,220px)] xl:grid-cols-[minmax(0,1fr)_240px] lg:items-start">
-        <div className="cmd-left-column flex flex-col gap-6">
-          <DashboardSystemLog entries={logEntries} />
-        </div>
+        <div className="cmd-main-grid grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(240px,280px)] xl:grid-cols-[minmax(0,1fr)_280px] lg:items-stretch">
+          <div className="cmd-left-column flex min-h-0 flex-col">
+            <div className="cmd-log-shell flex min-h-[320px] flex-1 flex-col">
+              <DashboardSystemLog entries={logEntries} />
+            </div>
+          </div>
 
-        <aside className="cmd-right-column lg:sticky lg:top-20" aria-label="Hızlı erişim widgetları">
-          <CommandSideWidgets signalSeries={signalSeries} />
-        </aside>
+          <aside className="cmd-right-column flex flex-col lg:sticky lg:top-20 lg:self-stretch" aria-label="Hızlı erişim widgetları">
+            <CommandSideWidgets signalSeries={signalSeries} />
+          </aside>
+        </div>
       </div>
     </div>
   )

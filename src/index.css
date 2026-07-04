@@ -834,15 +834,34 @@
 }
 
 .cmd-focus-gauge {
-  min-height: 300px;
+  min-height: 320px;
 }
 
 .cmd-focus-radar {
-  min-height: 300px;
+  min-height: 320px;
 }
 
 .cmd-main-grid {
-  align-items: start;
+  align-items: stretch;
+}
+
+.cmd-center .cmd-panel {
+  border-radius: 6px;
+}
+
+.cmd-center .cmd-log-shell .cmd-panel--log {
+  display: flex;
+  min-height: 100%;
+  flex: 1;
+  flex-direction: column;
+}
+
+.cmd-center .cmd-right-column .cmd-widget-column {
+  gap: 1.5rem;
+}
+
+.cmd-center .cmd-right-column .cmd-widget-column > * {
+  margin-top: 0 !important;
 }
 
 .cmd-mission-list--spacious {
