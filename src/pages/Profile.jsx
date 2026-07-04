@@ -758,38 +758,38 @@ export default function Profile() {
 
         <div className="flex min-w-0 flex-col gap-4 lg:flex-1">
           <OpTacticalCard title="Operatör Özeti">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
               <DataStat label="Tamamlanan görev" value={missionN} accentRgb={accent.rgb} fillPct={statFillPct(missionN, statMax)} />
               <DataStat label="Eğitim sayısı" value={trainN} accentRgb={accent.rgb} fillPct={statFillPct(trainN, statMax)} />
               <DataStat label="Sıhhî olay" value={sihhiN} accentRgb={accent.rgb} fillPct={statFillPct(sihhiN, statMax)} />
             </div>
-            <div className="mt-4 rounded-sm border border-accent/22 bg-app-bg/80 p-3">
-              <p className="font-mono-technical text-sm font-bold uppercase tracking-[0.18em] text-accent/85">Kan Grubu</p>
-              <div className="mt-2 flex flex-wrap items-end gap-2">
-                <select
-                  value={bloodOptions.includes(bloodDraft) ? bloodDraft : 'BELİRTİLMEDİ'}
-                  onChange={(e) => setBloodDraft(e.target.value)}
-                  className="dossier-blood-select min-w-0 flex-1 rounded-sm border border-accent/35 py-2 pl-2 pr-1 font-mono-technical text-sm font-medium text-app-text outline-none"
-                >
-                  {bloodOptions.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={saveBloodType}
-                  disabled={bloodSaving}
-                  className="rounded-sm border border-[#004DFF]/35 bg-[#004DFF]/10 px-2.5 py-1 font-mono-technical text-xs font-bold uppercase tracking-wider text-[#5b8cff] hover:bg-[#004DFF]/18 disabled:opacity-50"
-                >
-                  {bloodSaving ? '…' : 'KAYDET'}
-                </button>
-              </div>
-              {bloodMsg ? (
-                <p className={`mt-1 font-mono-technical text-sm ${bloodMsg.type === 'ok' ? 'text-emerald-400/90' : 'text-amber-400/90'}`}>{bloodMsg.text}</p>
-              ) : null}
+          </OpTacticalCard>
+
+          <OpTacticalCard title="Kan Grubu" className="w-full max-w-xs sm:max-w-sm">
+            <div className="flex flex-wrap items-end gap-2">
+              <select
+                value={bloodOptions.includes(bloodDraft) ? bloodDraft : 'BELİRTİLMEDİ'}
+                onChange={(e) => setBloodDraft(e.target.value)}
+                className="dossier-blood-select min-w-0 w-full rounded-sm border border-accent/35 py-2 pl-2 pr-1 font-mono-technical text-sm font-medium text-app-text outline-none"
+              >
+                {bloodOptions.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={saveBloodType}
+                disabled={bloodSaving}
+                className="rounded-sm border border-[#004DFF]/35 bg-[#004DFF]/10 px-2.5 py-1 font-mono-technical text-xs font-bold uppercase tracking-wider text-[#5b8cff] hover:bg-[#004DFF]/18 disabled:opacity-50"
+              >
+                {bloodSaving ? '…' : 'KAYDET'}
+              </button>
             </div>
+            {bloodMsg ? (
+              <p className={`mt-1 font-mono-technical text-sm ${bloodMsg.type === 'ok' ? 'text-emerald-400/90' : 'text-amber-400/90'}`}>{bloodMsg.text}</p>
+            ) : null}
           </OpTacticalCard>
 
           <OpTacticalCard title="Canlı Akış">
