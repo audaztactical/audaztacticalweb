@@ -2545,7 +2545,8 @@
 }
 
 .op-security-panel--open {
-  max-height: 2400px;
+  max-height: none;
+  overflow: visible;
   opacity: 1;
 }
 
@@ -2575,6 +2576,21 @@
 .profile-dossier-shell .op-data-stat__label {
   font-size: 0.75rem;
   letter-spacing: 0.12em;
+}
+
+.profile-dossier-shell .profile-dossier-right {
+  overflow: visible;
+}
+
+.profile-dossier-shell .profile-dossier-right .op-terminal-card {
+  overflow: visible;
+  flex: none;
+}
+
+.profile-dossier-shell .profile-dossier-right .op-terminal-card__body {
+  flex: none;
+  min-height: auto;
+  overflow: visible;
 }
 
 /* MÜŞTEREK HAREKAT KONSOLU — ince taktik sütun kaydırması */

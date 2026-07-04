@@ -809,8 +809,8 @@ export default function Profile() {
           </OpTacticalCard>
         </div>
 
-        <div className="flex min-w-0 w-full shrink-0 flex-col gap-6 lg:w-80">
-          <OpTacticalCard title="Kayıt Bilgileri" className="min-h-0 flex-1">
+        <div className="profile-dossier-right flex min-w-0 w-full shrink-0 flex-col gap-4 lg:w-80">
+          <OpTacticalCard title="Kayıt Bilgileri">
             <dl className="grid gap-0 font-mono-technical text-sm text-app-text/70">
               <div className="flex justify-between gap-2 border-b border-white/[0.05] py-1.5">
                 <dt className="text-app-text/45">@kullanıcı adı</dt>
@@ -864,7 +864,7 @@ export default function Profile() {
             </div>
           </OpTacticalCard>
 
-          <OpTacticalCard title="Hesap Güvenliği" className="min-h-0 flex-1">
+          <OpTacticalCard title="Hesap Güvenliği">
             <button
               type="button"
               onClick={() => setSecurityOpen((o) => !o)}
