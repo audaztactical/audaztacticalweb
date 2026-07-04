@@ -35,7 +35,7 @@ import { PhaseSubScoresDisplay } from './PhaseSubCriteriaFields'
 import { useOperatorGroup } from '../../hooks/useOperatorGroup'
 import IndividualTrainingSessionHeader from './IndividualTrainingSessionHeader'
 import TcccObservedEvalForm from './TcccObservedEvalForm'
-import TcccObservedEvalRegistry from './TcccObservedEvalRegistry'
+import TcccLogRegistry from './TcccLogRegistry'
 import TcccObservedPdfPanel from './TcccObservedPdfPanel'
 
 /** @typedef {'hud' | 'pdf' | 'entry' | 'observed'} TcccViewMode */
@@ -279,7 +279,7 @@ export default function TcccTerminal({
           ) : logsListenError ? (
             <p className={ctMsgErr}>Kayıt kanalı kesildi · {logsListenError.message}</p>
           ) : null}
-          <TcccObservedEvalRegistry logs={logs} loading={logsLoading} />
+          <TcccLogRegistry logs={logs} loading={logsLoading} />
         </>
       ) : (
         <>

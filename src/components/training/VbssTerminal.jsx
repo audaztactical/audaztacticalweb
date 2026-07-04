@@ -24,7 +24,7 @@ import { PhaseSubScoresDisplay } from './PhaseSubCriteriaFields'
 import { useOperatorGroup } from '../../hooks/useOperatorGroup'
 import IndividualTrainingSessionHeader from './IndividualTrainingSessionHeader'
 import VbssObservedEvalForm from './VbssObservedEvalForm'
-import VbssObservedEvalRegistry from './VbssObservedEvalRegistry'
+import VbssLogRegistry from './VbssLogRegistry'
 import VbssObservedPdfPanel from './VbssObservedPdfPanel'
 
 /** @typedef {'hud' | 'pdf' | 'entry' | 'observed'} VbssViewMode */
@@ -242,7 +242,7 @@ export default function VbssTerminal({
           ) : logsListenError ? (
             <p className={ctMsgErr}>Kayıt kanalı kesildi · {logsListenError.message}</p>
           ) : null}
-          <VbssObservedEvalRegistry logs={logs} loading={logsLoading} />
+          <VbssLogRegistry logs={logs} loading={logsLoading} />
         </>
       ) : (
         <>

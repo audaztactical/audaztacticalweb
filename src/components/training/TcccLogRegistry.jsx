@@ -1,9 +1,8 @@
 import { Fragment, useMemo, useState } from 'react'
 import { ChevronDown, FileDown } from 'lucide-react'
-import { jsPDF } from 'jspdf'
-import autoTable from 'jspdf-autotable'
 import TacticalPanel from '../ui/TacticalPanel'
-import logoUrl from '../../assets/logo.png'
+import { useAuth } from '../../context/AuthContext'
+import { generateTcccTacticalReportPdf } from '../../lib/tcccTacticalReportPdf'
 import {
   countTcccScoredMarchInterventions,
   extractTcccPhaseOptions,
@@ -43,95 +42,14 @@ function cellTitle(text) {
 }
 
 /**
- * @returns {Promise<string>}
- */
-async function loadLogoDataUrl() {
-  const res = await fetch(logoUrl)
-  if (!res.ok) throw new Error('Logo yüklenemedi')
-  const blob = await res.blob()
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(String(reader.result))
-    reader.onerror = () => reject(new Error('Logo okunamadı'))
-    reader.readAsDataURL(blob)
-  })
-}
-
-/**
- * @param {Record<string, unknown>[]} rows
- * @param {{ filterActive?: boolean; filterLabel?: string }} [options]
- */
-async function generatePDF(rows, options = {}) {
-  const { filterActive = false, filterLabel = '' } = options
-  const logoDataUrl = await loadLogoDataUrl()
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
-
-  doc.addImage(logoDataUrl, 'PNG', 10, 10, 15, 15)
-
-  doc.setFontSize(12)
-  doc.setTextColor(0, 255, 65)
-  doc.text('GEÇMİŞ TCCC KAYITLARI · TAKTİK SAĞLIK', 30, 18)
-
-  doc.setFontSize(8)
-  doc.setTextColor(100, 116, 139)
-  doc.text(`Rapor: ${new Date().toLocaleString('tr-TR')}`, 30, 24)
-  doc.text(
-    filterActive ? `Filtre: ${filterLabel || 'Aktif'} · ${rows.length} kayıt` : `Tüm kayıtlar · ${rows.length} kayıt`,
-    30,
-    29,
-  )
-
-  const head = [
-    [
-      'TARİH',
-      'YARALANMA',
-      'TCCC FAZI',
-      'TURNİKE KONUMU',
-      'TURNİKE SÜRESİ',
-      'TAHLİYE BEKLEME',
-      'SİSTOLİK BP',
-      'MARCH',
-      'BAŞARI %',
-    ],
-  ]
-
-  const body = rows.map((row) => {
-    const marchScore = countTcccScoredMarchInterventions(row)
-    return [
-      formatTcccDateCell(row),
-      getTcccInjuryType(row),
-      getTcccPhase(row),
-      getTcccTourniquetLocation(row),
-      formatTcccInterventionTime(row),
-      formatTcccEvacWaitingTime(row),
-      formatTcccSystolicBp(row),
-      marchScore.total > 0 ? `${marchScore.done}/${marchScore.total}` : '—',
-      formatSuccessPercentCell(row),
-    ]
-  })
-
-  autoTable(doc, {
-    startY: 34,
-    margin: { left: 10, right: 10 },
-    head,
-    body,
-    theme: 'grid',
-    styles: { fontSize: 7, cellPadding: 1.5 },
-    headStyles: { fillColor: [8, 8, 8], textColor: [0, 255, 65], fontStyle: 'bold' },
-    alternateRowStyles: { fillColor: [15, 17, 21] },
-  })
-
-  const stamp = new Date().toISOString().slice(0, 10)
-  doc.save(`tccc-kayitlari-${stamp}.pdf`)
-}
-
-/**
  * @param {{ logs: Record<string, unknown>[]; loading?: boolean }} props
  */
 export default function TcccLogRegistry({ logs, loading = false }) {
+  const { userData } = useAuth()
   const [filters, setFilters] = useState(FILTER_INITIAL)
   const [expandedId, setExpandedId] = useState(/** @type {string | null} */ (null))
-  const [pdfBusy, setPdfBusy] = useState(false)
+  const [pdfBusyId, setPdfBusyId] = useState(/** @type {string | null} */ (null))
+  const [bulkPdfBusy, setBulkPdfBusy] = useState(false)
 
   const tcccLogs = useMemo(() => sortTcccLogsDesc(logs), [logs])
   const filterActive = useMemo(() => isTcccFilterActive(filters), [filters])
@@ -149,18 +67,39 @@ export default function TcccLogRegistry({ logs, loading = false }) {
     setExpandedId(null)
   }
 
-  const handleDownloadPdf = async () => {
-    if (exportRows.length === 0) return
-    setPdfBusy(true)
+  const handleDownloadPdf = async (/** @type {Record<string, unknown>} */ row) => {
+    const id = String(row.id)
+    setPdfBusyId(id)
     try {
-      await generatePDF(exportRows, {
+      await generateTcccTacticalReportPdf({
+        logs: [row],
+        operator: userData,
+      })
+    } finally {
+      setPdfBusyId(null)
+    }
+  }
+
+  const handleDownloadBulkPdf = async () => {
+    if (exportRows.length === 0) return
+    setBulkPdfBusy(true)
+    try {
+      await generateTcccTacticalReportPdf({
+        logs: exportRows,
+        operator: userData,
         filterActive,
         filterLabel: formatTcccFilterSummary(filters),
       })
     } finally {
-      setPdfBusy(false)
+      setBulkPdfBusy(false)
     }
   }
+
+  const bulkButtonLabel = bulkPdfBusy
+    ? 'HAZIRLANIYOR…'
+    : filterActive
+      ? 'FİLTRELENENİ İNDİR'
+      : 'TÜMÜNÜ İNDİR'
 
   return (
     <TacticalPanel className="relative border-accent/20 bg-app-bg/95 p-0">
@@ -169,25 +108,28 @@ export default function TcccLogRegistry({ logs, loading = false }) {
       <span className="pointer-events-none absolute bottom-2 left-2 z-10 h-3 w-3 border-b border-l border-accent/45" />
       <span className="pointer-events-none absolute bottom-2 right-2 z-10 h-3 w-3 border-b border-r border-accent/45" />
 
-      <div className="relative border-b border-accent/15 bg-app-bg px-4 py-2 pr-12">
-        {exportRows.length > 0 ? (
-          <button
-            type="button"
-            disabled={pdfBusy}
-            onClick={handleDownloadPdf}
-            title={filterActive ? 'Filtrelenen kayıtları PDF indir' : 'Tüm kayıtları PDF indir'}
-            aria-label="PDF indir"
-            className="absolute right-3 top-1/2 z-[1] inline-flex size-7 -translate-y-1/2 items-center justify-center rounded border border-accent/25 text-accent/70 transition hover:border-accent/45 hover:bg-accent/8 hover:text-accent disabled:opacity-40"
-          >
-            <FileDown className="size-3.5" strokeWidth={2} aria-hidden />
-          </button>
-        ) : null}
-        <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-accent/90">
-          GEÇMİŞ TCCC KAYITLARI · TAKTİK SAĞLIK
-        </p>
-        <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-app-text/45">
-          tccc_logs · canlı senkron · {filtered.length}/{tcccLogs.length} KAYIT
-        </p>
+      <div className="border-b border-accent/15 bg-app-bg px-4 py-2">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-accent/90">
+              GEÇMİŞ TCCC KAYITLARI · TAKTİK SAĞLIK
+            </p>
+            <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-app-text/45">
+              tccc_logs · canlı senkron · {filtered.length}/{tcccLogs.length} KAYIT
+            </p>
+          </div>
+          {exportRows.length > 0 ? (
+            <button
+              type="button"
+              disabled={bulkPdfBusy}
+              onClick={handleDownloadBulkPdf}
+              className="inline-flex items-center gap-2 rounded border border-accent/45 bg-accent/10 px-3 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-[0.14em] text-accent transition hover:border-accent/65 hover:bg-accent/16 disabled:opacity-50"
+            >
+              <FileDown className="size-3.5" strokeWidth={2} aria-hidden />
+              {bulkButtonLabel}
+            </button>
+          ) : null}
+        </div>
       </div>
 
       <div className="border-b border-accent/12 bg-app-bg px-3 py-3">
@@ -232,6 +174,7 @@ export default function TcccLogRegistry({ logs, loading = false }) {
                 <th className="whitespace-nowrap px-3 py-2">SİSTOLİK BP</th>
                 <th className="whitespace-nowrap px-3 py-2">MARCH</th>
                 <th className="whitespace-nowrap px-3 py-2 text-accent">BAŞARI ORANI (%)</th>
+                <th className="px-3 py-2 text-right">RAPOR</th>
               </tr>
             </thead>
             <tbody>
@@ -301,9 +244,23 @@ export default function TcccLogRegistry({ logs, loading = false }) {
                       <td className="whitespace-nowrap px-3 py-2 text-sm font-bold tabular-nums text-accent">
                         {formatSuccessPercentCell(row)}
                       </td>
+                      <td className="px-3 py-2 text-right">
+                        <button
+                          type="button"
+                          disabled={pdfBusyId === id}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDownloadPdf(row)
+                          }}
+                          className="inline-flex items-center gap-1.5 rounded border border-accent/35 bg-accent/8 px-2 py-1 font-mono-technical text-[7px] font-bold uppercase tracking-[0.1em] text-accent transition hover:border-accent/55 hover:bg-accent/14 disabled:opacity-50"
+                        >
+                          <FileDown className="size-3" strokeWidth={2} aria-hidden />
+                          {pdfBusyId === id ? '…' : 'PDF'}
+                        </button>
+                      </td>
                     </tr>
                     <tr className="border-b border-accent/8">
-                      <td colSpan={10} className="p-0">
+                      <td colSpan={11} className="p-0">
                         <div
                           className={`grid transition-[grid-template-rows] duration-300 ease-out ${
                             open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
