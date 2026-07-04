@@ -486,13 +486,14 @@ export default function Forum() {
   }
 
   return (
+    <div className="px-4 sm:px-6 md:px-8">
     <PageShell
       title="Brifing Odası"
       subtitle="Operasyonel tartışma ve taktik brifing forumu."
       headerAction={
         <span className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-zinc-500">
           <MessagesSquare className="size-3.5 text-lime-500/70" strokeWidth={1.75} aria-hidden />
-          BRF-03 · FORUM
+          Forum
         </span>
       }
     >
@@ -612,7 +613,7 @@ export default function Forum() {
 
           <section aria-label="Forum başlıkları">
             <p className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.28em] text-zinc-500">
-              [ AKTİF BRİFİNGLER ] · {posts.length} BAŞLIK
+              Aktif Başlıklar · {posts.length}
             </p>
 
             {loading ? (
@@ -658,5 +659,6 @@ export default function Forum() {
         onSuccess={() => feedbackPanel?.pushToast('Şikayetiniz alındı — moderasyon ekibine iletildi.')}
       />
     </PageShell>
+    </div>
   )
 }

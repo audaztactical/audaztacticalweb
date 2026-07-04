@@ -276,7 +276,7 @@ export default function ForumPostCard({ post, currentUid, currentCallsign, onOpe
             ) : (
               <ThumbsUp className="size-3" strokeWidth={2} aria-hidden />
             )}
-            [ MUTABIK ] · {likeCount}
+            Mutabık · {likeCount}
           </button>
 
           <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-zinc-500">

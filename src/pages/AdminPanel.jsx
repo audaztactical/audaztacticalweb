@@ -415,27 +415,23 @@ export default function AdminPanel() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 pb-16">
+    <div className="mx-auto max-w-7xl space-y-6 px-6 pb-16 sm:px-8">
       <header className="overflow-hidden rounded-xl border border-accent/20 bg-gradient-to-br from-black/60 via-zinc-950/90 to-black/70 px-5 py-6 shadow-[0_0_48px_-16px_rgba(132,204,22,0.15)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="font-mono-technical text-[10px] font-semibold uppercase tracking-[0.35em] text-accent">
-              [ YÖNETİM KONSOLU ]
+              Yönetim Paneli
             </p>
             <h1 className="font-display mt-2 text-3xl font-bold tracking-tight text-app-text">Admin Panel</h1>
             <p className="mt-2 max-w-2xl text-sm text-app-text/55">
               Komuta merkezi — içerik, istihbarat, kanal yönetimi ve operatör geri bildirimleri.
-            </p>
-            <p className="mt-2 font-mono-technical text-[10px] uppercase tracking-wider text-app-text/45">
-              Yetkili hesap:{' '}
-              <span className="text-accent">{user?.email ?? '—'}</span>
             </p>
           </div>
           <div className="flex flex-col items-end gap-2">
             <div className="flex items-center gap-2 rounded-lg border border-accent/40 bg-accent/10 px-3 py-2 shadow-[0_0_20px_-6px_rgba(132,204,22,0.4)]">
               <Shield className="size-4 text-accent" aria-hidden />
               <span className="font-mono-technical text-[10px] font-bold uppercase tracking-wider text-accent">
-                ROOT_ERİŞİM
+                Yönetici
               </span>
             </div>
           </div>
