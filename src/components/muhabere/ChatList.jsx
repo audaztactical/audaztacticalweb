@@ -141,67 +141,74 @@ export default function ChatList({
           ) : (
             <ul className="space-y-1.5" role="listbox" aria-label="Tim kanalları">
               {channels.map((ch) => {
-              const activeChannelId =
-                openChannelId != null && openChannelId !== ''
-                  ? openChannelId
-                  : selectedChannelId
-              const isActiveRow =
-                activeChannelId != null && activeChannelId !== '' && ch.id === activeChannelId
-              const summary = indexed.byChannelId[ch.id]
-              const unreadCount = isActiveRow
-                ? 0
-                : Math.max(summary?.unreadCount ?? 0, channelUnreadById[ch.id] ?? 0)
-              const hasUnread = !isActiveRow && unreadCount > 0
-              const isOwner = ch.createdBy === uid
+                const activeChannelId =
+                  openChannelId != null && openChannelId !== ''
+                    ? openChannelId
+                    : selectedChannelId
+                const isActiveRow =
+                  activeChannelId != null && activeChannelId !== '' && ch.id === activeChannelId
+                const summary = indexed.byChannelId[ch.id]
+                const unreadCount = isActiveRow
+                  ? 0
+                  : Math.max(summary?.unreadCount ?? 0, channelUnreadById[ch.id] ?? 0)
+                const hasUnread = !isActiveRow && unreadCount > 0
+                const isOwner = ch.createdBy === uid
 
-              return (
-                <li
-                  key={ch.id}
-                  className={[
-                    'flex items-stretch gap-1 rounded-md border-l-2',
-                    hasUnread ? 'muhabere-unread-pulse border-l-transparent' : 'border-l-transparent',
-                    isActiveRow ? 'bg-zinc-800/80' : 'hover:bg-amber-500/[0.06]',
-                  ].join(' ')}
-                >
-                  <button
-                    type="button"
-                    role="option"
-                    aria-selected={isActiveRow}
-                    onClick={() => onSelectChannel(ch.id)}
-                    className="flex min-w-0 flex-1 items-center gap-3 px-2.5 py-3 text-left"
+                return (
+                  <li
+                    key={ch.id}
+                    className={[
+                      'flex items-stretch gap-1 rounded-md border-l-2',
+                      hasUnread
+                        ? 'muhabere-unread-pulse !border-l-amber-500'
+                        : 'border-l-transparent',
+                      isActiveRow ? 'bg-zinc-800/80' : 'hover:bg-amber-500/[0.06]',
+                    ].join(' ')}
                   >
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900/80">
-                      <Radio className="size-4 text-amber-400/80" aria-hidden />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="flex items-center justify-between gap-2">
-                        <span
-                          className={[
-                            'truncate text-xs font-semibold uppercase tracking-wide',
-                            isActiveRow ? 'text-amber-300' : hasUnread ? 'text-amber-100' : 'text-zinc-300',
-                          ].join(' ')}
-                        >
-                          {ch.name}
-                        </span>
-                        {summary?.lastMessageAt ? (
-                          <span className="shrink-0 text-[9px] text-zinc-600">
-                            {formatConversationPreviewTime(summary.lastMessageAt)}
-                          </span>
-                        ) : null}
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={isActiveRow}
+                      onClick={() => onSelectChannel(ch.id)}
+                      className="flex min-w-0 flex-1 items-center gap-3 px-2.5 py-3 text-left"
+                    >
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900/80">
+                        <Radio className="size-4 text-amber-400/80" aria-hidden />
                       </span>
-                      {summary?.lastMessage ? (
-                        <span className="mt-0.5 block truncate text-[9px] normal-case tracking-normal text-zinc-500">
-                          {summary.lastSender ? `${summary.lastSender}: ` : ''}
-                          {summary.lastMessage}
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center justify-between gap-2">
+                          <span
+                            className={[
+                              'truncate text-xs font-semibold uppercase tracking-wide',
+                              isActiveRow ? 'text-amber-300' : hasUnread ? 'text-amber-100' : 'text-zinc-300',
+                            ].join(' ')}
+                          >
+                            {ch.name}
+                          </span>
+                          {summary?.lastMessageAt ? (
+                            <span className="shrink-0 text-[9px] text-zinc-600">
+                              {formatConversationPreviewTime(summary.lastMessageAt)}
+                            </span>
+                          ) : null}
                         </span>
-                      ) : (
-                        <span className="mt-0.5 block text-[9px] text-zinc-600">{ch.members.length} üye</span>
-                      )}
-                    </span>
-                    {hasUnread ? <MuhabereUnreadBadge count={unreadCount} /> : null}
-                  </button>
+                        {summary?.lastMessage ? (
+                          <span className="mt-0.5 block truncate text-[9px] normal-case tracking-normal text-zinc-500">
+                            {summary.lastSender ? `${summary.lastSender}: ` : ''}
+                            {summary.lastMessage}
+                          </span>
+                        ) : (
+                          <span className="mt-0.5 block text-[9px] text-zinc-600">{ch.members.length} üye</span>
+                        )}
+                      </span>
+                    </button>
 
-                  <MuhabereConversationMenu
+                    {hasUnread ? (
+                      <span className="flex shrink-0 items-center self-center pr-0.5">
+                        <MuhabereUnreadBadge count={unreadCount} />
+                      </span>
+                    ) : null}
+
+                    <MuhabereConversationMenu
                     variant="channel"
                     isOwner={isOwner}
                     archiveBusy={archivingChannelId === ch.id}
