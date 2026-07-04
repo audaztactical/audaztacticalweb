@@ -90,7 +90,7 @@ function VideoNewsCard({ item, onOpen }) {
           className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded border border-[#ffaa00]/40 bg-[#ffaa00]/10 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#ffaa00] transition hover:border-[#ffaa00]/70 hover:bg-[#ffaa00]/15"
         >
           <Play className="size-3.5" aria-hidden />
-          [ VİDEOYU AÇ ]
+          Videoyu Aç
         </button>
       </div>
     </article>

@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ExternalLink, Globe, Languages, Loader2, Radio, ShieldAlert } from 'lucide-react'
 import VideoNewsGrid from '../components/intel/VideoNewsGrid'
-import HudFluffDecor from '../components/dashboard/HudFluffDecor'
 import { emitFirebaseError } from '../lib/firebaseErrorBus'
 import { formatIntelTimestamp, subscribeIntelFeed } from '../lib/firestoreIntelFeed'
 
@@ -169,7 +168,7 @@ export default function IntelFeed() {
   }, [])
 
   return (
-    <div className="relative mx-auto min-h-[calc(100vh-6rem)] max-w-[1480px] px-3 py-5 pt-12 sm:px-4 sm:pt-14 md:px-6">
+    <div className="relative mx-auto min-h-[calc(100vh-6rem)] max-w-[1480px] px-5 py-5 pt-12 sm:px-6 sm:pt-14 md:px-8">
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden>
         <div
           className="absolute inset-0 opacity-[0.14]"
@@ -179,33 +178,17 @@ export default function IntelFeed() {
             backgroundSize: '28px 28px',
           }}
         />
-        <HudFluffDecor />
       </div>
 
       <div className="relative z-[2] space-y-6">
-        <header className="flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <header className="flex flex-col gap-4 border-b border-white/10 pb-5">
           <div className="min-w-0 space-y-2">
-            <p className="font-mono-technical text-[10px] font-semibold uppercase tracking-[0.35em] text-[#ffaa00]">
-              <span className="text-app-text/35">[ </span>
-              SİSTEM MERKEZİ
-              <span className="text-app-text/35"> ]</span>
-            </p>
             <h1 className="font-display flex items-center gap-3 text-2xl font-bold tracking-[0.14em] text-app-text sm:text-3xl">
               <Globe className="size-7 shrink-0 text-[#ffaa00]" strokeWidth={1.5} aria-hidden />
               KÜRESEL HABER AĞI
             </h1>
             <p className="max-w-2xl font-mono-technical text-[10px] leading-relaxed text-app-text/55">
               Küresel taktik ve askeri kaynaklardan canlı haber akışı · yazılı ve video haberler
-            </p>
-          </div>
-
-          <div className="flex shrink-0 items-center gap-2 rounded border border-emerald-900/50 bg-emerald-950/20 px-3 py-2">
-            <span className="relative flex size-2">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-              <span className="relative inline-flex size-2 rounded-full bg-emerald-400" />
-            </span>
-            <p className="font-mono-technical text-[9px] font-bold uppercase tracking-wider text-emerald-400">
-              BAĞLANTI DURUMU: AKTİF
             </p>
           </div>
         </header>
@@ -217,12 +200,12 @@ export default function IntelFeed() {
           <IntelFeedTabButton
             active={feedTab === 'written'}
             onClick={() => setFeedTab('written')}
-            label="[ YAZILI HABERLER ]"
+            label="Yazılı Haberler"
           />
           <IntelFeedTabButton
             active={feedTab === 'video'}
             onClick={() => setFeedTab('video')}
-            label="[ VİDEO HABERLER ]"
+            label="Video Haberler"
           />
         </nav>
 
