@@ -202,7 +202,7 @@ export default function TcccIfakInventoryTab({
         <div className="flex items-center gap-2">
           <Package className="size-5 text-accent" strokeWidth={1.5} aria-hidden />
           <span className="font-mono-technical text-xs font-bold tracking-[0.28em] text-accent">
-            IFAK KİT ENVANTER YÖNETİMİ
+            IFAK & Malzeme Takibi
           </span>
         </div>
         <button

@@ -173,10 +173,10 @@ export default function PersonalHealthCard() {
           <Shield className="mt-0.5 size-5 shrink-0 text-red-500" strokeWidth={1.75} aria-hidden />
           <div>
             <h2 className="font-mono text-xs font-bold uppercase tracking-[0.28em] text-red-500">
-              KİŞİSEL SAĞLIK KÜNYESİ
+              Kişisel Sağlık Durumu
             </h2>
             <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-app-text/55">
-              TCCC · OPERATÖR MEDİKAL PROFİL
+              TCCC · operatör profili
             </p>
           </div>
         </div>

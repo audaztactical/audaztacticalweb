@@ -20,23 +20,22 @@ import { useAudazData } from '../hooks/useAudazData'
 const MENU_CARDS = [
   {
     id: /** @type {ActiveSection} */ ('personal_health'),
-    title: 'KİŞİSEL SAĞLIK & OPERATÖR DURUMU',
-    description: 'Kişisel medikal profil, alerji takibi ve aşı kayıtları defteri.',
+    title: 'Kişisel Sağlık Durumu',
+    description: 'Medikal profil, alerji ve aşı kayıtları.',
     Icon: Shield,
     accent: 'red',
   },
   {
     id: 'march_documents',
-    title: 'TAKTİK MEDİKAL KILAVUZ & EVRAK ÇANTASI',
-    description:
-      'Operasyonel yaralı kartları, tıbbi tahliye telsiz protokolleri ve basılabilir saha şablonları.',
+    title: 'Taktik Medikal Kılavuz',
+    description: 'Yaralı kartları, tahliye protokolleri ve basılabilir saha şablonları.',
     Icon: ClipboardList,
     accent: 'slate',
   },
   {
     id: 'ifak_logistics',
-    title: 'IFAK & LOJİSTİK ENVANTER',
-    description: 'Kişisel IFAK malzeme yönetimi ve kritik son kullanma tarihi (SKT) takibi.',
+    title: 'IFAK & Malzeme Takibi',
+    description: 'IFAK malzeme listesi ve son kullanma tarihi takibi.',
     Icon: Package,
     accent: 'amber',
   },
@@ -152,7 +151,7 @@ export default function TcccSuite() {
     ) : ifakListenError ? (
       <div className="flex rounded-lg border border-red-500/30 bg-red-950/30 px-3 py-2 text-red-300">
         <AlertTriangle className="size-5" aria-hidden />
-        <span className="ml-2 font-mono text-[10px] uppercase">VERİ_KANALI_KESİLDİ</span>
+        <span className="ml-2 font-mono text-[10px] uppercase">Veri kanalı kesildi</span>
       </div>
     ) : null
 
@@ -167,10 +166,10 @@ export default function TcccSuite() {
         onClick={() => setActiveSection('personal_health')}
         preview={
           <div className="rounded-lg border border-red-800/50 bg-red-950/25 px-4 py-3">
-            <p className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-red-500/80">ASKERİ KÜNYE · DURUM</p>
-            <p className="mt-2 font-mono text-[10px] uppercase text-app-text/55">TELSİZ KODU</p>
+            <p className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-red-500/80">Askeri Kimlik · Durum</p>
+            <p className="mt-2 font-mono text-[10px] uppercase text-app-text/55">Çağrı adı</p>
             <p className="font-mono text-sm font-bold uppercase tracking-wider text-app-text">{callsign}</p>
-            <p className="mt-3 font-mono text-[10px] uppercase text-app-text/55">KAN GRUBU</p>
+            <p className="mt-3 font-mono text-[10px] uppercase text-app-text/55">Kan Grubu</p>
             <p className="font-mono text-2xl font-black uppercase tracking-[0.1em] text-red-500">{bloodType}</p>
           </div>
         }
@@ -185,7 +184,7 @@ export default function TcccSuite() {
         onClick={() => setActiveSection('march_documents')}
         preview={
           <p className="font-mono text-[10px] font-bold uppercase leading-relaxed tracking-wide text-app-text/70">
-            MARCH DOKTRİNİ, CANLI DD-1380 YARALI KARTI, 9-LINE MEDEVAC VE BOŞ PDF ŞABLON İNDİRME MERKEZİ
+            MARCH · DD-1380 yaralı kartı · 9-line tahliye · PDF şablonları
           </p>
         }
       />
@@ -203,13 +202,13 @@ export default function TcccSuite() {
               role="alert"
               className="mb-4 animate-pulse rounded-lg border border-amber-500/60 bg-gradient-to-r from-amber-950/60 via-red-950/50 to-amber-950/60 px-3 py-2 font-mono text-[9px] font-bold uppercase tracking-wider text-amber-300"
             >
-              ⚠️ CRITICAL STOCK ALERT · {criticalCount} KALEM ≤30 GÜN / SKT GEÇMİŞ
+              ⚠️ Kritik stok uyarısı · {criticalCount} kalem ≤30 gün / SKT geçmiş
             </div>
           ) : null
         }
         preview={
           <p className="font-mono text-[10px] font-bold uppercase leading-relaxed tracking-wide text-app-text/70">
-            KİŞİSEL IFAK MALZEME YÖNETİMİ & KRİTİK SON KULLANMA TARİHİ (SKT) TAKİBİ
+            IFAK malzeme listesi · son kullanma takibi
           </p>
         }
       />
@@ -270,7 +269,8 @@ export default function TcccSuite() {
   }
 
   return (
-    <PageShell title="TCCC" subtitle="TACTICAL MEDICAL SUITE">
+    <div className="px-4 sm:px-6 md:px-8">
+    <PageShell title="TCCC" subtitle="Taktik Sağlık Paketi">
       <div className="tccc-march-shell h-auto min-h-0 space-y-5 text-app-text">
         {statusBanner}
 
@@ -284,5 +284,6 @@ export default function TcccSuite() {
         )}
       </div>
     </PageShell>
+    </div>
   )
 }

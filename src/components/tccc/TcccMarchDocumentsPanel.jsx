@@ -99,10 +99,10 @@ export default function TcccMarchDocumentsPanel({
     <div className="tccc-doc-panel h-auto min-h-0 space-y-4">
       <div className="rounded-lg border border-slate-800 bg-slate-900/50 px-4 py-3">
         <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-app-text/70">
-          TAKTİK MEDİKAL KILAVUZ & EVRAK ÇANTASI
+          Taktik Medikal Kılavuz
         </p>
         <p className="mt-1 font-mono text-xs leading-relaxed text-app-text/55">
-          MARCH DOKTRİNİ · CANLI DD-1380 YARALI KARTI · 9-LINE TAHLİYE · PDF ŞABLON MERKEZİ
+          MARCH · DD-1380 yaralı kartı · 9-line tahliye · PDF şablonları
         </p>
       </div>
 
