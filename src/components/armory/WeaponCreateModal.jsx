@@ -32,16 +32,19 @@ export default function WeaponCreateModal({ open, saving, form, onClose, onChang
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-3 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] overflow-y-auto overscroll-y-contain bg-black/75 p-3 backdrop-blur-sm [-webkit-overflow-scrolling:touch] sm:flex sm:items-center sm:justify-center">
       <button type="button" className="absolute inset-0 cursor-default" aria-label="Kapat" onClick={() => !saving && onClose()} />
-      <TacticalPanel className="relative z-[1] w-full max-w-lg border-accent/20 bg-app-bg/98 p-0 shadow-2xl backdrop-blur-md">
+      <TacticalPanel className="relative z-[1] mx-auto my-3 w-full max-w-lg border-accent/20 bg-app-bg/98 p-0 shadow-2xl backdrop-blur-md sm:my-0">
         <div className="border-b border-white/10 bg-app-bg px-3 py-2 sm:px-4">
           <p className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] text-accent/90">
             + YENİ_SİLAH_KAYDI
           </p>
           <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-app-text/45">P_TFK · T_TAB · AV_TFK · SİLAH_RAFI</p>
         </div>
-        <form onSubmit={onSubmit} className="space-y-3 px-3 py-3 sm:px-4 sm:py-4">
+        <form
+          onSubmit={onSubmit}
+          className="max-h-[calc(100dvh-5.5rem)] space-y-3 overflow-y-auto overscroll-contain px-3 py-3 [-webkit-overflow-scrolling:touch] sm:max-h-none sm:overflow-visible sm:px-4 sm:py-4"
+        >
           <label className="block">
             <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">SİLAH_TİPİ</span>
             <select

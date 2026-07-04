@@ -103,7 +103,7 @@ function TacticalFilterSelect({ label, value, options, onChange, disabled = fals
   const selected = options.find((o) => o.id === value) ?? options[0]
 
   return (
-    <div ref={rootRef} className="relative z-30 min-h-[4.75rem] space-y-1.5">
+    <div ref={rootRef} className={['relative min-h-[4.75rem] space-y-1.5', open ? 'z-[80]' : 'z-30'].join(' ')}>
       <span className="block text-[9px] font-bold uppercase tracking-wider text-app-text/55">{label}</span>
       <button
         type="button"
@@ -129,7 +129,7 @@ function TacticalFilterSelect({ label, value, options, onChange, disabled = fals
       {open && !disabled ? (
         <ul
           role="listbox"
-          className="absolute left-0 right-0 top-full z-[70] mt-1 max-h-52 overflow-y-auto rounded-sm border border-emerald-800/45 bg-slate-950 py-1 shadow-[0_16px_48px_rgba(0,0,0,0.72)]"
+          className="absolute left-0 right-0 top-full z-[100] mt-1 max-h-52 overflow-y-auto overscroll-contain rounded-sm border border-emerald-800/45 bg-slate-950 py-1 shadow-[0_16px_48px_rgba(0,0,0,0.72)]"
         >
           {options.map((opt) => {
             const active = opt.id === value
@@ -605,7 +605,7 @@ export default function ProgressTracker({ onBack }) {
           </div>
         ) : (
           <>
-            <div className="overflow-visible rounded-xl border border-slate-800 bg-slate-950 p-4">
+            <div className="relative z-50 isolate overflow-visible rounded-xl border border-slate-800 bg-slate-950 p-4">
               <div className="mb-4 flex items-center gap-2">
                 <Filter className="size-4 text-emerald-500" strokeWidth={1.5} aria-hidden />
                 <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-emerald-400">
@@ -699,7 +699,7 @@ export default function ProgressTracker({ onBack }) {
                   Taktik tim
                 </span>
                 <span className="mt-0.5 block font-mono text-[11px] text-app-text/65 group-hover:text-app-text/85">
-                  Grubuna katılmak veya kadronu görmek için Taktik Timim sayfasına git →
+                  Grubuna katılmak veya kadronu görmek için Ayarlar → Taktik Tim bölümüne git →
                 </span>
               </span>
               <ChevronRight className="size-4 shrink-0 text-emerald-500/70" strokeWidth={1.75} aria-hidden />

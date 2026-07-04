@@ -51,7 +51,7 @@ export default function AtisDrillPicker({ value, onChange, required = false }) {
   }
 
   return (
-    <div className="relative">
+    <div className="relative z-[1]">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -70,7 +70,7 @@ export default function AtisDrillPicker({ value, onChange, required = false }) {
 
       {open ? (
         <div
-          className="absolute left-0 right-0 z-30 mt-1 max-h-[min(52vh,17.5rem)] overflow-y-auto rounded border border-accent/35 bg-app-bg shadow-[0_12px_40px_-12px_rgba(0,0,0,0.85)]"
+          className="absolute left-0 right-0 z-50 mt-1 w-full max-h-60 overflow-y-auto overscroll-contain rounded border border-accent/35 bg-app-bg shadow-[0_12px_40px_-12px_rgba(0,0,0,0.85)] [-webkit-overflow-scrolling:touch]"
           role="listbox"
         >
           {ATIS_DRILL_LEVELS.map((tier) => (
