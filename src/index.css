@@ -2560,6 +2560,23 @@
   align-self: stretch;
 }
 
+.profile-dossier-shell {
+  width: 100%;
+}
+
+.profile-dossier-grid {
+  align-items: stretch;
+}
+
+.profile-dossier-shell .op-terminal-card__body {
+  font-size: 1rem;
+}
+
+.profile-dossier-shell .op-data-stat__label {
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+}
+
 /* MÜŞTEREK HAREKAT KONSOLU — ince taktik sütun kaydırması */
 .op-detay-col-scroll {
   scrollbar-width: thin;
