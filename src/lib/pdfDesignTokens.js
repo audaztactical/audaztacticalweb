@@ -263,7 +263,7 @@ export function stampPdfFooters(doc, reportId) {
     setPdfFont(doc, 'normal')
     doc.setFontSize(PDF_FONT_SIZE.footer)
     doc.setTextColor(...PDF_COLORS.footerText)
-    doc.text('AUDAZ TACTICAL — Gizli / Operasyonel Kullanım', PDF_LAYOUT.margin, y)
+    doc.text('AUDAZ TACTICAL', PDF_LAYOUT.margin, y)
     doc.text(reportId, pageW / 2, y, { align: 'center' })
     doc.text(`Sayfa ${i} / ${total}`, pageW - PDF_LAYOUT.margin, y, { align: 'right' })
   }
