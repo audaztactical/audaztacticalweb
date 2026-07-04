@@ -757,8 +757,8 @@ export default function Profile() {
           </section>
         </aside>
 
-        <div className="flex min-w-0 flex-col gap-6 lg:flex-1">
-          <OpTacticalCard title="Operatör Özeti" className="min-h-0 flex-1">
+        <div className="flex min-w-0 flex-col gap-4 lg:flex-1">
+          <OpTacticalCard title="Operatör Özeti">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <DataStat label="Tamamlanan görev" value={missionN} accentRgb={accent.rgb} fillPct={statFillPct(missionN, statMax)} />
               <DataStat label="Eğitim sayısı" value={trainN} accentRgb={accent.rgb} fillPct={statFillPct(trainN, statMax)} />
@@ -793,7 +793,7 @@ export default function Profile() {
             </div>
           </OpTacticalCard>
 
-          <OpTacticalCard title="Canlı Akış" className="min-h-0 flex-1">
+          <OpTacticalCard title="Canlı Akış">
             <ul className="space-y-2 text-base">
               {activityTop3.length === 0 ? (
                 <li className="font-mono-technical text-sm text-app-text/45">Henüz aktivite yok</li>
@@ -817,8 +817,8 @@ export default function Profile() {
                 <dd className="truncate text-app-text/90">{rawUsername ? `@${rawUsername}` : '—'}</dd>
               </div>
               <div className="flex justify-between gap-2 border-b border-white/[0.05] py-1.5">
-                <dt className="text-app-text/45">E-posta</dt>
-                <dd className="truncate text-app-text/90">{email || '—'}</dd>
+                <dt className="shrink-0 text-app-text/45">E-posta</dt>
+                <dd className="min-w-0 break-all text-right text-app-text/90">{email || '—'}</dd>
               </div>
               <div className="flex justify-between gap-2 border-b border-white/[0.05] py-1.5">
                 <dt className="text-app-text/45">Kayıt</dt>
@@ -971,10 +971,10 @@ export default function Profile() {
                         ) : (
                           <p className="font-mono-technical text-[8px] text-app-text/55">Google ile yeniden doğrulama penceresi açılabilir.</p>
                         )}
-                        <DossierField label="YENİ_ŞİFRE">
+                        <DossierField label="Yeni şifre">
                           <input type="password" autoComplete="new-password" value={newPass} onChange={(e) => setNewPass(e.target.value)} className={inputTactical} style={{ borderBottomColor: 'rgba(0,77,255,0.35)' }} />
                         </DossierField>
-                        <DossierField label="YENİ_ŞİFRE_TEKRAR">
+                        <DossierField label="Yeni şifre (tekrar)">
                           <input
                             type="password"
                             autoComplete="new-password"
