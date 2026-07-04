@@ -1026,27 +1026,65 @@ export default function TaktikMuhabere() {
         <aside
           className={[
             'flex h-full min-h-0 shrink-0 flex-col overflow-hidden border-r border-zinc-800/90 bg-[#0a0b0d]',
-            compact ? (showMobileRoster ? 'w-full min-w-0' : 'hidden') : 'w-80',
+            compact ? (showMobileRoster ? 'w-full min-w-0' : 'hidden') : 'w-72',
           ].join(' ')}
         >
-          <div className="border-b border-zinc-800/80 bg-[#0a0b0d] px-3 py-3">
-            <label className="relative block">
-              <Search
-                className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-zinc-500"
-                strokeWidth={2}
-                aria-hidden
-              />
-              <input
-                type="search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Çağrı Adı Ara..."
-                className="w-full rounded-md border border-zinc-700/90 bg-zinc-950 py-2 pl-9 pr-3 font-mono text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20"
-                autoComplete="off"
-                spellCheck={false}
-              />
-            </label>
-          </div>
+          {!isSearchMode ? (
+            <ChatList
+              uid={uid}
+              channels={activeChannels}
+              totalChannelCount={channels.length}
+              channelsLoading={channelsLoading}
+              channelsError={channelsError}
+              selectedChannelId={selectedChannelId}
+              archivingChannelId={archivingChannelId}
+              deletingChannelId={deletingChannelId}
+              destroyingChannelId={destroyingChannelId}
+              editingChannelId={editChannelTarget?.id ?? null}
+              channelUnreadById={channelUnreadById}
+              openChannelId={conversationMode === 'channel' ? selectedChannelId : null}
+              onSelectChannel={selectChannel}
+              onArchiveChannel={handleArchiveChannel}
+              onDeleteChannel={handleDeleteChannel}
+              onLeaveChannel={handleDeleteChannel}
+              onEditChannel={(channel) => setEditChannelTarget(channel)}
+              onDestroyChannel={handleDestroyChannel}
+              onCreateChannel={() => setShowCreateChannel(true)}
+              onSummariesChange={handleConversationSummariesChange}
+            />
+          ) : null}
+
+          {!isSearchMode ? (
+            <div className="relative shrink-0 px-3 py-2" aria-hidden>
+              <div className="absolute inset-x-3 top-1/2 border-t border-amber-500/35" />
+              <span className="relative mx-auto block w-fit bg-[#0a0b0d] px-3 font-mono-technical text-[9px] font-bold uppercase tracking-[0.22em] text-amber-500/75">
+                Operatörler
+              </span>
+            </div>
+          ) : null}
+
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className="shrink-0 border-b border-zinc-800/80 px-3 py-2.5">
+              <h2 className="mb-2 font-mono-technical text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">
+                {isSearchMode ? '[ Arama sonuçları ]' : '[ Tim rehberi ]'}
+              </h2>
+              <label className="relative block">
+                <Search
+                  className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-zinc-500"
+                  strokeWidth={2}
+                  aria-hidden
+                />
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Çağrı Adı Ara..."
+                  className="w-full rounded-md border border-zinc-700/90 bg-zinc-950 py-2 pl-9 pr-3 font-mono text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20"
+                  autoComplete="off"
+                  spellCheck={false}
+                />
+              </label>
+            </div>
 
           {incomingRequests.length > 0 ? (
             <div className="shrink-0 border-b border-zinc-800 px-4 py-3">
@@ -1096,37 +1134,6 @@ export default function TaktikMuhabere() {
             </div>
           ) : null}
 
-          {!isSearchMode ? (
-            <ChatList
-              uid={uid}
-              channels={activeChannels}
-              totalChannelCount={channels.length}
-              channelsLoading={channelsLoading}
-              channelsError={channelsError}
-              selectedChannelId={selectedChannelId}
-              archivingChannelId={archivingChannelId}
-              deletingChannelId={deletingChannelId}
-              destroyingChannelId={destroyingChannelId}
-              editingChannelId={editChannelTarget?.id ?? null}
-              channelUnreadById={channelUnreadById}
-              openChannelId={conversationMode === 'channel' ? selectedChannelId : null}
-              onSelectChannel={selectChannel}
-              onArchiveChannel={handleArchiveChannel}
-              onDeleteChannel={handleDeleteChannel}
-              onLeaveChannel={handleDeleteChannel}
-              onEditChannel={(channel) => setEditChannelTarget(channel)}
-              onDestroyChannel={handleDestroyChannel}
-              onCreateChannel={() => setShowCreateChannel(true)}
-              onSummariesChange={handleConversationSummariesChange}
-            />
-          ) : null}
-
-          <div className="border-b border-zinc-800 px-4 py-2">
-            <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">
-              {isSearchMode ? 'Arama sonuçları' : 'Tim rehberi'}
-            </h2>
-          </div>
-
           {listLoading ? (
             <div className="flex flex-1 items-center justify-center gap-2 text-zinc-500">
               <Loader2 className="size-4 animate-spin text-lime-400/80" aria-hidden />
@@ -1138,7 +1145,7 @@ export default function TaktikMuhabere() {
             <p className="flex-1 px-4 py-6 text-xs leading-relaxed text-zinc-600">{emptyMessage}</p>
           ) : (
             <ul
-              className="min-h-0 flex-1 overflow-y-auto p-2"
+              className="min-h-0 flex-1 space-y-1.5 overflow-y-auto p-2"
               role="listbox"
               aria-label={isSearchMode ? 'Arama sonuçları' : 'Tim rehberi'}
             >
@@ -1170,7 +1177,7 @@ export default function TaktikMuhabere() {
                       ].join(' ')}
                     >
                       {showRequest ? (
-                        <div className="flex min-w-0 flex-1 items-start gap-3 px-2 py-2.5">
+                        <div className="flex min-w-0 flex-1 items-start gap-3 px-2.5 py-3">
                           <OperatorAvatar
                             uid={contact.uid}
                             size="sm"
@@ -1197,7 +1204,7 @@ export default function TaktikMuhabere() {
                           role="option"
                           aria-selected={isActiveRow}
                           onClick={() => selectOperator(contact.uid)}
-                          className="flex min-w-0 flex-1 items-center gap-3 px-2 py-2.5 text-left"
+                          className="flex min-w-0 flex-1 items-center gap-3 px-2.5 py-3 text-left"
                         >
                           <OperatorAvatar
                             uid={contact.uid}
@@ -1304,6 +1311,7 @@ export default function TaktikMuhabere() {
               unarchivingDmUid={unarchivingDmUid}
             />
           ) : null}
+          </div>
         </aside>
 
         <section

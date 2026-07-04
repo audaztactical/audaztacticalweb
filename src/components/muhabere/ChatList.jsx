@@ -107,34 +107,40 @@ export default function ChatList({
 
   return (
     <>
-      <div className="shrink-0 border-b border-zinc-800/80 px-3 py-3">
-        <div className="mb-2 flex items-center justify-between gap-2">
-          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400/90">
-            Tim kanalları
-          </h2>
-          <button
-            type="button"
-            onClick={onCreateChannel}
-            className="inline-flex items-center gap-1 rounded border border-amber-500/30 bg-amber-950/30 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-amber-300 transition hover:bg-amber-900/50"
-          >
-            <Plus className="size-3" strokeWidth={2.5} aria-hidden />
-            Yeni kanal
-          </button>
+      <section
+        className="flex min-h-[180px] max-h-[40%] shrink-0 flex-col overflow-hidden"
+        aria-label="Tim kanalları"
+      >
+        <div className="shrink-0 border-b border-zinc-800/60 px-3 py-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400/90">
+              [ Tim kanalları ]
+            </h2>
+            <button
+              type="button"
+              onClick={onCreateChannel}
+              className="inline-flex items-center gap-1 rounded border border-amber-500/30 bg-amber-950/30 px-2 py-1 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-amber-300 transition hover:bg-amber-900/50"
+            >
+              <Plus className="size-3" strokeWidth={2.5} aria-hidden />
+              + Yeni kanal
+            </button>
+          </div>
         </div>
 
-        {channelsLoading ? (
-          <p className="text-[10px] text-zinc-600">Kanallar yükleniyor…</p>
-        ) : listError ? (
-          <p className="text-[10px] text-red-400/90">{listError}</p>
-        ) : channels.length === 0 ? (
-          <p className="text-[10px] leading-relaxed text-zinc-600">
-            {totalChannelCount === 0
-              ? 'Henüz kanal yok — tim üyeleriyle grup açın.'
-              : 'Aktif kanal yok — arşivi kontrol edin.'}
-          </p>
-        ) : (
-          <ul className="max-h-44 space-y-1 overflow-y-auto" role="listbox" aria-label="Tim kanalları">
-            {channels.map((ch) => {
+        <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
+          {channelsLoading ? (
+            <p className="px-1 py-2 text-[10px] text-zinc-600">Kanallar yükleniyor…</p>
+          ) : listError ? (
+            <p className="px-1 py-2 text-[10px] text-red-400/90">{listError}</p>
+          ) : channels.length === 0 ? (
+            <p className="px-1 py-2 text-[10px] leading-relaxed text-zinc-600">
+              {totalChannelCount === 0
+                ? 'Henüz kanal yok — yeni kanal oluştur.'
+                : 'Aktif kanal yok — arşivi kontrol edin.'}
+            </p>
+          ) : (
+            <ul className="space-y-1.5" role="listbox" aria-label="Tim kanalları">
+              {channels.map((ch) => {
               const activeChannelId =
                 openChannelId != null && openChannelId !== ''
                   ? openChannelId
@@ -162,10 +168,10 @@ export default function ChatList({
                     role="option"
                     aria-selected={isActiveRow}
                     onClick={() => onSelectChannel(ch.id)}
-                    className="flex min-w-0 flex-1 items-center gap-2 px-2 py-2.5 text-left"
+                    className="flex min-w-0 flex-1 items-center gap-3 px-2.5 py-3 text-left"
                   >
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900/80">
-                      <Radio className="size-3.5 text-amber-400/80" aria-hidden />
+                    <span className="flex size-10 shrink-0 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900/80">
+                      <Radio className="size-4 text-amber-400/80" aria-hidden />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center justify-between gap-2">
@@ -211,10 +217,11 @@ export default function ChatList({
                   />
                 </li>
               )
-            })}
-          </ul>
-        )}
-      </div>
+              })}
+            </ul>
+          )}
+        </div>
+      </section>
 
       <TacticalAlert
         open={Boolean(archiveTarget)}
