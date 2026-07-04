@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import PageShell from '../components/layout/PageShell'
 import AccessCodeRedeemPanel from '../components/AccessCodeRedeemPanel'
+import AccessCodesPanel from '../components/admin/AccessCodesPanel'
 import SettingsPanel from '../components/SettingsPanel'
 import FeedbackForm from '../components/FeedbackForm'
 import SettingsAccordionSection from '../components/settings/SettingsAccordionSection'
@@ -112,7 +113,6 @@ export default function Settings() {
           title="KİŞİSEL"
           color="#F59E0B"
           icon={Palette}
-          defaultOpen
         >
           <SettingsPanel bare sections={['theme']} />
         </SettingsAccordionSection>
@@ -131,7 +131,7 @@ export default function Settings() {
         </SettingsAccordionSection>
 
         <SettingsAccordionSection id="access-code" title="ERİŞİM KODU" color="#A855F7" icon={KeyRound}>
-          <AccessCodeRedeemPanel bare />
+          {showAdminPanel || isAdmin ? <AccessCodesPanel /> : <AccessCodeRedeemPanel bare />}
         </SettingsAccordionSection>
 
         <SettingsAccordionSection
