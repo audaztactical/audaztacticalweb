@@ -1,4 +1,5 @@
 import TacticalPanel from '../ui/TacticalPanel'
+import BallisticInfoCollapsible from './BallisticInfoCollapsible'
 
 const labelClass =
   'block font-mono-technical text-xs font-bold uppercase tracking-[0.2em] text-app-text/55 sm:text-[8px]'
@@ -15,7 +16,17 @@ const submitBtnClass =
  * @param {{
  *   open: boolean
  *   saving: boolean
- *   form: { caliberName: string, calibre: string, initialStock: string, unitPrice: string, criticalThreshold: string }
+ *   form: {
+ *     caliberName: string
+ *     calibre: string
+ *     initialStock: string
+ *     unitPrice: string
+ *     criticalThreshold: string
+ *     bulletWeight: string
+ *     bulletDiameter: string
+ *     ballisticCoefficient: string
+ *     bcModel: string
+ *   }
  *   onClose: () => void
  *   onChange: (patch: Record<string, string>) => void
  *   onSubmit: (e: import('react').FormEvent) => void
@@ -89,6 +100,16 @@ export default function AmmoCreateModal({ open, saving, form, onClose, onChange,
                 />
               </label>
             </div>
+            <BallisticInfoCollapsible
+              kind="ammo"
+              values={{
+                bulletWeight: form.bulletWeight,
+                bulletDiameter: form.bulletDiameter,
+                ballisticCoefficient: form.ballisticCoefficient,
+                bcModel: form.bcModel,
+              }}
+              onChange={onChange}
+            />
           </div>
           <div className={actionBarClass}>
             <button type="button" onClick={onClose} disabled={saving} className={cancelBtnClass}>

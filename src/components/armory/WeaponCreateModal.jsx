@@ -1,4 +1,5 @@
 import TacticalPanel from '../ui/TacticalPanel'
+import BallisticInfoCollapsible from './BallisticInfoCollapsible'
 
 const WEAPON_CATEGORIES = [
   { value: 'T_TAB', label: 'T_TAB · Taktik Tabanca' },
@@ -31,6 +32,10 @@ const submitBtnClass =
  *     brand: string
  *     serialNo: string
  *     calibre: string
+ *     barrelLength: string
+ *     twistRate: string
+ *     muzzleVelocity: string
+ *     sightHeightDefault: string
  *   }
  *   onClose: () => void
  *   onChange: (patch: Record<string, string>) => void
@@ -94,6 +99,16 @@ export default function WeaponCreateModal({ open, saving, form, onClose, onChang
               <span className={labelClass}>KALİBRE</span>
               <input className={inputClass} value={form.calibre} onChange={(e) => onChange({ calibre: e.target.value })} placeholder="9×19" />
             </label>
+            <BallisticInfoCollapsible
+              kind="weapon"
+              values={{
+                barrelLength: form.barrelLength,
+                twistRate: form.twistRate,
+                muzzleVelocity: form.muzzleVelocity,
+                sightHeightDefault: form.sightHeightDefault,
+              }}
+              onChange={onChange}
+            />
           </div>
           <div className={actionBarClass}>
             <button type="button" onClick={onClose} disabled={saving} className={cancelBtnClass}>

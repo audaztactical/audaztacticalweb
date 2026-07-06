@@ -83,6 +83,22 @@ export const InventoryItemSchema = {
   /** Dashboard SİSTEM_GÜNLÜĞÜ — son audit */
   auditLogCode: 'string',
   auditLogMsg: 'string',
+  /** Silah (P_TFK/T_TAB/AV_TFK) — balistik opsiyonel */
+  barrelLength: 'number|null',
+  twistRate: 'string|null',
+  muzzleVelocity: 'number|null',
+  sightHeightDefault: 'number|null',
+  /** Optik (OPT + OPTIK) — balistik opsiyonel */
+  magnification: 'string|null',
+  clickValueMoa: 'number|null',
+  clickValueMrad: 'number|null',
+  ffpSfp: 'string|null',
+  reticleType: 'string|null',
+  /** Mühimmat (MHM) — balistik opsiyonel */
+  bulletWeight: 'number|null',
+  bulletDiameter: 'number|null',
+  ballisticCoefficient: 'number|null',
+  bcModel: 'string|null',
   createdAt: 'timestamp',
   updatedAt: 'timestamp',
 }

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Plus } from 'lucide-react'
 import AccessoryMaintenanceModal from './AccessoryMaintenanceModal'
 import AccessoryMountModal from './AccessoryMountModal'
+import InventoryBallisticEditPanel from './InventoryBallisticEditPanel'
 import MatrixWireVisualizer from './MatrixWireVisualizer'
 import TacticalPanel from '../ui/TacticalPanel'
 import {
@@ -15,6 +16,7 @@ import {
   isAccessoryIdle,
   isAccessoryMounted,
   localizedAccessoryTypeLabel,
+  resolveAccessoryKind,
 } from '../../lib/accessoryIlws'
 import { filterAuditForAccessory, resolveAuditEntryDisplay } from '../../lib/armoryAuditTrail'
 import { syncDetachAccessory, syncMountAccessory } from '../../lib/armoryMountSync'
@@ -558,6 +560,11 @@ export default function AttachmentsDeepDive({
               </div>
 
               <div className={`min-h-0 flex-1 p-3 ${panelScroll}`}>
+                {resolveAccessoryKind(selected.accessoryKind) === 'OPTIK' ? (
+                  <div className="mb-3">
+                    <InventoryBallisticEditPanel kind="optic" row={selected} updateItem={updateItem} />
+                  </div>
+                ) : null}
                 {rightTab === 'deploy' ? (
                   <section className="space-y-3">
                     <button type="button" onClick={() => openCenterLogs('deploy')} disabled={!selected} className="w-full rounded border border-[#00b4ff]/55 bg-[#00b4ff]/12 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#5ec8ff] shadow-[0_0_18px_rgba(0,180,255,0.28)] transition hover:bg-[#00b4ff]/20 hover:shadow-[0_0_24px_rgba(0,180,255,0.4)] disabled:opacity-40">

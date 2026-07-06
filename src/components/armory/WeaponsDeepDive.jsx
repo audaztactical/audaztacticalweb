@@ -22,6 +22,7 @@ import { isMaintenanceRequired } from '../../lib/weaponMaintenanceAlarm'
 import WeaponMaintenanceCenterAlert from './WeaponMaintenanceCenterAlert'
 import WeaponMaintenanceLogModal from './WeaponMaintenanceLogModal'
 import { WeaponMaintenanceAlarmFromInventory } from './WeaponMaintenanceAlarmPanel'
+import InventoryBallisticEditPanel from './InventoryBallisticEditPanel'
 import { syncDetachAccessory, syncMountAccessory } from '../../lib/armoryMountSync'
 import { invStr } from '../../lib/inventoryIlws'
 
@@ -338,6 +339,8 @@ export default function WeaponsDeepDive({
                   [ ⚠️ YİV-SET KRİTİK / NAMLU DEĞİŞİMİ ]
                 </p>
               ) : null}
+
+              <InventoryBallisticEditPanel kind="weapon" row={selected} updateItem={updateItem} />
 
               <div className="space-y-2 border-b border-white/10 pb-3">
                 <p className="font-mono-technical text-[8px] font-bold uppercase text-app-text/55">AKSESUAR:</p>

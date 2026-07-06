@@ -1,4 +1,5 @@
 import TacticalPanel from '../ui/TacticalPanel'
+import BallisticInfoCollapsible from './BallisticInfoCollapsible'
 import { ACCESSORY_KINDS } from '../../lib/accessoryIlws'
 
 const labelClass =
@@ -25,6 +26,11 @@ const submitBtnClass =
  *     technicalDescription: string
  *     brand: string
  *     serialNo: string
+ *     magnification: string
+ *     clickValueMoa: string
+ *     clickValueMrad: string
+ *     ffpSfp: string
+ *     reticleType: string
  *   }
  *   onClose: () => void
  *   onChange: (patch: Record<string, string>) => void
@@ -86,6 +92,19 @@ export default function AccessoryCreateModal({ open, saving, form, onClose, onCh
                 <input className={inputClass} value={form.serialNo} onChange={(e) => onChange({ serialNo: e.target.value })} />
               </label>
             </div>
+            {form.accessoryKind === 'OPTIK' ? (
+              <BallisticInfoCollapsible
+                kind="optic"
+                values={{
+                  magnification: form.magnification,
+                  clickValueMoa: form.clickValueMoa,
+                  clickValueMrad: form.clickValueMrad,
+                  ffpSfp: form.ffpSfp,
+                  reticleType: form.reticleType,
+                }}
+                onChange={onChange}
+              />
+            ) : null}
           </div>
           <div className={actionBarClass}>
             <button type="button" onClick={onClose} disabled={saving} className={cancelBtnClass}>

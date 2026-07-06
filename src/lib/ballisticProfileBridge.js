@@ -7,6 +7,7 @@ import { calculateBallistics } from './ballisticsEngine.js'
 import { ammoDisplayLabel, filterAmmoRows, findAmmoForWeapon } from './ammoIlws.js'
 import { accessoryDisplayName, getMountedWeaponId, resolveAccessoryKind } from './accessoryIlws.js'
 import { invNum, invStr } from './inventoryIlws.js'
+import { parseBcModel, parseFfpSfp } from './inventoryBallisticFields.js'
 import { filterWeaponRows, weaponDisplayName } from './weaponIlws.js'
 
 /** @typedef {import('./schema.js').BallisticProfileDocument} BallisticProfileDocument */
@@ -202,6 +203,9 @@ export function buildProfileDefaultsFromInventory(weaponId, opticId, ammoId, inv
   const resolvedAmmo =
     ammoRow ?? (weapon ? getMatchingAmmoForWeapon(weapon, ammo) : null)
 
+  const ammoBcModel = parseBcModel(resolvedAmmo?.bcModel ?? resolvedAmmo?.ballisticType)
+  const opticFfp = parseFfpSfp(resolvedOptic?.ffpSfp)
+
   const weaponLabel = weapon ? weaponDisplayName(weapon) : 'Manuel Silah'
   const ammoLabel = resolvedAmmo ? ammoDisplayLabel(resolvedAmmo) : 'Manuel Mühimmat'
   const opticLabel = resolvedOptic ? accessoryDisplayName(resolvedOptic) : null
@@ -212,19 +216,57 @@ export function buildProfileDefaultsFromInventory(weaponId, opticId, ammoId, inv
 
   return {
     profileName,
+    ...base,
     linkedWeaponId: weapon ? String(weapon.id) : null,
     linkedOpticId: resolvedOptic ? String(resolvedOptic.id) : null,
     linkedAmmoId: resolvedAmmo ? String(resolvedAmmo.id) : null,
-    ...base,
     weapon: {
       ...base.weapon,
-      barrelLength: weapon?.barrelLength != null ? invNum(weapon.barrelLength) || null : null,
+      barrelLength:
+        weapon?.barrelLength != null && weapon.barrelLength !== ''
+          ? invNum(weapon.barrelLength) || null
+          : null,
       twistRate: invStr(weapon?.twistRate).trim() || invStr(weapon?.b_twt).trim() || null,
+      sightHeight:
+        weapon?.sightHeightDefault != null && invNum(weapon.sightHeightDefault) > 0
+          ? invNum(weapon.sightHeightDefault)
+          : base.weapon.sightHeight,
     },
     optic: {
       ...base.optic,
       magnification: invStr(resolvedOptic?.magnification).trim() || null,
+      clickValueMoa:
+        resolvedOptic?.clickValueMoa != null && resolvedOptic.clickValueMoa !== ''
+          ? invNum(resolvedOptic.clickValueMoa) || null
+          : null,
+      clickValueMrad:
+        resolvedOptic?.clickValueMrad != null && resolvedOptic.clickValueMrad !== ''
+          ? invNum(resolvedOptic.clickValueMrad) || null
+          : null,
+      ffpSfp: opticFfp,
       reticleType: invStr(resolvedOptic?.reticleType ?? resolvedOptic?.reticle).trim() || null,
+    },
+    ammo: {
+      ...base.ammo,
+      bulletWeight:
+        resolvedAmmo?.bulletWeight != null && invNum(resolvedAmmo.bulletWeight) > 0
+          ? invNum(resolvedAmmo.bulletWeight)
+          : base.ammo.bulletWeight,
+      bulletDiameter:
+        resolvedAmmo?.bulletDiameter != null && invNum(resolvedAmmo.bulletDiameter) > 0
+          ? invNum(resolvedAmmo.bulletDiameter)
+          : base.ammo.bulletDiameter,
+      muzzleVelocity:
+        resolvedAmmo?.muzzleVelocity != null && invNum(resolvedAmmo.muzzleVelocity) > 0
+          ? invNum(resolvedAmmo.muzzleVelocity)
+          : weapon?.muzzleVelocity != null && invNum(weapon.muzzleVelocity) > 0
+            ? invNum(weapon.muzzleVelocity)
+            : base.ammo.muzzleVelocity,
+      ballisticCoefficient:
+        resolvedAmmo?.ballisticCoefficient != null && invNum(resolvedAmmo.ballisticCoefficient) > 0
+          ? invNum(resolvedAmmo.ballisticCoefficient)
+          : base.ammo.ballisticCoefficient,
+      bcModel: ammoBcModel ?? base.ammo.bcModel,
     },
   }
 }

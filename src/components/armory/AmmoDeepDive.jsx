@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Plus } from 'lucide-react'
 import MatrixWireVisualizer from './MatrixWireVisualizer'
+import InventoryBallisticEditPanel from './InventoryBallisticEditPanel'
 import TacticalPanel from '../ui/TacticalPanel'
 import {
   AMMO_TX_TYPES,
@@ -386,7 +387,8 @@ export default function AmmoDeepDive({
           </p>
           {selected ? (
             <div className={`min-h-0 flex-1 space-y-3 p-3 ${panelScroll}`}>
-<div className="rounded border border-accent/30 bg-black/50 p-3">
+              <InventoryBallisticEditPanel kind="ammo" row={selected} updateItem={updateItem} />
+              <div className="rounded border border-accent/30 bg-black/50 p-3">
                 <p className="font-mono-technical text-[8px] font-bold uppercase tracking-wider text-app-text/55">
                   KRİTİK_EŞİK (ADET)
                 </p>

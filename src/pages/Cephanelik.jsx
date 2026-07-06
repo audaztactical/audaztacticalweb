@@ -38,6 +38,14 @@ import {
   todayIsoDate,
   weaponTypeFromCategory,
 } from '../lib/weaponIlws'
+import {
+  ammoBallisticPatchFromForm,
+  opticBallisticPatchFromForm,
+  weaponBallisticPatchFromForm,
+  WEAPON_BALLISTIC_FORM_EMPTY,
+  OPTIC_BALLISTIC_FORM_EMPTY,
+  AMMO_BALLISTIC_FORM_EMPTY,
+} from '../lib/inventoryBallisticFields'
 
 /** @typedef {import('../lib/inventoryIlws').IlwsFilterId} IlwsFilterId */
 /** @typedef {null | 'weapons' | 'attachments' | 'ammo'} IlwsActiveCategory */
@@ -81,6 +89,7 @@ const WEAPON_FORM_INITIAL = {
   brand: '',
   serialNo: '',
   calibre: '',
+  ...WEAPON_BALLISTIC_FORM_EMPTY,
 }
 
 const ACCESSORY_FORM_INITIAL = {
@@ -89,6 +98,7 @@ const ACCESSORY_FORM_INITIAL = {
   technicalDescription: '',
   brand: '',
   serialNo: '',
+  ...OPTIC_BALLISTIC_FORM_EMPTY,
 }
 
 const AMMO_FORM_INITIAL = {
@@ -97,6 +107,7 @@ const AMMO_FORM_INITIAL = {
   initialStock: '1000',
   unitPrice: '',
   criticalThreshold: String(DEFAULT_CRITICAL_THRESHOLD),
+  ...AMMO_BALLISTIC_FORM_EMPTY,
 }
 
 export default function Cephanelik() {
@@ -246,6 +257,7 @@ export default function Cephanelik() {
             : [],
         operationalStatus: 'AKTİF',
         created_at: created,
+        ...ammoBallisticPatchFromForm(ammoForm),
       })
       setAmmoModalOpen(false)
       setAmmoForm({ ...AMMO_FORM_INITIAL })
@@ -276,6 +288,7 @@ export default function Cephanelik() {
         linkedWeaponName: null,
         maintenance_logs: [],
         created_at: todayIsoDate(),
+        ...opticBallisticPatchFromForm(accessoryForm),
       })
       setAccessoryModalOpen(false)
       setAccessoryForm({ ...ACCESSORY_FORM_INITIAL })
@@ -311,6 +324,7 @@ export default function Cephanelik() {
         attached_accessory_id: null,
         conditionPercent: 100,
         created_at: todayIsoDate(),
+        ...weaponBallisticPatchFromForm(weaponForm),
       })
       setWeaponModalOpen(false)
       setWeaponForm({ ...WEAPON_FORM_INITIAL })

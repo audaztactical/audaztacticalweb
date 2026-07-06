@@ -152,6 +152,16 @@ export function buildWeaponSpecs(row) {
     { key: 'KALİBRE', value: invStr(row.calibre) || '—' },
     { key: 'SERİ_NO', value: invStr(row.serialNo) || invStr(row.serial) || '—' },
     { key: 'MARKA', value: invStr(row.brand) || '—' },
+    ...(row.barrelLength != null && row.barrelLength !== ''
+      ? [{ key: 'NAMLU_UZUNLUĞU', value: `${row.barrelLength} in` }]
+      : []),
+    ...(invStr(row.twistRate).trim() ? [{ key: 'BURULMA', value: invStr(row.twistRate).trim() }] : []),
+    ...(row.muzzleVelocity != null && row.muzzleVelocity !== ''
+      ? [{ key: 'NAMLU_HIZI', value: `${row.muzzleVelocity} fps` }]
+      : []),
+    ...(row.sightHeightDefault != null && row.sightHeightDefault !== ''
+      ? [{ key: 'SIGHT_HEIGHT', value: `${row.sightHeightDefault} cm` }]
+      : []),
   ]
 }
 
