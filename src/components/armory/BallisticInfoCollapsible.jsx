@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
+import ClickUnitSystemToggle from '../shared/ClickUnitSystemToggle'
+import { parseClickUnitSystem } from '../../lib/clickUnitSystem'
 
 const labelClass =
   'block font-mono-technical text-xs font-bold uppercase tracking-[0.2em] text-app-text/55 sm:text-[8px]'
@@ -31,6 +33,20 @@ export default function BallisticInfoCollapsible({
   }, [autoExpand])
 
   const patch = (key, value) => onChange({ [key]: value })
+
+  const handleClickUnitChange = (unit) => {
+    /** @type {Record<string, string>} */
+    const patchValues = { clickUnitSystem: unit ?? '' }
+    if (unit === 'MOA') patchValues.clickValueMrad = ''
+    else if (unit === 'MRAD') patchValues.clickValueMoa = ''
+    else {
+      patchValues.clickValueMoa = ''
+      patchValues.clickValueMrad = ''
+    }
+    onChange(patchValues)
+  }
+
+  const clickUnit = parseClickUnitSystem(values.clickUnitSystem)
 
   return (
     <div className={`rounded-lg border border-white/10 bg-black/25 ${className}`.trim()}>
@@ -126,7 +142,12 @@ export default function BallisticInfoCollapsible({
                   />
                 </label>
               </div>
-              <div className="grid gap-2 sm:grid-cols-2">
+              <ClickUnitSystemToggle
+                value={clickUnit}
+                onChange={handleClickUnitChange}
+                labelClass={labelClass}
+              />
+              {clickUnit === 'MOA' ? (
                 <label className="block space-y-1">
                   <span className={labelClass}>TIK DEĞERİ (MOA)</span>
                   <input
@@ -139,6 +160,8 @@ export default function BallisticInfoCollapsible({
                     placeholder="0.25"
                   />
                 </label>
+              ) : null}
+              {clickUnit === 'MRAD' ? (
                 <label className="block space-y-1">
                   <span className={labelClass}>TIK DEĞERİ (MRAD)</span>
                   <input
@@ -151,7 +174,12 @@ export default function BallisticInfoCollapsible({
                     placeholder="0.1"
                   />
                 </label>
-              </div>
+              ) : null}
+              {clickUnit ? null : (
+                <p className="font-mono-technical text-[9px] text-app-text/40">
+                  Tık değeri girmek için önce birim sistemi seçin.
+                </p>
+              )}
               <label className="block space-y-1">
                 <span className={labelClass}>FFP / SFP</span>
                 <select

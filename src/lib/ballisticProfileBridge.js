@@ -8,6 +8,7 @@ import { ammoDisplayLabel, filterAmmoRows, findAmmoForWeapon } from './ammoIlws.
 import { accessoryDisplayName, getMountedWeaponId, resolveAccessoryKind } from './accessoryIlws.js'
 import { invNum, invStr } from './inventoryIlws.js'
 import { parseBcModel, parseFfpSfp } from './inventoryBallisticFields.js'
+import { parseClickUnitSystem } from './clickUnitSystem.js'
 import { filterWeaponRows, weaponDisplayName } from './weaponIlws.js'
 
 /** @typedef {import('./schema.js').BallisticProfileDocument} BallisticProfileDocument */
@@ -51,6 +52,7 @@ export function createDefaultBallisticProfileFields() {
       zeroDistance: 100,
     },
     optic: {
+      clickUnitSystem: null,
       magnification: null,
       clickValueMoa: null,
       clickValueMrad: null,
@@ -234,6 +236,7 @@ export function buildProfileDefaultsFromInventory(weaponId, opticId, ammoId, inv
     },
     optic: {
       ...base.optic,
+      clickUnitSystem: parseClickUnitSystem(resolvedOptic?.clickUnitSystem),
       magnification: invStr(resolvedOptic?.magnification).trim() || null,
       clickValueMoa:
         resolvedOptic?.clickValueMoa != null && resolvedOptic.clickValueMoa !== ''
@@ -291,6 +294,7 @@ export function normalizeBallisticProfile(profile) {
 
   const ffpRaw = invStr(optic.ffpSfp).toUpperCase()
   const ffpSfp = ffpRaw === 'FFP' || ffpRaw === 'SFP' ? ffpRaw : null
+  const clickUnitSystem = parseClickUnitSystem(optic.clickUnitSystem)
 
   return {
     id: p.id != null ? String(p.id) : undefined,
@@ -305,9 +309,20 @@ export function normalizeBallisticProfile(profile) {
       zeroDistance: invNum(weapon.zeroDistance) > 0 ? invNum(weapon.zeroDistance) : 100,
     },
     optic: {
+      clickUnitSystem,
       magnification: invStr(optic.magnification).trim() || null,
-      clickValueMoa: optic.clickValueMoa != null && optic.clickValueMoa !== '' ? invNum(optic.clickValueMoa) : null,
-      clickValueMrad: optic.clickValueMrad != null && optic.clickValueMrad !== '' ? invNum(optic.clickValueMrad) : null,
+      clickValueMoa:
+        clickUnitSystem === 'MRAD'
+          ? null
+          : optic.clickValueMoa != null && optic.clickValueMoa !== ''
+            ? invNum(optic.clickValueMoa)
+            : null,
+      clickValueMrad:
+        clickUnitSystem === 'MOA'
+          ? null
+          : optic.clickValueMrad != null && optic.clickValueMrad !== ''
+            ? invNum(optic.clickValueMrad)
+            : null,
       ffpSfp,
       reticleType: invStr(optic.reticleType).trim() || null,
     },

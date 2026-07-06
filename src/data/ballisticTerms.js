@@ -22,6 +22,20 @@ export const TABLE_COLUMN_TERM_KEYS = [
   'machNumber',
 ]
 
+/**
+ * @param {unknown} clickUnitSystem
+ * @returns {string[]}
+ */
+export function tableColumnTermKeysForUnit(clickUnitSystem) {
+  const base = ['distance', 'drop', 'windage', 'timeOfFlight', 'velocity', 'remainingEnergy']
+  const unit = String(clickUnitSystem ?? '').toUpperCase()
+  if (unit !== 'MOA' && unit !== 'MRAD') {
+    return [...base, 'moaClicks', 'mradClicks', 'machNumber']
+  }
+  if (unit === 'MOA') return [...base, 'moaClicks', 'machNumber']
+  return [...base, 'mradClicks', 'machNumber']
+}
+
 /** @type {BallisticTerm[]} */
 export const BALLISTIC_TERMS = [
   {

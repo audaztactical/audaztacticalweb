@@ -8,6 +8,8 @@ import {
   Wind,
 } from 'lucide-react'
 import InfoTooltip from '../shared/InfoTooltip.jsx'
+import ClickUnitSystemToggle from '../shared/ClickUnitSystemToggle.jsx'
+import { parseClickUnitSystem } from '../../lib/clickUnitSystem.js'
 
 const labelClass =
   'flex items-center gap-1 font-mono-technical text-[9px] font-bold uppercase tracking-[0.18em] text-app-text/55'
@@ -98,6 +100,22 @@ export default function BallisticFormPanel({
   const patchOptic = (p) => onFormChange({ optic: { ...optic, ...p } })
   const patchAmmo = (p) => onFormChange({ ammo: { ...ammo, ...p } })
   const patchAdvanced = (p) => onFormChange({ advanced: { ...advanced, ...p } })
+
+  const clickUnit = parseClickUnitSystem(optic.clickUnitSystem)
+
+  const handleClickUnitChange = (unit) => {
+    /** @type {Record<string, unknown>} */
+    const patchValues = { clickUnitSystem: unit }
+    if (unit === 'MOA') {
+      patchValues.clickValueMrad = null
+    } else if (unit === 'MRAD') {
+      patchValues.clickValueMoa = null
+    } else {
+      patchValues.clickValueMoa = null
+      patchValues.clickValueMrad = null
+    }
+    patchOptic(patchValues)
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -246,7 +264,10 @@ export default function BallisticFormPanel({
               onChange={(e) => patchOptic({ reticleType: e.target.value || null })}
             />
           </Field>
-          <Field label="Tık MOA" termKey="clickValue">
+        </div>
+        <ClickUnitSystemToggle value={clickUnit} onChange={handleClickUnitChange} />
+        {clickUnit === 'MOA' ? (
+          <Field label="Tık Değeri (MOA)" termKey="moaClicks">
             <input
               type="number"
               step="0.125"
@@ -257,7 +278,9 @@ export default function BallisticFormPanel({
               }
             />
           </Field>
-          <Field label="Tık MRAD" termKey="clickValue">
+        ) : null}
+        {clickUnit === 'MRAD' ? (
+          <Field label="Tık Değeri (MRAD)" termKey="mradClicks">
             <input
               type="number"
               step="0.05"
@@ -268,7 +291,12 @@ export default function BallisticFormPanel({
               }
             />
           </Field>
-        </div>
+        ) : null}
+        {clickUnit ? null : (
+          <p className="font-mono-technical text-[9px] text-app-text/40">
+            Tık değeri girmek için önce birim sistemi seçin.
+          </p>
+        )}
         <Field label="FFP / SFP" termKey="ffpSfp">
           <select
             className={inputClass}

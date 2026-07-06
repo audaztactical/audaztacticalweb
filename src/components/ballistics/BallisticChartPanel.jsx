@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import debounce from 'lodash/debounce'
 import {
+  isDualClickUnitDisplay,
+  parseClickUnitSystem,
+} from '../../lib/clickUnitSystem.js'
+import {
   CartesianGrid,
   ComposedChart,
   Line,
@@ -139,12 +143,11 @@ function pickAlternateMetric(current, exclude) {
  *   value: ChartMetricId
  *   onChange: (id: ChartMetricId) => void
  *   exclude?: ChartMetricId
+ *   metricIds?: ChartMetricId[]
  * }} props
  */
-function MetricSelect({ id, label, value, onChange, exclude }) {
-  const options = exclude
-    ? CHART_METRIC_IDS.filter((metricId) => metricId !== exclude)
-    : CHART_METRIC_IDS
+function MetricSelect({ id, label, value, onChange, exclude, metricIds = CHART_METRIC_IDS }) {
+  const options = exclude ? metricIds.filter((metricId) => metricId !== exclude) : metricIds
 
   return (
     <label htmlFor={id} className="flex min-w-[10rem] flex-1 flex-col gap-1 sm:max-w-xs">
@@ -252,12 +255,27 @@ function MetricChart({
 }
 
 /**
+ * @param {unknown} clickUnitSystem
+ * @returns {ChartMetricId[]}
+ */
+function chartMetricsForUnit(clickUnitSystem) {
+  if (parseClickUnitSystem(clickUnitSystem) === 'MOA') {
+    return CHART_METRIC_IDS.filter((id) => id !== 'mrad')
+  }
+  if (parseClickUnitSystem(clickUnitSystem) === 'MRAD') {
+    return CHART_METRIC_IDS.filter((id) => id !== 'moa')
+  }
+  return CHART_METRIC_IDS
+}
+
+/**
  * @param {{
  *   results: import('../../lib/ballisticsEngine.js').BallisticsPointResult[]
  *   activeDistance: number
  *   onActiveDistanceChange: (d: number) => void
  *   rangeMin: number
  *   rangeMax: number
+ *   clickUnitSystem?: string | null
  * }} props
  */
 export default function BallisticChartPanel({
@@ -266,10 +284,19 @@ export default function BallisticChartPanel({
   onActiveDistanceChange,
   rangeMin,
   rangeMax,
+  clickUnitSystem = null,
 }) {
   const [primaryMetric, setPrimaryMetric] = useState(/** @type {ChartMetricId} */ ('drop'))
   const [compareMode, setCompareMode] = useState(false)
   const [secondaryMetric, setSecondaryMetric] = useState(/** @type {ChartMetricId} */ ('velocity'))
+
+  const availableMetrics = useMemo(
+    () => chartMetricsForUnit(clickUnitSystem),
+    [clickUnitSystem],
+  )
+
+  const dualUnitDisplay = isDualClickUnitDisplay(clickUnitSystem)
+  const unit = parseClickUnitSystem(clickUnitSystem)
 
   const chartData = useMemo(
     () =>
@@ -310,6 +337,15 @@ export default function BallisticChartPanel({
     }
   }, [compareMode, primaryMetric, secondaryMetric])
 
+  useEffect(() => {
+    if (!availableMetrics.includes(primaryMetric)) {
+      setPrimaryMetric('drop')
+    }
+    if (!availableMetrics.includes(secondaryMetric)) {
+      setSecondaryMetric(pickAlternateMetric('velocity', primaryMetric))
+    }
+  }, [availableMetrics, primaryMetric, secondaryMetric])
+
   const handleChartMouseMove = useCallback(
     (state) => {
       const label = state?.activeLabel
@@ -334,47 +370,62 @@ export default function BallisticChartPanel({
   }, [])
 
   /** @param {import('recharts').TooltipProps<number, string>} props */
-  const ChartTooltip = useCallback(({ active, payload }) => {
-    if (!active || !payload?.length) return null
-    const row = payload[0]?.payload
-    if (!row?.raw) return null
-    const r = row.raw
-    return (
-      <div className="pointer-events-none w-[min(18rem,calc(100vw-2rem))] rounded border border-emerald-500/40 bg-black/95 px-3 py-2 shadow-xl">
-        <p className="font-mono-technical text-[10px] font-bold uppercase tracking-wider text-emerald-400">
-          {r.distance} m
-        </p>
-        <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 font-mono-technical text-[10px] text-slate-300">
-          <dt className="text-slate-500">Drop</dt>
-          <dd>{Math.abs(r.dropCm).toFixed(1)} cm</dd>
-          <dt className="text-slate-500">Windage</dt>
-          <dd>{Math.abs(r.windageCm).toFixed(1)} cm</dd>
-          <dt className="text-slate-500">TOF</dt>
-          <dd>{r.timeOfFlightSeconds.toFixed(3)} s</dd>
-          <dt className="text-slate-500">Hız</dt>
-          <dd>{r.velocityRemaining.toFixed(0)} fps</dd>
-          <dt className="text-slate-500">Enerji</dt>
-          <dd>{r.energyRemaining.toFixed(0)} ft·lb</dd>
-          <dt className="text-slate-500">MOA drop</dt>
-          <dd>{r.dropMOA.toFixed(2)}</dd>
-          <dt className="text-slate-500">MRAD drop</dt>
-          <dd>{r.dropMRAD.toFixed(2)}</dd>
-          {r.dropClicksMoa != null ? (
-            <>
-              <dt className="text-slate-500">MOA tık</dt>
-              <dd>{r.dropClicksMoa.toFixed(1)}</dd>
-            </>
-          ) : null}
-          {r.dropClicksMrad != null ? (
-            <>
-              <dt className="text-slate-500">MRAD tık</dt>
-              <dd>{r.dropClicksMrad.toFixed(1)}</dd>
-            </>
-          ) : null}
-        </dl>
-      </div>
-    )
-  }, [])
+  const ChartTooltip = useCallback(
+    ({ active, payload }) => {
+      if (!active || !payload?.length) return null
+      const row = payload[0]?.payload
+      if (!row?.raw) return null
+      const r = row.raw
+      return (
+        <div className="pointer-events-none w-[min(18rem,calc(100vw-2rem))] rounded border border-emerald-500/40 bg-black/95 px-3 py-2 shadow-xl">
+          <p className="font-mono-technical text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+            {r.distance} m
+          </p>
+          <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 font-mono-technical text-[10px] text-slate-300">
+            <dt className="text-slate-500">Drop</dt>
+            <dd>{Math.abs(r.dropCm).toFixed(1)} cm</dd>
+            <dt className="text-slate-500">Windage</dt>
+            <dd>{Math.abs(r.windageCm).toFixed(1)} cm</dd>
+            <dt className="text-slate-500">TOF</dt>
+            <dd>{r.timeOfFlightSeconds.toFixed(3)} s</dd>
+            <dt className="text-slate-500">Hız</dt>
+            <dd>{r.velocityRemaining.toFixed(0)} fps</dd>
+            <dt className="text-slate-500">Enerji</dt>
+            <dd>{r.energyRemaining.toFixed(0)} ft·lb</dd>
+            {dualUnitDisplay || unit === 'MOA' ? (
+              <>
+                <dt className="text-slate-500">MOA drop</dt>
+                <dd>{r.dropMOA.toFixed(2)}</dd>
+              </>
+            ) : null}
+            {dualUnitDisplay || unit === 'MRAD' ? (
+              <>
+                <dt className="text-slate-500">MRAD drop</dt>
+                <dd>{r.dropMRAD.toFixed(2)}</dd>
+              </>
+            ) : null}
+            {dualUnitDisplay || unit === 'MOA' ? (
+              r.dropClicksMoa != null ? (
+                <>
+                  <dt className="text-slate-500">MOA tık</dt>
+                  <dd>{r.dropClicksMoa.toFixed(1)}</dd>
+                </>
+              ) : null
+            ) : null}
+            {dualUnitDisplay || unit === 'MRAD' ? (
+              r.dropClicksMrad != null ? (
+                <>
+                  <dt className="text-slate-500">MRAD tık</dt>
+                  <dd>{r.dropClicksMrad.toFixed(1)}</dd>
+                </>
+              ) : null
+            ) : null}
+          </dl>
+        </div>
+      )
+    },
+    [dualUnitDisplay, unit],
+  )
 
   if (!chartData.length) {
     return (
@@ -394,6 +445,7 @@ export default function BallisticChartPanel({
           label="Metrik"
           value={primaryMetric}
           onChange={handlePrimaryMetricChange}
+          metricIds={availableMetrics}
         />
         <div className="flex shrink-0 flex-col gap-1">
           <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.18em] text-app-text/45">
@@ -420,6 +472,7 @@ export default function BallisticChartPanel({
             value={secondaryMetric}
             onChange={setSecondaryMetric}
             exclude={primaryMetric}
+            metricIds={availableMetrics}
           />
         ) : null}
       </div>
@@ -487,8 +540,12 @@ export default function BallisticChartPanel({
             ['TOF', `${activeResult.timeOfFlightSeconds.toFixed(3)} s`],
             ['Hız', `${activeResult.velocityRemaining.toFixed(0)} fps`],
             ['Enerji', `${activeResult.energyRemaining.toFixed(0)} ft·lb`],
-            ['MOA', activeResult.dropMOA.toFixed(2)],
-            ['MRAD', activeResult.dropMRAD.toFixed(2)],
+            ...(dualUnitDisplay || unit === 'MOA'
+              ? [['MOA', activeResult.dropMOA.toFixed(2)]]
+              : []),
+            ...(dualUnitDisplay || unit === 'MRAD'
+              ? [['MRAD', activeResult.dropMRAD.toFixed(2)]]
+              : []),
             ['Mach', activeResult.machNumber.toFixed(3)],
           ].map(([k, v]) => (
             <div key={k}>

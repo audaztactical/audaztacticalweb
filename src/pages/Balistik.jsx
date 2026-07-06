@@ -16,6 +16,7 @@ import {
   runBallisticsForProfile,
 } from '../lib/ballisticProfileBridge'
 import { exportBallisticReportPdf } from '../lib/ballisticReportPdf'
+import { angleTableCellsForRow, buildAngleTableColumns } from '../lib/clickUnitSystem'
 import { weaponDisplayName } from '../lib/weaponIlws'
 
 /** @typedef {import('../lib/ballisticsEngine.js').BallisticsEngineOutput} BallisticsEngineOutput */
@@ -41,16 +42,13 @@ const DEFAULT_ENV = {
 }
 
 /** @type {{ label: string, termKey: string }[]} */
-const TABLE_COLUMNS = [
+const TABLE_COLUMNS_BASE = [
   { label: 'M', termKey: 'distance' },
   { label: 'Drop', termKey: 'drop' },
   { label: 'Wind', termKey: 'windage' },
   { label: 'TOF', termKey: 'timeOfFlight' },
   { label: 'fps', termKey: 'velocity' },
   { label: 'E', termKey: 'remainingEnergy' },
-  { label: 'MOA', termKey: 'moaClicks' },
-  { label: 'MRAD', termKey: 'mradClicks' },
-  { label: 'Mach', termKey: 'machNumber' },
 ]
 
 export default function Balistik() {
@@ -77,6 +75,13 @@ export default function Balistik() {
   const [resultTab, setResultTab] = useState(/** @type {'chart' | 'table'} */ ('chart'))
 
   const weapons = useMemo(() => filterInventoryWeapons(inventoryItems), [inventoryItems])
+
+  const clickUnitSystem = form.optic?.clickUnitSystem ?? null
+
+  const tableColumns = useMemo(
+    () => [...TABLE_COLUMNS_BASE, ...buildAngleTableColumns(clickUnitSystem), { label: 'Mach', termKey: 'machNumber' }],
+    [clickUnitSystem],
+  )
 
   const onFormChange = useCallback((patch) => {
     setForm((prev) => ({ ...prev, ...patch }))
@@ -166,6 +171,7 @@ export default function Balistik() {
     try {
       const reportMeta = await exportBallisticReportPdf(output, {
         profileName: String(form.profileName),
+        clickUnitSystem,
       })
 
       if (import.meta.env.DEV) {
@@ -174,7 +180,7 @@ export default function Balistik() {
     } finally {
       setPdfBusy(false)
     }
-  }, [output, form.profileName])
+  }, [output, form.profileName, clickUnitSystem])
 
   const resultTabBtnClass = (active) =>
     [
@@ -312,6 +318,7 @@ export default function Balistik() {
                       onActiveDistanceChange={setActiveDistance}
                       rangeMin={output.results[0]?.distance ?? rangeMin}
                       rangeMax={output.results[output.results.length - 1]?.distance ?? rangeMax}
+                      clickUnitSystem={clickUnitSystem}
                     />
 
                     <BallisticTrajectoryHud results={output.results} activeDistance={activeDistance} />
@@ -342,7 +349,7 @@ export default function Balistik() {
                     <table className="w-full min-w-[640px] text-left font-mono-technical text-[10px] text-slate-300">
                       <thead className="sticky top-0 z-[1] border-b border-white/10 bg-app-bg/95 text-[8px] uppercase tracking-wider text-app-text/45 backdrop-blur-sm">
                         <tr>
-                          {TABLE_COLUMNS.map(({ label, termKey }) => (
+                          {tableColumns.map(({ label, termKey }) => (
                             <th key={termKey} className="px-2 py-2 font-normal">
                               <span className="inline-flex items-center gap-0.5">
                                 {label}
@@ -368,8 +375,11 @@ export default function Balistik() {
                             <td className="px-2 py-1.5 tabular-nums">{r.timeOfFlightSeconds.toFixed(3)}</td>
                             <td className="px-2 py-1.5 tabular-nums">{r.velocityRemaining.toFixed(0)}</td>
                             <td className="px-2 py-1.5 tabular-nums">{r.energyRemaining.toFixed(0)}</td>
-                            <td className="px-2 py-1.5 tabular-nums">{r.dropMOA.toFixed(2)}</td>
-                            <td className="px-2 py-1.5 tabular-nums">{r.dropMRAD.toFixed(2)}</td>
+                            {angleTableCellsForRow(r, clickUnitSystem).map((cell, idx) => (
+                              <td key={`angle-${idx}`} className="px-2 py-1.5 tabular-nums">
+                                {cell}
+                              </td>
+                            ))}
                             <td className="px-2 py-1.5 tabular-nums">{r.machNumber.toFixed(3)}</td>
                           </tr>
                         ))}

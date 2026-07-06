@@ -89,6 +89,7 @@ export const InventoryItemSchema = {
   muzzleVelocity: 'number|null',
   sightHeightDefault: 'number|null',
   /** Optik (OPT + OPTIK) — balistik opsiyonel */
+  clickUnitSystem: 'string|null',
   magnification: 'string|null',
   clickValueMoa: 'number|null',
   clickValueMrad: 'number|null',
@@ -242,7 +243,7 @@ export const BallisticProfileSchema = {
   linkedAmmoId: 'string|null',
   /** { barrelLength, twistRate, sightHeight, zeroDistance } */
   weapon: 'map',
-  /** { magnification, clickValueMoa, clickValueMrad, ffpSfp, reticleType } */
+  /** { magnification, clickUnitSystem, clickValueMoa, clickValueMrad, ffpSfp, reticleType } */
   optic: 'map',
   /** { bulletWeight, bulletDiameter, muzzleVelocity, ballisticCoefficient, bcModel } */
   ammo: 'map',
@@ -262,6 +263,7 @@ export const BallisticProfileSchema = {
  */
 
 /** @typedef {Object} BallisticProfileOpticFields
+ * @property {'MOA'|'MRAD'|null} clickUnitSystem
  * @property {string|null} magnification
  * @property {number|null} clickValueMoa
  * @property {number|null} clickValueMrad

@@ -27,6 +27,7 @@ const submitBtnClass =
  *     brand: string
  *     serialNo: string
  *     magnification: string
+ *     clickUnitSystem: string
  *     clickValueMoa: string
  *     clickValueMrad: string
  *     ffpSfp: string
@@ -96,6 +97,7 @@ export default function AccessoryCreateModal({ open, saving, form, onClose, onCh
               <BallisticInfoCollapsible
                 kind="optic"
                 values={{
+                  clickUnitSystem: form.clickUnitSystem,
                   magnification: form.magnification,
                   clickValueMoa: form.clickValueMoa,
                   clickValueMrad: form.clickValueMrad,

@@ -1,7 +1,8 @@
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import html2canvas from 'html2canvas'
-import { getBallisticTerm, TABLE_COLUMN_TERM_KEYS } from '../data/ballisticTerms.js'
+import { getBallisticTerm, tableColumnTermKeysForUnit } from '../data/ballisticTerms.js'
+import { buildPdfRangeTableHead, pdfRangeTableRowForResult } from './clickUnitSystem.js'
 import {
   buildBallisticChartPngFromResults,
   chartPngValidateShape,
@@ -286,6 +287,7 @@ function ensureSpace(doc, pageW, pageH, logoDataUrl, logoDims, reportTitle, y, n
  * @param {string} reportTitle
  * @param {number} startY
  * @param {string[]} layoutLog
+ * @param {string[]} termKeys
  */
 function drawTermGlossarySection(
   doc,
@@ -297,6 +299,7 @@ function drawTermGlossarySection(
   reportTitle,
   startY,
   layoutLog,
+  termKeys,
 ) {
   let y = ensureSpace(doc, pageW, pageH, logoDataUrl, logoDims, reportTitle, startY, 24)
   layoutLog.push(`Sayfa ${doc.getNumberOfPages()}: TERİM AÇIKLAMALARI (y=${y.toFixed(1)})`)
@@ -306,7 +309,7 @@ function drawTermGlossarySection(
   doc.setFontSize(PDF_FONT_SIZE.body)
   const contentW = pageW - margin * 2
 
-  for (const termKey of TABLE_COLUMN_TERM_KEYS) {
+  for (const termKey of termKeys) {
     const term = getBallisticTerm(termKey)
     if (!term) continue
 
@@ -346,10 +349,12 @@ function drawTermGlossarySection(
 
 /**
  * @param {import('./ballisticsEngine.js').BallisticsEngineOutput} output
- * @param {{ profileName?: string, saveTo?: string }} meta
+ * @param {{ profileName?: string, saveTo?: string, clickUnitSystem?: string | null }} meta
  * @returns {Promise<{ pageCount: number, layoutLog: string[] }>}
  */
 export async function exportBallisticReportPdf(output, meta = {}) {
+  const clickUnitSystem = meta.clickUnitSystem ?? null
+  const glossaryTermKeys = tableColumnTermKeysForUnit(clickUnitSystem)
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
   const { logoDataUrl, logoDims } = await preparePdfAssets(doc)
   const pageW = doc.internal.pageSize.getWidth()
@@ -387,18 +392,8 @@ export async function exportBallisticReportPdf(output, meta = {}) {
   const tableStart = drawSectionTitle(doc, margin, pageW, 'Menzil tablosu', y)
   autoTable(doc, {
     startY: tableStart,
-    head: [['M (m)', 'Drop (cm)', 'Wind (cm)', 'TOF (s)', 'V (fps)', 'E (ft·lb)', 'MOA', 'MRAD', 'Mach']],
-    body: output.results.map((r) => [
-      String(r.distance),
-      Math.abs(r.dropCm).toFixed(1),
-      Math.abs(r.windageCm).toFixed(1),
-      r.timeOfFlightSeconds.toFixed(3),
-      r.velocityRemaining.toFixed(0),
-      r.energyRemaining.toFixed(0),
-      r.dropMOA.toFixed(2),
-      r.dropMRAD.toFixed(2),
-      r.machNumber.toFixed(3),
-    ]),
+    head: [buildPdfRangeTableHead(clickUnitSystem)],
+    body: output.results.map((r) => pdfRangeTableRowForResult(r, clickUnitSystem)),
     ...getAutoTableOptions(margin),
   })
 
@@ -410,7 +405,7 @@ export async function exportBallisticReportPdf(output, meta = {}) {
   y = setupReportContinuationPage(doc, pageW, pageH, logoDataUrl, logoDims, title, 'Terim açıklamaları')
   layoutLog.push(`Sayfa ${doc.getNumberOfPages()}: Terim açıklamaları başlangıcı`)
 
-  drawTermGlossarySection(doc, margin, pageW, pageH, logoDataUrl, logoDims, title, y, layoutLog)
+  drawTermGlossarySection(doc, margin, pageW, pageH, logoDataUrl, logoDims, title, y, layoutLog, glossaryTermKeys)
 
   stampPdfFooters(doc, reportId)
 
