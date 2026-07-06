@@ -71,6 +71,7 @@ export default function Balistik() {
   const [calculating, setCalculating] = useState(false)
   const [profileSaving, setProfileSaving] = useState(false)
   const [armoryOpen, setArmoryOpen] = useState(false)
+  const [armoryFillNotice, setArmoryFillNotice] = useState('')
   const [pdfBusy, setPdfBusy] = useState(false)
   const [resultTab, setResultTab] = useState(/** @type {'chart' | 'table'} */ ('chart'))
 
@@ -139,8 +140,13 @@ export default function Balistik() {
       setForm((prev) => ({
         ...prev,
         ...draft,
-        ammo: { ...draft.ammo, ...prev.ammo },
+        ammo: draft.ammo,
       }))
+      setArmoryFillNotice(
+        draft.linkedAmmoId
+          ? ''
+          : 'Bu silahın kalibresine uygun mühimmat envanterde bulunamadı. Mühimmat alanlarını elle girin.',
+      )
       setArmoryOpen(false)
     },
     [inventoryItems],
@@ -215,6 +221,12 @@ export default function Balistik() {
       {calcError ? (
         <p className="rounded border border-red-500/40 bg-red-950/30 px-3 py-2 font-mono-technical text-xs text-red-300">
           {calcError}
+        </p>
+      ) : null}
+
+      {armoryFillNotice ? (
+        <p className="rounded border border-amber-500/40 bg-amber-950/25 px-3 py-2 font-mono-technical text-xs text-amber-200">
+          {armoryFillNotice}
         </p>
       ) : null}
 

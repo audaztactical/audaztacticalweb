@@ -26,6 +26,28 @@ export function normalizeCalibreKey(s) {
     .replace(/-/g, '')
 }
 
+/**
+ * Kalibre anahtarlarını karşılaştırır (tam eşitlik veya alt string / üst küme).
+ * @param {string} weaponKey normalizeCalibreKey çıktısı
+ * @param {string} ammoKey normalizeCalibreKey çıktısı
+ * @returns {number} 0 = eşleşme yok, daha yüksek = daha iyi eşleşme
+ */
+export function scoreCalibreMatch(weaponKey, ammoKey) {
+  if (!weaponKey || !ammoKey) return 0
+  if (weaponKey === ammoKey) return 100
+  if (ammoKey.includes(weaponKey)) return 80 + (weaponKey.length / ammoKey.length) * 15
+  if (weaponKey.includes(ammoKey)) return 70 + (ammoKey.length / weaponKey.length) * 15
+  return 0
+}
+
+/** @param {Record<string, unknown>} ammoRow */
+function ammoCalibreKeys(ammoRow) {
+  const keys = new Set(
+    [normalizeCalibreKey(getCaliberName(ammoRow)), normalizeCalibreKey(ammoRow.calibre)].filter(Boolean),
+  )
+  return [...keys]
+}
+
 /** @param {Record<string, unknown>} row */
 export function getCaliberName(row) {
   const explicit = invStr(row.caliber_name).trim()
@@ -115,13 +137,21 @@ export function filterAmmoRows(items) {
 export function findAmmoForWeapon(ammoRows, weapon) {
   const wKey = normalizeCalibreKey(weapon.calibre)
   if (!wKey) return null
-  return (
-    ammoRows.find((a) => {
-      const k = normalizeCalibreKey(getCaliberName(a))
-      const k2 = normalizeCalibreKey(a.calibre)
-      return k === wKey || k2 === wKey
-    }) ?? null
-  )
+
+  let best = null
+  let bestScore = 0
+
+  for (const row of ammoRows) {
+    for (const aKey of ammoCalibreKeys(row)) {
+      const score = scoreCalibreMatch(wKey, aKey)
+      if (score > bestScore) {
+        bestScore = score
+        best = row
+      }
+    }
+  }
+
+  return bestScore > 0 ? best : null
 }
 
 /** @param {Record<string, unknown>} row */

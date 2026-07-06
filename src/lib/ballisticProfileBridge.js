@@ -249,28 +249,35 @@ export function buildProfileDefaultsFromInventory(weaponId, opticId, ammoId, inv
       ffpSfp: opticFfp,
       reticleType: invStr(resolvedOptic?.reticleType ?? resolvedOptic?.reticle).trim() || null,
     },
-    ammo: {
-      ...base.ammo,
-      bulletWeight:
-        resolvedAmmo?.bulletWeight != null && invNum(resolvedAmmo.bulletWeight) > 0
-          ? invNum(resolvedAmmo.bulletWeight)
-          : base.ammo.bulletWeight,
-      bulletDiameter:
-        resolvedAmmo?.bulletDiameter != null && invNum(resolvedAmmo.bulletDiameter) > 0
-          ? invNum(resolvedAmmo.bulletDiameter)
-          : base.ammo.bulletDiameter,
-      muzzleVelocity:
-        resolvedAmmo?.muzzleVelocity != null && invNum(resolvedAmmo.muzzleVelocity) > 0
-          ? invNum(resolvedAmmo.muzzleVelocity)
-          : weapon?.muzzleVelocity != null && invNum(weapon.muzzleVelocity) > 0
-            ? invNum(weapon.muzzleVelocity)
-            : base.ammo.muzzleVelocity,
-      ballisticCoefficient:
-        resolvedAmmo?.ballisticCoefficient != null && invNum(resolvedAmmo.ballisticCoefficient) > 0
-          ? invNum(resolvedAmmo.ballisticCoefficient)
-          : base.ammo.ballisticCoefficient,
-      bcModel: ammoBcModel ?? base.ammo.bcModel,
-    },
+    ammo: resolvedAmmo
+      ? {
+          bulletWeight:
+            resolvedAmmo.bulletWeight != null && invNum(resolvedAmmo.bulletWeight) > 0
+              ? invNum(resolvedAmmo.bulletWeight)
+              : 0,
+          bulletDiameter:
+            resolvedAmmo.bulletDiameter != null && invNum(resolvedAmmo.bulletDiameter) > 0
+              ? invNum(resolvedAmmo.bulletDiameter)
+              : 0,
+          muzzleVelocity:
+            resolvedAmmo.muzzleVelocity != null && invNum(resolvedAmmo.muzzleVelocity) > 0
+              ? invNum(resolvedAmmo.muzzleVelocity)
+              : weapon?.muzzleVelocity != null && invNum(weapon.muzzleVelocity) > 0
+                ? invNum(weapon.muzzleVelocity)
+                : 0,
+          ballisticCoefficient:
+            resolvedAmmo.ballisticCoefficient != null && invNum(resolvedAmmo.ballisticCoefficient) > 0
+              ? invNum(resolvedAmmo.ballisticCoefficient)
+              : 0,
+          bcModel: ammoBcModel ?? 'G7',
+        }
+      : {
+          bulletWeight: 0,
+          bulletDiameter: 0,
+          muzzleVelocity: 0,
+          ballisticCoefficient: 0,
+          bcModel: 'G7',
+        },
   }
 }
 
