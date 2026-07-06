@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   ChevronDown,
   CircleDot,
@@ -149,6 +149,33 @@ function sectionAdvancedHasData(advanced) {
  * @param {{
  *   form: Record<string, unknown>
  *   env: Record<string, unknown>
+ *   rangeMin: number
+ *   rangeMax: number
+ *   rangeStep: number
+ *   selectedProfileId: string
+ * }} input
+ */
+function computeAutoExpandFlags({ form, env, rangeMin, rangeMax, rangeStep, selectedProfileId }) {
+  const weapon = /** @type {Record<string, unknown>} */ (form.weapon ?? {})
+  const optic = /** @type {Record<string, unknown>} */ (form.optic ?? {})
+  const ammo = /** @type {Record<string, unknown>} */ (form.ammo ?? {})
+  const advanced = /** @type {Record<string, unknown>} */ (form.advanced ?? {})
+
+  return {
+    profile: Boolean(selectedProfileId || form.linkedWeaponId || form.linkedAmmoId),
+    ammo: sectionAmmoHasData(ammo),
+    weapon: sectionWeaponHasData(weapon),
+    optic: sectionOpticHasData(optic),
+    env: sectionEnvHasData(env),
+    advanced: sectionAdvancedHasData(advanced),
+    range: rangeMin !== 100 || rangeMax !== 1500 || rangeStep !== 100,
+  }
+}
+
+/**
+ * @param {{
+ *   form: Record<string, unknown>
+ *   env: Record<string, unknown>
  *   onFormChange: (patch: Record<string, unknown>) => void
  *   onEnvChange: (patch: Record<string, unknown>) => void
  *   rangeMin: number
@@ -166,6 +193,7 @@ function sectionAdvancedHasData(advanced) {
  *   onCalculate: () => void
  *   calculating: boolean
  *   profileSaving: boolean
+ *   autoExpandTrigger?: number
  * }} props
  */
 export default function BallisticFormPanel({
@@ -188,6 +216,7 @@ export default function BallisticFormPanel({
   onCalculate,
   calculating,
   profileSaving,
+  autoExpandTrigger = 0,
 }) {
   const weapon = /** @type {Record<string, unknown>} */ (form.weapon ?? {})
   const optic = /** @type {Record<string, unknown>} */ (form.optic ?? {})
@@ -195,32 +224,40 @@ export default function BallisticFormPanel({
   const advanced = /** @type {Record<string, unknown>} */ (form.advanced ?? {})
 
   const [openSections, setOpenSections] = useState(DEFAULT_OPEN)
+  const userToggledRef = useRef(/** @type {Set<FormSectionId>} */ (new Set()))
+  const expandContextRef = useRef({
+    form,
+    env,
+    rangeMin,
+    rangeMax,
+    rangeStep,
+    selectedProfileId,
+  })
+  expandContextRef.current = { form, env, rangeMin, rangeMax, rangeStep, selectedProfileId }
 
-  const autoExpandFlags = useMemo(
-    () => ({
-      profile: Boolean(selectedProfileId || form.linkedWeaponId || form.linkedAmmoId),
-      ammo: sectionAmmoHasData(ammo),
-      weapon: sectionWeaponHasData(weapon),
-      optic: sectionOpticHasData(optic),
-      env: sectionEnvHasData(env),
-      advanced: sectionAdvancedHasData(advanced),
-      range: rangeMin !== 100 || rangeMax !== 1500 || rangeStep !== 100,
-    }),
-    [selectedProfileId, form.linkedWeaponId, form.linkedAmmoId, ammo, weapon, optic, env, advanced, rangeMin, rangeMax, rangeStep],
-  )
+  const applyAutoExpand = useCallback((resetUserToggles) => {
+    if (resetUserToggles) userToggledRef.current.clear()
 
-  useEffect(() => {
+    const flags = computeAutoExpandFlags(expandContextRef.current)
+
     setOpenSections((prev) => {
       /** @type {Record<FormSectionId, boolean>} */
       const next = { ...prev }
-      for (const [id, shouldOpen] of Object.entries(autoExpandFlags)) {
-        if (shouldOpen) next[/** @type {FormSectionId} */ (id)] = true
+      for (const [id, shouldOpen] of Object.entries(flags)) {
+        const sectionId = /** @type {FormSectionId} */ (id)
+        if (userToggledRef.current.has(sectionId)) continue
+        if (shouldOpen) next[sectionId] = true
       }
       return next
     })
-  }, [autoExpandFlags])
+  }, [])
+
+  useEffect(() => {
+    applyAutoExpand(autoExpandTrigger > 0)
+  }, [autoExpandTrigger, applyAutoExpand])
 
   const toggleSection = (id) => {
+    userToggledRef.current.add(id)
     setOpenSections((prev) => ({ ...prev, [id]: !prev[id] }))
   }
 

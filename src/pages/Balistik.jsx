@@ -74,6 +74,11 @@ export default function Balistik() {
   const [armoryFillNotice, setArmoryFillNotice] = useState('')
   const [pdfBusy, setPdfBusy] = useState(false)
   const [resultTab, setResultTab] = useState(/** @type {'chart' | 'table'} */ ('chart'))
+  const [accordionAutoExpandTrigger, setAccordionAutoExpandTrigger] = useState(0)
+
+  const bumpAccordionAutoExpand = useCallback(() => {
+    setAccordionAutoExpandTrigger((n) => n + 1)
+  }, [])
 
   const weapons = useMemo(() => filterInventoryWeapons(inventoryItems), [inventoryItems])
 
@@ -108,14 +113,16 @@ export default function Balistik() {
         ammo: { ...createDefaultBallisticProfileFields().ammo, ...(row.ammo ?? {}) },
         advanced: { ...createDefaultBallisticProfileFields().advanced, ...(row.advanced ?? {}) },
       })
+      bumpAccordionAutoExpand()
     },
-    [profiles],
+    [profiles, bumpAccordionAutoExpand],
   )
 
   const handleNewProfile = useCallback(() => {
     setSelectedProfileId('')
     setForm({ profileName: 'Yeni Profil', ...createDefaultBallisticProfileFields() })
-  }, [])
+    bumpAccordionAutoExpand()
+  }, [bumpAccordionAutoExpand])
 
   const handleSaveProfile = useCallback(async () => {
     setProfileSaving(true)
@@ -147,9 +154,10 @@ export default function Balistik() {
           ? ''
           : 'Bu silahın kalibresine uygun mühimmat envanterde bulunamadı. Mühimmat alanlarını elle girin.',
       )
+      bumpAccordionAutoExpand()
       setArmoryOpen(false)
     },
-    [inventoryItems],
+    [inventoryItems, bumpAccordionAutoExpand],
   )
 
   const handleCalculate = useCallback(() => {
@@ -252,6 +260,7 @@ export default function Balistik() {
             onCalculate={handleCalculate}
             calculating={calculating}
             profileSaving={profileSaving}
+            autoExpandTrigger={accordionAutoExpandTrigger}
           />
         </TacticalPanel>
 
