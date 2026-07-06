@@ -11,7 +11,18 @@ import {
 } from 'lucide-react'
 import InfoTooltip from '../shared/InfoTooltip.jsx'
 import ClickUnitSystemToggle from '../shared/ClickUnitSystemToggle.jsx'
+import {
+  InventorySectionLockBar,
+  InventoryUnlockModal,
+  OverrideMarker,
+  lockedInputClass,
+} from './InventoryLockedFormHelpers.jsx'
 import { parseClickUnitSystem } from '../../lib/clickUnitSystem.js'
+import {
+  isFieldInventoryLocked,
+  isFieldInventoryOverridden,
+  sectionHasInventoryLocks,
+} from '../../lib/inventoryFillLocks.js'
 
 const labelClass =
   'flex items-center gap-1 font-mono-technical text-[9px] font-bold uppercase tracking-[0.18em] text-app-text/55'
@@ -66,12 +77,13 @@ function FormAccordionSection({ id, title, icon: Icon, open, onToggle, termKey, 
 }
 
 /**
- * @param {{ label: string, termKey?: string, children: import('react').ReactNode }} props
+ * @param {{ label: string, termKey?: string, showOverride?: boolean, children: import('react').ReactNode }} props
  */
-function Field({ label, termKey, children }) {
+function Field({ label, termKey, showOverride = false, children }) {
   return (
     <label className="block space-y-1">
       <span className={labelClass}>
+        {showOverride ? <OverrideMarker show /> : null}
         {label}
         {termKey ? <InfoTooltip termKey={termKey} /> : null}
       </span>
@@ -194,6 +206,9 @@ function computeAutoExpandFlags({ form, env, rangeMin, rangeMax, rangeStep, sele
  *   calculating: boolean
  *   profileSaving: boolean
  *   autoExpandTrigger?: number
+ *   inventoryFillLocks?: import('../../lib/inventoryFillLocks.js').InventoryFillLockState
+ *   onUnlockInventorySection?: (group: 'weapon' | 'optic' | 'ammo') => void
+ *   onMarkInventoryOverrides?: (paths: string[]) => void
  * }} props
  */
 export default function BallisticFormPanel({
@@ -217,6 +232,9 @@ export default function BallisticFormPanel({
   calculating,
   profileSaving,
   autoExpandTrigger = 0,
+  inventoryFillLocks = null,
+  onUnlockInventorySection,
+  onMarkInventoryOverrides,
 }) {
   const weapon = /** @type {Record<string, unknown>} */ (form.weapon ?? {})
   const optic = /** @type {Record<string, unknown>} */ (form.optic ?? {})
@@ -224,6 +242,7 @@ export default function BallisticFormPanel({
   const advanced = /** @type {Record<string, unknown>} */ (form.advanced ?? {})
 
   const [openSections, setOpenSections] = useState(DEFAULT_OPEN)
+  const [unlockTarget, setUnlockTarget] = useState(/** @type {'weapon' | 'optic' | 'ammo' | null} */ (null))
   const userToggledRef = useRef(/** @type {Set<FormSectionId>} */ (new Set()))
   const expandContextRef = useRef({
     form,
@@ -266,9 +285,35 @@ export default function BallisticFormPanel({
   const patchAmmo = (p) => onFormChange({ ammo: { ...ammo, ...p } })
   const patchAdvanced = (p) => onFormChange({ advanced: { ...advanced, ...p } })
 
-  const clickUnit = parseClickUnitSystem(optic.clickUnitSystem)
+  /** @param {'weapon' | 'optic' | 'ammo'} group @param {string} field */
+  const markIfOverridden = (group, field) => {
+    if (
+      inventoryFillLocks?.active &&
+      inventoryFillLocks[group]?.[field] &&
+      inventoryFillLocks.unlocked?.[group]
+    ) {
+      onMarkInventoryOverrides?.([`${group}.${field}`])
+    }
+  }
+
+  /** @param {'weapon' | 'optic' | 'ammo'} group @param {string} field */
+  const fieldLocked = (group, field) => isFieldInventoryLocked(inventoryFillLocks, group, field)
+
+  /** @param {'weapon' | 'optic' | 'ammo'} group @param {string} field */
+  const fieldOverridden = (group, field) => isFieldInventoryOverridden(inventoryFillLocks, group, field)
+
+  /** @param {'weapon' | 'optic' | 'ammo'} group @param {string} field @param {string} inputClassName */
+  const lockedFieldClass = (group, field, inputClassName = inputClass) =>
+    fieldLocked(group, field) ? `${inputClassName} ${lockedInputClass}` : inputClassName
+
+  /** @param {'weapon' | 'optic' | 'ammo'} group */
+  const showSectionLockBar = (group) =>
+    openSections[group] &&
+    sectionHasInventoryLocks(inventoryFillLocks, group) &&
+    !inventoryFillLocks?.unlocked?.[group]
 
   const handleClickUnitChange = (unit) => {
+    if (fieldLocked('optic', 'clickUnitSystem')) return
     /** @type {Record<string, unknown>} */
     const patchValues = { clickUnitSystem: unit }
     if (unit === 'MOA') {
@@ -280,10 +325,23 @@ export default function BallisticFormPanel({
       patchValues.clickValueMrad = null
     }
     patchOptic(patchValues)
+    markIfOverridden('optic', 'clickUnitSystem')
+    if (unit === 'MOA') markIfOverridden('optic', 'clickValueMoa')
+    if (unit === 'MRAD') markIfOverridden('optic', 'clickValueMrad')
   }
+
+  const clickUnit = parseClickUnitSystem(optic.clickUnitSystem)
 
   return (
     <div className="flex flex-col gap-3">
+      <InventoryUnlockModal
+        open={Boolean(unlockTarget)}
+        onCancel={() => setUnlockTarget(null)}
+        onConfirm={() => {
+          if (unlockTarget) onUnlockInventorySection?.(unlockTarget)
+          setUnlockTarget(null)
+        }}
+      />
       <FormAccordionSection
         id="profile"
         title="Profil"
@@ -330,50 +388,78 @@ export default function BallisticFormPanel({
         open={openSections.ammo}
         onToggle={toggleSection}
       >
+        {showSectionLockBar('ammo') ? (
+          <InventorySectionLockBar onUnlock={() => setUnlockTarget('ammo')} />
+        ) : null}
         <div className="grid grid-cols-2 gap-2">
-          <Field label="Ağırlık (gr)">
+          <Field label="Ağırlık (gr)" showOverride={fieldOverridden('ammo', 'bulletWeight')}>
             <input
               type="number"
-              className={inputClass}
+              readOnly={fieldLocked('ammo', 'bulletWeight')}
+              className={lockedFieldClass('ammo', 'bulletWeight')}
               value={ammo.bulletWeight ?? ''}
-              onChange={(e) => patchAmmo({ bulletWeight: Number(e.target.value) })}
+              onChange={(e) => {
+                if (fieldLocked('ammo', 'bulletWeight')) return
+                patchAmmo({ bulletWeight: Number(e.target.value) })
+                markIfOverridden('ammo', 'bulletWeight')
+              }}
             />
           </Field>
-          <Field label="Çap (in)">
+          <Field label="Çap (in)" showOverride={fieldOverridden('ammo', 'bulletDiameter')}>
             <input
               type="number"
               step="0.001"
-              className={inputClass}
+              readOnly={fieldLocked('ammo', 'bulletDiameter')}
+              className={lockedFieldClass('ammo', 'bulletDiameter')}
               value={ammo.bulletDiameter ?? ''}
-              onChange={(e) => patchAmmo({ bulletDiameter: Number(e.target.value) })}
+              onChange={(e) => {
+                if (fieldLocked('ammo', 'bulletDiameter')) return
+                patchAmmo({ bulletDiameter: Number(e.target.value) })
+                markIfOverridden('ammo', 'bulletDiameter')
+              }}
             />
           </Field>
-          <Field label="Namlu hızı (fps)" termKey="muzzleVelocity">
+          <Field label="Namlu hızı (fps)" termKey="muzzleVelocity" showOverride={fieldOverridden('ammo', 'muzzleVelocity')}>
             <input
               type="number"
-              className={inputClass}
+              readOnly={fieldLocked('ammo', 'muzzleVelocity')}
+              className={lockedFieldClass('ammo', 'muzzleVelocity')}
               value={ammo.muzzleVelocity ?? ''}
-              onChange={(e) => patchAmmo({ muzzleVelocity: Number(e.target.value) })}
+              onChange={(e) => {
+                if (fieldLocked('ammo', 'muzzleVelocity')) return
+                patchAmmo({ muzzleVelocity: Number(e.target.value) })
+                markIfOverridden('ammo', 'muzzleVelocity')
+              }}
             />
           </Field>
-          <Field label="BC" termKey="bc">
+          <Field label="BC" termKey="bc" showOverride={fieldOverridden('ammo', 'ballisticCoefficient')}>
             <input
               type="number"
               step="0.001"
-              className={inputClass}
+              readOnly={fieldLocked('ammo', 'ballisticCoefficient')}
+              className={lockedFieldClass('ammo', 'ballisticCoefficient')}
               value={ammo.ballisticCoefficient ?? ''}
-              onChange={(e) => patchAmmo({ ballisticCoefficient: Number(e.target.value) })}
+              onChange={(e) => {
+                if (fieldLocked('ammo', 'ballisticCoefficient')) return
+                patchAmmo({ ballisticCoefficient: Number(e.target.value) })
+                markIfOverridden('ammo', 'ballisticCoefficient')
+              }}
             />
           </Field>
         </div>
-        <Field label="Drag modeli" termKey="g1G7DragModel">
+        <Field label="Drag modeli" termKey="g1G7DragModel" showOverride={fieldOverridden('ammo', 'bcModel')}>
           <div className="flex gap-2">
             {['G7', 'G1'].map((m) => (
               <button
                 key={m}
                 type="button"
+                disabled={fieldLocked('ammo', 'bcModel')}
                 className={ammo.bcModel === m ? btnAccent : btnSecondary}
-                onClick={() => patchAmmo({ bcModel: m })}
+                onClick={() => {
+                  if (fieldLocked('ammo', 'bcModel')) return
+                  patchAmmo({ bcModel: m })
+                  markIfOverridden('ammo', 'bcModel')
+                }}
               >
                 {m}
               </button>
@@ -389,14 +475,22 @@ export default function BallisticFormPanel({
         open={openSections.weapon}
         onToggle={toggleSection}
       >
+        {showSectionLockBar('weapon') ? (
+          <InventorySectionLockBar onUnlock={() => setUnlockTarget('weapon')} />
+        ) : null}
         <div className="grid grid-cols-2 gap-2">
-          <Field label="Sight height (cm)" termKey="sightHeight">
+          <Field label="Sight height (cm)" termKey="sightHeight" showOverride={fieldOverridden('weapon', 'sightHeight')}>
             <input
               type="number"
               step="0.1"
-              className={inputClass}
+              readOnly={fieldLocked('weapon', 'sightHeight')}
+              className={lockedFieldClass('weapon', 'sightHeight')}
               value={weapon.sightHeight ?? ''}
-              onChange={(e) => patchWeapon({ sightHeight: Number(e.target.value) })}
+              onChange={(e) => {
+                if (fieldLocked('weapon', 'sightHeight')) return
+                patchWeapon({ sightHeight: Number(e.target.value) })
+                markIfOverridden('weapon', 'sightHeight')
+              }}
             />
           </Field>
           <Field label="Zero (m)" termKey="zeroDistance">
@@ -407,21 +501,31 @@ export default function BallisticFormPanel({
               onChange={(e) => patchWeapon({ zeroDistance: Number(e.target.value) })}
             />
           </Field>
-          <Field label="Namlu uz. (in)">
+          <Field label="Namlu uz. (in)" showOverride={fieldOverridden('weapon', 'barrelLength')}>
             <input
               type="number"
               step="0.1"
-              className={inputClass}
+              readOnly={fieldLocked('weapon', 'barrelLength')}
+              className={lockedFieldClass('weapon', 'barrelLength')}
               value={weapon.barrelLength ?? ''}
-              onChange={(e) => patchWeapon({ barrelLength: e.target.value ? Number(e.target.value) : null })}
+              onChange={(e) => {
+                if (fieldLocked('weapon', 'barrelLength')) return
+                patchWeapon({ barrelLength: e.target.value ? Number(e.target.value) : null })
+                markIfOverridden('weapon', 'barrelLength')
+              }}
             />
           </Field>
-          <Field label="Yiv devri" termKey="twistRate">
+          <Field label="Yiv devri" termKey="twistRate" showOverride={fieldOverridden('weapon', 'twistRate')}>
             <input
-              className={inputClass}
+              readOnly={fieldLocked('weapon', 'twistRate')}
+              className={lockedFieldClass('weapon', 'twistRate')}
               placeholder="1:8"
               value={weapon.twistRate ?? ''}
-              onChange={(e) => patchWeapon({ twistRate: e.target.value || null })}
+              onChange={(e) => {
+                if (fieldLocked('weapon', 'twistRate')) return
+                patchWeapon({ twistRate: e.target.value || null })
+                markIfOverridden('weapon', 'twistRate')
+              }}
             />
           </Field>
         </div>
@@ -434,46 +538,69 @@ export default function BallisticFormPanel({
         open={openSections.optic}
         onToggle={toggleSection}
       >
+        {showSectionLockBar('optic') ? (
+          <InventorySectionLockBar onUnlock={() => setUnlockTarget('optic')} />
+        ) : null}
         <div className="grid grid-cols-2 gap-2">
-          <Field label="Büyütme">
+          <Field label="Büyütme" showOverride={fieldOverridden('optic', 'magnification')}>
             <input
-              className={inputClass}
+              readOnly={fieldLocked('optic', 'magnification')}
+              className={lockedFieldClass('optic', 'magnification')}
               value={optic.magnification ?? ''}
-              onChange={(e) => patchOptic({ magnification: e.target.value || null })}
+              onChange={(e) => {
+                if (fieldLocked('optic', 'magnification')) return
+                patchOptic({ magnification: e.target.value || null })
+                markIfOverridden('optic', 'magnification')
+              }}
             />
           </Field>
-          <Field label="Reticle" termKey="reticleType">
+          <Field label="Reticle" termKey="reticleType" showOverride={fieldOverridden('optic', 'reticleType')}>
             <input
-              className={inputClass}
+              readOnly={fieldLocked('optic', 'reticleType')}
+              className={lockedFieldClass('optic', 'reticleType')}
               value={optic.reticleType ?? ''}
-              onChange={(e) => patchOptic({ reticleType: e.target.value || null })}
+              onChange={(e) => {
+                if (fieldLocked('optic', 'reticleType')) return
+                patchOptic({ reticleType: e.target.value || null })
+                markIfOverridden('optic', 'reticleType')
+              }}
             />
           </Field>
         </div>
-        <ClickUnitSystemToggle value={clickUnit} onChange={handleClickUnitChange} />
+        <ClickUnitSystemToggle
+          value={clickUnit}
+          onChange={handleClickUnitChange}
+          disabled={fieldLocked('optic', 'clickUnitSystem')}
+        />
         {clickUnit === 'MOA' ? (
-          <Field label="Tık Değeri (MOA)" termKey="moaClicks">
+          <Field label="Tık Değeri (MOA)" termKey="moaClicks" showOverride={fieldOverridden('optic', 'clickValueMoa')}>
             <input
               type="number"
               step="0.125"
-              className={inputClass}
+              readOnly={fieldLocked('optic', 'clickValueMoa')}
+              className={lockedFieldClass('optic', 'clickValueMoa')}
               value={optic.clickValueMoa ?? ''}
-              onChange={(e) =>
+              onChange={(e) => {
+                if (fieldLocked('optic', 'clickValueMoa')) return
                 patchOptic({ clickValueMoa: e.target.value ? Number(e.target.value) : null })
-              }
+                markIfOverridden('optic', 'clickValueMoa')
+              }}
             />
           </Field>
         ) : null}
         {clickUnit === 'MRAD' ? (
-          <Field label="Tık Değeri (MRAD)" termKey="mradClicks">
+          <Field label="Tık Değeri (MRAD)" termKey="mradClicks" showOverride={fieldOverridden('optic', 'clickValueMrad')}>
             <input
               type="number"
               step="0.05"
-              className={inputClass}
+              readOnly={fieldLocked('optic', 'clickValueMrad')}
+              className={lockedFieldClass('optic', 'clickValueMrad')}
               value={optic.clickValueMrad ?? ''}
-              onChange={(e) =>
+              onChange={(e) => {
+                if (fieldLocked('optic', 'clickValueMrad')) return
                 patchOptic({ clickValueMrad: e.target.value ? Number(e.target.value) : null })
-              }
+                markIfOverridden('optic', 'clickValueMrad')
+              }}
             />
           </Field>
         ) : null}
@@ -482,11 +609,16 @@ export default function BallisticFormPanel({
             Tık değeri girmek için önce birim sistemi seçin.
           </p>
         )}
-        <Field label="FFP / SFP" termKey="ffpSfp">
+        <Field label="FFP / SFP" termKey="ffpSfp" showOverride={fieldOverridden('optic', 'ffpSfp')}>
           <select
-            className={inputClass}
+            disabled={fieldLocked('optic', 'ffpSfp')}
+            className={lockedFieldClass('optic', 'ffpSfp')}
             value={optic.ffpSfp ?? ''}
-            onChange={(e) => patchOptic({ ffpSfp: e.target.value || null })}
+            onChange={(e) => {
+              if (fieldLocked('optic', 'ffpSfp')) return
+              patchOptic({ ffpSfp: e.target.value || null })
+              markIfOverridden('optic', 'ffpSfp')
+            }}
           >
             <option value="">—</option>
             <option value="FFP">FFP</option>

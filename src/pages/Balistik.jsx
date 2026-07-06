@@ -18,6 +18,10 @@ import {
 } from '../lib/ballisticProfileBridge'
 import { exportBallisticReportPdf } from '../lib/ballisticReportPdf'
 import { angleTableCellsForRow, buildAngleTableColumns } from '../lib/clickUnitSystem'
+import {
+  buildInventoryFillLocks,
+  EMPTY_INVENTORY_FILL_LOCKS,
+} from '../lib/inventoryFillLocks'
 import { weaponDisplayName } from '../lib/weaponIlws'
 
 /** @typedef {import('../lib/ballisticsEngine.js').BallisticsEngineOutput} BallisticsEngineOutput */
@@ -75,6 +79,7 @@ export default function Balistik() {
   const [pdfBusy, setPdfBusy] = useState(false)
   const [resultTab, setResultTab] = useState(/** @type {'chart' | 'table'} */ ('chart'))
   const [accordionAutoExpandTrigger, setAccordionAutoExpandTrigger] = useState(0)
+  const [inventoryFillLocks, setInventoryFillLocks] = useState(EMPTY_INVENTORY_FILL_LOCKS)
 
   const bumpAccordionAutoExpand = useCallback(() => {
     setAccordionAutoExpandTrigger((n) => n + 1)
@@ -100,6 +105,8 @@ export default function Balistik() {
   const handleSelectProfile = useCallback(
     (id) => {
       setSelectedProfileId(id)
+      setInventoryFillLocks(EMPTY_INVENTORY_FILL_LOCKS)
+      setArmoryFillNotice('')
       if (!id) return
       const row = profiles.find((p) => String(p.id) === id)
       if (!row) return
@@ -120,6 +127,8 @@ export default function Balistik() {
 
   const handleNewProfile = useCallback(() => {
     setSelectedProfileId('')
+    setInventoryFillLocks(EMPTY_INVENTORY_FILL_LOCKS)
+    setArmoryFillNotice('')
     setForm({ profileName: 'Yeni Profil', ...createDefaultBallisticProfileFields() })
     bumpAccordionAutoExpand()
   }, [bumpAccordionAutoExpand])
@@ -139,11 +148,31 @@ export default function Balistik() {
     }
   }, [form, selectedProfileId, createProfile, updateProfile])
 
+  const handleUnlockInventorySection = useCallback((group) => {
+    setInventoryFillLocks((prev) => ({
+      ...prev,
+      unlocked: { ...prev.unlocked, [group]: true },
+    }))
+  }, [])
+
+  const handleMarkInventoryOverrides = useCallback((paths) => {
+    setInventoryFillLocks((prev) => {
+      if (!prev.active) return prev
+      /** @type {Record<string, boolean>} */
+      const next = { ...prev.overridden }
+      for (const path of paths) {
+        const [group, field] = path.split('.')
+        if (prev[group]?.[field]) next[path] = true
+      }
+      return { ...prev, overridden: next }
+    })
+  }, [])
+
   const handleArmorySelect = useCallback(
     (weaponId) => {
-      const draft = buildProfileDefaultsFromInventory(weaponId, null, null, {
-        allItems: inventoryItems,
-      })
+      const inventoryBundle = { allItems: inventoryItems }
+      const draft = buildProfileDefaultsFromInventory(weaponId, null, null, inventoryBundle)
+      setInventoryFillLocks(buildInventoryFillLocks(weaponId, inventoryBundle))
       setForm((prev) => ({
         ...prev,
         ...draft,
@@ -154,10 +183,9 @@ export default function Balistik() {
           ? ''
           : 'Bu silahın kalibresine uygun mühimmat envanterde bulunamadı. Mühimmat alanlarını elle girin.',
       )
-      bumpAccordionAutoExpand()
       setArmoryOpen(false)
     },
-    [inventoryItems, bumpAccordionAutoExpand],
+    [inventoryItems],
   )
 
   const handleCalculate = useCallback(() => {
@@ -261,6 +289,9 @@ export default function Balistik() {
             calculating={calculating}
             profileSaving={profileSaving}
             autoExpandTrigger={accordionAutoExpandTrigger}
+            inventoryFillLocks={inventoryFillLocks}
+            onUnlockInventorySection={handleUnlockInventorySection}
+            onMarkInventoryOverrides={handleMarkInventoryOverrides}
           />
         </TacticalPanel>
 

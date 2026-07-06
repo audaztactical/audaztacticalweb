@@ -7,11 +7,12 @@ const btnAccent =
  * @param {{
  *   value: string | null | undefined
  *   onChange: (unit: 'MOA' | 'MRAD' | null) => void
+ *   disabled?: boolean
  *   labelClass?: string
  *   className?: string
  * }} props
  */
-export default function ClickUnitSystemToggle({ value, onChange, labelClass, className = '' }) {
+export default function ClickUnitSystemToggle({ value, onChange, disabled = false, labelClass, className = '' }) {
   const active = value === 'MOA' || value === 'MRAD' ? value : null
 
   return (
@@ -29,9 +30,13 @@ export default function ClickUnitSystemToggle({ value, onChange, labelClass, cla
           <button
             key={unit}
             type="button"
-            className={active === unit ? btnAccent : btnSecondary}
+            disabled={disabled}
+            className={`${active === unit ? btnAccent : btnSecondary}${disabled ? ' cursor-not-allowed opacity-50' : ''}`}
             aria-pressed={active === unit}
-            onClick={() => onChange(active === unit ? null : unit)}
+            onClick={() => {
+              if (disabled) return
+              onChange(active === unit ? null : unit)
+            }}
           >
             {unit}
           </button>
