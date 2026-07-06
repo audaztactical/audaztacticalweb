@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { Download, Target } from 'lucide-react'
 import HudFluffDecor from '../components/dashboard/HudFluffDecor'
 import TacticalPanel from '../components/ui/TacticalPanel'
@@ -15,7 +16,11 @@ import {
   normalizeBallisticProfile,
   runBallisticsForProfile,
 } from '../lib/ballisticProfileBridge'
-import { exportBallisticReportPdf, chartContainerToPngDataUrl } from '../lib/ballisticReportPdf'
+import {
+  buildBallisticChartPngFromResults,
+  chartContainerToPngDataUrl,
+  exportBallisticReportPdf,
+} from '../lib/ballisticReportPdf'
 import { weaponDisplayName } from '../lib/weaponIlws'
 
 /** @typedef {import('../lib/ballisticsEngine.js').BallisticsEngineOutput} BallisticsEngineOutput */
@@ -160,26 +165,71 @@ export default function Balistik() {
     }
   }, [form, env, rangeMin, rangeMax, rangeStep])
 
+  const waitForChartExportReady = useCallback(async (timeoutMs = 5000) => {
+    const deadline = Date.now() + timeoutMs
+    while (Date.now() < deadline) {
+      const el = document.getElementById('balistik-chart-export')
+      const svg = el?.querySelector('svg')
+      const rect = el?.getBoundingClientRect()
+      const hasSeries = Boolean(svg?.querySelector('path, .recharts-line-curve, line'))
+      if (
+        el &&
+        svg &&
+        rect &&
+        rect.width >= 120 &&
+        rect.height >= 80 &&
+        hasSeries
+      ) {
+        return el
+      }
+      await new Promise((resolve) => setTimeout(resolve, 60))
+    }
+    return null
+  }, [])
+
   const handleExportPdf = useCallback(async () => {
     if (!output) return
     setPdfBusy(true)
     const previousTab = resultTab
+    const captureDebug = /** @type {import('../lib/ballisticReportPdf.js').ChartCaptureDebug[]} */ ([])
     try {
-      if (previousTab !== 'chart') setResultTab('chart')
-      await new Promise((resolve) => {
-        requestAnimationFrame(() => requestAnimationFrame(resolve))
-      })
-      const chartEl = document.getElementById('balistik-chart-export')
-      const chartImageDataUrl = chartEl ? await chartContainerToPngDataUrl(chartEl) : null
-      await exportBallisticReportPdf(output, {
+      if (previousTab !== 'chart') {
+        flushSync(() => setResultTab('chart'))
+      }
+
+      const chartEl = await waitForChartExportReady()
+      let chartImageDataUrl = chartEl ? await chartContainerToPngDataUrl(chartEl, { debug: captureDebug }) : null
+      let chartSource = chartImageDataUrl ? 'dom' : 'none'
+
+      if (!chartImageDataUrl) {
+        chartImageDataUrl = buildBallisticChartPngFromResults(output.results)
+        if (chartImageDataUrl) chartSource = 'canvas-fallback'
+      }
+
+      if (import.meta.env.DEV) {
+        console.info('[Balistik PDF] chart capture', {
+          chartElFound: Boolean(chartEl),
+          chartSource,
+          captureDebug,
+          pngBytes: chartImageDataUrl ? chartImageDataUrl.length : 0,
+        })
+      }
+
+      const reportMeta = await exportBallisticReportPdf(output, {
         profileName: String(form.profileName),
         chartImageDataUrl,
       })
+
+      if (import.meta.env.DEV) {
+        console.info('[Balistik PDF] layout', reportMeta)
+      }
     } finally {
-      if (previousTab !== 'chart') setResultTab(previousTab)
+      if (previousTab !== 'chart') {
+        flushSync(() => setResultTab(previousTab))
+      }
       setPdfBusy(false)
     }
-  }, [output, form.profileName, resultTab])
+  }, [output, form.profileName, resultTab, waitForChartExportReady])
 
   const resultTabBtnClass = (active) =>
     [

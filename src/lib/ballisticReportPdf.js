@@ -13,37 +13,64 @@ import {
   stampPdfFooters,
 } from './pdfDesignTokens'
 
+const CHART_EXPORT_MIN_WIDTH = 120
+const CHART_EXPORT_MIN_HEIGHT = 80
+
+/**
+ * @typedef {{ step: string, ok: boolean, detail?: string }} ChartCaptureDebug
+ */
+
 /**
  * Recharts SVG çıktısını PNG data URL'e çevirir (PDF gömme için).
  * @param {HTMLElement | null | undefined} container
+ * @param {{ debug?: ChartCaptureDebug[] }} [options]
  * @returns {Promise<string | null>}
  */
-export async function chartContainerToPngDataUrl(container) {
-  if (!container) return null
+export async function chartContainerToPngDataUrl(container, options = {}) {
+  const debug = options.debug ?? []
 
-  const svg = container.querySelector('svg.recharts-surface')
-  if (!svg) return null
+  if (!container) {
+    debug.push({ step: 'container', ok: false, detail: 'Element bulunamadı' })
+    return null
+  }
 
   const rect = container.getBoundingClientRect()
+  if (rect.width < CHART_EXPORT_MIN_WIDTH || rect.height < CHART_EXPORT_MIN_HEIGHT) {
+    debug.push({
+      step: 'dimensions',
+      ok: false,
+      detail: `Boyut yetersiz: ${Math.round(rect.width)}x${Math.round(rect.height)}`,
+    })
+    return null
+  }
+
+  const svg =
+    container.querySelector('svg.recharts-surface') ??
+    container.querySelector('.recharts-wrapper svg') ??
+    container.querySelector('svg')
+  if (!svg) {
+    debug.push({ step: 'svg', ok: false, detail: 'SVG bulunamadı' })
+    return null
+  }
+
   const width = Math.max(1, Math.round(rect.width))
   const height = Math.max(1, Math.round(rect.height))
 
   const clone = /** @type {SVGSVGElement} */ (svg.cloneNode(true))
   clone.setAttribute('width', String(width))
   clone.setAttribute('height', String(height))
-  if (!clone.getAttribute('xmlns')) {
-    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
-  }
+  clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+  clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
 
   const svgString = new XMLSerializer().serializeToString(clone)
-  const url = URL.createObjectURL(new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' }))
+  const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`
 
   try {
     const img = await new Promise((resolve, reject) => {
       const image = new Image()
       image.onload = () => resolve(image)
-      image.onerror = reject
-      image.src = url
+      image.onerror = () => reject(new Error('SVG image decode failed'))
+      image.src = dataUrl
     })
 
     const scale = 2
@@ -51,18 +78,112 @@ export async function chartContainerToPngDataUrl(container) {
     canvas.width = width * scale
     canvas.height = height * scale
     const ctx = canvas.getContext('2d')
-    if (!ctx) return null
+    if (!ctx) {
+      debug.push({ step: 'canvas', ok: false, detail: '2D context alınamadı' })
+      return null
+    }
 
     ctx.scale(scale, scale)
     ctx.fillStyle = '#0a0a0a'
     ctx.fillRect(0, 0, width, height)
     ctx.drawImage(img, 0, 0, width, height)
-    return canvas.toDataURL('image/png')
-  } catch {
+
+    const png = canvas.toDataURL('image/png')
+    const ok = png.startsWith('data:image/png') && png.length > 1200
+    debug.push({
+      step: 'png',
+      ok,
+      detail: ok ? `PNG ${Math.round(png.length / 1024)}KB` : `PNG geçersiz (${png.length} byte)`,
+    })
+    return ok ? png : null
+  } catch (err) {
+    debug.push({
+      step: 'render',
+      ok: false,
+      detail: err instanceof Error ? err.message : 'Bilinmeyen hata',
+    })
     return null
-  } finally {
-    URL.revokeObjectURL(url)
   }
+}
+
+/**
+ * DOM yakalama başarısız olursa motor sonuçlarından canvas grafik üretir.
+ * @param {import('./ballisticsEngine.js').BallisticsPointResult[]} results
+ * @param {number} [width]
+ * @param {number} [height]
+ * @returns {string | null}
+ */
+export function buildBallisticChartPngFromResults(results, width = 960, height = 320) {
+  if (typeof document === 'undefined' || !results?.length) return null
+
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return null
+
+  const pad = { l: 52, r: 52, t: 28, b: 40 }
+  const plotW = width - pad.l - pad.r
+  const plotH = height - pad.t - pad.b
+
+  ctx.fillStyle = '#0a0a0a'
+  ctx.fillRect(0, 0, width, height)
+
+  const maxDist = Math.max(...results.map((r) => r.distance), 1)
+  const maxDrop = Math.max(...results.map((r) => Math.abs(r.dropCm)), 1)
+  const maxVel = Math.max(...results.map((r) => r.velocityRemaining))
+  const minVel = Math.min(...results.map((r) => r.velocityRemaining))
+  const velSpan = Math.max(1, maxVel - minVel)
+
+  const xAt = (d) => pad.l + (d / maxDist) * plotW
+  const yDrop = (drop) => pad.t + (Math.abs(drop) / maxDrop) * plotH
+  const yVel = (v) => pad.t + plotH - ((v - minVel) / velSpan) * plotH
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)'
+  ctx.lineWidth = 1
+  for (let i = 0; i <= 4; i += 1) {
+    const gy = pad.t + (plotH / 4) * i
+    ctx.beginPath()
+    ctx.moveTo(pad.l, gy)
+    ctx.lineTo(pad.l + plotW, gy)
+    ctx.stroke()
+  }
+
+  const dropGradient = ctx.createLinearGradient(pad.l, 0, pad.l + plotW, 0)
+  dropGradient.addColorStop(0, '#22c55e')
+  dropGradient.addColorStop(0.5, '#eab308')
+  dropGradient.addColorStop(1, '#ef4444')
+
+  ctx.strokeStyle = dropGradient
+  ctx.lineWidth = 2.5
+  ctx.beginPath()
+  results.forEach((r, i) => {
+    const x = xAt(r.distance)
+    const y = yDrop(r.dropCm)
+    if (i === 0) ctx.moveTo(x, y)
+    else ctx.lineTo(x, y)
+  })
+  ctx.stroke()
+
+  ctx.strokeStyle = '#fbbf24'
+  ctx.lineWidth = 2
+  ctx.beginPath()
+  results.forEach((r, i) => {
+    const x = xAt(r.distance)
+    const y = yVel(r.velocityRemaining)
+    if (i === 0) ctx.moveTo(x, y)
+    else ctx.lineTo(x, y)
+  })
+  ctx.stroke()
+
+  ctx.fillStyle = 'rgba(148,163,184,0.85)'
+  ctx.font = '11px monospace'
+  ctx.fillText('Drop (cm)', pad.l, height - 14)
+  ctx.fillStyle = 'rgba(251,191,36,0.85)'
+  ctx.fillText('Velocity (fps)', pad.l + plotW - 110, height - 14)
+
+  const png = canvas.toDataURL('image/png')
+  return png.startsWith('data:image/png') && png.length > 800 ? png : null
 }
 
 /**
@@ -73,6 +194,7 @@ export async function chartContainerToPngDataUrl(container) {
  * @param {{ widthMm: number, heightMm: number }} logoDims
  * @param {string} reportTitle
  * @param {number} y
+ * @param {number} [needed]
  * @returns {number}
  */
 function ensureSpace(doc, pageW, pageH, logoDataUrl, logoDims, reportTitle, y, needed = 20) {
@@ -90,9 +212,21 @@ function ensureSpace(doc, pageW, pageH, logoDataUrl, logoDims, reportTitle, y, n
  * @param {{ widthMm: number, heightMm: number }} logoDims
  * @param {string} reportTitle
  * @param {number} startY
+ * @param {string[]} layoutLog
  */
-function drawTermGlossarySection(doc, margin, pageW, pageH, logoDataUrl, logoDims, reportTitle, startY) {
+function drawTermGlossarySection(
+  doc,
+  margin,
+  pageW,
+  pageH,
+  logoDataUrl,
+  logoDims,
+  reportTitle,
+  startY,
+  layoutLog,
+) {
   let y = ensureSpace(doc, pageW, pageH, logoDataUrl, logoDims, reportTitle, startY, 24)
+  layoutLog.push(`Sayfa ${doc.getNumberOfPages()}: TERİM AÇIKLAMALARI (y=${y.toFixed(1)})`)
   y = drawSectionTitle(doc, margin, pageW, 'TERİM AÇIKLAMALARI', y)
 
   setPdfFont(doc, 'normal')
@@ -139,7 +273,8 @@ function drawTermGlossarySection(doc, margin, pageW, pageH, logoDataUrl, logoDim
 
 /**
  * @param {import('./ballisticsEngine.js').BallisticsEngineOutput} output
- * @param {{ profileName?: string, chartImageDataUrl?: string | null }} meta
+ * @param {{ profileName?: string, chartImageDataUrl?: string | null, saveTo?: string }} meta
+ * @returns {Promise<{ pageCount: number, layoutLog: string[], chartSource: string }>}
  */
 export async function exportBallisticReportPdf(output, meta = {}) {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
@@ -147,6 +282,7 @@ export async function exportBallisticReportPdf(output, meta = {}) {
   const pageW = doc.internal.pageSize.getWidth()
   const pageH = doc.internal.pageSize.getHeight()
   const margin = PDF_LAYOUT.margin
+  const layoutLog = []
 
   const title = meta.profileName
     ? `BALİSTİK TRAJEKTORİ · ${meta.profileName}`
@@ -161,6 +297,8 @@ export async function exportBallisticReportPdf(output, meta = {}) {
     title,
     null,
   )
+
+  layoutLog.push('Sayfa 1: Kapak + özet + menzil tablosu başlangıcı')
 
   setPdfFont(doc, 'normal')
   doc.setFontSize(PDF_FONT_SIZE.body)
@@ -191,20 +329,48 @@ export async function exportBallisticReportPdf(output, meta = {}) {
     ...getAutoTableOptions(margin),
   })
 
-  y = (doc.lastAutoTable?.finalY ?? tableStart) + 8
+  layoutLog.push(
+    `Sayfa ${doc.getNumberOfPages()}: Menzil tablosu bitti (finalY=${(doc.lastAutoTable?.finalY ?? tableStart).toFixed(1)})`,
+  )
 
-  if (meta.chartImageDataUrl) {
-    y = ensureSpace(doc, pageW, pageH, logoDataUrl, logoDims, title, y, 55)
-    y = drawSectionTitle(doc, margin, pageW, 'Trajektori grafiği', y)
-
-    const imgW = pageW - margin * 2
-    const imgH = 62
-    doc.addImage(meta.chartImageDataUrl, 'PNG', margin, y, imgW, imgH, undefined, 'FAST')
-    y += imgH + 8
+  let chartImageDataUrl = meta.chartImageDataUrl ?? null
+  let chartSource = 'none'
+  if (chartImageDataUrl) {
+    chartSource = 'dom'
+  } else {
+    chartImageDataUrl = buildBallisticChartPngFromResults(output.results)
+    if (chartImageDataUrl) chartSource = 'canvas-fallback'
   }
 
-  drawTermGlossarySection(doc, margin, pageW, pageH, logoDataUrl, logoDims, title, y)
+  doc.addPage()
+  y = setupReportContinuationPage(doc, pageW, pageH, logoDataUrl, logoDims, title, 'Trajektori grafiği')
+  layoutLog.push(`Sayfa ${doc.getNumberOfPages()}: Trajektori grafiği bölümü`)
+
+  y = drawSectionTitle(doc, margin, pageW, 'Trajektori grafiği', y)
+
+  if (chartImageDataUrl) {
+    const imgW = pageW - margin * 2
+    const imgH = 72
+    doc.addImage(chartImageDataUrl, 'PNG', margin, y, imgW, imgH, undefined, 'SLOW')
+    y += imgH + 8
+    layoutLog.push(`Sayfa ${doc.getNumberOfPages()}: Grafik PNG gömüldü (${chartSource})`)
+  } else {
+    doc.setFontSize(PDF_FONT_SIZE.small)
+    doc.setTextColor(...PDF_COLORS.muted)
+    doc.text('Grafik görseli üretilemedi.', margin, y + 4)
+    y += 10
+    layoutLog.push(`Sayfa ${doc.getNumberOfPages()}: Grafik PNG üretilemedi`)
+  }
+
+  drawTermGlossarySection(doc, margin, pageW, pageH, logoDataUrl, logoDims, title, y, layoutLog)
 
   stampPdfFooters(doc, reportId)
-  doc.save(`audaz-balistik-${Date.now()}.pdf`)
+
+  doc.save(meta.saveTo ?? `audaz-balistik-${Date.now()}.pdf`)
+
+  return {
+    pageCount: doc.getNumberOfPages(),
+    layoutLog,
+    chartSource,
+  }
 }
