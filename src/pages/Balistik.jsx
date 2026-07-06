@@ -15,7 +15,7 @@ import {
   normalizeBallisticProfile,
   runBallisticsForProfile,
 } from '../lib/ballisticProfileBridge'
-import { exportBallisticReportPdf } from '../lib/ballisticReportPdf'
+import { exportBallisticReportPdf, chartContainerToPngDataUrl } from '../lib/ballisticReportPdf'
 import { weaponDisplayName } from '../lib/weaponIlws'
 
 /** @typedef {import('../lib/ballisticsEngine.js').BallisticsEngineOutput} BallisticsEngineOutput */
@@ -39,6 +39,19 @@ const DEFAULT_ENV = {
   windSpeedUnit: 'mph',
   windAngleDegrees: 90,
 }
+
+/** @type {{ label: string, termKey: string }[]} */
+const TABLE_COLUMNS = [
+  { label: 'M', termKey: 'distance' },
+  { label: 'Drop', termKey: 'drop' },
+  { label: 'Wind', termKey: 'windage' },
+  { label: 'TOF', termKey: 'timeOfFlight' },
+  { label: 'fps', termKey: 'velocity' },
+  { label: 'E', termKey: 'remainingEnergy' },
+  { label: 'MOA', termKey: 'moaClicks' },
+  { label: 'MRAD', termKey: 'mradClicks' },
+  { label: 'Mach', termKey: 'machNumber' },
+]
 
 export default function Balistik() {
   const { items: inventoryItems } = useAudazData('inventory')
@@ -150,12 +163,23 @@ export default function Balistik() {
   const handleExportPdf = useCallback(async () => {
     if (!output) return
     setPdfBusy(true)
+    const previousTab = resultTab
     try {
-      await exportBallisticReportPdf(output, { profileName: String(form.profileName) })
+      if (previousTab !== 'chart') setResultTab('chart')
+      await new Promise((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(resolve))
+      })
+      const chartEl = document.getElementById('balistik-chart-export')
+      const chartImageDataUrl = chartEl ? await chartContainerToPngDataUrl(chartEl) : null
+      await exportBallisticReportPdf(output, {
+        profileName: String(form.profileName),
+        chartImageDataUrl,
+      })
     } finally {
+      if (previousTab !== 'chart') setResultTab(previousTab)
       setPdfBusy(false)
     }
-  }, [output, form.profileName])
+  }, [output, form.profileName, resultTab])
 
   const resultTabBtnClass = (active) =>
     [
@@ -321,9 +345,12 @@ export default function Balistik() {
                     <table className="w-full min-w-[640px] text-left font-mono-technical text-[10px] text-slate-300">
                       <thead className="sticky top-0 z-[1] border-b border-white/10 bg-app-bg/95 text-[8px] uppercase tracking-wider text-app-text/45 backdrop-blur-sm">
                         <tr>
-                          {['m', 'Drop', 'Wind', 'TOF', 'fps', 'E', 'MOA', 'MRAD', 'Mach'].map((h) => (
-                            <th key={h} className="px-2 py-2 font-normal">
-                              {h}
+                          {TABLE_COLUMNS.map(({ label, termKey }) => (
+                            <th key={termKey} className="px-2 py-2 font-normal">
+                              <span className="inline-flex items-center gap-0.5">
+                                {label}
+                                <InfoTooltip termKey={termKey} />
+                              </span>
                             </th>
                           ))}
                         </tr>

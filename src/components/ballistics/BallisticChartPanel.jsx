@@ -140,7 +140,7 @@ export default function BallisticChartPanel({
 
   return (
     <div className="space-y-3">
-      <div className="h-64 min-h-[14rem] w-full sm:h-72">
+      <div id="balistik-chart-export" className="h-64 min-h-[14rem] w-full sm:h-72">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={chartData}
