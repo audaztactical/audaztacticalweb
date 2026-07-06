@@ -1,19 +1,13 @@
 /**
- * .308 Win senaryosu ile balistik PDF üretir ve grafik şeklini doğrular.
+ * .308 Win senaryosu ile balistik PDF üretir (grafiksiz yapı).
  * node scripts/ballistic-pdf-export-test.mjs
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { createCanvas, loadImage } from 'canvas'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { calculateBallistics } from '../src/lib/ballisticsEngine.js'
-import {
-  chartPngValidateShapeFromImageData,
-  computeBallisticChartLayout,
-  drawBallisticChartNode,
-} from '../src/lib/ballisticChartImage.js'
 import { getBallisticTerm, TABLE_COLUMN_TERM_KEYS } from '../src/data/ballisticTerms.js'
 
 const PDF_MARGIN = 14
@@ -52,37 +46,15 @@ function getAutoTableOptions(margin) {
 async function preparePdfAssetsNode(doc) {
   const regular = readFileSync(path.join(root, 'public/fonts/Roboto-Regular.ttf'))
   const bold = readFileSync(path.join(root, 'public/fonts/Roboto-Bold.ttf'))
-  const logoBuf = readFileSync(path.join(root, 'src/assets/logo.png'))
-  const logoDataUrl = `data:image/png;base64,${logoBuf.toString('base64')}`
 
   doc.addFileToVFS('Roboto-Regular.ttf', arrayBufferToBase64(regular))
   doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal')
   doc.addFileToVFS('Roboto-Bold.ttf', arrayBufferToBase64(bold))
   doc.addFont('Roboto-Bold.ttf', 'Roboto', 'bold')
-
-  return { logoDataUrl, logoDims: { widthMm: 16, heightMm: 16 } }
 }
 
 function setPdfFont(doc, style = 'normal') {
   doc.setFont('Roboto', style)
-}
-
-function buildChartPng(results) {
-  const width = 960
-  const height = 320
-  const canvas = createCanvas(width, height)
-  const ctx = canvas.getContext('2d')
-  drawBallisticChartNode(ctx, results, width, height)
-  return canvas.toDataURL('image/png')
-}
-
-async function loadPngImageDataNode(pngPath) {
-  const img = await loadImage(pngPath)
-  const canvas = createCanvas(img.width, img.height)
-  const ctx = canvas.getContext('2d')
-  ctx.drawImage(img, 0, 0)
-  const imageData = ctx.getImageData(0, 0, img.width, img.height)
-  return { data: imageData.data, width: img.width, height: img.height }
 }
 
 function ensureSpace(doc, pageW, pageH, y, needed = 20) {
@@ -91,7 +63,7 @@ function ensureSpace(doc, pageW, pageH, y, needed = 20) {
   return PDF_MARGIN + 8
 }
 
-async function buildPdf(output, chartImageDataUrl, saveTo) {
+async function buildPdf(output, saveTo) {
   const layoutLog = []
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
   await preparePdfAssetsNode(doc)
@@ -137,20 +109,7 @@ async function buildPdf(output, chartImageDataUrl, saveTo) {
 
   doc.addPage()
   y = margin + 8
-  layoutLog.push(`Sayfa ${doc.getNumberOfPages()}: Trajektori grafiği`)
-
-  y = drawSectionTitle(doc, margin, pageW, 'Trajektori grafiği', y)
-  const imgW = pageW - margin * 2
-  const imgH = 72
-  doc.addImage(chartImageDataUrl, 'PNG', margin, y, imgW, imgH, undefined, 'SLOW')
-  y += imgH + 8
-
-  const pngBuf = Buffer.from(chartImageDataUrl.split(',')[1], 'base64')
-  writeFileSync(path.join(outDir, 'balistik-chart-test.png'), pngBuf)
-  layoutLog.push(`Sayfa ${doc.getNumberOfPages()}: Grafik PNG gömüldü (${Math.round(pngBuf.length / 1024)} KB)`)
-
-  y = ensureSpace(doc, pageW, pageH, y, 24)
-  layoutLog.push(`Sayfa ${doc.getNumberOfPages()}: TERİM AÇIKLAMALARI başlangıcı`)
+  layoutLog.push(`Sayfa ${doc.getNumberOfPages()}: Terim açıklamaları başlangıcı`)
   y = drawSectionTitle(doc, margin, pageW, 'TERİM AÇIKLAMALARI', y)
 
   const contentW = pageW - margin * 2
@@ -211,32 +170,12 @@ const output = calculateBallistics({
   energyUnit: 'ftlb',
 })
 
-const layout = computeBallisticChartLayout(output.results)
-console.log('=== Koordinat örneği (.308 Win) ===')
-for (const d of [100, 800, 1500]) {
-  const r = output.results.find((x) => x.distance === d)
-  console.log(
-    `${d}m: drop=${Math.abs(r.dropCm).toFixed(1)}cm → yDrop=${layout.yDrop(r.dropCm).toFixed(1)}, vel=${r.velocityRemaining.toFixed(0)}fps → yVel=${layout.yVel(r.velocityRemaining).toFixed(1)}, x=${layout.xAt(d).toFixed(1)}`,
-  )
-}
-
-const chartPng = buildChartPng(output.results)
-if (!chartPng || chartPng.length < 1200) {
-  console.error('FAIL: Chart PNG üretilemedi, length=', chartPng?.length ?? 0)
-  process.exit(1)
-}
-
 const pdfPath = path.join(outDir, 'balistik-308-test.pdf')
-const result = await buildPdf(output, chartPng, pdfPath)
+const result = await buildPdf(output, pdfPath)
 
-const pngPath = path.join(outDir, 'balistik-chart-test.png')
-const loaded = await loadPngImageDataNode(pngPath)
-const shape = chartPngValidateShapeFromImageData(loaded, output.results, 960, 320, { mode: 'strict' })
-
-console.log('\n=== Balistik PDF Test (.308 Win) ===')
+console.log('=== Balistik PDF Test (.308 Win) ===')
 console.log('Profil: .308 Win 175gr SMK (G7 BC 0.243)')
 console.log('Menzil noktası:', output.results.length)
-console.log('Chart PNG:', `${Math.round(chartPng.length / 1024)} KB`)
 console.log('PDF:', pdfPath)
 console.log('PDF boyutu:', `${Math.round(result.pdfSize / 1024)} KB`)
 console.log('Sayfa sayısı:', result.pageCount)
@@ -247,29 +186,9 @@ const pdfRaw = readFileSync(pdfPath)
 const pageMarkers = (pdfRaw.toString('latin1').match(/\/Type\s*\/Page\b/g) ?? []).length
 console.log('\nPDF /Page işaretleyici sayısı:', pageMarkers)
 
-console.log('\n=== chartPngValidateShape ===')
-console.log('Sonuç:', shape.ok ? 'GEÇTİ' : 'KALDI')
-if (shape.checkpoints?.length) {
-  shape.checkpoints.forEach((cp) => {
-    console.log(
-      ` - ${cp.distance}m: dropHit=${cp.dropHit} velHit=${cp.velHit} (drop y≈${cp.expectedDrop.y.toFixed(0)}, vel y≈${cp.expectedVel.y.toFixed(0)})`,
-    )
-  })
-}
-if (shape.issues?.length) {
-  console.log('Sorunlar:', shape.issues.join('; '))
-}
-console.log('Drop Y serisi (100→1500m):', shape.dropYs?.map((y) => Math.round(y)).join(' → '))
-console.log('Vel Y serisi (100→1500m):', shape.velYs?.map((y) => Math.round(y)).join(' → '))
-
-if (!shape.ok) {
-  console.error('FAIL: chartPngValidateShape başarısız')
+if (result.pageCount < 2 || pageMarkers < 2) {
+  console.error('FAIL: Beklenen en az 2 sayfa (tablo + terimler)')
   process.exit(1)
 }
 
-if (result.pageCount < 3 || pageMarkers < 3) {
-  console.error('FAIL: Beklenen en az 3 sayfa')
-  process.exit(1)
-}
-
-console.log('\nOK: PDF ve grafik PNG oluşturuldu — chartPngValidateShape geçti.')
+console.log('\nOK: Grafiksiz PDF oluşturuldu.')

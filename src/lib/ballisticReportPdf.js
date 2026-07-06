@@ -346,8 +346,8 @@ function drawTermGlossarySection(
 
 /**
  * @param {import('./ballisticsEngine.js').BallisticsEngineOutput} output
- * @param {{ profileName?: string, chartImageDataUrl?: string | null, saveTo?: string }} meta
- * @returns {Promise<{ pageCount: number, layoutLog: string[], chartSource: string }>}
+ * @param {{ profileName?: string, saveTo?: string }} meta
+ * @returns {Promise<{ pageCount: number, layoutLog: string[] }>}
  */
 export async function exportBallisticReportPdf(output, meta = {}) {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
@@ -406,43 +406,9 @@ export async function exportBallisticReportPdf(output, meta = {}) {
     `Sayfa ${doc.getNumberOfPages()}: Menzil tablosu bitti (finalY=${(doc.lastAutoTable?.finalY ?? tableStart).toFixed(1)})`,
   )
 
-  let chartImageDataUrl = meta.chartImageDataUrl ?? buildBallisticChartPngFromResults(output.results)
-  let chartSource = chartImageDataUrl ? 'canvas-data' : 'none'
-  if (meta.chartImageDataUrl) {
-    const shape = await chartPngValidateShape(meta.chartImageDataUrl, output.results, 960, 320, {
-      mode: meta.chartSource === 'html2canvas' ? 'dom' : 'strict',
-    })
-    if (shape.ok) {
-      chartSource = meta.chartSource ?? 'dom'
-    } else if (await chartPngHasLineContent(meta.chartImageDataUrl)) {
-      chartSource = meta.chartSource ?? 'dom'
-    } else {
-      chartImageDataUrl = buildBallisticChartPngFromResults(output.results)
-      chartSource = chartImageDataUrl ? 'canvas-data' : 'none'
-    }
-  } else if (!chartImageDataUrl) {
-    chartSource = 'none'
-  }
-
   doc.addPage()
-  y = setupReportContinuationPage(doc, pageW, pageH, logoDataUrl, logoDims, title, 'Trajektori grafiği')
-  layoutLog.push(`Sayfa ${doc.getNumberOfPages()}: Trajektori grafiği bölümü`)
-
-  y = drawSectionTitle(doc, margin, pageW, 'Trajektori grafiği', y)
-
-  if (chartImageDataUrl) {
-    const imgW = pageW - margin * 2
-    const imgH = 72
-    doc.addImage(chartImageDataUrl, 'PNG', margin, y, imgW, imgH, undefined, 'SLOW')
-    y += imgH + 8
-    layoutLog.push(`Sayfa ${doc.getNumberOfPages()}: Grafik PNG gömüldü (${chartSource})`)
-  } else {
-    doc.setFontSize(PDF_FONT_SIZE.small)
-    doc.setTextColor(...PDF_COLORS.muted)
-    doc.text('Grafik görseli üretilemedi.', margin, y + 4)
-    y += 10
-    layoutLog.push(`Sayfa ${doc.getNumberOfPages()}: Grafik PNG üretilemedi`)
-  }
+  y = setupReportContinuationPage(doc, pageW, pageH, logoDataUrl, logoDims, title, 'Terim açıklamaları')
+  layoutLog.push(`Sayfa ${doc.getNumberOfPages()}: Terim açıklamaları başlangıcı`)
 
   drawTermGlossarySection(doc, margin, pageW, pageH, logoDataUrl, logoDims, title, y, layoutLog)
 
@@ -453,6 +419,5 @@ export async function exportBallisticReportPdf(output, meta = {}) {
   return {
     pageCount: doc.getNumberOfPages(),
     layoutLog,
-    chartSource,
   }
 }
