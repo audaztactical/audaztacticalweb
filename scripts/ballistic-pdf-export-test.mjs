@@ -5,7 +5,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { createCanvas } from 'canvas'
+import { createCanvas, loadImage } from 'canvas'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { calculateBallistics } from '../src/lib/ballisticsEngine.js'
@@ -95,7 +95,12 @@ function buildChartPng(results) {
     ctx.stroke()
   }
 
-  ctx.strokeStyle = '#22c55e'
+  const dropGradient = ctx.createLinearGradient(pad.l, 0, pad.l + plotW, 0)
+  dropGradient.addColorStop(0, '#22c55e')
+  dropGradient.addColorStop(0.5, '#eab308')
+  dropGradient.addColorStop(1, '#ef4444')
+
+  ctx.strokeStyle = dropGradient
   ctx.lineWidth = 2.5
   ctx.beginPath()
   results.forEach((r, i) => {
@@ -117,7 +122,49 @@ function buildChartPng(results) {
   })
   ctx.stroke()
 
+  ctx.fillStyle = 'rgba(148,163,184,0.85)'
+  ctx.font = '10px monospace'
+  ctx.textAlign = 'right'
+  for (let i = 0; i <= 4; i += 1) {
+    const frac = i / 4
+    const dropVal = Math.round(maxDrop * frac)
+    const y = pad.t + plotH - frac * plotH
+    ctx.fillText(String(dropVal), pad.l - 6, y + 3)
+  }
+
+  ctx.textAlign = 'left'
+  for (let i = 0; i <= 4; i += 1) {
+    const frac = i / 4
+    const velVal = Math.round(minVel + velSpan * (1 - frac))
+    const y = pad.t + frac * plotH
+    ctx.fillText(String(velVal), pad.l + plotW + 8, y + 3)
+  }
+
+  ctx.textAlign = 'center'
+  const tickDistances = [results[0].distance, results[Math.floor(results.length / 2)].distance, results[results.length - 1].distance]
+  tickDistances.forEach((d) => {
+    ctx.fillText(`${d}m`, xAt(d), height - 22)
+  })
+
   return canvas.toDataURL('image/png')
+}
+
+async function countLinePixels(pngPath) {
+  const img = await loadImage(pngPath)
+  const canvas = createCanvas(img.width, img.height)
+  const ctx = canvas.getContext('2d')
+  ctx.drawImage(img, 0, 0)
+  const data = ctx.getImageData(0, 0, img.width, img.height).data
+  let green = 0
+  let gold = 0
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i]
+    const g = data[i + 1]
+    const b = data[i + 2]
+    if (g > 130 && r < 130) green += 1
+    if (r > 170 && g > 110 && b < 110) gold += 1
+  }
+  return { green, gold, width: img.width, height: img.height }
 }
 
 function ensureSpace(doc, pageW, pageH, y, needed = 20) {
@@ -255,6 +302,9 @@ if (!chartPng || chartPng.length < 1200) {
 const pdfPath = path.join(outDir, 'balistik-308-test.pdf')
 const result = await buildPdf(output, chartPng, pdfPath)
 
+const pngPath = path.join(outDir, 'balistik-chart-test.png')
+const pixels = await countLinePixels(pngPath)
+
 console.log('=== Balistik PDF Test (.308 Win) ===')
 console.log('Profil: .308 Win 175gr SMK (G7 BC 0.243)')
 console.log('Menzil noktası:', output.results.length)
@@ -269,9 +319,16 @@ const pdfRaw = readFileSync(pdfPath)
 const pageMarkers = (pdfRaw.toString('latin1').match(/\/Type\s*\/Page\b/g) ?? []).length
 console.log('\nPDF /Page işaretleyici sayısı:', pageMarkers)
 
+console.log('Chart PNG piksel analizi:', pixels)
+
+if (pixels.green + pixels.gold < 800) {
+  console.error('FAIL: PNG içinde yeterli çizgi pikseli yok (green+gold >= 800)')
+  process.exit(1)
+}
+
 if (result.pageCount < 3 || pageMarkers < 3) {
   console.error('FAIL: Beklenen en az 3 sayfa')
   process.exit(1)
 }
 
-console.log('\nOK: PDF ve grafik PNG oluşturuldu ve doğrulandı.')
+console.log('\nOK: PDF ve grafik PNG oluşturuldu — çizgiler piksel doğrulamasından geçti.')

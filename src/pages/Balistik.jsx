@@ -17,9 +17,8 @@ import {
   runBallisticsForProfile,
 } from '../lib/ballisticProfileBridge'
 import {
-  buildBallisticChartPngFromResults,
-  chartContainerToPngDataUrl,
   exportBallisticReportPdf,
+  resolveChartImageForPdf,
 } from '../lib/ballisticReportPdf'
 import { weaponDisplayName } from '../lib/weaponIlws'
 
@@ -191,20 +190,16 @@ export default function Balistik() {
     if (!output) return
     setPdfBusy(true)
     const previousTab = resultTab
-    const captureDebug = /** @type {import('../lib/ballisticReportPdf.js').ChartCaptureDebug[]} */ ([])
     try {
       if (previousTab !== 'chart') {
         flushSync(() => setResultTab('chart'))
       }
-
       const chartEl = await waitForChartExportReady()
-      let chartImageDataUrl = chartEl ? await chartContainerToPngDataUrl(chartEl, { debug: captureDebug }) : null
-      let chartSource = chartImageDataUrl ? 'dom' : 'none'
 
-      if (!chartImageDataUrl) {
-        chartImageDataUrl = buildBallisticChartPngFromResults(output.results)
-        if (chartImageDataUrl) chartSource = 'canvas-fallback'
-      }
+      const { chartImageDataUrl, chartSource, debug: captureDebug } = await resolveChartImageForPdf(
+        output.results,
+        chartEl,
+      )
 
       if (import.meta.env.DEV) {
         console.info('[Balistik PDF] chart capture', {
@@ -218,6 +213,7 @@ export default function Balistik() {
       const reportMeta = await exportBallisticReportPdf(output, {
         profileName: String(form.profileName),
         chartImageDataUrl,
+        chartSource,
       })
 
       if (import.meta.env.DEV) {

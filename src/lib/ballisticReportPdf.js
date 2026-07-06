@@ -21,7 +21,85 @@ const CHART_EXPORT_MIN_HEIGHT = 80
  */
 
 /**
- * Recharts SVG çıktısını PNG data URL'e çevirir (PDF gömme için).
+ * PNG içinde gerçekten renkli çizgi pikseli var mı (eksens-only Recharts yakalamasını reddeder).
+ * @param {string} pngDataUrl
+ * @param {number} [minColoredPixels]
+ * @returns {Promise<boolean>}
+ */
+export function chartPngHasLineContent(pngDataUrl, minColoredPixels = 350) {
+  if (typeof document === 'undefined' || !pngDataUrl?.startsWith('data:image/png')) {
+    return Promise.resolve(false)
+  }
+
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = img.width
+      canvas.height = img.height
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        resolve(false)
+        return
+      }
+      ctx.drawImage(img, 0, 0)
+      const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data
+      let colored = 0
+      for (let i = 0; i < data.length; i += 16) {
+        const r = data[i]
+        const g = data[i + 1]
+        const b = data[i + 2]
+        if (r < 28 && g < 28 && b < 28) continue
+        if (g > 130 && r < 130) colored += 1
+        else if (r > 170 && g > 110 && b < 110) colored += 1
+        else if (r > 210 && g > 60 && b < 90) colored += 1
+        if (colored >= minColoredPixels) break
+      }
+      resolve(colored >= minColoredPixels)
+    }
+    img.onerror = () => resolve(false)
+    img.src = pngDataUrl
+  })
+}
+
+/**
+ * PDF için güvenilir grafik PNG'si — önce veri tabanlı canvas, DOM yalnızca doğrulanırsa.
+ * @param {import('./ballisticsEngine.js').BallisticsPointResult[]} results
+ * @param {HTMLElement | null | undefined} [domContainer]
+ * @returns {Promise<{ chartImageDataUrl: string | null, chartSource: string, debug: ChartCaptureDebug[] }>}
+ */
+export async function resolveChartImageForPdf(results, domContainer) {
+  const debug = /** @type {ChartCaptureDebug[]} */ ([])
+
+  const dataPng = buildBallisticChartPngFromResults(results)
+  if (dataPng && (await chartPngHasLineContent(dataPng))) {
+    debug.push({ step: 'canvas-data', ok: true, detail: 'Veri tabanlı grafik doğrulandı' })
+    return { chartImageDataUrl: dataPng, chartSource: 'canvas-data', debug }
+  }
+
+  if (domContainer) {
+    const domPng = await chartContainerToPngDataUrl(domContainer, { debug })
+    if (domPng && (await chartPngHasLineContent(domPng))) {
+      debug.push({ step: 'dom', ok: true, detail: 'DOM grafik doğrulandı' })
+      return { chartImageDataUrl: domPng, chartSource: 'dom', debug }
+    }
+    debug.push({
+      step: 'dom-reject',
+      ok: false,
+      detail: 'DOM PNG eksen-only (gradyan stroke rasterize edilmedi)',
+    })
+  }
+
+  if (dataPng) {
+    debug.push({ step: 'canvas-data-fallback', ok: true, detail: 'Doğrulama atlandı, veri PNG kullanıldı' })
+    return { chartImageDataUrl: dataPng, chartSource: 'canvas-data', debug }
+  }
+
+  return { chartImageDataUrl: null, chartSource: 'none', debug }
+}
+
+/**
+ * DOM yakalama — Recharts SVG (gradyan stroke PDF'te genelde boş kalır; yedek amaçlı).
  * @param {HTMLElement | null | undefined} container
  * @param {{ debug?: ChartCaptureDebug[] }} [options]
  * @returns {Promise<string | null>}
@@ -177,10 +255,43 @@ export function buildBallisticChartPngFromResults(results, width = 960, height =
   ctx.stroke()
 
   ctx.fillStyle = 'rgba(148,163,184,0.85)'
-  ctx.font = '11px monospace'
-  ctx.fillText('Drop (cm)', pad.l, height - 14)
-  ctx.fillStyle = 'rgba(251,191,36,0.85)'
-  ctx.fillText('Velocity (fps)', pad.l + plotW - 110, height - 14)
+  ctx.font = '10px monospace'
+  ctx.textAlign = 'right'
+  for (let i = 0; i <= 4; i += 1) {
+    const frac = i / 4
+    const dropVal = Math.round(maxDrop * frac)
+    const y = pad.t + plotH - frac * plotH
+    ctx.fillText(String(dropVal), pad.l - 6, y + 3)
+  }
+
+  ctx.textAlign = 'left'
+  for (let i = 0; i <= 4; i += 1) {
+    const frac = i / 4
+    const velVal = Math.round(minVel + velSpan * (1 - frac))
+    const y = pad.t + frac * plotH
+    ctx.fillText(String(velVal), pad.l + plotW + 8, y + 3)
+  }
+
+  ctx.textAlign = 'center'
+  const tickDistances = [results[0].distance, results[Math.floor(results.length / 2)].distance, results[results.length - 1].distance]
+  tickDistances.forEach((d) => {
+    const x = xAt(d)
+    ctx.fillText(`${d}m`, x, height - 22)
+  })
+
+  ctx.textAlign = 'left'
+  ctx.fillStyle = 'rgba(34,197,94,0.9)'
+  ctx.fillText('Drop (cm)', pad.l, height - 8)
+  ctx.fillStyle = 'rgba(251,191,36,0.9)'
+  ctx.fillText('Velocity (fps)', pad.l + plotW - 110, height - 8)
+
+  ctx.strokeStyle = 'rgba(148,163,184,0.35)'
+  ctx.lineWidth = 1
+  ctx.beginPath()
+  ctx.moveTo(pad.l, pad.t)
+  ctx.lineTo(pad.l, pad.t + plotH)
+  ctx.lineTo(pad.l + plotW, pad.t + plotH)
+  ctx.stroke()
 
   const png = canvas.toDataURL('image/png')
   return png.startsWith('data:image/png') && png.length > 800 ? png : null
@@ -333,13 +444,12 @@ export async function exportBallisticReportPdf(output, meta = {}) {
     `Sayfa ${doc.getNumberOfPages()}: Menzil tablosu bitti (finalY=${(doc.lastAutoTable?.finalY ?? tableStart).toFixed(1)})`,
   )
 
-  let chartImageDataUrl = meta.chartImageDataUrl ?? null
-  let chartSource = 'none'
-  if (chartImageDataUrl) {
-    chartSource = 'dom'
-  } else {
-    chartImageDataUrl = buildBallisticChartPngFromResults(output.results)
-    if (chartImageDataUrl) chartSource = 'canvas-fallback'
+  let chartImageDataUrl = meta.chartImageDataUrl ?? buildBallisticChartPngFromResults(output.results)
+  let chartSource = chartImageDataUrl ? 'canvas-data' : 'none'
+  if (meta.chartImageDataUrl && (await chartPngHasLineContent(meta.chartImageDataUrl))) {
+    chartSource = meta.chartSource ?? 'dom'
+  } else if (!chartImageDataUrl) {
+    chartSource = 'none'
   }
 
   doc.addPage()
