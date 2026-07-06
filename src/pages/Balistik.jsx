@@ -61,6 +61,7 @@ export default function Balistik() {
   const [profileSaving, setProfileSaving] = useState(false)
   const [armoryOpen, setArmoryOpen] = useState(false)
   const [pdfBusy, setPdfBusy] = useState(false)
+  const [resultTab, setResultTab] = useState(/** @type {'chart' | 'table'} */ ('chart'))
 
   const weapons = useMemo(() => filterInventoryWeapons(inventoryItems), [inventoryItems])
 
@@ -156,6 +157,12 @@ export default function Balistik() {
     }
   }, [output, form.profileName])
 
+  const resultTabBtnClass = (active) =>
+    [
+      'relative flex-1 px-2 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-[0.22em] transition sm:px-4',
+      active ? 'text-emerald-400' : 'text-app-text/45 hover:text-app-text/75',
+    ].join(' ')
+
   return (
     <div className="relative mx-auto flex min-h-0 w-full max-w-[1600px] flex-col gap-4">
       <HudFluffDecor className="pointer-events-none opacity-40" />
@@ -184,7 +191,7 @@ export default function Balistik() {
         </p>
       ) : null}
 
-      <div className="relative z-[1] grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(0,22rem)_1fr] xl:grid-cols-[minmax(0,24rem)_1fr]">
+      <div className="relative z-[1] grid min-h-0 flex-1 gap-4 lg:min-h-[calc(100dvh-11rem)] lg:grid-cols-[minmax(0,22rem)_1fr] xl:grid-cols-[minmax(0,24rem)_1fr]">
         <TacticalPanel className="min-h-0 overflow-y-auto p-3 sm:p-4 lg:max-h-[calc(100dvh-11rem)] lg:overflow-y-auto">
           <BallisticFormPanel
             form={form}
@@ -211,10 +218,10 @@ export default function Balistik() {
           />
         </TacticalPanel>
 
-        <TacticalPanel className="flex min-h-0 flex-col gap-4 p-3 sm:p-4">
+        <TacticalPanel className="flex min-h-0 flex-col gap-3 p-3 sm:gap-4 sm:p-4 lg:max-h-[calc(100dvh-11rem)] lg:overflow-hidden">
           {output ? (
             <>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <div className="grid shrink-0 grid-cols-1 gap-2 sm:grid-cols-3">
                 {[
                   ['Sıfırlama açısı', `${output.launchAngleDegrees.toFixed(3)}°`, 'launchAngle'],
                   ['Yoğunluk oranı', output.airDensityRatio.toFixed(4), 'airDensity'],
@@ -233,67 +240,114 @@ export default function Balistik() {
                 ))}
               </div>
 
-              <BallisticChartPanel
-                results={output.results}
-                activeDistance={activeDistance}
-                onActiveDistanceChange={setActiveDistance}
-                rangeMin={output.results[0]?.distance ?? rangeMin}
-                rangeMax={output.results[output.results.length - 1]?.distance ?? rangeMax}
-              />
-
-              <BallisticTrajectoryHud results={output.results} activeDistance={activeDistance} />
-
-              <div className="min-h-0 flex-1 overflow-auto rounded-lg border border-white/10">
-                <div className="sticky top-0 flex items-center justify-between gap-2 border-b border-white/10 bg-app-bg/95 px-3 py-2 backdrop-blur-sm">
-                  <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.22em] text-emerald-500/80">
-                    Tam sonuç tablosu
-                  </p>
-                  <button
-                    type="button"
-                    className="inline-flex items-center gap-1 rounded border border-emerald-500/40 px-2 py-1 font-mono-technical text-[9px] uppercase tracking-wider text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-50"
-                    onClick={handleExportPdf}
-                    disabled={pdfBusy}
-                  >
-                    <Download className="size-3.5" aria-hidden />
-                    {pdfBusy ? 'PDF…' : 'PDF'}
-                  </button>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[640px] text-left font-mono-technical text-[10px] text-slate-300">
-                    <thead className="border-b border-white/10 text-[8px] uppercase tracking-wider text-app-text/45">
-                      <tr>
-                        {['m', 'Drop', 'Wind', 'TOF', 'fps', 'E', 'MOA', 'MRAD', 'Mach'].map((h) => (
-                          <th key={h} className="px-2 py-2 font-normal">
-                            {h}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {output.results.map((r) => (
-                        <tr
-                          key={r.distance}
-                          className={`border-b border-white/5 ${
-                            Math.abs(r.distance - activeDistance) < rangeStep / 2
-                              ? 'bg-emerald-500/10'
-                              : ''
-                          }`}
-                        >
-                          <td className="px-2 py-1.5 tabular-nums">{r.distance}</td>
-                          <td className="px-2 py-1.5 tabular-nums">{Math.abs(r.dropCm).toFixed(1)}</td>
-                          <td className="px-2 py-1.5 tabular-nums">{Math.abs(r.windageCm).toFixed(1)}</td>
-                          <td className="px-2 py-1.5 tabular-nums">{r.timeOfFlightSeconds.toFixed(3)}</td>
-                          <td className="px-2 py-1.5 tabular-nums">{r.velocityRemaining.toFixed(0)}</td>
-                          <td className="px-2 py-1.5 tabular-nums">{r.energyRemaining.toFixed(0)}</td>
-                          <td className="px-2 py-1.5 tabular-nums">{r.dropMOA.toFixed(2)}</td>
-                          <td className="px-2 py-1.5 tabular-nums">{r.dropMRAD.toFixed(2)}</td>
-                          <td className="px-2 py-1.5 tabular-nums">{r.machNumber.toFixed(3)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+              <div
+                className="flex shrink-0 gap-1 border-b border-white/10"
+                role="tablist"
+                aria-label="Sonuç görünümü"
+              >
+                {[
+                  { id: 'chart', label: 'GRAFİK' },
+                  { id: 'table', label: 'TAM_TABLO' },
+                ].map(({ id, label }) => {
+                  const active = resultTab === id
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      aria-controls={`balistik-result-${id}`}
+                      id={`balistik-tab-${id}`}
+                      onClick={() => setResultTab(/** @type {'chart' | 'table'} */ (id))}
+                      className={resultTabBtnClass(active)}
+                    >
+                      {label}
+                      {active ? (
+                        <span
+                          className="absolute inset-x-1 bottom-0 h-0.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(34,197,94,0.55)]"
+                          aria-hidden
+                        />
+                      ) : null}
+                    </button>
+                  )
+                })}
               </div>
+
+              {resultTab === 'chart' ? (
+                <div
+                  id="balistik-result-chart"
+                  role="tabpanel"
+                  aria-labelledby="balistik-tab-chart"
+                  className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto"
+                >
+                  <BallisticChartPanel
+                    results={output.results}
+                    activeDistance={activeDistance}
+                    onActiveDistanceChange={setActiveDistance}
+                    rangeMin={output.results[0]?.distance ?? rangeMin}
+                    rangeMax={output.results[output.results.length - 1]?.distance ?? rangeMax}
+                  />
+
+                  <BallisticTrajectoryHud results={output.results} activeDistance={activeDistance} />
+                </div>
+              ) : (
+                <div
+                  id="balistik-result-table"
+                  role="tabpanel"
+                  aria-labelledby="balistik-tab-table"
+                  className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-white/10"
+                >
+                  <div className="flex shrink-0 items-center justify-between gap-2 border-b border-white/10 bg-app-bg/95 px-3 py-2 backdrop-blur-sm">
+                    <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.22em] text-emerald-500/80">
+                      Tam sonuç tablosu
+                    </p>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1 rounded border border-emerald-500/40 px-2 py-1 font-mono-technical text-[9px] uppercase tracking-wider text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-50"
+                      onClick={handleExportPdf}
+                      disabled={pdfBusy}
+                    >
+                      <Download className="size-3.5" aria-hidden />
+                      {pdfBusy ? 'PDF…' : 'PDF'}
+                    </button>
+                  </div>
+                  <div className="min-h-0 flex-1 overflow-y-auto overflow-x-auto">
+                    <table className="w-full min-w-[640px] text-left font-mono-technical text-[10px] text-slate-300">
+                      <thead className="sticky top-0 z-[1] border-b border-white/10 bg-app-bg/95 text-[8px] uppercase tracking-wider text-app-text/45 backdrop-blur-sm">
+                        <tr>
+                          {['m', 'Drop', 'Wind', 'TOF', 'fps', 'E', 'MOA', 'MRAD', 'Mach'].map((h) => (
+                            <th key={h} className="px-2 py-2 font-normal">
+                              {h}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {output.results.map((r) => (
+                          <tr
+                            key={r.distance}
+                            className={`border-b border-white/5 ${
+                              Math.abs(r.distance - activeDistance) < rangeStep / 2
+                                ? 'bg-emerald-500/10'
+                                : ''
+                            }`}
+                          >
+                            <td className="px-2 py-1.5 tabular-nums">{r.distance}</td>
+                            <td className="px-2 py-1.5 tabular-nums">{Math.abs(r.dropCm).toFixed(1)}</td>
+                            <td className="px-2 py-1.5 tabular-nums">{Math.abs(r.windageCm).toFixed(1)}</td>
+                            <td className="px-2 py-1.5 tabular-nums">{r.timeOfFlightSeconds.toFixed(3)}</td>
+                            <td className="px-2 py-1.5 tabular-nums">{r.velocityRemaining.toFixed(0)}</td>
+                            <td className="px-2 py-1.5 tabular-nums">{r.energyRemaining.toFixed(0)}</td>
+                            <td className="px-2 py-1.5 tabular-nums">{r.dropMOA.toFixed(2)}</td>
+                            <td className="px-2 py-1.5 tabular-nums">{r.dropMRAD.toFixed(2)}</td>
+                            <td className="px-2 py-1.5 tabular-nums">{r.machNumber.toFixed(3)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </>
           ) : (
             <div className="flex flex-1 flex-col items-center justify-center py-16 text-center">
