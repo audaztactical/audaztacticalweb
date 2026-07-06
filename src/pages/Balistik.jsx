@@ -18,7 +18,7 @@ import {
 } from '../lib/ballisticProfileBridge'
 import { exportBallisticReportPdf } from '../lib/ballisticReportPdf'
 import { angleTableCellsForRow, buildAngleTableColumns } from '../lib/clickUnitSystem'
-import { EMPTY_INVENTORY_FILL_LOCKS } from '../lib/inventoryFillLocks'
+import { buildArmorySessionFromArmoryFill } from '../lib/inventoryFillLocks'
 import { weaponDisplayName } from '../lib/weaponIlws'
 
 /** @typedef {import('../lib/ballisticsEngine.js').BallisticsEngineOutput} BallisticsEngineOutput */
@@ -76,8 +76,6 @@ export default function Balistik() {
   const [pdfBusy, setPdfBusy] = useState(false)
   const [resultTab, setResultTab] = useState(/** @type {'chart' | 'table'} */ ('chart'))
   const [accordionAutoExpandTrigger, setAccordionAutoExpandTrigger] = useState(0)
-  const [inventoryFillLocks, setInventoryFillLocks] = useState(EMPTY_INVENTORY_FILL_LOCKS)
-  const [armoryFillRevision, setArmoryFillRevision] = useState(0)
 
   const bumpAccordionAutoExpand = useCallback(() => {
     setAccordionAutoExpandTrigger((n) => n + 1)
@@ -103,7 +101,6 @@ export default function Balistik() {
   const handleSelectProfile = useCallback(
     (id) => {
       setSelectedProfileId(id)
-      setInventoryFillLocks(EMPTY_INVENTORY_FILL_LOCKS)
       setArmoryFillNotice('')
       if (!id) return
       const row = profiles.find((p) => String(p.id) === id)
@@ -117,6 +114,7 @@ export default function Balistik() {
         optic: { ...createDefaultBallisticProfileFields().optic, ...(row.optic ?? {}) },
         ammo: { ...createDefaultBallisticProfileFields().ammo, ...(row.ammo ?? {}) },
         advanced: { ...createDefaultBallisticProfileFields().advanced, ...(row.advanced ?? {}) },
+        armorySession: null,
       })
       bumpAccordionAutoExpand()
     },
@@ -125,9 +123,8 @@ export default function Balistik() {
 
   const handleNewProfile = useCallback(() => {
     setSelectedProfileId('')
-    setInventoryFillLocks(EMPTY_INVENTORY_FILL_LOCKS)
     setArmoryFillNotice('')
-    setForm({ profileName: 'Yeni Profil', ...createDefaultBallisticProfileFields() })
+    setForm({ profileName: 'Yeni Profil', ...createDefaultBallisticProfileFields(), armorySession: null })
     bumpAccordionAutoExpand()
   }, [bumpAccordionAutoExpand])
 
@@ -147,22 +144,32 @@ export default function Balistik() {
   }, [form, selectedProfileId, createProfile, updateProfile])
 
   const handleUnlockInventorySection = useCallback((group) => {
-    setInventoryFillLocks((prev) => ({
-      ...prev,
-      unlocked: { ...prev.unlocked, [group]: true },
-    }))
+    setForm((prev) => {
+      const session = prev.armorySession
+      if (!session) return prev
+      return {
+        ...prev,
+        armorySession: {
+          ...session,
+          unlocked: { ...session.unlocked, [group]: true },
+        },
+      }
+    })
   }, [])
 
   const handleMarkInventoryOverrides = useCallback((paths) => {
-    setInventoryFillLocks((prev) => {
-      if (!prev.active) return prev
+    setForm((prev) => {
+      const session = prev.armorySession
+      if (!session) return prev
       /** @type {Record<string, boolean>} */
-      const next = { ...prev.overridden }
+      const next = { ...session.overridden }
       for (const path of paths) {
-        const [group, field] = path.split('.')
-        if (prev[group]?.[field]) next[path] = true
+        if (session.lockedFields[path]) next[path] = true
       }
-      return { ...prev, overridden: next }
+      return {
+        ...prev,
+        armorySession: { ...session, overridden: next },
+      }
     })
   }, [])
 
@@ -170,13 +177,21 @@ export default function Balistik() {
     (weaponId) => {
       const inventoryBundle = { allItems: inventoryItems }
       const { draft, locks } = buildArmoryFillPayload(weaponId, inventoryBundle)
-      setInventoryFillLocks(locks)
-      setArmoryFillRevision((n) => n + 1)
-      setForm((prev) => ({
-        ...prev,
-        ...draft,
-        ammo: draft.ammo,
-      }))
+      setForm((prev) => {
+        const revision = (prev.armorySession?.revision ?? 0) + 1
+        const armorySession = buildArmorySessionFromArmoryFill(draft, locks, revision)
+        const nextForm = {
+          ...prev,
+          ...draft,
+          ammo: draft.ammo,
+          armorySession,
+        }
+        if (import.meta.env.DEV) {
+          window.__AUDAZ_BALLISTIC_ARMORY__ = { locks, armorySession, draft }
+        }
+        console.info('[Balistik] Silahtan Doldur armorySession', armorySession)
+        return nextForm
+      })
       setArmoryFillNotice(
         draft.linkedAmmoId
           ? ''
@@ -288,8 +303,6 @@ export default function Balistik() {
             calculating={calculating}
             profileSaving={profileSaving}
             autoExpandTrigger={accordionAutoExpandTrigger}
-            armoryFillRevision={armoryFillRevision}
-            inventoryFillLocks={inventoryFillLocks}
             onUnlockInventorySection={handleUnlockInventorySection}
             onMarkInventoryOverrides={handleMarkInventoryOverrides}
           />

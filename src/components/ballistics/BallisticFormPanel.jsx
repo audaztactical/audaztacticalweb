@@ -15,13 +15,13 @@ import {
   InventorySectionLockBar,
   InventoryUnlockModal,
   OverrideMarker,
-  lockedInputClass,
 } from './InventoryLockedFormHelpers.jsx'
+import { getInventoryFieldControlProps } from '../../lib/inventoryFieldControl.js'
 import { parseClickUnitSystem } from '../../lib/clickUnitSystem.js'
 import {
-  isFieldInventoryLocked,
-  isFieldInventoryOverridden,
-  sectionHasInventoryLocks,
+  armorySessionGroupHasLocks,
+  isArmorySessionFieldLocked,
+  isArmorySessionFieldOverridden,
 } from '../../lib/inventoryFillLocks.js'
 
 const labelClass =
@@ -165,7 +165,7 @@ function sectionAdvancedHasData(advanced) {
  *   rangeMax: number
  *   rangeStep: number
  *   selectedProfileId: string
- *   inventoryFillLocks?: import('../../lib/inventoryFillLocks.js').InventoryFillLockState | null
+ *   armorySession?: import('../../lib/inventoryFillLocks.js').ArmorySessionState | null
  * }} input
  */
 function computeAutoExpandFlags({
@@ -175,13 +175,13 @@ function computeAutoExpandFlags({
   rangeMax,
   rangeStep,
   selectedProfileId,
-  inventoryFillLocks = null,
+  armorySession = null,
 }) {
   const weapon = /** @type {Record<string, unknown>} */ (form.weapon ?? {})
   const optic = /** @type {Record<string, unknown>} */ (form.optic ?? {})
   const ammo = /** @type {Record<string, unknown>} */ (form.ammo ?? {})
   const advanced = /** @type {Record<string, unknown>} */ (form.advanced ?? {})
-  const armoryLocked = Boolean(inventoryFillLocks?.active)
+  const armoryLocked = Boolean(armorySession?.lockedFields && Object.keys(armorySession.lockedFields).length > 0)
 
   return {
     profile: Boolean(selectedProfileId || form.linkedWeaponId || form.linkedAmmoId),
@@ -216,8 +216,6 @@ function computeAutoExpandFlags({
  *   calculating: boolean
  *   profileSaving: boolean
  *   autoExpandTrigger?: number
- *   armoryFillRevision?: number
- *   inventoryFillLocks?: import('../../lib/inventoryFillLocks.js').InventoryFillLockState
  *   onUnlockInventorySection?: (group: 'weapon' | 'optic' | 'ammo') => void
  *   onMarkInventoryOverrides?: (paths: string[]) => void
  * }} props
@@ -243,8 +241,6 @@ export default function BallisticFormPanel({
   calculating,
   profileSaving,
   autoExpandTrigger = 0,
-  armoryFillRevision = 0,
-  inventoryFillLocks = null,
   onUnlockInventorySection,
   onMarkInventoryOverrides,
 }) {
@@ -252,11 +248,15 @@ export default function BallisticFormPanel({
   const optic = /** @type {Record<string, unknown>} */ (form.optic ?? {})
   const ammo = /** @type {Record<string, unknown>} */ (form.ammo ?? {})
   const advanced = /** @type {Record<string, unknown>} */ (form.advanced ?? {})
+  const armorySession = /** @type {import('../../lib/inventoryFillLocks.js').ArmorySessionState | null | undefined} */ (
+    form.armorySession
+  )
 
   const [openSections, setOpenSections] = useState(DEFAULT_OPEN)
   const [unlockTarget, setUnlockTarget] = useState(/** @type {'weapon' | 'optic' | 'ammo' | null} */ (null))
   const userToggledRef = useRef(/** @type {Set<FormSectionId>} */ (new Set()))
   const prevAutoExpandTriggerRef = useRef(0)
+  const prevArmoryRevisionRef = useRef(0)
   const expandContextRef = useRef({
     form,
     env,
@@ -264,7 +264,7 @@ export default function BallisticFormPanel({
     rangeMax,
     rangeStep,
     selectedProfileId,
-    inventoryFillLocks,
+    armorySession,
   })
   expandContextRef.current = {
     form,
@@ -273,7 +273,7 @@ export default function BallisticFormPanel({
     rangeMax,
     rangeStep,
     selectedProfileId,
-    inventoryFillLocks,
+    armorySession,
   }
 
   const applyAutoExpand = useCallback((resetUserToggles) => {
@@ -300,7 +300,9 @@ export default function BallisticFormPanel({
   }, [autoExpandTrigger, applyAutoExpand])
 
   useEffect(() => {
-    if (armoryFillRevision <= 0) return
+    const revision = armorySession?.revision ?? 0
+    if (revision <= prevArmoryRevisionRef.current) return
+    prevArmoryRevisionRef.current = revision
     for (const id of /** @type {FormSectionId[]} */ (['ammo', 'weapon', 'optic'])) {
       userToggledRef.current.delete(id)
     }
@@ -311,7 +313,7 @@ export default function BallisticFormPanel({
       weapon: false,
       optic: false,
     }))
-  }, [armoryFillRevision])
+  }, [armorySession?.revision])
 
   const toggleSection = (id) => {
     userToggledRef.current.add(id)
@@ -326,41 +328,28 @@ export default function BallisticFormPanel({
   /** @param {'weapon' | 'optic' | 'ammo'} group @param {string} field */
   const markIfOverridden = (group, field) => {
     if (
-      inventoryFillLocks?.active &&
-      inventoryFillLocks[group]?.[field] &&
-      inventoryFillLocks.unlocked?.[group]
+      armorySession?.lockedFields?.[`${group}.${field}`] &&
+      armorySession.unlocked?.[group]
     ) {
       onMarkInventoryOverrides?.([`${group}.${field}`])
     }
   }
 
   /** @param {'weapon' | 'optic' | 'ammo'} group @param {string} field */
-  const fieldLocked = (group, field) => isFieldInventoryLocked(inventoryFillLocks, group, field)
+  const fieldLocked = (group, field) => isArmorySessionFieldLocked(armorySession, group, field)
 
   /** @param {'weapon' | 'optic' | 'ammo'} group @param {string} field */
-  const fieldOverridden = (group, field) => isFieldInventoryOverridden(inventoryFillLocks, group, field)
+  const fieldOverridden = (group, field) => isArmorySessionFieldOverridden(armorySession, group, field)
 
-  /** @param {'weapon' | 'optic' | 'ammo'} group @param {string} field @param {string} inputClassName */
-  const lockedFieldClass = (group, field, inputClassName = inputClass) =>
-    fieldLocked(group, field) ? `${inputClassName} ${lockedInputClass}` : inputClassName
-
-  /** @param {'weapon' | 'optic' | 'ammo'} group @param {string} field */
-  const inventoryInputProps = (group, field) => {
-    const locked = fieldLocked(group, field)
-    return {
-      readOnly: locked,
-      disabled: locked,
-      'data-inventory-locked': locked ? 'true' : undefined,
-      'aria-readonly': locked ? true : undefined,
-      className: lockedFieldClass(group, field),
-    }
-  }
+  /** @param {'weapon' | 'optic' | 'ammo'} group @param {string} field @param {string} label */
+  const inventoryFieldProps = (group, field, label) =>
+    getInventoryFieldControlProps({ group, field, label, session: armorySession, baseClass: inputClass })
 
   /** @param {'weapon' | 'optic' | 'ammo'} group */
   const showSectionLockBar = (group) =>
     openSections[group] &&
-    sectionHasInventoryLocks(inventoryFillLocks, group) &&
-    !inventoryFillLocks?.unlocked?.[group]
+    armorySessionGroupHasLocks(armorySession, group) &&
+    !armorySession?.unlocked?.[group]
 
   const handleClickUnitChange = (unit) => {
     if (fieldLocked('optic', 'clickUnitSystem')) return
@@ -445,7 +434,7 @@ export default function BallisticFormPanel({
           <Field label="Ağırlık (gr)" showOverride={fieldOverridden('ammo', 'bulletWeight')}>
             <input
               type="number"
-              {...inventoryInputProps('ammo', 'bulletWeight')}
+              {...inventoryFieldProps('ammo', 'bulletWeight', 'Ağırlık (gr)')}
               value={ammo.bulletWeight ?? ''}
               onChange={(e) => {
                 if (fieldLocked('ammo', 'bulletWeight')) return
@@ -458,7 +447,7 @@ export default function BallisticFormPanel({
             <input
               type="number"
               step="0.001"
-              {...inventoryInputProps('ammo', 'bulletDiameter')}
+              {...inventoryFieldProps('ammo', 'bulletDiameter', 'Çap (in)')}
               value={ammo.bulletDiameter ?? ''}
               onChange={(e) => {
                 if (fieldLocked('ammo', 'bulletDiameter')) return
@@ -470,7 +459,7 @@ export default function BallisticFormPanel({
           <Field label="Namlu hızı (fps)" termKey="muzzleVelocity" showOverride={fieldOverridden('ammo', 'muzzleVelocity')}>
             <input
               type="number"
-              {...inventoryInputProps('ammo', 'muzzleVelocity')}
+              {...inventoryFieldProps('ammo', 'muzzleVelocity', 'Namlu hızı (fps)')}
               value={ammo.muzzleVelocity ?? ''}
               onChange={(e) => {
                 if (fieldLocked('ammo', 'muzzleVelocity')) return
@@ -483,7 +472,7 @@ export default function BallisticFormPanel({
             <input
               type="number"
               step="0.001"
-              {...inventoryInputProps('ammo', 'ballisticCoefficient')}
+              {...inventoryFieldProps('ammo', 'ballisticCoefficient', 'BC')}
               value={ammo.ballisticCoefficient ?? ''}
               onChange={(e) => {
                 if (fieldLocked('ammo', 'ballisticCoefficient')) return
@@ -529,7 +518,7 @@ export default function BallisticFormPanel({
             <input
               type="number"
               step="0.1"
-              {...inventoryInputProps('weapon', 'sightHeight')}
+              {...inventoryFieldProps('weapon', 'sightHeight', 'Sight height (cm)')}
               value={weapon.sightHeight ?? ''}
               onChange={(e) => {
                 if (fieldLocked('weapon', 'sightHeight')) return
@@ -550,7 +539,7 @@ export default function BallisticFormPanel({
             <input
               type="number"
               step="0.1"
-              {...inventoryInputProps('weapon', 'barrelLength')}
+              {...inventoryFieldProps('weapon', 'barrelLength', 'Namlu uz. (in)')}
               value={weapon.barrelLength ?? ''}
               onChange={(e) => {
                 if (fieldLocked('weapon', 'barrelLength')) return
@@ -561,7 +550,7 @@ export default function BallisticFormPanel({
           </Field>
           <Field label="Yiv devri" termKey="twistRate" showOverride={fieldOverridden('weapon', 'twistRate')}>
             <input
-              {...inventoryInputProps('weapon', 'twistRate')}
+              {...inventoryFieldProps('weapon', 'twistRate', 'Yiv devri')}
               placeholder="1:8"
               value={weapon.twistRate ?? ''}
               onChange={(e) => {
@@ -587,7 +576,7 @@ export default function BallisticFormPanel({
         <div className="grid grid-cols-2 gap-2">
           <Field label="Büyütme" showOverride={fieldOverridden('optic', 'magnification')}>
             <input
-              {...inventoryInputProps('optic', 'magnification')}
+              {...inventoryFieldProps('optic', 'magnification', 'Büyütme')}
               value={optic.magnification ?? ''}
               onChange={(e) => {
                 if (fieldLocked('optic', 'magnification')) return
@@ -598,7 +587,7 @@ export default function BallisticFormPanel({
           </Field>
           <Field label="Reticle" termKey="reticleType" showOverride={fieldOverridden('optic', 'reticleType')}>
             <input
-              {...inventoryInputProps('optic', 'reticleType')}
+              {...inventoryFieldProps('optic', 'reticleType', 'Reticle')}
               value={optic.reticleType ?? ''}
               onChange={(e) => {
                 if (fieldLocked('optic', 'reticleType')) return
@@ -618,7 +607,7 @@ export default function BallisticFormPanel({
             <input
               type="number"
               step="0.125"
-              {...inventoryInputProps('optic', 'clickValueMoa')}
+              {...inventoryFieldProps('optic', 'clickValueMoa', 'Tık Değeri (MOA)')}
               value={optic.clickValueMoa ?? ''}
               onChange={(e) => {
                 if (fieldLocked('optic', 'clickValueMoa')) return
@@ -633,7 +622,7 @@ export default function BallisticFormPanel({
             <input
               type="number"
               step="0.05"
-              {...inventoryInputProps('optic', 'clickValueMrad')}
+              {...inventoryFieldProps('optic', 'clickValueMrad', 'Tık Değeri (MRAD)')}
               value={optic.clickValueMrad ?? ''}
               onChange={(e) => {
                 if (fieldLocked('optic', 'clickValueMrad')) return
@@ -650,7 +639,7 @@ export default function BallisticFormPanel({
         )}
         <Field label="FFP / SFP" termKey="ffpSfp" showOverride={fieldOverridden('optic', 'ffpSfp')}>
           <select
-            {...inventoryInputProps('optic', 'ffpSfp')}
+            {...inventoryFieldProps('optic', 'ffpSfp', 'FFP / SFP')}
             value={optic.ffpSfp ?? ''}
             onChange={(e) => {
               if (fieldLocked('optic', 'ffpSfp')) return

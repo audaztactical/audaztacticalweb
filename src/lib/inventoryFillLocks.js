@@ -17,6 +17,20 @@ import { invNum, invStr } from './inventoryIlws.js'
 export const INVENTORY_UNLOCK_WARNING =
   "Bu veriler Cephanelik'ten otomatik alındı. Değiştirirseniz bu profildeki değerler artık envanterdeki kayıtla senkron olmayacak, elle güncellemeniz gerekecek. Devam etmek istiyor musunuz?"
 
+/** Form alan adları — kilit map anahtarları ile birebir aynı olmalı */
+export const INVENTORY_LOCK_FIELD_KEYS = {
+  ammo: ['bulletWeight', 'bulletDiameter', 'muzzleVelocity', 'ballisticCoefficient', 'bcModel'],
+  weapon: ['barrelLength', 'twistRate', 'sightHeight'],
+  optic: [
+    'clickUnitSystem',
+    'magnification',
+    'reticleType',
+    'clickValueMoa',
+    'clickValueMrad',
+    'ffpSfp',
+  ],
+}
+
 export const EMPTY_INVENTORY_FILL_LOCKS = /** @type {InventoryFillLockState} */ ({
   active: false,
   weapon: {},
@@ -86,6 +100,130 @@ export function buildInventoryFillLocksFromResolution(weapon, resolvedOptic, res
   }
 
   return locks
+}
+
+/**
+ * Nested lock state → düz path map ('ammo.bulletWeight' → true)
+ * @param {InventoryFillLockState} locks
+ * @returns {Record<string, boolean>}
+ */
+export function flattenInventoryLockFields(locks) {
+  /** @type {Record<string, boolean>} */
+  const flat = {}
+  if (!locks?.active) return flat
+
+  for (const [group, fields] of /** @type {const} */ ([
+    ['ammo', locks.ammo],
+    ['weapon', locks.weapon],
+    ['optic', locks.optic],
+  ])) {
+    for (const [field, on] of Object.entries(fields ?? {})) {
+      if (on) flat[`${group}.${field}`] = true
+    }
+  }
+  return flat
+}
+
+/**
+ * @typedef {Object} ArmorySessionState
+ * @property {number} revision
+ * @property {Record<string, boolean>} lockedFields — 'ammo.bulletWeight'
+ * @property {Record<InventoryLockGroup, boolean>} unlocked
+ * @property {Record<string, boolean>} overridden
+ */
+
+export const EMPTY_ARMORY_SESSION = /** @type {ArmorySessionState | null} */ (null)
+
+/**
+ * Silahtan Doldur sonrası form ile birlikte taşınan kilit oturumu (ayrı state senkron kaybını önler).
+ * @param {InventoryFillLockState} locks
+ * @param {number} revision
+ * @returns {ArmorySessionState}
+ */
+export function buildArmorySessionFromLocks(locks, revision) {
+  return {
+    revision,
+    lockedFields: flattenInventoryLockFields(locks),
+    unlocked: { ...(locks.unlocked ?? { weapon: false, optic: false, ammo: false }) },
+    overridden: { ...(locks.overridden ?? {}) },
+  }
+}
+
+/**
+ * Envanter çözümlemesi + form draft — kilit map'i birleştirir (alan adı kaçaklarını kapatır).
+ * @param {Record<string, unknown>} draft
+ * @param {InventoryFillLockState} locks
+ * @param {number} revision
+ * @returns {ArmorySessionState}
+ */
+export function buildArmorySessionFromArmoryFill(draft, locks, revision) {
+  /** @type {Record<string, boolean>} */
+  const lockedFields = { ...flattenInventoryLockFields(locks) }
+
+  if (draft?.linkedWeaponId) {
+    const weapon = /** @type {Record<string, unknown>} */ (draft.weapon ?? {})
+    if (weapon.barrelLength != null && weapon.barrelLength !== '') lockedFields['weapon.barrelLength'] = true
+    if (invStr(weapon.twistRate).trim()) lockedFields['weapon.twistRate'] = true
+    if (Number(weapon.sightHeight) > 0 && Number(weapon.sightHeight) !== 5) {
+      lockedFields['weapon.sightHeight'] = true
+    }
+  }
+
+  if (draft?.linkedAmmoId) {
+    const ammo = /** @type {Record<string, unknown>} */ (draft.ammo ?? {})
+    if (Number(ammo.bulletWeight) > 0) lockedFields['ammo.bulletWeight'] = true
+    if (Number(ammo.bulletDiameter) > 0) lockedFields['ammo.bulletDiameter'] = true
+    if (Number(ammo.muzzleVelocity) > 0) lockedFields['ammo.muzzleVelocity'] = true
+    if (Number(ammo.ballisticCoefficient) > 0) lockedFields['ammo.ballisticCoefficient'] = true
+    if (parseBcModel(ammo.bcModel)) lockedFields['ammo.bcModel'] = true
+  }
+
+  if (draft?.linkedOpticId) {
+    const optic = /** @type {Record<string, unknown>} */ (draft.optic ?? {})
+    if (parseClickUnitSystem(optic.clickUnitSystem)) lockedFields['optic.clickUnitSystem'] = true
+    if (invStr(optic.magnification).trim()) lockedFields['optic.magnification'] = true
+    if (invStr(optic.reticleType).trim()) lockedFields['optic.reticleType'] = true
+    if (parseFfpSfp(optic.ffpSfp)) lockedFields['optic.ffpSfp'] = true
+    if (Number(optic.clickValueMoa) > 0) lockedFields['optic.clickValueMoa'] = true
+    if (Number(optic.clickValueMrad) > 0) lockedFields['optic.clickValueMrad'] = true
+  }
+
+  return {
+    revision,
+    lockedFields,
+    unlocked: { ...(locks.unlocked ?? { weapon: false, optic: false, ammo: false }) },
+    overridden: { ...(locks.overridden ?? {}) },
+  }
+}
+
+/**
+ * @param {ArmorySessionState | null | undefined} session
+ * @param {InventoryLockGroup} group
+ * @param {string} field
+ */
+export function isArmorySessionFieldLocked(session, group, field) {
+  if (!session?.lockedFields) return false
+  if (session.unlocked?.[group]) return false
+  return Boolean(session.lockedFields[`${group}.${field}`])
+}
+
+/**
+ * @param {ArmorySessionState | null | undefined} session
+ * @param {InventoryLockGroup} group
+ */
+export function armorySessionGroupHasLocks(session, group) {
+  if (!session?.lockedFields) return false
+  const prefix = `${group}.`
+  return Object.keys(session.lockedFields).some((k) => k.startsWith(prefix))
+}
+
+/**
+ * @param {ArmorySessionState | null | undefined} session
+ * @param {InventoryLockGroup} group
+ * @param {string} field
+ */
+export function isArmorySessionFieldOverridden(session, group, field) {
+  return Boolean(session?.overridden?.[`${group}.${field}`])
 }
 
 /**

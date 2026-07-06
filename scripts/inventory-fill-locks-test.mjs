@@ -4,9 +4,13 @@
  */
 import { buildArmoryFillPayload } from '../src/lib/ballisticProfileBridge.js'
 import {
+  buildArmorySessionFromLocks,
+  flattenInventoryLockFields,
+  isArmorySessionFieldLocked,
   isFieldInventoryLocked,
   sectionHasInventoryLocks,
 } from '../src/lib/inventoryFillLocks.js'
+import { getInventoryFieldControlProps } from '../src/lib/inventoryFieldControl.js'
 
 const BORA12 = {
   id: 'bora-12',
@@ -71,8 +75,34 @@ console.log('ammo section:', sectionHasInventoryLocks(locks, 'ammo'), '(beklenen
 
 if (!sectionHasInventoryLocks(locks, 'ammo')) failed = true
 
+const session = buildArmorySessionFromLocks(locks, 1)
+const flat = flattenInventoryLockFields(locks)
+console.log('\n=== armorySession (form içi kilit — production model) ===')
+console.log('lockedFields:', session.lockedFields)
+console.log('flat ammo.bulletWeight:', flat['ammo.bulletWeight'])
+console.log('session locked bulletWeight:', isArmorySessionFieldLocked(session, 'ammo', 'bulletWeight'))
+
+if (!session.lockedFields['ammo.bulletWeight']) failed = true
+if (!isArmorySessionFieldLocked(session, 'ammo', 'bulletWeight')) failed = true
+
+const domProps = getInventoryFieldControlProps({
+  group: 'ammo',
+  field: 'bulletWeight',
+  label: 'Ağırlık (gr)',
+  session,
+  baseClass: 'input',
+})
+console.log('\n=== getInventoryFieldControlProps ===')
+console.log('disabled:', domProps.disabled, '(beklenen: true)')
+console.log('name:', domProps.name, '(beklenen: bulletWeight)')
+console.log('data-inventory-locked:', domProps['data-inventory-locked'])
+
+if (domProps.disabled !== true) failed = true
+if (domProps.name !== 'bulletWeight') failed = true
+if (domProps['data-inventory-locked'] !== 'true') failed = true
+
 console.log('\n=== autoExpand skip when armory locked ===')
-const armoryLocked = locks.active
+const armoryLocked = Object.keys(session.lockedFields).length > 0
 const ammoWouldExpand = armoryLocked ? false : draft.ammo.bulletWeight > 0
 console.log('ammo autoExpand:', ammoWouldExpand, '(beklenen: false)')
 
