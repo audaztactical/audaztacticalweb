@@ -204,7 +204,7 @@ function MetricChart({
           <span className="ml-1 font-normal text-app-text/45">({metric.unit})</span>
         </p>
       ) : null}
-      <div className={compact ? 'h-52 min-h-[12rem] w-full sm:h-56' : 'h-64 min-h-[14rem] w-full sm:h-72'}>
+      <div className={compact ? 'h-52 min-h-[12rem] w-full sm:h-56' : 'h-56 min-h-[13rem] w-full sm:h-64'}>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={chartData}

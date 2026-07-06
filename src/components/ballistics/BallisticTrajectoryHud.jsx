@@ -38,11 +38,11 @@ export default function BallisticTrajectoryHud({ results, activeDistance }) {
   }, [results, activeDistance])
 
   return (
-    <div className="relative overflow-hidden rounded-lg border border-emerald-500/20 bg-black/60 p-2">
-      <p className="mb-1 font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-emerald-500/80">
+    <div className="relative shrink-0 overflow-hidden rounded-lg border border-emerald-500/20 bg-black/60 p-1.5 sm:p-2">
+      <p className="mb-0.5 font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-emerald-500/80">
         YÖRÜNGE GÖRÜNÜMÜ · {Math.round(activeDistance)} m / {Math.round(maxRange)} m
       </p>
-      <svg viewBox="0 0 300 64" className="h-16 w-full" aria-hidden>
+      <svg viewBox="0 0 300 64" className="h-12 w-full sm:h-14" aria-hidden>
         <defs>
           <linearGradient id="trajGlow" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#22c55e" stopOpacity="0.9" />

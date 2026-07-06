@@ -212,8 +212,8 @@ export default function Balistik() {
         </p>
       ) : null}
 
-      <div className="relative z-[1] grid min-h-0 flex-1 gap-4 lg:min-h-[calc(100dvh-11rem)] lg:grid-cols-[minmax(0,22rem)_1fr] xl:grid-cols-[minmax(0,24rem)_1fr]">
-        <TacticalPanel className="min-h-0 overflow-y-auto p-3 sm:p-4 lg:max-h-[calc(100dvh-11rem)] lg:overflow-y-auto">
+      <div className="relative z-[1] grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(0,22rem)_1fr] lg:h-[calc(100dvh-11rem)] lg:max-h-[calc(100dvh-11rem)] xl:grid-cols-[minmax(0,24rem)_1fr]">
+        <TacticalPanel className="min-h-0 overflow-y-auto p-3 sm:p-4 lg:h-full lg:max-h-full lg:overflow-y-auto">
           <BallisticFormPanel
             form={form}
             env={env}
@@ -239,9 +239,9 @@ export default function Balistik() {
           />
         </TacticalPanel>
 
-        <TacticalPanel className="flex min-h-0 flex-col gap-3 p-3 sm:gap-4 sm:p-4 lg:max-h-[calc(100dvh-11rem)] lg:overflow-hidden">
+        <TacticalPanel className="flex min-h-0 flex-col overflow-hidden p-3 sm:gap-4 sm:p-4 lg:h-full lg:max-h-full">
           {output ? (
-            <>
+            <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden sm:gap-4">
               <div className="grid shrink-0 grid-cols-1 gap-2 sm:grid-cols-3">
                 {[
                   ['Sıfırlama açısı', `${output.launchAngleDegrees.toFixed(3)}°`, 'launchAngle'],
@@ -303,17 +303,19 @@ export default function Balistik() {
                   id="balistik-result-chart"
                   role="tabpanel"
                   aria-labelledby="balistik-tab-chart"
-                  className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto"
+                  className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch] [scrollbar-gutter:stable]"
                 >
-                  <BallisticChartPanel
-                    results={output.results}
-                    activeDistance={activeDistance}
-                    onActiveDistanceChange={setActiveDistance}
-                    rangeMin={output.results[0]?.distance ?? rangeMin}
-                    rangeMax={output.results[output.results.length - 1]?.distance ?? rangeMax}
-                  />
+                  <div className="flex flex-col gap-4 pb-1">
+                    <BallisticChartPanel
+                      results={output.results}
+                      activeDistance={activeDistance}
+                      onActiveDistanceChange={setActiveDistance}
+                      rangeMin={output.results[0]?.distance ?? rangeMin}
+                      rangeMax={output.results[output.results.length - 1]?.distance ?? rangeMax}
+                    />
 
-                  <BallisticTrajectoryHud results={output.results} activeDistance={activeDistance} />
+                    <BallisticTrajectoryHud results={output.results} activeDistance={activeDistance} />
+                  </div>
                 </div>
               ) : (
                 <div
@@ -376,7 +378,7 @@ export default function Balistik() {
                   </div>
                 </div>
               )}
-            </>
+            </div>
           ) : (
             <div className="flex flex-1 flex-col items-center justify-center py-16 text-center">
               <Target className="mb-3 size-10 text-emerald-500/30" strokeWidth={1} aria-hidden />
