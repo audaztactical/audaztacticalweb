@@ -1,0 +1,510 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML><HEAD><TITLE>JBM - Calculations - Trajectory (Simplified)</TITLE>
+<!-- /home1/jbmballi/public_html/include/head_cgi.html -->
+  <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+  <LINK REL="Stylesheet" HREF="/include/jbm.css" TYPE="text/css">
+  <LINK REL="shortcut icon" HREF="/graphics/jbm.ico">
+
+  <META NAME="DESCRIPTION" 
+    CONTENT="Ballistics calculations and formulas for small arms">
+  <META NAME="KEYWORDS"
+    CONTENT="rifle, pistol, hunting, ballistics, ballistic coefficient, IDPA, IPSC, TSA, USPSA, bullet, gunpowder, barrel">
+<META HTTP-EQUIV="Pragma" CONTENT="no-cache">
+<META HTTP-EQUIV="expires" CONTENT="0">
+</HEAD><BODY CLASS="body_default">
+
+<!--                AUTH_TYPE = "" -->
+<!--           CONTENT_LENGTH = "346" -->
+<!--             CONTENT_TYPE = "application/x-www-form-urlencoded" -->
+<!--        GATEWAY_INTERFACE = "CGI/1.1" -->
+<!--          HTTP_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" -->
+<!--              HTTP_ACCEPT = "*/*" -->
+<!--             HTTP_REFERER = "https://jbmballistics.com/cgi-bin/jbmtraj_simp-5.1.cgi" -->
+<!--                PATH_INFO = "" -->
+<!--          PATH_TRANSLATED = "" -->
+<!--             QUERY_STRING = "" -->
+<!--           REQUEST_METHOD = "POST" -->
+<!--              REMOTE_HOST = "" -->
+<!--              REMOTE_ADDR = "104.28.162.113" -->
+<!--              REMOTE_USER = "" -->
+<!--             REMOTE_IDENT = "" -->
+<!--              SCRIPT_NAME = "/cgi-bin/jbmtraj_simp-5.1.cgi" -->
+<!--          SERVER_SOFTWARE = "Apache" -->
+<!--              SERVER_NAME = "jbmballistics.com" -->
+<!--              SERVER_PORT = "443" -->
+<!--          SERVER_PROTOCOL = "HTTP/1.1" -->
+<!--                 Compiled = Oct 31 2025 18:06:31 -->
+
+<!--                                             Altitude (alt.value) = "0" -->
+<!--                                             Altitude (alt.units) = "m" -->
+<!--                                     Target Angle (ang_tgt.value) = "90.0" -->
+<!--                                       Wind Angle (ang_wnd.value) = "90.0" -->
+<!--                                              Windage (azm.value) = "0.0" -->
+<!--                                              Windage (azm.units) = "MOA" -->
+<!--                                             Library (b_id.value) = "-1" -->
+<!--                                       Barrel Twist (b_twt.value) = "12.0" -->
+<!--                                       Barrel Twist (b_twt.units) = "in" -->
+<!--                                Twist Direction (b_twt_dir.value) = "1" -->
+<!--                                 Ballistic Coefficient (bc.value) = "0.243" -->
+<!--                                    Bullet Length (blt_len.value) = "1.5" -->
+<!--                                    Bullet Length (blt_len.units) = "in" -->
+<!--                                     Bullet Weight (bt_wgt.value) = "175" -->
+<!--                                     Bullet Weight (bt_wgt.units) = "gr" -->
+<!--                                              Caliber (cal.value) = "0.308" -->
+<!--                                              Caliber (cal.units) = "in" -->
+<!--                           Distance to Chronograph (ch_dst.value) = "10.0" -->
+<!--                           Distance to Chronograph (ch_dst.units) = "ft" -->
+<!--                                           Cant Angle (cnt.value) = "0.0" -->
+<!--                                   Column 1 Units (col1_un.value) = "1.00" -->
+<!--                                   Column 1 Units (col1_un.units) = "cm" -->
+<!--                                   Column 2 Units (col2_un.value) = "1.00" -->
+<!--                                   Column 2 Units (col2_un.units) = "MOA" -->
+<!--                          "Energy Column" Formula (col_eng.value) = "0" -->
+<!--                Windage Correction for Zero Range (cor_azm.value) = "0" -->
+<!--              Elevation Correction for Zero Range (cor_ele.value) = "1" -->
+<!--                            Pressure is Corrected (cor_prs.value) = "1" -->
+<!--                                               (null) (d_f.value) = "4" -->
+<!--                            Target Relative Drops (def_cnt.value) = "0" -->
+<!--                                            Elevation (ele.value) = "0.0" -->
+<!--                                            Elevation (ele.units) = "MOA" -->
+<!--                               Include Extra Rows (ext_row.value) = "0" -->
+<!--                                     Sight Height (hgt_sgt.value) = "5" -->
+<!--                                     Sight Height (hgt_sgt.units) = "cm" -->
+<!--                                      Zero Height (hgt_zer.value) = "0.0" -->
+<!--                                      Zero Height (hgt_zer.units) = "in" -->
+<!--                                             Humidity (hum.value) = "0" -->
+<!--                               Include Spin Drift (inc_drf.value) = "0" -->
+<!--                              Include Danger Space (inc_ds.value) = "0" -->
+<!--                                  Line Of Sight Angle (los.value) = "0.0" -->
+<!--                                    Muzzle Velocity (m_vel.value) = "2600" -->
+<!--                                    Muzzle Velocity (m_vel.units) = "ft/s" -->
+<!--                      Mark Sound Barrier Crossing (mrk_trs.value) = "0" -->
+<!--                                     Sight Offset (ofs_sgt.value) = "0.0" -->
+<!--                                     Sight Offset (ofs_sgt.units) = "in" -->
+<!--                                      Zero Offset (ofs_zer.value) = "0.0" -->
+<!--                                      Zero Offset (ofs_zer.units) = "in" -->
+<!--                   Zero at Max. Point Blank Range (pbr_zer.value) = "0" -->
+<!--                                             Pressure (prs.value) = "1013.25" -->
+<!--                                             Pressure (prs.units) = "mb" -->
+<!--                                 Vital Zone Radius (rad_vz.value) = "5.0" -->
+<!--                                 Vital Zone Radius (rad_vz.units) = "in" -->
+<!--                    Round Output to Whole Numbers (rnd_clk.value) = "0" -->
+<!--                                  Range Increment (rng_inc.value) = "100" -->
+<!--                                    Maximum Range (rng_max.value) = "1000" -->
+<!--                                    Minimum Range (rng_min.value) = "0" -->
+<!--                                  Ranges in Meters (rng_un.value) = "1" -->
+<!--                                       Zero Range (rng_zer.value) = "100" -->
+<!--                                    Target Height (siz_tgt.value) = "12.0" -->
+<!--                                    Target Height (siz_tgt.units) = "in" -->
+<!--                                     Target Speed (spd_tgt.value) = "10.0" -->
+<!--                                     Target Speed (spd_tgt.units) = "mph" -->
+<!--                                       Wind Speed (spd_wnd.value) = "0" -->
+<!--                                       Wind Speed (spd_wnd.units) = "mph" -->
+<!--                      Std. Atmosphere at Altitude (std_alt.value) = "0" -->
+<!--                               Plastic Tip Length (tip_len.value) = "0.0" -->
+<!--                               Plastic Tip Length (tip_len.units) = "in" -->
+<!--                                          Temperature (tmp.value) = "15" -->
+<!--                                          Temperature (tmp.units) = "&#176;C" -->
+<!-- /home1/jbmballi/public_html/include/header_cgi.html -->
+<DIV CLASS="div_cgi_header_container">
+
+  <DIV CLASS="div_header_links_container">
+    <A CLASS="header_link" HREF="/about/about.shtml">About</A>
+    |
+    <A CLASS="header_link" HREF="/contact/contact.php">Contact</A>
+    |
+    <A CLASS="header_link" HREF="/faq/faq.shtml">FAQ</A>
+    |
+    <A CLASS="header_link" HREF="/privacy/privacy.shtml">Privacy Policy</A>
+    <!-- |
+    <A CLASS="header_link" HREF="/forums/index.php">Support</A> -->
+    <BR>
+    <DIV CLASS="div_copyright">
+      All content and logos &copy; 2010-2013, JBM Ballistics, LLC  
+    </DIV>
+  </DIV>
+
+  <DIV CLASS="div_header_ads_container">
+  </DIV>
+</DIV>
+<DIV CLASS="div_cgi_content_ads_top">
+<!-- /home1/jbmballi/public_html/include/ads_top.html -->
+
+<div id="amzn-assoc-ad-0b4b17a6-9c27-4acf-abdf-1b6f968c284d"></div><script async src="//z-na.amazon-adsystem.com/widgets/onejs?MarketPlace=US&adInstanceId=0b4b17a6-9c27-4acf-abdf-1b6f968c284d"></script>
+
+</DIV>
+<DIV CLASS="div_cgi_content_container">
+<!-- /home1/jbmballi/public_html/include/ballistics_cgi_menu.html -->
+  <DIV CLASS="div_cgi_menu_container">
+
+    <DIV CLASS="div_menu_link div_top_menu_link" 
+      onmouseover="this.className='div_menu_link div_top_menu_link div_menu_link_hover'" 
+      onmouseout="this.className='div_menu_link div_top_menu_link'">
+      <A CLASS="menu_link" HREF="/index.shtml">
+        Home
+      </A>
+      <DIV CLASS="div_menu_link_text"></DIV>
+    </DIV>
+
+    <DIV CLASS="div_menu_link div_menu_link_hover" 
+      onmouseover="this.className='div_menu_link'" 
+      onmouseout="this.className='div_menu_link div_menu_link_hover'">
+      <A CLASS="menu_link" HREF="/ballistics/calculators/calculators.shtml">
+        Ballistics
+      </A>
+      <DIV CLASS="div_menu_link_text">Calculators and other resources</DIV>
+    </DIV>
+
+    <DIV CLASS="div_sub_menu_link" 
+      onmouseover="this.className='div_sub_menu_link div_sub_menu_link_hover'" 
+      onmouseout="this.className='div_sub_menu_link'">
+      <A CLASS="menu_link" HREF="/ballistics/bibliography/bibliography.shtml">
+        - Bibliography
+      </A>
+    </DIV>
+
+    <DIV CLASS="div_sub_menu_link" 
+      onmouseover="this.className='div_sub_menu_link div_sub_menu_link_hover'" 
+      onmouseout="this.className='div_sub_menu_link'">
+      <A CLASS="menu_link" HREF="/ballistics/calculators/calculators.shtml">
+        - Calculators
+      </A>
+    </DIV>
+
+    <DIV CLASS="div_sub_menu_link" 
+      onmouseover="this.className='div_sub_menu_link div_sub_menu_link_hover'" 
+      onmouseout="this.className='div_sub_menu_link'">
+      <A CLASS="menu_link" HREF="/ballistics/downloads/downloads.shtml">
+        - Downloads
+      </A>
+    </DIV>
+
+    <DIV CLASS="div_sub_menu_link" 
+      onmouseover="this.className='div_sub_menu_link div_sub_menu_link_hover'" 
+      onmouseout="this.className='div_sub_menu_link'">
+      <A CLASS="menu_link" HREF="/ballistics/lengths/lengths.shtml">
+        - Lengths
+      </A>
+    </DIV>
+
+    <DIV CLASS="div_sub_menu_link" 
+      onmouseover="this.className='div_sub_menu_link div_sub_menu_link_hover'" 
+      onmouseout="this.className='div_sub_menu_link'">
+      <A CLASS="menu_link" HREF="/ballistics/software/software.shtml">
+        - Software
+      </A>
+    </DIV>
+
+    <DIV CLASS="div_sub_menu_link" 
+      onmouseover="this.className='div_sub_menu_link div_sub_menu_link_hover'" 
+      onmouseout="this.className='div_sub_menu_link'">
+      <A CLASS="menu_link" HREF="/cgi-bin/jbmstats-5.1.cgi">
+        - Statistics
+      </A>
+    </DIV>
+
+    <DIV CLASS="div_sub_menu_link" 
+      onmouseover="this.className='div_sub_menu_link div_sub_menu_link_hover'" 
+      onmouseout="this.className='div_sub_menu_link'">
+      <A CLASS="menu_link" HREF="/ballistics/topics/topics.shtml">
+        - Topics
+      </A>
+    </DIV>
+  </DIV>
+
+  </DIV>
+
+<DIV CLASS="div_cgi_content">
+<CENTER><TABLE CLASS="data_table"><TR><TD><CENTER>
+<TABLE CLASS="data_table" WIDTH="100%">
+<TR CLASS="page_title_row">
+<TD CLASS="page_title_col" COLSPAN="4">
+Trajectory (Simplified)<TR CLASS="section_title_row">
+<TD CLASS="section_title_col" COLSPAN="4">
+Input Data<TR CLASS="input_row">
+<TD CLASS="input_desc_cell">Ballistic Coefficient:
+<TD CLASS="input_value_cell">0.243 G7
+<TD CLASS="input_desc_cell">Caliber:
+<TD CLASS="input_value_cell">0.308 in
+<TR CLASS="input_row">
+<TD CLASS="input_desc_cell">Bullet Weight:
+<TD CLASS="input_value_cell">175.0 gr
+<TD CLASS="input_desc_cell">
+<TD CLASS="input_value_cell">
+<TR CLASS="break_row">
+<TD CLASS="break_cell" COLSPAN="4">
+<TR CLASS="input_row">
+<TD CLASS="input_desc_cell" COLSPAN="1">
+Muzzle Velocity:<TD CLASS="input_value_cell" COLSPAN="1">
+2600.0 ft/s<TD CLASS="input_desc_cell" COLSPAN="1">
+<TD CLASS="input_value_cell" COLSPAN="1">
+<TR CLASS="break_row">
+<TD CLASS="break_cell" COLSPAN="4">
+<TR CLASS="input_row">
+<TD CLASS="input_desc_cell" COLSPAN="1">
+Sight Height:<TD CLASS="input_value_cell" COLSPAN="1">
+5.00 cm<TD CLASS="input_desc_cell" COLSPAN="1">
+Line Of Sight Angle:<TD CLASS="input_value_cell" COLSPAN="1">
+0.0 deg<TR CLASS="input_row">
+<TD CLASS="input_desc_cell" COLSPAN="1">
+Cant Angle:<TD CLASS="input_value_cell" COLSPAN="1">
+0.0 deg<TD CLASS="input_desc_cell" COLSPAN="1">
+<TD CLASS="input_value_cell" COLSPAN="1">
+<TR CLASS="break_row">
+<TD CLASS="break_cell" COLSPAN="4">
+<TR CLASS="input_row">
+<TD CLASS="input_desc_cell" COLSPAN="1">
+Wind Speed:<TD CLASS="input_value_cell" COLSPAN="1">
+0.0 mph<TD CLASS="input_desc_cell" COLSPAN="1">
+Target Speed:<TD CLASS="input_value_cell" COLSPAN="1">
+10.0 mph<TR CLASS="break_row">
+<TD CLASS="break_cell" COLSPAN="4">
+<TR CLASS="input_row">
+<TD CLASS="input_desc_cell" COLSPAN="1">
+Temperature:<TD CLASS="input_value_cell" COLSPAN="1">
+15.0 &#176;C<TD CLASS="input_desc_cell" COLSPAN="1">
+Pressure:<TD CLASS="input_value_cell" COLSPAN="1">
+1013.25 mb<TR CLASS="input_row">
+<TD CLASS="input_desc_cell" COLSPAN="1">
+Humidity:<TD CLASS="input_value_cell" COLSPAN="1">
+0 %<TD CLASS="input_desc_cell" COLSPAN="1">
+Altitude:<TD CLASS="input_value_cell" COLSPAN="1">
+0.0 m<TR CLASS="break_row">
+<TD CLASS="break_cell" COLSPAN="4">
+<TR CLASS="input_row">
+<TD CLASS="input_desc_cell" COLSPAN="1">
+Std. Atmosphere at Altitude:<TD CLASS="input_value_cell" COLSPAN="1">
+No<TD CLASS="input_desc_cell" COLSPAN="1">
+Pressure is Corrected:<TD CLASS="input_value_cell" COLSPAN="1">
+Yes<TR CLASS="input_row">
+<TD CLASS="input_desc_cell" COLSPAN="1">
+Zero at Max. Point Blank Range:<TD CLASS="input_value_cell" COLSPAN="1">
+No<TD CLASS="input_desc_cell" COLSPAN="1">
+Target Relative Drops:<TD CLASS="input_value_cell" COLSPAN="1">
+No<TR CLASS="input_row">
+<TD CLASS="input_desc_cell" COLSPAN="1">
+Column 1 Units:<TD CLASS="input_value_cell" COLSPAN="1">
+1.00 cm<TD CLASS="input_desc_cell" COLSPAN="1">
+Column 2 Units:<TD CLASS="input_value_cell" COLSPAN="1">
+1.00 MOA<TR CLASS="input_row">
+<TD CLASS="input_desc_cell" COLSPAN="1">
+Round Output to Whole Numbers:<TD CLASS="input_value_cell" COLSPAN="1">
+No<TD CLASS="input_desc_cell" COLSPAN="1">
+<TD CLASS="input_value_cell" COLSPAN="1">
+<TR CLASS="section_title_row">
+<TD CLASS="section_title_col" COLSPAN="4">
+Output Data<TR CLASS="output_row">
+<TD CLASS="input_desc_cell" COLSPAN="1">
+Elevation:<TD CLASS="input_value_cell" COLSPAN="1">
+4.551 MOA<TD CLASS="input_desc_cell" COLSPAN="1">
+Windage:<TD CLASS="input_value_cell" COLSPAN="1">
+0.000 MOA<TR CLASS="break_row">
+<TD CLASS="break_cell" COLSPAN="4">
+<TR CLASS="output_row">
+<TD CLASS="input_desc_cell" COLSPAN="1">
+Atmospheric Density:<TD CLASS="input_value_cell" COLSPAN="1">
+0.07647 lb/ft&sup3;<TD CLASS="input_desc_cell" COLSPAN="1">
+Speed of Sound:<TD CLASS="input_value_cell" COLSPAN="1">
+1116.4 ft/s<TR CLASS="break_row">
+<TD CLASS="break_cell" COLSPAN="4">
+<TR CLASS="output_row">
+<TD CLASS="input_desc_cell" COLSPAN="1">
+Maximum PBR:<TD CLASS="input_value_cell" COLSPAN="1">
+293 m<TD CLASS="input_desc_cell" COLSPAN="1">
+Maximum PBR Zero:<TD CLASS="input_value_cell" COLSPAN="1">
+250 m<TR CLASS="output_row">
+<TD CLASS="input_desc_cell" COLSPAN="1">
+Range of Maximum Height:<TD CLASS="input_value_cell" COLSPAN="1">
+140 m<TD CLASS="input_desc_cell" COLSPAN="1">
+Energy at Maximum PBR:<TD CLASS="input_value_cell" COLSPAN="1">
+1616.9 ft&#149;lbs<TR CLASS="break_row">
+<TD CLASS="break_cell" COLSPAN="4">
+<TR CLASS="output_row">
+<TD CLASS="input_desc_cell" COLSPAN="1">
+Sectional Density:<TD CLASS="input_value_cell" COLSPAN="1">
+0.264 lb/in&sup2;<TD CLASS="input_desc_cell" COLSPAN="1">
+<TD CLASS="input_value_cell" COLSPAN="1">
+</TABLE>
+<TABLE CLASS="output_table" WIDTH="100%">
+<TR CLASS="section_title_row"><TD CLASS="section_title_col" COLSPAN="11">Calculated Table<TR CLASS="output_row">
+<TH CLASS="" COLSPAN="1">Range<TH CLASS="" COLSPAN="1">Drop<TH CLASS="" COLSPAN="1">Drop<TH CLASS="" COLSPAN="1">Windage<TH CLASS="" COLSPAN="1">Windage<TH CLASS="" COLSPAN="1">Velocity<TH CLASS="" COLSPAN="1">Mach<TH CLASS="" COLSPAN="1">Energy<TH CLASS="" COLSPAN="1">Time<TH CLASS="" COLSPAN="1">Lead<TH CLASS="" COLSPAN="1">Lead<TR CLASS="output_row">
+<TH CLASS="" COLSPAN="1">(m)<TH CLASS="" COLSPAN="1">(cm)<TH CLASS="" COLSPAN="1">(MOA)<TH CLASS="" COLSPAN="1">(cm)<TH CLASS="" COLSPAN="1">(MOA)<TH CLASS="" COLSPAN="1">(ft/s)<TH CLASS="" COLSPAN="1">(none)<TH CLASS="" COLSPAN="1">(ft&#149;lbs)<TH CLASS="" COLSPAN="1">(s)<TH CLASS="" COLSPAN="1">(cm)<TH CLASS="" COLSPAN="1">(MOA)<TR CLASS="data_row">
+<TD CLASS="range_cell">0</TD>
+<TD CLASS="drop_length_cell">-5.0</TD>
+<TD CLASS="drop_angle_cell">***</TD>
+<TD CLASS="wind_length_cell">0.0</TD>
+<TD CLASS="wind_angle_cell">***</TD>
+<TD CLASS="velocity_cell">2600.0</TD>
+<TD CLASS="mach_cell">2.329</TD>
+<TD CLASS="energy_cell">2626.3</TD>
+<TD CLASS="time_cell">0.000</TD>
+<TD CLASS="lead_length_cell">0.0</TD>
+<TD CLASS="lead_angle_cell">***</TD>
+</TR>
+
+<TR CLASS="zero_row">
+<TD CLASS="range_cell">100</TD>
+<TD CLASS="drop_length_cell">-0.0</TD>
+<TD CLASS="drop_angle_cell">-0.0</TD>
+<TD CLASS="wind_length_cell">0.0</TD>
+<TD CLASS="wind_angle_cell">0.0</TD>
+<TD CLASS="velocity_cell">2400.1</TD>
+<TD CLASS="mach_cell">2.150</TD>
+<TD CLASS="energy_cell">2237.9</TD>
+<TD CLASS="time_cell">0.131</TD>
+<TD CLASS="lead_length_cell">58.7</TD>
+<TD CLASS="lead_angle_cell">20.2</TD>
+</TR>
+
+<TR CLASS="data_row">
+<TD CLASS="range_cell">200</TD>
+<TD CLASS="drop_length_cell">-13.4</TD>
+<TD CLASS="drop_angle_cell">-2.3</TD>
+<TD CLASS="wind_length_cell">0.0</TD>
+<TD CLASS="wind_angle_cell">0.0</TD>
+<TD CLASS="velocity_cell">2209.2</TD>
+<TD CLASS="mach_cell">1.979</TD>
+<TD CLASS="energy_cell">1896.2</TD>
+<TD CLASS="time_cell">0.274</TD>
+<TD CLASS="lead_length_cell">122.4</TD>
+<TD CLASS="lead_angle_cell">21.0</TD>
+</TR>
+
+<TR CLASS="data_row">
+<TD CLASS="range_cell">300</TD>
+<TD CLASS="drop_length_cell">-48.4</TD>
+<TD CLASS="drop_angle_cell">-5.6</TD>
+<TD CLASS="wind_length_cell">0.0</TD>
+<TD CLASS="wind_angle_cell">0.0</TD>
+<TD CLASS="velocity_cell">2027.6</TD>
+<TD CLASS="mach_cell">1.816</TD>
+<TD CLASS="energy_cell">1597.3</TD>
+<TD CLASS="time_cell">0.429</TD>
+<TD CLASS="lead_length_cell">191.7</TD>
+<TD CLASS="lead_angle_cell">22.0</TD>
+</TR>
+
+<TR CLASS="data_row">
+<TD CLASS="range_cell">400</TD>
+<TD CLASS="drop_length_cell">-109.3</TD>
+<TD CLASS="drop_angle_cell">-9.4</TD>
+<TD CLASS="wind_length_cell">0.0</TD>
+<TD CLASS="wind_angle_cell">0.0</TD>
+<TD CLASS="velocity_cell">1854.3</TD>
+<TD CLASS="mach_cell">1.661</TD>
+<TD CLASS="energy_cell">1335.9</TD>
+<TD CLASS="time_cell">0.598</TD>
+<TD CLASS="lead_length_cell">267.4</TD>
+<TD CLASS="lead_angle_cell">23.0</TD>
+</TR>
+
+<TR CLASS="data_row">
+<TD CLASS="range_cell">500</TD>
+<TD CLASS="drop_length_cell">-200.9</TD>
+<TD CLASS="drop_angle_cell">-13.8</TD>
+<TD CLASS="wind_length_cell">0.0</TD>
+<TD CLASS="wind_angle_cell">0.0</TD>
+<TD CLASS="velocity_cell">1688.2</TD>
+<TD CLASS="mach_cell">1.512</TD>
+<TD CLASS="energy_cell">1107.3</TD>
+<TD CLASS="time_cell">0.783</TD>
+<TD CLASS="lead_length_cell">350.2</TD>
+<TD CLASS="lead_angle_cell">24.1</TD>
+</TR>
+
+<TR CLASS="data_row">
+<TD CLASS="range_cell">600</TD>
+<TD CLASS="drop_length_cell">-329.7</TD>
+<TD CLASS="drop_angle_cell">-18.9</TD>
+<TD CLASS="wind_length_cell">0.0</TD>
+<TD CLASS="wind_angle_cell">0.0</TD>
+<TD CLASS="velocity_cell">1528.8</TD>
+<TD CLASS="mach_cell">1.369</TD>
+<TD CLASS="energy_cell">908.0</TD>
+<TD CLASS="time_cell">0.988</TD>
+<TD CLASS="lead_length_cell">441.5</TD>
+<TD CLASS="lead_angle_cell">25.3</TD>
+</TR>
+
+<TR CLASS="data_row">
+<TD CLASS="range_cell">700</TD>
+<TD CLASS="drop_length_cell">-503.9</TD>
+<TD CLASS="drop_angle_cell">-24.7</TD>
+<TD CLASS="wind_length_cell">0.0</TD>
+<TD CLASS="wind_angle_cell">0.0</TD>
+<TD CLASS="velocity_cell">1376.4</TD>
+<TD CLASS="mach_cell">1.233</TD>
+<TD CLASS="energy_cell">736.0</TD>
+<TD CLASS="time_cell">1.214</TD>
+<TD CLASS="lead_length_cell">542.7</TD>
+<TD CLASS="lead_angle_cell">26.7</TD>
+</TR>
+
+<TR CLASS="data_row">
+<TD CLASS="range_cell">800</TD>
+<TD CLASS="drop_length_cell">-734.1</TD>
+<TD CLASS="drop_angle_cell">-31.5</TD>
+<TD CLASS="wind_length_cell">0.0</TD>
+<TD CLASS="wind_angle_cell">0.0</TD>
+<TD CLASS="velocity_cell">1232.4</TD>
+<TD CLASS="mach_cell">1.104</TD>
+<TD CLASS="energy_cell">590.1</TD>
+<TD CLASS="time_cell">1.466</TD>
+<TD CLASS="lead_length_cell">655.3</TD>
+<TD CLASS="lead_angle_cell">28.2</TD>
+</TR>
+
+<TR CLASS="data_row">
+<TD CLASS="range_cell">900</TD>
+<TD CLASS="drop_length_cell">-1034.2</TD>
+<TD CLASS="drop_angle_cell">-39.5</TD>
+<TD CLASS="wind_length_cell">0.0</TD>
+<TD CLASS="wind_angle_cell">0.0</TD>
+<TD CLASS="velocity_cell">1102.9</TD>
+<TD CLASS="mach_cell">0.988</TD>
+<TD CLASS="energy_cell">472.6</TD>
+<TD CLASS="time_cell">1.748</TD>
+<TD CLASS="lead_length_cell">781.4</TD>
+<TD CLASS="lead_angle_cell">29.8</TD>
+</TR>
+
+<TR CLASS="data_row">
+<TD CLASS="range_cell">1000</TD>
+<TD CLASS="drop_length_cell">-1420.5</TD>
+<TD CLASS="drop_angle_cell">-48.8</TD>
+<TD CLASS="wind_length_cell">0.0</TD>
+<TD CLASS="wind_angle_cell">0.0</TD>
+<TD CLASS="velocity_cell">1034.3</TD>
+<TD CLASS="mach_cell">0.926</TD>
+<TD CLASS="energy_cell">415.6</TD>
+<TD CLASS="time_cell">2.057</TD>
+<TD CLASS="lead_length_cell">919.3</TD>
+<TD CLASS="lead_angle_cell">31.6</TD>
+</TR>
+
+</TABLE>
+</CENTER>
+<TR><TD><TABLE WIDTH="100%" CLASS="credit_table"><TR CLASS="credit_row">
+<TD CLASS="credit_cell">05-Jul-26 19:15, <A HREF="/">JBM</A>/<A HREF="/cgi-bin/jbmtraj_simp-5.1.cgi">jbmtraj_simp-5.1.cgi</A>
+</TABLE></TABLE></CENTER>
+<P CLASS="report_error_paragraph"><A CLASS="report_error_link" HREF="/contact/contact.php?subject=Bug%20Report&body=%2A%2A%2A%20Enter%20a%20description%20of%20the%20problem%20below%20this%20line%2E%20%2A%2A%2A%0A%0A%0A%0A%0A%2A%2A%2A%20Please%20do%20not%20write%20below%20this%20line%2E%20%2A%2A%2A%0A%2Fcgi%2Dbin%2Fjbmtraj%5Fsimp%2D5%2E1%2Ecgi%0Aalt%2Evalue%20=%200%0Aalt%2Eunits%20=%20m%0Aang%5Ftgt%2Evalue%20=%2090%2E0%0Aang%5Fwnd%2Evalue%20=%2090%2E0%0Aazm%2Evalue%20=%200%2E0%0Aazm%2Eunits%20=%20MOA%0Ab%5Fid%2Evalue%20=%20%2D1%0Ab%5Ftwt%2Evalue%20=%2012%2E0%0Ab%5Ftwt%2Eunits%20=%20in%0Ab%5Ftwt%5Fdir%2Evalue%20=%201%0Abc%2Evalue%20=%200%2E243%0Ablt%5Flen%2Evalue%20=%201%2E5%0Ablt%5Flen%2Eunits%20=%20in%0Abt%5Fwgt%2Evalue%20=%20175%0Abt%5Fwgt%2Eunits%20=%20gr%0Acal%2Evalue%20=%200%2E308%0Acal%2Eunits%20=%20in%0Ach%5Fdst%2Evalue%20=%2010%2E0%0Ach%5Fdst%2Eunits%20=%20ft%0Acnt%2Evalue%20=%200%2E0%0Acol1%5Fun%2Evalue%20=%201%2E00%0Acol1%5Fun%2Eunits%20=%20cm%0Acol2%5Fun%2Evalue%20=%201%2E00%0Acol2%5Fun%2Eunits%20=%20MOA%0Acol%5Feng%2Evalue%20=%200%0Acor%5Fazm%2Evalue%20=%200%0Acor%5Fele%2Evalue%20=%201%0Acor%5Fprs%2Evalue%20=%201%0Ad%5Ff%2Evalue%20=%204%0Adef%5Fcnt%2Evalue%20=%200%0Aele%2Evalue%20=%200%2E0%0Aele%2Eunits%20=%20MOA%0Aext%5Frow%2Evalue%20=%200%0Ahgt%5Fsgt%2Evalue%20=%205%0Ahgt%5Fsgt%2Eunits%20=%20cm%0Ahgt%5Fzer%2Evalue%20=%200%2E0%0Ahgt%5Fzer%2Eunits%20=%20in%0Ahum%2Evalue%20=%200%0Ainc%5Fdrf%2Evalue%20=%200%0Ainc%5Fds%2Evalue%20=%200%0Alos%2Evalue%20=%200%2E0%0Am%5Fvel%2Evalue%20=%202600%0Am%5Fvel%2Eunits%20=%20ft%2Fs%0Amrk%5Ftrs%2Evalue%20=%200%0Aofs%5Fsgt%2Evalue%20=%200%2E0%0Aofs%5Fsgt%2Eunits%20=%20in%0Aofs%5Fzer%2Evalue%20=%200%2E0%0Aofs%5Fzer%2Eunits%20=%20in%0Apbr%5Fzer%2Evalue%20=%200%0Aprs%2Evalue%20=%201013%2E25%0Aprs%2Eunits%20=%20mb%0Arad%5Fvz%2Evalue%20=%205%2E0%0Arad%5Fvz%2Eunits%20=%20in%0Arnd%5Fclk%2Evalue%20=%200%0Arng%5Finc%2Evalue%20=%20100%0Arng%5Fmax%2Evalue%20=%201000%0Arng%5Fmin%2Evalue%20=%200%0Arng%5Fun%2Evalue%20=%201%0Arng%5Fzer%2Evalue%20=%20100%0Asiz%5Ftgt%2Evalue%20=%2012%2E0%0Asiz%5Ftgt%2Eunits%20=%20in%0Aspd%5Ftgt%2Evalue%20=%2010%2E0%0Aspd%5Ftgt%2Eunits%20=%20mph%0Aspd%5Fwnd%2Evalue%20=%200%0Aspd%5Fwnd%2Eunits%20=%20mph%0Astd%5Falt%2Evalue%20=%200%0Atip%5Flen%2Evalue%20=%200%2E0%0Atip%5Flen%2Eunits%20=%20in%0Atmp%2Evalue%20=%2015%0Atmp%2Eunits%20=%20%26%23176%3BC%0A"><DIV CLASS="div_cgi_report_error"
+  ONMOUSEOVER="this.className='div_cgi_report_error div_cgi_report_error_hover'"
+  ONMOUSEOUT="this.className='div_cgi_report_error'">
+Click here to report an error.</DIV></A></P><BR>
+</DIV>
+</DIV>
+<DIV CLASS="div_cgi_content_ads_bottom">
+<!-- /home1/jbmballi/public_html/include/ads_bottom.html -->
+
+
+<div id="amzn-assoc-ad-0b4b17a6-9c27-4acf-abdf-1b6f968c284d"></div><script async src="//z-na.amazon-adsystem.com/widgets/onejs?MarketPlace=US&adInstanceId=0b4b17a6-9c27-4acf-abdf-1b6f968c284d"></script>
+
+</DIV>
+<DIV CLASS="div_cgi_content_ads_bottom">
+<!-- /home1/jbmballi/public_html/include/ads_bottom.html -->
+
+
+<div id="amzn-assoc-ad-0b4b17a6-9c27-4acf-abdf-1b6f968c284d"></div><script async src="//z-na.amazon-adsystem.com/widgets/onejs?MarketPlace=US&adInstanceId=0b4b17a6-9c27-4acf-abdf-1b6f968c284d"></script>
+
+</DIV>
+</BODY></HTML>

@@ -216,12 +216,82 @@ export const UsernamesMapSchema = {
   uid: 'string',
 }
 
+/**
+ * ballistic_profiles/{uid}/profiles/{profileId}
+ */
+export const BallisticProfileSchema = {
+  profileName: 'string',
+  linkedWeaponId: 'string|null',
+  linkedOpticId: 'string|null',
+  linkedAmmoId: 'string|null',
+  /** { barrelLength, twistRate, sightHeight, zeroDistance } */
+  weapon: 'map',
+  /** { magnification, clickValueMoa, clickValueMrad, ffpSfp, reticleType } */
+  optic: 'map',
+  /** { bulletWeight, bulletDiameter, muzzleVelocity, ballisticCoefficient, bcModel } */
+  ammo: 'map',
+  /** { coriolisEnabled, latitude, azimuthDegrees, pressureType } */
+  advanced: 'map',
+  ownerId: 'string',
+  createdAt: 'timestamp',
+  updatedAt: 'timestamp',
+  status: 'string',
+}
+
+/** @typedef {Object} BallisticProfileWeaponFields
+ * @property {number|null} barrelLength — inç
+ * @property {string|null} twistRate — örn. "1:8"
+ * @property {number} sightHeight — cm
+ * @property {number} zeroDistance — m
+ */
+
+/** @typedef {Object} BallisticProfileOpticFields
+ * @property {string|null} magnification
+ * @property {number|null} clickValueMoa
+ * @property {number|null} clickValueMrad
+ * @property {'FFP'|'SFP'|null} ffpSfp
+ * @property {string|null} reticleType
+ */
+
+/** @typedef {Object} BallisticProfileAmmoFields
+ * @property {number} bulletWeight — grain
+ * @property {number} bulletDiameter — inç
+ * @property {number} muzzleVelocity — fps
+ * @property {number} ballisticCoefficient
+ * @property {'G1'|'G7'} bcModel
+ */
+
+/** @typedef {Object} BallisticProfileAdvancedFields
+ * @property {boolean} coriolisEnabled
+ * @property {number|null} latitude
+ * @property {number|null} azimuthDegrees
+ * @property {'station'|'sea-level'} pressureType
+ */
+
+/** @typedef {Object} BallisticProfileDocument
+ * @property {string} [id]
+ * @property {string} profileName
+ * @property {string|null} linkedWeaponId
+ * @property {string|null} linkedOpticId
+ * @property {string|null} linkedAmmoId
+ * @property {BallisticProfileWeaponFields} weapon
+ * @property {BallisticProfileOpticFields} optic
+ * @property {BallisticProfileAmmoFields} ammo
+ * @property {BallisticProfileAdvancedFields} advanced
+ * @property {string} [ownerId]
+ * @property {import('firebase/firestore').Timestamp} [createdAt]
+ * @property {import('firebase/firestore').Timestamp} [updatedAt]
+ * @property {string} [status]
+ */
+
 /** Tüm koleksiyon adları */
 export const COLLECTIONS = {
   users: 'users',
   usernames: 'usernames',
   inventory: 'inventory',
   inventoryItems: 'items',
+  ballisticProfiles: 'ballistic_profiles',
+  ballisticProfileItems: 'profiles',
   envanter: 'envanter',
   doktrinler: 'doktrinler',
   missions: 'missions',

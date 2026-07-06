@@ -64,7 +64,8 @@ function ensureStore(uid, domain, orderField) {
         domain === 'trainings' ||
         domain === 'range_logs' ||
         domain === 'vbss_logs' ||
-        domain === 'tccc_logs'
+        domain === 'tccc_logs' ||
+        domain === 'ballistic_profiles'
 
       unsub = onSnapshot(
         q,

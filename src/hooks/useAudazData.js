@@ -12,7 +12,7 @@ import { subscribeAudazUserDoc } from '../lib/audazDocumentStore'
 import { PERSONAL_DATA_DOMAINS } from '../lib/firestoreDataDomains'
 
 /** Kişisel veri: {@link PERSONAL_DATA_DOMAINS.RANGE_LOGS} · {@link PERSONAL_DATA_DOMAINS.TRAINING_PLANS} */
-/** @typedef {'inventory' | 'health_records' | 'casualty_cards' | 'ifak_inventory' | 'medevac_logs' | 'missions' | 'trainings' | 'range_logs' | 'vbss_logs' | 'tccc_logs' | 'armory_audit_trail'} AudazDataKey */
+/** @typedef {'inventory' | 'health_records' | 'casualty_cards' | 'ifak_inventory' | 'medevac_logs' | 'missions' | 'trainings' | 'range_logs' | 'vbss_logs' | 'tccc_logs' | 'armory_audit_trail' | 'ballistic_profiles'} AudazDataKey */
 
 /**
  * Paylaşımlı koleksiyon dinleyicisi — aynı uid+domain için tek Firestore onSnapshot.

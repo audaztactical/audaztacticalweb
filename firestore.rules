@@ -259,6 +259,14 @@ service cloud.firestore {
       allow read, write: if isOwnerUid(userId);
     }
 
+    match /ballistic_profiles/{userId} {
+      allow read, write: if isOwnerUid(userId);
+    }
+
+    match /ballistic_profiles/{userId}/profiles/{profileId} {
+      allow read, write: if isOwnerUid(userId);
+    }
+
     match /health_records/{userId} {
       allow read, write: if isOwnerUid(userId);
     }

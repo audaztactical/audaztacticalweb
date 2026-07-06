@@ -27,6 +27,7 @@ const Akademi = lazy(() => import('./pages/Akademi'))
 const Forum = lazy(() => import('./pages/Forum'))
 const IntelFeed = lazy(() => import('./pages/IntelFeed'))
 const Cephanelik = lazy(() => import('./pages/Cephanelik'))
+const Balistik = lazy(() => import('./pages/Balistik'))
 const Training = lazy(() => import('./pages/Training'))
 const TcccSuite = lazy(() => import('./pages/TcccSuite'))
 const ProgressTracker = lazy(() => import('./pages/ProgressTracker'))
@@ -65,6 +66,7 @@ export default function App() {
                   <Route path="forum" element={<Forum />} />
                   <Route path="istihbarat" element={<IntelFeed />} />
                   <Route path="cephanelik" element={<Cephanelik />} />
+                  <Route path="balistik" element={<Balistik />} />
                   <Route path="antrenman" element={<Training />} />
                   <Route path="tccc" element={<TcccSuite />} />
                   <Route path="basarilar" element={<ProgressTracker />} />

@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { Crosshair, Home, MessageSquare, Shield, User } from 'lucide-react'
+import { Crosshair, Home, MessageSquare, Shield, Target, User } from 'lucide-react'
 import { useMuhabereNotify } from '../context/MuhabereNotifyContext'
 import { scheduleScrollAppToTop } from '../lib/scrollAppToTop'
 
@@ -15,6 +15,7 @@ export const BOTTOM_TAB_ITEMS = [
   { to: '/antrenman', label: 'Antrenman', icon: Crosshair },
   { to: '/mesajlar', label: 'Mesajlar', icon: MessageSquare },
   { to: '/cephanelik', label: 'Cephanelik', icon: Shield },
+  { to: '/balistik', label: 'Balistik', icon: Target },
   { to: '/profil', label: 'Profil', icon: User },
 ]
 

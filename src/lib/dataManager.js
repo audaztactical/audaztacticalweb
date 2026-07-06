@@ -11,7 +11,7 @@ import { db, isFirebaseConfigured } from './firebase'
 import { emitFirebaseError } from './firebaseErrorBus'
 import { prepareAudazPatchPayload, prepareAudazWritePayload } from './audazFirestoreWrite'
 
-/** @typedef {'inventory' | 'health_records' | 'casualty_cards' | 'ifak_inventory' | 'medevac_logs' | 'missions' | 'trainings' | 'range_logs' | 'vbss_logs' | 'tccc_logs' | 'armory_audit_trail'} AudazDataDomain */
+/** @typedef {'inventory' | 'health_records' | 'casualty_cards' | 'ifak_inventory' | 'medevac_logs' | 'missions' | 'trainings' | 'range_logs' | 'vbss_logs' | 'tccc_logs' | 'armory_audit_trail' | 'ballistic_profiles'} AudazDataDomain */
 
 const DOMAIN_CONFIG = {
   inventory: { kind: 'sub', path: (uid) => ['inventory', uid, 'items'] },
@@ -23,6 +23,7 @@ const DOMAIN_CONFIG = {
   vbss_logs: { kind: 'sub', path: (uid) => ['vbss_logs', uid, 'entries'] },
   tccc_logs: { kind: 'sub', path: (uid) => ['tccc_logs', uid, 'entries'] },
   armory_audit_trail: { kind: 'sub', path: (uid) => ['armory_audit_trail', uid, 'entries'] },
+  ballistic_profiles: { kind: 'sub', path: (uid) => ['ballistic_profiles', uid, 'profiles'] },
   missions: { kind: 'root', name: 'missions' },
   trainings: { kind: 'root', name: 'trainings' },
 }
