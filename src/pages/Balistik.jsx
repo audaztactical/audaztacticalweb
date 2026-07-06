@@ -310,7 +310,7 @@ export default function Balistik() {
 
         <TacticalPanel className="flex min-h-0 flex-col overflow-hidden p-3 sm:gap-4 sm:p-4 lg:h-full lg:max-h-full">
           {output ? (
-            <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden sm:gap-4">
+            <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch] [scrollbar-gutter:stable] sm:gap-4">
               <div className="grid shrink-0 grid-cols-1 gap-2 sm:grid-cols-3">
                 {[
                   ['Sıfırlama açısı', `${output.launchAngleDegrees.toFixed(3)}°`, 'launchAngle'],
@@ -380,7 +380,7 @@ export default function Balistik() {
                   id="balistik-result-chart"
                   role="tabpanel"
                   aria-labelledby="balistik-tab-chart"
-                  className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch] [scrollbar-gutter:stable]"
+                  className="shrink-0"
                 >
                   <div className="flex flex-col gap-4 pb-1">
                     <BallisticChartPanel
@@ -400,7 +400,7 @@ export default function Balistik() {
                   id="balistik-result-table"
                   role="tabpanel"
                   aria-labelledby="balistik-tab-table"
-                  className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-white/10"
+                  className="flex shrink-0 flex-col rounded-lg border border-white/10"
                 >
                   <div className="flex shrink-0 items-center justify-between gap-2 border-b border-white/10 bg-app-bg/95 px-3 py-2 backdrop-blur-sm">
                     <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.22em] text-emerald-500/80">
@@ -416,7 +416,7 @@ export default function Balistik() {
                       {pdfBusy ? 'PDF…' : 'PDF'}
                     </button>
                   </div>
-                  <div className="min-h-0 flex-1 overflow-y-auto overflow-x-auto">
+                  <div className="overflow-x-auto">
                     <table className="w-full min-w-[640px] text-left font-mono-technical text-[10px] text-slate-300">
                       <thead className="sticky top-0 z-[1] border-b border-white/10 bg-app-bg/95 text-[8px] uppercase tracking-wider text-app-text/45 backdrop-blur-sm">
                         <tr>

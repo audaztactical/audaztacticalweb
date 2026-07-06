@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Crosshair, Target } from 'lucide-react'
 import { pickNearestResult } from './BallisticChartPanel.jsx'
 import { isDualClickUnitDisplay, parseClickUnitSystem } from '../../lib/clickUnitSystem.js'
 
@@ -6,24 +7,31 @@ import { isDualClickUnitDisplay, parseClickUnitSystem } from '../../lib/clickUni
 
 const QUICK_REF_TARGETS = [100, 300, 500, 700, 900, 1200]
 
-const modeBtnClass = (active) =>
-  [
-    'rounded border px-3 py-1.5 font-mono-technical text-[10px] font-bold uppercase tracking-[0.18em] transition min-h-[36px]',
-    active
-      ? 'border-amber-500/55 bg-amber-500/15 text-amber-200'
-      : 'border-white/15 bg-black/40 text-app-text/55 hover:border-white/25',
-  ].join(' ')
+/**
+ * @param {number} dropCm — pozitif = mermi LOS altında → dürbünü yukarı
+ * @returns {{ arrow: string, label: string }}
+ */
+function elevationCue(dropCm) {
+  const dialUp = dropCm >= 0
+  return {
+    arrow: dialUp ? '↑' : '↓',
+    label: dialUp ? 'YUKARI' : 'AŞAĞI',
+  }
+}
 
 /**
- * @param {number} cm
+ * @param {number} windageCm — pozitif = sağ sapma → nişanı sola al
+ * @returns {{ arrow: string, label: string }}
  */
-function bodySizeHint(cm) {
-  const v = Math.abs(cm)
-  if (v < 4) return null
-  if (v < 12) return '~bir el genişliği'
-  if (v < 24) return '~omuz genişliği'
-  if (v < 40) return '~yarım gövde'
-  return null
+function windCue(windageCm) {
+  if (Math.abs(windageCm) < 0.05) {
+    return { arrow: '·', label: '—' }
+  }
+  const aimLeft = windageCm > 0
+  return {
+    arrow: aimLeft ? '←' : '→',
+    label: aimLeft ? 'SOLA' : 'SAĞA',
+  }
 }
 
 /**
@@ -73,26 +81,35 @@ function formatClickCount(value) {
 }
 
 /**
- * @param {number} dropCm
+ * @param {number} cm
  */
-function elevationDirection(dropCm) {
-  return dropCm >= 0 ? 'YUKARI' : 'AŞAĞI'
+function bodySizeHint(cm) {
+  const v = Math.abs(cm)
+  if (v < 4) return null
+  if (v < 12) return '~bir el genişliği'
+  if (v < 24) return '~omuz genişliği'
+  if (v < 40) return '~yarım gövde'
+  return null
 }
 
 /**
- * @param {number} windageCm — pozitif = sağ sapma → nişanı sola al
+ * @param {{ active: boolean, children: import('react').ReactNode, onClick: () => void, label: string }} props
  */
-function windDirection(windageCm) {
-  if (Math.abs(windageCm) < 0.05) return '—'
-  return windageCm > 0 ? 'SOLA' : 'SAĞA'
-}
-
-/**
- * @param {number} windageCm
- */
-function windArrow(windageCm) {
-  if (Math.abs(windageCm) < 0.05) return '·'
-  return windageCm > 0 ? '←' : '→'
+function ModePill({ active, children, onClick, label }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      aria-label={label}
+      className={[
+        'relative z-[1] flex-1 rounded-full px-3 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-[0.2em] transition min-h-[32px]',
+        active ? 'text-amber-950' : 'text-app-text/50 hover:text-app-text/75',
+      ].join(' ')}
+      onClick={onClick}
+    >
+      {children}
+    </button>
+  )
 }
 
 /**
@@ -131,107 +148,159 @@ export default function BallisticQuickReferencePanel({
   const dropCm = activeResult.dropCm
   const windCm = activeResult.windageCm
   const elev = resolveElevationWind(activeResult, clickUnitSystem, clickValueMoa, clickValueMrad)
-  const elevDir = elevationDirection(dropCm)
-  const windDir = windDirection(windCm)
+  const elevCue = elevationCue(dropCm)
+  const wind = windCue(windCm)
   const dropHint = bodySizeHint(dropCm)
   const windHint = bodySizeHint(windCm)
+  const unitLabel = elev.hasClickValue ? 'TİK' : elev.angleUnit
 
   return (
-    <div className="shrink-0 rounded-lg border-2 border-amber-500/45 bg-gradient-to-b from-amber-950/30 to-black/70 p-3 shadow-[0_0_24px_-8px_rgba(245,158,11,0.35)] sm:p-4">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-amber-400/90">
-          HIZLI REFERANS · ACİL DURUM
+    <div className="shrink-0 overflow-hidden rounded-lg border border-amber-500/25 bg-gradient-to-br from-amber-950/20 via-black/55 to-emerald-950/15 shadow-[inset_0_1px_0_rgba(251,191,36,0.12)]">
+      <div className="flex items-center justify-between gap-2 border-b border-amber-500/15 px-3 py-2">
+        <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.26em] text-amber-400/85">
+          Hızlı Referans
         </p>
-        <div className="flex gap-1.5">
-          <button type="button" className={modeBtnClass(mode === 'tik')} onClick={() => setMode('tik')}>
+        <div
+          className="relative flex w-[9.5rem] shrink-0 rounded-full border border-white/10 bg-black/50 p-0.5"
+          role="group"
+          aria-label="Gösterim modu"
+        >
+          <span
+            className={`pointer-events-none absolute inset-y-0.5 w-[calc(50%-2px)] rounded-full bg-gradient-to-r from-amber-400 to-amber-500 shadow-[0_0_12px_rgba(251,191,36,0.35)] transition-transform duration-200 ${
+              mode === 'nisangah' ? 'translate-x-[calc(100%+2px)]' : 'translate-x-0.5'
+            }`}
+            aria-hidden
+          />
+          <ModePill active={mode === 'tik'} label="Tık modu" onClick={() => setMode('tik')}>
             TIK
-          </button>
-          <button
-            type="button"
-            className={modeBtnClass(mode === 'nisangah')}
-            onClick={() => setMode('nisangah')}
-          >
+          </ModePill>
+          <ModePill active={mode === 'nisangah'} label="Nişangah modu" onClick={() => setMode('nisangah')}>
             NİŞAN
-          </button>
+          </ModePill>
         </div>
       </div>
 
-      <div className="mb-3 rounded border border-amber-500/35 bg-black/50 px-4 py-3 text-center">
-        <p className="font-mono-technical text-[10px] uppercase tracking-[0.22em] text-amber-500/75">
-          Aktif mesafe
-        </p>
-        <p className="mt-1 font-mono-technical text-4xl font-black tabular-nums tracking-tight text-amber-100 sm:text-5xl">
-          {Math.round(activeDistance)} m
-        </p>
-      </div>
+      <div className="grid gap-2 px-3 py-2.5 sm:grid-cols-[minmax(0,7rem)_1fr] sm:items-center sm:gap-3">
+        <div className="rounded-md border border-amber-500/20 bg-black/40 px-2.5 py-2 text-center sm:py-2.5">
+          <p className="font-mono-technical text-[7px] uppercase tracking-[0.2em] text-amber-500/65">
+            Mesafe
+          </p>
+          <p className="mt-0.5 font-mono-technical text-2xl font-black tabular-nums leading-none text-amber-50 sm:text-3xl">
+            {Math.round(activeDistance)}
+            <span className="ml-0.5 text-sm font-bold text-amber-400/80">m</span>
+          </p>
+        </div>
 
-      {mode === 'tik' ? (
-        <div className="space-y-3">
-          {!elev.hasClickValue ? (
-            <p className="rounded border border-amber-500/30 bg-amber-950/40 px-2 py-1.5 font-mono-technical text-[10px] leading-relaxed text-amber-200/90">
-              Tık değeri girilmedi; sadece açısal değer gösteriliyor:{' '}
-              <span className="font-bold text-amber-100">{elev.angleUnit}</span>
-              {!isDualClickUnitDisplay(clickUnitSystem) ? null : (
-                <span className="text-amber-200/70"> (birim sistemi seçin)</span>
+        {mode === 'tik' ? (
+          <div className="space-y-1.5">
+            {!elev.hasClickValue ? (
+              <p className="rounded border border-amber-500/20 bg-amber-950/30 px-2 py-1 font-mono-technical text-[9px] leading-snug text-amber-200/85">
+                Tık değeri yok — {elev.angleUnit} gösteriliyor
+                {!isDualClickUnitDisplay(clickUnitSystem) ? null : ' (birim seçin)'}
+              </p>
+            ) : null}
+            <div className="flex items-baseline gap-2 font-mono-technical text-lg font-black leading-none text-slate-50 sm:text-xl">
+              <span className="text-amber-300">{elevCue.arrow}</span>
+              <span className="tabular-nums">{formatClickCount(elev.elevationValue)}</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400/90">
+                {unitLabel} {elevCue.label}
+              </span>
+            </div>
+            <div className="flex items-baseline gap-2 font-mono-technical text-lg font-black leading-none text-slate-50 sm:text-xl">
+              <span className="text-amber-300">{wind.arrow}</span>
+              <span className="tabular-nums">{formatClickCount(elev.windValue)}</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400/90">
+                {unitLabel} {wind.label !== '—' ? wind.label : 'RÜZGAR YOK'}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-1.5 font-mono-technical text-sm font-bold leading-snug text-slate-50 sm:text-base">
+            <p>
+              Nişan noktasını hedefin{' '}
+              <span className="text-amber-200">
+                ~{Math.abs(dropCm).toFixed(1)} cm {elevCue.label}
+              </span>
+              ına alın
+            </p>
+            {dropHint ? <p className="text-[9px] font-normal text-app-text/45">{dropHint}</p> : null}
+            <p>
+              {wind.label !== '—' ? (
+                <>
+                  <span className="text-amber-200">
+                    ~{Math.abs(windCm).toFixed(1)} cm {wind.label}
+                  </span>
+                  ına alın
+                </>
+              ) : (
+                <span className="text-app-text/55">Rüzgar düzeltmesi gerekmez</span>
               )}
             </p>
-          ) : null}
-          <p className="font-mono-technical text-2xl font-black leading-tight text-slate-50 sm:text-3xl">
-            ↑ {formatClickCount(elev.elevationValue)}{' '}
-            {elev.hasClickValue ? 'TİK' : elev.angleUnit} {elevDir}
-          </p>
-          <p className="font-mono-technical text-2xl font-black leading-tight text-slate-50 sm:text-3xl">
-            {windArrow(windCm)} {formatClickCount(elev.windValue)}{' '}
-            {elev.hasClickValue ? 'TİK' : elev.angleUnit}{' '}
-            {windDir !== '—' ? windDir : 'RÜZGAR YOK'}
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          <p className="font-mono-technical text-xl font-black leading-snug text-slate-50 sm:text-2xl">
-            Nişan noktasını hedefin{' '}
-            <span className="text-amber-200">~{Math.abs(dropCm).toFixed(1)} cm {elevDir}</span>
-            ına alın
-          </p>
-          {dropHint ? (
-            <p className="font-mono-technical text-[10px] text-app-text/45">{dropHint}</p>
-          ) : null}
-          <p className="font-mono-technical text-xl font-black leading-snug text-slate-50 sm:text-2xl">
-            {windDir !== '—' ? (
-              <>
-                <span className="text-amber-200">~{Math.abs(windCm).toFixed(1)} cm {windDir}</span>
-                ına alın
-              </>
-            ) : (
-              <span className="text-app-text/55">Rüzgar düzeltmesi gerekmez</span>
-            )}
-          </p>
-          {windHint && windDir !== '—' ? (
-            <p className="font-mono-technical text-[10px] text-app-text/45">{windHint}</p>
-          ) : null}
-        </div>
-      )}
+            {windHint && wind.label !== '—' ? (
+              <p className="text-[9px] font-normal text-app-text/45">{windHint}</p>
+            ) : null}
+          </div>
+        )}
+      </div>
 
       {summaryRows.length > 0 ? (
-        <ul className="mt-4 space-y-1 border-t border-amber-500/25 pt-3">
-          {summaryRows.map(({ target, row }) => {
+        <ul className="grid gap-1 border-t border-amber-500/15 px-2 py-2 sm:px-3">
+          {summaryRows.map(({ target, row }, index) => {
             const e = resolveElevationWind(row, clickUnitSystem, clickValueMoa, clickValueMrad)
-            const dDir = elevationDirection(row.dropCm)
-            const wDir = windDirection(row.windageCm)
-            const compact =
-              mode === 'tik'
-                ? `${target}m · ↑${formatClickCount(e.elevationValue)}${e.hasClickValue ? 'T' : e.angleUnit.slice(0, 1)} ${dDir.slice(0, 3)} · ${windArrow(row.windageCm)}${formatClickCount(e.windValue)}${e.hasClickValue ? 'T' : e.angleUnit.slice(0, 1)} ${wDir !== '—' ? wDir.slice(0, 4) : '—'}`
-                : `${target}m · ${Math.abs(row.dropCm).toFixed(0)}cm ${dDir.slice(0, 3)} · ${wDir !== '—' ? `${Math.abs(row.windageCm).toFixed(0)}cm ${wDir.slice(0, 4)}` : '—'}`
+            const rowElev = elevationCue(row.dropCm)
+            const rowWind = windCue(row.windageCm)
+            const isActive = Math.abs(row.distance - activeDistance) < 1
+            const unitShort = e.hasClickValue ? 'T' : e.angleUnit.slice(0, 1)
+
             return (
               <li
                 key={target}
-                className={`rounded px-2 py-1 font-mono-technical text-[10px] tabular-nums sm:text-[11px] ${
-                  Math.abs(row.distance - activeDistance) < 1
-                    ? 'bg-amber-500/15 text-amber-100'
-                    : 'text-slate-300/90'
-                }`}
+                className={[
+                  'group flex items-center gap-2 rounded-md border px-2 py-1.5 font-mono-technical text-[10px] transition sm:text-[11px]',
+                  isActive
+                    ? 'border-amber-500/35 bg-amber-500/12 text-amber-50'
+                    : index % 2 === 0
+                      ? 'border-white/5 bg-white/[0.02] text-slate-300/90 hover:border-amber-500/20 hover:bg-amber-500/5'
+                      : 'border-transparent bg-black/20 text-slate-300/80 hover:border-amber-500/20 hover:bg-amber-500/5',
+                ].join(' ')}
               >
-                {compact}
+                <span
+                  className={`flex size-5 shrink-0 items-center justify-center rounded border text-[8px] font-bold tabular-nums ${
+                    isActive
+                      ? 'border-amber-400/50 bg-amber-500/20 text-amber-200'
+                      : 'border-white/10 bg-black/40 text-app-text/45 group-hover:border-amber-500/25'
+                  }`}
+                >
+                  {mode === 'tik' ? (
+                    <Target className="size-2.5 opacity-70" aria-hidden />
+                  ) : (
+                    <Crosshair className="size-2.5 opacity-70" aria-hidden />
+                  )}
+                </span>
+                <span className="w-10 shrink-0 font-bold tabular-nums text-amber-400/90">{target}m</span>
+                {mode === 'tik' ? (
+                  <>
+                    <span className="min-w-0 flex-1 truncate tabular-nums">
+                      <span className="text-amber-300/90">{rowElev.arrow}</span>
+                      {formatClickCount(e.elevationValue)}
+                      {unitShort} {rowElev.label.slice(0, 3)}
+                    </span>
+                    <span className="shrink-0 tabular-nums text-slate-400/80">
+                      <span className="text-amber-300/90">{rowWind.arrow}</span>
+                      {formatClickCount(e.windValue)}
+                      {unitShort}{' '}
+                      {rowWind.label !== '—' ? rowWind.label.slice(0, 4) : '—'}
+                    </span>
+                  </>
+                ) : (
+                  <span className="min-w-0 flex-1 truncate tabular-nums">
+                    {Math.abs(row.dropCm).toFixed(0)}cm {rowElev.label.slice(0, 3)}
+                    <span className="mx-1 text-white/15">·</span>
+                    {rowWind.label !== '—'
+                      ? `${Math.abs(row.windageCm).toFixed(0)}cm ${rowWind.label.slice(0, 4)}`
+                      : '—'}
+                  </span>
+                )}
               </li>
             )
           })}
