@@ -10,7 +10,7 @@ import InfoTooltip from '../components/shared/InfoTooltip'
 import { useAudazData } from '../hooks/useAudazData'
 import { useBallisticProfiles } from '../hooks/useBallisticProfiles'
 import {
-  buildProfileDefaultsFromInventory,
+  buildArmoryFillPayload,
   createDefaultBallisticProfileFields,
   filterInventoryWeapons,
   normalizeBallisticProfile,
@@ -18,10 +18,7 @@ import {
 } from '../lib/ballisticProfileBridge'
 import { exportBallisticReportPdf } from '../lib/ballisticReportPdf'
 import { angleTableCellsForRow, buildAngleTableColumns } from '../lib/clickUnitSystem'
-import {
-  buildInventoryFillLocks,
-  EMPTY_INVENTORY_FILL_LOCKS,
-} from '../lib/inventoryFillLocks'
+import { EMPTY_INVENTORY_FILL_LOCKS } from '../lib/inventoryFillLocks'
 import { weaponDisplayName } from '../lib/weaponIlws'
 
 /** @typedef {import('../lib/ballisticsEngine.js').BallisticsEngineOutput} BallisticsEngineOutput */
@@ -80,6 +77,7 @@ export default function Balistik() {
   const [resultTab, setResultTab] = useState(/** @type {'chart' | 'table'} */ ('chart'))
   const [accordionAutoExpandTrigger, setAccordionAutoExpandTrigger] = useState(0)
   const [inventoryFillLocks, setInventoryFillLocks] = useState(EMPTY_INVENTORY_FILL_LOCKS)
+  const [armoryFillRevision, setArmoryFillRevision] = useState(0)
 
   const bumpAccordionAutoExpand = useCallback(() => {
     setAccordionAutoExpandTrigger((n) => n + 1)
@@ -171,8 +169,9 @@ export default function Balistik() {
   const handleArmorySelect = useCallback(
     (weaponId) => {
       const inventoryBundle = { allItems: inventoryItems }
-      const draft = buildProfileDefaultsFromInventory(weaponId, null, null, inventoryBundle)
-      setInventoryFillLocks(buildInventoryFillLocks(weaponId, inventoryBundle))
+      const { draft, locks } = buildArmoryFillPayload(weaponId, inventoryBundle)
+      setInventoryFillLocks(locks)
+      setArmoryFillRevision((n) => n + 1)
       setForm((prev) => ({
         ...prev,
         ...draft,
@@ -289,6 +288,7 @@ export default function Balistik() {
             calculating={calculating}
             profileSaving={profileSaving}
             autoExpandTrigger={accordionAutoExpandTrigger}
+            armoryFillRevision={armoryFillRevision}
             inventoryFillLocks={inventoryFillLocks}
             onUnlockInventorySection={handleUnlockInventorySection}
             onMarkInventoryOverrides={handleMarkInventoryOverrides}

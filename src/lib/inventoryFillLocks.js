@@ -1,12 +1,6 @@
 import { parseBcModel, parseFfpSfp } from './inventoryBallisticFields.js'
 import { parseClickUnitSystem } from './clickUnitSystem.js'
-import { filterAmmoRows, findAmmoForWeapon } from './ammoIlws.js'
-import {
-  filterInventoryOptics,
-  getMountedOpticForWeapon,
-} from './ballisticProfileBridge.js'
 import { invNum, invStr } from './inventoryIlws.js'
-import { filterWeaponRows } from './weaponIlws.js'
 
 /** @typedef {'weapon' | 'optic' | 'ammo'} InventoryLockGroup */
 
@@ -33,23 +27,14 @@ export const EMPTY_INVENTORY_FILL_LOCKS = /** @type {InventoryFillLockState} */ 
 })
 
 /**
- * @param {string} weaponId
- * @param {import('./ballisticProfileBridge.js').BallisticInventoryBundle} inventoryData
+ * Cephanelik çözümlemesinden kilit state — draft ile aynı kaynak satırları kullanılmalı.
+ * @param {Record<string, unknown> | null | undefined} weapon
+ * @param {Record<string, unknown> | null | undefined} resolvedOptic
+ * @param {Record<string, unknown> | null | undefined} resolvedAmmo
  * @returns {InventoryFillLockState}
  */
-export function buildInventoryFillLocks(weaponId, inventoryData = {}) {
-  if (!weaponId) return { ...EMPTY_INVENTORY_FILL_LOCKS, overridden: {} }
-
-  const allItems = inventoryData.allItems ?? []
-  const weapons = inventoryData.weapons ?? filterWeaponRows(allItems)
-  const optics = inventoryData.optics ?? filterInventoryOptics(allItems)
-  const ammoList = inventoryData.ammo ?? filterAmmoRows(allItems)
-
-  const weapon = weapons.find((w) => String(w.id) === String(weaponId)) ?? null
+export function buildInventoryFillLocksFromResolution(weapon, resolvedOptic, resolvedAmmo) {
   if (!weapon) return { ...EMPTY_INVENTORY_FILL_LOCKS, overridden: {} }
-
-  const resolvedOptic = getMountedOpticForWeapon(String(weapon.id), optics, weapons)
-  const resolvedAmmo = findAmmoForWeapon(ammoList, weapon)
 
   /** @type {InventoryFillLockState} */
   const locks = {

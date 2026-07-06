@@ -2,7 +2,7 @@ import { Lock, Unlock } from 'lucide-react'
 import { INVENTORY_UNLOCK_WARNING } from '../../lib/inventoryFillLocks.js'
 
 export const lockedInputClass =
-  'cursor-not-allowed border-cyan-500/25 bg-black/25 text-slate-300/85 focus:border-cyan-500/25'
+  'cursor-not-allowed border-cyan-500/35 bg-black/25 text-slate-400/90 opacity-90 focus:border-cyan-500/35 disabled:opacity-70'
 
 /**
  * @param {{ show: boolean }} props

@@ -10,6 +10,7 @@ import { invNum, invStr } from './inventoryIlws.js'
 import { parseBcModel, parseFfpSfp } from './inventoryBallisticFields.js'
 import { parseClickUnitSystem } from './clickUnitSystem.js'
 import { filterWeaponRows, weaponDisplayName } from './weaponIlws.js'
+import { buildInventoryFillLocksFromResolution } from './inventoryFillLocks.js'
 
 /** @typedef {import('./schema.js').BallisticProfileDocument} BallisticProfileDocument */
 
@@ -279,6 +280,22 @@ export function buildProfileDefaultsFromInventory(weaponId, opticId, ammoId, inv
           bcModel: 'G7',
         },
   }
+}
+
+/**
+ * Silahtan Doldur — tek çözümleme ile draft + kilit state (senkron garanti).
+ * @param {string|null|undefined} weaponId
+ * @param {BallisticInventoryBundle} inventoryData
+ * @returns {{ draft: BallisticProfileDocument, locks: import('./inventoryFillLocks.js').InventoryFillLockState }}
+ */
+export function buildArmoryFillPayload(weaponId, inventoryData = {}) {
+  const { weapons, optics, ammo } = resolveInventoryBundle(inventoryData)
+  const weapon = weaponId ? weapons.find((w) => String(w.id) === String(weaponId)) : null
+  const resolvedOptic = weapon ? getMountedOpticForWeapon(String(weapon.id), optics, weapons) : null
+  const resolvedAmmo = weapon ? getMatchingAmmoForWeapon(weapon, ammo) : null
+  const draft = buildProfileDefaultsFromInventory(weaponId, null, null, inventoryData)
+  const locks = buildInventoryFillLocksFromResolution(weapon, resolvedOptic, resolvedAmmo)
+  return { draft, locks }
 }
 
 /**
