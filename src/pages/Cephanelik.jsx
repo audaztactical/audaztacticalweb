@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Crosshair,
+  Focus,
   LayoutGrid,
   Lock,
   Plus,
@@ -27,6 +28,7 @@ import {
   ILWS_FILTERS,
   TACTICAL_CATEGORIES,
   invNum,
+  isWeaponTacticalCategoryId,
   matchesIlwsFilter,
   partitionInventoryBySector,
 } from '../lib/inventoryIlws'
@@ -77,6 +79,7 @@ const FILTER_ICONS = {
   ALL: LayoutGrid,
   P_TFK: Crosshair,
   T_TAB: Shield,
+  KNT: Focus,
   OPT: Scan,
   MHM: Target,
   AV_TFK: Target,
@@ -363,7 +366,7 @@ export default function Cephanelik() {
   const legacyCategory = (tc) => {
     if (tc === 'MHM') return 'Mühimmat'
     if (tc === 'OPT') return 'Optik'
-    if (tc === 'P_TFK' || tc === 'T_TAB' || tc === 'AV_TFK') return 'Silah'
+    if (isWeaponTacticalCategoryId(tc)) return 'Silah'
     return 'Ekipman'
   }
 
@@ -387,7 +390,7 @@ export default function Cephanelik() {
       operationalStatus: 'AKTİF',
       attachmentLink: 'YOK',
     }
-    if (tc === 'P_TFK' || tc === 'T_TAB' || tc === 'AV_TFK') {
+    if (isWeaponTacticalCategoryId(tc)) {
       const wtc = resolveWeaponTacticalCategory(tc)
       payload.weaponType = weaponTypeFromCategory(wtc)
       payload.manual_rounds_fired = 0
@@ -472,7 +475,7 @@ export default function Cephanelik() {
               <span className="mr-1 font-mono-technical text-[8px] uppercase tracking-widest text-app-text/45">FİLTRE</span>
               {ILWS_FILTERS.filter((f) => {
                 if (f.id === 'ALL') return true
-                if (activeCategory === 'weapons') return f.id === 'P_TFK' || f.id === 'T_TAB' || f.id === 'AV_TFK'
+                if (activeCategory === 'weapons') return isWeaponTacticalCategoryId(f.id)
                 if (activeCategory === 'attachments') return f.id === 'OPT'
                 if (activeCategory === 'ammo') return f.id === 'MHM'
                 return false
@@ -681,9 +684,7 @@ export default function Cephanelik() {
                   <input className={inputClass} value={form.calibre} onChange={(e) => setForm((f) => ({ ...f, calibre: e.target.value }))} />
                 </label>
               </div>
-              {form.tacticalCategory === 'P_TFK' ||
-              form.tacticalCategory === 'T_TAB' ||
-              form.tacticalCategory === 'AV_TFK' ? (
+              {isWeaponTacticalCategoryId(form.tacticalCategory) ? (
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="block">
                     <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">KONDİSYON_%</span>

@@ -42,7 +42,7 @@ export function getAtisWeaponTypeBucket(row) {
       ? invStr(/** @type {Record<string, unknown>} */ (specs).tacticalCategory).toUpperCase()
       : ''
   if (tc === 'T_TAB') return 'HANDGUN'
-  if (tc === 'P_TFK' || tc === 'AV_TFK') return 'RIFLE'
+  if (tc === 'P_TFK' || tc === 'AV_TFK' || tc === 'KNT') return 'RIFLE'
   const wt = invStr(row.weaponType ?? (specs && typeof specs === 'object' ? /** @type {Record<string, unknown>} */ (specs).weaponType : '')).toLowerCase()
   if (wt.includes('tabanca') || wt === 't_tab' || wt === 'pistol') return 'HANDGUN'
   return 'RIFLE'

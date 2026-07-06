@@ -15,7 +15,7 @@ import { ATIS_DRILL_CUSTOM } from '../../lib/atisDrills'
 import { buildWeaponSpecsSnapshot } from '../../lib/atisLogPayload'
 import { sanitizeShotCounts } from '../../lib/atisShotCounts'
 import { submitAtisRecord } from '../../lib/atisSubmit'
-import { invNum, invStr } from '../../lib/inventoryIlws'
+import { invNum, invStr, tacticalCategoryLabel } from '../../lib/inventoryIlws'
 import { filterWeaponRows, getAttachedAccessoryId, weaponDisplayName } from '../../lib/weaponIlws'
 import AtisLogRegistry from './AtisLogRegistry'
 import AtisDrillPicker from './AtisDrillPicker'
@@ -360,7 +360,11 @@ export default function AtisShootingTerminal({
               <>
                 <p className="text-accent">{String(weaponSpecsPreview.displayName)}</p>
                 <p className="mt-1 text-app-text/70">
-                  {[weaponSpecsPreview.brand, weaponSpecsPreview.calibre, weaponSpecsPreview.tacticalCategory]
+                  {[
+                    weaponSpecsPreview.brand,
+                    weaponSpecsPreview.calibre,
+                    tacticalCategoryLabel(String(weaponSpecsPreview.tacticalCategory ?? '')),
+                  ]
                     .filter(Boolean)
                     .join(' · ')}
                 </p>

@@ -42,7 +42,7 @@ export const InventoryItemSchema = {
   name: 'string',
   /** Legacy: Silah | Mühimmat | Optik | Ekipman */
   category: 'string',
-  /** ILWS: P_TFK | T_TAB | AV_TFK | OPT | MHM */
+  /** ILWS: P_TFK | T_TAB | AV_TFK | KNT | OPT | MHM */
   tacticalCategory: 'string',
   /** OPTIK | LAZER | FENER | TUTAMAK_SUSTURUCU */
   accessoryKind: 'string',
@@ -83,7 +83,7 @@ export const InventoryItemSchema = {
   /** Dashboard SİSTEM_GÜNLÜĞÜ — son audit */
   auditLogCode: 'string',
   auditLogMsg: 'string',
-  /** Silah (P_TFK/T_TAB/AV_TFK) — balistik opsiyonel */
+  /** Silah (P_TFK/T_TAB/AV_TFK/KNT) — balistik opsiyonel */
   barrelLength: 'number|null',
   twistRate: 'string|null',
   muzzleVelocity: 'number|null',

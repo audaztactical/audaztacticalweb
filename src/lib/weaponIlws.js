@@ -8,9 +8,19 @@ export const MAINTENANCE_TYPES = [
   'Sıfırlama / Atış Kontrolü',
 ]
 
-/** @typedef {'P_TFK' | 'T_TAB' | 'AV_TFK'} WeaponTacticalCode */
+/** @typedef {'P_TFK' | 'T_TAB' | 'AV_TFK' | 'KNT'} WeaponTacticalCode */
 
-export const WEAPON_TACTICAL_CODES = /** @type {WeaponTacticalCode[]} */ (['P_TFK', 'T_TAB', 'AV_TFK'])
+export const WEAPON_TACTICAL_CODES = /** @type {WeaponTacticalCode[]} */ (
+  ['P_TFK', 'T_TAB', 'AV_TFK', 'KNT']
+)
+
+/** Kullanıcıya görünen silah tipi seçenekleri (enum kodu yalnızca value'da). */
+export const WEAPON_CATEGORY_OPTIONS = [
+  { value: 'T_TAB', label: 'Taktik Tabanca' },
+  { value: 'P_TFK', label: 'Piyade Tüfeği' },
+  { value: 'AV_TFK', label: 'Av Tüfeği' },
+  { value: 'KNT', label: 'Keskin Nişancı Tüfeği' },
+]
 
 /** @returns {string} */
 export function todayIsoDate() {
@@ -37,7 +47,7 @@ export function getWeaponCreatedAt(row) {
 /** @param {string} tc @returns {WeaponTacticalCode} */
 export function resolveWeaponTacticalCategory(tc) {
   const u = invStr(tc).toUpperCase()
-  if (u === 'T_TAB' || u === 'AV_TFK' || u === 'P_TFK') return u
+  if (u === 'T_TAB' || u === 'AV_TFK' || u === 'P_TFK' || u === 'KNT') return u
   return 'T_TAB'
 }
 
@@ -46,6 +56,7 @@ export function defaultMaxBarrelLifeForCategory(tc) {
   const cat = resolveWeaponTacticalCategory(tc)
   if (cat === 'T_TAB') return 15000
   if (cat === 'AV_TFK') return 30000
+  if (cat === 'KNT') return 9000
   return 20000
 }
 
@@ -54,6 +65,7 @@ export function weaponTypeFromCategory(tc) {
   const cat = resolveWeaponTacticalCategory(tc)
   if (cat === 'T_TAB') return 't_tab'
   if (cat === 'AV_TFK') return 'av_tfk'
+  if (cat === 'KNT') return 'knt'
   return 'p_tfk'
 }
 

@@ -1,11 +1,6 @@
 import TacticalPanel from '../ui/TacticalPanel'
 import BallisticInfoCollapsible from './BallisticInfoCollapsible'
-
-const WEAPON_CATEGORIES = [
-  { value: 'T_TAB', label: 'T_TAB · Taktik Tabanca' },
-  { value: 'P_TFK', label: 'P_TFK · Piyade Tüfeği' },
-  { value: 'AV_TFK', label: 'AV_TFK · Av Tüfeği' },
-]
+import { WEAPON_CATEGORY_OPTIONS } from '../../lib/weaponIlws'
 
 const labelClass =
   'block font-mono-technical text-xs font-bold uppercase tracking-[0.2em] text-app-text/55 sm:text-[8px]'
@@ -53,7 +48,7 @@ export default function WeaponCreateModal({ open, saving, form, onClose, onChang
           <p className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] text-accent/90">
             + YENİ_SİLAH_KAYDI
           </p>
-          <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-app-text/45">P_TFK · T_TAB · AV_TFK · SİLAH_RAFI</p>
+          <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-app-text/45">Silah Rafı · Cephanelik</p>
         </div>
         <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div className="flex flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-3 py-2 [-webkit-overflow-scrolling:touch] sm:gap-3 sm:px-4 sm:py-4">
@@ -65,7 +60,7 @@ export default function WeaponCreateModal({ open, saving, form, onClose, onChang
                 onChange={(e) => onChange({ tacticalCategory: e.target.value })}
                 required
               >
-                {WEAPON_CATEGORIES.map((c) => (
+                {WEAPON_CATEGORY_OPTIONS.map((c) => (
                   <option key={c.value} value={c.value}>
                     {c.label}
                   </option>
