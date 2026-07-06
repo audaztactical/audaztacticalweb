@@ -159,8 +159,10 @@ export default function Balistik() {
 
   const resultTabBtnClass = (active) =>
     [
-      'relative flex-1 px-2 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-[0.22em] transition sm:px-4',
-      active ? 'text-emerald-400' : 'text-app-text/45 hover:text-app-text/75',
+      'relative flex-1 rounded-md px-3 py-3 font-mono-technical text-[9px] font-bold uppercase tracking-[0.22em] transition min-h-[44px] sm:px-5',
+      active
+        ? 'border border-emerald-500/40 bg-emerald-500/20 text-emerald-300 shadow-[inset_0_1px_0_rgba(34,197,94,0.5)]'
+        : 'border border-transparent text-app-text/40 hover:border-white/15 hover:bg-white/[0.04] hover:text-app-text/75',
     ].join(' ')
 
   return (
@@ -241,34 +243,38 @@ export default function Balistik() {
               </div>
 
               <div
-                className="flex shrink-0 gap-1 border-b border-white/10"
+                className="flex shrink-0 gap-1 rounded-lg border border-white/10 bg-black/50 p-1"
                 role="tablist"
                 aria-label="Sonuç görünümü"
               >
                 {[
                   { id: 'chart', label: 'GRAFİK' },
-                  { id: 'table', label: 'TAM_TABLO' },
-                ].map(({ id, label }) => {
+                  { id: 'table', label: 'TAM TABLO' },
+                ].map(({ id, label }, index) => {
                   const active = resultTab === id
                   return (
-                    <button
-                      key={id}
-                      type="button"
-                      role="tab"
-                      aria-selected={active}
-                      aria-controls={`balistik-result-${id}`}
-                      id={`balistik-tab-${id}`}
-                      onClick={() => setResultTab(/** @type {'chart' | 'table'} */ (id))}
-                      className={resultTabBtnClass(active)}
-                    >
-                      {label}
-                      {active ? (
-                        <span
-                          className="absolute inset-x-1 bottom-0 h-0.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(34,197,94,0.55)]"
-                          aria-hidden
-                        />
+                    <div key={id} className="flex min-w-0 flex-1 items-stretch">
+                      {index > 0 ? (
+                        <span className="mr-1 w-px shrink-0 self-stretch bg-white/15" aria-hidden />
                       ) : null}
-                    </button>
+                      <button
+                        type="button"
+                        role="tab"
+                        aria-selected={active}
+                        aria-controls={`balistik-result-${id}`}
+                        id={`balistik-tab-${id}`}
+                        onClick={() => setResultTab(/** @type {'chart' | 'table'} */ (id))}
+                        className={resultTabBtnClass(active)}
+                      >
+                        {label}
+                        {active ? (
+                          <span
+                            className="absolute inset-x-2 bottom-1 h-0.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(34,197,94,0.65)]"
+                            aria-hidden
+                          />
+                        ) : null}
+                      </button>
+                    </div>
                   )
                 })}
               </div>

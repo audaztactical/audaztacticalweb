@@ -40,7 +40,7 @@ export default function BallisticTrajectoryHud({ results, activeDistance }) {
   return (
     <div className="relative overflow-hidden rounded-lg border border-emerald-500/20 bg-black/60 p-2">
       <p className="mb-1 font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-emerald-500/80">
-        YÖRÜNGE_HUD · {Math.round(activeDistance)}m / {Math.round(maxRange)}m
+        YÖRÜNGE GÖRÜNÜMÜ · {Math.round(activeDistance)} m / {Math.round(maxRange)} m
       </p>
       <svg viewBox="0 0 300 64" className="h-16 w-full" aria-hidden>
         <defs>

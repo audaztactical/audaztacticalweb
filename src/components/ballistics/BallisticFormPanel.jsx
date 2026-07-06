@@ -1,11 +1,30 @@
+import {
+  CircleDot,
+  Crosshair,
+  Focus,
+  Ruler,
+  SlidersHorizontal,
+  User,
+  Wind,
+} from 'lucide-react'
 import InfoTooltip from '../shared/InfoTooltip.jsx'
 
 const labelClass =
   'flex items-center gap-1 font-mono-technical text-[9px] font-bold uppercase tracking-[0.18em] text-app-text/55'
 const inputClass =
   'w-full rounded border border-white/15 bg-black/40 px-2 py-1.5 font-mono-technical text-xs text-slate-100 outline-none focus:border-emerald-500/50'
-const sectionTitle =
-  'font-mono-technical text-[9px] font-bold uppercase tracking-[0.24em] text-emerald-500/85'
+
+/**
+ * @param {{ icon?: import('lucide-react').LucideIcon, children: import('react').ReactNode }} props
+ */
+function SectionHeading({ icon: Icon, children }) {
+  return (
+    <h3 className="flex items-center gap-2 border-l-2 border-amber-500/80 py-0.5 pl-2.5 font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] text-amber-400/95">
+      {Icon ? <Icon className="size-3.5 shrink-0 text-amber-500/75" strokeWidth={2} aria-hidden /> : null}
+      <span>{children}</span>
+    </h3>
+  )
+}
 
 /**
  * @param {{ label: string, termKey?: string, children: import('react').ReactNode }} props
@@ -83,7 +102,7 @@ export default function BallisticFormPanel({
   return (
     <div className="flex flex-col gap-4">
       <section className="space-y-2">
-        <p className={sectionTitle}>Profil</p>
+        <SectionHeading icon={User}>Profil</SectionHeading>
         <select
           className={inputClass}
           value={selectedProfileId}
@@ -117,7 +136,7 @@ export default function BallisticFormPanel({
       </section>
 
       <section className="space-y-2">
-        <p className={sectionTitle}>Mermi</p>
+        <SectionHeading icon={CircleDot}>Mermi</SectionHeading>
         <div className="grid grid-cols-2 gap-2">
           <Field label="Ağırlık (gr)">
             <input
@@ -171,7 +190,7 @@ export default function BallisticFormPanel({
       </section>
 
       <section className="space-y-2">
-        <p className={sectionTitle}>Silah</p>
+        <SectionHeading icon={Crosshair}>Silah</SectionHeading>
         <div className="grid grid-cols-2 gap-2">
           <Field label="Sight height (cm)" termKey="sightHeight">
             <input
@@ -211,7 +230,7 @@ export default function BallisticFormPanel({
       </section>
 
       <section className="space-y-2">
-        <p className={sectionTitle}>Optik</p>
+        <SectionHeading icon={Focus}>Optik</SectionHeading>
         <div className="grid grid-cols-2 gap-2">
           <Field label="Büyütme">
             <input
@@ -264,9 +283,9 @@ export default function BallisticFormPanel({
       </section>
 
       <section className="space-y-2">
-        <p className={sectionTitle}>
+        <SectionHeading icon={Wind}>
           Çevre <InfoTooltip termKey="airDensity" />
-        </p>
+        </SectionHeading>
         <div className="grid grid-cols-2 gap-2">
           <Field label="Sıcaklık °C">
             <input
@@ -351,15 +370,18 @@ export default function BallisticFormPanel({
         </div>
       </section>
 
-      <section className="rounded border border-white/10 bg-black/30">
+      <section className="overflow-hidden rounded border border-white/10 bg-black/30">
         <button
           type="button"
-          className="flex w-full items-center justify-between px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.2em] text-app-text/70"
+          className="flex w-full items-center justify-between gap-2 border-l-2 border-amber-500/80 px-3 py-2.5 pl-2.5 font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] text-amber-400/95"
           onClick={() => onAdvancedOpen(!advancedOpen)}
         >
-          Gelişmiş
-          <InfoTooltip termKey="coriolis" />
-          <span>{advancedOpen ? '−' : '+'}</span>
+          <span className="flex items-center gap-2">
+            <SlidersHorizontal className="size-3.5 shrink-0 text-amber-500/75" strokeWidth={2} aria-hidden />
+            Gelişmiş
+            <InfoTooltip termKey="coriolis" />
+          </span>
+          <span className="text-app-text/55">{advancedOpen ? '−' : '+'}</span>
         </button>
         {advancedOpen ? (
           <div className="space-y-2 border-t border-white/10 px-3 py-2">
@@ -398,7 +420,7 @@ export default function BallisticFormPanel({
       </section>
 
       <section className="space-y-2">
-        <p className={sectionTitle}>Hedef aralığı</p>
+        <SectionHeading icon={Ruler}>Hedef aralığı</SectionHeading>
         <div className="grid grid-cols-3 gap-2">
           <Field label="Min m">
             <input
