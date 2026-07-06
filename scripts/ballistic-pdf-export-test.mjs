@@ -1,5 +1,5 @@
 /**
- * .308 Win senaryosu ile balistik PDF üretir ve sayfa yapısını doğrular.
+ * .308 Win senaryosu ile balistik PDF üretir ve grafik şeklini doğrular.
  * node scripts/ballistic-pdf-export-test.mjs
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'fs'
@@ -9,6 +9,11 @@ import { createCanvas, loadImage } from 'canvas'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { calculateBallistics } from '../src/lib/ballisticsEngine.js'
+import {
+  chartPngValidateShapeFromImageData,
+  computeBallisticChartLayout,
+  drawBallisticChartNode,
+} from '../src/lib/ballisticChartImage.js'
 import { getBallisticTerm, TABLE_COLUMN_TERM_KEYS } from '../src/data/ballisticTerms.js'
 
 const PDF_MARGIN = 14
@@ -67,104 +72,17 @@ function buildChartPng(results) {
   const height = 320
   const canvas = createCanvas(width, height)
   const ctx = canvas.getContext('2d')
-
-  const pad = { l: 52, r: 52, t: 28, b: 40 }
-  const plotW = width - pad.l - pad.r
-  const plotH = height - pad.t - pad.b
-
-  ctx.fillStyle = '#0a0a0a'
-  ctx.fillRect(0, 0, width, height)
-
-  const maxDist = Math.max(...results.map((r) => r.distance), 1)
-  const maxDrop = Math.max(...results.map((r) => Math.abs(r.dropCm)), 1)
-  const maxVel = Math.max(...results.map((r) => r.velocityRemaining))
-  const minVel = Math.min(...results.map((r) => r.velocityRemaining))
-  const velSpan = Math.max(1, maxVel - minVel)
-
-  const xAt = (d) => pad.l + (d / maxDist) * plotW
-  const yDrop = (drop) => pad.t + (Math.abs(drop) / maxDrop) * plotH
-  const yVel = (v) => pad.t + plotH - ((v - minVel) / velSpan) * plotH
-
-  ctx.strokeStyle = 'rgba(255,255,255,0.08)'
-  ctx.lineWidth = 1
-  for (let i = 0; i <= 4; i += 1) {
-    const gy = pad.t + (plotH / 4) * i
-    ctx.beginPath()
-    ctx.moveTo(pad.l, gy)
-    ctx.lineTo(pad.l + plotW, gy)
-    ctx.stroke()
-  }
-
-  const dropGradient = ctx.createLinearGradient(pad.l, 0, pad.l + plotW, 0)
-  dropGradient.addColorStop(0, '#22c55e')
-  dropGradient.addColorStop(0.5, '#eab308')
-  dropGradient.addColorStop(1, '#ef4444')
-
-  ctx.strokeStyle = dropGradient
-  ctx.lineWidth = 2.5
-  ctx.beginPath()
-  results.forEach((r, i) => {
-    const x = xAt(r.distance)
-    const y = yDrop(r.dropCm)
-    if (i === 0) ctx.moveTo(x, y)
-    else ctx.lineTo(x, y)
-  })
-  ctx.stroke()
-
-  ctx.strokeStyle = '#fbbf24'
-  ctx.lineWidth = 2
-  ctx.beginPath()
-  results.forEach((r, i) => {
-    const x = xAt(r.distance)
-    const y = yVel(r.velocityRemaining)
-    if (i === 0) ctx.moveTo(x, y)
-    else ctx.lineTo(x, y)
-  })
-  ctx.stroke()
-
-  ctx.fillStyle = 'rgba(148,163,184,0.85)'
-  ctx.font = '10px monospace'
-  ctx.textAlign = 'right'
-  for (let i = 0; i <= 4; i += 1) {
-    const frac = i / 4
-    const dropVal = Math.round(maxDrop * frac)
-    const y = pad.t + plotH - frac * plotH
-    ctx.fillText(String(dropVal), pad.l - 6, y + 3)
-  }
-
-  ctx.textAlign = 'left'
-  for (let i = 0; i <= 4; i += 1) {
-    const frac = i / 4
-    const velVal = Math.round(minVel + velSpan * (1 - frac))
-    const y = pad.t + frac * plotH
-    ctx.fillText(String(velVal), pad.l + plotW + 8, y + 3)
-  }
-
-  ctx.textAlign = 'center'
-  const tickDistances = [results[0].distance, results[Math.floor(results.length / 2)].distance, results[results.length - 1].distance]
-  tickDistances.forEach((d) => {
-    ctx.fillText(`${d}m`, xAt(d), height - 22)
-  })
-
+  drawBallisticChartNode(ctx, results, width, height)
   return canvas.toDataURL('image/png')
 }
 
-async function countLinePixels(pngPath) {
+async function loadPngImageDataNode(pngPath) {
   const img = await loadImage(pngPath)
   const canvas = createCanvas(img.width, img.height)
   const ctx = canvas.getContext('2d')
   ctx.drawImage(img, 0, 0)
-  const data = ctx.getImageData(0, 0, img.width, img.height).data
-  let green = 0
-  let gold = 0
-  for (let i = 0; i < data.length; i += 4) {
-    const r = data[i]
-    const g = data[i + 1]
-    const b = data[i + 2]
-    if (g > 130 && r < 130) green += 1
-    if (r > 170 && g > 110 && b < 110) gold += 1
-  }
-  return { green, gold, width: img.width, height: img.height }
+  const imageData = ctx.getImageData(0, 0, img.width, img.height)
+  return { data: imageData.data, width: img.width, height: img.height }
 }
 
 function ensureSpace(doc, pageW, pageH, y, needed = 20) {
@@ -293,6 +211,15 @@ const output = calculateBallistics({
   energyUnit: 'ftlb',
 })
 
+const layout = computeBallisticChartLayout(output.results)
+console.log('=== Koordinat örneği (.308 Win) ===')
+for (const d of [100, 800, 1500]) {
+  const r = output.results.find((x) => x.distance === d)
+  console.log(
+    `${d}m: drop=${Math.abs(r.dropCm).toFixed(1)}cm → yDrop=${layout.yDrop(r.dropCm).toFixed(1)}, vel=${r.velocityRemaining.toFixed(0)}fps → yVel=${layout.yVel(r.velocityRemaining).toFixed(1)}, x=${layout.xAt(d).toFixed(1)}`,
+  )
+}
+
 const chartPng = buildChartPng(output.results)
 if (!chartPng || chartPng.length < 1200) {
   console.error('FAIL: Chart PNG üretilemedi, length=', chartPng?.length ?? 0)
@@ -303,9 +230,10 @@ const pdfPath = path.join(outDir, 'balistik-308-test.pdf')
 const result = await buildPdf(output, chartPng, pdfPath)
 
 const pngPath = path.join(outDir, 'balistik-chart-test.png')
-const pixels = await countLinePixels(pngPath)
+const loaded = await loadPngImageDataNode(pngPath)
+const shape = chartPngValidateShapeFromImageData(loaded, output.results, 960, 320, { mode: 'strict' })
 
-console.log('=== Balistik PDF Test (.308 Win) ===')
+console.log('\n=== Balistik PDF Test (.308 Win) ===')
 console.log('Profil: .308 Win 175gr SMK (G7 BC 0.243)')
 console.log('Menzil noktası:', output.results.length)
 console.log('Chart PNG:', `${Math.round(chartPng.length / 1024)} KB`)
@@ -319,10 +247,23 @@ const pdfRaw = readFileSync(pdfPath)
 const pageMarkers = (pdfRaw.toString('latin1').match(/\/Type\s*\/Page\b/g) ?? []).length
 console.log('\nPDF /Page işaretleyici sayısı:', pageMarkers)
 
-console.log('Chart PNG piksel analizi:', pixels)
+console.log('\n=== chartPngValidateShape ===')
+console.log('Sonuç:', shape.ok ? 'GEÇTİ' : 'KALDI')
+if (shape.checkpoints?.length) {
+  shape.checkpoints.forEach((cp) => {
+    console.log(
+      ` - ${cp.distance}m: dropHit=${cp.dropHit} velHit=${cp.velHit} (drop y≈${cp.expectedDrop.y.toFixed(0)}, vel y≈${cp.expectedVel.y.toFixed(0)})`,
+    )
+  })
+}
+if (shape.issues?.length) {
+  console.log('Sorunlar:', shape.issues.join('; '))
+}
+console.log('Drop Y serisi (100→1500m):', shape.dropYs?.map((y) => Math.round(y)).join(' → '))
+console.log('Vel Y serisi (100→1500m):', shape.velYs?.map((y) => Math.round(y)).join(' → '))
 
-if (pixels.green + pixels.gold < 800) {
-  console.error('FAIL: PNG içinde yeterli çizgi pikseli yok (green+gold >= 800)')
+if (!shape.ok) {
+  console.error('FAIL: chartPngValidateShape başarısız')
   process.exit(1)
 }
 
@@ -331,4 +272,4 @@ if (result.pageCount < 3 || pageMarkers < 3) {
   process.exit(1)
 }
 
-console.log('\nOK: PDF ve grafik PNG oluşturuldu — çizgiler piksel doğrulamasından geçti.')
+console.log('\nOK: PDF ve grafik PNG oluşturuldu — chartPngValidateShape geçti.')

@@ -1,6 +1,11 @@
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import html2canvas from 'html2canvas'
 import { getBallisticTerm, TABLE_COLUMN_TERM_KEYS } from '../data/ballisticTerms.js'
+import {
+  buildBallisticChartPngFromResults,
+  chartPngValidateShape,
+} from './ballisticChartImage.js'
 import { preparePdfAssets, setPdfFont } from './pdfFontLoader'
 import {
   PDF_COLORS,
@@ -63,7 +68,56 @@ export function chartPngHasLineContent(pngDataUrl, minColoredPixels = 350) {
 }
 
 /**
- * PDF için güvenilir grafik PNG'si — önce veri tabanlı canvas, DOM yalnızca doğrulanırsa.
+ * html2canvas ile gerçek Recharts DOM'unu yakalar (birincil yöntem).
+ * @param {HTMLElement | null | undefined} container
+ * @param {{ debug?: ChartCaptureDebug[] }} [options]
+ * @returns {Promise<string | null>}
+ */
+export async function chartContainerToPngHtml2Canvas(container, options = {}) {
+  const debug = options.debug ?? []
+
+  if (!container) {
+    debug.push({ step: 'html2canvas-container', ok: false, detail: 'Element bulunamadı' })
+    return null
+  }
+
+  const rect = container.getBoundingClientRect()
+  if (rect.width < CHART_EXPORT_MIN_WIDTH || rect.height < CHART_EXPORT_MIN_HEIGHT) {
+    debug.push({
+      step: 'html2canvas-dimensions',
+      ok: false,
+      detail: `Boyut yetersiz: ${Math.round(rect.width)}x${Math.round(rect.height)}`,
+    })
+    return null
+  }
+
+  try {
+    const canvas = await html2canvas(container, {
+      backgroundColor: '#0a0a0a',
+      scale: 2,
+      logging: false,
+      useCORS: true,
+    })
+    const png = canvas.toDataURL('image/png')
+    const ok = png.startsWith('data:image/png') && png.length > 1200
+    debug.push({
+      step: 'html2canvas',
+      ok,
+      detail: ok ? `PNG ${Math.round(png.length / 1024)}KB (${canvas.width}x${canvas.height})` : `PNG geçersiz (${png.length} byte)`,
+    })
+    return ok ? png : null
+  } catch (err) {
+    debug.push({
+      step: 'html2canvas',
+      ok: false,
+      detail: err instanceof Error ? err.message : 'Bilinmeyen hata',
+    })
+    return null
+  }
+}
+
+/**
+ * PDF için güvenilir grafik PNG'si — html2canvas birincil, canvas-data yedek; şekil doğrulaması zorunlu.
  * @param {import('./ballisticsEngine.js').BallisticsPointResult[]} results
  * @param {HTMLElement | null | undefined} [domContainer]
  * @returns {Promise<{ chartImageDataUrl: string | null, chartSource: string, debug: ChartCaptureDebug[] }>}
@@ -71,32 +125,53 @@ export function chartPngHasLineContent(pngDataUrl, minColoredPixels = 350) {
 export async function resolveChartImageForPdf(results, domContainer) {
   const debug = /** @type {ChartCaptureDebug[]} */ ([])
 
+  if (domContainer) {
+    const html2Png = await chartContainerToPngHtml2Canvas(domContainer, { debug })
+    if (html2Png) {
+      const shape = await chartPngValidateShape(html2Png, results, 960, 320, { mode: 'dom' })
+      if (shape.ok) {
+        debug.push({ step: 'html2canvas-shape', ok: true, detail: 'DOM html2canvas şekil doğrulandı' })
+        return { chartImageDataUrl: html2Png, chartSource: 'html2canvas', debug }
+      }
+      debug.push({
+        step: 'html2canvas-shape',
+        ok: false,
+        detail: shape.issues.join('; ') || 'Şekil doğrulaması başarısız',
+      })
+    }
+  }
+
   const dataPng = buildBallisticChartPngFromResults(results)
-  if (dataPng && (await chartPngHasLineContent(dataPng))) {
-    debug.push({ step: 'canvas-data', ok: true, detail: 'Veri tabanlı grafik doğrulandı' })
-    return { chartImageDataUrl: dataPng, chartSource: 'canvas-data', debug }
+  if (dataPng) {
+    const shape = await chartPngValidateShape(dataPng, results, 960, 320, { mode: 'strict' })
+    if (shape.ok) {
+      debug.push({ step: 'canvas-data-shape', ok: true, detail: 'Veri tabanlı grafik şekil doğrulandı' })
+      return { chartImageDataUrl: dataPng, chartSource: 'canvas-data', debug }
+    }
+    debug.push({
+      step: 'canvas-data-shape',
+      ok: false,
+      detail: shape.issues.join('; ') || 'Şekil doğrulaması başarısız',
+    })
   }
 
   if (domContainer) {
     const domPng = await chartContainerToPngDataUrl(domContainer, { debug })
     if (domPng && (await chartPngHasLineContent(domPng))) {
-      debug.push({ step: 'dom', ok: true, detail: 'DOM grafik doğrulandı' })
-      return { chartImageDataUrl: domPng, chartSource: 'dom', debug }
+      debug.push({ step: 'dom-svg-fallback', ok: true, detail: 'SVG DOM yedek (şekil doğrulanmadı)' })
+      return { chartImageDataUrl: domPng, chartSource: 'dom-svg', debug }
     }
-    debug.push({
-      step: 'dom-reject',
-      ok: false,
-      detail: 'DOM PNG eksen-only (gradyan stroke rasterize edilmedi)',
-    })
   }
 
-  if (dataPng) {
-    debug.push({ step: 'canvas-data-fallback', ok: true, detail: 'Doğrulama atlandı, veri PNG kullanıldı' })
+  if (dataPng && (await chartPngHasLineContent(dataPng))) {
+    debug.push({ step: 'canvas-data-fallback', ok: true, detail: 'Şekil doğrulaması atlandı, veri PNG kullanıldı' })
     return { chartImageDataUrl: dataPng, chartSource: 'canvas-data', debug }
   }
 
   return { chartImageDataUrl: null, chartSource: 'none', debug }
 }
+
+export { buildBallisticChartPngFromResults, chartPngValidateShape } from './ballisticChartImage.js'
 
 /**
  * DOM yakalama — Recharts SVG (gradyan stroke PDF'te genelde boş kalır; yedek amaçlı).
@@ -182,119 +257,6 @@ export async function chartContainerToPngDataUrl(container, options = {}) {
     })
     return null
   }
-}
-
-/**
- * DOM yakalama başarısız olursa motor sonuçlarından canvas grafik üretir.
- * @param {import('./ballisticsEngine.js').BallisticsPointResult[]} results
- * @param {number} [width]
- * @param {number} [height]
- * @returns {string | null}
- */
-export function buildBallisticChartPngFromResults(results, width = 960, height = 320) {
-  if (typeof document === 'undefined' || !results?.length) return null
-
-  const canvas = document.createElement('canvas')
-  canvas.width = width
-  canvas.height = height
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return null
-
-  const pad = { l: 52, r: 52, t: 28, b: 40 }
-  const plotW = width - pad.l - pad.r
-  const plotH = height - pad.t - pad.b
-
-  ctx.fillStyle = '#0a0a0a'
-  ctx.fillRect(0, 0, width, height)
-
-  const maxDist = Math.max(...results.map((r) => r.distance), 1)
-  const maxDrop = Math.max(...results.map((r) => Math.abs(r.dropCm)), 1)
-  const maxVel = Math.max(...results.map((r) => r.velocityRemaining))
-  const minVel = Math.min(...results.map((r) => r.velocityRemaining))
-  const velSpan = Math.max(1, maxVel - minVel)
-
-  const xAt = (d) => pad.l + (d / maxDist) * plotW
-  const yDrop = (drop) => pad.t + (Math.abs(drop) / maxDrop) * plotH
-  const yVel = (v) => pad.t + plotH - ((v - minVel) / velSpan) * plotH
-
-  ctx.strokeStyle = 'rgba(255,255,255,0.08)'
-  ctx.lineWidth = 1
-  for (let i = 0; i <= 4; i += 1) {
-    const gy = pad.t + (plotH / 4) * i
-    ctx.beginPath()
-    ctx.moveTo(pad.l, gy)
-    ctx.lineTo(pad.l + plotW, gy)
-    ctx.stroke()
-  }
-
-  const dropGradient = ctx.createLinearGradient(pad.l, 0, pad.l + plotW, 0)
-  dropGradient.addColorStop(0, '#22c55e')
-  dropGradient.addColorStop(0.5, '#eab308')
-  dropGradient.addColorStop(1, '#ef4444')
-
-  ctx.strokeStyle = dropGradient
-  ctx.lineWidth = 2.5
-  ctx.beginPath()
-  results.forEach((r, i) => {
-    const x = xAt(r.distance)
-    const y = yDrop(r.dropCm)
-    if (i === 0) ctx.moveTo(x, y)
-    else ctx.lineTo(x, y)
-  })
-  ctx.stroke()
-
-  ctx.strokeStyle = '#fbbf24'
-  ctx.lineWidth = 2
-  ctx.beginPath()
-  results.forEach((r, i) => {
-    const x = xAt(r.distance)
-    const y = yVel(r.velocityRemaining)
-    if (i === 0) ctx.moveTo(x, y)
-    else ctx.lineTo(x, y)
-  })
-  ctx.stroke()
-
-  ctx.fillStyle = 'rgba(148,163,184,0.85)'
-  ctx.font = '10px monospace'
-  ctx.textAlign = 'right'
-  for (let i = 0; i <= 4; i += 1) {
-    const frac = i / 4
-    const dropVal = Math.round(maxDrop * frac)
-    const y = pad.t + plotH - frac * plotH
-    ctx.fillText(String(dropVal), pad.l - 6, y + 3)
-  }
-
-  ctx.textAlign = 'left'
-  for (let i = 0; i <= 4; i += 1) {
-    const frac = i / 4
-    const velVal = Math.round(minVel + velSpan * (1 - frac))
-    const y = pad.t + frac * plotH
-    ctx.fillText(String(velVal), pad.l + plotW + 8, y + 3)
-  }
-
-  ctx.textAlign = 'center'
-  const tickDistances = [results[0].distance, results[Math.floor(results.length / 2)].distance, results[results.length - 1].distance]
-  tickDistances.forEach((d) => {
-    const x = xAt(d)
-    ctx.fillText(`${d}m`, x, height - 22)
-  })
-
-  ctx.textAlign = 'left'
-  ctx.fillStyle = 'rgba(34,197,94,0.9)'
-  ctx.fillText('Drop (cm)', pad.l, height - 8)
-  ctx.fillStyle = 'rgba(251,191,36,0.9)'
-  ctx.fillText('Velocity (fps)', pad.l + plotW - 110, height - 8)
-
-  ctx.strokeStyle = 'rgba(148,163,184,0.35)'
-  ctx.lineWidth = 1
-  ctx.beginPath()
-  ctx.moveTo(pad.l, pad.t)
-  ctx.lineTo(pad.l, pad.t + plotH)
-  ctx.lineTo(pad.l + plotW, pad.t + plotH)
-  ctx.stroke()
-
-  const png = canvas.toDataURL('image/png')
-  return png.startsWith('data:image/png') && png.length > 800 ? png : null
 }
 
 /**
@@ -446,8 +408,18 @@ export async function exportBallisticReportPdf(output, meta = {}) {
 
   let chartImageDataUrl = meta.chartImageDataUrl ?? buildBallisticChartPngFromResults(output.results)
   let chartSource = chartImageDataUrl ? 'canvas-data' : 'none'
-  if (meta.chartImageDataUrl && (await chartPngHasLineContent(meta.chartImageDataUrl))) {
-    chartSource = meta.chartSource ?? 'dom'
+  if (meta.chartImageDataUrl) {
+    const shape = await chartPngValidateShape(meta.chartImageDataUrl, output.results, 960, 320, {
+      mode: meta.chartSource === 'html2canvas' ? 'dom' : 'strict',
+    })
+    if (shape.ok) {
+      chartSource = meta.chartSource ?? 'dom'
+    } else if (await chartPngHasLineContent(meta.chartImageDataUrl)) {
+      chartSource = meta.chartSource ?? 'dom'
+    } else {
+      chartImageDataUrl = buildBallisticChartPngFromResults(output.results)
+      chartSource = chartImageDataUrl ? 'canvas-data' : 'none'
+    }
   } else if (!chartImageDataUrl) {
     chartSource = 'none'
   }
