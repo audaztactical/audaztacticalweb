@@ -4,6 +4,7 @@ import HudFluffDecor from '../components/dashboard/HudFluffDecor'
 import TacticalPanel from '../components/ui/TacticalPanel'
 import BallisticFormPanel from '../components/ballistics/BallisticFormPanel'
 import BallisticChartPanel from '../components/ballistics/BallisticChartPanel'
+import BallisticQuickReferencePanel from '../components/ballistics/BallisticQuickReferencePanel'
 import BallisticTrajectoryHud from '../components/ballistics/BallisticTrajectoryHud'
 import InfoTooltip from '../components/shared/InfoTooltip'
 import { useAudazData } from '../hooks/useAudazData'
@@ -61,7 +62,6 @@ export default function Balistik() {
   }))
   const [env, setEnv] = useState(DEFAULT_ENV)
   const [selectedProfileId, setSelectedProfileId] = useState('')
-  const [advancedOpen, setAdvancedOpen] = useState(false)
   const [rangeMin, setRangeMin] = useState(100)
   const [rangeMax, setRangeMax] = useState(1500)
   const [rangeStep, setRangeStep] = useState(100)
@@ -235,8 +235,6 @@ export default function Balistik() {
           <BallisticFormPanel
             form={form}
             env={env}
-            advancedOpen={advancedOpen}
-            onAdvancedOpen={setAdvancedOpen}
             onFormChange={onFormChange}
             onEnvChange={onEnvChange}
             rangeMin={rangeMin}
@@ -278,6 +276,14 @@ export default function Balistik() {
                   </div>
                 ))}
               </div>
+
+              <BallisticQuickReferencePanel
+                results={output.results}
+                activeDistance={activeDistance}
+                clickUnitSystem={clickUnitSystem}
+                clickValueMoa={form.optic?.clickValueMoa}
+                clickValueMrad={form.optic?.clickValueMrad}
+              />
 
               <div
                 className="flex shrink-0 gap-1 rounded-lg border border-white/10 bg-black/50 p-1"

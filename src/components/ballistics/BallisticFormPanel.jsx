@@ -1,4 +1,6 @@
+import { useEffect, useMemo, useState } from 'react'
 import {
+  ChevronDown,
   CircleDot,
   Crosshair,
   Focus,
@@ -16,15 +18,50 @@ const labelClass =
 const inputClass =
   'w-full rounded border border-white/15 bg-black/40 px-2 py-1.5 font-mono-technical text-xs text-slate-100 outline-none focus:border-emerald-500/50'
 
+/** @typedef {'profile' | 'ammo' | 'weapon' | 'optic' | 'env' | 'advanced' | 'range'} FormSectionId */
+
+const DEFAULT_OPEN = /** @type {Record<FormSectionId, boolean>} */ ({
+  profile: true,
+  ammo: false,
+  weapon: false,
+  optic: false,
+  env: false,
+  advanced: false,
+  range: false,
+})
+
 /**
- * @param {{ icon?: import('lucide-react').LucideIcon, children: import('react').ReactNode }} props
+ * @param {{
+ *   id: FormSectionId
+ *   title: string
+ *   icon: import('lucide-react').LucideIcon
+ *   open: boolean
+ *   onToggle: (id: FormSectionId) => void
+ *   termKey?: string
+ *   children: import('react').ReactNode
+ * }} props
  */
-function SectionHeading({ icon: Icon, children }) {
+function FormAccordionSection({ id, title, icon: Icon, open, onToggle, termKey, children }) {
   return (
-    <h3 className="flex items-center gap-2 border-l-2 border-amber-500/80 py-0.5 pl-2.5 font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] text-amber-400/95">
-      {Icon ? <Icon className="size-3.5 shrink-0 text-amber-500/75" strokeWidth={2} aria-hidden /> : null}
-      <span>{children}</span>
-    </h3>
+    <section className="overflow-hidden rounded border border-white/10 bg-black/30">
+      <button
+        type="button"
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-2 border-l-2 border-amber-500/80 px-3 py-2.5 pl-2.5 text-left font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] text-amber-400/95"
+        onClick={() => onToggle(id)}
+      >
+        <span className="flex min-w-0 items-center gap-2">
+          <Icon className="size-3.5 shrink-0 text-amber-500/75" strokeWidth={2} aria-hidden />
+          <span className="truncate">{title}</span>
+          {termKey ? <InfoTooltip termKey={termKey} /> : null}
+        </span>
+        <ChevronDown
+          className={`size-4 shrink-0 text-app-text/45 transition-transform ${open ? 'rotate-180' : ''}`}
+          aria-hidden
+        />
+      </button>
+      {open ? <div className="space-y-2 border-t border-white/10 px-3 py-3">{children}</div> : null}
+    </section>
   )
 }
 
@@ -44,11 +81,74 @@ function Field({ label, termKey, children }) {
 }
 
 /**
+ * @param {Record<string, unknown>} ammo
+ */
+function sectionAmmoHasData(ammo) {
+  return (
+    Number(ammo.bulletWeight) > 0 ||
+    Number(ammo.bulletDiameter) > 0 ||
+    Number(ammo.muzzleVelocity) > 0 ||
+    Number(ammo.ballisticCoefficient) > 0
+  )
+}
+
+/**
+ * @param {Record<string, unknown>} weapon
+ */
+function sectionWeaponHasData(weapon) {
+  return (
+    weapon.barrelLength != null ||
+    Boolean(weapon.twistRate) ||
+    (Number(weapon.sightHeight) > 0 && Number(weapon.sightHeight) !== 5) ||
+    (Number(weapon.zeroDistance) > 0 && Number(weapon.zeroDistance) !== 100)
+  )
+}
+
+/**
+ * @param {Record<string, unknown>} optic
+ */
+function sectionOpticHasData(optic) {
+  return (
+    Boolean(parseClickUnitSystem(optic.clickUnitSystem)) ||
+    Boolean(optic.magnification) ||
+    Boolean(optic.reticleType) ||
+    Number(optic.clickValueMoa) > 0 ||
+    Number(optic.clickValueMrad) > 0 ||
+    Boolean(optic.ffpSfp)
+  )
+}
+
+/**
+ * @param {Record<string, unknown>} env
+ */
+function sectionEnvHasData(env) {
+  return (
+    Number(env.temperatureC) !== 15 ||
+    Number(env.pressureHpa) !== 1013.25 ||
+    Number(env.humidityPercent) !== 0 ||
+    Number(env.altitudeM) !== 0 ||
+    Number(env.windSpeed) !== 0 ||
+    env.pressureType !== 'station' ||
+    env.windSpeedUnit !== 'mph' ||
+    Number(env.windAngleDegrees) !== 90
+  )
+}
+
+/**
+ * @param {Record<string, unknown>} advanced
+ */
+function sectionAdvancedHasData(advanced) {
+  return (
+    Boolean(advanced.coriolisEnabled) ||
+    advanced.latitude != null ||
+    advanced.azimuthDegrees != null
+  )
+}
+
+/**
  * @param {{
  *   form: Record<string, unknown>
  *   env: Record<string, unknown>
- *   advancedOpen: boolean
- *   onAdvancedOpen: (v: boolean) => void
  *   onFormChange: (patch: Record<string, unknown>) => void
  *   onEnvChange: (patch: Record<string, unknown>) => void
  *   rangeMin: number
@@ -71,8 +171,6 @@ function Field({ label, termKey, children }) {
 export default function BallisticFormPanel({
   form,
   env,
-  advancedOpen,
-  onAdvancedOpen,
   onFormChange,
   onEnvChange,
   rangeMin,
@@ -96,6 +194,36 @@ export default function BallisticFormPanel({
   const ammo = /** @type {Record<string, unknown>} */ (form.ammo ?? {})
   const advanced = /** @type {Record<string, unknown>} */ (form.advanced ?? {})
 
+  const [openSections, setOpenSections] = useState(DEFAULT_OPEN)
+
+  const autoExpandFlags = useMemo(
+    () => ({
+      profile: Boolean(selectedProfileId || form.linkedWeaponId || form.linkedAmmoId),
+      ammo: sectionAmmoHasData(ammo),
+      weapon: sectionWeaponHasData(weapon),
+      optic: sectionOpticHasData(optic),
+      env: sectionEnvHasData(env),
+      advanced: sectionAdvancedHasData(advanced),
+      range: rangeMin !== 100 || rangeMax !== 1500 || rangeStep !== 100,
+    }),
+    [selectedProfileId, form.linkedWeaponId, form.linkedAmmoId, ammo, weapon, optic, env, advanced, rangeMin, rangeMax, rangeStep],
+  )
+
+  useEffect(() => {
+    setOpenSections((prev) => {
+      /** @type {Record<FormSectionId, boolean>} */
+      const next = { ...prev }
+      for (const [id, shouldOpen] of Object.entries(autoExpandFlags)) {
+        if (shouldOpen) next[/** @type {FormSectionId} */ (id)] = true
+      }
+      return next
+    })
+  }, [autoExpandFlags])
+
+  const toggleSection = (id) => {
+    setOpenSections((prev) => ({ ...prev, [id]: !prev[id] }))
+  }
+
   const patchWeapon = (p) => onFormChange({ weapon: { ...weapon, ...p } })
   const patchOptic = (p) => onFormChange({ optic: { ...optic, ...p } })
   const patchAmmo = (p) => onFormChange({ ammo: { ...ammo, ...p } })
@@ -118,9 +246,14 @@ export default function BallisticFormPanel({
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <section className="space-y-2">
-        <SectionHeading icon={User}>Profil</SectionHeading>
+    <div className="flex flex-col gap-3">
+      <FormAccordionSection
+        id="profile"
+        title="Profil"
+        icon={User}
+        open={openSections.profile}
+        onToggle={toggleSection}
+      >
         <select
           className={inputClass}
           value={selectedProfileId}
@@ -151,10 +284,15 @@ export default function BallisticFormPanel({
             onChange={(e) => onFormChange({ profileName: e.target.value })}
           />
         </Field>
-      </section>
+      </FormAccordionSection>
 
-      <section className="space-y-2">
-        <SectionHeading icon={CircleDot}>Mermi</SectionHeading>
+      <FormAccordionSection
+        id="ammo"
+        title="Mermi"
+        icon={CircleDot}
+        open={openSections.ammo}
+        onToggle={toggleSection}
+      >
         <div className="grid grid-cols-2 gap-2">
           <Field label="Ağırlık (gr)">
             <input
@@ -205,10 +343,15 @@ export default function BallisticFormPanel({
             ))}
           </div>
         </Field>
-      </section>
+      </FormAccordionSection>
 
-      <section className="space-y-2">
-        <SectionHeading icon={Crosshair}>Silah</SectionHeading>
+      <FormAccordionSection
+        id="weapon"
+        title="Silah"
+        icon={Crosshair}
+        open={openSections.weapon}
+        onToggle={toggleSection}
+      >
         <div className="grid grid-cols-2 gap-2">
           <Field label="Sight height (cm)" termKey="sightHeight">
             <input
@@ -245,10 +388,15 @@ export default function BallisticFormPanel({
             />
           </Field>
         </div>
-      </section>
+      </FormAccordionSection>
 
-      <section className="space-y-2">
-        <SectionHeading icon={Focus}>Optik</SectionHeading>
+      <FormAccordionSection
+        id="optic"
+        title="Optik"
+        icon={Focus}
+        open={openSections.optic}
+        onToggle={toggleSection}
+      >
         <div className="grid grid-cols-2 gap-2">
           <Field label="Büyütme">
             <input
@@ -308,12 +456,16 @@ export default function BallisticFormPanel({
             <option value="SFP">SFP</option>
           </select>
         </Field>
-      </section>
+      </FormAccordionSection>
 
-      <section className="space-y-2">
-        <SectionHeading icon={Wind}>
-          Çevre <InfoTooltip termKey="airDensity" />
-        </SectionHeading>
+      <FormAccordionSection
+        id="env"
+        title="Çevre"
+        icon={Wind}
+        open={openSections.env}
+        onToggle={toggleSection}
+        termKey="airDensity"
+      >
         <div className="grid grid-cols-2 gap-2">
           <Field label="Sıcaklık °C">
             <input
@@ -396,59 +548,55 @@ export default function BallisticFormPanel({
             />
           </Field>
         </div>
-      </section>
+      </FormAccordionSection>
 
-      <section className="overflow-hidden rounded border border-white/10 bg-black/30">
-        <button
-          type="button"
-          className="flex w-full items-center justify-between gap-2 border-l-2 border-amber-500/80 px-3 py-2.5 pl-2.5 font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] text-amber-400/95"
-          onClick={() => onAdvancedOpen(!advancedOpen)}
-        >
-          <span className="flex items-center gap-2">
-            <SlidersHorizontal className="size-3.5 shrink-0 text-amber-500/75" strokeWidth={2} aria-hidden />
-            Gelişmiş
-            <InfoTooltip termKey="coriolis" />
-          </span>
-          <span className="text-app-text/55">{advancedOpen ? '−' : '+'}</span>
-        </button>
-        {advancedOpen ? (
-          <div className="space-y-2 border-t border-white/10 px-3 py-2">
-            <label className="flex items-center gap-2 font-mono-technical text-xs text-slate-300">
-              <input
-                type="checkbox"
-                checked={Boolean(advanced.coriolisEnabled)}
-                onChange={(e) => patchAdvanced({ coriolisEnabled: e.target.checked })}
-              />
-              Coriolis etkin
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              <Field label="Enlem" termKey="coriolis">
-                <input
-                  type="number"
-                  className={inputClass}
-                  value={advanced.latitude ?? ''}
-                  onChange={(e) =>
-                    patchAdvanced({ latitude: e.target.value ? Number(e.target.value) : null })
-                  }
-                />
-              </Field>
-              <Field label="Azimut °" termKey="coriolis">
-                <input
-                  type="number"
-                  className={inputClass}
-                  value={advanced.azimuthDegrees ?? ''}
-                  onChange={(e) =>
-                    patchAdvanced({ azimuthDegrees: e.target.value ? Number(e.target.value) : null })
-                  }
-                />
-              </Field>
-            </div>
-          </div>
-        ) : null}
-      </section>
+      <FormAccordionSection
+        id="advanced"
+        title="Gelişmiş"
+        icon={SlidersHorizontal}
+        open={openSections.advanced}
+        onToggle={toggleSection}
+        termKey="coriolis"
+      >
+        <label className="flex items-center gap-2 font-mono-technical text-xs text-slate-300">
+          <input
+            type="checkbox"
+            checked={Boolean(advanced.coriolisEnabled)}
+            onChange={(e) => patchAdvanced({ coriolisEnabled: e.target.checked })}
+          />
+          Coriolis etkin
+        </label>
+        <div className="grid grid-cols-2 gap-2">
+          <Field label="Enlem" termKey="coriolis">
+            <input
+              type="number"
+              className={inputClass}
+              value={advanced.latitude ?? ''}
+              onChange={(e) =>
+                patchAdvanced({ latitude: e.target.value ? Number(e.target.value) : null })
+              }
+            />
+          </Field>
+          <Field label="Azimut °" termKey="coriolis">
+            <input
+              type="number"
+              className={inputClass}
+              value={advanced.azimuthDegrees ?? ''}
+              onChange={(e) =>
+                patchAdvanced({ azimuthDegrees: e.target.value ? Number(e.target.value) : null })
+              }
+            />
+          </Field>
+        </div>
+      </FormAccordionSection>
 
-      <section className="space-y-2">
-        <SectionHeading icon={Ruler}>Hedef aralığı</SectionHeading>
+      <FormAccordionSection
+        id="range"
+        title="Hedef aralığı"
+        icon={Ruler}
+        open={openSections.range}
+        onToggle={toggleSection}
+      >
         <div className="grid grid-cols-3 gap-2">
           <Field label="Min m">
             <input
@@ -478,7 +626,7 @@ export default function BallisticFormPanel({
         <button type="button" className={`${btnAccent} w-full py-2.5`} onClick={onCalculate} disabled={calculating}>
           {calculating ? 'Hesaplanıyor…' : 'Hesapla'}
         </button>
-      </section>
+      </FormAccordionSection>
     </div>
   )
 }
