@@ -1141,6 +1141,17 @@ service cloud.firestore {
     }
 
     /**
+     * app_settings/auth — küresel kimlik doğrulama ayarları (route koruması client-side okur).
+     */
+    match /app_settings/auth {
+      allow read: if true;
+      allow create, update: if isContentAdmin()
+        && request.resource.data.keys().hasOnly(['emailVerificationRequired', 'updatedAt', 'updatedBy'])
+        && request.resource.data.emailVerificationRequired is bool;
+      allow delete: if false;
+    }
+
+    /**
      * suspensionAppeals — askıdaki kullanıcı itirazları (yalnızca create açık).
      */
     match /suspensionAppeals/{appealId} {

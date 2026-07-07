@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useAuthAppSettings } from '../../hooks/useAuthAppSettings'
 import { userRequiresEmailVerification } from '../../lib/authEmailVerification'
 
 function RouteLoader() {
@@ -19,6 +20,7 @@ function RouteLoader() {
 
 export default function ProtectedRoute() {
   const { user, userData, loading, profileLoading, googleRedirectResolving } = useAuth()
+  const { emailVerificationRequired, ready: authSettingsReady } = useAuthAppSettings()
   const location = useLocation()
 
   if (loading || googleRedirectResolving || (user && profileLoading && !userData)) {
@@ -30,7 +32,9 @@ export default function ProtectedRoute() {
   }
 
   const accountStatus = userData?.accountStatus ?? 'active'
-  const needsVerify = userRequiresEmailVerification(user, accountStatus)
+  const enforceEmailVerification = !authSettingsReady || emailVerificationRequired !== false
+  const needsVerify =
+    enforceEmailVerification && userRequiresEmailVerification(user, accountStatus)
   const onVerifyPage = location.pathname === '/verify-email'
 
   if (needsVerify && !onVerifyPage) {

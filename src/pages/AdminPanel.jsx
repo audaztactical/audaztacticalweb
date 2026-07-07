@@ -36,6 +36,7 @@ import IntelModerationTable from '../components/admin/IntelModerationTable'
 import FeedbackModerationTable from '../components/admin/FeedbackModerationTable'
 import ForumModerationTable from '../components/admin/ForumModerationTable'
 import AccessCodesPanel from '../components/admin/AccessCodesPanel'
+import AuthSettingsPanel from '../components/admin/AuthSettingsPanel'
 import UsersManagementTable from '../components/admin/UsersManagementTable'
 import YoutubeChannelsPanel from '../components/admin/YoutubeChannelsPanel'
 import {
@@ -513,6 +514,14 @@ export default function AdminPanel() {
 
       {activeTab === 'kullanicilar' ? (
         <div className="space-y-8">
+        <AdminSection
+          title="Kimlik Doğrulama Ayarları"
+          subtitle="Route koruması — e-posta doğrulama zorunluluğu (test sürecinde geçici kapatılabilir)."
+          icon={Shield}
+        >
+          <AuthSettingsPanel onFeedback={showMsg} />
+        </AdminSection>
+
         <AdminSection
           title="Kullanıcı yönetimi"
           subtitle="Operatör hesapları — askıya alma, üyelik düşürme ve kalıcı silme."
