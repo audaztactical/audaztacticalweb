@@ -3,7 +3,6 @@ import { NavLink, useLocation } from 'react-router-dom'
 import {
   BarChart3,
   BookOpen,
-  ChevronDown,
   CreditCard,
   Crosshair,
   HeartPulse,
@@ -26,9 +25,13 @@ import { useAuth } from '../../context/AuthContext'
 import { useFeedbackPanelOptional } from '../../context/FeedbackPanelContext'
 import { useMuhabereNotify } from '../../context/MuhabereNotifyContext'
 import { useSidebarGroupState } from '../../hooks/useSidebarGroupState'
+import { getNavGroupTheme, NAV_GROUP_THEMES } from '../../lib/sidebarGroupColors'
 import { isSidebarGroupOpen } from '../../lib/sidebarGroupState'
 import { auth } from '../../lib/firebase'
 import { scheduleScrollAppToTop } from '../../lib/scrollAppToTop'
+import { SidebarGroupAccordion } from './SidebarNavParts'
+
+export { NAV_GROUP_THEMES } from '../../lib/sidebarGroupColors'
 
 /**
  * @typedef {Object} NavItem
@@ -45,40 +48,6 @@ import { scheduleScrollAppToTop } from '../../lib/scrollAppToTop'
  * @property {string} title
  * @property {NavItem[]} items
  */
-
-/**
- * @typedef {Object} NavGroupTheme
- * @property {string} titleClass
- * @property {string} iconIdleClass
- */
-
-/** @type {Record<string, NavGroupTheme>} */
-export const NAV_GROUP_THEMES = {
-  personal: {
-    titleClass: 'text-emerald-500/75 border-emerald-500/35',
-    iconIdleClass: 'text-emerald-500/45 group-hover:text-emerald-400/75',
-  },
-  'audaz-network': {
-    titleClass: 'text-violet-400/75 border-violet-500/35',
-    iconIdleClass: 'text-violet-400/45 group-hover:text-violet-300/75',
-  },
-  operations: {
-    titleClass: 'text-amber-500/80 border-amber-500/35',
-    iconIdleClass: 'text-amber-500/45 group-hover:text-amber-400/75',
-  },
-  command: {
-    titleClass: 'text-cyan-400/75 border-cyan-500/35',
-    iconIdleClass: 'text-cyan-400/45 group-hover:text-cyan-300/75',
-  },
-  'usage-guide': {
-    titleClass: 'text-amber-400/85 border-amber-400/40',
-    iconIdleClass: 'text-amber-400/50 group-hover:text-amber-300/80',
-  },
-  system: {
-    titleClass: 'text-rose-400/75 border-rose-500/35',
-    iconIdleClass: 'text-rose-400/45 group-hover:text-rose-300/75',
-  },
-}
 
 /** @type {NavGroup[]} */
 export const NAV_GROUPS = [
@@ -128,9 +97,6 @@ const instructorNavItem = /** @type {NavItem} */ ({
   label: 'Eğitmen Kontrol Paneli',
   icon: KeyRound,
 })
-
-const groupTitleBaseClass =
-  'border-b px-3 pb-2 pt-5 font-mono text-[9px] font-bold uppercase tracking-[0.22em] first:pt-2'
 
 const linkBaseClass =
   'group relative flex items-center gap-3 overflow-hidden rounded-lg px-3 py-3 text-sm font-medium transition-colors duration-200'
@@ -236,7 +202,7 @@ export function SidebarLink({
   )
 }
 
-function SidebarActionButton({
+export function SidebarActionButton({
   label,
   icon,
   onClick,
@@ -273,54 +239,6 @@ function SidebarActionButton({
         </span>
       ) : null}
     </button>
-  )
-}
-
-/**
- * @param {{
- *   groupId: import('../../lib/sidebarGroupState.js').SidebarNavGroupId
- *   title: string
- *   theme: NavGroupTheme
- *   open: boolean
- *   onToggle: () => void
- *   children: import('react').ReactNode
- * }} props
- */
-function SidebarGroupAccordion({ groupId, title, theme, open, onToggle, children }) {
-  return (
-    <section aria-labelledby={`nav-group-${groupId}`}>
-      <button
-        type="button"
-        id={`nav-group-${groupId}`}
-        aria-expanded={open}
-        aria-controls={`nav-group-panel-${groupId}`}
-        onClick={onToggle}
-        className={[
-          groupTitleBaseClass,
-          theme.titleClass,
-          'sidebar-nav-group-heading flex w-full items-center justify-between gap-2 text-left',
-        ].join(' ')}
-      >
-        <span className="min-w-0 truncate">{title}</span>
-        <ChevronDown
-          className={[
-            'size-3.5 shrink-0 opacity-70 transition-transform duration-200',
-            open ? 'rotate-0' : '-rotate-90',
-          ].join(' ')}
-          strokeWidth={2}
-          aria-hidden
-        />
-      </button>
-      <div
-        id={`nav-group-panel-${groupId}`}
-        className={[
-          'sidebar-nav-group-panel',
-          open ? 'sidebar-nav-group-panel-open' : '',
-        ].join(' ')}
-      >
-        <div className="sidebar-nav-group-panel-inner">{children}</div>
-      </div>
-    </section>
   )
 }
 
@@ -366,7 +284,7 @@ export default function Sidebar({
         aria-label="Modüller"
       >
         {groups.map((group) => {
-          const theme = NAV_GROUP_THEMES[group.id] ?? NAV_GROUP_THEMES.personal
+          const theme = getNavGroupTheme(group.id)
           const groupOpen = isSidebarGroupOpen(groupState, group.id)
           const itemList = (
             <ul className="flex flex-col gap-1 pb-2 pt-1">

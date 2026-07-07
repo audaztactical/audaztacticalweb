@@ -1,14 +1,24 @@
-import { NavLink } from 'react-router-dom'
-import { KeyRound, LogOut, MessageSquarePlus, Settings, ShieldAlert, X } from 'lucide-react'
+import { useMemo } from 'react'
+import { CreditCard, KeyRound, LogOut, MessageSquarePlus, Settings, ShieldAlert, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useFeedbackPanelOptional } from '../context/FeedbackPanelContext'
 import { useMuhabereNotify } from '../context/MuhabereNotifyContext'
+import { useSidebarGroupState } from '../hooks/useSidebarGroupState'
+import { getNavGroupTheme, NAV_GROUP_THEMES } from '../lib/sidebarGroupColors'
+import { isSidebarGroupOpen } from '../lib/sidebarGroupState'
 import { auth } from '../lib/firebase'
 import { scheduleScrollAppToTop } from '../lib/scrollAppToTop'
-import { NAV_GROUPS, SidebarLink } from '../components/navigation/Sidebar'
+import { NAV_GROUPS, SidebarActionButton, SidebarLink } from '../components/navigation/Sidebar'
+import { SidebarGroupAccordion } from '../components/navigation/SidebarNavParts'
 import { BOTTOM_TAB_ITEMS } from './BottomTabBar'
 
 const TAB_ROUTES = new Set(BOTTOM_TAB_ITEMS.map((t) => t.to))
+
+const instructorNavItem = {
+  to: '/egitmen-komuta',
+  label: 'Eğitmen Kontrol Paneli',
+  icon: KeyRound,
+}
 
 /**
  * @param {{
@@ -29,15 +39,40 @@ export default function MobileNavMenu({
   const { isInstructor, role, showAdminPanel, isAdmin } = useAuth()
   const { sidebarMuhabereBadgeCount } = useMuhabereNotify()
   const feedbackPanel = useFeedbackPanelOptional()
+  const { groupState, toggleGroup } = useSidebarGroupState()
   const showAdminLink = showAdminPanel || isAdmin
-  const isInstructorUser = role === 'instructor' || isInstructor
+  const systemTheme = NAV_GROUP_THEMES.system
+
+  const extraGroups = useMemo(() => {
+    const isInstructorUser = role === 'instructor' || isInstructor
+    const next = NAV_GROUPS.map((g) => ({
+      ...g,
+      items: g.items.filter((item) => !TAB_ROUTES.has(item.to)),
+    })).map((g) => ({ ...g, items: [...g.items] }))
+
+    if (isInstructorUser) {
+      let command = next.find((g) => g.id === 'command')
+      if (!command) {
+        const commandTemplate = NAV_GROUPS.find((g) => g.id === 'command')
+        if (commandTemplate) {
+          command = { ...commandTemplate, items: [] }
+          next.push(command)
+        }
+      }
+      if (command && !command.items.some((item) => item.to === instructorNavItem.to)) {
+        command.items.push(instructorNavItem)
+      }
+    }
+
+    return next.filter((g) => g.items.length > 0)
+  }, [role, isInstructor])
 
   if (!open) return null
 
-  const extraGroups = NAV_GROUPS.map((g) => ({
-    ...g,
-    items: g.items.filter((item) => !TAB_ROUTES.has(item.to)),
-  })).filter((g) => g.items.length > 0)
+  const handleNavigate = () => {
+    scheduleScrollAppToTop()
+    onClose()
+  }
 
   return (
     <>
@@ -66,110 +101,104 @@ export default function MobileNavMenu({
         </div>
 
         <nav className="flex-1 overflow-y-auto px-3 py-3">
-          {extraGroups.map((group) => (
-            <section key={group.id} className="mb-4">
-              <h2 className="px-2 pb-2 font-mono text-[9px] font-bold uppercase tracking-[0.22em] text-zinc-500">
-                {group.title}
-              </h2>
-              <ul className="flex flex-col gap-1">
-                {group.items.map((item) => (
-                  <li key={item.to}>
-                    <SidebarLink
-                      to={item.to}
-                      end={item.end}
-                      label={item.label}
-                      icon={item.icon}
-                      state={item.state}
-                      onNavigate={onClose}
-                      badgeCount={item.to === '/mesajlar' ? sidebarMuhabereBadgeCount : 0}
-                    />
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
+          {extraGroups.map((group) => {
+            const theme = getNavGroupTheme(group.id)
+            const groupOpen = isSidebarGroupOpen(groupState, group.id)
 
-          {isInstructorUser ? (
-            <section className="mb-4">
-              <h2 className="px-2 pb-2 font-mono text-[9px] font-bold uppercase tracking-[0.22em] text-zinc-500">
-                [ KOMUTA ]
-              </h2>
-              <SidebarLink
-                to="/egitmen-komuta"
-                label="Eğitmen Kontrol Paneli"
-                icon={KeyRound}
-                onNavigate={onClose}
-              />
-            </section>
-          ) : null}
+            return (
+              <SidebarGroupAccordion
+                key={group.id}
+                groupId={group.id}
+                title={group.title}
+                theme={theme}
+                open={groupOpen}
+                onToggle={() => toggleGroup(group.id)}
+              >
+                <ul className="flex flex-col gap-1 pb-2 pt-1">
+                  {group.items.map((item) => (
+                    <li key={item.to}>
+                      <SidebarLink
+                        to={item.to}
+                        end={item.end}
+                        label={item.label}
+                        icon={item.icon}
+                        state={item.state}
+                        onNavigate={handleNavigate}
+                        iconIdleClass={theme.iconIdleClass}
+                        badgeCount={item.to === '/mesajlar' ? sidebarMuhabereBadgeCount : 0}
+                        blinkIcon={item.to === '/mesajlar' && sidebarMuhabereBadgeCount > 0}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </SidebarGroupAccordion>
+            )
+          })}
         </nav>
 
         <div className="border-t border-zinc-800/80 px-3 py-4">
-          <ul className="flex flex-col gap-1">
-            {showAdminLink ? (
+          <SidebarGroupAccordion
+            groupId="system"
+            title="[ SİSTEM ]"
+            theme={systemTheme}
+            open={isSidebarGroupOpen(groupState, 'system')}
+            onToggle={() => toggleGroup('system')}
+          >
+            <ul className="flex flex-col gap-1 pb-1 pt-1">
+              {showAdminLink ? (
+                <li>
+                  <SidebarLink
+                    to="/admin"
+                    label="Admin Paneli"
+                    icon={ShieldAlert}
+                    onNavigate={handleNavigate}
+                    iconIdleClass={systemTheme.iconIdleClass}
+                  />
+                </li>
+              ) : null}
               <li>
-                <NavLink
-                  to="/admin"
+                <SidebarActionButton
+                  label="Şikayet & Öneri"
+                  icon={MessageSquarePlus}
+                  iconIdleClass="text-zinc-500 transition-colors group-hover:text-lime-400"
                   onClick={() => {
-                    scheduleScrollAppToTop()
-                    onClose()
+                    feedbackPanel?.openPanel()
+                    handleNavigate()
                   }}
-                  className={({ isActive }) =>
-                    [
-                      'flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition',
-                      isActive ? 'bg-zinc-800/60 text-lime-400' : 'text-zinc-400 hover:bg-zinc-800/40',
-                    ].join(' ')
-                  }
-                >
-                  <ShieldAlert className="size-5 shrink-0" strokeWidth={1.75} aria-hidden />
-                  <span className="font-mono text-[12px]">Admin Paneli</span>
-                </NavLink>
+                />
               </li>
-            ) : null}
-            <li>
-              <button
-                type="button"
-                onClick={() => {
-                  feedbackPanel?.openPanel()
-                  scheduleScrollAppToTop()
-                  onClose()
-                }}
-                className="flex min-h-[44px] w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-zinc-400 transition hover:bg-zinc-800/40 hover:text-zinc-200"
-              >
-                <MessageSquarePlus className="size-5 shrink-0" strokeWidth={1.75} aria-hidden />
-                <span className="font-mono text-[12px]">Şikayet & Öneri</span>
-              </button>
-            </li>
-            <li>
-              <NavLink
-                to="/ayarlar"
-                onClick={() => {
-                  scheduleScrollAppToTop()
-                  onClose()
-                }}
-                className={({ isActive }) =>
-                  [
-                    'flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition',
-                    isActive ? 'bg-zinc-800/60 text-lime-400' : 'text-zinc-400 hover:bg-zinc-800/40',
-                  ].join(' ')
-                }
-              >
-                <Settings className="size-5 shrink-0" strokeWidth={1.75} aria-hidden />
-                <span className="font-mono text-[12px]">Ayarlar</span>
-              </NavLink>
-            </li>
-            <li>
-              <button
-                type="button"
-                disabled={!auth || signingOut}
-                onClick={onSignOut}
-                className="flex min-h-[44px] w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-zinc-400 transition hover:bg-zinc-800/40 hover:text-red-400/90 disabled:opacity-50"
-              >
-                <LogOut className="size-5 shrink-0" strokeWidth={1.75} aria-hidden />
-                <span className="font-mono text-[12px]">Çıkış</span>
-              </button>
-            </li>
-          </ul>
+              {showAdminLink ? (
+                <li>
+                  <SidebarLink
+                    to="/fiyatlandirma"
+                    label="Fiyatlandırma"
+                    icon={CreditCard}
+                    onNavigate={handleNavigate}
+                    iconIdleClass={systemTheme.iconIdleClass}
+                  />
+                </li>
+              ) : null}
+              <li>
+                <SidebarLink
+                  to="/ayarlar"
+                  label="Ayarlar"
+                  icon={Settings}
+                  onNavigate={handleNavigate}
+                  iconIdleClass={systemTheme.iconIdleClass}
+                />
+              </li>
+              <li>
+                <SidebarActionButton
+                  label="Çıkış"
+                  icon={LogOut}
+                  disabled={!auth || signingOut}
+                  iconIdleClass="text-zinc-500 transition-colors group-hover:text-red-400/80"
+                  idleClass="sidebar-nav-link-idle text-zinc-400 hover:bg-zinc-800/40 hover:text-red-400/90"
+                  onClick={() => onSignOut?.()}
+                />
+              </li>
+            </ul>
+          </SidebarGroupAccordion>
           <p className="mt-3 truncate px-2 font-mono text-[10px] text-zinc-600" title={userEmail}>
             {userEmail || 'Oturum yok'}
           </p>
