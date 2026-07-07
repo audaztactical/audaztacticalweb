@@ -181,11 +181,11 @@ export default function InfoTooltip({ termKey, className = '' }) {
       : null
 
   return (
-    <span className={`inline-flex align-middle ${className}`.trim()}>
+    <span className={`inline-flex shrink-0 align-middle leading-none ${className}`.trim()}>
       <button
         ref={triggerRef}
         type="button"
-        className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-emerald-500/45 bg-black/80 text-emerald-400/90 transition hover:border-emerald-400/70 hover:bg-emerald-500/10 hover:text-emerald-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-emerald-500/60 sm:h-[18px] sm:w-[18px]"
+        className="group relative inline-flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center -m-3.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-emerald-500/60 sm:h-8 sm:w-8 sm:-m-1.5"
         aria-label={`${term.termTr} hakkında bilgi`}
         aria-expanded={open}
         aria-controls={popoverId}
@@ -200,7 +200,16 @@ export default function InfoTooltip({ termKey, className = '' }) {
           if (openViaHover) close()
         }}
       >
-        <Info className="h-2.5 w-2.5 sm:h-3 sm:w-3" strokeWidth={2.25} aria-hidden />
+        <span
+          className="inline-flex h-3 w-3 items-center justify-center rounded-full border border-emerald-500/45 bg-black/80 text-emerald-400/90 transition group-hover:border-emerald-400/70 group-hover:bg-emerald-500/10 group-hover:text-emerald-300 group-focus-visible:border-emerald-400/70 group-focus-visible:bg-emerald-500/10 group-focus-visible:text-emerald-300 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4"
+          aria-hidden
+        >
+          <Info
+            className="size-[10px] sm:size-[11px] md:size-3"
+            strokeWidth={2.25}
+            aria-hidden
+          />
+        </span>
       </button>
       {popover}
     </span>
