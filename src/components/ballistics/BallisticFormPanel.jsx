@@ -209,7 +209,6 @@ function computeAutoExpandFlags({
  *   profiles: Record<string, unknown>[]
  *   selectedProfileId: string
  *   onSelectProfile: (id: string) => void
- *   onNewProfile: () => void
  *   onSaveProfile: () => void
  *   onArmoryFill: () => void
  *   onCalculate: () => void
@@ -234,7 +233,6 @@ export default function BallisticFormPanel({
   profiles,
   selectedProfileId,
   onSelectProfile,
-  onNewProfile,
   onSaveProfile,
   onArmoryFill,
   onCalculate,
@@ -403,9 +401,6 @@ export default function BallisticFormPanel({
           ))}
         </select>
         <div className="flex flex-wrap gap-2">
-          <button type="button" className={btnSecondary} onClick={onNewProfile}>
-            Yeni Profil
-          </button>
           <button type="button" className={btnSecondary} onClick={onSaveProfile} disabled={profileSaving}>
             {profileSaving ? 'Kaydediliyor…' : 'Profili Kaydet'}
           </button>
@@ -413,11 +408,23 @@ export default function BallisticFormPanel({
             Cephanelikten Getir
           </button>
         </div>
+        <Field label="Silah adı">
+          <input
+            readOnly
+            disabled
+            className={`${inputClass} cursor-not-allowed opacity-50 pointer-events-none bg-neutral-800/50`}
+            value={String(form.weaponDisplayLabel ?? '')}
+            placeholder="Cephanelikten getir ile doldurulur"
+            aria-label="Silah adı"
+          />
+        </Field>
         <Field label="Profil adı">
           <input
             className={inputClass}
             value={String(form.profileName ?? '')}
             onChange={(e) => onFormChange({ profileName: e.target.value })}
+            placeholder="Bu profile bir isim verin (örn. Sabah Antrenmanı)"
+            aria-label="Profil adı"
           />
         </Field>
       </FormAccordionSection>

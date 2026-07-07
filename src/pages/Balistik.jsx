@@ -12,6 +12,7 @@ import { useAudazData } from '../hooks/useAudazData'
 import { useBallisticProfiles } from '../hooks/useBallisticProfiles'
 import {
   buildArmoryFillPayload,
+  buildProfileDefaultsFromInventory,
   createDefaultBallisticProfileFields,
   filterInventoryWeapons,
   normalizeBallisticProfile,
@@ -31,6 +32,22 @@ function buildTargetDistances(min, max, step) {
   const out = []
   for (let d = lo; d <= hi; d += inc) out.push(d)
   return out.length ? out : [100]
+}
+
+/**
+ * UI-only silah etiketi — Cephanelik bağlantısından türetilir, Firestore'a yazılmaz.
+ * @param {{ linkedWeaponId?: string | null, linkedOpticId?: string | null, linkedAmmoId?: string | null }} profile
+ * @param {Record<string, unknown>[]} inventoryItems
+ */
+function resolveWeaponDisplayLabel(profile, inventoryItems) {
+  if (!profile?.linkedWeaponId) return ''
+  const rebuilt = buildProfileDefaultsFromInventory(
+    profile.linkedWeaponId,
+    profile.linkedOpticId ?? null,
+    profile.linkedAmmoId ?? null,
+    { allItems: inventoryItems },
+  )
+  return rebuilt.profileName
 }
 
 const DEFAULT_ENV = {
@@ -60,7 +77,8 @@ export default function Balistik() {
   const { profiles, createProfile, updateProfile, loading: profilesLoading } = useBallisticProfiles()
 
   const [form, setForm] = useState(() => ({
-    profileName: 'Yeni Profil',
+    profileName: '',
+    weaponDisplayLabel: '',
     ...createDefaultBallisticProfileFields(),
   }))
   const [env, setEnv] = useState(DEFAULT_ENV)
@@ -108,7 +126,8 @@ export default function Balistik() {
       const row = profiles.find((p) => String(p.id) === id)
       if (!row) return
       setForm({
-        profileName: String(row.profileName ?? 'Profil'),
+        profileName: String(row.profileName ?? ''),
+        weaponDisplayLabel: resolveWeaponDisplayLabel(row, inventoryItems),
         linkedWeaponId: row.linkedWeaponId ?? null,
         linkedOpticId: row.linkedOpticId ?? null,
         linkedAmmoId: row.linkedAmmoId ?? null,
@@ -120,15 +139,8 @@ export default function Balistik() {
       })
       bumpAccordionAutoExpand()
     },
-    [profiles, bumpAccordionAutoExpand],
+    [profiles, inventoryItems, bumpAccordionAutoExpand],
   )
-
-  const handleNewProfile = useCallback(() => {
-    setSelectedProfileId('')
-    setArmoryFillNotice('')
-    setForm({ profileName: 'Yeni Profil', ...createDefaultBallisticProfileFields(), armorySession: null })
-    bumpAccordionAutoExpand()
-  }, [bumpAccordionAutoExpand])
 
   const handleSaveProfile = useCallback(async () => {
     setProfileSaving(true)
@@ -185,6 +197,8 @@ export default function Balistik() {
         const nextForm = {
           ...prev,
           ...draft,
+          profileName: '',
+          weaponDisplayLabel: draft.profileName,
           ammo: draft.ammo,
           armorySession,
         }
@@ -298,7 +312,6 @@ export default function Balistik() {
             profiles={profiles}
             selectedProfileId={selectedProfileId}
             onSelectProfile={handleSelectProfile}
-            onNewProfile={handleNewProfile}
             onSaveProfile={handleSaveProfile}
             onArmoryFill={() => setArmoryOpen(true)}
             onCalculate={handleCalculate}
