@@ -372,7 +372,7 @@ export default function BallisticFormPanel({
   const clickUnit = parseClickUnitSystem(optic.clickUnitSystem)
 
   return (
-    <div className="flex flex-col gap-3">
+    <>
       <InventoryUnlockModal
         open={Boolean(unlockTarget)}
         onCancel={() => setUnlockTarget(null)}
@@ -381,6 +381,8 @@ export default function BallisticFormPanel({
           setUnlockTarget(null)
         }}
       />
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-y-contain pb-1 [-webkit-overflow-scrolling:touch]">
       <FormAccordionSection
         id="profile"
         title="Profil"
@@ -819,11 +821,21 @@ export default function BallisticFormPanel({
             />
           </Field>
         </div>
-        <button type="button" className={`${btnAccent} w-full py-2.5`} onClick={onCalculate} disabled={calculating}>
-          {calculating ? 'Hesaplanıyor…' : 'Hesapla'}
-        </button>
       </FormAccordionSection>
-    </div>
+        </div>
+
+        <div className="sticky bottom-0 z-[2] -mx-3 shrink-0 border-t border-emerald-500/20 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/98 to-[#0a0a0a]/75 px-3 pt-3 shadow-[0_-12px_28px_rgba(0,0,0,0.55)] sm:-mx-4 sm:px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <button
+            type="button"
+            className={`${btnAccent} w-full py-3 sm:py-2.5`}
+            onClick={onCalculate}
+            disabled={calculating}
+          >
+            {calculating ? 'Hesaplanıyor…' : 'Hesapla'}
+          </button>
+        </div>
+      </div>
+    </>
   )
 }
 

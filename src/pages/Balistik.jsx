@@ -281,7 +281,7 @@ export default function Balistik() {
       ) : null}
 
       <div className="relative z-[1] grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(0,22rem)_1fr] lg:h-[calc(100dvh-11rem)] lg:max-h-[calc(100dvh-11rem)] xl:grid-cols-[minmax(0,24rem)_1fr]">
-        <TacticalPanel className="min-h-0 overflow-y-auto p-3 sm:p-4 lg:h-full lg:max-h-full lg:overflow-y-auto">
+        <TacticalPanel className="flex min-h-0 max-h-[min(68dvh,640px)] flex-col overflow-hidden p-3 sm:max-h-[min(72dvh,680px)] sm:p-4 lg:h-full lg:max-h-full">
           <BallisticFormPanel
             form={form}
             env={env}
