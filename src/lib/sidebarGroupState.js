@@ -12,25 +12,39 @@ export const SIDEBAR_NAV_GROUP_IDS = /** @type {const} */ ([
 /** @typedef {Partial<Record<SidebarNavGroupId, boolean>>} SidebarGroupStateMap */
 
 /**
+ * İlk kullanım / tercih yok — tüm gruplar kapalı.
  * @returns {Record<SidebarNavGroupId, boolean>}
  */
 export function defaultSidebarGroupState() {
-  return Object.fromEntries(SIDEBAR_NAV_GROUP_IDS.map((id) => [id, true]))
+  return Object.fromEntries(SIDEBAR_NAV_GROUP_IDS.map((id) => [id, false]))
 }
 
 /**
  * @param {unknown} raw
+ */
+function hasAnySavedSidebarGroupPreference(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return false
+  /** @type {Record<string, unknown>} */
+  const source = raw
+  return SIDEBAR_NAV_GROUP_IDS.some((id) => typeof source[id] === 'boolean')
+}
+
+/**
+ * Firestore users/{uid}.sidebarGroupState okuma.
+ * - Alan yok / boş → varsayılan kapalı
+ * - Kayıtlı tercih var → yalnızca explicit boolean'lar uygulanır (mevcut kullanıcılar korunur)
+ * @param {unknown} raw
  * @returns {Record<SidebarNavGroupId, boolean>}
  */
 export function parseSidebarGroupState(raw) {
-  const defaults = defaultSidebarGroupState()
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
-    return defaults
+  if (!hasAnySavedSidebarGroupPreference(raw)) {
+    return defaultSidebarGroupState()
   }
 
   /** @type {Record<string, unknown>} */
   const source = raw
-  const next = { ...defaults }
+  /** Kayıtlı tercih varken belirtilmemiş anahtarlar eski davranışla açık kalır (partial map uyumu). */
+  const next = Object.fromEntries(SIDEBAR_NAV_GROUP_IDS.map((id) => [id, true]))
 
   for (const id of SIDEBAR_NAV_GROUP_IDS) {
     if (typeof source[id] === 'boolean') {
@@ -46,8 +60,7 @@ export function parseSidebarGroupState(raw) {
  * @param {SidebarNavGroupId} groupId
  */
 export function isSidebarGroupOpen(state, groupId) {
-  if (!state || state[groupId] === undefined) return true
-  return state[groupId] !== false
+  return state?.[groupId] === true
 }
 
 /**
@@ -55,7 +68,9 @@ export function isSidebarGroupOpen(state, groupId) {
  * @param {SidebarNavGroupId} groupId
  */
 export function toggleSidebarGroupState(state, groupId) {
-  const base = parseSidebarGroupState(state)
+  const base = hasAnySavedSidebarGroupPreference(state)
+    ? parseSidebarGroupState(state)
+    : defaultSidebarGroupState()
   return {
     ...base,
     [groupId]: !isSidebarGroupOpen(base, groupId),

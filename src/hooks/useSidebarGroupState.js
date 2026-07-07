@@ -7,6 +7,7 @@ import { emitFirebaseError } from '../lib/firebaseErrorBus'
 import { safeOnSnapshot } from '../lib/firestoreSnapshot'
 import {
   defaultSidebarGroupState,
+  isSidebarGroupOpen,
   parseSidebarGroupState,
   toggleSidebarGroupState,
 } from '../lib/sidebarGroupState'
@@ -101,9 +102,7 @@ export function useSidebarGroupState() {
 
   const isGroupOpen = useCallback(
     (/** @type {import('../lib/sidebarGroupState.js').SidebarNavGroupId} */ groupId) => {
-      const state = groupStateRef.current
-      if (state[groupId] === undefined) return true
-      return state[groupId] !== false
+      return isSidebarGroupOpen(groupStateRef.current, groupId)
     },
     [],
   )
