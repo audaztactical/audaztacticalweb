@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
-import { Download, Target } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Download, Package, Target } from 'lucide-react'
 import HudFluffDecor from '../components/dashboard/HudFluffDecor'
 import TacticalPanel from '../components/ui/TacticalPanel'
 import BallisticFormPanel from '../components/ballistics/BallisticFormPanel'
@@ -54,6 +55,7 @@ const TABLE_COLUMNS_BASE = [
 ]
 
 export default function Balistik() {
+  const navigate = useNavigate()
   const { items: inventoryItems } = useAudazData('inventory')
   const { profiles, createProfile, updateProfile, loading: profilesLoading } = useBallisticProfiles()
 
@@ -481,17 +483,31 @@ export default function Balistik() {
           />
           <TacticalPanel className="relative z-[1] max-h-[70vh] w-full max-w-md overflow-hidden p-0">
             <div className="border-b border-white/10 px-4 py-2">
-              <p className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.24em] text-emerald-400">
-                Silahtan doldur
+              <p className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-400/90">
+                Cephanelikten getir
               </p>
             </div>
+            {weapons.length === 0 ? (
+              <div className="px-4 py-8 text-center">
+                <Package className="mx-auto size-8 text-cyan-500/35" strokeWidth={1.25} aria-hidden />
+                <p className="mt-4 font-mono-technical text-xs leading-relaxed text-app-text/65">
+                  Cephanelik&apos;te henüz kayıtlı bir silahınız yok. Önce Cephanelik&apos;e bir silah eklemeniz
+                  gerekiyor.
+                </p>
+                <button
+                  type="button"
+                  className="mt-5 inline-flex min-h-[44px] items-center justify-center rounded border border-cyan-500/40 bg-cyan-500/[0.08] px-4 py-2 font-mono-technical text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-300 hover:border-cyan-400/55 hover:bg-cyan-500/12"
+                  onClick={() => {
+                    setArmoryOpen(false)
+                    navigate('/cephanelik')
+                  }}
+                >
+                  Cephanelik&apos;e Git
+                </button>
+              </div>
+            ) : (
             <ul className="max-h-[50vh] overflow-y-auto p-2">
-              {weapons.length === 0 ? (
-                <li className="px-2 py-6 text-center font-mono text-[10px] text-app-text/45">
-                  Cephanelikte silah yok
-                </li>
-              ) : (
-                weapons.map((w) => (
+              {weapons.map((w) => (
                   <li key={String(w.id)}>
                     <button
                       type="button"
@@ -502,9 +518,9 @@ export default function Balistik() {
                       <span className="mt-0.5 block text-[9px] text-app-text/45">{String(w.calibre ?? '—')}</span>
                     </button>
                   </li>
-                ))
-              )}
+              ))}
             </ul>
+            )}
           </TacticalPanel>
         </div>
       ) : null}

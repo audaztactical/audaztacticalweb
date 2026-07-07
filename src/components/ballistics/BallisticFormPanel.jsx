@@ -409,8 +409,8 @@ export default function BallisticFormPanel({
           <button type="button" className={btnSecondary} onClick={onSaveProfile} disabled={profileSaving}>
             {profileSaving ? 'Kaydediliyor…' : 'Profili Kaydet'}
           </button>
-          <button type="button" className={btnAccent} onClick={onArmoryFill}>
-            Silahtan Doldur
+          <button type="button" className={btnArmory} onClick={onArmoryFill}>
+            Cephanelikten Getir
           </button>
         </div>
         <Field label="Profil adı">
@@ -841,5 +841,7 @@ export default function BallisticFormPanel({
 
 const btnSecondary =
   'rounded border border-white/15 px-2 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-app-text/75 hover:bg-white/5'
+const btnArmory =
+  'rounded border border-cyan-500/40 bg-cyan-500/[0.06] px-2 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-cyan-300/95 hover:border-cyan-400/55 hover:bg-cyan-500/10'
 const btnAccent =
   'rounded border border-emerald-500/45 bg-emerald-500/10 px-2 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-emerald-400 hover:bg-emerald-500/15'
