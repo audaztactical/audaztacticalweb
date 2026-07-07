@@ -2048,6 +2048,34 @@
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.45);
 }
 
+.sidebar-nav-group-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition:
+    grid-template-rows 200ms ease,
+    opacity 200ms ease;
+  opacity: 0;
+}
+
+.sidebar-nav-group-panel-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.sidebar-nav-group-panel-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.sidebar-nav-group-heading {
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.sidebar-nav-group-heading:hover {
+  background-color: rgb(255 255 255 / 0.03);
+}
+
 @media (min-width: 1024px) {
   .sidebar-shell[data-collapsed='true'] .group:hover .sidebar-collapsed-tooltip,
   .sidebar-shell[data-collapsed='true'] button:hover .sidebar-collapsed-tooltip {

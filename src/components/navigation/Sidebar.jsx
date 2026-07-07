@@ -3,6 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom'
 import {
   BarChart3,
   BookOpen,
+  ChevronDown,
   CreditCard,
   Crosshair,
   HeartPulse,
@@ -24,6 +25,8 @@ import {
 import { useAuth } from '../../context/AuthContext'
 import { useFeedbackPanelOptional } from '../../context/FeedbackPanelContext'
 import { useMuhabereNotify } from '../../context/MuhabereNotifyContext'
+import { useSidebarGroupState } from '../../hooks/useSidebarGroupState'
+import { isSidebarGroupOpen } from '../../lib/sidebarGroupState'
 import { auth } from '../../lib/firebase'
 import { scheduleScrollAppToTop } from '../../lib/scrollAppToTop'
 
@@ -233,17 +236,6 @@ export function SidebarLink({
   )
 }
 
-/**
- * @param {{
- *   label: string
- *   icon: import('lucide-react').LucideIcon
- *   onClick: () => void
- *   collapsed?: boolean
- *   iconIdleClass?: string
- *   idleClass?: string
- *   disabled?: boolean
- * }} props
- */
 function SidebarActionButton({
   label,
   icon,
@@ -286,6 +278,54 @@ function SidebarActionButton({
 
 /**
  * @param {{
+ *   groupId: import('../../lib/sidebarGroupState.js').SidebarNavGroupId
+ *   title: string
+ *   theme: NavGroupTheme
+ *   open: boolean
+ *   onToggle: () => void
+ *   children: import('react').ReactNode
+ * }} props
+ */
+function SidebarGroupAccordion({ groupId, title, theme, open, onToggle, children }) {
+  return (
+    <section aria-labelledby={`nav-group-${groupId}`}>
+      <button
+        type="button"
+        id={`nav-group-${groupId}`}
+        aria-expanded={open}
+        aria-controls={`nav-group-panel-${groupId}`}
+        onClick={onToggle}
+        className={[
+          groupTitleBaseClass,
+          theme.titleClass,
+          'sidebar-nav-group-heading flex w-full items-center justify-between gap-2 text-left',
+        ].join(' ')}
+      >
+        <span className="min-w-0 truncate">{title}</span>
+        <ChevronDown
+          className={[
+            'size-3.5 shrink-0 opacity-70 transition-transform duration-200',
+            open ? 'rotate-0' : '-rotate-90',
+          ].join(' ')}
+          strokeWidth={2}
+          aria-hidden
+        />
+      </button>
+      <div
+        id={`nav-group-panel-${groupId}`}
+        className={[
+          'sidebar-nav-group-panel',
+          open ? 'sidebar-nav-group-panel-open' : '',
+        ].join(' ')}
+      >
+        <div className="sidebar-nav-group-panel-inner">{children}</div>
+      </div>
+    </section>
+  )
+}
+
+/**
+ * @param {{
  *   onNavigate?: () => void
  *   signingOut?: boolean
  *   onSignOut?: () => void
@@ -307,6 +347,7 @@ export default function Sidebar({
   const feedbackPanel = useFeedbackPanelOptional()
   const showAdminLink = showAdminPanel || isAdmin
   const systemTheme = NAV_GROUP_THEMES.system
+  const { groupState, toggleGroup } = useSidebarGroupState()
 
   const groups = useMemo(() => {
     const isInstructorUser = role === 'instructor' || isInstructor
@@ -326,106 +367,185 @@ export default function Sidebar({
       >
         {groups.map((group) => {
           const theme = NAV_GROUP_THEMES[group.id] ?? NAV_GROUP_THEMES.personal
-          return (
-            <section key={group.id} aria-labelledby={`nav-group-${group.id}`}>
-              {!collapsed ? (
-                <h2
-                  id={`nav-group-${group.id}`}
-                  className={[groupTitleBaseClass, theme.titleClass].join(' ')}
-                >
-                  {group.title}
-                </h2>
-              ) : (
+          const groupOpen = isSidebarGroupOpen(groupState, group.id)
+          const itemList = (
+            <ul className="flex flex-col gap-1 pb-2 pt-1">
+              {group.items.map((item) => (
+                <li key={item.to}>
+                  <SidebarLink
+                    to={item.to}
+                    end={item.end}
+                    label={item.label}
+                    icon={item.icon}
+                    state={item.state}
+                    onNavigate={onNavigate}
+                    collapsed={collapsed}
+                    iconIdleClass={theme.iconIdleClass}
+                    badgeCount={item.to === '/mesajlar' ? sidebarMuhabereBadgeCount : 0}
+                    blinkIcon={item.to === '/mesajlar' && sidebarMuhabereBadgeCount > 0}
+                  />
+                </li>
+              ))}
+            </ul>
+          )
+
+          if (collapsed) {
+            return (
+              <section key={group.id} aria-label={group.title}>
                 <div className="my-2 border-b border-white/5" aria-hidden />
-              )}
-              <ul className="flex flex-col gap-1 pb-2">
-                {group.items.map((item) => (
-                  <li key={item.to}>
-                    <SidebarLink
-                      to={item.to}
-                      end={item.end}
-                      label={item.label}
-                      icon={item.icon}
-                      state={item.state}
-                      onNavigate={onNavigate}
-                      collapsed={collapsed}
-                      iconIdleClass={theme.iconIdleClass}
-                      badgeCount={item.to === '/mesajlar' ? sidebarMuhabereBadgeCount : 0}
-                      blinkIcon={item.to === '/mesajlar' && sidebarMuhabereBadgeCount > 0}
-                    />
-                  </li>
-                ))}
-              </ul>
-            </section>
+                {itemList}
+              </section>
+            )
+          }
+
+          return (
+            <SidebarGroupAccordion
+              key={group.id}
+              groupId={group.id}
+              title={group.title}
+              theme={theme}
+              open={groupOpen}
+              onToggle={() => toggleGroup(group.id)}
+            >
+              {itemList}
+            </SidebarGroupAccordion>
           )
         })}
       </nav>
 
       <div className={['border-t border-zinc-800/80 py-4', collapsed ? 'px-1.5' : 'px-3'].join(' ')}>
-        {!collapsed ? (
-          <p className={[groupTitleBaseClass, systemTheme.titleClass, 'pt-2'].join(' ')}>[ SİSTEM ]</p>
+        {collapsed ? (
+          <>
+            <div className="mb-2 border-b border-white/5" aria-hidden />
+            <ul className="flex flex-col gap-1">
+              {showAdminLink ? (
+                <li>
+                  <SidebarLink
+                    to="/admin"
+                    label="Admin Paneli"
+                    icon={ShieldAlert}
+                    onNavigate={onNavigate}
+                    collapsed={collapsed}
+                    iconIdleClass={systemTheme.iconIdleClass}
+                  />
+                </li>
+              ) : null}
+              <li>
+                <SidebarActionButton
+                  label="Şikayet & Öneri"
+                  icon={MessageSquarePlus}
+                  collapsed={collapsed}
+                  iconIdleClass="text-zinc-500 transition-colors group-hover:text-lime-400"
+                  onClick={() => {
+                    feedbackPanel?.openPanel()
+                    onNavigate?.()
+                  }}
+                />
+              </li>
+              {showAdminLink ? (
+                <li>
+                  <SidebarLink
+                    to="/fiyatlandirma"
+                    label="Fiyatlandırma"
+                    icon={CreditCard}
+                    onNavigate={onNavigate}
+                    collapsed={collapsed}
+                    iconIdleClass={systemTheme.iconIdleClass}
+                  />
+                </li>
+              ) : null}
+              <li>
+                <SidebarLink
+                  to="/ayarlar"
+                  label="Ayarlar"
+                  icon={Settings}
+                  onNavigate={onNavigate}
+                  collapsed={collapsed}
+                  iconIdleClass={systemTheme.iconIdleClass}
+                />
+              </li>
+              <li>
+                <SidebarActionButton
+                  label="Çıkış"
+                  icon={LogOut}
+                  collapsed={collapsed}
+                  disabled={!auth || signingOut}
+                  iconIdleClass="text-zinc-500 transition-colors group-hover:text-red-400/80"
+                  idleClass="sidebar-nav-link-idle text-zinc-400 hover:bg-zinc-800/40 hover:text-red-400/90"
+                  onClick={() => onSignOut?.()}
+                />
+              </li>
+            </ul>
+          </>
         ) : (
-          <div className="mb-2 border-b border-white/5" aria-hidden />
+          <SidebarGroupAccordion
+            groupId="system"
+            title="[ SİSTEM ]"
+            theme={systemTheme}
+            open={isSidebarGroupOpen(groupState, 'system')}
+            onToggle={() => toggleGroup('system')}
+          >
+            <ul className="flex flex-col gap-1 pb-1 pt-1">
+              {showAdminLink ? (
+                <li>
+                  <SidebarLink
+                    to="/admin"
+                    label="Admin Paneli"
+                    icon={ShieldAlert}
+                    onNavigate={onNavigate}
+                    collapsed={collapsed}
+                    iconIdleClass={systemTheme.iconIdleClass}
+                  />
+                </li>
+              ) : null}
+              <li>
+                <SidebarActionButton
+                  label="Şikayet & Öneri"
+                  icon={MessageSquarePlus}
+                  collapsed={collapsed}
+                  iconIdleClass="text-zinc-500 transition-colors group-hover:text-lime-400"
+                  onClick={() => {
+                    feedbackPanel?.openPanel()
+                    onNavigate?.()
+                  }}
+                />
+              </li>
+              {showAdminLink ? (
+                <li>
+                  <SidebarLink
+                    to="/fiyatlandirma"
+                    label="Fiyatlandırma"
+                    icon={CreditCard}
+                    onNavigate={onNavigate}
+                    collapsed={collapsed}
+                    iconIdleClass={systemTheme.iconIdleClass}
+                  />
+                </li>
+              ) : null}
+              <li>
+                <SidebarLink
+                  to="/ayarlar"
+                  label="Ayarlar"
+                  icon={Settings}
+                  onNavigate={onNavigate}
+                  collapsed={collapsed}
+                  iconIdleClass={systemTheme.iconIdleClass}
+                />
+              </li>
+              <li>
+                <SidebarActionButton
+                  label="Çıkış"
+                  icon={LogOut}
+                  collapsed={collapsed}
+                  disabled={!auth || signingOut}
+                  iconIdleClass="text-zinc-500 transition-colors group-hover:text-red-400/80"
+                  idleClass="sidebar-nav-link-idle text-zinc-400 hover:bg-zinc-800/40 hover:text-red-400/90"
+                  onClick={() => onSignOut?.()}
+                />
+              </li>
+            </ul>
+          </SidebarGroupAccordion>
         )}
-        <ul className="flex flex-col gap-1">
-          {showAdminLink ? (
-            <li>
-              <SidebarLink
-                to="/admin"
-                label="Admin Paneli"
-                icon={ShieldAlert}
-                onNavigate={onNavigate}
-                collapsed={collapsed}
-                iconIdleClass={systemTheme.iconIdleClass}
-              />
-            </li>
-          ) : null}
-          <li>
-            <SidebarActionButton
-              label="Şikayet & Öneri"
-              icon={MessageSquarePlus}
-              collapsed={collapsed}
-              iconIdleClass="text-zinc-500 transition-colors group-hover:text-lime-400"
-              onClick={() => {
-                feedbackPanel?.openPanel()
-                onNavigate?.()
-              }}
-            />
-          </li>
-          {showAdminLink ? (
-            <li>
-              <SidebarLink
-                to="/fiyatlandirma"
-                label="Fiyatlandırma"
-                icon={CreditCard}
-                onNavigate={onNavigate}
-                collapsed={collapsed}
-                iconIdleClass={systemTheme.iconIdleClass}
-              />
-            </li>
-          ) : null}
-          <li>
-            <SidebarLink
-              to="/ayarlar"
-              label="Ayarlar"
-              icon={Settings}
-              onNavigate={onNavigate}
-              collapsed={collapsed}
-              iconIdleClass={systemTheme.iconIdleClass}
-            />
-          </li>
-          <li>
-            <SidebarActionButton
-              label="Çıkış"
-              icon={LogOut}
-              collapsed={collapsed}
-              disabled={!auth || signingOut}
-              iconIdleClass="text-zinc-500 transition-colors group-hover:text-red-400/80"
-              idleClass="sidebar-nav-link-idle text-zinc-400 hover:bg-zinc-800/40 hover:text-red-400/90"
-              onClick={() => onSignOut?.()}
-            />
-          </li>
-        </ul>
         {!collapsed ? (
           <p className="mt-4 truncate px-3 font-mono text-[10px] text-zinc-600" title={userEmail}>
             {loading ? '…' : userEmail || 'Oturum yok'}

@@ -131,6 +131,13 @@ service cloud.firestore {
         ]);
     }
 
+    /** Sidebar grup accordion tercihi — yalnızca sidebarGroupState (+ updatedAt). */
+    function isOwnerSidebarGroupStateOnlyUpdate(uid) {
+      return isOwnerUid(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['sidebarGroupState', 'updatedAt'])
+        && request.resource.data.sidebarGroupState is map;
+    }
+
     /**
      * Taktik Muhabere — engellenen operatörler (yalnızca kendi profili).
      * arrayUnion / arrayRemove: liste yalnızca büyür veya küçülür; kendi uid eklenemez.
@@ -176,6 +183,7 @@ service cloud.firestore {
         || (isOwnerUid(userId) && isOwnerTermsAckOnly())
         || (isOwnerUid(userId) && isOwnerPresenceOnlyUpdate(userId))
         || (isOwnerUid(userId) && isOwnerFcmTokensOnlyUpdate(userId))
+        || (isOwnerUid(userId) && isOwnerSidebarGroupStateOnlyUpdate(userId))
         || (isOwnerUid(userId) && isOwnerBlockedUsersOnlyUpdate(userId))
         || (isOwnerUid(userId) && ownerPrivilegedFieldsUnchanged());
       allow delete: if false;
