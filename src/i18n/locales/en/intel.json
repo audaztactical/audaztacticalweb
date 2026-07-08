@@ -19,8 +19,11 @@
     "noSummary": "No summary available.",
     "noTags": "No tags",
     "goToSource": "Go to source",
-    "showOriginal": "Show original",
-    "showTurkish": "Show Turkish translation"
+    "toggle": {
+      "showOriginal": "Show original",
+      "showTurkishTranslation": "Show Turkish translation",
+      "showEnglishTranslation": "Show English translation"
+    }
   },
   "video": {
     "filterLabel": "Channel filter",

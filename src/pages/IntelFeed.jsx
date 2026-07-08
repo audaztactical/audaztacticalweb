@@ -7,6 +7,7 @@ import { emitFirebaseError } from '../lib/firebaseErrorBus'
 import {
   defaultShowTurkishForIntelItem,
   formatIntelTimestampDisplay,
+  getIntelTranslationToggleLabelKey,
   isIntelUiTurkish,
   pickIntelFeedSummary,
   pickIntelFeedTitle,
@@ -150,7 +151,7 @@ function IntelCard({ item }) {
               className="inline-flex shrink-0 items-center gap-1.5 rounded border border-gray-700 bg-black/40 px-2.5 py-1.5 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-[#ffaa00] transition hover:border-[#ffaa00]/60 hover:bg-[#ffaa00]/10"
             >
               <Languages className="size-3" aria-hidden />
-              {showTurkish ? t('card.showOriginal') : t('card.showTurkish')}
+              {t(getIntelTranslationToggleLabelKey(item, showTurkish))}
             </button>
           ) : null}
         </div>

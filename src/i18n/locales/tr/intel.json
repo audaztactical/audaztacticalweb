@@ -19,8 +19,11 @@
     "noSummary": "Özet mevcut değil.",
     "noTags": "Etiket yok",
     "goToSource": "Kaynağa git",
-    "showOriginal": "Orijinal dil",
-    "showTurkish": "Türkçe çeviri"
+    "toggle": {
+      "showOriginal": "Orijinal dil",
+      "showTurkishTranslation": "Türkçe çeviri",
+      "showEnglishTranslation": "İngilizce çeviri"
+    }
   },
   "video": {
     "filterLabel": "Kanal filtresi",

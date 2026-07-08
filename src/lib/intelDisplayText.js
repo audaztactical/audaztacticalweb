@@ -123,6 +123,22 @@ export function shouldShowIntelTranslationToggle(item, language = i18n.language)
 }
 
 /**
+ * Toggle etiketi: native dil + şu an gösterilen dil kombinasyonuna göre.
+ * @param {import('./firestoreIntelFeed').IntelFeedItem} item
+ * @param {boolean} showTurkish
+ * @returns {'card.toggle.showOriginal' | 'card.toggle.showTurkishTranslation' | 'card.toggle.showEnglishTranslation'}
+ */
+export function getIntelTranslationToggleLabelKey(item, showTurkish) {
+  const nativeLang = intelNativeLanguage(item)
+
+  if (nativeLang === 'en') {
+    return showTurkish ? 'card.toggle.showOriginal' : 'card.toggle.showTurkishTranslation'
+  }
+
+  return showTurkish ? 'card.toggle.showEnglishTranslation' : 'card.toggle.showOriginal'
+}
+
+/**
  * @param {import('./firestoreIntelFeed').IntelFeedItem} item
  * @param {boolean} showTurkish
  */
