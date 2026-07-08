@@ -9,9 +9,11 @@ import HudTicker from '../components/ui/HudTicker'
 import LanguageSwitcher from '../components/shared/LanguageSwitcher'
 import NotificationDropdown from '../components/notifications/NotificationDropdown'
 import Sidebar from '../components/navigation/Sidebar'
+import { useNavUi } from '../hooks/useNavLabels'
 
 export default function MainLayout() {
   const { user, loading } = useAuth()
+  const navUi = useNavUi()
   const location = useLocation()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -73,7 +75,7 @@ export default function MainLayout() {
         <button
           type="button"
           className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm lg:hidden"
-          aria-label="Menüyü kapat"
+          aria-label={navUi.closeMenu}
           onClick={closeMobileNav}
         />
       ) : null}
@@ -86,7 +88,7 @@ export default function MainLayout() {
           mobileNavOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
           sidebarCollapsed ? 'lg:w-16' : 'lg:w-[17.5rem]',
         ].join(' ')}
-        aria-label="Ana navigasyon"
+        aria-label={navUi.mainNavAria}
       >
         <div className="border-b border-white/10">
           <div
@@ -103,7 +105,7 @@ export default function MainLayout() {
                 'flex min-w-0 items-center gap-3 transition-opacity hover:opacity-90',
                 sidebarCollapsed ? 'lg:gap-0' : '',
               ].join(' ')}
-              aria-label="Ana sayfa"
+              aria-label={navUi.homeAria}
             >
               <img
                 src="/logo.png"
@@ -126,7 +128,7 @@ export default function MainLayout() {
             <button
               type="button"
               className="rounded-lg p-2 text-app-text/70 transition hover:bg-white/10 hover:text-app-text lg:hidden"
-              aria-label="Menüyü kapat"
+              aria-label={navUi.closeMenu}
               onClick={closeMobileNav}
             >
               <X className="size-5" strokeWidth={1.75} aria-hidden />
@@ -139,7 +141,7 @@ export default function MainLayout() {
               sidebarCollapsed ? 'px-0' : 'px-3',
             ].join(' ')}
             aria-expanded={!sidebarCollapsed}
-            aria-label={sidebarCollapsed ? 'Kenar çubuğunu genişlet' : 'Kenar çubuğunu daralt'}
+            aria-label={sidebarCollapsed ? navUi.expandAria : navUi.collapseAria}
             onClick={() => setSidebarCollapsed((v) => !v)}
           >
             {sidebarCollapsed ? (
@@ -147,7 +149,7 @@ export default function MainLayout() {
             ) : (
               <>
                 <ChevronLeft className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />
-                <span>Daralt</span>
+                <span>{navUi.collapse}</span>
               </>
             )}
           </button>
@@ -170,12 +172,12 @@ export default function MainLayout() {
             className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-accent"
             aria-expanded={mobileNavOpen}
             aria-controls="sidebar-nav"
-            aria-label="Menüyü aç"
+            aria-label={navUi.openMenu}
             onClick={() => setMobileNavOpen(true)}
           >
             <Menu className="size-5" strokeWidth={1.75} aria-hidden />
           </button>
-          <Link to="/" state={{ skipIntro: true }} className="flex flex-1 justify-center" aria-label="Ana sayfa">
+          <Link to="/" state={{ skipIntro: true }} className="flex flex-1 justify-center" aria-label={navUi.homeAria}>
             <img
               src="/logo.png"
               alt="AUDAZ Tactical"

@@ -1,36 +1,24 @@
 import { useMemo } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import {
-  BarChart3,
-  BookOpen,
   CreditCard,
-  Crosshair,
-  HeartPulse,
-  Home,
-  KeyRound,
-  Landmark,
   LogOut,
-  MessageSquare,
   MessageSquarePlus,
-  Globe,
-  MessagesSquare,
-  PlayCircle,
   Settings,
-  Shield,
   ShieldAlert,
-  Target,
-  User,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useFeedbackPanelOptional } from '../../context/FeedbackPanelContext'
 import { useMuhabereNotify } from '../../context/MuhabereNotifyContext'
 import { useSidebarGroupState } from '../../hooks/useSidebarGroupState'
+import { useInstructorNavItem, useNavGroups, useNavItemLabels, useNavUi, useSystemGroupTitle } from '../../hooks/useNavLabels'
 import { getNavGroupTheme, NAV_GROUP_THEMES } from '../../lib/sidebarGroupColors'
 import { isSidebarGroupOpen } from '../../lib/sidebarGroupState'
 import { auth } from '../../lib/firebase'
 import { scheduleScrollAppToTop } from '../../lib/scrollAppToTop'
 import { SidebarGroupAccordion } from './SidebarNavParts'
 
+export { NAV_GROUP_DEFS } from '../../lib/navStructure'
 export { NAV_GROUP_THEMES } from '../../lib/sidebarGroupColors'
 
 /**
@@ -48,55 +36,6 @@ export { NAV_GROUP_THEMES } from '../../lib/sidebarGroupColors'
  * @property {string} title
  * @property {NavItem[]} items
  */
-
-/** @type {NavGroup[]} */
-export const NAV_GROUPS = [
-  {
-    id: 'personal',
-    title: '[ KİŞİSEL / MERKEZ ]',
-    items: [
-      { to: '/', end: true, label: "Karargâh'a Dön", icon: Landmark, state: { skipIntro: true } },
-      { to: '/dashboard', end: true, label: 'Ana Sayfa', icon: Home },
-      { to: '/profil', label: 'Profilim', icon: User },
-      { to: '/mesajlar', label: 'Taktik Muhabere', icon: MessageSquare },
-    ],
-  },
-  {
-    id: 'audaz-network',
-    title: '[ AUDAZ AĞI ]',
-    items: [
-      { to: '/akademi', label: 'Audaz Akademi', icon: PlayCircle },
-      { to: '/forum', label: 'Brifing Odası (Forum)', icon: MessagesSquare },
-      { to: '/istihbarat', label: 'Küresel Haber Ağı', icon: Globe },
-    ],
-  },
-  {
-    id: 'operations',
-    title: '[ OPERASYON VE LOJİSTİK ]',
-    items: [
-      { to: '/antrenman', label: 'Antrenman ve Operasyon', icon: Crosshair },
-      { to: '/tccc', label: 'TCCC & Sağlık', icon: HeartPulse },
-      { to: '/cephanelik', label: 'Cephanelik', icon: Shield },
-      { to: '/balistik', label: 'Balistik Terminal', icon: Target },
-    ],
-  },
-  {
-    id: 'command',
-    title: '[ KOMUTA VE ANALİTİK ]',
-    items: [{ to: '/basarilar', label: 'Kişisel Başarı Takibi', icon: BarChart3 }],
-  },
-  {
-    id: 'usage-guide',
-    title: '[ KULLANIM KILAVUZU ]',
-    items: [{ to: '/kilavuz', end: true, label: 'Kullanım Kılavuzu', icon: BookOpen }],
-  },
-]
-
-const instructorNavItem = /** @type {NavItem} */ ({
-  to: '/egitmen-komuta',
-  label: 'Eğitmen Kontrol Paneli',
-  icon: KeyRound,
-})
 
 const linkBaseClass =
   'group relative flex items-center gap-3 overflow-hidden rounded-lg px-3 py-3 text-sm font-medium transition-colors duration-200'
@@ -266,22 +205,27 @@ export default function Sidebar({
   const showAdminLink = showAdminPanel || isAdmin
   const systemTheme = NAV_GROUP_THEMES.system
   const { groupState, toggleGroup } = useSidebarGroupState()
+  const navGroups = useNavGroups()
+  const instructorNavItem = useInstructorNavItem()
+  const systemGroupTitle = useSystemGroupTitle()
+  const navItems = useNavItemLabels()
+  const navUi = useNavUi()
 
   const groups = useMemo(() => {
     const isInstructorUser = role === 'instructor' || isInstructor
-    const next = NAV_GROUPS.map((g) => ({ ...g, items: [...g.items] }))
+    const next = navGroups.map((g) => ({ ...g, items: [...g.items] }))
     if (isInstructorUser) {
       const command = next.find((g) => g.id === 'command')
       if (command) command.items.push(instructorNavItem)
     }
     return next
-  }, [role, isInstructor])
+  }, [navGroups, instructorNavItem, role, isInstructor])
 
   return (
     <>
       <nav
         className={['flex flex-1 flex-col overflow-y-auto py-4', collapsed ? 'px-1.5' : 'px-3'].join(' ')}
-        aria-label="Modüller"
+        aria-label={navUi.modulesNavAria}
       >
         {groups.map((group) => {
           const theme = getNavGroupTheme(group.id)
@@ -340,7 +284,7 @@ export default function Sidebar({
                 <li>
                   <SidebarLink
                     to="/admin"
-                    label="Admin Paneli"
+                    label={navItems.admin}
                     icon={ShieldAlert}
                     onNavigate={onNavigate}
                     collapsed={collapsed}
@@ -350,7 +294,7 @@ export default function Sidebar({
               ) : null}
               <li>
                 <SidebarActionButton
-                  label="Şikayet & Öneri"
+                  label={navItems.feedback}
                   icon={MessageSquarePlus}
                   collapsed={collapsed}
                   iconIdleClass="text-zinc-500 transition-colors group-hover:text-lime-400"
@@ -364,7 +308,7 @@ export default function Sidebar({
                 <li>
                   <SidebarLink
                     to="/fiyatlandirma"
-                    label="Fiyatlandırma"
+                    label={navItems.pricing}
                     icon={CreditCard}
                     onNavigate={onNavigate}
                     collapsed={collapsed}
@@ -375,7 +319,7 @@ export default function Sidebar({
               <li>
                 <SidebarLink
                   to="/ayarlar"
-                  label="Ayarlar"
+                  label={navItems.settings}
                   icon={Settings}
                   onNavigate={onNavigate}
                   collapsed={collapsed}
@@ -384,7 +328,7 @@ export default function Sidebar({
               </li>
               <li>
                 <SidebarActionButton
-                  label="Çıkış"
+                  label={navItems.signOut}
                   icon={LogOut}
                   collapsed={collapsed}
                   disabled={!auth || signingOut}
@@ -398,7 +342,7 @@ export default function Sidebar({
         ) : (
           <SidebarGroupAccordion
             groupId="system"
-            title="[ SİSTEM ]"
+            title={systemGroupTitle}
             theme={systemTheme}
             open={isSidebarGroupOpen(groupState, 'system')}
             onToggle={() => toggleGroup('system')}
@@ -408,7 +352,7 @@ export default function Sidebar({
                 <li>
                   <SidebarLink
                     to="/admin"
-                    label="Admin Paneli"
+                    label={navItems.admin}
                     icon={ShieldAlert}
                     onNavigate={onNavigate}
                     collapsed={collapsed}
@@ -418,7 +362,7 @@ export default function Sidebar({
               ) : null}
               <li>
                 <SidebarActionButton
-                  label="Şikayet & Öneri"
+                  label={navItems.feedback}
                   icon={MessageSquarePlus}
                   collapsed={collapsed}
                   iconIdleClass="text-zinc-500 transition-colors group-hover:text-lime-400"
@@ -432,7 +376,7 @@ export default function Sidebar({
                 <li>
                   <SidebarLink
                     to="/fiyatlandirma"
-                    label="Fiyatlandırma"
+                    label={navItems.pricing}
                     icon={CreditCard}
                     onNavigate={onNavigate}
                     collapsed={collapsed}
@@ -443,7 +387,7 @@ export default function Sidebar({
               <li>
                 <SidebarLink
                   to="/ayarlar"
-                  label="Ayarlar"
+                  label={navItems.settings}
                   icon={Settings}
                   onNavigate={onNavigate}
                   collapsed={collapsed}
@@ -452,7 +396,7 @@ export default function Sidebar({
               </li>
               <li>
                 <SidebarActionButton
-                  label="Çıkış"
+                  label={navItems.signOut}
                   icon={LogOut}
                   collapsed={collapsed}
                   disabled={!auth || signingOut}
@@ -466,7 +410,7 @@ export default function Sidebar({
         )}
         {!collapsed ? (
           <p className="mt-4 truncate px-3 font-mono text-[10px] text-zinc-600" title={userEmail}>
-            {loading ? '…' : userEmail || 'Oturum yok'}
+            {loading ? '…' : userEmail || navUi.noSession}
           </p>
         ) : null}
       </div>
@@ -474,5 +418,5 @@ export default function Sidebar({
   )
 }
 
-/** @deprecated Gruplu NAV_GROUPS kullanın */
-export const mainNav = NAV_GROUPS.flatMap((g) => g.items)
+/** @deprecated NAV_GROUP_DEFS + useNavGroups kullanın */
+export { NAV_GROUP_DEFS as NAV_GROUPS } from '../../lib/navStructure'

@@ -1,24 +1,23 @@
 import { useMemo } from 'react'
-import { CreditCard, KeyRound, LogOut, MessageSquarePlus, Settings, ShieldAlert, X } from 'lucide-react'
+import { CreditCard, LogOut, MessageSquarePlus, Settings, ShieldAlert, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useFeedbackPanelOptional } from '../context/FeedbackPanelContext'
 import { useMuhabereNotify } from '../context/MuhabereNotifyContext'
 import { useSidebarGroupState } from '../hooks/useSidebarGroupState'
+import {
+  useInstructorNavItem,
+  useNavGroups,
+  useNavItemLabels,
+  useNavUi,
+  useSystemGroupTitle,
+} from '../hooks/useNavLabels'
 import { getNavGroupTheme, NAV_GROUP_THEMES } from '../lib/sidebarGroupColors'
 import { isSidebarGroupOpen } from '../lib/sidebarGroupState'
 import { auth } from '../lib/firebase'
 import { scheduleScrollAppToTop } from '../lib/scrollAppToTop'
-import { NAV_GROUPS, SidebarActionButton, SidebarLink } from '../components/navigation/Sidebar'
+import { SidebarActionButton, SidebarLink } from '../components/navigation/Sidebar'
 import { SidebarGroupAccordion } from '../components/navigation/SidebarNavParts'
-import { BOTTOM_TAB_ITEMS } from './BottomTabBar'
-
-const TAB_ROUTES = new Set(BOTTOM_TAB_ITEMS.map((t) => t.to))
-
-const instructorNavItem = {
-  to: '/egitmen-komuta',
-  label: 'Eğitmen Kontrol Paneli',
-  icon: KeyRound,
-}
+import { BOTTOM_TAB_ROUTES } from './BottomTabBar'
 
 /**
  * @param {{
@@ -40,32 +39,37 @@ export default function MobileNavMenu({
   const { sidebarMuhabereBadgeCount } = useMuhabereNotify()
   const feedbackPanel = useFeedbackPanelOptional()
   const { groupState, toggleGroup } = useSidebarGroupState()
+  const navGroups = useNavGroups()
+  const instructorNavItem = useInstructorNavItem()
+  const systemGroupTitle = useSystemGroupTitle()
+  const navItems = useNavItemLabels()
+  const navUi = useNavUi()
   const showAdminLink = showAdminPanel || isAdmin
   const systemTheme = NAV_GROUP_THEMES.system
 
   const extraGroups = useMemo(() => {
     const isInstructorUser = role === 'instructor' || isInstructor
-    const next = NAV_GROUPS.map((g) => ({
-      ...g,
-      items: g.items.filter((item) => !TAB_ROUTES.has(item.to)),
-    })).map((g) => ({ ...g, items: [...g.items] }))
+    const commandTitle = navGroups.find((g) => g.id === 'command')?.title ?? ''
+    const next = navGroups
+      .map((g) => ({
+        ...g,
+        items: g.items.filter((item) => !BOTTOM_TAB_ROUTES.has(item.to)),
+      }))
+      .map((g) => ({ ...g, items: [...g.items] }))
 
     if (isInstructorUser) {
       let command = next.find((g) => g.id === 'command')
       if (!command) {
-        const commandTemplate = NAV_GROUPS.find((g) => g.id === 'command')
-        if (commandTemplate) {
-          command = { ...commandTemplate, items: [] }
-          next.push(command)
-        }
+        command = { id: 'command', title: commandTitle, items: [] }
+        next.push(command)
       }
-      if (command && !command.items.some((item) => item.to === instructorNavItem.to)) {
+      if (!command.items.some((item) => item.to === instructorNavItem.to)) {
         command.items.push(instructorNavItem)
       }
     }
 
     return next.filter((g) => g.items.length > 0)
-  }, [role, isInstructor])
+  }, [navGroups, instructorNavItem, role, isInstructor])
 
   if (!open) return null
 
@@ -79,21 +83,21 @@ export default function MobileNavMenu({
       <button
         type="button"
         className="fixed inset-0 z-[60] bg-black/75 backdrop-blur-sm"
-        aria-label="Menüyü kapat"
+        aria-label={navUi.closeMenu}
         onClick={onClose}
       />
       <aside
         className="mobile-nav-sheet fixed inset-y-0 left-0 z-[70] flex w-[min(18rem,85vw)] flex-col border-r border-accent/15 bg-app-bg/98 shadow-2xl"
-        aria-label="Ek modüller"
+        aria-label={navUi.modulesSheetAria}
       >
         <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
           <p className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] text-accent">
-            MODÜLLER
+            {navUi.modulesTitle}
           </p>
           <button
             type="button"
             className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-zinc-400 hover:bg-white/10 hover:text-app-text"
-            aria-label="Kapat"
+            aria-label={navUi.close}
             onClick={onClose}
           >
             <X className="size-5" strokeWidth={1.75} aria-hidden />
@@ -139,7 +143,7 @@ export default function MobileNavMenu({
         <div className="border-t border-zinc-800/80 px-3 py-4">
           <SidebarGroupAccordion
             groupId="system"
-            title="[ SİSTEM ]"
+            title={systemGroupTitle}
             theme={systemTheme}
             open={isSidebarGroupOpen(groupState, 'system')}
             onToggle={() => toggleGroup('system')}
@@ -149,7 +153,7 @@ export default function MobileNavMenu({
                 <li>
                   <SidebarLink
                     to="/admin"
-                    label="Admin Paneli"
+                    label={navItems.admin}
                     icon={ShieldAlert}
                     onNavigate={handleNavigate}
                     iconIdleClass={systemTheme.iconIdleClass}
@@ -158,7 +162,7 @@ export default function MobileNavMenu({
               ) : null}
               <li>
                 <SidebarActionButton
-                  label="Şikayet & Öneri"
+                  label={navItems.feedback}
                   icon={MessageSquarePlus}
                   iconIdleClass="text-zinc-500 transition-colors group-hover:text-lime-400"
                   onClick={() => {
@@ -171,7 +175,7 @@ export default function MobileNavMenu({
                 <li>
                   <SidebarLink
                     to="/fiyatlandirma"
-                    label="Fiyatlandırma"
+                    label={navItems.pricing}
                     icon={CreditCard}
                     onNavigate={handleNavigate}
                     iconIdleClass={systemTheme.iconIdleClass}
@@ -181,7 +185,7 @@ export default function MobileNavMenu({
               <li>
                 <SidebarLink
                   to="/ayarlar"
-                  label="Ayarlar"
+                  label={navItems.settings}
                   icon={Settings}
                   onNavigate={handleNavigate}
                   iconIdleClass={systemTheme.iconIdleClass}
@@ -189,7 +193,7 @@ export default function MobileNavMenu({
               </li>
               <li>
                 <SidebarActionButton
-                  label="Çıkış"
+                  label={navItems.signOut}
                   icon={LogOut}
                   disabled={!auth || signingOut}
                   iconIdleClass="text-zinc-500 transition-colors group-hover:text-red-400/80"
@@ -200,7 +204,7 @@ export default function MobileNavMenu({
             </ul>
           </SidebarGroupAccordion>
           <p className="mt-3 truncate px-2 font-mono text-[10px] text-zinc-600" title={userEmail}>
-            {userEmail || 'Oturum yok'}
+            {userEmail || navUi.noSession}
           </p>
         </div>
       </aside>

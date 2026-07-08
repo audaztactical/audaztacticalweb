@@ -4,6 +4,8 @@ import trCommon from './locales/tr/common.json'
 import enCommon from './locales/en/common.json'
 import trDashboard from './locales/tr/dashboard.json'
 import enDashboard from './locales/en/dashboard.json'
+import trNav from './locales/tr/nav.json'
+import enNav from './locales/en/nav.json'
 
 export const SUPPORTED_LANGUAGES = /** @type {const} */ (['tr', 'en'])
 
@@ -20,14 +22,14 @@ const isDev = typeof import.meta !== 'undefined' && Boolean(import.meta.env?.DEV
 
 i18n.use(initReactI18next).init({
   resources: {
-    tr: { common: trCommon, dashboard: trDashboard },
-    en: { common: enCommon, dashboard: enDashboard },
+    tr: { common: trCommon, dashboard: trDashboard, nav: trNav },
+    en: { common: enCommon, dashboard: enDashboard, nav: enNav },
   },
   lng: detectBrowserLanguage(),
   fallbackLng: 'en',
   supportedLngs: [...SUPPORTED_LANGUAGES],
   defaultNS: 'common',
-  ns: ['common', 'dashboard'],
+  ns: ['common', 'dashboard', 'nav'],
   interpolation: { escapeValue: false },
   ...(isDev
     ? {

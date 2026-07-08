@@ -9,9 +9,11 @@ import NotificationDropdown from '../components/notifications/NotificationDropdo
 import LanguageSwitcher from '../components/shared/LanguageSwitcher'
 import BottomTabBar from './BottomTabBar'
 import MobileNavMenu from './MobileNavMenu'
+import { useNavUi } from '../hooks/useNavLabels'
 
 export default function MobileLayout() {
   const { user } = useAuth()
+  const navUi = useNavUi()
   const location = useLocation()
   const [navMenuOpen, setNavMenuOpen] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
@@ -51,13 +53,13 @@ export default function MobileLayout() {
           type="button"
           className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-white/10 bg-white/5 text-accent"
           aria-expanded={navMenuOpen}
-          aria-label="Modül menüsü"
+          aria-label={navUi.moduleMenuAria}
           onClick={() => setNavMenuOpen(true)}
         >
           <Menu className="size-5" strokeWidth={1.75} aria-hidden />
         </button>
 
-        <Link to="/dashboard" className="flex min-w-0 flex-1 justify-center" aria-label="Ana sayfa">
+        <Link to="/dashboard" className="flex min-w-0 flex-1 justify-center" aria-label={navUi.homeAria}>
           <img src="/logo.png" alt="AUDAZ Tactical" className="h-9 w-auto object-contain" decoding="async" />
         </Link>
 

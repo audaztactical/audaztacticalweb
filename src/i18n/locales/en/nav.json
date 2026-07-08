@@ -1,0 +1,57 @@
+{
+  "groups": {
+    "personal": "[ personal / hq ]",
+    "audazNetwork": "[ audaz network ]",
+    "operations": "[ ops & logistics ]",
+    "command": "[ command & analytics ]",
+    "usageGuide": "[ usage guide ]",
+    "system": "[ system ]"
+  },
+  "items": {
+    "hqReturn": "Return to HQ",
+    "home": "Home",
+    "profile": "My profile",
+    "tacticalComms": "Tactical comms",
+    "audazAcademy": "Audaz Academy",
+    "briefingRoom": "Briefing room",
+    "globalIntel": "Global intel",
+    "trainingOps": "Training & ops",
+    "tccc": "TCCC & medical",
+    "armory": "Armory",
+    "ballistics": "Ballistics",
+    "achievements": "Achievements",
+    "instructorPanel": "Instructor panel",
+    "usageGuide": "Usage guide",
+    "admin": "Admin panel",
+    "feedback": "Feedback",
+    "pricing": "Pricing",
+    "settings": "Settings",
+    "signOut": "Sign out"
+  },
+  "tabs": {
+    "home": "Home",
+    "training": "Training",
+    "messages": "Messages",
+    "armory": "Armory",
+    "ballistics": "Ballistics",
+    "profile": "Profile"
+  },
+  "ui": {
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "collapseAria": "Collapse sidebar",
+    "expandAria": "Expand sidebar",
+    "mainNavAria": "Main navigation",
+    "modulesNavAria": "Modules",
+    "modulesTitle": "Modules",
+    "modulesSheetAria": "Additional modules",
+    "closeMenu": "Close menu",
+    "openMenu": "Open menu",
+    "close": "Close",
+    "bottomNavAria": "Bottom navigation",
+    "homeAria": "Home",
+    "moduleMenuAria": "Module menu",
+    "noSession": "No session",
+    "unreadMessages": "{{count}} unread messages"
+  }
+}

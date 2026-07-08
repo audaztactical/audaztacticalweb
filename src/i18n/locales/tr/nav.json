@@ -1,0 +1,57 @@
+{
+  "groups": {
+    "personal": "[ kişisel / merkez ]",
+    "audazNetwork": "[ audaz ağı ]",
+    "operations": "[ operasyon ve lojistik ]",
+    "command": "[ komuta ve analitik ]",
+    "usageGuide": "[ kullanım kılavuzu ]",
+    "system": "[ sistem ]"
+  },
+  "items": {
+    "hqReturn": "Karargâh'a dön",
+    "home": "Ana sayfa",
+    "profile": "Profilim",
+    "tacticalComms": "Taktik muhabere",
+    "audazAcademy": "Audaz Akademi",
+    "briefingRoom": "Brifing odası (forum)",
+    "globalIntel": "Küresel haber ağı",
+    "trainingOps": "Antrenman ve operasyon",
+    "tccc": "TCCC & sağlık",
+    "armory": "Cephanelik",
+    "ballistics": "Balistik terminal",
+    "achievements": "Kişisel başarı takibi",
+    "instructorPanel": "Eğitmen kontrol paneli",
+    "usageGuide": "Kullanım kılavuzu",
+    "admin": "Admin paneli",
+    "feedback": "Şikayet & öneri",
+    "pricing": "Fiyatlandırma",
+    "settings": "Ayarlar",
+    "signOut": "Çıkış"
+  },
+  "tabs": {
+    "home": "Ana sayfa",
+    "training": "Antrenman",
+    "messages": "Mesajlar",
+    "armory": "Cephanelik",
+    "ballistics": "Balistik",
+    "profile": "Profil"
+  },
+  "ui": {
+    "collapse": "Daralt",
+    "expand": "Genişlet",
+    "collapseAria": "Kenar çubuğunu daralt",
+    "expandAria": "Kenar çubuğunu genişlet",
+    "mainNavAria": "Ana navigasyon",
+    "modulesNavAria": "Modüller",
+    "modulesTitle": "Modüller",
+    "modulesSheetAria": "Ek modüller",
+    "closeMenu": "Menüyü kapat",
+    "openMenu": "Menüyü aç",
+    "close": "Kapat",
+    "bottomNavAria": "Alt navigasyon",
+    "homeAria": "Ana sayfa",
+    "moduleMenuAria": "Modül menüsü",
+    "noSession": "Oturum yok",
+    "unreadMessages": "{{count}} okunmamış mesaj"
+  }
+}

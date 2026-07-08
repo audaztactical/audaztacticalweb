@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { Crosshair, Home, MessageSquare, Shield, Target, User } from 'lucide-react'
-import { NAV_GROUPS } from '../components/navigation/Sidebar'
 import { useMuhabereNotify } from '../context/MuhabereNotifyContext'
+import { useBottomTabItems, useNavUi } from '../hooks/useNavLabels'
+import { ROUTE_GROUP_MAP } from '../lib/navStructure'
 import { getNavGroupTheme } from '../lib/sidebarGroupColors'
 import { scheduleScrollAppToTop } from '../lib/scrollAppToTop'
 
@@ -12,20 +12,7 @@ function formatMesajlarBadgeCount(count) {
   return count > 9 ? '9+' : String(count)
 }
 
-/** @type {{ to: string; label: string; icon: import('lucide-react').LucideIcon; end?: boolean }[]} */
-export const BOTTOM_TAB_ITEMS = [
-  { to: '/dashboard', label: 'Ana Sayfa', icon: Home, end: true },
-  { to: '/antrenman', label: 'Antrenman', icon: Crosshair },
-  { to: '/mesajlar', label: 'Mesajlar', icon: MessageSquare },
-  { to: '/cephanelik', label: 'Cephanelik', icon: Shield },
-  { to: '/balistik', label: 'Balistik', icon: Target },
-  { to: '/profil', label: 'Profil', icon: User },
-]
-
-/** @type {Map<string, string>} */
-const ROUTE_GROUP_MAP = new Map(
-  NAV_GROUPS.flatMap((group) => group.items.map((item) => [item.to, group.id])),
-)
+export { BOTTOM_TAB_DEFS, BOTTOM_TAB_ROUTES } from '../lib/navStructure'
 
 /**
  * @param {string} route
@@ -36,7 +23,6 @@ function getGroupIdForRoute(route) {
 }
 
 /**
- * Paylaşılan NAV_GROUP_THEMES tonlarından tab bar sınıfları türetir (yeni palet yok).
  * @param {string} groupId
  */
 function getTabThemeClasses(groupId) {
@@ -67,6 +53,8 @@ function getTabThemeClasses(groupId) {
 }
 
 export default function BottomTabBar() {
+  const bottomTabItems = useBottomTabItems()
+  const navUi = useNavUi()
   const { unreadMuhabereMessagesTotal, unreadChannelMessageCount, unreadMessageCount } =
     useMuhabereNotify()
   const location = useLocation()
@@ -81,19 +69,20 @@ export default function BottomTabBar() {
 
   const tabThemes = useMemo(() => {
     const map = new Map()
-    for (const { to } of BOTTOM_TAB_ITEMS) {
+    for (const { to } of bottomTabItems) {
       map.set(to, getTabThemeClasses(getGroupIdForRoute(to)))
     }
     return map
-  }, [])
+  }, [bottomTabItems])
 
   return (
     <nav
       className="mobile-tab-bar fixed inset-x-0 bottom-0 z-50 border-t border-accent/20 bg-app-bg/95 backdrop-blur-md"
-      aria-label="Alt navigasyon"
+      aria-label={navUi.bottomNavAria}
     >
       <ul className="mx-auto flex h-14 max-w-lg items-stretch justify-around px-1">
-        {BOTTOM_TAB_ITEMS.map(({ to, label, icon: TabIcon, end }) => {
+        {bottomTabItems.map((tab) => {
+          const { to, label, icon: Icon, end } = tab
           const mesajlarBadgeLabel =
             to === '/mesajlar' && !onMesajlarRoute
               ? formatMesajlarBadgeCount(totalUnreadCount)
@@ -126,7 +115,7 @@ export default function BottomTabBar() {
                 {({ isActive }) => (
                   <>
                     <span className="relative inline-flex">
-                      <TabIcon
+                      <Icon
                         className={[
                           'size-5 shrink-0 transition-[color,filter] duration-200',
                           isActive ? [theme.activeIcon, 'drop-shadow-[0_0_5px_currentColor]'].join(' ') : theme.idleIcon,
@@ -137,7 +126,7 @@ export default function BottomTabBar() {
                       {mesajlarBadgeLabel ? (
                         <span
                           className="absolute -right-2.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-center font-mono text-[9px] font-bold leading-none text-black shadow-[0_0_10px_rgba(245,158,11,0.55)]"
-                          aria-label={`${totalUnreadCount} okunmamış mesaj`}
+                          aria-label={navUi.unreadMessages(totalUnreadCount)}
                         >
                           {mesajlarBadgeLabel}
                         </span>
