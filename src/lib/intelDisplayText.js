@@ -83,3 +83,34 @@ export function formatVideoOriginDisplay(origin) {
   if (!raw) return i18n.t('video.defaultOrigin', { ns: 'intel' })
   return raw
 }
+
+/** @param {string} [language] */
+export function isIntelUiTurkish(language = i18n.language) {
+  return String(language ?? '').startsWith('tr')
+}
+
+/**
+ * Küresel RSS: UI diline göre; yerel uyarı: her zaman TR.
+ * @param {{ isAlert?: boolean }} item
+ * @param {string} [language]
+ */
+export function defaultShowTurkishForIntelItem(item, language = i18n.language) {
+  if (item.isAlert === true) return true
+  return isIntelUiTurkish(language)
+}
+
+/**
+ * @param {import('./firestoreIntelFeed').IntelFeedItem} item
+ * @param {boolean} showTurkish
+ */
+export function pickIntelFeedTitle(item, showTurkish) {
+  return showTurkish ? item.trTitle || item.enTitle : item.enTitle || item.trTitle
+}
+
+/**
+ * @param {import('./firestoreIntelFeed').IntelFeedItem} item
+ * @param {boolean} showTurkish
+ */
+export function pickIntelFeedSummary(item, showTurkish) {
+  return showTurkish ? item.trSummary || item.enSummary : item.enSummary || item.trSummary
+}

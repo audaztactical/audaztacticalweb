@@ -4,7 +4,13 @@ import { ExternalLink, Globe, Languages, Loader2, Radio, ShieldAlert } from 'luc
 import { useTranslation } from 'react-i18next'
 import VideoNewsGrid from '../components/intel/VideoNewsGrid'
 import { emitFirebaseError } from '../lib/firebaseErrorBus'
-import { formatIntelTimestampDisplay } from '../lib/intelDisplayText'
+import {
+  defaultShowTurkishForIntelItem,
+  formatIntelTimestampDisplay,
+  isIntelUiTurkish,
+  pickIntelFeedSummary,
+  pickIntelFeedTitle,
+} from '../lib/intelDisplayText'
 import { subscribeIntelFeed } from '../lib/firestoreIntelFeed'
 import i18n from '../i18n'
 
@@ -45,11 +51,19 @@ const cardVariants = {
  * @param {{ item: IntelFeedItem }} props
  */
 function IntelCard({ item }) {
-  const { t } = useTranslation('intel')
-  const [showTurkish, setShowTurkish] = useState(true)
+  const { t, i18n } = useTranslation('intel')
+  const isAlert = item.isAlert === true
+  const [showTurkish, setShowTurkish] = useState(() =>
+    defaultShowTurkishForIntelItem(item, i18n.language),
+  )
 
-  const title = showTurkish ? item.trTitle || item.enTitle : item.enTitle || item.trTitle
-  const summary = showTurkish ? item.trSummary || item.enSummary : item.enSummary || item.trSummary
+  useEffect(() => {
+    if (isAlert) return
+    setShowTurkish(isIntelUiTurkish(i18n.language))
+  }, [i18n.language, isAlert])
+
+  const title = pickIntelFeedTitle(item, showTurkish)
+  const summary = pickIntelFeedSummary(item, showTurkish)
   const hasTranslation = Boolean(
     (item.trTitle || item.trSummary) && (item.enTitle || item.enSummary),
   )

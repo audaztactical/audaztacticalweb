@@ -18,6 +18,7 @@ export const INTEL_NEWS_TYPE = 'haber'
  *   type?: string
  *   public?: boolean
  *   hiddenFromFeed?: boolean
+ *   isAlert?: boolean
  * }} IntelFeedItem
  */
 
@@ -66,6 +67,7 @@ export function mapIntelFeedDoc(raw, docId) {
     url: String(d.url ?? '').trim(),
     type: String(d.type ?? INTEL_NEWS_TYPE).trim() || INTEL_NEWS_TYPE,
     public: d.public !== false,
+    isAlert: d.isAlert === true,
   }
 }
 

@@ -1,3 +1,10 @@
+import i18n from '../../i18n'
+import {
+  defaultShowTurkishForIntelItem,
+  pickIntelFeedSummary,
+  pickIntelFeedTitle,
+} from '../../lib/intelDisplayText'
+
 /** @typedef {{ id: string, title: string, source: string, teaser: string, live?: boolean }} NewsTeaser */
 
 /** @type {NewsTeaser[]} */
@@ -29,14 +36,17 @@ export const LANDING_NEWS_TEASERS = [
 
 /**
  * @param {import('../../lib/firestoreIntelFeed').IntelFeedItem} item
+ * @param {string} [language]
  * @returns {NewsTeaser}
  */
-export function intelItemToTeaser(item) {
+export function intelItemToTeaser(item, language = i18n.language) {
+  const showTurkish = defaultShowTurkishForIntelItem(item, language)
+
   return {
     id: item.id,
-    title: item.trTitle || item.enTitle || 'Operasyonel Özet',
+    title: pickIntelFeedTitle(item, showTurkish) || i18n.t('card.noTitle', { ns: 'intel' }),
     source: item.source || 'HABER · Küresel Haber Ağı',
-    teaser: item.trSummary || item.enSummary || 'Özet mevcut değil.',
+    teaser: pickIntelFeedSummary(item, showTurkish) || i18n.t('card.noSummary', { ns: 'intel' }),
     live: true,
   }
 }

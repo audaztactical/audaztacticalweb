@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ImageIcon } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { fetchLandingIntelNews } from '../../lib/firestoreIntelFeed'
 import {
   feedStatusLabel,
@@ -61,8 +62,14 @@ function NewsTeaserCard({ teaser }) {
  * @param {{ onStatusChange?: (status: FeedStatus) => void }} props
  */
 export default function LandingIntelNewsGrid({ onStatusChange }) {
-  const [teasers, setTeasers] = useState(() => mergeNewsTeasers([]))
+  const { i18n } = useTranslation()
+  const [liveItems, setLiveItems] = useState(/** @type {import('../../lib/firestoreIntelFeed').IntelFeedItem[]} */ ([]))
   const [status, setStatus] = useState(/** @type {FeedStatus} */ ('syncing'))
+
+  const teasers = useMemo(
+    () => mergeNewsTeasers(liveItems.map((item) => intelItemToTeaser(item, i18n.language))),
+    [liveItems, i18n.language],
+  )
 
   useEffect(() => {
     onStatusChange?.('syncing')
@@ -72,15 +79,13 @@ export default function LandingIntelNewsGrid({ onStatusChange }) {
       try {
         const rows = await fetchLandingIntelNews(3)
         if (cancelled) return
-        const live = rows.map(intelItemToTeaser)
-        const merged = mergeNewsTeasers(live)
-        setTeasers(merged)
-        const nextStatus = live.length > 0 ? 'live' : 'teaser'
+        setLiveItems(rows)
+        const nextStatus = rows.length > 0 ? 'live' : 'teaser'
         setStatus(nextStatus)
         onStatusChange?.(nextStatus)
       } catch {
         if (cancelled) return
-        setTeasers(mergeNewsTeasers([]))
+        setLiveItems([])
         setStatus('teaser')
         onStatusChange?.('teaser')
       }
