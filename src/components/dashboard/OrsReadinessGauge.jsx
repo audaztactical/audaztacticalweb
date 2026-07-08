@@ -1,4 +1,5 @@
 import { useId, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import TacticalPanel from '../ui/TacticalPanel'
 import { useTheme } from '../../contexts/ThemeContext'
 import { getAccentColor } from '../../lib/themeColors'
@@ -8,10 +9,11 @@ const TACTIC_AMBER = '#f59e0b'
 const COMBAT_RED = '#FF0000'
 
 /**
- * OHP (Operasyonel Hazırlık Puanı) — üst yarım daire + durum + hata kodları.
+ * OHP / ORS — üst yarım daire + durum + hata kodları.
  * @param {{ score: number, penalties: { code: string, delta: number, detail: string }[], loading?: boolean, embedded?: boolean }} props
  */
 export default function OrsReadinessGauge({ score, penalties, loading, embedded = false }) {
+  const { t } = useTranslation('dashboard')
   const gid = useId().replace(/:/g, '')
   const { themeClass } = useTheme()
   const accentColor = useMemo(() => getAccentColor(), [themeClass])
@@ -31,7 +33,7 @@ export default function OrsReadinessGauge({ score, penalties, loading, embedded 
 
   const strokeTrack = 'rgba(255,255,255,0.1)'
   let glow = `drop-shadow(0 0 16px color-mix(in srgb, ${accentColor} 60%, transparent))`
-  let statusLine = 'DURUM: GÖREVE HAZIR'
+  let statusLine = t('ors.statusReady')
   let titleAccent = 'text-accent/90'
   let scoreColor = 'text-accent'
   let fillStart = accentColor
@@ -39,14 +41,14 @@ export default function OrsReadinessGauge({ score, penalties, loading, embedded 
   if (isMarginal) {
     fillStart = TACTIC_AMBER
     glow = 'drop-shadow(0 0 14px rgba(245,158,11,0.55))'
-    statusLine = 'DURUM: DİKKAT - SINIRDA HAZIR'
+    statusLine = t('ors.statusMarginal')
     titleAccent = 'text-accent/90'
     scoreColor = 'text-accent'
   }
   if (isCritical) {
     fillStart = COMBAT_RED
     glow = `drop-shadow(0 0 20px ${COMBAT_RED}cc)`
-    statusLine = 'DURUM: KRİTİK - GÖREV İPTAL'
+    statusLine = t('ors.statusCritical')
     titleAccent = 'text-red-500'
     scoreColor = 'text-[#FF0000]'
   }
@@ -56,16 +58,18 @@ export default function OrsReadinessGauge({ score, penalties, loading, embedded 
   const inner = (
     <>
       <div className="pointer-events-none flex flex-col items-center text-center">
-        <p className={`font-mono-technical text-[10px] font-bold uppercase tracking-[0.32em] sm:tracking-[0.45em] ${titleAccent}`}>OHP</p>
-        <p className="mt-1 font-mono-technical text-[9px] uppercase tracking-[0.16em] text-app-text/45 sm:tracking-[0.22em]">
-          Operasyonel Hazırlık Puanı
+        <p className={`font-mono-technical text-[10px] font-bold uppercase tracking-[0.32em] sm:tracking-[0.45em] ${titleAccent}`}>
+          {t('ors.abbrev')}
+        </p>
+        <p className="mt-1 max-w-[18rem] font-mono-technical text-[9px] uppercase leading-snug tracking-[0.16em] text-app-text/45 sm:tracking-[0.22em]">
+          {t('ors.title')}
         </p>
       </div>
 
       <div className="relative mx-auto mt-1 flex h-[148px] w-full max-w-[300px] items-start justify-center">
         {loading ? (
           <div className="absolute inset-0 z-[2] flex items-center justify-center rounded-lg bg-black/35 font-mono-technical text-[10px] uppercase tracking-widest text-app-text/55 backdrop-blur-[1px]">
-            HESAPLANIYOR…
+            {t('ors.calculating')}
           </div>
         ) : null}
         <svg width="300" height="145" viewBox="0 0 200 120" className="h-auto w-full max-w-[300px] overflow-visible" aria-hidden>
@@ -93,7 +97,7 @@ export default function OrsReadinessGauge({ score, penalties, loading, embedded 
         </svg>
         <div className="pointer-events-none absolute bottom-2 left-1/2 flex -translate-x-1/2 flex-col items-center">
           <span className={`font-mono-technical text-3xl font-black tabular-nums leading-none tracking-tight sm:text-5xl ${scoreColor}`}>{score}</span>
-          <span className="mt-0.5 font-mono-technical text-[9px] text-app-text/45 sm:mt-1 sm:text-[10px]">/ 100</span>
+          <span className="mt-0.5 font-mono-technical text-[9px] text-app-text/45 sm:mt-1 sm:text-[10px]">{t('ors.scoreOf')}</span>
         </div>
       </div>
 
@@ -106,7 +110,7 @@ export default function OrsReadinessGauge({ score, penalties, loading, embedded 
       <div className="mt-4 space-y-1 border-t border-white/10 pt-3">
         {penalties.length === 0 ? (
           <p className="text-center font-mono-technical text-[10px] uppercase tracking-wider text-accent/75 sm:text-[9px]">
-            Kesinti yok · hata kuyruğu temiz
+            {t('ors.noPenalties')}
           </p>
         ) : (
           penalties.slice(0, 3).map((pen, i) => (
@@ -115,8 +119,8 @@ export default function OrsReadinessGauge({ score, penalties, loading, embedded 
               className="grid grid-cols-1 gap-1 text-[10px] sm:flex sm:flex-wrap sm:items-baseline sm:justify-between sm:gap-x-2 sm:gap-y-1 sm:text-[9px]"
             >
               <span className="font-mono-technical text-[#FF0000]/95 break-words">{humanizeOrsPenaltyCode(pen.code)}</span>
-              <span className="font-mono-technical tabular-nums text-app-text/55">{humanizeOrsPenaltyDetail(pen.detail)}</span>
-              <span className="font-mono-technical tabular-nums text-app-text/45 sm:text-right">{pen.delta} PUAN</span>
+              <span className="font-mono-technical tabular-nums text-app-text/55 break-words">{humanizeOrsPenaltyDetail(pen.detail)}</span>
+              <span className="font-mono-technical tabular-nums text-app-text/45 sm:text-right">{t('ors.points', { delta: pen.delta })}</span>
             </div>
           ))
         )}

@@ -1,0 +1,159 @@
+{
+  "header": {
+    "kicker": "Operasyonel Komuta Merkezi",
+    "operatorFallback": "Operatör",
+    "notifications_one": "{{count}} bildirim",
+    "notifications_other": "{{count}} bildirim"
+  },
+  "hero": {
+    "pending_one": "Sırada bekleyen {{count}} operasyonunuz var",
+    "pending_other": "Sırada bekleyen {{count}} operasyonunuz var",
+    "inProgress_one": "{{count}} aktif operasyon devam ediyor",
+    "inProgress_other": "{{count}} aktif operasyon devam ediyor",
+    "active_one": "{{count}} açık görev kayıtlı",
+    "active_other": "{{count}} açık görev kayıtlı",
+    "ready": "Operasyonel durum hazır — bekleyen görev yok"
+  },
+  "alert": {
+    "dataInterrupted": "Veri akışında geçici kesinti. Bağlantı yenileniyor."
+  },
+  "focusSectionAria": "Operasyonel hazırlık ve kapasite radarı",
+  "sideWidgetsAria": "Hızlı erişim widgetları",
+  "ors": {
+    "abbrev": "OHP",
+    "title": "Operasyonel Hazırlık Puanı",
+    "calculating": "HESAPLANIYOR…",
+    "scoreOf": "/ 100",
+    "statusReady": "DURUM: GÖREVE HAZIR",
+    "statusMarginal": "DURUM: DİKKAT - SINIRDA HAZIR",
+    "statusCritical": "DURUM: KRİTİK - GÖREV İPTAL",
+    "noPenalties": "Kesinti yok · hata kuyruğu temiz",
+    "points": "{{delta}} PUAN"
+  },
+  "radar": {
+    "title": "Kapasite radarı",
+    "subtitle": "Personel · lojistik · ekipman karşılaştırması",
+    "calculating": "Hesaplanıyor…",
+    "noDataHint": "Veri bekleniyor — antrenman ve cephanelik kayıtları radarı doldurur.",
+    "tooltipKicker": "Kapasite metriği",
+    "seriesName": "Hazırlık",
+    "axes": {
+      "personnel": "Personel",
+      "logistics": "Lojistik",
+      "equipment": "Ekipman"
+    }
+  },
+  "systemLog": {
+    "title": "Sistem günlüğü",
+    "subtitle": "Renk kodlu operasyon akışı",
+    "empty": "Henüz kayıt yok.",
+    "severity": {
+      "critical": "KRİTİK",
+      "warning": "UYARI",
+      "active": "AKTİF",
+      "neutral": "BİLGİ"
+    },
+    "codes": {
+      "CEP_GNC": "Cephanelik",
+      "CEP": "Cephanelik",
+      "GÜV": "Güvenlik",
+      "OPS": "Operasyon",
+      "EĞT": "Eğitim",
+      "SHT": "Sağlık"
+    },
+    "mission": "Görev · {{title}}",
+    "drill": "Tatbikat · {{title}}",
+    "fieldRecord": "Saha kaydı · Bölge {{zone}}",
+    "medicalRecord": "Tıbbi kayıt · {{name}}",
+    "sessionActive": "Kanal açık · Oturum aktif",
+    "phrases": {
+      "AKSESUAR_SÖKÜLDÜ": "Aksesuar söküldü",
+      "AKSESUAR_MONTAJ": "Aksesuar montaj",
+      "CEP_GNC": "Cephanelik güncellendi",
+      "KANAL_AÇIK · OTURUM_AKTİF": "Kanal açık · Oturum aktif",
+      "GÖREV_SENK": "Görev",
+      "TATBİKAT_IX": "Tatbikat",
+      "SAHA_KAYIT": "Saha kaydı",
+      "TIBBİ_SENK": "Tıbbi kayıt",
+      "IFAK_IX": "IFAK",
+      "OLAY_IX": "Olay kaydı",
+      "UNK": "Bilinmiyor"
+    },
+    "region": "Bölge"
+  },
+  "penalty": {
+    "incidentArea": "Olay alanı",
+    "barrelFlag": "Namlu ihlali",
+    "ammo": "Mühimmat",
+    "sevenDays": "7 gün",
+    "count": "Adet",
+    "session": "oturum",
+    "level": "Seviye {{n}}",
+    "last24h": "Son 24 saat"
+  },
+  "maintenance": {
+    "alert": "KRİTİK NAMLU BAKIMI GEREKLİ - ATIŞ SONRASI TEMİZLİK VE YİV-SET KONTROLÜ BEKLENİYOR",
+    "logButton": "BAKIM KAYDI GİR"
+  },
+  "location": {
+    "aria": "Konum seçici",
+    "title": "Konum seçici",
+    "useMyLocation": "Konumumu kullan",
+    "province": "İl",
+    "district": "İlçe",
+    "geoLocating": "Konum algılanıyor…",
+    "geoUpdated": "GPS ile güncellendi",
+    "geoFailed": "Konum alınamadı — Windows konum servisini açın veya manuel seçin",
+    "geoUnsupported": "GPS desteklenmiyor"
+  },
+  "widgets": {
+    "panelAria": "Operasyonel yan panel",
+    "weather": {
+      "label": "Hava Durumu",
+      "desc": "Meteorolojik durum"
+    },
+    "wind": {
+      "label": "Rüzgar Trendi",
+      "desc": "Saatlik rüzgar hızı",
+      "estimated": "Tahmini",
+      "chartEstimated": "Gerçek veri alınamadı — tahmini eğilim gösteriliyor",
+      "chartLive": "Saatlik rüzgar (km/h) · Open-Meteo"
+    },
+    "geo": {
+      "label": "Konum Haritası",
+      "desc": "Koordinat ve bölge"
+    },
+    "atmosphere": {
+      "label": "Atmosfer Verisi",
+      "desc": "Nem, basınç ve kaynak"
+    },
+    "loading": "yükleniyor…",
+    "noData": "Veri yok",
+    "weatherRow": "Hava durumu",
+    "probability": "İhtimal",
+    "amount": "Miktar",
+    "wind": "Rüzgar",
+    "sea": "Deniz durumu",
+    "region": "Bölge",
+    "coordinates": "Koordinat",
+    "coastal": "Kıyı",
+    "humidity": "Nem",
+    "pressure": "Basınç",
+    "source": "Kaynak",
+    "feelsLike": "Hissedilen {{temp}}°C",
+    "windDirection": "Yön {{dir}} ({{deg}}°)",
+    "coastalYes": "Evet — deniz verisi aktif",
+    "coastalNo": "Hayır",
+    "notCoastal": "Kıyı bölgesi değil",
+    "wave": "Dalga {{height}} m",
+    "waterTemp": "Su {{temp}}°C",
+    "fetchError": "Veri alınamadı",
+    "precip": {
+      "none": "Yağış beklenmiyor",
+      "dry": "Yağışsız",
+      "probability": "İhtimal: %{{pct}}",
+      "amount": "Miktar: {{amount}} mm/h",
+      "duration": "Tahmini süre ~{{hours}} saat"
+    }
+  }
+}

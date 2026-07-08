@@ -1,7 +1,9 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import './i18n'
 import LandingPage from './pages/LandingPage'
 import { AuthProvider } from './context/AuthContext'
+import { LanguagePreferenceProvider } from './context/LanguagePreferenceContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { FirebaseErrorProvider } from './context/FirebaseErrorContext'
 import { TcccAlertProvider } from './context/TcccAlertContext'
@@ -41,6 +43,7 @@ const UsageGuide = lazy(() => import('./pages/UsageGuide'))
 export default function App() {
   return (
     <AuthProvider>
+      <LanguagePreferenceProvider>
       <ThemeProvider>
       <FcmPushBootstrap />
       <NotificationProvider>
@@ -110,6 +113,7 @@ export default function App() {
       </TcccAlertProvider>
       </NotificationProvider>
       </ThemeProvider>
+      </LanguagePreferenceProvider>
     </AuthProvider>
   )
 }

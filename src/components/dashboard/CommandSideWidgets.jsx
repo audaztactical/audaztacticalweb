@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   ChevronDown,
   CloudRain,
@@ -9,25 +10,26 @@ import {
 import { Line, LineChart, ResponsiveContainer, YAxis } from 'recharts'
 import LocationSelector from './LocationSelector'
 import { useDefaultLocationSelection, useLocationWeather } from '../../hooks/useLocationWeather'
-import { formatPrecipitationRows, formatWeatherSource } from '../../lib/weatherService'
+import { formatDashboardPrecipitationRows } from '../../lib/dashboardWeatherDisplay'
+import { formatWeatherSource } from '../../lib/weatherService'
 
 /**
- * @param {{ label: string, value: string, detail?: string, icon?: import('react').ReactNode, loading?: boolean }} props
+ * @param {{ label: string, value: string, detail?: string, icon?: import('react').ReactNode, loading?: boolean, loadingText: string }} props
  */
-function MetDataRow({ label, value, detail, icon, loading }) {
+function MetDataRow({ label, value, detail, icon, loading, loadingText }) {
   return (
     <div className="cmd-met-row">
       <span className="cmd-met-row__label">{label}</span>
-      <div className="cmd-met-row__value-wrap">
+      <div className="cmd-met-row__value-wrap min-w-0">
         {loading ? (
-          <span className="cmd-met-row__loading">yükleniyor…</span>
+          <span className="cmd-met-row__loading">{loadingText}</span>
         ) : (
           <>
-            <div className="cmd-met-row__main">
+            <div className="cmd-met-row__main min-w-0">
               {icon ? <span className="cmd-met-row__icon">{icon}</span> : null}
-              <span className="cmd-met-row__value">{value}</span>
+              <span className="cmd-met-row__value break-words">{value}</span>
             </div>
-            {detail ? <span className="cmd-met-row__detail">{detail}</span> : null}
+            {detail ? <span className="cmd-met-row__detail break-words">{detail}</span> : null}
           </>
         )}
       </div>
@@ -39,6 +41,7 @@ function MetDataRow({ label, value, detail, icon, loading }) {
  * @param {{ signalSeries?: { t: string, v: number }[] }} props
  */
 export default function CommandSideWidgets({ signalSeries: _legacySignal }) {
+  const { t, i18n } = useTranslation('dashboard')
   const { provinceId, setProvinceId, districtName, setDistrictName, gpsCoords, geoStatus, geoActive, refreshFromGps } =
     useDefaultLocationSelection()
   const { location, data, loading, error } = useLocationWeather(provinceId, districtName, gpsCoords)
@@ -51,32 +54,35 @@ export default function CommandSideWidgets({ signalSeries: _legacySignal }) {
 
   const widgets = useMemo(
     () => [
-      { id: 'weather', label: 'Hava Durumu', desc: 'Meteorolojik durum', icon: CloudRain, glow: 'cmd-widget--sky' },
-      { id: 'signal', label: 'Rüzgar Trendi', desc: 'Saatlik rüzgar hızı', icon: Radio, glow: 'cmd-widget--green', chart: true },
-      { id: 'geo', label: 'Konum Haritası', desc: 'Koordinat ve bölge', icon: Map, glow: 'cmd-widget--slate', geo: true },
-      { id: 'globe', label: 'Atmosfer Verisi', desc: 'Nem, basınç ve kaynak', icon: Globe2, glow: 'cmd-widget--sky', intel: true },
+      { id: 'weather', label: t('widgets.weather.label'), desc: t('widgets.weather.desc'), icon: CloudRain, glow: 'cmd-widget--sky' },
+      { id: 'signal', label: t('widgets.wind.label'), desc: t('widgets.wind.desc'), icon: Radio, glow: 'cmd-widget--green', chart: true },
+      { id: 'geo', label: t('widgets.geo.label'), desc: t('widgets.geo.desc'), icon: Map, glow: 'cmd-widget--slate', geo: true },
+      { id: 'globe', label: t('widgets.atmosphere.label'), desc: t('widgets.atmosphere.desc'), icon: Globe2, glow: 'cmd-widget--sky', intel: true },
     ],
-    []
+    [t, i18n.language],
   )
 
   const toggleExpand = (id) => {
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }))
   }
 
-  const precipRows = useMemo(() => formatPrecipitationRows(data), [data])
+  const precipRows = useMemo(() => formatDashboardPrecipitationRows(data), [data, i18n.language])
 
   const seaText = useMemo(() => {
-    if (!location.coastal) return 'Kıyı bölgesi değil'
-    if (!data?.marine) return loading ? '…' : 'Veri yok'
+    if (!location.coastal) return t('widgets.notCoastal')
+    if (!data?.marine) return loading ? '…' : t('widgets.noData')
     const { waveHeightM, seaTempC } = data.marine
     const parts = []
-    if (waveHeightM != null) parts.push(`Dalga ${waveHeightM} m`)
-    if (seaTempC != null) parts.push(`Su ${seaTempC}°C`)
-    return parts.length ? parts.join(' · ') : 'Veri yok'
-  }, [location.coastal, data, loading])
+    if (waveHeightM != null) parts.push(t('widgets.wave', { height: waveHeightM }))
+    if (seaTempC != null) parts.push(t('widgets.waterTemp', { temp: seaTempC }))
+    return parts.length ? parts.join(' · ') : t('widgets.noData')
+  }, [location.coastal, data, loading, t, i18n.language])
+
+  const displayError =
+    error === 'Veri alınamadı' || error?.includes('fetch') ? t('widgets.fetchError') : error
 
   return (
-    <div className="cmd-widget-column space-y-3" aria-label="Operasyonel yan panel">
+    <div className="cmd-widget-column space-y-3" aria-label={t('widgets.panelAria')}>
       <LocationSelector
         provinceId={provinceId}
         districtName={districtName}
@@ -88,9 +94,9 @@ export default function CommandSideWidgets({ signalSeries: _legacySignal }) {
         onRefreshGps={refreshFromGps}
       />
 
-      {error ? (
-        <p className="cmd-met-error" role="status">
-          {error}
+      {displayError ? (
+        <p className="cmd-met-error break-words" role="status">
+          {displayError}
         </p>
       ) : null}
 
@@ -115,17 +121,17 @@ export default function CommandSideWidgets({ signalSeries: _legacySignal }) {
                 </span>
                 <div className="min-w-0 flex-1 text-left">
                   <p className="cmd-widget__label flex flex-wrap items-center gap-1.5">
-                    <span>{w.label}</span>
+                    <span className="break-words">{w.label}</span>
                     {w.id === 'signal' && windSeriesIsEstimated ? (
                       <span className="rounded border border-amber-500/45 bg-amber-950/40 px-1.5 py-0.5 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-amber-400/95">
-                        Tahmini
+                        {t('widgets.wind.estimated')}
                       </span>
                     ) : null}
                   </p>
-                  <p className="cmd-widget__desc">{w.desc}</p>
+                  <p className="cmd-widget__desc break-words">{w.desc}</p>
                 </div>
                 <ChevronDown
-                  className={['cmd-widget__chevron size-4 text-app-text/55', isOpen ? 'cmd-widget__chevron--open' : ''].join(' ')}
+                  className={['cmd-widget__chevron size-4 shrink-0 text-app-text/55', isOpen ? 'cmd-widget__chevron--open' : ''].join(' ')}
                   strokeWidth={2}
                   aria-hidden
                 />
@@ -137,33 +143,46 @@ export default function CommandSideWidgets({ signalSeries: _legacySignal }) {
                 {w.id === 'weather' ? (
                   <div className="cmd-met-block">
                     <MetDataRow
-                      label="Hava durumu"
+                      label={t('widgets.weatherRow')}
                       loading={loading}
+                      loadingText={t('widgets.loading')}
                       value={data ? `${data.temperatureC}°C · ${data.description}` : '—'}
                       detail={
                         data?.apparentTemperatureC != null
-                          ? `Hissedilen ${data.apparentTemperatureC}°C`
+                          ? t('widgets.feelsLike', { temp: data.apparentTemperatureC })
                           : undefined
                       }
                     />
                     <MetDataRow
-                      label="İhtimal"
+                      label={t('widgets.probability')}
                       loading={loading}
+                      loadingText={t('widgets.loading')}
                       value={precipRows.probability}
                       detail={precipRows.detail}
                     />
                     <MetDataRow
-                      label="Miktar"
+                      label={t('widgets.amount')}
                       loading={loading}
+                      loadingText={t('widgets.loading')}
                       value={precipRows.amount}
                     />
                     <MetDataRow
-                      label="Rüzgar"
+                      label={t('widgets.wind')}
                       loading={loading}
+                      loadingText={t('widgets.loading')}
                       value={data ? `${data.windSpeedKmh} km/h` : '—'}
-                      detail={data ? `Yön ${data.windDirection} (${Math.round(data.windDeg)}°)` : undefined}
+                      detail={
+                        data
+                          ? t('widgets.windDirection', { dir: data.windDirection, deg: Math.round(data.windDeg) })
+                          : undefined
+                      }
                     />
-                    <MetDataRow label="Deniz durumu" loading={loading} value={seaText} />
+                    <MetDataRow
+                      label={t('widgets.sea')}
+                      loading={loading}
+                      loadingText={t('widgets.loading')}
+                      value={seaText}
+                    />
                   </div>
                 ) : null}
 
@@ -182,26 +201,31 @@ export default function CommandSideWidgets({ signalSeries: _legacySignal }) {
                         />
                       </LineChart>
                     </ResponsiveContainer>
-                    <p className="cmd-met-chart-caption">
-                      {windSeriesIsEstimated
-                        ? 'Gerçek veri alınamadı — tahmini eğilim gösteriliyor'
-                        : 'Saatlik rüzgar (km/h) · Open-Meteo'}
+                    <p className="cmd-met-chart-caption break-words">
+                      {windSeriesIsEstimated ? t('widgets.wind.chartEstimated') : t('widgets.wind.chartLive')}
                     </p>
                   </div>
                 ) : null}
 
                 {w.geo ? (
                   <div className="cmd-met-block mt-1">
-                    <MetDataRow label="Bölge" loading={false} value={location.label} />
                     <MetDataRow
-                      label="Koordinat"
+                      label={t('widgets.region')}
                       loading={false}
+                      loadingText={t('widgets.loading')}
+                      value={location.label}
+                    />
+                    <MetDataRow
+                      label={t('widgets.coordinates')}
+                      loading={false}
+                      loadingText={t('widgets.loading')}
                       value={`${location.lat.toFixed(4)}°N · ${location.lon.toFixed(4)}°E`}
                     />
                     <MetDataRow
-                      label="Kıyı"
+                      label={t('widgets.coastal')}
                       loading={false}
-                      value={location.coastal ? 'Evet — deniz verisi aktif' : 'Hayır'}
+                      loadingText={t('widgets.loading')}
+                      value={location.coastal ? t('widgets.coastalYes') : t('widgets.coastalNo')}
                     />
                   </div>
                 ) : null}
@@ -209,16 +233,23 @@ export default function CommandSideWidgets({ signalSeries: _legacySignal }) {
                 {w.intel ? (
                   <div className="cmd-met-block mt-1">
                     <MetDataRow
-                      label="Nem"
+                      label={t('widgets.humidity')}
                       loading={loading}
+                      loadingText={t('widgets.loading')}
                       value={data?.humidity != null ? `%${data.humidity}` : '—'}
                     />
                     <MetDataRow
-                      label="Basınç"
+                      label={t('widgets.pressure')}
                       loading={loading}
+                      loadingText={t('widgets.loading')}
                       value={data?.pressureHpa != null ? `${data.pressureHpa} hPa` : '—'}
                     />
-                    <MetDataRow label="Kaynak" loading={loading} value={formatWeatherSource()} />
+                    <MetDataRow
+                      label={t('widgets.source')}
+                      loading={loading}
+                      loadingText={t('widgets.loading')}
+                      value={formatWeatherSource()}
+                    />
                   </div>
                 ) : null}
               </div>

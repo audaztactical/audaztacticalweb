@@ -138,6 +138,13 @@ service cloud.firestore {
         && request.resource.data.sidebarGroupState is map;
     }
 
+    /** Dil tercihi — yalnızca preferredLanguage (+ updatedAt). */
+    function isOwnerPreferredLanguageOnlyUpdate(uid) {
+      return isOwnerUid(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['preferredLanguage', 'updatedAt'])
+        && request.resource.data.preferredLanguage in ['tr', 'en'];
+    }
+
     /**
      * Taktik Muhabere — engellenen operatörler (yalnızca kendi profili).
      * arrayUnion / arrayRemove: liste yalnızca büyür veya küçülür; kendi uid eklenemez.
@@ -184,6 +191,7 @@ service cloud.firestore {
         || (isOwnerUid(userId) && isOwnerPresenceOnlyUpdate(userId))
         || (isOwnerUid(userId) && isOwnerFcmTokensOnlyUpdate(userId))
         || (isOwnerUid(userId) && isOwnerSidebarGroupStateOnlyUpdate(userId))
+        || (isOwnerUid(userId) && isOwnerPreferredLanguageOnlyUpdate(userId))
         || (isOwnerUid(userId) && isOwnerBlockedUsersOnlyUpdate(userId))
         || (isOwnerUid(userId) && ownerPrivilegedFieldsUnchanged());
       allow delete: if false;

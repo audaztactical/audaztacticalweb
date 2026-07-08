@@ -5,6 +5,7 @@ import {
   Info,
   ShieldAlert,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { utcHms } from '../../lib/dashboardHudData'
 import { humanizeDashboardLogCode } from '../../lib/dashboardDisplayText'
 
@@ -12,41 +13,45 @@ import { humanizeDashboardLogCode } from '../../lib/dashboardDisplayText'
 function logSeverity(code, msg) {
   const c = code.toUpperCase()
   const m = msg.toUpperCase()
-  if (c === 'SHT' || m.includes('OLAY') || m.includes('KRİT') || m.includes('HATA')) return 'critical'
-  if (c === 'CEP' || c === 'CEP GNC' || m.includes('UYARI') || m.includes('Δ')) return 'warning'
+  if (c === 'SHT' || m.includes('OLAY') || m.includes('KRİT') || m.includes('HATA') || m.includes('CRITICAL') || m.includes('INCIDENT')) {
+    return 'critical'
+  }
+  if (c === 'CEP' || c === 'CEP GNC' || m.includes('UYARI') || m.includes('WARNING') || m.includes('Δ')) return 'warning'
   if (c === 'OPS' || c === 'EĞT' || c === 'GÜV') return 'active'
   return 'neutral'
-}
-
-const SEVERITY_META = {
-  critical: { label: 'KRİTİK', Icon: ShieldAlert, className: 'cmd-log-sev--critical' },
-  warning: { label: 'UYARI', Icon: AlertTriangle, className: 'cmd-log-sev--warning' },
-  active: { label: 'AKTİF', Icon: Activity, className: 'cmd-log-sev--active' },
-  neutral: { label: 'BİLGİ', Icon: Info, className: 'cmd-log-sev--neutral' },
 }
 
 /**
  * @param {{ entries: { ms: number, code: string, msg: string }[] }} props
  */
 export default function DashboardSystemLog({ entries }) {
+  const { t } = useTranslation('dashboard')
+
+  const severityMeta = {
+    critical: { label: t('systemLog.severity.critical'), Icon: ShieldAlert, className: 'cmd-log-sev--critical' },
+    warning: { label: t('systemLog.severity.warning'), Icon: AlertTriangle, className: 'cmd-log-sev--warning' },
+    active: { label: t('systemLog.severity.active'), Icon: Activity, className: 'cmd-log-sev--active' },
+    neutral: { label: t('systemLog.severity.neutral'), Icon: Info, className: 'cmd-log-sev--neutral' },
+  }
+
   return (
     <section className="cmd-panel cmd-panel--log cmd-glass-panel flex min-h-[300px] flex-col overflow-hidden">
       <div className="cmd-panel__head shrink-0">
-        <div>
-          <h2 className="cmd-panel__title">Sistem günlüğü</h2>
-          <p className="cmd-panel__subtitle">Renk kodlu operasyon akışı</p>
+        <div className="min-w-0">
+          <h2 className="cmd-panel__title">{t('systemLog.title')}</h2>
+          <p className="cmd-panel__subtitle">{t('systemLog.subtitle')}</p>
         </div>
       </div>
       <div className="cmd-log-scroll flex flex-1 flex-col gap-4 overflow-y-auto px-5 py-5">
         {entries.length === 0 ? (
           <div className="cmd-empty py-8">
             <ClipboardList className="size-7 text-app-text/45" strokeWidth={1.25} aria-hidden />
-            <p className="cmd-empty__text mt-2">Henüz kayıt yok.</p>
+            <p className="cmd-empty__text mt-2">{t('systemLog.empty')}</p>
           </div>
         ) : (
           entries.slice(0, 14).map((e, i) => {
             const sev = logSeverity(e.code, e.msg)
-            const meta = SEVERITY_META[sev]
+            const meta = severityMeta[sev]
             const SevIcon = meta.Icon
             return (
               <div key={`${e.ms}-${i}`} className={['cmd-log-entry-rich', meta.className].join(' ')}>
@@ -58,7 +63,7 @@ export default function DashboardSystemLog({ entries }) {
                   <span className="cmd-log-entry-rich__code">{humanizeDashboardLogCode(e.code)}</span>
                   <span className="cmd-log-entry-rich__time">{utcHms(e.ms)}</span>
                 </div>
-                <p className="cmd-log-entry-rich__msg">{e.msg}</p>
+                <p className="cmd-log-entry-rich__msg break-words">{e.msg}</p>
               </div>
             )
           })

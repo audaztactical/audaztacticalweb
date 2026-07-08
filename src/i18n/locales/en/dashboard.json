@@ -1,0 +1,159 @@
+{
+  "header": {
+    "kicker": "Operational Command Center",
+    "operatorFallback": "Operator",
+    "notifications_one": "{{count}} notification",
+    "notifications_other": "{{count}} notifications"
+  },
+  "hero": {
+    "pending_one": "{{count}} operation queued",
+    "pending_other": "{{count}} operations queued",
+    "inProgress_one": "{{count}} active operation in progress",
+    "inProgress_other": "{{count}} active operations in progress",
+    "active_one": "{{count}} open task on record",
+    "active_other": "{{count}} open tasks on record",
+    "ready": "Operational status green — no pending tasks"
+  },
+  "alert": {
+    "dataInterrupted": "Temporary data feed interruption. Reconnecting."
+  },
+  "focusSectionAria": "Operational readiness and capacity radar",
+  "sideWidgetsAria": "Quick-access widgets",
+  "ors": {
+    "abbrev": "ORS",
+    "title": "Operational Readiness Score",
+    "calculating": "CALCULATING…",
+    "scoreOf": "/ 100",
+    "statusReady": "STATUS: MISSION READY",
+    "statusMarginal": "STATUS: CAUTION — MARGINAL READINESS",
+    "statusCritical": "STATUS: CRITICAL — MISSION HOLD",
+    "noPenalties": "No deductions · fault queue clear",
+    "points": "{{delta}} PTS"
+  },
+  "radar": {
+    "title": "Readiness Radar",
+    "subtitle": "Personnel · logistics · equipment comparison",
+    "calculating": "Calculating…",
+    "noDataHint": "Awaiting data — training and armory records populate the radar.",
+    "tooltipKicker": "Capacity metric",
+    "seriesName": "Readiness",
+    "axes": {
+      "personnel": "Personnel",
+      "logistics": "Logistics",
+      "equipment": "Equipment"
+    }
+  },
+  "systemLog": {
+    "title": "System Log",
+    "subtitle": "Color-coded operational feed",
+    "empty": "No entries yet.",
+    "severity": {
+      "critical": "CRITICAL",
+      "warning": "WARNING",
+      "active": "ACTIVE",
+      "neutral": "INFO"
+    },
+    "codes": {
+      "CEP_GNC": "Armory",
+      "CEP": "Armory",
+      "GÜV": "Security",
+      "OPS": "Operations",
+      "EĞT": "Training",
+      "SHT": "Medical"
+    },
+    "mission": "Mission · {{title}}",
+    "drill": "Drill · {{title}}",
+    "fieldRecord": "Field record · Zone {{zone}}",
+    "medicalRecord": "Medical record · {{name}}",
+    "sessionActive": "Channel open · Session active",
+    "phrases": {
+      "AKSESUAR_SÖKÜLDÜ": "Accessory removed",
+      "AKSESUAR_MONTAJ": "Accessory mounted",
+      "CEP_GNC": "Armory updated",
+      "KANAL_AÇIK · OTURUM_AKTİF": "Channel open · Session active",
+      "GÖREV_SENK": "Mission",
+      "TATBİKAT_IX": "Drill",
+      "SAHA_KAYIT": "Field record",
+      "TIBBİ_SENK": "Medical record",
+      "IFAK_IX": "IFAK",
+      "OLAY_IX": "Incident record",
+      "UNK": "Unknown"
+    },
+    "region": "Zone"
+  },
+  "penalty": {
+    "incidentArea": "incident area",
+    "barrelFlag": "barrel violation",
+    "ammo": "Ammunition",
+    "sevenDays": "7 days",
+    "count": "Count",
+    "session": "session",
+    "level": "Level {{n}}",
+    "last24h": "Last 24 hours"
+  },
+  "maintenance": {
+    "alert": "CRITICAL BARREL MAINTENANCE REQUIRED — POST-FIRE CLEANING AND RIFLING INSPECTION PENDING",
+    "logButton": "LOG MAINTENANCE"
+  },
+  "location": {
+    "aria": "Location selector",
+    "title": "Location selector",
+    "useMyLocation": "Use my location",
+    "province": "Province",
+    "district": "District",
+    "geoLocating": "Detecting location…",
+    "geoUpdated": "Updated via GPS",
+    "geoFailed": "Location unavailable — enable Windows location services or select manually",
+    "geoUnsupported": "GPS not supported"
+  },
+  "widgets": {
+    "panelAria": "Operational side panel",
+    "weather": {
+      "label": "Weather",
+      "desc": "Meteorological conditions"
+    },
+    "wind": {
+      "label": "Wind Trend",
+      "desc": "Hourly wind speed",
+      "estimated": "Estimated",
+      "chartEstimated": "Live data unavailable — showing estimated trend",
+      "chartLive": "Hourly wind (km/h) · Open-Meteo"
+    },
+    "geo": {
+      "label": "Location Map",
+      "desc": "Coordinates and region"
+    },
+    "atmosphere": {
+      "label": "Atmosphere Data",
+      "desc": "Humidity, pressure, and source"
+    },
+    "loading": "loading…",
+    "noData": "No data",
+    "weatherRow": "Weather",
+    "probability": "Probability",
+    "amount": "Amount",
+    "wind": "Wind",
+    "sea": "Sea state",
+    "region": "Region",
+    "coordinates": "Coordinates",
+    "coastal": "Coastal",
+    "humidity": "Humidity",
+    "pressure": "Pressure",
+    "source": "Source",
+    "feelsLike": "Feels like {{temp}}°C",
+    "windDirection": "Direction {{dir}} ({{deg}}°)",
+    "coastalYes": "Yes — marine data active",
+    "coastalNo": "No",
+    "notCoastal": "Not a coastal region",
+    "wave": "Wave {{height}} m",
+    "waterTemp": "Water {{temp}}°C",
+    "fetchError": "Could not fetch data",
+    "precip": {
+      "none": "No precipitation expected",
+      "dry": "Dry",
+      "probability": "Probability: {{pct}}%",
+      "amount": "Amount: {{amount}} mm/h",
+      "duration": "Estimated duration ~{{hours}} h"
+    }
+  }
+}

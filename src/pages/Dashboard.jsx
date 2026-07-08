@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { AlertCircle, Bell } from 'lucide-react'
 import CommandSideWidgets from '../components/dashboard/CommandSideWidgets'
 import DashboardSystemLog from '../components/dashboard/DashboardSystemLog'
@@ -28,10 +29,11 @@ function statusLooksComplete(status) {
 }
 
 export default function Dashboard() {
+  const { t, i18n } = useTranslation('dashboard')
   const { userData, profileLoading } = useAuth()
   const { totalNotifications } = useMuhabereNotify()
   const m = useAudazData('missions')
-  const t = useAudazData('trainings')
+  const trainings = useAudazData('trainings')
   const inv = useAudazData('inventory')
   const rangeLogs = useAudazData('range_logs')
   const vbssLogs = useAudazData('vbss_logs')
@@ -46,9 +48,15 @@ export default function Dashboard() {
     return () => window.clearInterval(id)
   }, [])
 
-  const anyErr = Boolean(m.listenError || t.listenError || inv.listenError || h.listenError)
+  const anyErr = Boolean(m.listenError || trainings.listenError || inv.listenError || h.listenError)
   const orsLoading =
-    !m.ready || !t.ready || !inv.ready || !h.ready || !rangeLogs.ready || !vbssLogs.ready || !tcccLogs.ready
+    !m.ready ||
+    !trainings.ready ||
+    !inv.ready ||
+    !h.ready ||
+    !rangeLogs.ready ||
+    !vbssLogs.ready ||
+    !tcccLogs.ready
 
   const observedEvalLogs = useMemo(
     () => filterObservedEvalLogs([...vbssLogs.items, ...tcccLogs.items]),
@@ -57,7 +65,7 @@ export default function Dashboard() {
 
   const activeMissions = useMemo(
     () => m.items.filter((row) => !statusLooksComplete(/** @type {string} */ (row.status))),
-    [m.items]
+    [m.items],
   )
 
   const pendingMissions = useMemo(() => {
@@ -78,12 +86,12 @@ export default function Dashboard() {
     () =>
       buildSystemLogEntries({
         missions: m.items,
-        trainings: t.items,
+        trainings: trainings.items,
         inventory: inv.items,
         health: h.items,
         sessionOpenMs: sessionOpenedMs,
       }),
-    [m.items, t.items, inv.items, h.items, sessionOpenedMs]
+    [m.items, trainings.items, inv.items, h.items, sessionOpenedMs, i18n.language],
   )
 
   const orsResult = useMemo(() => {
@@ -91,7 +99,7 @@ export default function Dashboard() {
     if (orsLoading) return null
     return computeORS({
       inventory: inv.items,
-      trainings: t.items,
+      trainings: trainings.items,
       health: h.items,
       rangeLogs: rangeLogs.items,
       observedEvalLogs,
@@ -99,7 +107,7 @@ export default function Dashboard() {
     })
   }, [
     orsLoading,
-    t.items,
+    trainings.items,
     inv.items,
     h.items,
     rangeLogs.items,
@@ -109,29 +117,29 @@ export default function Dashboard() {
 
   const heroMessage = useMemo(() => {
     if (pendingMissions.length > 0) {
-      return `Sırada bekleyen ${pendingMissions.length} operasyonunuz var`
+      return t('hero.pending', { count: pendingMissions.length })
     }
     if (inProgressMissions.length > 0) {
-      return `${inProgressMissions.length} aktif operasyon devam ediyor`
+      return t('hero.inProgress', { count: inProgressMissions.length })
     }
     if (activeMissions.length > 0) {
-      return `${activeMissions.length} açık görev kayıtlı`
+      return t('hero.active', { count: activeMissions.length })
     }
-    return 'Operasyonel durum hazır — bekleyen görev yok'
-  }, [pendingMissions.length, inProgressMissions.length, activeMissions.length])
+    return t('hero.ready')
+  }, [pendingMissions.length, inProgressMissions.length, activeMissions.length, t, i18n.language])
 
   const radarData = useMemo(() => {
     if (!orsResult) {
       return [
-        { axis: 'Personel', value: 0, fullMark: 100 },
-        { axis: 'Lojistik', value: 0, fullMark: 100 },
-        { axis: 'Ekipman', value: 0, fullMark: 100 },
+        { axisKey: 'personnel', value: 0, fullMark: 100 },
+        { axisKey: 'logistics', value: 0, fullMark: 100 },
+        { axisKey: 'equipment', value: 0, fullMark: 100 },
       ]
     }
     const meta = orsResult.meta
     const trainPct = Math.min(
       100,
-      Math.round((meta.trainingsLast7 / Math.max(1, meta.trainingMin)) * 100)
+      Math.round((meta.trainingsLast7 / Math.max(1, meta.trainingMin)) * 100),
     )
     const personnel =
       meta.combatScore != null ? Math.round((meta.combatScore + trainPct) / 2) : trainPct
@@ -143,9 +151,9 @@ export default function Dashboard() {
     if (meta.incidentFlags?.applies) equipment = Math.max(0, equipment - 25)
 
     return [
-      { axis: 'Personel', value: personnel, fullMark: 100 },
-      { axis: 'Lojistik', value: logistical, fullMark: 100 },
-      { axis: 'Ekipman', value: equipment, fullMark: 100 },
+      { axisKey: 'personnel', value: personnel, fullMark: 100 },
+      { axisKey: 'logistics', value: logistical, fullMark: 100 },
+      { axisKey: 'equipment', value: equipment, fullMark: 100 },
     ]
   }, [orsResult])
 
@@ -168,31 +176,31 @@ export default function Dashboard() {
         />
 
         <header className="relative flex flex-wrap items-end justify-between gap-4">
-        <div className="space-y-2">
-          <p className="cmd-kicker">Operasyonel Komuta Merkezi</p>
-          <h1 className="cmd-page-title">
-            {profileLoading ? '…' : userData?.callsign ?? 'Operatör'}
-          </h1>
-          <p className="cmd-hero-message !text-base sm:!text-lg">{heroMessage}</p>
-        </div>
-        {totalNotifications > 0 ? (
-          <Link to="/mesajlar" className="cmd-action-btn shrink-0">
-            <Bell className="size-4" strokeWidth={1.75} aria-hidden />
-            {totalNotifications} bildirim
-          </Link>
-        ) : null}
-      </header>
+          <div className="min-w-0 space-y-2">
+            <p className="cmd-kicker">{t('header.kicker')}</p>
+            <h1 className="cmd-page-title break-words">
+              {profileLoading ? '…' : (userData?.callsign ?? t('header.operatorFallback'))}
+            </h1>
+            <p className="cmd-hero-message !text-base sm:!text-lg">{heroMessage}</p>
+          </div>
+          {totalNotifications > 0 ? (
+            <Link to="/mesajlar" className="cmd-action-btn shrink-0">
+              <Bell className="size-4" strokeWidth={1.75} aria-hidden />
+              {t('header.notifications', { count: totalNotifications })}
+            </Link>
+          ) : null}
+        </header>
 
         {anyErr ? (
           <div className="cmd-alert relative" role="status">
             <AlertCircle className="size-4 shrink-0 text-amber-400/90" strokeWidth={1.5} aria-hidden />
-            <span>Veri akışında geçici kesinti. Bağlantı yenileniyor.</span>
+            <span>{t('alert.dataInterrupted')}</span>
           </div>
         ) : null}
 
         <section
           className="cmd-focus-row grid gap-6 lg:grid-cols-2 lg:items-stretch"
-          aria-label="Operasyonel hazırlık ve kapasite radarı"
+          aria-label={t('focusSectionAria')}
         >
           <div className="cmd-glass-panel cmd-focus-gauge flex h-full min-h-[320px] items-center justify-center p-5">
             <OrsReadinessGauge
@@ -214,7 +222,10 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <aside className="cmd-right-column flex flex-col lg:sticky lg:top-20 lg:self-stretch" aria-label="Hızlı erişim widgetları">
+          <aside
+            className="cmd-right-column flex flex-col lg:sticky lg:top-20 lg:self-stretch"
+            aria-label={t('sideWidgetsAria')}
+          >
             <CommandSideWidgets signalSeries={signalSeries} />
           </aside>
         </div>

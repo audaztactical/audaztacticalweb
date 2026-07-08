@@ -1,3 +1,4 @@
+import i18n from '../i18n'
 import { humanizeDashboardLogMessage } from './dashboardDisplayText'
 
 /** @param {unknown} row */
@@ -37,7 +38,7 @@ export function buildSystemLogEntries(p) {
     raw.push({
       ms,
       code: 'OPS',
-      msg: `Görev · ${title}`,
+      msg: i18n.t('systemLog.mission', { ns: 'dashboard', title }),
     })
   }
 
@@ -48,7 +49,7 @@ export function buildSystemLogEntries(p) {
     raw.push({
       ms,
       code: 'EĞT',
-      msg: `Tatbikat · ${title}`,
+      msg: i18n.t('systemLog.drill', { ns: 'dashboard', title }),
     })
   }
 
@@ -80,11 +81,19 @@ export function buildSystemLogEntries(p) {
     if (ms <= 0) continue
     const k = str(row.kind)
     if (k === INC || str(row.injuryZone)) {
-      const z = str(row.injuryZone) || 'Bilinmiyor'
-      raw.push({ ms, code: 'SHT', msg: `Saha kaydı · Bölge ${z}` })
+      const z = str(row.injuryZone) || i18n.t('systemLog.phrases.UNK', { ns: 'dashboard' })
+      raw.push({
+        ms,
+        code: 'SHT',
+        msg: i18n.t('systemLog.fieldRecord', { ns: 'dashboard', zone: z }),
+      })
     } else {
       const name = str(row.name).slice(0, 36) || 'IFAK'
-      raw.push({ ms, code: 'SHT', msg: `Tıbbi kayıt · ${name}` })
+      raw.push({
+        ms,
+        code: 'SHT',
+        msg: i18n.t('systemLog.medicalRecord', { ns: 'dashboard', name }),
+      })
     }
   }
 
@@ -94,7 +103,7 @@ export function buildSystemLogEntries(p) {
     raw.unshift({
       ms: sessionOpenMs,
       code: 'GÜV',
-      msg: 'Kanal açık · Oturum aktif',
+      msg: i18n.t('systemLog.sessionActive', { ns: 'dashboard' }),
     })
   }
 

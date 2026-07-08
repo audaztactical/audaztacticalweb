@@ -6,6 +6,7 @@ import { Menu } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { auth } from '../lib/firebase'
 import NotificationDropdown from '../components/notifications/NotificationDropdown'
+import LanguageSwitcher from '../components/shared/LanguageSwitcher'
 import BottomTabBar from './BottomTabBar'
 import MobileNavMenu from './MobileNavMenu'
 
@@ -60,7 +61,8 @@ export default function MobileLayout() {
           <img src="/logo.png" alt="AUDAZ Tactical" className="h-9 w-auto object-contain" decoding="async" />
         </Link>
 
-        <div className="flex min-w-[44px] items-center justify-end">
+        <div className="flex shrink-0 items-center gap-1.5">
+          <LanguageSwitcher compact />
           <NotificationDropdown />
         </div>
       </header>

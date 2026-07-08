@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { AlertTriangle } from 'lucide-react'
 import WeaponMaintenanceLogModal from './WeaponMaintenanceLogModal'
-import { MAINTENANCE_ALERT_MESSAGE, isMaintenanceRequired } from '../../lib/weaponMaintenanceAlarm'
+import { isMaintenanceRequired } from '../../lib/weaponMaintenanceAlarm'
 import { filterWeaponRows, weaponDisplayName, weaponStokKodu } from '../../lib/weaponIlws'
 
 /**
@@ -13,6 +14,7 @@ import { filterWeaponRows, weaponDisplayName, weaponStokKodu } from '../../lib/w
  * }} props
  */
 export default function WeaponMaintenanceAlarmPanel({ weapons, rangeLogs, updateItem, className = '' }) {
+  const { t } = useTranslation('dashboard')
   const alarmWeapons = useMemo(() => weapons.filter(isMaintenanceRequired), [weapons])
   const [modalWeapon, setModalWeapon] = useState(/** @type {Record<string, unknown> | null} */ (null))
 
@@ -26,7 +28,7 @@ export default function WeaponMaintenanceAlarmPanel({ weapons, rangeLogs, update
       >
         <p className="flex items-start gap-2 font-mono-technical text-[9px] font-bold uppercase leading-relaxed tracking-wide text-red-400">
           <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
-          <span>{MAINTENANCE_ALERT_MESSAGE}</span>
+          <span>{t('maintenance.alert')}</span>
         </p>
         <ul className="space-y-1.5 border-t border-red-500/25 pt-2">
           {alarmWeapons.map((w) => (
@@ -42,7 +44,7 @@ export default function WeaponMaintenanceAlarmPanel({ weapons, rangeLogs, update
                 onClick={() => setModalWeapon(w)}
                 className="shrink-0 rounded border border-accent/50 bg-accent/10 px-2 py-1 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-accent hover:bg-accent/20"
               >
-                BAKIM KAYDI GİR
+                {t('maintenance.logButton')}
               </button>
             </li>
           ))}

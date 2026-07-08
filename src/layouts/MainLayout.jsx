@@ -6,6 +6,7 @@ import { Bug, ChevronLeft, ChevronRight, Menu, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { auth } from '../lib/firebase'
 import HudTicker from '../components/ui/HudTicker'
+import LanguageSwitcher from '../components/shared/LanguageSwitcher'
 import NotificationDropdown from '../components/notifications/NotificationDropdown'
 import Sidebar from '../components/navigation/Sidebar'
 
@@ -183,6 +184,7 @@ export default function MainLayout() {
             />
           </Link>
           <NotificationDropdown />
+          <LanguageSwitcher compact />
         </header>
 
         <main
@@ -190,6 +192,7 @@ export default function MainLayout() {
           data-app-scroll-root
         >
           <div className="relative z-[110] hidden border-b border-white/10 bg-black/20 px-4 py-2 backdrop-blur-md md:flex md:items-center md:justify-end md:gap-3 lg:px-8">
+            <LanguageSwitcher />
             <NotificationDropdown />
             <HudTicker />
           </div>

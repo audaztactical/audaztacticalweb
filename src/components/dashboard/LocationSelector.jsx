@@ -1,4 +1,5 @@
 import { Loader2, LocateFixed, MapPin } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { TURKEY_PROVINCES } from '../../lib/turkeyLocations'
 
 /**
@@ -23,32 +24,33 @@ export default function LocationSelector({
   gpsCoords = null,
   onRefreshGps,
 }) {
+  const { t } = useTranslation('dashboard')
   const province = TURKEY_PROVINCES.find((p) => p.id === provinceId) ?? TURKEY_PROVINCES[0]
 
   const geoHint =
     geoStatus === 'locating'
-      ? 'Konum algılanıyor…'
+      ? t('location.geoLocating')
       : geoActive
-        ? 'GPS ile güncellendi'
+        ? t('location.geoUpdated')
         : geoStatus === 'failed'
-          ? 'Konum alınamadı — Windows konum servisini açın veya manuel seçin'
+          ? t('location.geoFailed')
           : geoStatus === 'unsupported'
-            ? 'GPS desteklenmiyor'
+            ? t('location.geoUnsupported')
             : null
 
   return (
-    <div className="cmd-loc-selector cmd-glass-panel" aria-label="Konum seçici">
+    <div className="cmd-loc-selector cmd-glass-panel" aria-label={t('location.aria')}>
       <div className="cmd-loc-selector__head">
         <MapPin className="size-3.5 text-sky-400/80" strokeWidth={1.75} aria-hidden />
-        <span className="cmd-loc-selector__title">Konum seçici</span>
+        <span className="cmd-loc-selector__title">{t('location.title')}</span>
         {onRefreshGps ? (
           <button
             type="button"
             onClick={onRefreshGps}
             disabled={geoStatus === 'locating'}
             className="cmd-loc-selector__gps-btn"
-            title="Konumumu kullan"
-            aria-label="Konumumu kullan"
+            title={t('location.useMyLocation')}
+            aria-label={t('location.useMyLocation')}
           >
             {geoStatus === 'locating' ? (
               <Loader2 className="size-3 animate-spin text-sky-400/80" aria-hidden />
@@ -59,7 +61,7 @@ export default function LocationSelector({
         ) : null}
       </div>
       {geoHint ? (
-        <p className="cmd-loc-selector__geo-hint" role="status">
+        <p className="cmd-loc-selector__geo-hint break-words" role="status">
           {geoHint}
           {geoActive && gpsCoords ? (
             <span className="block tabular-nums text-app-text/45">
@@ -70,7 +72,7 @@ export default function LocationSelector({
       ) : null}
       <div className="cmd-loc-selector__fields">
         <label className="cmd-loc-selector__field">
-          <span className="cmd-loc-selector__label">İl</span>
+          <span className="cmd-loc-selector__label">{t('location.province')}</span>
           <select
             className="cmd-loc-selector__select"
             value={provinceId}
@@ -84,7 +86,7 @@ export default function LocationSelector({
           </select>
         </label>
         <label className="cmd-loc-selector__field">
-          <span className="cmd-loc-selector__label">İlçe</span>
+          <span className="cmd-loc-selector__label">{t('location.district')}</span>
           <select
             className="cmd-loc-selector__select"
             value={districtName}

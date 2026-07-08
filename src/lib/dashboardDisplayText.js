@@ -1,21 +1,14 @@
+import i18n from '../i18n'
+
 /** @param {string} text */
 function replaceKnownPhrases(text) {
-  const known = [
-    ['AKSESUAR_SÖKÜLDÜ', 'Aksesuar söküldü'],
-    ['AKSESUAR_MONTAJ', 'Aksesuar montaj'],
-    ['CEP_GNC', 'Cephanelik güncellendi'],
-    ['KANAL_AÇIK · OTURUM_AKTİF', 'Kanal açık · Oturum aktif'],
-    ['GÖREV_SENK', 'Görev'],
-    ['TATBİKAT_IX', 'Tatbikat'],
-    ['SAHA_KAYIT', 'Saha kaydı'],
-    ['TIBBİ_SENK', 'Tıbbi kayıt'],
-    ['IFAK_IX', 'IFAK'],
-    ['OLAY_IX', 'Olay kaydı'],
-    ['UNK', 'Bilinmiyor'],
-  ]
+  /** @type {Record<string, string>} */
+  const phrases = i18n.t('systemLog.phrases', { ns: 'dashboard', returnObjects: true })
   let out = text
-  for (const [from, to] of known) {
-    out = out.split(from).join(to)
+  if (phrases && typeof phrases === 'object') {
+    for (const [from, to] of Object.entries(phrases)) {
+      out = out.split(from).join(to)
+    }
   }
   return out.replace(/_/g, ' ')
 }
@@ -23,15 +16,8 @@ function replaceKnownPhrases(text) {
 /** @param {string} code */
 export function humanizeDashboardLogCode(code) {
   const key = String(code ?? '').trim()
-  const map = {
-    CEP_GNC: 'Cephanelik',
-    CEP: 'Cephanelik',
-    GÜV: 'Güvenlik',
-    OPS: 'Operasyon',
-    EĞT: 'Eğitim',
-    SHT: 'Sağlık',
-  }
-  if (map[key]) return map[key]
+  const mapped = i18n.t(`systemLog.codes.${key}`, { ns: 'dashboard', defaultValue: '' })
+  if (mapped) return mapped
   return replaceKnownPhrases(key)
 }
 
@@ -39,8 +25,10 @@ export function humanizeDashboardLogCode(code) {
 export function humanizeDashboardLogMessage(msg) {
   const raw = String(msg ?? '').trim()
   if (!raw) return '—'
+  const region = i18n.t('systemLog.region', { ns: 'dashboard' })
   return replaceKnownPhrases(raw)
-    .replace(/\s·\sBÖLGE\s/i, ' · Bölge ')
+    .replace(/\s·\sBÖLGE\s/i, ` · ${region} `)
+    .replace(/\s·\sZONE\s/i, ` · ${region} `)
     .replace(/\sΔ\s·\s/g, ' · ')
     .replace(/\sΔ\b/g, '')
     .trim()
@@ -51,19 +39,19 @@ export function humanizeOrsPenaltyCode(code) {
   return String(code ?? '')
     .replace(/^HATA_KODU:\s*/i, '')
     .replace(/_/g, ' ')
-    .replace(/\bOLAY ALANI\b/i, 'Olay alanı')
-    .replace(/\bNAMLU FLAG\b/i, 'Namlu ihlali')
+    .replace(/\bOLAY ALANI\b/i, i18n.t('penalty.incidentArea', { ns: 'dashboard' }))
+    .replace(/\bNAMLU FLAG\b/i, i18n.t('penalty.barrelFlag', { ns: 'dashboard' }))
     .trim()
 }
 
 /** @param {string} detail */
 export function humanizeOrsPenaltyDetail(detail) {
   return String(detail ?? '')
-    .replace(/Σ_MHM\s*/g, 'Mühimmat ')
-    .replace(/7G_SAY\s*/g, '7 gün ')
-    .replace(/\bSAY\b/g, 'Adet')
-    .replace(/\bOTURUM\b/g, 'oturum')
-    .replace(/SEV_(\d+)/g, 'Seviye $1')
-    .replace(/T-24H/g, 'Son 24 saat')
+    .replace(/Σ_MHM\s*/g, `${i18n.t('penalty.ammo', { ns: 'dashboard' })} `)
+    .replace(/7G_SAY\s*/g, `${i18n.t('penalty.sevenDays', { ns: 'dashboard' })} `)
+    .replace(/\bSAY\b/g, i18n.t('penalty.count', { ns: 'dashboard' }))
+    .replace(/\bOTURUM\b/g, i18n.t('penalty.session', { ns: 'dashboard' }))
+    .replace(/SEV_(\d+)/g, (_, n) => i18n.t('penalty.level', { ns: 'dashboard', n }))
+    .replace(/T-24H/g, i18n.t('penalty.last24h', { ns: 'dashboard' }))
     .trim()
 }
