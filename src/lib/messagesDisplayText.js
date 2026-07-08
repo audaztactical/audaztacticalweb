@@ -1,5 +1,6 @@
 import i18n from '../i18n'
 import { MUHABERE_CONTENT_VIOLATION } from './muhabereContentFilter'
+import { isOperatorOnline } from './operatorPresence'
 
 /** @returns {'tr-TR' | 'en-US'} */
 export function messagesLocale() {
@@ -27,6 +28,16 @@ export function muhabereContentViolationMessage() {
 export function isMuhabereContentViolationMessage(message) {
   const raw = String(message ?? '').trim()
   return raw === MUHABERE_CONTENT_VIOLATION || raw === muhabereContentViolationMessage()
+}
+
+/**
+ * @param {import('./operatorPresence').OperatorPresenceSnapshot | null | undefined} snapshot
+ * @param {number} [nowMs]
+ */
+export function formatOperatorPresenceLabelDisplay(snapshot, nowMs = Date.now()) {
+  return isOperatorOnline(snapshot, nowMs)
+    ? i18n.t('presence.online', { ns: 'messages' })
+    : i18n.t('presence.offline', { ns: 'messages' })
 }
 
 /** @param {unknown} role */

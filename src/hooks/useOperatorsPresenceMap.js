@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import {
-  formatOperatorPresenceLabel,
-  isOperatorOnline,
-} from '../lib/operatorPresence'
+import { useTranslation } from 'react-i18next'
+import { formatOperatorPresenceLabelDisplay } from '../lib/messagesDisplayText'
+import { isOperatorOnline } from '../lib/operatorPresence'
 import { subscribeOperatorPresence } from '../lib/operatorPresenceStore'
 
 /**
@@ -14,6 +13,7 @@ import { subscribeOperatorPresence } from '../lib/operatorPresenceStore'
  * @param {string[]} uids
  */
 export function useOperatorsPresenceMap(uids) {
+  const { i18n } = useTranslation('messages')
   const [snapshots, setSnapshots] = useState(
     /** @type {Record<string, import('../lib/operatorPresence').OperatorPresenceSnapshot>} */ ({}),
   )
@@ -62,9 +62,9 @@ export function useOperatorsPresenceMap(uids) {
       const snapshot = snapshots[id] ?? { lastSeenMs: 0, isOnlineFlag: false }
       out[id] = {
         online: isOperatorOnline(snapshot, now),
-        label: formatOperatorPresenceLabel(snapshot, now),
+        label: formatOperatorPresenceLabelDisplay(snapshot, now),
       }
     }
     return out
-  }, [normalizedUids, snapshots, tick])
+  }, [normalizedUids, snapshots, tick, i18n.language])
 }

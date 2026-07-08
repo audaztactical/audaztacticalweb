@@ -255,6 +255,10 @@
     "quickResponseAria": "Quick response — {{callsign}}",
     "terminalAria": "Quick response terminal — {{callsign}}"
   },
+  "presence": {
+    "online": "Online",
+    "offline": "Offline"
+  },
   "common": {
     "close": "Close",
     "cancel": "Cancel",

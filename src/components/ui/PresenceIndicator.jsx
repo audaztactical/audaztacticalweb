@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 /**
  * @param {{
  *   online?: boolean
@@ -12,7 +14,8 @@ export default function PresenceIndicator({
   showLabel = true,
   className = '',
 }) {
-  const text = label || (online ? 'Çevrimiçi' : 'Çevrimdışı')
+  const { t } = useTranslation('messages')
+  const text = label || (online ? t('presence.online') : t('presence.offline'))
 
   return (
     <span

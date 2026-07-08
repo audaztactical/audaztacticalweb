@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import {
-  formatOperatorPresenceLabel,
-  isOperatorOnline,
-} from '../lib/operatorPresence'
+import { useTranslation } from 'react-i18next'
+import { formatOperatorPresenceLabelDisplay } from '../lib/messagesDisplayText'
+import { isOperatorOnline } from '../lib/operatorPresence'
 import { subscribeOperatorPresence } from '../lib/operatorPresenceStore'
 
 /**
@@ -10,6 +9,7 @@ import { subscribeOperatorPresence } from '../lib/operatorPresenceStore'
  * @param {string | null | undefined} uid
  */
 export function useOperatorPresence(uid) {
+  const { i18n } = useTranslation('messages')
   const [snapshot, setSnapshot] = useState(
     /** @type {import('../lib/operatorPresence').OperatorPresenceSnapshot} */ ({
       lastSeenMs: 0,
@@ -37,8 +37,8 @@ export function useOperatorPresence(uid) {
     const now = Date.now()
     return {
       online: isOperatorOnline(snapshot, now),
-      label: formatOperatorPresenceLabel(snapshot, now),
+      label: formatOperatorPresenceLabelDisplay(snapshot, now),
       snapshot,
     }
-  }, [snapshot, tick])
+  }, [snapshot, tick, i18n.language])
 }

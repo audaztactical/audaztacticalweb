@@ -255,6 +255,10 @@
     "quickResponseAria": "Hızlı müdahale — {{callsign}}",
     "terminalAria": "Hızlı müdahale terminal — {{callsign}}"
   },
+  "presence": {
+    "online": "Çevrimiçi",
+    "offline": "Çevrimdışı"
+  },
   "common": {
     "close": "Kapat",
     "cancel": "İptal",
