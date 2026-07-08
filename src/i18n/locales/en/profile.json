@@ -1,0 +1,126 @@
+{
+  "loading": {
+    "status": "Loading profile",
+    "subtitle": "Loading identity data"
+  },
+  "header": {
+    "kicker": "Operator profile",
+    "title": "Profile",
+    "ohp": "OHP"
+  },
+  "repair": {
+    "title": "Profile record incomplete",
+    "description": "You are signed in but your operator profile was not written to Firestore (showing as GUEST). Enter the username you chose during registration to complete your profile.",
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "e.g. wolf1",
+    "completeButton": "Complete profile",
+    "errUsernameRequired": "Enter the username you chose during registration.",
+    "okCompleted": "Profile completed — refreshing page.",
+    "errUsernameTaken": "This username belongs to another account. Try a different name or contact support.",
+    "errFailed": "Could not complete profile."
+  },
+  "identity": {
+    "title": "Tactical identity",
+    "badgeActive": "Badge active",
+    "badgeCustom": "Custom",
+    "badgeAuto": "Auto",
+    "uploadUploading": "Uploading…",
+    "uploadButton": "Upload profile image",
+    "uploadProgress": "Uploading image",
+    "callsignLabel": "Callsign",
+    "membershipPlans": "Membership plans →",
+    "statusLabel": "Status"
+  },
+  "roles": {
+    "admin": "Administrator",
+    "instructor": "Instructor",
+    "premium": "Premium member",
+    "member": "Member",
+    "commander": "Commander"
+  },
+  "summary": {
+    "title": "Operator summary",
+    "missions": "Missions completed",
+    "trainings": "Training count",
+    "medical": "Medical incidents"
+  },
+  "blood": {
+    "title": "Blood type",
+    "unspecified": "Unspecified",
+    "save": "Save",
+    "okSaved": "Blood type saved",
+    "errFailed": "Save failed."
+  },
+  "activity": {
+    "title": "Live feed",
+    "empty": "No activity yet"
+  },
+  "registration": {
+    "title": "Registration details",
+    "username": "@username",
+    "email": "Email",
+    "enrolled": "Enrolled",
+    "status": "Status",
+    "updateCallsign": "Update callsign",
+    "callsignPlaceholder": "e.g. WOLF-1",
+    "apply": "Apply"
+  },
+  "callsign": {
+    "errEmpty": "Callsign cannot be empty.",
+    "okUpdated": "Updated",
+    "errFailed": "Save failed."
+  },
+  "avatar": {
+    "errImagesOnly": "Only image files are supported.",
+    "okSynced": "Image synced",
+    "errUploadFailed": "Upload failed."
+  },
+  "security": {
+    "title": "Account security",
+    "google": "Google",
+    "emailPassword": "Email + password",
+    "changePasswordTitle": "Change password",
+    "linkPasswordTitle": "Link account password",
+    "emailFixed": "Email (fixed)",
+    "password": "Password",
+    "passwordRepeat": "Confirm password",
+    "link": "Link",
+    "noEmailForPassword": "No email on this account; password cannot be linked.",
+    "passwordMinLength": "Password must be at least 6 characters.",
+    "passwordMismatch": "Passwords do not match.",
+    "linkFailed": "Could not link password.",
+    "noEmailPasswordGate": "No email on account; password gate closed for this session.",
+    "providerUnknown": "Could not read sign-in provider; sign out and sign in again.",
+    "changePassword": "Change password",
+    "currentPassword": "Current password",
+    "googleReauthHint": "A Google re-authentication window may open.",
+    "newPassword": "New password",
+    "newPasswordRepeat": "Confirm new password",
+    "update": "Update",
+    "sessionNotFound": "Session not found.",
+    "newPasswordMinLength": "New password must be at least 6 characters.",
+    "newPasswordMismatch": "New passwords do not match.",
+    "currentPasswordRequired": "Enter your current password.",
+    "changeFailed": "Could not update password."
+  },
+  "phone": {
+    "title": "Phone channel",
+    "channel": "Phone channel",
+    "subtitle": "For SMS and recovery",
+    "placeholder": "+1 …",
+    "aria": "Phone (inactive)",
+    "locked": "Locked"
+  },
+  "mfa": {
+    "title": "SMS / MFA",
+    "channel": "Phone · SMS verification",
+    "subtitle": "SMS verification",
+    "statusInactive": "Status: Inactive"
+  },
+  "defaults": {
+    "operator": "Operator"
+  },
+  "common": {
+    "ellipsis": "…"
+  }
+}

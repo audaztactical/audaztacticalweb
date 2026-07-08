@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   EmailAuthProvider,
   GoogleAuthProvider,
@@ -24,69 +25,19 @@ import { filterObservedEvalLogs } from '../lib/observedEvalRegistry'
 import { updateUserBloodType, updateUserCallsign, updateUserAvatarUrl, createOperatorProfile, repairPendingOperatorProfile, normalizeUsername } from '../lib/firestoreUsers'
 import { readPendingOperatorProfile } from '../lib/pendingOperatorProfile'
 import { userStoragePath } from '../services/storageService'
+import {
+  formatProfileActivityTs,
+  formatProfileEnrolledDate,
+  profileRoleLabel,
+} from '../lib/profileDisplayText'
 
 import { getAccentColor } from '../lib/themeColors'
 
 const TACTIC_AMBER = '#f59e0b'
 const COMBAT_RED = '#FF0000'
 
-const BLOOD_OPTIONS = ['BELİRTİLMEDİ', '0 RH+', '0 RH-', 'A RH+', 'A RH-', 'B RH+', 'B RH-', 'AB RH+', 'AB RH-']
-
-/** @param {number} ms */
-function fmtActivityTs(ms) {
-  try {
-    return new Date(ms).toLocaleString('tr-TR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    })
-  } catch {
-    return '—'
-  }
-}
-
-/** @param {{ code: string, msg: string }} e */
-function humanizeActivity(e) {
-  const { code, msg } = e
-  if (code === 'CEP_GNC') {
-    return `Cephanelik güncellendi · ${msg.slice(0, 48)}`
-  }
-  if (code === 'CEP') {
-    const tail = msg.replace(/^[\s\S]*·\s*/, '').trim() || 'kayıt'
-    return `Envanter güncellendi · ${tail.slice(0, 42)}`
-  }
-  if (code === 'SHT') {
-    if (msg.includes('Saha kaydı') || msg.includes('Bölge')) return `TCCC saha kaydı · ${msg.slice(0, 48)}`
-    const tail = msg.replace(/^Tıbbi kayıt · /, '').trim() || 'kayıt'
-    return `TCCC kaydı girildi · ${tail.slice(0, 42)}`
-  }
-  if (code === 'EĞT') {
-    const tail = msg.replace(/^Tatbikat · /, '').trim() || '—'
-    return `Eğitim / tatbikat · ${tail.slice(0, 42)}`
-  }
-  if (code === 'OPS') {
-    const tail = msg.replace(/^Görev · /, '').trim() || '—'
-    return `Görev senkronu · ${tail.slice(0, 42)}`
-  }
-  if (code === 'GÜV') return 'Sisteme giriş · oturum aktif'
-  return msg.slice(0, 52)
-}
-
-function formatEnrolled(ts) {
-  if (!ts || typeof ts.toDate !== 'function') return '—'
-  try {
-    return ts.toDate().toLocaleDateString('tr-TR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    })
-  } catch {
-    return '—'
-  }
-}
+const BLOOD_UNSPECIFIED = 'BELİRTİLMEDİ'
+const BLOOD_OPTIONS = [BLOOD_UNSPECIFIED, '0 RH+', '0 RH-', 'A RH+', 'A RH-', 'B RH+', 'B RH-', 'AB RH+', 'AB RH-']
 
 /** @param {import('firebase/auth').User | null} u */
 function hasPasswordProvider(u) {
@@ -127,21 +78,8 @@ function ohpAccent(score) {
   }
 }
 
-/** @param {unknown} role */
-function roleLabel(role) {
-  const r = String(role || 'member')
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '_')
-  if (r === 'admin') return 'Yönetici'
-  if (r === 'instructor') return 'Eğitmen'
-  if (r === 'premium_member' || r === 'premium') return 'Premium Üye'
-  if (r === 'member' || r === 'operator' || r === 'operatör') return 'Üye'
-  if (r === 'commander' || r === 'komutan' || r === 'command' || r === 'cmd') return 'Komutan'
-  return 'Üye'
-}
-
 function DataLoadingScreen() {
+  const { t } = useTranslation('profile')
   return (
     <div className="dashboard-hud-shell profile-dossier-shell relative flex min-h-[50vh] w-full flex-col items-center justify-center gap-3 px-6 pb-5 pt-6 sm:px-8 lg:px-10">
       <div
@@ -150,14 +88,14 @@ function DataLoadingScreen() {
         aria-live="polite"
       >
         <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-mono-technical text-[10px] uppercase tracking-widest text-[#004DFF]/90">
-          Profil yükleniyor
+          {t('loading.status')}
         </span>
         <span
           className="absolute right-3 top-1/2 inline-block size-3.5 -translate-y-1/2 animate-spin rounded-full border-2 border-[#004DFF] border-t-transparent"
           aria-hidden
         />
       </div>
-      <p className="font-mono-technical text-[10px] font-semibold tracking-[0.3em] text-app-text/55">Kimlik verisi yükleniyor</p>
+      <p className="font-mono-technical text-[10px] font-semibold tracking-[0.3em] text-app-text/55">{t('loading.subtitle')}</p>
     </div>
   )
 }
@@ -223,7 +161,7 @@ function DataStat({ label, value, accentRgb, fillPct = 50 }) {
   return (
     <div className="op-data-stat group">
       <div className="op-data-stat__frame">
-        <p className="op-data-stat__label">{label}</p>
+        <p className="op-data-stat__label line-clamp-2">{label}</p>
         <p className="op-data-stat__value text-2xl" style={{ color: accentRgb, textShadow: `0 0 10px ${accentRgb}44` }}>
           {value}
         </p>
@@ -249,6 +187,7 @@ function statFillPct(n, max) {
 }
 
 export default function Profile() {
+  const { t, i18n } = useTranslation('profile')
   const { user, userData, profileLoading, refreshUserProfile, linkAccountWithPassword, isAdmin, showAdminPanel } = useAuth()
   const showPricingLink = showAdminPanel || isAdmin
   const { themeClass } = useTheme()
@@ -256,7 +195,7 @@ export default function Profile() {
   const [authProvidersTick, setAuthProvidersTick] = useState(0)
   const [sessionOpenedMs] = useState(() => Date.now())
   const m = useAudazData('missions')
-  const t = useAudazData('trainings')
+  const trainings = useAudazData('trainings')
   const inv = useAudazData('inventory')
   const h = useAudazData('health_records')
   const rangeLogs = useAudazData('range_logs')
@@ -276,10 +215,10 @@ export default function Profile() {
 
   const orsResult = useMemo(() => {
     void orsClock
-    if (!m.ready || !t.ready || !inv.ready || !h.ready || !rangeLogs.ready || !vbssLogs.ready || !tcccLogs.ready) return null
+    if (!m.ready || !trainings.ready || !inv.ready || !h.ready || !rangeLogs.ready || !vbssLogs.ready || !tcccLogs.ready) return null
     return computeORS({
       inventory: inv.items,
-      trainings: t.items,
+      trainings: trainings.items,
       health: h.items,
       rangeLogs: rangeLogs.items,
       observedEvalLogs,
@@ -287,14 +226,14 @@ export default function Profile() {
     })
   }, [
     m.ready,
-    t.ready,
+    trainings.ready,
     inv.ready,
     h.ready,
     rangeLogs.ready,
     vbssLogs.ready,
     tcccLogs.ready,
     m.items,
-    t.items,
+    trainings.items,
     inv.items,
     h.items,
     rangeLogs.items,
@@ -313,7 +252,7 @@ export default function Profile() {
   const activityTop3 = useMemo(() => {
     const raw = buildSystemLogEntries({
       missions: m.items,
-      trainings: t.items,
+      trainings: trainings.items,
       inventory: inv.items,
       health: h.items,
       sessionOpenMs: sessionOpenedMs,
@@ -321,15 +260,15 @@ export default function Profile() {
     const sorted = [...raw].sort((a, b) => b.ms - a.ms)
     return sorted.slice(0, 3).map((e) => ({
       ms: e.ms,
-      line: humanizeActivity(e),
+      line: e.msg.slice(0, 72),
     }))
-  }, [m.items, t.items, inv.items, h.items, sessionOpenedMs])
+  }, [m.items, trainings.items, inv.items, h.items, sessionOpenedMs, i18n.language])
 
   const [callsignDraft, setCallsignDraft] = useState('')
   const [callsignSaving, setCallsignSaving] = useState(false)
   const [callsignMsg, setCallsignMsg] = useState(null)
 
-  const [bloodDraft, setBloodDraft] = useState('BELİRTİLMEDİ')
+  const [bloodDraft, setBloodDraft] = useState(BLOOD_UNSPECIFIED)
   const [bloodSaving, setBloodSaving] = useState(false)
   const [bloodMsg, setBloodMsg] = useState(null)
 
@@ -370,7 +309,7 @@ export default function Profile() {
     if (!user?.uid) return
     const key = normalizeUsername(profileRepairUsername)
     if (!key) {
-      setProfileRepairMsg({ type: 'err', text: 'Kayıt sırasında seçtiğiniz kullanıcı adını girin.' })
+      setProfileRepairMsg({ type: 'err', text: t('repair.errUsernameRequired') })
       return
     }
     setProfileRepairBusy(true)
@@ -379,24 +318,24 @@ export default function Profile() {
       await createOperatorProfile(user.uid, {
         email: user.email ?? '',
         username: key,
-        callsign: (callsignDraft || user.displayName || 'Operatör').trim(),
+        callsign: (callsignDraft || user.displayName || t('defaults.operator')).trim(),
         bloodType: '',
         status: 'Beta',
         role: 'member',
         accountStatus: 'active',
       })
       await refreshUserProfile()
-      setProfileRepairMsg({ type: 'ok', text: 'Profil tamamlandı — sayfa yenileniyor.' })
+      setProfileRepairMsg({ type: 'ok', text: t('repair.okCompleted') })
     } catch (err) {
       reportFirebaseError(err)
       setProfileRepairMsg({
         type: 'err',
         text:
           err?.code === 'username-already-in-use'
-            ? 'Bu kullanıcı adı başka bir hesapta. Farklı bir ad deneyin veya destek ile iletişime geçin.'
+            ? t('repair.errUsernameTaken')
             : typeof err?.message === 'string'
               ? err.message
-              : 'Profil tamamlanamadı.',
+              : t('repair.errFailed'),
       })
     } finally {
       setProfileRepairBusy(false)
@@ -422,7 +361,7 @@ export default function Profile() {
   useEffect(() => {
     const bt = (userData?.bloodType || '').trim()
     if (!bt || bt === 'GUEST') {
-      setBloodDraft('BELİRTİLMEDİ')
+      setBloodDraft(BLOOD_UNSPECIFIED)
       return
     }
     setBloodDraft(bt)
@@ -432,7 +371,7 @@ export default function Profile() {
   const callsign = userData?.callsign ?? user?.displayName ?? '—'
   const rawUsername = (userData?.username || '').trim()
   const status = userData?.status ?? 'GUEST'
-  const enrolled = formatEnrolled(userData?.enrolledAt)
+  const enrolled = formatProfileEnrolledDate(userData?.enrolledAt)
   const photoUrl = (user?.photoURL || userData?.photoURL || '').trim()
 
   const sessionUser = auth?.currentUser ?? user
@@ -457,7 +396,7 @@ export default function Profile() {
     if (!file || !user?.uid || !auth?.currentUser) return
 
     if (!file.type.startsWith('image/')) {
-      setAvatarMsg({ type: 'err', text: 'Yalnızca görsel dosyaları desteklenir.' })
+      setAvatarMsg({ type: 'err', text: t('avatar.errImagesOnly') })
       return
     }
 
@@ -471,12 +410,12 @@ export default function Profile() {
       await updateUserAvatarUrl(user.uid, url)
       await auth.currentUser.reload()
       await refreshUserProfile()
-      setAvatarMsg({ type: 'ok', text: '✓ GÖRSEL SENKRONLANDI' })
+      setAvatarMsg({ type: 'ok', text: `✓ ${t('avatar.okSynced')}` })
     } catch (err) {
       reportFirebaseError(err)
       setAvatarMsg({
         type: 'err',
-        text: err instanceof Error ? err.message : 'Yükleme başarısız.',
+        text: err instanceof Error ? err.message : t('avatar.errUploadFailed'),
       })
     }
   }
@@ -485,7 +424,7 @@ export default function Profile() {
     if (!auth?.currentUser || !user?.uid) return
     const trimmed = callsignDraft.trim()
     if (!trimmed) {
-      setCallsignMsg({ type: 'err', text: 'Kod adı boş olamaz.' })
+      setCallsignMsg({ type: 'err', text: t('callsign.errEmpty') })
       return
     }
     setCallsignSaving(true)
@@ -494,10 +433,10 @@ export default function Profile() {
       await updateProfile(auth.currentUser, { displayName: trimmed })
       await updateUserCallsign(user.uid, trimmed)
       await refreshUserProfile()
-      setCallsignMsg({ type: 'ok', text: '✓ GÜNCELLENDİ' })
+      setCallsignMsg({ type: 'ok', text: `✓ ${t('callsign.okUpdated')}` })
     } catch (err) {
       reportFirebaseError(err)
-      setCallsignMsg({ type: 'err', text: err?.message || 'Kayıt başarısız.' })
+      setCallsignMsg({ type: 'err', text: err?.message || t('callsign.errFailed') })
     } finally {
       setCallsignSaving(false)
     }
@@ -508,12 +447,12 @@ export default function Profile() {
     setBloodSaving(true)
     setBloodMsg(null)
     try {
-      await updateUserBloodType(user.uid, bloodDraft === 'BELİRTİLMEDİ' ? '' : bloodDraft)
+      await updateUserBloodType(user.uid, bloodDraft === BLOOD_UNSPECIFIED ? '' : bloodDraft)
       await refreshUserProfile()
-      setBloodMsg({ type: 'ok', text: '✓ Kan grubu kaydedildi' })
+      setBloodMsg({ type: 'ok', text: `✓ ${t('blood.okSaved')}` })
     } catch (err) {
       reportFirebaseError(err)
-      setBloodMsg({ type: 'err', text: err?.message || 'Kayıt başarısız.' })
+      setBloodMsg({ type: 'err', text: err?.message || t('blood.errFailed') })
     } finally {
       setBloodSaving(false)
     }
@@ -524,15 +463,15 @@ export default function Profile() {
     setLinkError('')
     const u = auth?.currentUser
     if (!u?.email) {
-      setLinkError('Hesabınızda e-posta yok; şifre bağlanamaz.')
+      setLinkError(t('security.noEmailForPassword'))
       return
     }
     if (linkPass.length < 6) {
-      setLinkError('Şifre en az 6 karakter olmalı.')
+      setLinkError(t('security.passwordMinLength'))
       return
     }
     if (linkPass !== linkConfirm) {
-      setLinkError('Şifreler eşleşmiyor.')
+      setLinkError(t('security.passwordMismatch'))
       return
     }
     setLinkBusy(true)
@@ -544,7 +483,7 @@ export default function Profile() {
       setLinkError('')
     } catch (err) {
       reportFirebaseError(err)
-      setLinkError(typeof err?.message === 'string' ? err.message : 'Şifre bağlanamadı.')
+      setLinkError(typeof err?.message === 'string' ? err.message : t('security.linkFailed'))
     } finally {
       setLinkBusy(false)
     }
@@ -555,15 +494,15 @@ export default function Profile() {
     setChangeError('')
     const u = auth?.currentUser
     if (!u?.email) {
-      setChangeError('Oturum bulunamadı.')
+      setChangeError(t('security.sessionNotFound'))
       return
     }
     if (newPass.length < 6) {
-      setChangeError('Yeni şifre en az 6 karakter olmalı.')
+      setChangeError(t('security.newPasswordMinLength'))
       return
     }
     if (newPass !== newPassConfirm) {
-      setChangeError('Yeni şifreler eşleşmiyor.')
+      setChangeError(t('security.newPasswordMismatch'))
       return
     }
     setChangeBusy(true)
@@ -572,7 +511,7 @@ export default function Profile() {
         await reauthenticateWithPopup(u, new GoogleAuthProvider())
       } else {
         if (currentPassForChange.length < 6) {
-          setChangeError('Mevcut şifrenizi girin.')
+          setChangeError(t('security.currentPasswordRequired'))
           setChangeBusy(false)
           return
         }
@@ -584,7 +523,7 @@ export default function Profile() {
       setCurrentPassForChange('')
     } catch (err) {
       reportFirebaseError(err)
-      setChangeError(typeof err?.message === 'string' ? err.message : 'Şifre güncellenemedi.')
+      setChangeError(typeof err?.message === 'string' ? err.message : t('security.changeFailed'))
     } finally {
       setChangeBusy(false)
     }
@@ -595,7 +534,7 @@ export default function Profile() {
   }
 
   const missionN = m.ready ? m.items.length : '—'
-  const trainN = t.ready ? t.items.length : '—'
+  const trainN = trainings.ready ? trainings.items.length : '—'
   const sihhiN = h.ready ? incidentCount : '—'
 
   const statMax = Math.max(
@@ -611,11 +550,11 @@ export default function Profile() {
     <div className="dashboard-hud-shell profile-dossier-shell relative w-full px-6 pb-5 pt-6 sm:px-8 lg:px-10">
       <div className="relative mb-6 flex flex-wrap items-end gap-4 border-b border-white/10 pb-4">
         <div className="space-y-2">
-          <p className="cmd-kicker">Operatör Profili</p>
+          <p className="cmd-kicker">{t('header.kicker')}</p>
           <div className="flex flex-wrap items-baseline gap-4">
-            <h1 className="cmd-page-title">Profil</h1>
+            <h1 className="cmd-page-title">{t('header.title')}</h1>
             <span className="font-mono-technical text-sm uppercase tracking-wider text-app-text/45">
-              OHP{' '}
+              {t('header.ohp')}{' '}
               <span style={{ color: accent.rgb, textShadow: `0 0 8px ${accent.rgb}55` }}>{ohpScore != null ? `${ohpScore}` : '—'}</span>
               <span className="text-app-text/45">/100</span>
             </span>
@@ -626,23 +565,20 @@ export default function Profile() {
       {!rawUsername && user?.uid ? (
         <div className="relative mb-6 rounded-lg border border-amber-500/40 bg-amber-950/30 px-4 py-3">
           <p className="font-mono-technical text-xs font-bold uppercase tracking-wider text-amber-300">
-            Profil kaydı eksik
+            {t('repair.title')}
           </p>
-          <p className="mt-1 text-sm text-amber-100/85">
-            Oturum açık ancak operatör profiliniz Firestore&apos;a yazılmamış (GUEST görünümü). Kayıt
-            sırasında seçtiğiniz kullanıcı adını girip profili tamamlayın.
-          </p>
+          <p className="mt-1 text-sm text-amber-100/85">{t('repair.description')}</p>
           <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
             <label className="min-w-0 flex-1">
               <span className="font-mono-technical text-[9px] uppercase tracking-wider text-amber-200/70">
-                Kullanıcı adı
+                {t('repair.usernameLabel')}
               </span>
               <input
                 value={profileRepairUsername}
                 onChange={(e) =>
                   setProfileRepairUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_\s]/g, ''))
                 }
-                placeholder="örn: sarma1"
+                placeholder={t('repair.usernamePlaceholder')}
                 className="mt-1 w-full rounded border border-amber-500/30 bg-black/40 px-3 py-2 font-mono-technical text-sm text-amber-50 outline-none focus:border-amber-400/60"
               />
             </label>
@@ -652,7 +588,7 @@ export default function Profile() {
               disabled={profileRepairBusy}
               className="shrink-0 rounded border border-amber-400/50 bg-amber-500/15 px-4 py-2 font-mono-technical text-[10px] font-bold uppercase tracking-wider text-amber-200 hover:bg-amber-500/25 disabled:opacity-50"
             >
-              {profileRepairBusy ? '…' : 'Profili tamamla'}
+              {profileRepairBusy ? t('common.ellipsis') : t('repair.completeButton')}
             </button>
           </div>
           {profileRepairMsg ? (
@@ -671,7 +607,7 @@ export default function Profile() {
         <aside className="op-identity-sticky w-full shrink-0 lg:w-72">
           <section className="op-terminal-card flex h-full min-h-0 flex-col">
             <header className="op-terminal-card__head shrink-0">
-              <TerminalTitle>Taktik Kimlik</TerminalTitle>
+              <TerminalTitle>{t('identity.title')}</TerminalTitle>
             </header>
             <div className="op-terminal-card__body space-y-4 text-sm">
               <div className="op-avatar-frame mx-auto w-auto max-w-none lg:mx-0">
@@ -691,7 +627,7 @@ export default function Profile() {
                   />
                 </div>
                 <p className="mt-1.5 text-center font-mono-technical text-[7px] uppercase tracking-[0.22em] text-accent/75 lg:text-left">
-                  Rozet aktif · {photoUrl ? 'Görsel' : 'Otomatik'}
+                  {t('identity.badgeActive')} · {photoUrl ? t('identity.badgeCustom') : t('identity.badgeAuto')}
                 </p>
                 <input
                   ref={avatarInputRef}
@@ -708,12 +644,12 @@ export default function Profile() {
                   className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-sm border border-emerald-500/35 bg-emerald-950/25 px-2 py-1.5 font-mono-technical text-[8px] font-bold uppercase tracking-[0.16em] text-emerald-400 transition hover:border-emerald-400/55 hover:bg-emerald-950/40 disabled:cursor-not-allowed disabled:opacity-45"
                 >
                   <Camera className="size-3" strokeWidth={1.75} aria-hidden />
-                  {avatarUploading ? 'YÜKLENİYOR…' : 'PROFİL GÖRSELİ YÜKLE'}
+                  {avatarUploading ? t('identity.uploadUploading') : t('identity.uploadButton')}
                 </button>
                 {avatarUploading ? (
                   <TacticalUploadProgress
                     progress={avatarProgress}
-                    label="Görsel yükleniyor"
+                    label={t('identity.uploadProgress')}
                     error={avatarUploadError}
                     className="mt-2"
                   />
@@ -731,50 +667,50 @@ export default function Profile() {
               </div>
 
               <div className="space-y-1 border-t border-white/10 pt-3">
-                <p className="font-mono-technical text-sm uppercase tracking-[0.28em] text-app-text/55">Çağrı adı</p>
+                <p className="font-mono-technical text-sm uppercase tracking-[0.28em] text-app-text/55">{t('identity.callsignLabel')}</p>
                 <p
                   className="font-mono-technical text-2xl font-bold uppercase leading-tight tracking-tight"
                   style={{ color: accent.rgb, textShadow: `0 0 14px ${accent.rgb}55` }}
                 >
                   {callsign}
                 </p>
-                <p className="font-mono-technical text-sm font-semibold text-app-text/70">{roleLabel(userData?.role)}</p>
+                <p className="font-mono-technical text-sm font-semibold text-app-text/70">{profileRoleLabel(userData?.role)}</p>
                 {showPricingLink ? (
                   <Link
                     to="/fiyatlandirma"
                     className="mt-1 inline-block font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent/80 hover:text-accent"
                   >
-                    Üyelik planları →
+                    {t('identity.membershipPlans')}
                   </Link>
                 ) : null}
               </div>
 
               <dl className="space-y-0 border-t border-white/10 pt-2">
-                <TechLine k="Statü" v={status} accentRgb={accent.rgb} />
+                <TechLine k={t('identity.statusLabel')} v={status} accentRgb={accent.rgb} />
               </dl>
             </div>
           </section>
         </aside>
 
         <div className="flex min-w-0 flex-col gap-4 lg:flex-1">
-          <OpTacticalCard title="Operatör Özeti">
+          <OpTacticalCard title={t('summary.title')}>
             <div className="grid grid-cols-3 gap-2 sm:gap-3">
-              <DataStat label="Tamamlanan görev" value={missionN} accentRgb={accent.rgb} fillPct={statFillPct(missionN, statMax)} />
-              <DataStat label="Eğitim sayısı" value={trainN} accentRgb={accent.rgb} fillPct={statFillPct(trainN, statMax)} />
-              <DataStat label="Sıhhî olay" value={sihhiN} accentRgb={accent.rgb} fillPct={statFillPct(sihhiN, statMax)} />
+              <DataStat label={t('summary.missions')} value={missionN} accentRgb={accent.rgb} fillPct={statFillPct(missionN, statMax)} />
+              <DataStat label={t('summary.trainings')} value={trainN} accentRgb={accent.rgb} fillPct={statFillPct(trainN, statMax)} />
+              <DataStat label={t('summary.medical')} value={sihhiN} accentRgb={accent.rgb} fillPct={statFillPct(sihhiN, statMax)} />
             </div>
           </OpTacticalCard>
 
-          <OpTacticalCard title="Kan Grubu" className="w-full max-w-xs sm:max-w-sm">
+          <OpTacticalCard title={t('blood.title')} className="w-full max-w-xs sm:max-w-sm">
             <div className="flex flex-wrap items-end gap-2">
               <select
-                value={bloodOptions.includes(bloodDraft) ? bloodDraft : 'BELİRTİLMEDİ'}
+                value={bloodOptions.includes(bloodDraft) ? bloodDraft : BLOOD_UNSPECIFIED}
                 onChange={(e) => setBloodDraft(e.target.value)}
                 className="dossier-blood-select min-w-0 w-full rounded-sm border border-accent/35 py-2 pl-2 pr-1 font-mono-technical text-sm font-medium text-app-text outline-none"
               >
                 {bloodOptions.map((opt) => (
                   <option key={opt} value={opt}>
-                    {opt}
+                    {opt === BLOOD_UNSPECIFIED ? t('blood.unspecified') : opt}
                   </option>
                 ))}
               </select>
@@ -784,7 +720,7 @@ export default function Profile() {
                 disabled={bloodSaving}
                 className="rounded-sm border border-[#004DFF]/35 bg-[#004DFF]/10 px-2.5 py-1 font-mono-technical text-xs font-bold uppercase tracking-wider text-[#5b8cff] hover:bg-[#004DFF]/18 disabled:opacity-50"
               >
-                {bloodSaving ? '…' : 'KAYDET'}
+                {bloodSaving ? t('common.ellipsis') : t('blood.save')}
               </button>
             </div>
             {bloodMsg ? (
@@ -792,14 +728,14 @@ export default function Profile() {
             ) : null}
           </OpTacticalCard>
 
-          <OpTacticalCard title="Canlı Akış">
+          <OpTacticalCard title={t('activity.title')}>
             <ul className="space-y-2 text-sm">
               {activityTop3.length === 0 ? (
-                <li className="font-mono-technical text-sm text-app-text/45">Henüz aktivite yok</li>
+                <li className="font-mono-technical text-sm text-app-text/45">{t('activity.empty')}</li>
               ) : (
                 activityTop3.map((row, i) => (
                   <li key={`${row.ms}-${i}-${row.line.slice(0, 12)}`} className="flex flex-col gap-1 border-b border-white/[0.06] pb-2 last:border-0 last:pb-0">
-                    <span className="font-mono-technical text-xs tabular-nums text-[#004DFF]/80">{fmtActivityTs(row.ms)}</span>
+                    <span className="font-mono-technical text-xs tabular-nums text-[#004DFF]/80">{formatProfileActivityTs(row.ms)}</span>
                     <span className="font-mono-technical text-sm leading-snug text-app-text/90">{row.line}</span>
                   </li>
                 ))
@@ -809,35 +745,35 @@ export default function Profile() {
         </div>
 
         <div className="profile-dossier-right flex min-w-0 w-full shrink-0 flex-col gap-4 lg:w-80">
-          <OpTacticalCard title="Kayıt Bilgileri">
+          <OpTacticalCard title={t('registration.title')}>
             <dl className="grid gap-0 font-mono-technical text-sm text-app-text/70">
               <div className="flex justify-between gap-2 border-b border-white/[0.05] py-1.5">
-                <dt className="text-app-text/45">@kullanıcı adı</dt>
+                <dt className="text-app-text/45">{t('registration.username')}</dt>
                 <dd className="truncate text-app-text/90">{rawUsername ? `@${rawUsername}` : '—'}</dd>
               </div>
               <div className="flex justify-between gap-2 border-b border-white/[0.05] py-1.5">
-                <dt className="shrink-0 text-app-text/45">E-posta</dt>
+                <dt className="shrink-0 text-app-text/45">{t('registration.email')}</dt>
                 <dd className="min-w-0 break-all text-right text-app-text/90">{email || '—'}</dd>
               </div>
               <div className="flex justify-between gap-2 border-b border-white/[0.05] py-1.5">
-                <dt className="text-app-text/45">Kayıt</dt>
+                <dt className="text-app-text/45">{t('registration.enrolled')}</dt>
                 <dd className="text-app-text/90">{enrolled}</dd>
               </div>
               <div className="flex justify-between gap-2 py-1.5">
-                <dt className="text-app-text/45">Statü</dt>
+                <dt className="text-app-text/45">{t('registration.status')}</dt>
                 <dd className="text-app-text/90">{status}</dd>
               </div>
             </dl>
 
             <div className="mt-3 space-y-2 border-t border-white/10 pt-3">
-              <DossierField label="Çağrı Adı Güncelle">
+              <DossierField label={t('registration.updateCallsign')}>
                 <div className="flex flex-col gap-1.5 sm:flex-row sm:items-end">
                   <input
                     name="callsign"
                     autoComplete="nickname"
                     value={callsignDraft}
                     onChange={(e) => setCallsignDraft(e.target.value.toUpperCase())}
-                    placeholder="ÖRN: WOLF-1"
+                    placeholder={t('registration.callsignPlaceholder')}
                     className={`${inputTactical} min-w-0 flex-1`}
                     style={{ borderBottomColor: 'rgba(255,255,255,0.18)' }}
                     onFocus={(e) => {
@@ -853,7 +789,7 @@ export default function Profile() {
                     disabled={callsignSaving}
                     className="shrink-0 rounded-sm border border-[#004DFF]/40 bg-[#004DFF]/12 px-2.5 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#6b9fff] hover:bg-[#004DFF]/18 disabled:opacity-50"
                   >
-                    {callsignSaving ? '…' : 'UYGULA'}
+                    {callsignSaving ? t('common.ellipsis') : t('registration.apply')}
                   </button>
                 </div>
               </DossierField>
@@ -868,7 +804,7 @@ export default function Profile() {
       <section className="profile-security-section mt-6 w-full" aria-labelledby="profile-security-heading">
         <header className="mb-4 border-b border-white/10 pb-3">
           <h2 id="profile-security-heading" className="op-terminal-title text-xs uppercase tracking-wider">
-            Hesap Güvenliği
+            {t('security.title')}
           </h2>
           <div className="mt-3 flex flex-wrap gap-1.5">
             <span
@@ -876,31 +812,31 @@ export default function Profile() {
                 googleLinked ? 'border-emerald-500/40 text-emerald-300/90' : 'border-[#2A2D34] bg-[#2A2D34]/80 text-app-text/55'
               }`}
             >
-              Google {googleLinked ? '●' : '○'}
+              {t('security.google')} {googleLinked ? '●' : '○'}
             </span>
             <span
               className={`inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 font-mono-technical text-[8px] font-bold uppercase tracking-widest ${
                 pwdLinked ? 'border-emerald-500/40 text-emerald-300/90' : 'border-[#004DFF]/35 bg-[#2A2D34]/90 text-[#7aa3ff]'
               }`}
             >
-              E-posta + şifre {pwdLinked ? '●' : '○'}
+              {t('security.emailPassword')} {pwdLinked ? '●' : '○'}
             </span>
           </div>
         </header>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          <OpTacticalCard title="Şifre Değiştir">
+          <OpTacticalCard title={t('security.changePasswordTitle')}>
             <div className="space-y-3">
               {!pwdLinked && googleLinked && email ? (
                 <form onSubmit={linkEmailPassword} className={`space-y-2.5 rounded-sm p-3 ${secPanelClass}`}>
                   <div className="flex items-start gap-2">
                     <Link2 className="mt-0.5 size-3.5 shrink-0 text-[#5b8cff]" strokeWidth={1.5} aria-hidden />
                     <div className="min-w-0 flex-1 space-y-1.5">
-                      <p className="font-mono-technical text-[9px] font-bold uppercase tracking-wide text-[#b8ccff]">Hesap şifresi bağla</p>
-                      <DossierField label="E_POSTA (SABİT)">
+                      <p className="font-mono-technical text-[9px] font-bold uppercase tracking-wide text-[#b8ccff]">{t('security.linkPasswordTitle')}</p>
+                      <DossierField label={t('security.emailFixed')}>
                         <input type="email" readOnly value={email} className={`${inputTactical} opacity-70`} />
                       </DossierField>
-                      <DossierField label="ŞİFRE">
+                      <DossierField label={t('security.password')}>
                         <input
                           type="password"
                           autoComplete="new-password"
@@ -910,7 +846,7 @@ export default function Profile() {
                           style={{ borderBottomColor: 'rgba(0,77,255,0.35)' }}
                         />
                       </DossierField>
-                      <DossierField label="ŞİFRE_TEKRAR">
+                      <DossierField label={t('security.passwordRepeat')}>
                         <input
                           type="password"
                           autoComplete="new-password"
@@ -926,7 +862,7 @@ export default function Profile() {
                         disabled={linkBusy}
                         className="rounded-sm border border-[#004DFF]/50 bg-[#004DFF]/15 px-2.5 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#8eb7ff] hover:bg-[#004DFF]/22 disabled:opacity-50"
                       >
-                        {linkBusy ? '…' : 'BAĞLA'}
+                        {linkBusy ? t('common.ellipsis') : t('security.link')}
                       </button>
                     </div>
                   </div>
@@ -934,11 +870,11 @@ export default function Profile() {
               ) : null}
 
               {!pwdLinked && googleLinked && !email ? (
-                <AmberAlert>Hesapta e-posta yok; şifre çiti bu oturum için kapalı.</AmberAlert>
+                <AmberAlert>{t('security.noEmailPasswordGate')}</AmberAlert>
               ) : null}
 
               {!googleLinked && !pwdLinked && email ? (
-                <AmberAlert>Oturum sağlayıcı bilgisi alınamadı; çıkış / yeniden giriş önerilir.</AmberAlert>
+                <AmberAlert>{t('security.providerUnknown')}</AmberAlert>
               ) : null}
 
               {pwdLinked ? (
@@ -946,9 +882,9 @@ export default function Profile() {
                   <div className="flex items-start gap-2">
                     <KeyRound className="mt-0.5 size-3.5 shrink-0 text-[#5b8cff]" strokeWidth={1.5} aria-hidden />
                     <div className="min-w-0 flex-1 space-y-1.5">
-                      <p className="font-mono-technical text-[9px] font-bold uppercase tracking-wide text-[#b8ccff]">Şifre değiştir</p>
+                      <p className="font-mono-technical text-[9px] font-bold uppercase tracking-wide text-[#b8ccff]">{t('security.changePassword')}</p>
                       {!googleLinked ? (
-                        <DossierField label="Mevcut şifre">
+                        <DossierField label={t('security.currentPassword')}>
                           <input
                             type="password"
                             autoComplete="current-password"
@@ -959,12 +895,12 @@ export default function Profile() {
                           />
                         </DossierField>
                       ) : (
-                        <p className="font-mono-technical text-[8px] text-app-text/55">Google ile yeniden doğrulama penceresi açılabilir.</p>
+                        <p className="font-mono-technical text-[8px] text-app-text/55">{t('security.googleReauthHint')}</p>
                       )}
-                      <DossierField label="Yeni şifre">
+                      <DossierField label={t('security.newPassword')}>
                         <input type="password" autoComplete="new-password" value={newPass} onChange={(e) => setNewPass(e.target.value)} className={inputTactical} style={{ borderBottomColor: 'rgba(0,77,255,0.35)' }} />
                       </DossierField>
-                      <DossierField label="Yeni şifre (tekrar)">
+                      <DossierField label={t('security.newPasswordRepeat')}>
                         <input
                           type="password"
                           autoComplete="new-password"
@@ -980,7 +916,7 @@ export default function Profile() {
                         disabled={changeBusy}
                         className="rounded-sm border border-[#004DFF]/40 bg-[#2A2D34] px-2.5 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#9db6e8] hover:border-[#004DFF]/55 disabled:opacity-50"
                       >
-                        {changeBusy ? '…' : 'GÜNCELLE'}
+                        {changeBusy ? t('common.ellipsis') : t('security.update')}
                       </button>
                     </div>
                   </div>
@@ -989,33 +925,33 @@ export default function Profile() {
             </div>
           </OpTacticalCard>
 
-          <OpTacticalCard title="Telefon Kanalı">
+          <OpTacticalCard title={t('phone.title')}>
             <div className={`rounded-sm p-3 ${secPanelClass}`}>
               <div className="flex items-start gap-2">
                 <Phone className="mt-0.5 size-3.5 shrink-0 text-[#5b8cff]" strokeWidth={1.5} aria-hidden />
                 <div className="min-w-0 flex-1">
-                  <p className="font-mono-technical text-[9px] font-bold uppercase text-[#b8ccff]">Telefon kanalı</p>
-                  <p className="mt-0.5 font-mono-technical text-[8px] uppercase leading-snug text-app-text/55">SMS ve kurtarma için</p>
-                  <input type="tel" readOnly disabled placeholder="+90 …" className={`${inputTactical} mt-1 cursor-not-allowed opacity-45`} aria-label="Telefon (pasif)" />
+                  <p className="font-mono-technical text-[9px] font-bold uppercase text-[#b8ccff]">{t('phone.channel')}</p>
+                  <p className="mt-0.5 font-mono-technical text-[8px] uppercase leading-snug text-app-text/55">{t('phone.subtitle')}</p>
+                  <input type="tel" readOnly disabled placeholder={t('phone.placeholder')} className={`${inputTactical} mt-1 cursor-not-allowed opacity-45`} aria-label={t('phone.aria')} />
                   <button type="button" disabled className="mt-1 rounded-sm border border-[#2A2D34] px-1.5 py-0.5 font-mono-technical text-[8px] uppercase text-app-text/45">
-                    Kilitli
+                    {t('phone.locked')}
                   </button>
                 </div>
               </div>
             </div>
           </OpTacticalCard>
 
-          <OpTacticalCard title="SMS / MFA">
+          <OpTacticalCard title={t('mfa.title')}>
             <div className={`rounded-sm p-3 ${secPanelClass}`}>
               <div className="flex items-start gap-2">
                 <Shield className="mt-0.5 size-3.5 shrink-0 text-[#5b8cff]" strokeWidth={1.5} aria-hidden />
                 <div className="min-w-0 flex-1">
-                  <p className="font-mono-technical text-[9px] font-bold uppercase text-[#b8ccff]">Telefon · SMS doğrulama</p>
-                  <p className="mt-0.5 font-mono-technical text-[8px] uppercase leading-snug text-app-text/55">SMS doğrulama</p>
+                  <p className="font-mono-technical text-[9px] font-bold uppercase text-[#b8ccff]">{t('mfa.channel')}</p>
+                  <p className="mt-0.5 font-mono-technical text-[8px] uppercase leading-snug text-app-text/55">{t('mfa.subtitle')}</p>
                   <label className="mt-2 flex cursor-not-allowed items-center gap-1.5 opacity-65">
                     <input type="checkbox" disabled className="size-3 rounded-sm border-white/20" />
                     <span className="font-mono-technical text-[8px] uppercase leading-snug tracking-wide text-app-text/55">
-                      Durum: Pasif
+                      {t('mfa.statusInactive')}
                     </span>
                   </label>
                 </div>

@@ -1,0 +1,126 @@
+{
+  "loading": {
+    "status": "Profil yükleniyor",
+    "subtitle": "Kimlik verisi yükleniyor"
+  },
+  "header": {
+    "kicker": "Operatör profili",
+    "title": "Profil",
+    "ohp": "OHP"
+  },
+  "repair": {
+    "title": "Profil kaydı eksik",
+    "description": "Oturum açık ancak operatör profiliniz Firestore'a yazılmamış (GUEST görünümü). Kayıt sırasında seçtiğiniz kullanıcı adını girip profili tamamlayın.",
+    "usernameLabel": "Kullanıcı adı",
+    "usernamePlaceholder": "örn: sarma1",
+    "completeButton": "Profili tamamla",
+    "errUsernameRequired": "Kayıt sırasında seçtiğiniz kullanıcı adını girin.",
+    "okCompleted": "Profil tamamlandı — sayfa yenileniyor.",
+    "errUsernameTaken": "Bu kullanıcı adı başka bir hesapta. Farklı bir ad deneyin veya destek ile iletişime geçin.",
+    "errFailed": "Profil tamamlanamadı."
+  },
+  "identity": {
+    "title": "Taktik kimlik",
+    "badgeActive": "Rozet aktif",
+    "badgeCustom": "Görsel",
+    "badgeAuto": "Otomatik",
+    "uploadUploading": "Yükleniyor…",
+    "uploadButton": "Profil görseli yükle",
+    "uploadProgress": "Görsel yükleniyor",
+    "callsignLabel": "Çağrı adı",
+    "membershipPlans": "Üyelik planları →",
+    "statusLabel": "Statü"
+  },
+  "roles": {
+    "admin": "Yönetici",
+    "instructor": "Eğitmen",
+    "premium": "Premium üye",
+    "member": "Üye",
+    "commander": "Komutan"
+  },
+  "summary": {
+    "title": "Operatör özeti",
+    "missions": "Tamamlanan görev",
+    "trainings": "Eğitim sayısı",
+    "medical": "Sıhhî olay"
+  },
+  "blood": {
+    "title": "Kan grubu",
+    "unspecified": "Belirtilmedi",
+    "save": "Kaydet",
+    "okSaved": "Kan grubu kaydedildi",
+    "errFailed": "Kayıt başarısız."
+  },
+  "activity": {
+    "title": "Canlı akış",
+    "empty": "Henüz aktivite yok"
+  },
+  "registration": {
+    "title": "Kayıt bilgileri",
+    "username": "@kullanıcı adı",
+    "email": "E-posta",
+    "enrolled": "Kayıt",
+    "status": "Statü",
+    "updateCallsign": "Çağrı adı güncelle",
+    "callsignPlaceholder": "Örn: WOLF-1",
+    "apply": "Uygula"
+  },
+  "callsign": {
+    "errEmpty": "Kod adı boş olamaz.",
+    "okUpdated": "Güncellendi",
+    "errFailed": "Kayıt başarısız."
+  },
+  "avatar": {
+    "errImagesOnly": "Yalnızca görsel dosyaları desteklenir.",
+    "okSynced": "Görsel senkronlandı",
+    "errUploadFailed": "Yükleme başarısız."
+  },
+  "security": {
+    "title": "Hesap güvenliği",
+    "google": "Google",
+    "emailPassword": "E-posta + şifre",
+    "changePasswordTitle": "Şifre değiştir",
+    "linkPasswordTitle": "Hesap şifresi bağla",
+    "emailFixed": "E-posta (sabit)",
+    "password": "Şifre",
+    "passwordRepeat": "Şifre tekrar",
+    "link": "Bağla",
+    "noEmailForPassword": "Hesabınızda e-posta yok; şifre bağlanamaz.",
+    "passwordMinLength": "Şifre en az 6 karakter olmalı.",
+    "passwordMismatch": "Şifreler eşleşmiyor.",
+    "linkFailed": "Şifre bağlanamadı.",
+    "noEmailPasswordGate": "Hesapta e-posta yok; şifre çiti bu oturum için kapalı.",
+    "providerUnknown": "Oturum sağlayıcı bilgisi alınamadı; çıkış / yeniden giriş önerilir.",
+    "changePassword": "Şifre değiştir",
+    "currentPassword": "Mevcut şifre",
+    "googleReauthHint": "Google ile yeniden doğrulama penceresi açılabilir.",
+    "newPassword": "Yeni şifre",
+    "newPasswordRepeat": "Yeni şifre (tekrar)",
+    "update": "Güncelle",
+    "sessionNotFound": "Oturum bulunamadı.",
+    "newPasswordMinLength": "Yeni şifre en az 6 karakter olmalı.",
+    "newPasswordMismatch": "Yeni şifreler eşleşmiyor.",
+    "currentPasswordRequired": "Mevcut şifrenizi girin.",
+    "changeFailed": "Şifre güncellenemedi."
+  },
+  "phone": {
+    "title": "Telefon kanalı",
+    "channel": "Telefon kanalı",
+    "subtitle": "SMS ve kurtarma için",
+    "placeholder": "+90 …",
+    "aria": "Telefon (pasif)",
+    "locked": "Kilitli"
+  },
+  "mfa": {
+    "title": "SMS / MFA",
+    "channel": "Telefon · SMS doğrulama",
+    "subtitle": "SMS doğrulama",
+    "statusInactive": "Durum: Pasif"
+  },
+  "defaults": {
+    "operator": "Operatör"
+  },
+  "common": {
+    "ellipsis": "…"
+  }
+}
