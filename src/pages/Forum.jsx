@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { ChevronLeft, Flag, Loader2, MessagesSquare, Plus, Send } from 'lucide-react'
 import ForumImageBlock from '../components/common/ForumImageBlock'
 import TacticalImageAttachField from '../components/common/TacticalImageAttachField'
@@ -10,16 +11,20 @@ import PageShell from '../components/layout/PageShell'
 import { useAuth } from '../context/AuthContext'
 import { useFeedbackPanelOptional } from '../context/FeedbackPanelContext'
 import { useStorage } from '../hooks/useStorage'
+import i18n from '../i18n'
 import { emitFirebaseError } from '../lib/firebaseErrorBus'
 import {
   FORUM_CATEGORIES,
   createForumPost,
   createForumReply,
-  formatForumTimestamp,
   fetchForumPostById,
   subscribeForumPosts,
   subscribeForumReplies,
 } from '../lib/firestoreForum'
+import {
+  formatForumCategoryLabel,
+  formatForumTimestampDisplay,
+} from '../lib/forumDisplayText'
 import { forumStoragePath } from '../services/storageService'
 
 /** @typedef {import('../lib/firestoreForum').ForumPost} ForumPost */
@@ -69,7 +74,7 @@ function CategoryBadge({ category }) {
   const style = CATEGORY_STYLES[category] ?? CATEGORY_STYLES['GENEL OPERASYON']
   return (
     <span className={['inline-block rounded border px-2 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider', style].join(' ')}>
-      {category}
+      {formatForumCategoryLabel(category)}
     </span>
   )
 }
@@ -85,6 +90,7 @@ function CategoryBadge({ category }) {
  * }} props
  */
 function ForumThreadView({ post, uid, callsign, onBack, onReportPost, onReportReply }) {
+  const { t } = useTranslation('forum')
   const [replies, setReplies] = useState(/** @type {ForumReply[]} */ ([]))
   const [loading, setLoading] = useState(true)
   const [replyDraft, setReplyDraft] = useState('')
@@ -158,13 +164,13 @@ function ForumThreadView({ post, uid, callsign, onBack, onReportPost, onReportRe
         className="mb-4 inline-flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-zinc-500 transition hover:text-lime-400"
       >
         <ChevronLeft className="size-3.5" strokeWidth={2} aria-hidden />
-        [ &lt; MERKEZE DÖN ]
+        {t('thread.backToHub')}
       </button>
 
       <article className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-5">
         {post.removed ? (
           <p className="rounded border border-red-900/40 bg-red-950/20 px-4 py-6 text-center font-mono text-xs uppercase text-red-300">
-            Bu brifing moderasyon tarafından kaldırıldı.
+            {t('thread.removedPost')}
           </p>
         ) : (
           <>
@@ -172,7 +178,7 @@ function ForumThreadView({ post, uid, callsign, onBack, onReportPost, onReportRe
           <OperatorAvatar uid={post.authorId} callsign={post.authorCallsign} size="sm" />
           <div className="min-w-0 flex-1">
             <p className="font-mono text-xs font-bold uppercase tracking-wide text-lime-400">{post.authorCallsign}</p>
-            <span className="font-mono text-[10px] text-zinc-500">{formatForumTimestamp(post.timestamp)}</span>
+            <span className="font-mono text-[10px] text-zinc-500">{formatForumTimestampDisplay(post.timestamp)}</span>
           </div>
           {uid && uid !== post.authorId ? (
             <button
@@ -181,7 +187,7 @@ function ForumThreadView({ post, uid, callsign, onBack, onReportPost, onReportRe
               className="inline-flex items-center gap-1.5 rounded border border-zinc-700 bg-zinc-950 px-2.5 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-zinc-500 transition hover:border-amber-500/40 hover:text-amber-400"
             >
               <Flag className="size-3" strokeWidth={2} aria-hidden />
-              Şikayet et
+              {t('thread.report')}
             </button>
           ) : null}
         </div>
@@ -197,26 +203,26 @@ function ForumThreadView({ post, uid, callsign, onBack, onReportPost, onReportRe
         )}
       </article>
 
-      <section className="mt-6" aria-label="Yanıtlar">
+      <section className="mt-6" aria-label={t('replies.sectionAria')}>
         <p className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.28em] text-zinc-500">
-          [ YANITLAR ] · {post.replyCount}
+          {t('replies.section', { count: post.replyCount })}
         </p>
 
         {loading ? (
           <p className="flex items-center gap-2 font-mono text-xs text-zinc-500">
             <Loader2 className="size-3 animate-spin" aria-hidden />
-            Yanıtlar yükleniyor…
+            {t('replies.loading')}
           </p>
         ) : replies.length === 0 ? (
           <p className="rounded border border-zinc-800 bg-zinc-950/40 px-4 py-6 text-center font-mono text-xs text-zinc-500">
-            Henüz yanıt yok. İlk brifing notunu ekle.
+            {t('replies.empty')}
           </p>
         ) : (
           <ul className="space-y-3">
             {replies.map((reply) => (
               <li key={reply.id} className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-4">
                 {reply.removed ? (
-                  <p className="font-mono text-[10px] uppercase text-zinc-500">[ Yorum kaldırıldı ]</p>
+                  <p className="font-mono text-[10px] uppercase text-zinc-500">{t('replies.removed')}</p>
                 ) : (
                   <>
                 <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
@@ -224,7 +230,7 @@ function ForumThreadView({ post, uid, callsign, onBack, onReportPost, onReportRe
                     <OperatorAvatar uid={reply.authorId} callsign={reply.authorCallsign} size="sm" />
                     <div className="font-mono text-[10px] uppercase tracking-wider">
                       <span className="font-bold text-lime-400">{reply.authorCallsign}</span>
-                      <span className="ml-2 text-zinc-500">{formatForumTimestamp(reply.timestamp)}</span>
+                      <span className="ml-2 text-zinc-500">{formatForumTimestampDisplay(reply.timestamp)}</span>
                     </div>
                   </div>
                   {uid && uid !== reply.authorId ? (
@@ -234,7 +240,7 @@ function ForumThreadView({ post, uid, callsign, onBack, onReportPost, onReportRe
                       className="inline-flex items-center gap-1 rounded border border-zinc-700 px-2 py-1 font-mono text-[9px] font-bold uppercase tracking-wider text-zinc-500 hover:border-amber-500/40 hover:text-amber-400"
                     >
                       <Flag className="size-3" aria-hidden />
-                      Şikayet
+                      {t('thread.reportShort')}
                     </button>
                   ) : null}
                 </div>
@@ -251,19 +257,22 @@ function ForumThreadView({ post, uid, callsign, onBack, onReportPost, onReportRe
       </section>
 
       <form onSubmit={handleReply} className="mt-6 rounded-lg border border-zinc-700 bg-zinc-900 p-4">
-        <p className="mb-2 font-mono text-[10px] font-bold uppercase tracking-widest text-zinc-500">[ YANIT EKLE ]</p>
+        <p className="mb-2 font-mono text-[10px] font-bold uppercase tracking-widest text-zinc-500">{t('replies.addSection')}</p>
         <textarea
           value={replyDraft}
           onChange={(e) => setReplyDraft(e.target.value)}
           rows={3}
           maxLength={2000}
           disabled={!uid || submitting || replyImgLoading}
-          placeholder="Brifing notunu yaz…"
+          placeholder={t('replies.placeholder')}
           className="w-full resize-y rounded border border-zinc-800 bg-zinc-950 px-3 py-2.5 font-mono text-sm text-zinc-300 placeholder:text-zinc-600 focus:border-lime-500/40 focus:outline-none focus:ring-1 focus:ring-lime-500/30 disabled:opacity-40"
         />
         <TacticalImageAttachField
           className="mt-3"
-          label="GÖRSEL EKLE"
+          label={t('attach.label')}
+          uploadingLabel={t('attach.uploading')}
+          clearLabel={t('attach.clear')}
+          syncProgressLabel={t('attach.sync')}
           previewUrl={replyImageUrl}
           uploading={replyImgLoading}
           progress={replyImgProgress}
@@ -282,7 +291,7 @@ function ForumThreadView({ post, uid, callsign, onBack, onReportPost, onReportRe
             className="inline-flex items-center gap-2 rounded border border-lime-500/40 bg-lime-950/20 px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-lime-400 transition hover:border-lime-500 hover:bg-lime-950/40 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {submitting ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Send className="size-4" strokeWidth={1.75} aria-hidden />}
-            GÖNDER
+            {t('replies.submit')}
           </button>
         </div>
       </form>
@@ -291,10 +300,11 @@ function ForumThreadView({ post, uid, callsign, onBack, onReportPost, onReportRe
 }
 
 export default function Forum() {
+  const { t } = useTranslation('forum')
   const { user, userData } = useAuth()
   const feedbackPanel = useFeedbackPanelOptional()
   const uid = user?.uid ?? null
-  const callsign = (userData?.callsign || user?.displayName || 'OPERATÖR').trim()
+  const callsign = (userData?.callsign || user?.displayName || t('defaults.operatorCallsign')).trim()
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -340,7 +350,7 @@ export default function Forum() {
       },
       (err) => {
         emitFirebaseError(err)
-        setListenError(err instanceof Error ? err.message : 'Forum yüklenemedi.')
+        setListenError(err instanceof Error ? err.message : i18n.t('list.loadFailed', { ns: 'forum' }))
         setLoading(false)
       },
     )
@@ -488,12 +498,12 @@ export default function Forum() {
   return (
     <div className="px-4 sm:px-6 md:px-8">
     <PageShell
-      title="Brifing Odası"
-      subtitle="Operasyonel tartışma ve taktik brifing forumu."
+      title={t('header.title')}
+      subtitle={t('header.subtitle')}
       headerAction={
         <span className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-zinc-500">
           <MessagesSquare className="size-3.5 text-lime-500/70" strokeWidth={1.75} aria-hidden />
-          Forum
+          {t('header.badge')}
         </span>
       }
     >
@@ -528,7 +538,7 @@ export default function Forum() {
               ].join(' ')}
             >
               <Plus className="size-4" strokeWidth={2} aria-hidden />
-              [ YENİ BRİFİNG BAŞLAT ]
+              {t('newPost.toggle')}
             </button>
           </div>
 
@@ -539,7 +549,7 @@ export default function Forum() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 maxLength={120}
-                placeholder="[ BRİFİNG BAŞLIĞI ]"
+                placeholder={t('newPost.titlePlaceholder')}
                 className="mb-3 w-full rounded border border-zinc-800 bg-zinc-950 px-3 py-2.5 font-mono text-sm text-zinc-300 placeholder:text-zinc-600 focus:border-lime-500/40 focus:outline-none focus:ring-1 focus:ring-lime-500/30"
               />
 
@@ -562,7 +572,7 @@ export default function Forum() {
                       onChange={() => setCategory(cat)}
                       className="sr-only"
                     />
-                    {cat}
+                    {formatForumCategoryLabel(cat)}
                   </label>
                 ))}
               </div>
@@ -573,13 +583,16 @@ export default function Forum() {
                 rows={5}
                 maxLength={4000}
                 disabled={postImgLoading}
-                placeholder="[ BRİFİNG İÇERİĞİ ] — Tartışma konusunu detaylandır…"
+                placeholder={t('newPost.contentPlaceholder')}
                 className="w-full resize-y rounded border border-zinc-800 bg-zinc-950 px-3 py-2.5 font-mono text-sm text-zinc-300 placeholder:text-zinc-600 focus:border-lime-500/40 focus:outline-none focus:ring-1 focus:ring-lime-500/30 disabled:opacity-40"
               />
 
               <TacticalImageAttachField
                 className="mt-3"
-                label="GÖRSEL EKLE"
+                label={t('attach.label')}
+                uploadingLabel={t('attach.uploading')}
+                clearLabel={t('attach.clear')}
+                syncProgressLabel={t('attach.sync')}
                 previewUrl={postImageUrl}
                 uploading={postImgLoading}
                 progress={postImgProgress}
@@ -605,27 +618,27 @@ export default function Forum() {
                   className="inline-flex items-center gap-2 rounded border border-lime-500/40 bg-lime-950/20 px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-lime-400 transition hover:border-lime-500 hover:bg-lime-950/40 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {submitting ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Send className="size-4" strokeWidth={1.75} aria-hidden />}
-                  [ İLET ]
+                  {t('newPost.submit')}
                 </button>
               </div>
             </form>
           ) : null}
 
-          <section aria-label="Forum başlıkları">
+          <section aria-label={t('list.sectionAria')}>
             <p className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.28em] text-zinc-500">
-              Aktif Başlıklar · {posts.length}
+              {t('list.activeTopics', { count: posts.length })}
             </p>
 
             {loading ? (
               <div className="flex items-center justify-center gap-2 py-16 font-mono text-xs text-zinc-500">
                 <Loader2 className="size-4 animate-spin text-lime-500/60" aria-hidden />
-                Forum senkronize ediliyor…
+                {t('list.loading')}
               </div>
             ) : listenError ? (
               <p className="rounded border border-red-900/50 bg-red-950/20 px-4 py-3 font-mono text-xs text-red-300">{listenError}</p>
             ) : posts.length === 0 ? (
               <p className="rounded border border-zinc-800 bg-zinc-950/40 px-4 py-10 text-center font-mono text-xs text-zinc-500">
-                Henüz brifing başlığı yok. İlk tartışmayı başlat.
+                {t('list.empty')}
               </p>
             ) : (
               <ul className="space-y-3">
@@ -656,7 +669,7 @@ export default function Forum() {
         parentPostId={reportTarget?.parentPostId ?? null}
         reporterId={uid ?? ''}
         reporterCallsign={callsign}
-        onSuccess={() => feedbackPanel?.pushToast('Şikayetiniz alındı — moderasyon ekibine iletildi.')}
+        onSuccess={() => feedbackPanel?.pushToast(t('toast.reportReceived'))}
       />
     </PageShell>
     </div>

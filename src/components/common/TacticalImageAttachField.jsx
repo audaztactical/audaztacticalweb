@@ -13,6 +13,9 @@ import TacticalUploadProgress from './TacticalUploadProgress'
  *   disabled?: boolean
  *   onPick: (file: File) => void
  *   onClear?: () => void
+ *   uploadingLabel?: string
+ *   clearLabel?: string
+ *   syncProgressLabel?: string
  *   className?: string
  * }} props
  */
@@ -25,6 +28,9 @@ export default function TacticalImageAttachField({
   disabled = false,
   onPick,
   onClear,
+  uploadingLabel = 'YÜKLENİYOR…',
+  clearLabel = 'KALDIR',
+  syncProgressLabel = 'GÖRSEL_SYNC',
   className = '',
 }) {
   const inputRef = useRef(/** @type {HTMLInputElement | null} */ (null))
@@ -59,7 +65,7 @@ export default function TacticalImageAttachField({
           ) : (
             <ImagePlus className="size-3" strokeWidth={1.75} aria-hidden />
           )}
-          [ {uploading ? 'YÜKLENİYOR…' : label} ]
+          [ {uploading ? uploadingLabel : label} ]
         </button>
         {preview && onClear ? (
           <button
@@ -69,7 +75,7 @@ export default function TacticalImageAttachField({
             className="inline-flex items-center gap-1 rounded-sm border border-zinc-700 px-2 py-1 font-mono-technical text-[8px] uppercase tracking-wider text-zinc-500 transition hover:border-red-500/40 hover:text-red-400 disabled:opacity-45"
           >
             <X className="size-3" aria-hidden />
-            KALDIR
+            {clearLabel}
           </button>
         ) : null}
       </div>
@@ -78,7 +84,7 @@ export default function TacticalImageAttachField({
           <img src={preview} alt="" className="max-h-40 w-full object-contain" loading="lazy" decoding="async" />
         </div>
       ) : null}
-      {uploading ? <TacticalUploadProgress progress={progress} label="GÖRSEL_SYNC" error={error} /> : null}
+      {uploading ? <TacticalUploadProgress progress={progress} label={syncProgressLabel} error={error} /> : null}
       {!uploading && error ? (
         <p className="font-mono-technical text-[8px] uppercase tracking-wider text-amber-400/90">[ {error} ]</p>
       ) : null}

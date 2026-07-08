@@ -1,17 +1,21 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Loader2, Flag, MessageSquare, ThumbsUp, UserCheck, UserPlus } from 'lucide-react'
 import OperatorAvatar from '../ui/OperatorAvatar'
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
 import {
   fetchForumAuthorProfile,
-  formatForumRoleLabel,
-  formatForumTimestamp,
   sendForumContactRequest,
   subscribeForumContactRequestStatus,
   subscribeForumPeerInContacts,
   toggleForumPostLike,
 } from '../../lib/firestoreForum'
+import {
+  formatForumCategoryLabel,
+  formatForumRoleLabelDisplay,
+  formatForumTimestampDisplay,
+} from '../../lib/forumDisplayText'
 
 /** @typedef {import('../../lib/firestoreForum').ForumPost} ForumPost */
 /** @typedef {import('../../lib/firestoreForum').ForumAuthorProfile} ForumAuthorProfile */
@@ -35,7 +39,7 @@ function CategoryBadge({ category }) {
         style,
       ].join(' ')}
     >
-      {category}
+      {formatForumCategoryLabel(category)}
     </span>
   )
 }
@@ -47,12 +51,12 @@ function CategoryBadge({ category }) {
  *   post: ForumPost
  *   currentUid: string | null
  *   currentCallsign: string
- *   currentCallsign: string
  *   onOpen: () => void
  *   onReport?: () => void
  * }} props
  */
 export default function ForumPostCard({ post, currentUid, currentCallsign, onOpen, onReport }) {
+  const { t } = useTranslation('forum')
   const [author, setAuthor] = useState(/** @type {ForumAuthorProfile | null} */ (null))
   const [authorLoading, setAuthorLoading] = useState(true)
   const [likeBusy, setLikeBusy] = useState(false)
@@ -186,13 +190,13 @@ export default function ForumPostCard({ post, currentUid, currentCallsign, onOpe
   )
 
   const contactLabel = isAlreadyFriend
-    ? '[ ARKADAŞ ]'
+    ? t('postCard.friend')
     : isFriendRequestSent
-      ? '[ İSTEK İLETİLDİ ]'
-      : '[ İRTİBAT EKLE ]'
+      ? t('postCard.requestSent')
+      : t('postCard.addContact')
 
   const authorCallsign = author?.callsign ?? post.authorCallsign
-  const authorRole = formatForumRoleLabel(author?.role)
+  const authorRole = formatForumRoleLabelDisplay(author?.role)
   const authorRank = author?.rank ?? authorRole
 
   return (
@@ -213,7 +217,7 @@ export default function ForumPostCard({ post, currentUid, currentCallsign, onOpe
           to={profilePath}
           onClick={(e) => e.stopPropagation()}
           className="group flex min-w-0 items-center gap-3 rounded-md border border-transparent px-1 py-0.5 transition hover:border-amber-500/30 hover:bg-zinc-950/60 focus:outline-none focus:ring-1 focus:ring-amber-500/40"
-          aria-label={`${authorCallsign} operatör profiline git`}
+          aria-label={t('postCard.profileAria', { callsign: authorCallsign })}
         >
           {authorLoading ? (
             <div className="flex size-10 items-center justify-center rounded-sm border border-zinc-700 bg-zinc-950">
@@ -243,7 +247,7 @@ export default function ForumPostCard({ post, currentUid, currentCallsign, onOpe
 
         <div className="flex flex-wrap items-center gap-2">
           <CategoryBadge category={post.category} />
-          <span className="font-mono text-[10px] text-zinc-500">{formatForumTimestamp(post.timestamp)}</span>
+          <span className="font-mono text-[10px] text-zinc-500">{formatForumTimestampDisplay(post.timestamp)}</span>
         </div>
       </div>
 
@@ -276,12 +280,12 @@ export default function ForumPostCard({ post, currentUid, currentCallsign, onOpe
             ) : (
               <ThumbsUp className="size-3" strokeWidth={2} aria-hidden />
             )}
-            Mutabık · {likeCount}
+            {t('postCard.agree')} · {likeCount}
           </button>
 
           <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-zinc-500">
             <MessageSquare className="size-3" strokeWidth={1.75} aria-hidden />
-            {post.replyCount} yanıt
+            {t('postCard.replyCount', { count: post.replyCount })}
           </span>
 
           {currentUid && !isOwnPost && onReport ? (
@@ -294,7 +298,7 @@ export default function ForumPostCard({ post, currentUid, currentCallsign, onOpe
               className="inline-flex items-center gap-1.5 rounded border border-zinc-700 bg-zinc-950 px-2.5 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-zinc-500 transition hover:border-amber-500/40 hover:text-amber-400"
             >
               <Flag className="size-3" strokeWidth={2} aria-hidden />
-              Şikayet et
+              {t('postCard.report')}
             </button>
           ) : null}
         </div>

@@ -1,0 +1,89 @@
+{
+  "header": {
+    "title": "Briefing Room",
+    "subtitle": "Operational discussion and tactical briefing forum.",
+    "badge": "Forum"
+  },
+  "thread": {
+    "backToHub": "[ Return to hub ]",
+    "removedPost": "This briefing was removed by moderation.",
+    "report": "Report",
+    "reportShort": "Report"
+  },
+  "replies": {
+    "section": "[ Replies ] · {{count}}",
+    "sectionAria": "Replies",
+    "loading": "Loading replies…",
+    "empty": "No replies yet. Add the first briefing note.",
+    "removed": "[ Comment removed ]",
+    "addSection": "[ Add reply ]",
+    "placeholder": "Write your briefing note…",
+    "submit": "Send"
+  },
+  "newPost": {
+    "toggle": "[ Start new briefing ]",
+    "titlePlaceholder": "[ Briefing title ]",
+    "contentPlaceholder": "[ Briefing content ] — Expand on the discussion topic…",
+    "submit": "[ Transmit ]"
+  },
+  "attach": {
+    "label": "Attach image",
+    "uploading": "Uploading…",
+    "clear": "Remove",
+    "sync": "IMAGE_SYNC"
+  },
+  "list": {
+    "sectionAria": "Forum topics",
+    "activeTopics": "Active topics · {{count}}",
+    "loading": "Syncing forum…",
+    "loadFailed": "Could not load forum.",
+    "empty": "No briefing topics yet. Start the first discussion."
+  },
+  "categories": {
+    "weapons": "Weapon systems",
+    "cqb": "CQB & tactical",
+    "tccc": "TCCC & medical",
+    "general": "General operations"
+  },
+  "roles": {
+    "admin": "Administrator",
+    "instructor": "Instructor",
+    "operator": "Operator"
+  },
+  "defaults": {
+    "operatorCallsign": "OPERATOR"
+  },
+  "postCard": {
+    "profileAria": "Go to {{callsign}} operator profile",
+    "agree": "Agreed",
+    "replyCount": "{{count}} replies",
+    "report": "Report",
+    "friend": "[ Friend ]",
+    "requestSent": "[ Request sent ]",
+    "addContact": "[ Add contact ]"
+  },
+  "report": {
+    "kicker": "Briefing moderation",
+    "title": "Report content",
+    "close": "Close",
+    "categoryLegend": "Report category",
+    "descriptionLabel": "Description (optional)",
+    "descriptionPlaceholder": "Brief explanation…",
+    "cancel": "Cancel",
+    "submit": "Submit report",
+    "errorAlreadyReported": "You have already reported this content.",
+    "errorSubmitFailed": "Could not submit report.",
+    "reasons": {
+      "spam": "Spam",
+      "harassment": "Harassment / abuse",
+      "inappropriate": "Inappropriate content",
+      "other": "Other"
+    }
+  },
+  "image": {
+    "alt": "Briefing image"
+  },
+  "toast": {
+    "reportReceived": "Your report was received — forwarded to the moderation team."
+  }
+}

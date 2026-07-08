@@ -1,0 +1,89 @@
+{
+  "header": {
+    "title": "Brifing Odası",
+    "subtitle": "Operasyonel tartışma ve taktik brifing forumu.",
+    "badge": "Forum"
+  },
+  "thread": {
+    "backToHub": "[ Merkeze dön ]",
+    "removedPost": "Bu brifing moderasyon tarafından kaldırıldı.",
+    "report": "Şikayet et",
+    "reportShort": "Şikayet"
+  },
+  "replies": {
+    "section": "[ Yanıtlar ] · {{count}}",
+    "sectionAria": "Yanıtlar",
+    "loading": "Yanıtlar yükleniyor…",
+    "empty": "Henüz yanıt yok. İlk brifing notunu ekle.",
+    "removed": "[ Yorum kaldırıldı ]",
+    "addSection": "[ Yanıt ekle ]",
+    "placeholder": "Brifing notunu yaz…",
+    "submit": "Gönder"
+  },
+  "newPost": {
+    "toggle": "[ Yeni brifing başlat ]",
+    "titlePlaceholder": "[ Brifing başlığı ]",
+    "contentPlaceholder": "[ Brifing içeriği ] — Tartışma konusunu detaylandır…",
+    "submit": "[ İlet ]"
+  },
+  "attach": {
+    "label": "Görsel ekle",
+    "uploading": "Yükleniyor…",
+    "clear": "Kaldır",
+    "sync": "GÖRSEL_SYNC"
+  },
+  "list": {
+    "sectionAria": "Forum başlıkları",
+    "activeTopics": "Aktif başlıklar · {{count}}",
+    "loading": "Forum senkronize ediliyor…",
+    "loadFailed": "Forum yüklenemedi.",
+    "empty": "Henüz brifing başlığı yok. İlk tartışmayı başlat."
+  },
+  "categories": {
+    "weapons": "Silah sistemleri",
+    "cqb": "CQB & taktik",
+    "tccc": "TCCC & medikal",
+    "general": "Genel operasyon"
+  },
+  "roles": {
+    "admin": "Yönetici",
+    "instructor": "Eğitmen",
+    "operator": "Operatör"
+  },
+  "defaults": {
+    "operatorCallsign": "OPERATÖR"
+  },
+  "postCard": {
+    "profileAria": "{{callsign}} operatör profiline git",
+    "agree": "Mutabık",
+    "replyCount": "{{count}} yanıt",
+    "report": "Şikayet et",
+    "friend": "[ Arkadaş ]",
+    "requestSent": "[ İstek iletildi ]",
+    "addContact": "[ İrtibat ekle ]"
+  },
+  "report": {
+    "kicker": "Brifing moderasyon",
+    "title": "İçeriği şikayet et",
+    "close": "Kapat",
+    "categoryLegend": "Şikayet kategorisi",
+    "descriptionLabel": "Açıklama (opsiyonel)",
+    "descriptionPlaceholder": "Kısa açıklama…",
+    "cancel": "İptal",
+    "submit": "Şikayeti gönder",
+    "errorAlreadyReported": "Bu içeriği zaten şikayet ettiniz.",
+    "errorSubmitFailed": "Şikayet gönderilemedi.",
+    "reasons": {
+      "spam": "Spam",
+      "harassment": "Taciz / hakaret",
+      "inappropriate": "Uygunsuz içerik",
+      "other": "Diğer"
+    }
+  },
+  "image": {
+    "alt": "Brifing görseli"
+  },
+  "toast": {
+    "reportReceived": "Şikayetiniz alındı — moderasyon ekibine iletildi."
+  }
+}
