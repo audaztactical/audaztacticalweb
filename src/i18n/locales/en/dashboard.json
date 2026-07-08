@@ -1,6 +1,6 @@
 {
   "header": {
-    "kicker": "Operational Command Center",
+    "kicker": "operational command center",
     "operatorFallback": "Operator",
     "notifications_one": "{{count}} notification",
     "notifications_other": "{{count}} notifications"
@@ -21,17 +21,17 @@
   "sideWidgetsAria": "Quick-access widgets",
   "ors": {
     "abbrev": "ORS",
-    "title": "Operational Readiness Score",
-    "calculating": "CALCULATING…",
+    "title": "Operational readiness score",
+    "calculating": "Calculating…",
     "scoreOf": "/ 100",
-    "statusReady": "STATUS: MISSION READY",
-    "statusMarginal": "STATUS: CAUTION — MARGINAL READINESS",
-    "statusCritical": "STATUS: CRITICAL — MISSION HOLD",
+    "statusReady": "Status: mission ready",
+    "statusMarginal": "Status: caution — marginal readiness",
+    "statusCritical": "Status: critical — mission hold",
     "noPenalties": "No deductions · fault queue clear",
-    "points": "{{delta}} PTS"
+    "points": "{{delta}} pts"
   },
   "radar": {
-    "title": "Readiness Radar",
+    "title": "Readiness radar",
     "subtitle": "Personnel · logistics · equipment comparison",
     "calculating": "Calculating…",
     "noDataHint": "Awaiting data — training and armory records populate the radar.",
@@ -48,10 +48,10 @@
     "subtitle": "Color-coded operational feed",
     "empty": "No entries yet.",
     "severity": {
-      "critical": "CRITICAL",
-      "warning": "WARNING",
-      "active": "ACTIVE",
-      "neutral": "INFO"
+      "critical": "Critical",
+      "warning": "Warning",
+      "active": "Active",
+      "neutral": "Info"
     },
     "codes": {
       "CEP_GNC": "Armory",
@@ -89,11 +89,31 @@
     "count": "Count",
     "session": "session",
     "level": "Level {{n}}",
-    "last24h": "Last 24 hours"
+    "last24h": "Last 24 hours",
+    "codes": {
+      "lowAmmo": "Ammunition below threshold",
+      "lowTraining": "No recent training record",
+      "incidentReadiness": "Incident area readiness",
+      "blueOnBlue": "Blue-on-blue (FoF)",
+      "muzzleFlag": "Muzzle flag (CQB)",
+      "fatalFunnel": "Fatal funnel (CQB)",
+      "tcccBelowThreshold": "TCCC below threshold",
+      "slowBreach": "Slow breach (CQB)",
+      "slowCompletion": "Slow completion",
+      "lowAccuracy": "Low accuracy"
+    },
+    "details": {
+      "ammo": "{{current}}/{{threshold}} ammunition",
+      "training7d": "7 days {{current}}/{{min}}",
+      "sessions": "{{count}} sessions",
+      "count": "Count {{count}}",
+      "tcccSessions": "Below 40% · {{count}} sessions",
+      "incident": "Incident record"
+    }
   },
   "maintenance": {
-    "alert": "CRITICAL BARREL MAINTENANCE REQUIRED — POST-FIRE CLEANING AND RIFLING INSPECTION PENDING",
-    "logButton": "LOG MAINTENANCE"
+    "alert": "Critical barrel maintenance required — post-fire cleaning and rifling inspection pending",
+    "logButton": "Log maintenance"
   },
   "location": {
     "aria": "Location selector",

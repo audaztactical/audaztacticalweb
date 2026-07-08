@@ -1,6 +1,6 @@
 {
   "header": {
-    "kicker": "Operasyonel Komuta Merkezi",
+    "kicker": "operasyonel komuta merkezi",
     "operatorFallback": "Operatör",
     "notifications_one": "{{count}} bildirim",
     "notifications_other": "{{count}} bildirim"
@@ -21,14 +21,14 @@
   "sideWidgetsAria": "Hızlı erişim widgetları",
   "ors": {
     "abbrev": "OHP",
-    "title": "Operasyonel Hazırlık Puanı",
-    "calculating": "HESAPLANIYOR…",
+    "title": "Operasyonel hazırlık puanı",
+    "calculating": "Hesaplanıyor…",
     "scoreOf": "/ 100",
-    "statusReady": "DURUM: GÖREVE HAZIR",
-    "statusMarginal": "DURUM: DİKKAT - SINIRDA HAZIR",
-    "statusCritical": "DURUM: KRİTİK - GÖREV İPTAL",
+    "statusReady": "Durum: göreve hazır",
+    "statusMarginal": "Durum: dikkat — sınırda hazır",
+    "statusCritical": "Durum: kritik — görev iptal",
     "noPenalties": "Kesinti yok · hata kuyruğu temiz",
-    "points": "{{delta}} PUAN"
+    "points": "{{delta}} puan"
   },
   "radar": {
     "title": "Kapasite radarı",
@@ -48,10 +48,10 @@
     "subtitle": "Renk kodlu operasyon akışı",
     "empty": "Henüz kayıt yok.",
     "severity": {
-      "critical": "KRİTİK",
-      "warning": "UYARI",
-      "active": "AKTİF",
-      "neutral": "BİLGİ"
+      "critical": "Kritik",
+      "warning": "Uyarı",
+      "active": "Aktif",
+      "neutral": "Bilgi"
     },
     "codes": {
       "CEP_GNC": "Cephanelik",
@@ -82,18 +82,38 @@
     "region": "Bölge"
   },
   "penalty": {
-    "incidentArea": "Olay alanı",
-    "barrelFlag": "Namlu ihlali",
+    "incidentArea": "olay alanı",
+    "barrelFlag": "namlu ihlali",
     "ammo": "Mühimmat",
     "sevenDays": "7 gün",
     "count": "Adet",
     "session": "oturum",
     "level": "Seviye {{n}}",
-    "last24h": "Son 24 saat"
+    "last24h": "Son 24 saat",
+    "codes": {
+      "lowAmmo": "Mühimmat eşik altında",
+      "lowTraining": "Yakında eğitim kaydı yok",
+      "incidentReadiness": "Olay alanı hazırlığı",
+      "blueOnBlue": "Mavi-mavi (FoF)",
+      "muzzleFlag": "Namlu ihlali (CQB)",
+      "fatalFunnel": "Ölüm hunisi (CQB)",
+      "tcccBelowThreshold": "TCCC eşik altında",
+      "slowBreach": "Yavaş kırma (CQB)",
+      "slowCompletion": "Yavaş tamamlama",
+      "lowAccuracy": "Düşük isabet"
+    },
+    "details": {
+      "ammo": "{{current}}/{{threshold}} mühimmat",
+      "training7d": "7 gün {{current}}/{{min}}",
+      "sessions": "{{count}} oturum",
+      "count": "Adet {{count}}",
+      "tcccSessions": "%40 altı · {{count}} oturum",
+      "incident": "Olay kaydı"
+    }
   },
   "maintenance": {
-    "alert": "KRİTİK NAMLU BAKIMI GEREKLİ - ATIŞ SONRASI TEMİZLİK VE YİV-SET KONTROLÜ BEKLENİYOR",
-    "logButton": "BAKIM KAYDI GİR"
+    "alert": "Kritik namlu bakımı gerekli — atış sonrası temizlik ve yiv-set kontrolü bekleniyor",
+    "logButton": "Bakım kaydı gir"
   },
   "location": {
     "aria": "Konum seçici",

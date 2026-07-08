@@ -118,7 +118,7 @@ export default function OrsReadinessGauge({ score, penalties, loading, embedded 
               key={`${pen.code}-${i}`}
               className="grid grid-cols-1 gap-1 text-[10px] sm:flex sm:flex-wrap sm:items-baseline sm:justify-between sm:gap-x-2 sm:gap-y-1 sm:text-[9px]"
             >
-              <span className="font-mono-technical text-[#FF0000]/95 break-words">{humanizeOrsPenaltyCode(pen.code)}</span>
+              <span className="font-mono-technical uppercase text-[#FF0000]/95 break-words">{humanizeOrsPenaltyCode(pen.code)}</span>
               <span className="font-mono-technical tabular-nums text-app-text/55 break-words">{humanizeOrsPenaltyDetail(pen.detail)}</span>
               <span className="font-mono-technical tabular-nums text-app-text/45 sm:text-right">{t('ors.points', { delta: pen.delta })}</span>
             </div>
