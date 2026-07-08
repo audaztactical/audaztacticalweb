@@ -3,6 +3,10 @@ import { Image, MapPin, Paperclip, Plus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
 import { uploadMuhabereChatImage } from '../../lib/muhabereChatMedia'
+import {
+  MUHABERE_PREVIEW_IMAGE,
+  MUHABERE_PREVIEW_LOCATION,
+} from '../../lib/muhaberePreviewTokens'
 import { sendChannelMessage, sendChatMessage } from '../../lib/firestoreTaktikMuhabere'
 
 /**
@@ -83,7 +87,7 @@ export default function MuhabereAttachMenu({
 
     try {
       const imageUrl = await uploadMuhabereChatImage(threadId, file, (pct) => onUploadProgress(pct))
-      await dispatch({ type: 'image', text: '[ GÖRSEL ]', imageUrl })
+      await dispatch({ type: 'image', text: MUHABERE_PREVIEW_IMAGE, imageUrl })
       onMessageSent?.()
     } catch (err) {
       emitFirebaseError(err)
@@ -106,7 +110,7 @@ export default function MuhabereAttachMenu({
         try {
           await dispatch({
             type: 'location',
-            text: '[ STRATEJİK KOORDİNAT ]',
+            text: MUHABERE_PREVIEW_LOCATION,
             lat: pos.coords.latitude,
             lng: pos.coords.longitude,
           })

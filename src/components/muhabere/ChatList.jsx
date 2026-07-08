@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Plus, Radio } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { formatConversationPreviewTime } from '../../lib/firestoreTaktikMuhabere'
+import { formatMuhabereMessagePreviewDisplay } from '../../lib/messagesDisplayText'
 import { isActiveChannelRow, sortMuhabereChannelsByRecency } from '../../lib/muhabereConversation'
 import MuhabereConversationMenu from './MuhabereConversationMenu'
 import MuhabereUnreadBadge from './MuhabereUnreadBadge'
@@ -170,7 +171,7 @@ export default function ChatList({
                         {summary?.lastMessage ? (
                           <span className="mt-0.5 block truncate text-[9px] normal-case tracking-normal text-zinc-500">
                             {summary.lastSender ? `${summary.lastSender}: ` : ''}
-                            {summary.lastMessage}
+                            {formatMuhabereMessagePreviewDisplay(summary.lastMessage)}
                           </span>
                         ) : (
                           <span className="mt-0.5 block truncate text-[9px] text-zinc-600">

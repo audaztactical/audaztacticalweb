@@ -259,6 +259,10 @@
     "online": "Online",
     "offline": "Offline"
   },
+  "preview": {
+    "image": "[ Photo ]",
+    "location": "[ Strategic coordinate ]"
+  },
   "common": {
     "close": "Close",
     "cancel": "Cancel",

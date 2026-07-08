@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Loader2, Plus, Radio } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { formatMuhabereMessagePreviewDisplay } from '../../lib/messagesDisplayText'
 import MuhabereConversationActions from './MuhabereConversationActions'
 import TacticalAlert from './TacticalAlert'
 
@@ -112,7 +113,7 @@ export default function ChatSidebar({
                       {preview?.lastMessage ? (
                         <span className="mt-0.5 block truncate text-[9px] normal-case tracking-normal text-zinc-500">
                           {preview.senderName ? `${preview.senderName}: ` : ''}
-                          {preview.lastMessage}
+                          {formatMuhabereMessagePreviewDisplay(preview.lastMessage)}
                         </span>
                       ) : null}
                     </span>

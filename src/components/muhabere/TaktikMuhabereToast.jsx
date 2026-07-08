@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { formatMuhabereMessagePreviewDisplay } from '../../lib/messagesDisplayText'
 
 /**
  * @typedef {{
@@ -54,7 +55,9 @@ function TaktikMuhabereToastCard({ toast, onDismiss }) {
             <p className="truncate text-xs font-bold uppercase tracking-wider text-lime-400">
               {t('toast.newMessage', { callsign: toast.senderCallsign })}
             </p>
-            <p className="mt-1 truncate text-sm text-zinc-300">{toast.preview}</p>
+            <p className="mt-1 truncate text-sm text-zinc-300">
+              {formatMuhabereMessagePreviewDisplay(toast.preview)}
+            </p>
           </>
         )}
       </span>

@@ -259,6 +259,10 @@
     "online": "Çevrimiçi",
     "offline": "Çevrimdışı"
   },
+  "preview": {
+    "image": "[ Görsel ]",
+    "location": "[ Stratejik koordinat ]"
+  },
   "common": {
     "close": "Kapat",
     "cancel": "İptal",

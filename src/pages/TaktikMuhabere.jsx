@@ -64,6 +64,7 @@ import {
   sortMuhabereContactsByRecency,
 } from '../lib/muhabereConversation'
 import {
+  formatMuhabereMessagePreviewDisplay,
   isMuhabereContentViolationMessage,
   messagesRoleLabel,
   muhabereContentViolationMessage,
@@ -1392,7 +1393,7 @@ export default function TaktikMuhabere() {
                             {dmSummary?.lastMessage ? (
                               <p className="mt-0.5 truncate text-[9px] normal-case tracking-normal text-zinc-500">
                                 {dmSummary.lastSender ? `${dmSummary.lastSender}: ` : ''}
-                                {dmSummary.lastMessage}
+                                {formatMuhabereMessagePreviewDisplay(dmSummary.lastMessage)}
                               </p>
                             ) : null}
                           </div>

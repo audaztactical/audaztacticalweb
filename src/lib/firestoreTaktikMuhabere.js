@@ -28,6 +28,10 @@ import {
 } from '../services/notificationService'
 import { fetchUserProfile } from './firestoreUsers'
 import { assertMuhabereContentAllowed } from './muhabereContentFilter'
+import {
+  MUHABERE_PREVIEW_IMAGE,
+  MUHABERE_PREVIEW_LOCATION,
+} from './muhaberePreviewTokens'
 import { buildConversationId, mapConversationSummaryDoc } from './muhabereConversation'
 import { db, isFirebaseConfigured } from './firebase'
 import { safeOnSnapshot, timestampToMs } from './firestoreSnapshot'
@@ -1231,8 +1235,8 @@ export async function sendChatMessage({
     throw e
   }
 
-  if (msgType === 'image') body = body || '[ GÖRSEL ]'
-  if (msgType === 'location') body = body || '[ STRATEJİK KOORDİNAT ]'
+  if (msgType === 'image') body = body || MUHABERE_PREVIEW_IMAGE
+  if (msgType === 'location') body = body || MUHABERE_PREVIEW_LOCATION
 
   if (msgType === 'text') assertMuhabereContentAllowed(body)
 
@@ -1516,8 +1520,8 @@ export async function sendChannelMessage({
     throw e
   }
 
-  if (msgType === 'image') body = body || '[ GÖRSEL ]'
-  if (msgType === 'location') body = body || '[ STRATEJİK KOORDİNAT ]'
+  if (msgType === 'image') body = body || MUHABERE_PREVIEW_IMAGE
+  if (msgType === 'location') body = body || MUHABERE_PREVIEW_LOCATION
 
   if (msgType === 'text') assertMuhabereContentAllowed(body)
 

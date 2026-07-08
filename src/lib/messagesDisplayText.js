@@ -1,5 +1,6 @@
 import i18n from '../i18n'
 import { MUHABERE_CONTENT_VIOLATION } from './muhabereContentFilter'
+import { getMuhaberePreviewTokenKind } from './muhaberePreviewTokens'
 import { isOperatorOnline } from './operatorPresence'
 
 /** @returns {'tr-TR' | 'en-US'} */
@@ -28,6 +29,16 @@ export function muhabereContentViolationMessage() {
 export function isMuhabereContentViolationMessage(message) {
   const raw = String(message ?? '').trim()
   return raw === MUHABERE_CONTENT_VIOLATION || raw === muhabereContentViolationMessage()
+}
+
+/** @param {unknown} text */
+export function formatMuhabereMessagePreviewDisplay(text) {
+  const raw = String(text ?? '').trim()
+  if (!raw) return ''
+  const kind = getMuhaberePreviewTokenKind(raw)
+  if (kind === 'image') return i18n.t('preview.image', { ns: 'messages' })
+  if (kind === 'location') return i18n.t('preview.location', { ns: 'messages' })
+  return raw
 }
 
 /**
