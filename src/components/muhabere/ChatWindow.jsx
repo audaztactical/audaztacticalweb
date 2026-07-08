@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import MuhabereMessageRow from './MuhabereMessageRow'
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
+import i18n from '../../i18n'
 import { timestampToMs } from '../../lib/firestoreSnapshot'
 import {
   fetchOlderConversationMessages,
@@ -69,12 +70,14 @@ export default function ChatWindow({
   const scrollRef = useRef(/** @type {HTMLDivElement | null} */ (null))
   const contentRef = useRef(/** @type {HTMLDivElement | null} */ (null))
   const loadMoreRef = useRef(/** @type {HTMLDivElement | null} */ (null))
+  const loadOlderPageRef = useRef(/** @type {() => Promise<void>} */ (async () => {}))
   const oldestDocRef = useRef(/** @type {import('firebase/firestore').QueryDocumentSnapshot | null} */ (null))
   const hasMoreRef = useRef(false)
   const loadingOlderRef = useRef(false)
   const prependAnchorRef = useRef(/** @type {{ height: number; top: number } | null} */ (null))
   const initialScrollDoneRef = useRef(false)
   const stickToBottomRef = useRef(true)
+  const activeThreadKeyRef = useRef('')
 
   const [liveMessages, setLiveMessages] = useState(/** @type {MuhabereMessage[]} */ ([]))
   const [olderMessages, setOlderMessages] = useState(/** @type {MuhabereMessage[]} */ ([]))
@@ -170,15 +173,18 @@ export default function ChatWindow({
       }
     } catch (err) {
       emitFirebaseError(err)
-      setError(err instanceof Error ? err.message : t('errors.messagesLoadFailed'))
+      setError(err instanceof Error ? err.message : i18n.t('errors.messagesLoadFailed', { ns: 'messages' }))
     } finally {
       loadingOlderRef.current = false
       setLoadingOlder(false)
     }
-  }, [mode, refId, setError, t])
+  }, [mode, refId, setError])
+
+  loadOlderPageRef.current = loadOlderPage
 
   useEffect(() => {
     if (!uid || !mode || !refId) {
+      activeThreadKeyRef.current = ''
       setLiveMessages([])
       setOlderMessages([])
       setMessagesLoading(false)
@@ -191,16 +197,22 @@ export default function ChatWindow({
       return undefined
     }
 
+    const threadKey = `${uid}:${mode}:${refId}`
+    const isNewThread = activeThreadKeyRef.current !== threadKey
+    activeThreadKeyRef.current = threadKey
+
     let active = true
-    setLiveMessages([])
-    setOlderMessages([])
-    setMessagesLoading(true)
-    setHasMoreOlder(false)
-    oldestDocRef.current = null
-    hasMoreRef.current = false
-    initialScrollDoneRef.current = false
-    stickToBottomRef.current = true
-    setError(null)
+    if (isNewThread) {
+      setLiveMessages([])
+      setOlderMessages([])
+      setMessagesLoading(true)
+      setHasMoreOlder(false)
+      oldestDocRef.current = null
+      hasMoreRef.current = false
+      initialScrollDoneRef.current = false
+      stickToBottomRef.current = true
+      setError(null)
+    }
 
     if (mode === 'channel' && channelId) {
       markMuhabereChannelAsRead(uid, channelId, Date.now())
@@ -223,7 +235,7 @@ export default function ChatWindow({
       onError: (err) => {
         if (!active) return
         emitFirebaseError(err)
-        setError(err instanceof Error ? err.message : t('errors.messagesDisconnected'))
+        setError(err instanceof Error ? err.message : i18n.t('errors.messagesDisconnected', { ns: 'messages' }))
         setMessagesLoading(false)
       },
     })
@@ -232,7 +244,7 @@ export default function ChatWindow({
       active = false
       unsub()
     }
-  }, [uid, mode, refId, channelId, chatId, setError, t])
+  }, [uid, mode, refId, channelId, chatId, setError])
 
   useEffect(() => {
     if (!uid || mode !== 'dm' || !chatId || liveMessages.length === 0) return
@@ -309,7 +321,7 @@ export default function ChatWindow({
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries.some((entry) => entry.isIntersecting)) {
-          void loadOlderPage()
+          void loadOlderPageRef.current()
         }
       },
       { root, rootMargin: '80px', threshold: 0 },
@@ -317,7 +329,7 @@ export default function ChatWindow({
 
     observer.observe(sentinel)
     return () => observer.disconnect()
-  }, [loadOlderPage, mode, refId])
+  }, [mode, refId])
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">

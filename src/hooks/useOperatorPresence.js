@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useTranslation } from 'react-i18next'
+import i18n from '../i18n'
 import { formatOperatorPresenceLabelDisplay } from '../lib/messagesDisplayText'
 import { isOperatorOnline } from '../lib/operatorPresence'
 import { subscribeOperatorPresence } from '../lib/operatorPresenceStore'
@@ -9,7 +9,6 @@ import { subscribeOperatorPresence } from '../lib/operatorPresenceStore'
  * @param {string | null | undefined} uid
  */
 export function useOperatorPresence(uid) {
-  const { i18n } = useTranslation('messages')
   const [snapshot, setSnapshot] = useState(
     /** @type {import('../lib/operatorPresence').OperatorPresenceSnapshot} */ ({
       lastSeenMs: 0,
@@ -17,6 +16,13 @@ export function useOperatorPresence(uid) {
     }),
   )
   const [tick, setTick] = useState(0)
+  const [language, setLanguage] = useState(i18n.language)
+
+  useEffect(() => {
+    const onLanguageChanged = (/** @type {string} */ lng) => setLanguage(lng)
+    i18n.on('languageChanged', onLanguageChanged)
+    return () => i18n.off('languageChanged', onLanguageChanged)
+  }, [])
 
   useEffect(() => {
     const id = String(uid ?? '').trim()
@@ -34,11 +40,12 @@ export function useOperatorPresence(uid) {
 
   return useMemo(() => {
     void tick
+    void language
     const now = Date.now()
     return {
       online: isOperatorOnline(snapshot, now),
       label: formatOperatorPresenceLabelDisplay(snapshot, now),
       snapshot,
     }
-  }, [snapshot, tick, i18n.language])
+  }, [snapshot, tick, language])
 }

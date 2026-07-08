@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useTranslation } from 'react-i18next'
+import i18n from '../i18n'
 import { formatOperatorPresenceLabelDisplay } from '../lib/messagesDisplayText'
 import { isOperatorOnline } from '../lib/operatorPresence'
 import { subscribeOperatorPresence } from '../lib/operatorPresenceStore'
@@ -13,11 +13,11 @@ import { subscribeOperatorPresence } from '../lib/operatorPresenceStore'
  * @param {string[]} uids
  */
 export function useOperatorsPresenceMap(uids) {
-  const { i18n } = useTranslation('messages')
   const [snapshots, setSnapshots] = useState(
     /** @type {Record<string, import('../lib/operatorPresence').OperatorPresenceSnapshot>} */ ({}),
   )
   const [tick, setTick] = useState(0)
+  const [language, setLanguage] = useState(i18n.language)
 
   const normalizedUids = useMemo(() => {
     const seen = new Set()
@@ -32,6 +32,12 @@ export function useOperatorsPresenceMap(uids) {
   }, [uids])
 
   const uidKey = normalizedUids.join('|')
+
+  useEffect(() => {
+    const onLanguageChanged = (/** @type {string} */ lng) => setLanguage(lng)
+    i18n.on('languageChanged', onLanguageChanged)
+    return () => i18n.off('languageChanged', onLanguageChanged)
+  }, [])
 
   useEffect(() => {
     if (!uidKey) {
@@ -55,6 +61,7 @@ export function useOperatorsPresenceMap(uids) {
 
   return useMemo(() => {
     void tick
+    void language
     const now = Date.now()
     /** @type {Record<string, OperatorPresenceView>} */
     const out = {}
@@ -66,5 +73,5 @@ export function useOperatorsPresenceMap(uids) {
       }
     }
     return out
-  }, [normalizedUids, snapshots, tick, i18n.language])
+  }, [normalizedUids, snapshots, tick, language])
 }

@@ -72,6 +72,7 @@ import {
 } from '../lib/messagesDisplayText'
 import { useOperatorsPresenceMap } from '../hooks/useOperatorsPresenceMap'
 import { useCompactShell } from '../hooks/useCompactShell'
+import i18n from '../i18n'
 
 /** @typedef {import('../lib/firestoreTaktikMuhabere').MuhabereContact} MuhabereContact */
 /** @typedef {import('../lib/firestoreTaktikMuhabere').MuhabereMessage} MuhabereMessage */
@@ -333,10 +334,10 @@ export default function TaktikMuhabere() {
       },
       (err) => {
         emitFirebaseError(err)
-        setSummariesError(err instanceof Error ? err.message : t('errors.summaryDisconnected'))
+        setSummariesError(err instanceof Error ? err.message : i18n.t('errors.summaryDisconnected', { ns: 'messages' }))
       },
     )
-  }, [uid, t])
+  }, [uid])
 
   const handleBurnDestroyed = useCallback((/** @type {MuhabereMessage} */ msg) => {
     setBurnGhosts((prev) => ({
@@ -483,13 +484,13 @@ export default function TaktikMuhabere() {
       return rows
     } catch (err) {
       emitFirebaseError(err)
-      setRosterError(err instanceof Error ? err.message : t('errors.rosterLoadFailed'))
+      setRosterError(err instanceof Error ? err.message : i18n.t('errors.rosterLoadFailed', { ns: 'messages' }))
       setRoster([])
       return []
     } finally {
       setRosterLoading(false)
     }
-  }, [uid, t])
+  }, [uid])
 
   useEffect(() => {
     if (!uid) {
@@ -571,7 +572,7 @@ export default function TaktikMuhabere() {
         .catch((err) => {
           if (!active) return
           emitFirebaseError(err)
-          setSearchError(err instanceof Error ? err.message : t('errors.searchFailed'))
+          setSearchError(err instanceof Error ? err.message : i18n.t('errors.searchFailed', { ns: 'messages' }))
           setSearchResults([])
         })
         .finally(() => {
@@ -583,7 +584,7 @@ export default function TaktikMuhabere() {
       active = false
       window.clearTimeout(timer)
     }
-  }, [uid, searchTrimmed, isSearchMode, t])
+  }, [uid, searchTrimmed, isSearchMode])
 
   useEffect(() => {
     if (selectedUid) {
@@ -886,13 +887,13 @@ export default function TaktikMuhabere() {
       },
       (err) => {
         emitFirebaseError(err)
-        setChannelsError(err instanceof Error ? err.message : t('errors.channelsLoadFailed'))
+        setChannelsError(err instanceof Error ? err.message : i18n.t('errors.channelsLoadFailed', { ns: 'messages' }))
         setChannelsLoading(false)
       },
     )
 
     return unsub
-  }, [uid, t])
+  }, [uid])
 
   const handleSendRequest = async (/** @type {MuhabereContact} */ contact) => {
     if (!uid || sendingRequestUid || pendingSentUids.has(contact.uid)) return

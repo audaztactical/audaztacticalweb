@@ -1,8 +1,8 @@
-import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { useAuth } from './AuthContext'
-import { SUPPORTED_LANGUAGES } from '../i18n'
+import i18n, { SUPPORTED_LANGUAGES } from '../i18n'
 import { prepareAudazPatchPayload } from '../lib/audazFirestoreWrite'
 import { db, isFirebaseConfigured } from '../lib/firebase'
 import { emitFirebaseError } from '../lib/firebaseErrorBus'
@@ -16,7 +16,7 @@ const LanguagePreferenceContext = createContext(
 
 export function LanguagePreferenceProvider({ children }) {
   const { user } = useAuth()
-  const { i18n } = useTranslation()
+  const { i18n: i18nInstance } = useTranslation()
   const uid = user?.uid ?? null
   const [hydrated, setHydrated] = useState(false)
 
@@ -33,7 +33,10 @@ export function LanguagePreferenceProvider({ children }) {
       (snap) => {
         const pref = snap.data()?.preferredLanguage
         if (pref === 'tr' || pref === 'en') {
-          void i18n.changeLanguage(pref)
+          const current = i18n.language?.startsWith('tr') ? 'tr' : 'en'
+          if (current !== pref) {
+            void i18n.changeLanguage(pref)
+          }
         }
         setHydrated(true)
       },
@@ -41,12 +44,12 @@ export function LanguagePreferenceProvider({ children }) {
     )
 
     return unsub
-  }, [uid, i18n])
+  }, [uid])
 
   const setLanguage = useCallback(
     async (/** @type {AppLanguage} */ lang) => {
       if (!SUPPORTED_LANGUAGES.includes(lang)) return
-      await i18n.changeLanguage(lang)
+      await i18nInstance.changeLanguage(lang)
 
       if (!uid || !isFirebaseConfigured() || !db) return
 
@@ -60,13 +63,17 @@ export function LanguagePreferenceProvider({ children }) {
         emitFirebaseError(err)
       }
     },
-    [uid, i18n],
+    [uid, i18nInstance],
+  )
+
+  const language = i18nInstance.language?.startsWith('tr') ? 'tr' : 'en'
+  const value = useMemo(
+    () => ({ language, setLanguage, hydrated }),
+    [language, setLanguage, hydrated],
   )
 
   return (
-    <LanguagePreferenceContext.Provider
-      value={{ language: i18n.language?.startsWith('tr') ? 'tr' : 'en', setLanguage, hydrated }}
-    >
+    <LanguagePreferenceContext.Provider value={value}>
       {children}
     </LanguagePreferenceContext.Provider>
   )

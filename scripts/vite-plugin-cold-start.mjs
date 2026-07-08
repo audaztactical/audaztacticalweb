@@ -43,6 +43,7 @@ export function coldStartHtmlPlugin() {
               rel: 'preload',
               href: `/${entryCss}`,
               as: 'style',
+              crossorigin: true,
             },
           })
         }
