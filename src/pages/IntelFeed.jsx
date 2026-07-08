@@ -10,6 +10,7 @@ import {
   isIntelUiTurkish,
   pickIntelFeedSummary,
   pickIntelFeedTitle,
+  shouldShowIntelTranslationToggle,
 } from '../lib/intelDisplayText'
 import { subscribeIntelFeed } from '../lib/firestoreIntelFeed'
 import i18n from '../i18n'
@@ -64,9 +65,7 @@ function IntelCard({ item }) {
 
   const title = pickIntelFeedTitle(item, showTurkish)
   const summary = pickIntelFeedSummary(item, showTurkish)
-  const hasTranslation = Boolean(
-    (item.trTitle || item.trSummary) && (item.enTitle || item.enSummary),
-  )
+  const showTranslationToggle = shouldShowIntelTranslationToggle(item, i18n.language)
 
   return (
     <article className="group relative h-full overflow-hidden rounded-sm border border-gray-800 bg-app-bg p-4 transition-all duration-300 hover:scale-[1.0001] hover:border-[#ffaa00] hover:shadow-[0_0_22px_-6px_rgba(255,170,0,0.35)]">
@@ -144,7 +143,7 @@ function IntelCard({ item }) {
             </a>
           ) : null}
 
-          {hasTranslation ? (
+          {showTranslationToggle ? (
             <button
               type="button"
               onClick={() => setShowTurkish((v) => !v)}

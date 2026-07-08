@@ -3,11 +3,11 @@ const { getFirestore, FieldValue, Timestamp } = require('firebase-admin/firestor
 const { getMessaging } = require('firebase-admin/messaging')
 const { logger } = require('firebase-functions')
 const { COLLECTION, docIdFromUrl } = require('./intelFeed')
+const { translateToEnglish } = require('./translation')
 
 const DEFAULT_RSS_URL = 'https://www.trthaber.com/sondakika_articles.rss'
 const DEFAULT_SOURCE_LABEL = 'TRT HABER SON DAKİKA'
 const FCM_TOPIC = 'asayis_ikaz'
-const LOCAL_ALERT_PREFIX = '[LOCAL ALERT] '
 const MAX_SCAN_ITEMS = 40
 
 /** @type {string[]} */
@@ -68,19 +68,24 @@ function matchesTacticalKeywords(item) {
  * @param {import('rss-parser').Item} item
  * @param {string} sourceLabel
  */
-function mapAlertItemToFeedDoc(item, sourceLabel) {
+async function mapAlertItemToFeedDoc(item, sourceLabel) {
   const trTitle = String(item.title ?? '').trim()
   const trSummary = extractSummary(item)
   const url = String(item.link ?? item.guid ?? '').trim()
+
+  const [enTitle, enSummary] = await Promise.all([
+    translateToEnglish(trTitle),
+    translateToEnglish(trSummary),
+  ])
 
   /** @type {Record<string, unknown>} */
   const payload = {
     source: sourceLabel,
     timestamp: FieldValue.serverTimestamp(),
     trTitle,
-    enTitle: `${LOCAL_ALERT_PREFIX}${trTitle}`,
+    enTitle,
     trSummary,
-    enSummary: `${LOCAL_ALERT_PREFIX}${trSummary}`,
+    enSummary,
     tags: ['ASAYİŞ', 'SON DAKİKA', 'ACİL'],
     url,
     isAlert: true,
@@ -169,7 +174,7 @@ async function runLocalAlertsIngest(options = {}) {
       continue
     }
 
-    const payload = mapAlertItemToFeedDoc(item, sourceLabel)
+    const payload = await mapAlertItemToFeedDoc(item, sourceLabel)
     await col.doc(docId).set(payload, { merge: false })
     written += 1
 

@@ -100,6 +100,29 @@ export function defaultShowTurkishForIntelItem(item, language = i18n.language) {
 }
 
 /**
+ * Yerel uyarı = TR kaynak; küresel RSS = EN kaynak.
+ * @param {{ isAlert?: boolean }} item
+ */
+export function intelNativeLanguage(item) {
+  return item.isAlert === true ? 'tr' : 'en'
+}
+
+/**
+ * UI dili kaynak diliyle aynıysa toggle gizlenir; farklıysa ve çift dil mevcutsa gösterilir.
+ * @param {import('./firestoreIntelFeed').IntelFeedItem} item
+ * @param {string} [language]
+ */
+export function shouldShowIntelTranslationToggle(item, language = i18n.language) {
+  const uiLang = isIntelUiTurkish(language) ? 'tr' : 'en'
+  const nativeLang = intelNativeLanguage(item)
+  if (uiLang === nativeLang) return false
+
+  return Boolean(
+    (item.trTitle || item.trSummary) && (item.enTitle || item.enSummary),
+  )
+}
+
+/**
  * @param {import('./firestoreIntelFeed').IntelFeedItem} item
  * @param {boolean} showTurkish
  */

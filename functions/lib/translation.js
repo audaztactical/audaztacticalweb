@@ -2,6 +2,7 @@ const { Translate } = require('@google-cloud/translate').v2
 const { logger } = require('firebase-functions')
 
 const TR_FAIL_PREFIX = '[TR_FAIL] '
+const EN_FAIL_PREFIX = '[EN_FAIL] '
 
 /** @type {Translate | null} */
 let translateClient = null
@@ -49,7 +50,37 @@ async function translateToTurkish(enText) {
   }
 }
 
+/**
+ * Turkish → English via Google Cloud Translation API (Basic v2).
+ * On failure, returns `[EN_FAIL]` + original text so alert ingest continues.
+ *
+ * @param {string} trText
+ * @returns {Promise<string>}
+ */
+async function translateToEnglish(trText) {
+  const text = String(trText ?? '').trim()
+  if (!text) return ''
+
+  const client = getTranslateClient()
+  if (!client) {
+    logger.warn('Translation skipped — no Translate client (missing ADC?)')
+    return `${EN_FAIL_PREFIX}${text}`
+  }
+
+  try {
+    let [translations] = await client.translate(text, 'en')
+    translations = Array.isArray(translations) ? translations : [translations]
+    const result = String(translations[0] ?? '').trim()
+    return result || `${EN_FAIL_PREFIX}${text}`
+  } catch (error) {
+    logger.error('Translation Error:', error)
+    return `${EN_FAIL_PREFIX}${text}`
+  }
+}
+
 module.exports = {
   TR_FAIL_PREFIX,
+  EN_FAIL_PREFIX,
   translateToTurkish,
+  translateToEnglish,
 }
