@@ -15,7 +15,9 @@
     "deploy:global-intel": "firebase deploy --only functions:subscribeToGlobalIntel",
     "deploy:video-news": "firebase deploy --only functions:fetchVideoNews",
     "logs": "firebase functions:log --only fetchTacticalNews",
-    "logs:alerts": "firebase functions:log --only fetchLocalAlerts"
+    "logs:alerts": "firebase functions:log --only fetchLocalAlerts",
+    "backfill:local-alerts": "node scripts/backfillLocalAlertTranslations.js",
+    "backfill:local-alerts:execute": "node scripts/backfillLocalAlertTranslations.js --execute"
   },
   "dependencies": {
     "@google-cloud/translate": "^9.4.2",

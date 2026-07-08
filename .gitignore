@@ -6,22 +6,18 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-
 node_modules
 dist
 dist-ssr
 .env
 .env.local
 *.local
-
-# inject-firestore-admin.mjs çıktısı (VITE_ADMIN_EMAIL ile üretilir)
+# inject-firestore-admin.mjs Ã§Ä±ktÄ±sÄ± (VITE_ADMIN_EMAIL ile Ã¼retilir)
 firestore.deploy.rules
-
-# Capacitor — native projeler web kaynağından (src/) ayrı tutulur
-# Yeniden üretim: npm run build && npx cap add android && npx cap add ios
+# Capacitor â€” native projeler web kaynaÄŸÄ±ndan (src/) ayrÄ± tutulur
+# Yeniden Ã¼retim: npm run build && npx cap add android && npx cap add ios
 android/
 ios/
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -32,3 +28,6 @@ ios/
 *.njsproj
 *.sln
 *.sw?
+
+# Firebase service account keys - ASLA commit edilmemeli
+*firebase-adminsdk*.json

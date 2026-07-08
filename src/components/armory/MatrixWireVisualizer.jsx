@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { streamGlyphs } from './matrixWireModels'
 
 /** @typedef {'pistol' | 'reddot' | 'cartridge'} MatrixModelVariant */
@@ -32,14 +32,20 @@ export default function MatrixWireVisualizer({
   className = '',
 }) {
   const wrapRef = useRef(/** @type {HTMLDivElement | null} */ (null))
+  const imgRef = useRef(/** @type {HTMLImageElement | null} */ (null))
   const [tilt, setTilt] = useState({ rx: 0, ry: 0 })
   const [hovering, setHovering] = useState(false)
   const [tick, setTick] = useState(0)
   const [imageReady, setImageReady] = useState(false)
 
-  useEffect(() => {
-    setImageReady(false)
-  }, [imageSrc])
+  const syncImageReady = useCallback(() => {
+    const img = imgRef.current
+    setImageReady(Boolean(img?.complete && img.naturalWidth > 0))
+  }, [])
+
+  useLayoutEffect(() => {
+    syncImageReady()
+  }, [imageSrc, syncImageReady])
 
   const glyphs = useMemo(() => streamGlyphs(variant), [variant])
 
@@ -78,9 +84,15 @@ export default function MatrixWireVisualizer({
     ? 'font-mono text-[7px] leading-tight text-accent/30 xl:text-[8px] 2xl:text-[9px] 2xl:leading-snug'
     : 'font-mono text-[7px] leading-tight text-accent/30'
 
-  const imgLoading = hubMode && imagePriority === 'high' ? 'eager' : 'lazy'
+  const imgLoading = hubMode ? 'eager' : imagePriority === 'high' ? 'eager' : 'lazy'
   /** @type {'high' | 'low' | 'auto'} */
-  const imgFetchPriority = hubMode ? (imagePriority === 'high' ? 'high' : 'low') : 'auto'
+  const imgFetchPriority = hubMode
+    ? imagePriority === 'low'
+      ? 'auto'
+      : 'high'
+    : imagePriority === 'high'
+      ? 'high'
+      : 'auto'
 
   return (
     <div
@@ -133,6 +145,7 @@ export default function MatrixWireVisualizer({
           style={modelTransform ? { transform: modelTransform } : undefined}
         >
           <img
+            ref={imgRef}
             src={imageSrc}
             alt={imageAlt}
             width={hubMode ? HUB_IMAGE_WIDTH : undefined}
@@ -141,7 +154,8 @@ export default function MatrixWireVisualizer({
             decoding="async"
             fetchPriority={imgFetchPriority}
             draggable={false}
-            onLoad={() => setImageReady(true)}
+            onLoad={syncImageReady}
+            onError={() => setImageReady(false)}
             className={[
               'matrix-viz-asset max-h-[78%] max-w-[72%] select-none object-contain [transform-style:preserve-3d]',
               hubMode ? 'transition-opacity duration-300' : '',
