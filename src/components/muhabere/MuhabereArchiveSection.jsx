@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Archive, ArchiveRestore, ChevronDown, ChevronRight, Loader2, Radio } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import OperatorAvatar from '../ui/OperatorAvatar'
 import PresenceIndicator from '../ui/PresenceIndicator'
 
@@ -38,6 +39,7 @@ export default function MuhabereArchiveSection({
   unarchivingChannelId = null,
   unarchivingDmUid = null,
 }) {
+  const { t } = useTranslation('messages')
   const [open, setOpen] = useState(true)
   const total = archivedChannels.length + archivedContacts.length
   if (total === 0) return null
@@ -60,8 +62,8 @@ export default function MuhabereArchiveSection({
           <ChevronRight className="size-3.5 shrink-0 text-amber-400" aria-hidden />
         )}
         <Archive className="size-3.5 shrink-0 text-amber-400" aria-hidden />
-        <span className="flex-1 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400/90">
-          Arşivlenen sohbetler
+        <span className="min-w-0 flex-1 truncate text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400/90">
+          {t('archive.title')}
         </span>
         {archivedUnreadTotal > 0 ? (
           <span className="blink shrink-0 rounded-sm bg-lime-500 px-1.5 py-0.5 font-mono text-[9px] font-bold text-black">
@@ -71,7 +73,7 @@ export default function MuhabereArchiveSection({
       </button>
 
       {open ? (
-        <ul className="mt-2 max-h-32 space-y-1 overflow-y-auto" role="listbox" aria-label="Arşivlenen sohbetler">
+        <ul className="mt-2 max-h-32 space-y-1 overflow-y-auto" role="listbox" aria-label={t('archive.listAria')}>
           {archivedChannels.map((ch) => {
             const active = ch.id === selectedChannelId
             const unread = channelUnreadById[ch.id] ?? 0
@@ -109,8 +111,8 @@ export default function MuhabereArchiveSection({
                   disabled={unarchivingChannelId === ch.id}
                   onClick={() => void onUnarchiveChannel(ch)}
                   className="inline-flex size-8 shrink-0 items-center justify-center rounded-md border border-lime-500/45 bg-lime-950/50 text-lime-400 transition hover:border-lime-400 hover:bg-lime-900/60 hover:text-lime-300 disabled:opacity-40"
-                  aria-label={`${ch.name} kanalını arşivden çıkar`}
-                  title="Arşivden çıkar"
+                  aria-label={t('archive.unarchiveChannelAria', { name: ch.name })}
+                  title={t('archive.unarchiveTitle')}
                 >
                   {unarchivingChannelId === ch.id ? (
                     <Loader2 className="size-3.5 animate-spin" aria-hidden />
@@ -174,8 +176,8 @@ export default function MuhabereArchiveSection({
                   disabled={unarchivingDmUid === contact.uid}
                   onClick={() => void onUnarchiveContact(contact)}
                   className="inline-flex size-8 shrink-0 items-center justify-center rounded-md border border-lime-500/45 bg-lime-950/50 text-lime-400 transition hover:border-lime-400 hover:bg-lime-900/60 hover:text-lime-300 disabled:opacity-40"
-                  aria-label={`${contact.callsign} sohbetini arşivden çıkar`}
-                  title="Arşivden çıkar"
+                  aria-label={t('archive.unarchiveDmAria', { callsign: contact.callsign })}
+                  title={t('archive.unarchiveTitle')}
                 >
                   {unarchivingDmUid === contact.uid ? (
                     <Loader2 className="size-3.5 animate-spin" aria-hidden />

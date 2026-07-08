@@ -1,0 +1,266 @@
+{
+  "header": {
+    "badge": "COM-01 · SECURE",
+    "title": "Taktik muhabere",
+    "subtitle": "Uçtan uca operatör ağı · Tim rehberi",
+    "tabsAria": "Sol panel sekmeleri"
+  },
+  "tabs": {
+    "channels": "Kanallar",
+    "operators": "Operatörler"
+  },
+  "search": {
+    "placeholder": "Çağrı adı ara...",
+    "minChars": "Arama için en az 2 karakter girin.",
+    "noResults": "Ağda operatör bulunamadı — çağrı adını kontrol edin.",
+    "scanning": "Tarama…",
+    "resultsAria": "Arama sonuçları"
+  },
+  "requests": {
+    "title": "Ağ katılım istekleri",
+    "accept": "Onayla",
+    "reject": "Reddet",
+    "send": "İstek gönder",
+    "sent": "[ İstek iletildi ]",
+    "sendAria": "{{callsign}} — istek gönder"
+  },
+  "roles": {
+    "instructor": "Eğitmen",
+    "operator": "Operatör",
+    "premiumOperator": "Premium operatör"
+  },
+  "channels": {
+    "sectionAria": "Tim kanalları",
+    "sectionTitle": "Tim kanalları",
+    "newChannel": "+ Yeni kanal",
+    "newChannelShort": "Yeni kanal",
+    "loading": "Kanallar yükleniyor…",
+    "emptyNone": "Henüz kanal yok — yeni kanal oluştur.",
+    "emptyNoneSidebar": "Henüz kanal yok — tim üyeleriyle grup açın.",
+    "emptyArchived": "Aktif kanal yok — arşivi kontrol edin.",
+    "memberCount": "{{count}} üye",
+    "defaultName": "Kanal",
+    "menuLabel": "{{name}} kanal seçenekleri"
+  },
+  "chat": {
+    "rosterLoading": "Rehber yükleniyor…",
+    "rosterEmpty": "Tim rehberi boş — operatör arayıp katılım isteği gönderin.",
+    "rosterAria": "Tim rehberi",
+    "backToList": "Sohbet listesine dön",
+    "teamChannel": "Tim kanalı · {{count}} üye",
+    "showMembers": "Üyeler",
+    "showMembersAria": "Grup üyelerini göster",
+    "showMembersTitle": "Grup üyeleri",
+    "uploadProgress": "[ Veri yükleniyor... %{{progress}} ]",
+    "placeholder": "// Mesajınızı yazın…",
+    "send": "Gönder",
+    "sendAria": "Gönder",
+    "defaultPeer": "Operatör",
+    "emptyState": {
+      "withContacts": "Kanal seç · Operatörleri izle",
+      "noContacts": "Bir sohbet seçin"
+    }
+  },
+  "message": {
+    "loading": "Mesajlar yükleniyor…",
+    "loadingOlder": "Eski mesajlar yükleniyor…",
+    "loadMore": "↑ Daha eski iletiler",
+    "empty": "Henüz mesaj yok — ilk iletimi gönderin.",
+    "typing": "[ {{callsign}} veri giriyor... ]",
+    "delivered": "İletildi",
+    "read": "Okundu",
+    "optionsAria": "Mesaj seçenekleri",
+    "delete": "Mesajı sil",
+    "deleteConfirmTitle": "Bu mesajı benim ekranımdan kaldır",
+    "deleteConfirmBody": "Karşı tarafın mesajı etkilenmez; yalnızca sizin görünümünüzden silinir.",
+    "destroyed": "[ Veri imha edildi ]",
+    "burnBadge": "Burn",
+    "burnCountdown": "İmha {{count}}s",
+    "imageAlt": "Taktik görsel",
+    "fullscreenAlt": "Tam ekran görsel",
+    "close": "Kapat",
+    "locationTitle": "[ Stratejik koordinat alındı ]",
+    "locationCoords": "LAT: {{lat}} | LNG: {{lng}}",
+    "defaultSender": "Operatör"
+  },
+  "attach": {
+    "aria": "Ek medya",
+    "shareImage": "Görsel paylaş",
+    "shareLocation": "Grid / konum paylaş",
+    "imagesOnly": "Yalnızca görsel dosyaları desteklenir.",
+    "locationUnavailable": "Konum servisi kullanılamıyor."
+  },
+  "burn": {
+    "modeActive": "Burn modu aktif",
+    "modeInactive": "Burn modu",
+    "protocolTitle": "Burn protokolü — 10 sn sonra imha",
+    "placeholder": "// Burn ileti — 10 sn imha…"
+  },
+  "menu": {
+    "defaultLabel": "Sohbet seçenekleri",
+    "dmArchive": "Sohbeti arşivle",
+    "dmDelete": "Sohbeti sil",
+    "dmBlock": "Kullanıcıyı engelle",
+    "channelArchive": "Kanalı arşivle",
+    "channelLeave": "Kanaldan ayrıl",
+    "channelEdit": "Kanalı düzenle",
+    "channelDestroy": "Kanalı sil",
+    "archiveAction": "Arşivle",
+    "deleteAction": "Sil",
+    "archiveChannelAria": "{{name}} kanalını arşivle",
+    "leaveChannelAria": "{{name}} grubundan çık",
+    "dmMenuLabel": "{{callsign}} sohbet seçenekleri"
+  },
+  "archive": {
+    "title": "Arşivlenen sohbetler",
+    "listAria": "Arşivlenen sohbetler",
+    "unarchiveTitle": "Arşivden çıkar",
+    "unarchiveChannelAria": "{{name}} kanalını arşivden çıkar",
+    "unarchiveDmAria": "{{callsign}} sohbetini arşivden çıkar"
+  },
+  "alerts": {
+    "archiveChannel": {
+      "title": "Kanalı arşivle",
+      "message": "Kanal arşivlenen sohbetlere taşınacak. Mesajlar silinmez; yeni mesaj gelirse arşivde bildirim görürsünüz.",
+      "confirm": "Arşivle"
+    },
+    "leaveChannel": {
+      "title": "Kanaldan ayrıl",
+      "message": "Bu işlem sohbeti listenizden kaldırır ve sizi gruptan çıkarır. Diğer üyeler gruba ve mesajlara erişmeye devam eder. Onaylıyor musunuz?",
+      "confirm": "Kanaldan ayrıl"
+    },
+    "leaveAndDelete": {
+      "title": "Gruptan çık ve sohbeti sil",
+      "message": "Bu işlem sohbeti listenizden kaldırır ve sizi gruptan çıkarır. Diğer üyeler gruba ve mesajlara erişmeye devam eder. Onaylıyor musunuz?",
+      "confirm": "Gruptan çık"
+    },
+    "destroyChannel": {
+      "title": "Kanalı kalıcı olarak sil",
+      "message": "Kanal ve tüm mesajları kalıcı olarak silinecek. Bu işlem geri alınamaz. Onaylıyor musunuz?",
+      "confirm": "Kanalı sil"
+    },
+    "archiveDm": {
+      "title": "Sohbeti arşivle",
+      "message": "Sohbet arşivlenen sohbetlere taşınacak. Mesajlar silinmez; yeni mesaj gelirse arşivde bildirim görürsünüz.",
+      "confirm": "Arşivle"
+    },
+    "deleteDm": {
+      "title": "Sohbeti tamamen sil",
+      "message": "Bu sohbet listenizden tamamen kaldırılacak. Karşı tarafın mesajları etkilenmez. Onaylıyor musunuz?",
+      "confirm": "Tamamen sil"
+    },
+    "blockUser": {
+      "title": "Kullanıcıyı engelle",
+      "message": "Bu operatör engellenecek ve sohbet listenizden kaldırılacak. Karşı taraf size mesaj gönderemez. Onaylıyor musunuz?",
+      "confirm": "Engelle"
+    },
+    "removeMember": {
+      "title": "Üyeyi gruptan çıkar",
+      "messageInactive": "{{callsign}} tim rehberinizde değil ve mesaj almıyor. Gruptan çıkarılsın mı?",
+      "messageActive": "{{callsign}} bu gruptan çıkarılacak ve kanal mesajlarını alamayacak. Onaylıyor musunuz?",
+      "memberFallback": "Üye",
+      "confirm": "Gruptan çıkar"
+    },
+    "cancel": "İptal"
+  },
+  "createChannel": {
+    "title": "Yeni tim kanalı",
+    "nameLabel": "Kanal adı",
+    "namePlaceholder": "ALFA TIM",
+    "charCount": "{{count}}/48 karakter",
+    "defaultNameHint": "Varsayılan isim otomatik atanır",
+    "membersLabel": "Rehberden üyeler",
+    "membersOptional": "(isteğe bağlı)",
+    "groupMembers": "Grup üyeleri",
+    "youCreator": "Siz (grup kurucusu)",
+    "totalMembers": "Toplam {{count}} üye — grup açıldıktan sonra üye listesini sohbet başlığından görebilirsiniz.",
+    "rosterEmpty": "Tim rehberi boş — kanal yalnızca sizinle açılır.",
+    "sessionInvalid": "Oturum doğrulanamadı — kanal açılamaz.",
+    "submit": "Kanal aç"
+  },
+  "editChannel": {
+    "title": "Kanalı düzenle",
+    "nameLabel": "Kanal adı",
+    "submit": "Kaydet"
+  },
+  "members": {
+    "title": "Grup üyeleri",
+    "subtitle": "{{name}} · {{total}} kayıtlı · {{active}} aktif",
+    "loading": "Üyeler yükleniyor…",
+    "empty": "Üye bulunamadı.",
+    "you": "(Siz)",
+    "creator": "Grup kurucusu · ",
+    "notInRoster": "Rehberde değil",
+    "removeAria": "{{callsign}} gruptan çıkar",
+    "removeTitle": "Gruptan çıkar",
+    "footnote": "Rehberde olmayan üyeler mesaj almaz. Grup kurucusu bu üyeleri listeden çıkarabilir.",
+    "selfFallback": "Siz"
+  },
+  "sicil": {
+    "title": "Operatör dosyası",
+    "loading": "Dosya yükleniyor…",
+    "notFound": "Profil bulunamadı.",
+    "username": "Kullanıcı adı",
+    "email": "E-posta",
+    "status": "Durum",
+    "bloodType": "Kan grubu",
+    "enrolled": "Katılım"
+  },
+  "tacticalAlert": {
+    "defaultTitle": "Taktik uyarı",
+    "confirm": "Onayla",
+    "cancel": "İptal",
+    "processing": "İşleniyor"
+  },
+  "toast": {
+    "notificationsAria": "Taktik ileti bildirimleri",
+    "newMessage": "Yeni ileti — {{callsign}}",
+    "teamChannelOpened": "Tim kanalı açıldı",
+    "channelUpdated": "Kanal güncellendi",
+    "leftGroup": "Gruptan çıkıldı — {{name}}",
+    "channelDeleted": "Kanal silindi — {{name}}",
+    "memberRemoved": "Üye gruptan çıkarıldı",
+    "blocked": "Engellendi — {{callsign}}",
+    "requestSent": "İstek iletildi — {{callsign}}",
+    "connectionApproved": "Bağlantı onaylandı — {{callsign}}",
+    "requestRejected": "İstek reddedildi"
+  },
+  "errors": {
+    "rosterLoadFailed": "Rehber yüklenemedi.",
+    "searchFailed": "Arama başarısız.",
+    "channelsLoadFailed": "Kanallar yüklenemedi.",
+    "summaryDisconnected": "Özet kanalı kesildi.",
+    "sendFailed": "Gönderim başarısız.",
+    "messagesLoadFailed": "Eski mesajlar yüklenemedi.",
+    "messagesDisconnected": "Mesaj kanalı kesildi.",
+    "channelCreateFailed": "Kanal oluşturulamadı.",
+    "channelUpdateFailed": "Kanal güncellenemedi.",
+    "sessionNotFound": "Oturum bulunamadı — sayfayı yenileyip tekrar giriş yapın.",
+    "contentViolation": "Operasyonel disiplinsizlik: İhlal",
+    "requestDenied": "İşlem reddedildi. Firestore kuralları güncel değil — npm run deploy-backend çalıştırın.",
+    "requestAlreadyExists": "İstek zaten mevcut.",
+    "requestFailed": "İstek işlenemedi."
+  },
+  "floating": {
+    "noMessages": "İleti yok",
+    "placeholder": "// Hızlı cevap…",
+    "send": "Gönder",
+    "signal": "· Sinyal",
+    "terminalMode": "· Terminal modu",
+    "windowMode": "Pencere",
+    "windowModeTitle": "Pencere modu",
+    "minimize": "Küçült",
+    "fullscreen": "Tam ekran terminal",
+    "fullscreenTitle": "Tam ekran",
+    "quickResponseAria": "Hızlı müdahale — {{callsign}}",
+    "terminalAria": "Hızlı müdahale terminal — {{callsign}}"
+  },
+  "common": {
+    "close": "Kapat",
+    "cancel": "İptal",
+    "standby": "COM-01 · STANDBY",
+    "audazAlt": "Audaz Tactical",
+    "online": "Çevrimiçi",
+    "offline": "Çevrimdışı"
+  }
+}

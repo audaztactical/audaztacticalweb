@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Loader2, Plus, Radio } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import MuhabereConversationActions from './MuhabereConversationActions'
 import TacticalAlert from './TacticalAlert'
 
@@ -37,6 +38,7 @@ export default function ChatSidebar({
   onDeleteChannel,
   onCreateChannel,
 }) {
+  const { t } = useTranslation('messages')
   const [archiveTarget, setArchiveTarget] = useState(/** @type {MuhabereChannel | null} */ (null))
   const [deleteTarget, setDeleteTarget] = useState(/** @type {MuhabereChannel | null} */ (null))
 
@@ -53,31 +55,31 @@ export default function ChatSidebar({
     <>
       <div className="shrink-0 border-b border-zinc-800 px-3 py-3">
         <div className="mb-2 flex items-center justify-between gap-2">
-          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-lime-500/90">
-            Tim kanalları
+          <h2 className="min-w-0 truncate text-[10px] font-bold uppercase tracking-[0.2em] text-lime-500/90">
+            {t('channels.sectionTitle')}
           </h2>
           <button
             type="button"
             onClick={onCreateChannel}
-            className="inline-flex items-center gap-1 rounded border border-lime-500/30 bg-lime-950/30 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-lime-400 transition hover:bg-lime-900/50"
+            className="inline-flex min-w-0 shrink-0 items-center gap-1 rounded border border-lime-500/30 bg-lime-950/30 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-lime-400 transition hover:bg-lime-900/50"
           >
-            <Plus className="size-3" strokeWidth={2.5} aria-hidden />
-            Yeni kanal
+            <Plus className="size-3 shrink-0" strokeWidth={2.5} aria-hidden />
+            <span className="truncate">{t('channels.newChannelShort')}</span>
           </button>
         </div>
 
         {channelsLoading ? (
-          <p className="text-[10px] text-zinc-600">Kanallar yükleniyor…</p>
+          <p className="text-[10px] text-zinc-600">{t('channels.loading')}</p>
         ) : channelsError ? (
           <p className="text-[10px] text-red-400/90">{channelsError}</p>
         ) : channels.length === 0 ? (
           <p className="text-[10px] leading-relaxed text-zinc-600">
             {totalChannelCount === 0
-              ? 'Henüz kanal yok — tim üyeleriyle grup açın.'
-              : 'Aktif kanal yok — arşivi kontrol edin.'}
+              ? t('channels.emptyNoneSidebar')
+              : t('channels.emptyArchived')}
           </p>
         ) : (
-          <ul className="max-h-36 space-y-1 overflow-y-auto" role="listbox" aria-label="Tim kanalları">
+          <ul className="max-h-36 space-y-1 overflow-y-auto" role="listbox" aria-label={t('channels.sectionAria')}>
             {channels.map((ch) => {
               const active = ch.id === selectedChannelId
               const unreadCount = channelUnreadById[ch.id] ?? 0
@@ -128,8 +130,8 @@ export default function ChatSidebar({
                     deleteBusy={deletingChannelId === ch.id}
                     onArchive={() => setArchiveTarget(ch)}
                     onDelete={() => setDeleteTarget(ch)}
-                    archiveLabel={`${ch.name} kanalını arşivle`}
-                    deleteLabel={`${ch.name} grubundan çık`}
+                    archiveLabel={t('menu.archiveChannelAria', { name: ch.name })}
+                    deleteLabel={t('menu.leaveChannelAria', { name: ch.name })}
                   />
                 </li>
               )
@@ -140,10 +142,10 @@ export default function ChatSidebar({
 
       <TacticalAlert
         open={Boolean(archiveTarget)}
-        title="Kanalı arşivle"
-        message="Kanal arşivlenen sohbetlere taşınacak. Mesajlar silinmez; yeni mesaj gelirse arşivde bildirim görürsünüz."
-        confirmLabel="Arşivle"
-        cancelLabel="İptal"
+        title={t('alerts.archiveChannel.title')}
+        message={t('alerts.archiveChannel.message')}
+        confirmLabel={t('alerts.archiveChannel.confirm')}
+        cancelLabel={t('alerts.cancel')}
         busy={busyArchive}
         onConfirm={() => {
           if (!archiveTarget) return
@@ -154,10 +156,10 @@ export default function ChatSidebar({
 
       <TacticalAlert
         open={Boolean(deleteTarget)}
-        title="Gruptan çık ve sohbeti sil"
-        message="Bu işlem sohbeti listenizden kaldırır ve sizi gruptan çıkarır. Diğer üyeler gruba ve mesajlara erişmeye devam eder. Onaylıyor musunuz?"
-        confirmLabel="Gruptan çık"
-        cancelLabel="İptal"
+        title={t('alerts.leaveAndDelete.title')}
+        message={t('alerts.leaveAndDelete.message')}
+        confirmLabel={t('alerts.leaveAndDelete.confirm')}
+        cancelLabel={t('alerts.cancel')}
         busy={busyDelete}
         onConfirm={() => {
           if (!deleteTarget) return

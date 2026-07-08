@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Loader2, Radio, UserMinus, Users, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import OperatorAvatar from '../ui/OperatorAvatar'
 import PresenceIndicator from '../ui/PresenceIndicator'
 import TacticalAlert from './TacticalAlert'
 import { useOperatorsPresenceMap } from '../../hooks/useOperatorsPresenceMap'
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
+import { messagesRoleLabel } from '../../lib/messagesDisplayText'
 import {
   fetchMuhabereChannel,
   fetchMuhabereOperatorProfile,
@@ -51,6 +53,7 @@ export default function MuhabereChannelMembersModal({
   onOpenProfile,
   onRemoveMember,
 }) {
+  const { t } = useTranslation('messages')
   const [liveChannel, setLiveChannel] = useState(/** @type {MuhabereChannel | null} */ (null))
   const [rows, setRows] = useState(/** @type {ChannelMemberRow[]} */ ([]))
   const [loading, setLoading] = useState(false)
@@ -105,7 +108,7 @@ export default function MuhabereChannelMembersModal({
             if (memberUid === uid) {
               return {
                 uid: memberUid,
-                callsign: selfCallsign || 'SİZ',
+                callsign: selfCallsign || t('members.selfFallback'),
                 username: '',
                 role: 'operator',
                 isSelf: true,
@@ -152,7 +155,7 @@ export default function MuhabereChannelMembersModal({
     return () => {
       active = false
     }
-  }, [open, channel, contactByUid, rosterUidSet, uid, selfCallsign])
+  }, [open, channel, contactByUid, rosterUidSet, uid, selfCallsign, t])
 
   if (!open || !channel) return null
 
@@ -178,10 +181,14 @@ export default function MuhabereChannelMembersModal({
                 id="channel-members-title"
                 className="truncate text-xs font-bold uppercase tracking-[0.2em] text-lime-400"
               >
-                Grup üyeleri
+                {t('members.title')}
               </h2>
               <p className="mt-0.5 truncate text-[10px] uppercase tracking-wider text-zinc-500">
-                {displayChannel?.name ?? channel.name} · {rows.length} kayıtlı · {activeCount} aktif
+                {t('members.subtitle', {
+                  name: displayChannel?.name ?? channel.name,
+                  total: rows.length,
+                  active: activeCount,
+                })}
               </p>
             </div>
             <button
@@ -189,7 +196,7 @@ export default function MuhabereChannelMembersModal({
               onClick={onClose}
               disabled={busyRemove}
               className="rounded p-1 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-40"
-              aria-label="Kapat"
+              aria-label={t('common.close')}
             >
               <X className="size-4" strokeWidth={2} aria-hidden />
             </button>
@@ -199,10 +206,10 @@ export default function MuhabereChannelMembersModal({
             {loading ? (
               <div className="flex items-center justify-center gap-2 py-8 text-zinc-500">
                 <Loader2 className="size-4 animate-spin" aria-hidden />
-                <span className="text-xs">Üyeler yükleniyor…</span>
+                <span className="text-xs">{t('members.loading')}</span>
               </div>
             ) : rows.length === 0 ? (
-              <p className="py-8 text-center text-xs text-zinc-600">Üye bulunamadı.</p>
+              <p className="py-8 text-center text-xs text-zinc-600">{t('members.empty')}</p>
             ) : (
               <ul className="max-h-64 space-y-1 overflow-y-auto rounded-md border border-zinc-800 bg-zinc-900/50 p-2">
                 {rows.map((member) => {
@@ -232,7 +239,7 @@ export default function MuhabereChannelMembersModal({
                           <p className="truncate text-xs font-semibold uppercase tracking-wide text-zinc-200">
                             {member.callsign}
                             {member.isSelf ? (
-                              <span className="ml-1.5 text-[9px] font-bold text-lime-400">(SİZ)</span>
+                              <span className="ml-1.5 text-[9px] font-bold text-lime-400">{t('members.you')}</span>
                             ) : null}
                           </p>
                           <p className="flex flex-wrap items-center gap-x-1.5 text-[9px] uppercase tracking-wider text-zinc-500">
@@ -243,10 +250,10 @@ export default function MuhabereChannelMembersModal({
                               />
                             ) : null}
                             {!member.isInactive ? <span aria-hidden>·</span> : null}
-                            <span>
-                              {member.isCreator ? 'Grup kurucusu · ' : ''}
-                              {member.role === 'instructor' ? 'Eğitmen' : 'Operatör'}
-                              {member.isInactive ? ' · Rehberde değil' : ''}
+                            <span className="line-clamp-2">
+                              {member.isCreator ? t('members.creator') : ''}
+                              {messagesRoleLabel(member.role)}
+                              {member.isInactive ? ` · ${t('members.notInRoster')}` : ''}
                             </span>
                           </p>
                         </div>
@@ -258,8 +265,8 @@ export default function MuhabereChannelMembersModal({
                           disabled={busyRemove}
                           onClick={() => setRemoveTarget(member)}
                           className="inline-flex size-8 shrink-0 items-center justify-center rounded-md border border-red-500/45 bg-red-950/50 text-red-400 transition hover:border-red-400 hover:bg-red-900/60 hover:text-red-300 disabled:opacity-40"
-                          aria-label={`${member.callsign} gruptan çıkar`}
-                          title="Gruptan çıkar"
+                          aria-label={t('members.removeAria', { callsign: member.callsign })}
+                          title={t('members.removeTitle')}
                         >
                           {removing ? (
                             <Loader2 className="size-3.5 animate-spin" aria-hidden />
@@ -280,7 +287,7 @@ export default function MuhabereChannelMembersModal({
 
             <p className="mt-3 flex items-start gap-2 text-[9px] leading-relaxed text-zinc-600">
               <Radio className="mt-0.5 size-3 shrink-0 text-lime-500/60" aria-hidden />
-              Rehberde olmayan üyeler mesaj almaz. Grup kurucusu bu üyeleri listeden çıkarabilir.
+              {t('members.footnote')}
             </p>
           </div>
         </div>
@@ -288,14 +295,16 @@ export default function MuhabereChannelMembersModal({
 
       <TacticalAlert
         open={Boolean(removeTarget)}
-        title="Üyeyi gruptan çıkar"
+        title={t('alerts.removeMember.title')}
         message={
           removeTarget?.isInactive
-            ? `${removeTarget.callsign} tim rehberinizde değil ve mesaj almıyor. Gruptan çıkarılsın mı?`
-            : `${removeTarget?.callsign ?? 'Üye'} bu gruptan çıkarılacak ve kanal mesajlarını alamayacak. Onaylıyor musunuz?`
+            ? t('alerts.removeMember.messageInactive', { callsign: removeTarget.callsign })
+            : t('alerts.removeMember.messageActive', {
+                callsign: removeTarget?.callsign ?? t('alerts.removeMember.memberFallback'),
+              })
         }
-        confirmLabel="Gruptan çıkar"
-        cancelLabel="İptal"
+        confirmLabel={t('alerts.removeMember.confirm')}
+        cancelLabel={t('alerts.cancel')}
         busy={busyRemove}
         onConfirm={() => {
           if (!removeTarget) return

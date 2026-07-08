@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Check, CheckCheck, MoreHorizontal, Trash2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { deleteBurnMessage, formatMessageTime, markMessageAsRead } from '../../lib/firestoreTaktikMuhabere'
 
 /** @typedef {import('../../lib/firestoreTaktikMuhabere').MuhabereMessage} MuhabereMessage */
@@ -28,6 +29,7 @@ export default function MuhabereMessageRow({
   hideBusy = false,
   onMediaLoaded,
 }) {
+  const { t } = useTranslation('messages')
   const rowRef = useRef(/** @type {HTMLDivElement | null} */ (null))
   const menuRef = useRef(/** @type {HTMLDivElement | null} */ (null))
   const markedRef = useRef(false)
@@ -141,7 +143,7 @@ export default function MuhabereMessageRow({
   const handleHide = () => {
     if (!onHideMessage || hideBusy) return
     const confirmed = window.confirm(
-      'Bu mesajı benim ekranımdan kaldır\n\nKarşı tarafın mesajı etkilenmez; yalnızca sizin görünümünüzden silinir.',
+      `${t('message.deleteConfirmTitle')}\n\n${t('message.deleteConfirmBody')}`,
     )
     if (!confirmed) return
     setMenuOpen(false)
@@ -152,8 +154,8 @@ export default function MuhabereMessageRow({
     msg.isBurn && !displayDestroyed ? (
       <span className="text-[9px] font-bold uppercase tracking-wider text-red-500/90">
         {incoming && countdown != null && msg.status === 'read'
-          ? `İMHA ${countdown}s`
-          : 'BURN'}
+          ? t('message.burnCountdown', { count: countdown })
+          : t('message.burnBadge')}
       </span>
     ) : null
 
@@ -161,7 +163,7 @@ export default function MuhabereMessageRow({
     if (displayDestroyed) {
       return (
         <p className="font-mono text-xs font-bold uppercase tracking-wider text-red-500">
-          [ VERİ İMHA EDİLDİ ]
+          {t('message.destroyed')}
         </p>
       )
     }
@@ -175,7 +177,7 @@ export default function MuhabereMessageRow({
         >
           <img
             src={msg.imageUrl}
-            alt="Taktik görsel"
+            alt={t('message.imageAlt')}
             loading="eager"
             decoding="async"
             onLoad={() => onMediaLoaded?.()}
@@ -194,9 +196,9 @@ export default function MuhabereMessageRow({
           rel="noopener noreferrer"
           className="block rounded-sm border border-amber-900/50 bg-amber-950/30 p-2 font-mono text-amber-300 transition hover:border-amber-500/50 hover:bg-amber-950/40"
         >
-          <p className="text-[10px] font-bold uppercase tracking-wider">[ STRATEJİK KOORDİNAT ALINDI ]</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider">{t('message.locationTitle')}</p>
           <p className="mt-1 text-[10px] text-amber-200/90">
-            LAT: {msg.lat.toFixed(5)} | LNG: {msg.lng.toFixed(5)}
+            {t('message.locationCoords', { lat: msg.lat.toFixed(5), lng: msg.lng.toFixed(5) })}
           </p>
         </a>
       )
@@ -247,7 +249,7 @@ export default function MuhabereMessageRow({
             {outgoing && !displayDestroyed && isDm ? (
               <span
                 className="absolute bottom-1.5 right-2 inline-flex items-center"
-                aria-label={readByPeer ? 'Okundu' : 'İletildi'}
+                aria-label={readByPeer ? t('message.read') : t('message.delivered')}
               >
                 {readByPeer ? (
                   <CheckCheck className="size-3.5 text-cyan-400" strokeWidth={2.5} aria-hidden />
@@ -281,7 +283,7 @@ export default function MuhabereMessageRow({
                 'hover:border-amber-500/50 hover:bg-zinc-800 hover:text-amber-300',
                 menuOpen ? 'border-amber-500/50 text-amber-300' : '',
               ].join(' ')}
-              aria-label="Mesaj seçenekleri"
+              aria-label={t('message.optionsAria')}
               aria-expanded={menuOpen}
             >
               <MoreHorizontal className="size-4" strokeWidth={2.25} aria-hidden />
@@ -299,10 +301,10 @@ export default function MuhabereMessageRow({
                   role="menuitem"
                   disabled={hideBusy}
                   onClick={handleHide}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-zinc-400 transition hover:bg-zinc-900 hover:text-red-400 disabled:opacity-40"
+                  className="flex w-full min-w-0 items-center gap-2 px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-zinc-400 transition hover:bg-zinc-900 hover:text-red-400 disabled:opacity-40"
                 >
                   <Trash2 className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
-                  Mesajı sil
+                  <span className="min-w-0 truncate">{t('message.delete')}</span>
                 </button>
               </div>
             ) : null}
@@ -321,11 +323,11 @@ export default function MuhabereMessageRow({
             className="absolute right-4 top-4 rounded border border-zinc-700 px-2 py-1 text-[10px] font-bold uppercase text-zinc-400 hover:text-amber-300"
             onClick={() => setLightboxOpen(false)}
           >
-            Kapat
+            {t('message.close')}
           </button>
           <img
             src={msg.imageUrl}
-            alt="Tam ekran görsel"
+            alt={t('message.fullscreenAlt')}
             loading="lazy"
             decoding="async"
             className="max-h-[90vh] max-w-full rounded-sm border border-zinc-700 object-contain"

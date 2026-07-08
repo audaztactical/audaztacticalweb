@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Loader2, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { updateMuhabereChannelName } from '../../lib/firestoreTaktikMuhabere'
 
 /**
@@ -13,6 +14,7 @@ import { updateMuhabereChannelName } from '../../lib/firestoreTaktikMuhabere'
  * }} props
  */
 export default function EditChannelModal({ open, channelId, channelName, uid, onClose, onUpdated }) {
+  const { t } = useTranslation('messages')
   const [name, setName] = useState(channelName)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(/** @type {string | null} */ (null))
@@ -39,7 +41,7 @@ export default function EditChannelModal({ open, channelId, channelName, uid, on
       onUpdated(label)
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Kanal güncellenemedi.')
+      setError(err instanceof Error ? err.message : t('errors.channelUpdateFailed'))
     } finally {
       setBusy(false)
     }
@@ -58,14 +60,14 @@ export default function EditChannelModal({ open, channelId, channelName, uid, on
         onClick={(e) => e.stopPropagation()}
       >
         <header className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
-          <h2 id="edit-channel-title" className="text-xs font-bold uppercase tracking-[0.2em] text-amber-400">
-            Kanalı düzenle
+          <h2 id="edit-channel-title" className="min-w-0 truncate text-xs font-bold uppercase tracking-[0.2em] text-amber-400">
+            {t('editChannel.title')}
           </h2>
           <button
             type="button"
             onClick={onClose}
             className="rounded p-1 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200"
-            aria-label="Kapat"
+            aria-label={t('common.close')}
           >
             <X className="size-4" strokeWidth={2} aria-hidden />
           </button>
@@ -73,7 +75,7 @@ export default function EditChannelModal({ open, channelId, channelName, uid, on
 
         <form onSubmit={handleSubmit} className="px-4 py-4">
           <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500">
-            Kanal adı
+            {t('editChannel.nameLabel')}
             <input
               type="text"
               value={name}
@@ -92,16 +94,16 @@ export default function EditChannelModal({ open, channelId, channelName, uid, on
               type="button"
               onClick={onClose}
               disabled={busy}
-              className="flex-1 rounded-md border border-zinc-700 px-3 py-2 text-[10px] font-bold uppercase text-zinc-500 hover:bg-zinc-900 disabled:opacity-40"
+              className="min-w-0 flex-1 truncate rounded-md border border-zinc-700 px-3 py-2 text-[10px] font-bold uppercase text-zinc-500 hover:bg-zinc-900 disabled:opacity-40"
             >
-              İptal
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               disabled={busy || !name.trim()}
-              className="flex flex-1 items-center justify-center gap-1 rounded-md border border-amber-500/50 bg-amber-950/40 px-3 py-2 text-[10px] font-bold uppercase text-amber-300 hover:bg-amber-900/50 disabled:opacity-40"
+              className="flex min-w-0 flex-1 items-center justify-center gap-1 truncate rounded-md border border-amber-500/50 bg-amber-950/40 px-3 py-2 text-[10px] font-bold uppercase text-amber-300 hover:bg-amber-900/50 disabled:opacity-40"
             >
-              {busy ? <Loader2 className="size-3.5 animate-spin" aria-hidden /> : 'Kaydet'}
+              {busy ? <Loader2 className="size-3.5 animate-spin" aria-hidden /> : t('editChannel.submit')}
             </button>
           </div>
         </form>

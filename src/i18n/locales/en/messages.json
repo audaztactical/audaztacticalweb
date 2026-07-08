@@ -1,0 +1,266 @@
+{
+  "header": {
+    "badge": "COM-01 · SECURE",
+    "title": "Tactical comms",
+    "subtitle": "End-to-end operator network · Team roster",
+    "tabsAria": "Left panel tabs"
+  },
+  "tabs": {
+    "channels": "Channels",
+    "operators": "Operators"
+  },
+  "search": {
+    "placeholder": "Search callsign...",
+    "minChars": "Enter at least 2 characters to search.",
+    "noResults": "No operators found on the network — check the callsign.",
+    "scanning": "Scanning…",
+    "resultsAria": "Search results"
+  },
+  "requests": {
+    "title": "Network join requests",
+    "accept": "Accept",
+    "reject": "Decline",
+    "send": "Send request",
+    "sent": "[ Request sent ]",
+    "sendAria": "{{callsign}} — send request"
+  },
+  "roles": {
+    "instructor": "Instructor",
+    "operator": "Operator",
+    "premiumOperator": "Premium operator"
+  },
+  "channels": {
+    "sectionAria": "Team channels",
+    "sectionTitle": "Team channels",
+    "newChannel": "+ New channel",
+    "newChannelShort": "New channel",
+    "loading": "Loading channels…",
+    "emptyNone": "No channels yet — create a new channel.",
+    "emptyNoneSidebar": "No channels yet — open a group with team members.",
+    "emptyArchived": "No active channels — check the archive.",
+    "memberCount": "{{count}} members",
+    "defaultName": "Channel",
+    "menuLabel": "{{name}} channel options"
+  },
+  "chat": {
+    "rosterLoading": "Loading roster…",
+    "rosterEmpty": "Team roster is empty — search for operators and send join requests.",
+    "rosterAria": "Team roster",
+    "backToList": "Back to chat list",
+    "teamChannel": "Team channel · {{count}} members",
+    "showMembers": "Members",
+    "showMembersAria": "Show group members",
+    "showMembersTitle": "Group members",
+    "uploadProgress": "[ Uploading data... {{progress}}% ]",
+    "placeholder": "// Type your message…",
+    "send": "Send",
+    "sendAria": "Send",
+    "defaultPeer": "Operator",
+    "emptyState": {
+      "withContacts": "Select a channel · Monitor operators",
+      "noContacts": "Select a chat"
+    }
+  },
+  "message": {
+    "loading": "Loading messages…",
+    "loadingOlder": "Loading older messages…",
+    "loadMore": "↑ Older transmissions",
+    "empty": "No messages yet — send the first transmission.",
+    "typing": "[ {{callsign}} entering data... ]",
+    "delivered": "Delivered",
+    "read": "Read",
+    "optionsAria": "Message options",
+    "delete": "Delete message",
+    "deleteConfirmTitle": "Remove this message from my screen",
+    "deleteConfirmBody": "The other party's message is unaffected; it is only removed from your view.",
+    "destroyed": "[ Data destroyed ]",
+    "burnBadge": "Burn",
+    "burnCountdown": "Destroy {{count}}s",
+    "imageAlt": "Tactical image",
+    "fullscreenAlt": "Fullscreen image",
+    "close": "Close",
+    "locationTitle": "[ Strategic coordinate received ]",
+    "locationCoords": "LAT: {{lat}} | LNG: {{lng}}",
+    "defaultSender": "Operator"
+  },
+  "attach": {
+    "aria": "Attach media",
+    "shareImage": "Share image",
+    "shareLocation": "Share grid / location",
+    "imagesOnly": "Only image files are supported.",
+    "locationUnavailable": "Location service is unavailable."
+  },
+  "burn": {
+    "modeActive": "Burn mode active",
+    "modeInactive": "Burn mode",
+    "protocolTitle": "Burn protocol — auto-destroy in 10s",
+    "placeholder": "// Burn message — 10s destroy…"
+  },
+  "menu": {
+    "defaultLabel": "Chat options",
+    "dmArchive": "Archive chat",
+    "dmDelete": "Delete chat",
+    "dmBlock": "Block user",
+    "channelArchive": "Archive channel",
+    "channelLeave": "Leave channel",
+    "channelEdit": "Edit channel",
+    "channelDestroy": "Delete channel",
+    "archiveAction": "Archive",
+    "deleteAction": "Delete",
+    "archiveChannelAria": "Archive channel {{name}}",
+    "leaveChannelAria": "Leave group {{name}}",
+    "dmMenuLabel": "{{callsign}} chat options"
+  },
+  "archive": {
+    "title": "Archived chats",
+    "listAria": "Archived chats",
+    "unarchiveTitle": "Restore from archive",
+    "unarchiveChannelAria": "Restore channel {{name}} from archive",
+    "unarchiveDmAria": "Restore chat with {{callsign}} from archive"
+  },
+  "alerts": {
+    "archiveChannel": {
+      "title": "Archive channel",
+      "message": "The channel will move to archived chats. Messages are not deleted; you will see notifications in the archive when new messages arrive.",
+      "confirm": "Archive"
+    },
+    "leaveChannel": {
+      "title": "Leave channel",
+      "message": "This removes the chat from your list and removes you from the group. Other members keep access to the group and messages. Do you confirm?",
+      "confirm": "Leave channel"
+    },
+    "leaveAndDelete": {
+      "title": "Leave group and delete chat",
+      "message": "This removes the chat from your list and removes you from the group. Other members keep access to the group and messages. Do you confirm?",
+      "confirm": "Leave group"
+    },
+    "destroyChannel": {
+      "title": "Permanently delete channel",
+      "message": "The channel and all messages will be permanently deleted. This action cannot be undone. Do you confirm?",
+      "confirm": "Delete channel"
+    },
+    "archiveDm": {
+      "title": "Archive chat",
+      "message": "The chat will move to archived chats. Messages are not deleted; you will see notifications in the archive when new messages arrive.",
+      "confirm": "Archive"
+    },
+    "deleteDm": {
+      "title": "Permanently delete chat",
+      "message": "This chat will be completely removed from your list. The other party's messages are unaffected. Do you confirm?",
+      "confirm": "Delete permanently"
+    },
+    "blockUser": {
+      "title": "Block user",
+      "message": "This operator will be blocked and removed from your chat list. They will not be able to message you. Do you confirm?",
+      "confirm": "Block"
+    },
+    "removeMember": {
+      "title": "Remove member from group",
+      "messageInactive": "{{callsign}} is not in your team roster and does not receive messages. Remove from group?",
+      "messageActive": "{{callsign}} will be removed from this group and will no longer receive channel messages. Do you confirm?",
+      "memberFallback": "Member",
+      "confirm": "Remove from group"
+    },
+    "cancel": "Cancel"
+  },
+  "createChannel": {
+    "title": "New team channel",
+    "nameLabel": "Channel name",
+    "namePlaceholder": "ALFA TIM",
+    "charCount": "{{count}}/48 characters",
+    "defaultNameHint": "Default name is assigned automatically",
+    "membersLabel": "Roster members",
+    "membersOptional": "(optional)",
+    "groupMembers": "Group members",
+    "youCreator": "You (group creator)",
+    "totalMembers": "{{count}} members total — view the member list from the chat header after opening the group.",
+    "rosterEmpty": "Team roster is empty — the channel opens with only you.",
+    "sessionInvalid": "Session could not be verified — channel cannot be opened.",
+    "submit": "Open channel"
+  },
+  "editChannel": {
+    "title": "Edit channel",
+    "nameLabel": "Channel name",
+    "submit": "Save"
+  },
+  "members": {
+    "title": "Group members",
+    "subtitle": "{{name}} · {{total}} registered · {{active}} active",
+    "loading": "Loading members…",
+    "empty": "No members found.",
+    "you": "(You)",
+    "creator": "Group creator · ",
+    "notInRoster": "Not in roster",
+    "removeAria": "Remove {{callsign}} from group",
+    "removeTitle": "Remove from group",
+    "footnote": "Members not in roster do not receive messages. The group creator can remove them from the list.",
+    "selfFallback": "You"
+  },
+  "sicil": {
+    "title": "Operator file",
+    "loading": "Loading file…",
+    "notFound": "Profile not found.",
+    "username": "Username",
+    "email": "Email",
+    "status": "Status",
+    "bloodType": "Blood type",
+    "enrolled": "Enrolled"
+  },
+  "tacticalAlert": {
+    "defaultTitle": "Tactical alert",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "processing": "Processing"
+  },
+  "toast": {
+    "notificationsAria": "Tactical message notifications",
+    "newMessage": "New transmission — {{callsign}}",
+    "teamChannelOpened": "Team channel opened",
+    "channelUpdated": "Channel updated",
+    "leftGroup": "Left group — {{name}}",
+    "channelDeleted": "Channel deleted — {{name}}",
+    "memberRemoved": "Member removed from group",
+    "blocked": "Blocked — {{callsign}}",
+    "requestSent": "Request sent — {{callsign}}",
+    "connectionApproved": "Connection approved — {{callsign}}",
+    "requestRejected": "Request declined"
+  },
+  "errors": {
+    "rosterLoadFailed": "Failed to load roster.",
+    "searchFailed": "Search failed.",
+    "channelsLoadFailed": "Failed to load channels.",
+    "summaryDisconnected": "Summary feed disconnected.",
+    "sendFailed": "Send failed.",
+    "messagesLoadFailed": "Failed to load older messages.",
+    "messagesDisconnected": "Message feed disconnected.",
+    "channelCreateFailed": "Failed to create channel.",
+    "channelUpdateFailed": "Failed to update channel.",
+    "sessionNotFound": "Session not found — refresh the page and sign in again.",
+    "contentViolation": "Operational discipline violation",
+    "requestDenied": "Operation denied. Firestore rules are outdated — run npm run deploy-backend.",
+    "requestAlreadyExists": "Request already exists.",
+    "requestFailed": "Request could not be processed."
+  },
+  "floating": {
+    "noMessages": "No transmissions",
+    "placeholder": "// Quick reply…",
+    "send": "Send",
+    "signal": "· Signal",
+    "terminalMode": "· Terminal mode",
+    "windowMode": "Window",
+    "windowModeTitle": "Window mode",
+    "minimize": "Minimize",
+    "fullscreen": "Fullscreen terminal",
+    "fullscreenTitle": "Fullscreen",
+    "quickResponseAria": "Quick response — {{callsign}}",
+    "terminalAria": "Quick response terminal — {{callsign}}"
+  },
+  "common": {
+    "close": "Close",
+    "cancel": "Cancel",
+    "standby": "COM-01 · STANDBY",
+    "audazAlt": "Audaz Tactical",
+    "online": "Online",
+    "offline": "Offline"
+  }
+}

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { ChevronLeft, ChevronRight, Flame, Loader2, Radio, Search, UserPlus, Users } from 'lucide-react'
 import CreateChannelModal from '../components/muhabere/CreateChannelModal'
 import EditChannelModal from '../components/muhabere/EditChannelModal'
@@ -35,7 +36,6 @@ import {
   unarchiveMuhabereDmForUser,
   hideMuhabereMessageForUser,
   setChatTypingStatus,
-  muhabereRequestErrorMessage,
   rejectMuhabereContactRequest,
   searchMuhabereOperators,
   sendChannelMessage,
@@ -63,7 +63,12 @@ import {
   resolveContactConversationSummary,
   sortMuhabereContactsByRecency,
 } from '../lib/muhabereConversation'
-import { MUHABERE_CONTENT_VIOLATION } from '../lib/muhabereContentFilter'
+import {
+  isMuhabereContentViolationMessage,
+  messagesRoleLabel,
+  muhabereContentViolationMessage,
+  muhabereRequestErrorMessageDisplay,
+} from '../lib/messagesDisplayText'
 import { useOperatorsPresenceMap } from '../hooks/useOperatorsPresenceMap'
 import { useCompactShell } from '../hooks/useCompactShell'
 
@@ -111,6 +116,7 @@ function CallsignProfileTrigger({ callsign, operatorUid, onOpenProfile, classNam
 }
 
 export default function TaktikMuhabere() {
+  const { t } = useTranslation('messages')
   const { user, userData } = useAuth()
   const uid = user?.uid ?? ''
   const {
@@ -326,10 +332,10 @@ export default function TaktikMuhabere() {
       },
       (err) => {
         emitFirebaseError(err)
-        setSummariesError(err instanceof Error ? err.message : 'Özet kanalı kesildi.')
+        setSummariesError(err instanceof Error ? err.message : t('errors.summaryDisconnected'))
       },
     )
-  }, [uid])
+  }, [uid, t])
 
   const handleBurnDestroyed = useCallback((/** @type {MuhabereMessage} */ msg) => {
     setBurnGhosts((prev) => ({
@@ -476,13 +482,13 @@ export default function TaktikMuhabere() {
       return rows
     } catch (err) {
       emitFirebaseError(err)
-      setRosterError(err instanceof Error ? err.message : 'Rehber yüklenemedi.')
+      setRosterError(err instanceof Error ? err.message : t('errors.rosterLoadFailed'))
       setRoster([])
       return []
     } finally {
       setRosterLoading(false)
     }
-  }, [uid])
+  }, [uid, t])
 
   useEffect(() => {
     if (!uid) {
@@ -564,7 +570,7 @@ export default function TaktikMuhabere() {
         .catch((err) => {
           if (!active) return
           emitFirebaseError(err)
-          setSearchError(err instanceof Error ? err.message : 'Arama başarısız.')
+          setSearchError(err instanceof Error ? err.message : t('errors.searchFailed'))
           setSearchResults([])
         })
         .finally(() => {
@@ -576,7 +582,7 @@ export default function TaktikMuhabere() {
       active = false
       window.clearTimeout(timer)
     }
-  }, [uid, searchTrimmed, isSearchMode])
+  }, [uid, searchTrimmed, isSearchMode, t])
 
   useEffect(() => {
     if (selectedUid) {
@@ -697,7 +703,7 @@ export default function TaktikMuhabere() {
         await leaveMuhabereChannel(uid, cid)
         await deleteMuhabereChannelForUser(uid, cid)
         clearChannelSelection(cid)
-        pushSystemToast(`GRUPTAN ÇIKILDI — ${channel.name.toUpperCase()}`)
+        pushSystemToast(t('toast.leftGroup', { name: channel.name.toUpperCase() }))
       } catch (err) {
         setDeletedChannelIds((prev) => {
           const next = new Set(prev)
@@ -725,7 +731,7 @@ export default function TaktikMuhabere() {
         await deleteMuhabereChannelForUser(uid, cid)
         clearChannelSelection(cid)
         setChannels((prev) => prev.filter((c) => c.id !== cid))
-        pushSystemToast(`KANAL SİLİNDİ — ${channel.name.toUpperCase()}`)
+        pushSystemToast(t('toast.channelDeleted', { name: channel.name.toUpperCase() }))
       } catch (err) {
         setDeletedChannelIds((prev) => {
           const next = new Set(prev)
@@ -751,7 +757,7 @@ export default function TaktikMuhabere() {
       setRemovingChannelMemberUid(target)
       try {
         await removeMuhabereChannelMember(cid, target)
-        pushSystemToast('ÜYE GRUPTAN ÇIKARILDI')
+        pushSystemToast(t('toast.memberRemoved'))
       } catch (err) {
         emitFirebaseError(err)
       } finally {
@@ -852,7 +858,7 @@ export default function TaktikMuhabere() {
         await deleteMuhabereDmForUser(uid, peer)
         clearDmSelection(peer)
         setRoster((prev) => prev.filter((c) => c.uid !== peer))
-        pushSystemToast(`ENGELLENDİ — ${contact.callsign.toUpperCase()}`)
+        pushSystemToast(t('toast.blocked', { callsign: contact.callsign.toUpperCase() }))
       } catch (err) {
         emitFirebaseError(err)
       } finally {
@@ -879,13 +885,13 @@ export default function TaktikMuhabere() {
       },
       (err) => {
         emitFirebaseError(err)
-        setChannelsError(err instanceof Error ? err.message : 'Kanallar yüklenemedi.')
+        setChannelsError(err instanceof Error ? err.message : t('errors.channelsLoadFailed'))
         setChannelsLoading(false)
       },
     )
 
     return unsub
-  }, [uid])
+  }, [uid, t])
 
   const handleSendRequest = async (/** @type {MuhabereContact} */ contact) => {
     if (!uid || sendingRequestUid || pendingSentUids.has(contact.uid)) return
@@ -893,10 +899,10 @@ export default function TaktikMuhabere() {
     try {
       await sendMuhabereContactRequest(uid, contact.uid)
       setPendingSentUids((prev) => new Set([...prev, contact.uid]))
-      pushSystemToast(`İSTEK İLETİLDİ — ${contact.callsign.toUpperCase()}`)
+      pushSystemToast(t('toast.requestSent', { callsign: contact.callsign.toUpperCase() }))
     } catch (err) {
       emitFirebaseError(err)
-      pushSystemToast(muhabereRequestErrorMessage(err).toUpperCase())
+      pushSystemToast(muhabereRequestErrorMessageDisplay(err).toUpperCase())
     } finally {
       setSendingRequestUid(null)
     }
@@ -910,10 +916,10 @@ export default function TaktikMuhabere() {
       await loadRoster()
       setSelectedChannelId(null)
       setSelectedUid(contact.uid)
-      pushSystemToast(`BAĞLANTI ONAYLANDI — ${contact.callsign.toUpperCase()}`)
+      pushSystemToast(t('toast.connectionApproved', { callsign: contact.callsign.toUpperCase() }))
     } catch (err) {
       emitFirebaseError(err)
-      pushSystemToast(muhabereRequestErrorMessage(err).toUpperCase())
+      pushSystemToast(muhabereRequestErrorMessageDisplay(err).toUpperCase())
     } finally {
       setRequestBusyId(null)
     }
@@ -924,10 +930,10 @@ export default function TaktikMuhabere() {
     setRequestBusyId(req.id)
     try {
       await rejectMuhabereContactRequest(uid, req.id)
-      pushSystemToast('İSTEK REDDEDİLDİ')
+      pushSystemToast(t('toast.requestRejected'))
     } catch (err) {
       emitFirebaseError(err)
-      pushSystemToast(muhabereRequestErrorMessage(err).toUpperCase())
+      pushSystemToast(muhabereRequestErrorMessageDisplay(err).toUpperCase())
     } finally {
       setRequestBusyId(null)
     }
@@ -1024,13 +1030,13 @@ export default function TaktikMuhabere() {
       if (conversationMode === 'dm' && chatId) stopTyping()
       sentOk = true
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Gönderim başarısız.'
-      if (message === MUHABERE_CONTENT_VIOLATION) {
-        pushSystemToast(MUHABERE_CONTENT_VIOLATION)
+      const message = err instanceof Error ? err.message : t('errors.sendFailed')
+      if (isMuhabereContentViolationMessage(message)) {
+        pushSystemToast(muhabereContentViolationMessage())
       } else {
         emitFirebaseError(err)
       }
-      setSendError(message)
+      setSendError(isMuhabereContentViolationMessage(message) ? muhabereContentViolationMessage() : message)
     } finally {
       setSending(false)
       if (sentOk) focusMessageInput()
@@ -1056,9 +1062,9 @@ export default function TaktikMuhabere() {
 
   const emptyMessage = isSearchMode
     ? searchTrimmed.length < 2
-      ? 'Arama için en az 2 karakter girin.'
-      : 'Ağda operatör bulunamadı — çağrı adını kontrol edin.'
-    : 'Tim rehberi boş — operatör arayıp katılım isteği gönderin.'
+      ? t('search.minChars')
+      : t('search.noResults')
+    : t('chat.rosterEmpty')
 
   const showChannelsPanel = sidebarTab === 'channels'
   const showOperatorsPanel = sidebarTab === 'operators'
@@ -1100,12 +1106,12 @@ export default function TaktikMuhabere() {
       {!compact || !hasConversation ? (
         <header className="shrink-0 border-b border-zinc-800 pb-2 sm:pb-4">
           <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-zinc-500 sm:text-[10px] sm:tracking-[0.32em]">
-            COM-01 · SECURE
+            {t('header.badge')}
           </p>
           <h1 className="mt-0.5 text-base font-semibold uppercase tracking-wide text-zinc-100 sm:mt-1 sm:text-xl lg:text-2xl">
-            Taktik Muhabere
+            {t('header.title')}
           </h1>
-          <p className="mt-0.5 text-[11px] text-zinc-500 sm:mt-1 sm:text-xs">Uçtan uca operatör ağı · Tim rehberi</p>
+          <p className="mt-0.5 text-[11px] text-zinc-500 sm:mt-1 sm:text-xs">{t('header.subtitle')}</p>
         </header>
       ) : null}
 
@@ -1124,7 +1130,7 @@ export default function TaktikMuhabere() {
           <div
             className="flex shrink-0 border-b border-zinc-800/80"
             role="tablist"
-            aria-label="Sol panel sekmeleri"
+            aria-label={t('header.tabsAria')}
           >
             <button
               type="button"
@@ -1141,7 +1147,7 @@ export default function TaktikMuhabere() {
                   : 'border-transparent text-zinc-500 hover:text-zinc-400',
               ].join(' ')}
             >
-              <span>Kanallar</span>
+              <span className="truncate">{t('tabs.channels')}</span>
               {showChannelsTabUnread ? <MuhabereUnreadBadge count={totalActiveChannelUnread} /> : null}
             </button>
             <button
@@ -1159,7 +1165,7 @@ export default function TaktikMuhabere() {
                   : 'border-transparent text-zinc-500 hover:text-zinc-400',
               ].join(' ')}
             >
-              <span>Operatörler</span>
+              <span className="truncate">{t('tabs.operators')}</span>
               {showOperatorsTabUnread ? <MuhabereUnreadBadge count={totalActiveDmUnread} /> : null}
             </button>
           </div>
@@ -1222,7 +1228,7 @@ export default function TaktikMuhabere() {
                   type="search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Çağrı Adı Ara..."
+                  placeholder={t('search.placeholder')}
                   className="w-full rounded-md border border-zinc-700/90 bg-zinc-950 py-2 pl-9 pr-3 font-mono text-sm text-zinc-300 outline-none transition placeholder:text-zinc-600 focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20"
                   autoComplete="off"
                   spellCheck={false}
@@ -1233,7 +1239,7 @@ export default function TaktikMuhabere() {
           {incomingRequests.length > 0 ? (
             <div className="shrink-0 border-b border-zinc-800 px-4 py-3">
               <h3 className="mb-2 border-b border-zinc-800 pb-1 font-mono text-xs tracking-widest text-zinc-500">
-                AĞ KATILIM İSTEKLERİ
+                {t('requests.title')}
               </h3>
               <ul className="space-y-2">
                 {incomingRequests.map((req) => {
@@ -1259,7 +1265,7 @@ export default function TaktikMuhabere() {
                           {busy ? (
                             <Loader2 className="mx-auto size-3 animate-spin" aria-hidden />
                           ) : (
-                            'Onayla'
+                            t('requests.accept')
                           )}
                         </button>
                         <button
@@ -1268,7 +1274,7 @@ export default function TaktikMuhabere() {
                           onClick={() => handleRejectRequest(req)}
                           className="flex-1 rounded border border-transparent px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-red-500 transition hover:bg-red-900/30 disabled:opacity-40"
                         >
-                          Reddet
+                          {t('requests.reject')}
                         </button>
                       </div>
                     </li>
@@ -1281,7 +1287,7 @@ export default function TaktikMuhabere() {
           {listLoading ? (
             <div className="flex flex-1 items-center justify-center gap-2 text-zinc-500">
               <Loader2 className="size-4 animate-spin text-lime-400/80" aria-hidden />
-              <span className="text-xs">{isSearchMode ? 'Tarama…' : 'Rehber yükleniyor…'}</span>
+              <span className="text-xs">{isSearchMode ? t('search.scanning') : t('chat.rosterLoading')}</span>
             </div>
           ) : listError ? (
             <p className="flex-1 px-4 py-6 text-xs text-red-400/90">{listError}</p>
@@ -1291,7 +1297,7 @@ export default function TaktikMuhabere() {
             <ul
               className="min-h-0 flex-1 space-y-1.5 overflow-y-auto p-2"
               role="listbox"
-              aria-label={isSearchMode ? 'Arama sonuçları' : 'Tim rehberi'}
+              aria-label={isSearchMode ? t('search.resultsAria') : t('chat.rosterAria')}
             >
               {listItems.map((contact) => {
                 const isActiveRow =
@@ -1337,7 +1343,7 @@ export default function TaktikMuhabere() {
                               onOpenProfile={setProfileUid}
                             />
                             <p className="mt-0.5 text-[10px] uppercase tracking-wider text-zinc-500">
-                              {contact.role === 'instructor' ? 'Eğitmen' : 'Operatör'}
+                              {messagesRoleLabel(contact.role)}
                               {contact.username ? ` · @${contact.username}` : ''}
                             </p>
                           </div>
@@ -1381,7 +1387,7 @@ export default function TaktikMuhabere() {
                                 />
                               ) : null}
                               {inRoster ? <span aria-hidden>·</span> : null}
-                              <span>{contact.role === 'instructor' ? 'Eğitmen' : 'Operatör'}</span>
+                          <span className="truncate">{messagesRoleLabel(contact.role)}</span>
                             </p>
                             {dmSummary?.lastMessage ? (
                               <p className="mt-0.5 truncate text-[9px] normal-case tracking-normal text-zinc-500">
@@ -1397,7 +1403,7 @@ export default function TaktikMuhabere() {
                       {showRequest ? (
                         requestSent ? (
                           <span className="shrink-0 self-center px-1 py-1 text-[9px] font-bold uppercase tracking-wider text-zinc-500">
-                            [ İSTEK İLETİLDİ ]
+                            {t('requests.sent')}
                           </span>
                         ) : (
                           <button
@@ -1405,14 +1411,14 @@ export default function TaktikMuhabere() {
                             disabled={isSending}
                             onClick={() => handleSendRequest(contact)}
                             className="inline-flex shrink-0 self-center items-center gap-1 rounded border border-transparent px-1.5 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-400 transition hover:border-amber-500/30 hover:bg-amber-950/40 disabled:opacity-40"
-                            aria-label={`${contact.callsign} — istek gönder`}
+                            aria-label={t('requests.sendAria', { callsign: contact.callsign })}
                           >
                             {isSending ? (
                               <Loader2 className="size-3.5 animate-spin" aria-hidden />
                             ) : (
                               <>
                                 <UserPlus className="size-3.5" strokeWidth={2.25} aria-hidden />
-                                <span className="hidden sm:inline">İstek gönder</span>
+                                <span className="hidden truncate sm:inline">{t('requests.send')}</span>
                               </>
                             )}
                           </button>
@@ -1428,7 +1434,7 @@ export default function TaktikMuhabere() {
                           onArchive={() => setDmArchiveTarget(contact)}
                           onDelete={() => setDmDeleteTarget(contact)}
                           onBlock={() => setDmBlockTarget(contact)}
-                          menuLabel={`${contact.callsign} sohbet seçenekleri`}
+                          menuLabel={t('menu.dmMenuLabel', { callsign: contact.callsign })}
                         />
                       ) : null}
                     </div>
@@ -1475,7 +1481,7 @@ export default function TaktikMuhabere() {
               chatId={conversationMode === 'dm' ? chatId : ''}
               peerUid={conversationMode === 'dm' ? (selectedUid ?? '') : ''}
               peerTyping={peerTyping}
-              peerCallsign={selected?.callsign ?? 'OPERATÖR'}
+              peerCallsign={selected?.callsign ?? t('chat.defaultPeer')}
               senderNames={senderNames}
               burnGhosts={burnGhosts}
               hiddenMessageIds={hiddenMessageIds}
@@ -1489,7 +1495,7 @@ export default function TaktikMuhabere() {
                     type="button"
                     onClick={clearMobileConversation}
                     className="inline-flex size-9 shrink-0 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900 text-zinc-300 transition hover:border-amber-500/40 hover:text-amber-300"
-                    aria-label="Sohbet listesine dön"
+                    aria-label={t('chat.backToList')}
                   >
                     <ChevronLeft className="size-4" strokeWidth={2} aria-hidden />
                   </button>
@@ -1512,12 +1518,12 @@ export default function TaktikMuhabere() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-xs font-bold uppercase tracking-wide text-zinc-100 sm:text-sm">
                     {conversationMode === 'channel'
-                      ? selectedChannel?.name ?? 'KANAL'
+                      ? selectedChannel?.name ?? t('channels.defaultName')
                       : selected?.callsign}
                   </p>
                   <p className="flex flex-wrap items-center gap-x-1.5 text-[10px] uppercase tracking-wider text-zinc-500">
                     {conversationMode === 'channel' ? (
-                      <span>Tim kanalı · {selectedChannel?.members.length ?? 0} üye</span>
+                      <span className="truncate">{t('chat.teamChannel', { count: selectedChannel?.members.length ?? 0 })}</span>
                     ) : (
                       <PresenceIndicator
                         online={presenceMap[selectedUid]?.online ?? false}
@@ -1531,11 +1537,11 @@ export default function TaktikMuhabere() {
                     type="button"
                     onClick={() => setShowChannelMembers(true)}
                     className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-zinc-700 bg-zinc-900 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400 transition hover:border-amber-500/40 hover:text-amber-300"
-                    aria-label="Grup üyelerini göster"
-                    title="Grup üyeleri"
+                    aria-label={t('chat.showMembersAria')}
+                    title={t('chat.showMembersTitle')}
                   >
                     <Users className="size-3.5" strokeWidth={2} aria-hidden />
-                    <span className="hidden sm:inline">Üyeler</span>
+                    <span className="hidden truncate sm:inline">{t('chat.showMembers')}</span>
                   </button>
                 ) : null}
               </header>
@@ -1545,7 +1551,7 @@ export default function TaktikMuhabere() {
                 {uploadProgress != null ? (
                   <div className="mb-3 rounded-md border border-lime-500/30 bg-lime-950/30 px-3 py-2">
                     <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-lime-400">
-                      [ VERİ YÜKLENİYOR... %{uploadProgress} ]
+                      {t('chat.uploadProgress', { progress: uploadProgress })}
                     </p>
                     <div className="mt-2 h-1 overflow-hidden rounded-full bg-zinc-800">
                       <div
@@ -1575,9 +1581,9 @@ export default function TaktikMuhabere() {
                           ? 'border-red-600/60 bg-red-950/40 text-red-400'
                           : 'border-zinc-700 bg-zinc-900 text-zinc-500 hover:text-red-500',
                       ].join(' ')}
-                      aria-label={burnMode ? 'Burn modu aktif' : 'Burn modu'}
+                      aria-label={burnMode ? t('burn.modeActive') : t('burn.modeInactive')}
                       aria-pressed={burnMode}
-                      title="Burn protokolü — 10 sn sonra imha"
+                      title={t('burn.protocolTitle')}
                     >
                       <Flame className="size-4" strokeWidth={2} aria-hidden />
                     </button>
@@ -1593,8 +1599,8 @@ export default function TaktikMuhabere() {
                     }
                     placeholder={
                       burnMode && conversationMode === 'dm'
-                        ? '// Burn ileti — 10 sn imha…'
-                        : '// Mesajınızı yazın…'
+                        ? t('burn.placeholder')
+                        : t('chat.placeholder')
                     }
                     disabled={sending || uploadProgress != null}
                     autoFocus={!compact}
@@ -1610,13 +1616,13 @@ export default function TaktikMuhabere() {
                     type="submit"
                     disabled={!draft.trim() || sending || uploadProgress != null}
                     className="inline-flex shrink-0 items-center justify-center rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-zinc-400 transition duration-200 hover:border-amber-500/40 hover:bg-amber-950/40 hover:text-amber-300 disabled:cursor-not-allowed disabled:opacity-40 sm:px-4 sm:py-2.5 sm:text-sm"
-                    aria-label="Gönder"
+                    aria-label={t('chat.sendAria')}
                   >
                     {sending ? (
                       <Loader2 className="size-4 animate-spin" aria-hidden />
                     ) : (
                       <>
-                        <span className="hidden sm:inline">Gönder</span>
+                        <span className="hidden truncate sm:inline">{t('chat.send')}</span>
                         <ChevronRight className="size-4" strokeWidth={2.5} aria-hidden />
                       </>
                     )}
@@ -1645,7 +1651,7 @@ export default function TaktikMuhabere() {
         onClose={() => setShowCreateChannel(false)}
         onCreated={(channelId) => {
           selectChannel(channelId)
-          pushSystemToast('TİM KANALI AÇILDI')
+          pushSystemToast(t('toast.teamChannelOpened'))
         }}
       />
 
@@ -1659,7 +1665,7 @@ export default function TaktikMuhabere() {
           const cid = editChannelTarget?.id
           if (!cid) return
           setChannels((prev) => prev.map((c) => (c.id === cid ? { ...c, name } : c)))
-          pushSystemToast('KANAL GÜNCELLENDİ')
+          pushSystemToast(t('toast.channelUpdated'))
         }}
       />
 
@@ -1681,10 +1687,10 @@ export default function TaktikMuhabere() {
 
       <TacticalAlert
         open={Boolean(dmArchiveTarget)}
-        title="Sohbeti arşivle"
-        message="Sohbet arşivlenen sohbetlere taşınacak. Mesajlar silinmez; yeni mesaj gelirse arşivde bildirim görürsünüz."
-        confirmLabel="Arşivle"
-        cancelLabel="İptal"
+        title={t('alerts.archiveDm.title')}
+        message={t('alerts.archiveDm.message')}
+        confirmLabel={t('alerts.archiveDm.confirm')}
+        cancelLabel={t('alerts.cancel')}
         busy={Boolean(archivingDmUid)}
         onConfirm={() => {
           if (!dmArchiveTarget) return
@@ -1695,10 +1701,10 @@ export default function TaktikMuhabere() {
 
       <TacticalAlert
         open={Boolean(dmDeleteTarget)}
-        title="Sohbeti tamamen sil"
-        message="Bu sohbet listenizden tamamen kaldırılacak. Karşı tarafın mesajları etkilenmez. Onaylıyor musunuz?"
-        confirmLabel="Tamamen sil"
-        cancelLabel="İptal"
+        title={t('alerts.deleteDm.title')}
+        message={t('alerts.deleteDm.message')}
+        confirmLabel={t('alerts.deleteDm.confirm')}
+        cancelLabel={t('alerts.cancel')}
         busy={Boolean(deletingDmUid)}
         onConfirm={() => {
           if (!dmDeleteTarget) return
@@ -1709,10 +1715,10 @@ export default function TaktikMuhabere() {
 
       <TacticalAlert
         open={Boolean(dmBlockTarget)}
-        title="Kullanıcıyı engelle"
-        message="Bu operatör engellenecek ve sohbet listenizden kaldırılacak. Karşı taraf size mesaj gönderemez. Onaylıyor musunuz?"
-        confirmLabel="Engelle"
-        cancelLabel="İptal"
+        title={t('alerts.blockUser.title')}
+        message={t('alerts.blockUser.message')}
+        confirmLabel={t('alerts.blockUser.confirm')}
+        cancelLabel={t('alerts.cancel')}
         busy={Boolean(blockingUid)}
         onConfirm={() => {
           if (!dmBlockTarget) return

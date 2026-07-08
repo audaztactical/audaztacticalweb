@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Plus, Radio } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { formatConversationPreviewTime } from '../../lib/firestoreTaktikMuhabere'
 import { isActiveChannelRow, sortMuhabereChannelsByRecency } from '../../lib/muhabereConversation'
 import MuhabereConversationMenu from './MuhabereConversationMenu'
@@ -60,6 +61,7 @@ export default function ChatList({
   onCreateChannel,
   fillHeight = false,
 }) {
+  const { t } = useTranslation('messages')
   const [archiveTarget, setArchiveTarget] = useState(/** @type {MuhabereChannel | null} */ (null))
   const [leaveTarget, setLeaveTarget] = useState(/** @type {MuhabereChannel | null} */ (null))
   const [destroyTarget, setDestroyTarget] = useState(/** @type {MuhabereChannel | null} */ (null))
@@ -91,32 +93,32 @@ export default function ChatList({
           'flex flex-col overflow-hidden',
           fillHeight ? 'min-h-0 flex-1' : 'max-h-[40%] min-h-[180px] shrink-0',
         ].join(' ')}
-        aria-label="Tim kanalları"
+        aria-label={t('channels.sectionAria')}
       >
         <div className="flex shrink-0 items-center justify-end border-b border-zinc-800/60 px-3 py-2.5">
           <button
             type="button"
             onClick={onCreateChannel}
-            className="inline-flex items-center gap-1 rounded border border-amber-500/30 bg-amber-950/30 px-2 py-1 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-amber-300 transition hover:bg-amber-900/50"
+            className="inline-flex min-w-0 items-center gap-1 rounded border border-amber-500/30 bg-amber-950/30 px-2 py-1 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-amber-300 transition hover:bg-amber-900/50"
           >
-            <Plus className="size-3" strokeWidth={2.5} aria-hidden />
-            + Yeni kanal
+            <Plus className="size-3 shrink-0" strokeWidth={2.5} aria-hidden />
+            <span className="truncate">{t('channels.newChannel')}</span>
           </button>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
           {channelsLoading ? (
-            <p className="px-1 py-2 text-[10px] text-zinc-600">Kanallar yükleniyor…</p>
+            <p className="px-1 py-2 text-[10px] text-zinc-600">{t('channels.loading')}</p>
           ) : listError ? (
             <p className="px-1 py-2 text-[10px] text-red-400/90">{listError}</p>
           ) : channels.length === 0 ? (
             <p className="px-1 py-2 text-[10px] leading-relaxed text-zinc-600">
               {totalChannelCount === 0
-                ? 'Henüz kanal yok — yeni kanal oluştur.'
-                : 'Aktif kanal yok — arşivi kontrol edin.'}
+                ? t('channels.emptyNone')
+                : t('channels.emptyArchived')}
             </p>
           ) : (
-            <ul className="space-y-1.5" role="listbox" aria-label="Tim kanalları">
+            <ul className="space-y-1.5" role="listbox" aria-label={t('channels.sectionAria')}>
               {sortedChannels.map((ch) => {
                 const isActiveRow = isActiveChannelRow(openChannelId, ch.id)
                 const summary = byChannelId[ch.id]
@@ -171,7 +173,9 @@ export default function ChatList({
                             {summary.lastMessage}
                           </span>
                         ) : (
-                          <span className="mt-0.5 block text-[9px] text-zinc-600">{ch.members.length} üye</span>
+                          <span className="mt-0.5 block truncate text-[9px] text-zinc-600">
+                            {t('channels.memberCount', { count: ch.members.length })}
+                          </span>
                         )}
                       </span>
                     </button>
@@ -194,7 +198,7 @@ export default function ChatList({
                       onLeave={() => setLeaveTarget(ch)}
                       onEdit={isOwner && onEditChannel ? () => onEditChannel(ch) : undefined}
                       onDestroyChannel={isOwner && onDestroyChannel ? () => setDestroyTarget(ch) : undefined}
-                      menuLabel={`${ch.name} kanal seçenekleri`}
+                      menuLabel={t('channels.menuLabel', { name: ch.name })}
                     />
                   </li>
                 )
@@ -206,10 +210,10 @@ export default function ChatList({
 
       <TacticalAlert
         open={Boolean(archiveTarget)}
-        title="Kanalı arşivle"
-        message="Kanal arşivlenen sohbetlere taşınacak. Mesajlar silinmez; yeni mesaj gelirse arşivde bildirim görürsünüz."
-        confirmLabel="Arşivle"
-        cancelLabel="İptal"
+        title={t('alerts.archiveChannel.title')}
+        message={t('alerts.archiveChannel.message')}
+        confirmLabel={t('alerts.archiveChannel.confirm')}
+        cancelLabel={t('alerts.cancel')}
         busy={busyArchive}
         onConfirm={() => {
           if (!archiveTarget) return
@@ -220,10 +224,10 @@ export default function ChatList({
 
       <TacticalAlert
         open={Boolean(leaveTarget)}
-        title="Kanaldan ayrıl"
-        message="Bu işlem sohbeti listenizden kaldırır ve sizi gruptan çıkarır. Diğer üyeler gruba ve mesajlara erişmeye devam eder. Onaylıyor musunuz?"
-        confirmLabel="Kanaldan ayrıl"
-        cancelLabel="İptal"
+        title={t('alerts.leaveChannel.title')}
+        message={t('alerts.leaveChannel.message')}
+        confirmLabel={t('alerts.leaveChannel.confirm')}
+        cancelLabel={t('alerts.cancel')}
         busy={busyLeave}
         onConfirm={() => {
           if (!leaveTarget) return
@@ -235,10 +239,10 @@ export default function ChatList({
 
       <TacticalAlert
         open={Boolean(destroyTarget)}
-        title="Kanalı kalıcı olarak sil"
-        message="Kanal ve tüm mesajları kalıcı olarak silinecek. Bu işlem geri alınamaz. Onaylıyor musunuz?"
-        confirmLabel="Kanalı sil"
-        cancelLabel="İptal"
+        title={t('alerts.destroyChannel.title')}
+        message={t('alerts.destroyChannel.message')}
+        confirmLabel={t('alerts.destroyChannel.confirm')}
+        cancelLabel={t('alerts.cancel')}
         busy={busyDestroy}
         onConfirm={() => {
           if (!destroyTarget || !onDestroyChannel) return

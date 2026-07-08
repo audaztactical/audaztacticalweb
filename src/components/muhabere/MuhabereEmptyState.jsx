@@ -1,8 +1,12 @@
+import { useTranslation } from 'react-i18next'
+
 /**
  * Sağ panel — sohbet seçilmediğinde boş durum.
  * @param {{ hasContacts?: boolean }} props
  */
 export default function MuhabereEmptyState({ hasContacts = true }) {
+  const { t } = useTranslation('messages')
+
   return (
     <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden px-6 py-12 text-center">
       <div
@@ -18,17 +22,17 @@ export default function MuhabereEmptyState({ hasContacts = true }) {
           <div className="absolute inset-0 scale-150 rounded-full bg-amber-500/10 blur-2xl" aria-hidden />
           <img
             src="/logo.png"
-            alt="Audaz Tactical"
+            alt={t('common.audazAlt')}
             className="relative h-24 w-auto object-contain opacity-30 sm:h-32"
             decoding="async"
           />
         </div>
         <div className="space-y-2">
           <p className="font-mono text-[10px] font-bold uppercase tracking-[0.32em] text-zinc-600">
-            COM-01 · STANDBY
+            {t('common.standby')}
           </p>
           <p className="font-mono text-xs uppercase tracking-[0.18em] text-zinc-500">
-            {hasContacts ? 'Kanal seç · Operatörleri izle' : 'Bir sohbet seçin'}
+            {hasContacts ? t('chat.emptyState.withContacts') : t('chat.emptyState.noContacts')}
           </p>
         </div>
       </div>

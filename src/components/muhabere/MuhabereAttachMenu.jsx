@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Image, MapPin, Paperclip, Plus } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
 import { uploadMuhabereChatImage } from '../../lib/muhabereChatMedia'
 import { sendChannelMessage, sendChatMessage } from '../../lib/firestoreTaktikMuhabere'
@@ -24,6 +25,7 @@ export default function MuhabereAttachMenu({
   onUploadProgress,
   onMessageSent,
 }) {
+  const { t } = useTranslation('messages')
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const menuRef = useRef(/** @type {HTMLDivElement | null} */ (null))
@@ -72,7 +74,7 @@ export default function MuhabereAttachMenu({
     if (!file || busy || disabled) return
 
     if (!file.type.startsWith('image/')) {
-      emitFirebaseError(new Error('Yalnızca görsel dosyaları desteklenir.'))
+      emitFirebaseError(new Error(t('attach.imagesOnly')))
       return
     }
 
@@ -94,7 +96,7 @@ export default function MuhabereAttachMenu({
   const handleLocation = () => {
     setOpen(false)
     if (!navigator.geolocation || busy || disabled) {
-      emitFirebaseError(new Error('Konum servisi kullanılamıyor.'))
+      emitFirebaseError(new Error(t('attach.locationUnavailable')))
       return
     }
 
@@ -138,7 +140,7 @@ export default function MuhabereAttachMenu({
         disabled={disabled || busy || !threadId}
         onClick={() => setOpen((v) => !v)}
         className="inline-flex items-center justify-center rounded-md border border-zinc-700 bg-zinc-900 px-2.5 py-2.5 text-zinc-500 transition hover:text-lime-500 disabled:opacity-40"
-        aria-label="Ek medya"
+        aria-label={t('attach.aria')}
         aria-expanded={open}
       >
         <Paperclip className="size-4" strokeWidth={2} aria-hidden />
@@ -153,19 +155,19 @@ export default function MuhabereAttachMenu({
             type="button"
             role="menuitem"
             onClick={handleImagePick}
-            className="flex w-full items-center gap-2 px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-zinc-400 transition hover:bg-zinc-900 hover:text-lime-400"
+            className="flex w-full min-w-0 items-center gap-2 px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-zinc-400 transition hover:bg-zinc-900 hover:text-lime-400"
           >
             <Image className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
-            Görsel paylaş
+            <span className="min-w-0 truncate">{t('attach.shareImage')}</span>
           </button>
           <button
             type="button"
             role="menuitem"
             onClick={handleLocation}
-            className="flex w-full items-center gap-2 px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-zinc-400 transition hover:bg-zinc-900 hover:text-lime-400"
+            className="flex w-full min-w-0 items-center gap-2 px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-zinc-400 transition hover:bg-zinc-900 hover:text-lime-400"
           >
             <MapPin className="size-3.5 shrink-0" strokeWidth={2} aria-hidden />
-            Grid / konum paylaş
+            <span className="min-w-0 truncate">{t('attach.shareLocation')}</span>
           </button>
         </div>
       ) : null}

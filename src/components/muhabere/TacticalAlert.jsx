@@ -1,4 +1,5 @@
 import { Loader2, ShieldAlert } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 /**
  * Taktik onay penceresi — Taktik Muhabere uyarıları.
@@ -15,15 +16,21 @@ import { Loader2, ShieldAlert } from 'lucide-react'
  */
 export default function TacticalAlert({
   open,
-  title = 'Taktik uyarı',
+  title,
   message,
-  confirmLabel = 'Onayla',
-  cancelLabel = 'İptal',
+  confirmLabel,
+  cancelLabel,
   busy = false,
   onConfirm,
   onCancel,
 }) {
+  const { t } = useTranslation('messages')
+
   if (!open) return null
+
+  const resolvedTitle = title ?? t('tacticalAlert.defaultTitle')
+  const resolvedConfirm = confirmLabel ?? t('tacticalAlert.confirm')
+  const resolvedCancel = cancelLabel ?? t('tacticalAlert.cancel')
 
   return (
     <div
@@ -40,8 +47,8 @@ export default function TacticalAlert({
       >
         <header className="flex items-center gap-2 border-b border-zinc-800 px-4 py-3">
           <ShieldAlert className="size-4 shrink-0 text-amber-400" strokeWidth={2} aria-hidden />
-          <h2 id="tactical-alert-title" className="text-xs font-bold uppercase tracking-[0.2em] text-amber-400">
-            {title}
+          <h2 id="tactical-alert-title" className="min-w-0 truncate text-xs font-bold uppercase tracking-[0.2em] text-amber-400">
+            {resolvedTitle}
           </h2>
         </header>
 
@@ -54,23 +61,23 @@ export default function TacticalAlert({
             type="button"
             disabled={busy}
             onClick={onCancel}
-            className="flex-1 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400 transition hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-40"
+            className="min-w-0 flex-1 truncate rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-zinc-400 transition hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-40"
           >
-            {cancelLabel}
+            {resolvedCancel}
           </button>
           <button
             type="button"
             disabled={busy}
             onClick={onConfirm}
-            className="flex-1 rounded-md border border-amber-500/40 bg-amber-950/40 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-amber-300 transition hover:bg-amber-900/50 disabled:opacity-40"
+            className="min-w-0 flex-1 truncate rounded-md border border-amber-500/40 bg-amber-950/40 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-amber-300 transition hover:bg-amber-900/50 disabled:opacity-40"
           >
             {busy ? (
               <span className="inline-flex items-center justify-center gap-1.5">
                 <Loader2 className="size-3 animate-spin" aria-hidden />
-                İşleniyor
+                {t('tacticalAlert.processing')}
               </span>
             ) : (
-              confirmLabel
+              resolvedConfirm
             )}
           </button>
         </div>

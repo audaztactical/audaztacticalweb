@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 /**
  * @typedef {{
@@ -21,6 +22,7 @@ const TOAST_FADE_MS = 400
  * }} props
  */
 function TaktikMuhabereToastCard({ toast, onDismiss }) {
+  const { t } = useTranslation('messages')
   const navigate = useNavigate()
   const [exiting, setExiting] = useState(false)
   const isSystem = toast.kind === 'system'
@@ -49,8 +51,8 @@ function TaktikMuhabereToastCard({ toast, onDismiss }) {
           </p>
         ) : (
           <>
-            <p className="text-xs font-bold uppercase tracking-wider text-lime-400">
-              YENİ İLETİ — {toast.senderCallsign}
+            <p className="truncate text-xs font-bold uppercase tracking-wider text-lime-400">
+              {t('toast.newMessage', { callsign: toast.senderCallsign })}
             </p>
             <p className="mt-1 truncate text-sm text-zinc-300">{toast.preview}</p>
           </>
@@ -89,15 +91,17 @@ function TaktikMuhabereToastCard({ toast, onDismiss }) {
  * }} props
  */
 export default function TaktikMuhabereToastStack({ toasts, onDismiss }) {
+  const { t } = useTranslation('messages')
+
   if (toasts.length === 0) return null
 
   return (
     <div
       className="pointer-events-none fixed bottom-6 right-4 z-[200] flex w-[min(100%,20rem)] flex-col gap-2 sm:right-6"
-      aria-label="Taktik ileti bildirimleri"
+      aria-label={t('toast.notificationsAria')}
     >
-      {toasts.map((t) => (
-        <TaktikMuhabereToastCard key={t.id} toast={t} onDismiss={onDismiss} />
+      {toasts.map((toastItem) => (
+        <TaktikMuhabereToastCard key={toastItem.id} toast={toastItem} onDismiss={onDismiss} />
       ))}
     </div>
   )

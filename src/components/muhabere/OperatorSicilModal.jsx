@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Loader2, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import OperatorAvatar from '../ui/OperatorAvatar'
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
+import { messagesLocale, messagesRoleLabel } from '../../lib/messagesDisplayText'
 import { fetchMuhabereOperatorProfile } from '../../lib/firestoreTaktikMuhabere'
 import { timestampToMs } from '../../lib/firestoreSnapshot'
 
@@ -13,21 +15,11 @@ import { timestampToMs } from '../../lib/firestoreSnapshot'
 function formatEnrolled(ts) {
   const ms = timestampToMs(ts)
   if (!ms) return '—'
-  return new Date(ms).toLocaleDateString('tr-TR', {
+  return new Date(ms).toLocaleDateString(messagesLocale(), {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
   })
-}
-
-/**
- * @param {string} role
- */
-function roleLabel(role) {
-  if (role === 'instructor') return 'Eğitmen'
-  if (role === 'premium_member') return 'Premium Operatör'
-  if (role === 'member' || role === 'operator') return 'Operatör'
-  return role || '—'
 }
 
 /**
@@ -38,6 +30,7 @@ function roleLabel(role) {
  * }} props
  */
 export default function OperatorSicilModal({ open, operatorUid, onClose }) {
+  const { t } = useTranslation('messages')
   const [profile, setProfile] = useState(/** @type {MuhabereOperatorProfile | null} */ (null))
   const [loading, setLoading] = useState(false)
 
@@ -85,15 +78,15 @@ export default function OperatorSicilModal({ open, operatorUid, onClose }) {
         <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
           <p
             id="operator-sicil-title"
-            className="text-[10px] font-bold uppercase tracking-[0.28em] text-zinc-500"
+            className="min-w-0 truncate text-[10px] font-bold uppercase tracking-[0.28em] text-zinc-500"
           >
-            Operatör dosyası
+            {t('sicil.title')}
           </p>
           <button
             type="button"
             onClick={onClose}
             className="rounded p-1 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200"
-            aria-label="Kapat"
+            aria-label={t('common.close')}
           >
             <X className="size-4" strokeWidth={2} aria-hidden />
           </button>
@@ -102,10 +95,10 @@ export default function OperatorSicilModal({ open, operatorUid, onClose }) {
         {loading ? (
           <div className="flex items-center justify-center gap-2 py-16 text-zinc-500">
             <Loader2 className="size-5 animate-spin text-lime-400/80" aria-hidden />
-            <span className="text-xs">Dosya yükleniyor…</span>
+            <span className="text-xs">{t('sicil.loading')}</span>
           </div>
         ) : !profile ? (
-          <p className="px-4 py-16 text-center text-xs text-zinc-600">Profil bulunamadı.</p>
+          <p className="px-4 py-16 text-center text-xs text-zinc-600">{t('sicil.notFound')}</p>
         ) : (
           <div className="px-6 py-6 text-center">
             <OperatorAvatar
@@ -120,36 +113,36 @@ export default function OperatorSicilModal({ open, operatorUid, onClose }) {
             <h2 className="mt-4 font-mono text-xl font-semibold uppercase tracking-wide text-lime-400">
               {profile.callsign}
             </h2>
-            <p className="mt-1 text-sm text-zinc-400">{roleLabel(profile.role)}</p>
+            <p className="mt-1 text-sm text-zinc-400">{messagesRoleLabel(profile.role)}</p>
 
             <dl className="mt-6 space-y-2 border-t border-zinc-800 pt-4 text-left text-sm">
               {profile.username ? (
                 <div className="flex justify-between gap-4">
-                  <dt className="text-zinc-500">Kullanıcı adı</dt>
-                  <dd className="text-zinc-300">@{profile.username}</dd>
+                  <dt className="shrink-0 text-zinc-500">{t('sicil.username')}</dt>
+                  <dd className="truncate text-zinc-300">@{profile.username}</dd>
                 </div>
               ) : null}
               {profile.email ? (
                 <div className="flex justify-between gap-4">
-                  <dt className="text-zinc-500">E-posta</dt>
+                  <dt className="shrink-0 text-zinc-500">{t('sicil.email')}</dt>
                   <dd className="truncate text-zinc-300">{profile.email}</dd>
                 </div>
               ) : null}
               {profile.status ? (
                 <div className="flex justify-between gap-4">
-                  <dt className="text-zinc-500">Durum</dt>
-                  <dd className="text-zinc-300">{profile.status}</dd>
+                  <dt className="shrink-0 text-zinc-500">{t('sicil.status')}</dt>
+                  <dd className="truncate text-zinc-300">{profile.status}</dd>
                 </div>
               ) : null}
               {profile.bloodType ? (
                 <div className="flex justify-between gap-4">
-                  <dt className="text-zinc-500">Kan grubu</dt>
-                  <dd className="text-zinc-300">{profile.bloodType}</dd>
+                  <dt className="shrink-0 text-zinc-500">{t('sicil.bloodType')}</dt>
+                  <dd className="truncate text-zinc-300">{profile.bloodType}</dd>
                 </div>
               ) : null}
               <div className="flex justify-between gap-4">
-                <dt className="text-zinc-500">Katılım</dt>
-                <dd className="text-zinc-300">{formatEnrolled(profile.enrolledAt)}</dd>
+                <dt className="shrink-0 text-zinc-500">{t('sicil.enrolled')}</dt>
+                <dd className="truncate text-zinc-300">{formatEnrolled(profile.enrolledAt)}</dd>
               </div>
             </dl>
           </div>

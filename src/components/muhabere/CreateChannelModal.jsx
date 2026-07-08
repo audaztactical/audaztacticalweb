@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Loader2, Radio, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { createMuhabereChannel } from '../../lib/firestoreTaktikMuhabere'
 
 /** @typedef {import('../../lib/firestoreTaktikMuhabere').MuhabereContact} MuhabereContact */
@@ -21,6 +22,7 @@ function defaultChannelName() {
  * }} props
  */
 export default function CreateChannelModal({ open, uid, contacts, onClose, onCreated }) {
+  const { t } = useTranslation('messages')
   const [name, setName] = useState('')
   const [selected, setSelected] = useState(/** @type {Set<string>} */ (() => new Set()))
   const [busy, setBusy] = useState(false)
@@ -63,7 +65,7 @@ export default function CreateChannelModal({ open, uid, contacts, onClose, onCre
     console.log('[CreateChannelModal] Kanal oluşturuluyor:', payload)
 
     if (!uid) {
-      const msg = 'Oturum bulunamadı — sayfayı yenileyip tekrar giriş yapın.'
+      const msg = t('errors.sessionNotFound')
       setError(msg)
       console.error('[CreateChannelModal] Validasyon:', msg)
       return
@@ -83,7 +85,7 @@ export default function CreateChannelModal({ open, uid, contacts, onClose, onCre
       onClose()
     } catch (err) {
       const code = /** @type {{ code?: string }} */ (err)?.code ?? ''
-      const msg = err instanceof Error ? err.message : 'Kanal oluşturulamadı.'
+      const msg = err instanceof Error ? err.message : t('errors.channelCreateFailed')
       console.error('[CreateChannelModal] Kanal oluşturma hatası:', { code, err, payload })
       setError(msg)
       if (import.meta.env.DEV) {
@@ -107,14 +109,14 @@ export default function CreateChannelModal({ open, uid, contacts, onClose, onCre
         onClick={(e) => e.stopPropagation()}
       >
         <header className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
-          <h2 id="create-channel-title" className="text-xs font-bold uppercase tracking-[0.2em] text-lime-400">
-            Yeni tim kanalı
+          <h2 id="create-channel-title" className="min-w-0 truncate text-xs font-bold uppercase tracking-[0.2em] text-lime-400">
+            {t('createChannel.title')}
           </h2>
           <button
             type="button"
             onClick={onClose}
             className="rounded p-1 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200"
-            aria-label="Kapat"
+            aria-label={t('common.close')}
           >
             <X className="size-4" strokeWidth={2} aria-hidden />
           </button>
@@ -122,12 +124,12 @@ export default function CreateChannelModal({ open, uid, contacts, onClose, onCre
 
         <form onSubmit={handleSubmit} className="px-4 py-4">
           <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500">
-            Kanal adı
+            {t('createChannel.nameLabel')}
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="ALFA TIM"
+              placeholder={t('createChannel.namePlaceholder')}
               maxLength={48}
               required
               className="mt-1.5 w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-lime-500/50 focus:ring-1 focus:ring-lime-500/30"
@@ -135,18 +137,21 @@ export default function CreateChannelModal({ open, uid, contacts, onClose, onCre
             />
           </label>
           <p className="mt-1 text-[9px] text-zinc-600">
-            {trimmedName ? `${trimmedName.length}/48 karakter` : 'Varsayılan isim otomatik atanır'}
+            {trimmedName
+              ? t('createChannel.charCount', { count: trimmedName.length })
+              : t('createChannel.defaultNameHint')}
           </p>
 
           <p className="mt-4 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
-            Rehberden üyeler <span className="font-normal text-zinc-600">(isteğe bağlı)</span>
+            {t('createChannel.membersLabel')}{' '}
+            <span className="font-normal text-zinc-600">{t('createChannel.membersOptional')}</span>
           </p>
           <div className="mt-2 rounded-md border border-zinc-800 bg-zinc-900/40 px-3 py-2">
-            <p className="text-[9px] font-bold uppercase tracking-wider text-zinc-500">Grup üyeleri</p>
+            <p className="text-[9px] font-bold uppercase tracking-wider text-zinc-500">{t('createChannel.groupMembers')}</p>
             <ul className="mt-1.5 space-y-1">
               <li className="flex items-center gap-2 text-xs text-lime-400">
                 <Radio className="size-3 shrink-0" aria-hidden />
-                <span className="truncate">Siz (grup kurucusu)</span>
+                <span className="truncate">{t('createChannel.youCreator')}</span>
               </li>
               {contacts
                 .filter((c) => selected.has(c.uid))
@@ -158,11 +163,11 @@ export default function CreateChannelModal({ open, uid, contacts, onClose, onCre
                 ))}
             </ul>
             <p className="mt-2 text-[9px] text-zinc-600">
-              Toplam {selected.size + 1} üye — grup açıldıktan sonra üye listesini sohbet başlığından görebilirsiniz.
+              {t('createChannel.totalMembers', { count: selected.size + 1 })}
             </p>
           </div>
           {contacts.length === 0 ? (
-            <p className="mt-2 text-xs text-zinc-600">Tim rehberi boş — kanal yalnızca sizinle açılır.</p>
+            <p className="mt-2 text-xs text-zinc-600">{t('createChannel.rosterEmpty')}</p>
           ) : (
             <ul className="mt-2 max-h-48 space-y-1 overflow-y-auto rounded-md border border-zinc-800 bg-zinc-900/50 p-2">
               {contacts.map((c) => {
@@ -186,7 +191,7 @@ export default function CreateChannelModal({ open, uid, contacts, onClose, onCre
           )}
 
           {!sessionOk ? (
-            <p className="mt-3 text-xs text-amber-400/90">Oturum doğrulanamadı — kanal açılamaz.</p>
+            <p className="mt-3 text-xs text-amber-400/90">{t('createChannel.sessionInvalid')}</p>
           ) : null}
 
           {error ? <p className="mt-3 text-xs text-red-400/90">{error}</p> : null}
@@ -196,21 +201,21 @@ export default function CreateChannelModal({ open, uid, contacts, onClose, onCre
               type="button"
               onClick={onClose}
               disabled={busy}
-              className="flex-1 rounded-md border border-zinc-700 px-3 py-2 text-[10px] font-bold uppercase text-zinc-500 hover:bg-zinc-900 disabled:opacity-40"
+              className="min-w-0 flex-1 truncate rounded-md border border-zinc-700 px-3 py-2 text-[10px] font-bold uppercase text-zinc-500 hover:bg-zinc-900 disabled:opacity-40"
             >
-              İptal
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               disabled={busy || !sessionOk}
               className={[
-                'flex flex-1 items-center justify-center gap-1 rounded-md border px-3 py-2 text-[10px] font-bold uppercase transition',
+                'flex min-w-0 flex-1 items-center justify-center gap-1 truncate rounded-md border px-3 py-2 text-[10px] font-bold uppercase transition',
                 busy || !sessionOk
                   ? 'cursor-not-allowed border-zinc-700 bg-zinc-900 text-zinc-600 opacity-50'
                   : 'border-lime-400/60 bg-lime-500/20 text-lime-300 shadow-[0_0_24px_-8px_color-mix(in_srgb,var(--accent-color)_35%,transparent)]] hover:bg-lime-500/30',
               ].join(' ')}
             >
-              {busy ? <Loader2 className="size-3.5 animate-spin" aria-hidden /> : 'Kanal aç'}
+              {busy ? <Loader2 className="size-3.5 animate-spin" aria-hidden /> : t('createChannel.submit')}
             </button>
           </div>
         </form>

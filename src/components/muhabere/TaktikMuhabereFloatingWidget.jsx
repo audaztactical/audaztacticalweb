@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Loader2, Maximize2, Minus, Minimize2, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useMuhabereNotify } from '../../context/MuhabereNotifyContext'
 import {
   formatMessageTime,
@@ -11,6 +12,7 @@ import {
  * @param {{ uid: string }} props
  */
 export default function TaktikMuhabereFloatingWidget({ uid }) {
+  const { t } = useTranslation('messages')
   const { floatingChat, closeFloatingChat } = useMuhabereNotify()
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
@@ -126,7 +128,7 @@ export default function TaktikMuhabereFloatingWidget({ uid }) {
 
   const messageList =
     messages.length === 0 ? (
-      <p className="py-8 text-center text-[10px] text-zinc-600">İleti yok</p>
+      <p className="py-8 text-center text-[10px] text-zinc-600">{t('floating.noMessages')}</p>
     ) : (
       <div className="flex flex-col gap-2">
         {(isFullScreen ? messages : messages.slice(-12)).map((msg) => {
@@ -164,7 +166,7 @@ export default function TaktikMuhabereFloatingWidget({ uid }) {
             type="text"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="// Hızlı cevap…"
+            placeholder={t('floating.placeholder')}
             disabled={sending}
             className="min-w-0 flex-1 rounded border border-zinc-700 bg-zinc-900 px-2 py-1.5 font-mono text-sm text-zinc-300 outline-none placeholder:text-zinc-600 focus:border-zinc-600"
             autoComplete="off"
@@ -175,7 +177,7 @@ export default function TaktikMuhabereFloatingWidget({ uid }) {
             disabled={!draft.trim() || sending}
             className="shrink-0 rounded border border-zinc-700 px-2 py-1.5 text-[10px] font-bold uppercase text-lime-500 hover:bg-lime-950/40 disabled:opacity-40"
           >
-            {sending ? <Loader2 className="size-3.5 animate-spin" aria-hidden /> : 'Gönder'}
+            {sending ? <Loader2 className="size-3.5 animate-spin" aria-hidden /> : t('floating.send')}
           </button>
         </form>
       </footer>
@@ -186,10 +188,10 @@ export default function TaktikMuhabereFloatingWidget({ uid }) {
     <p className="min-w-0 flex-1 truncate text-xs font-bold uppercase tracking-wider text-lime-400">
       {callsign}
       {isMinimized && !isFullScreen && hasUnreadAlert ? (
-        <span className="ml-1.5 text-[9px] font-bold text-lime-300">· SİNYAL</span>
+        <span className="ml-1.5 text-[9px] font-bold text-lime-300">{t('floating.signal')}</span>
       ) : null}
       {isFullScreen ? (
-        <span className="ml-2 text-[9px] font-normal text-zinc-500">· TERMİNAL MODU</span>
+        <span className="ml-2 text-[9px] font-normal text-zinc-500">{t('floating.terminalMode')}</span>
       ) : null}
     </p>
   )
@@ -205,7 +207,7 @@ export default function TaktikMuhabereFloatingWidget({ uid }) {
           <div
             className="pointer-events-auto flex h-5/6 w-11/12 flex-col overflow-hidden rounded-md border border-lime-500/50 bg-zinc-950 font-mono shadow-2xl shadow-lime-900/10 md:w-3/4"
             role="dialog"
-            aria-label={`Hızlı müdahale terminal — ${callsign}`}
+            aria-label={t('floating.terminalAria', { callsign })}
             aria-modal="true"
           >
             <header className="flex shrink-0 items-center gap-2 border-b border-zinc-800 px-4 py-3">
@@ -213,20 +215,20 @@ export default function TaktikMuhabereFloatingWidget({ uid }) {
               <button
                 type="button"
                 onClick={exitFullScreenToWidget}
-                className="rounded border border-zinc-700 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-zinc-400 transition hover:border-zinc-600 hover:bg-zinc-900 hover:text-lime-400"
-                title="Pencere modu"
+                className="shrink-0 rounded border border-zinc-700 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-zinc-400 transition hover:border-zinc-600 hover:bg-zinc-900 hover:text-lime-400"
+                title={t('floating.windowModeTitle')}
               >
                 <span className="flex items-center gap-1">
                   <Minimize2 className="size-3.5" strokeWidth={2} aria-hidden />
-                  Pencere
+                  <span className="truncate">{t('floating.windowMode')}</span>
                 </span>
               </button>
               <button
                 type="button"
                 onClick={closeWidgetCompletely}
                 className="rounded p-1 text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-200"
-                aria-label="Kapat"
-                title="Kapat"
+                aria-label={t('common.close')}
+                title={t('common.close')}
               >
                 <X className="size-4" strokeWidth={2} aria-hidden />
               </button>
@@ -254,7 +256,7 @@ export default function TaktikMuhabereFloatingWidget({ uid }) {
     <div
       className={shellClass}
       role="dialog"
-      aria-label={`Hızlı müdahale — ${callsign}`}
+      aria-label={t('floating.quickResponseAria', { callsign })}
       aria-expanded={!isMinimized}
     >
       <header
@@ -286,8 +288,8 @@ export default function TaktikMuhabereFloatingWidget({ uid }) {
               closeWidgetCompletely()
             }}
             className="rounded p-1 text-current/80 transition hover:bg-black/20"
-            aria-label="Kapat"
-            title="Kapat"
+            aria-label={t('common.close')}
+            title={t('common.close')}
           >
             <X className="size-3.5" strokeWidth={2} aria-hidden />
           </button>
@@ -297,8 +299,8 @@ export default function TaktikMuhabereFloatingWidget({ uid }) {
               type="button"
               onClick={minimizeWidget}
               className="rounded p-1 text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-200"
-              aria-label="Küçült"
-              title="Küçült"
+              aria-label={t('floating.minimize')}
+              title={t('floating.minimize')}
             >
               <Minus className="size-3.5" strokeWidth={2} aria-hidden />
             </button>
@@ -306,8 +308,8 @@ export default function TaktikMuhabereFloatingWidget({ uid }) {
               type="button"
               onClick={closeWidgetCompletely}
               className="rounded p-1 text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-200"
-              aria-label="Kapat"
-              title="Kapat"
+              aria-label={t('common.close')}
+              title={t('common.close')}
             >
               <X className="size-3.5" strokeWidth={2} aria-hidden />
             </button>
@@ -315,8 +317,8 @@ export default function TaktikMuhabereFloatingWidget({ uid }) {
               type="button"
               onClick={enterFullScreen}
               className="rounded px-1.5 py-1 text-[9px] font-bold uppercase tracking-wider text-zinc-500 transition hover:bg-zinc-800 hover:text-lime-400"
-              aria-label="Tam ekran terminal"
-              title="Tam ekran"
+              aria-label={t('floating.fullscreen')}
+              title={t('floating.fullscreenTitle')}
             >
               <Maximize2 className="size-3.5" strokeWidth={2} aria-hidden />
             </button>

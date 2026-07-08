@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, memo } from 'react'
 import { Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import MuhabereMessageRow from './MuhabereMessageRow'
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
 import { timestampToMs } from '../../lib/firestoreSnapshot'
@@ -15,9 +16,10 @@ import {
 /** @typedef {import('../../lib/firestoreTaktikMuhabere').MuhabereMessage} MuhabereMessage */
 
 const MuhabereTypingIndicator = memo(function MuhabereTypingIndicator({ callsign }) {
+  const { t } = useTranslation('messages')
   return (
     <p className="font-mono text-xs text-lime-500/90" aria-live="polite" aria-atomic="true">
-      [ {callsign.toUpperCase()} VERİ GİRİYOR... ]
+      {t('message.typing', { callsign: callsign.toUpperCase() })}
     </p>
   )
 })
@@ -51,7 +53,7 @@ export default function ChatWindow({
   chatId = '',
   channelId = '',
   peerTyping = false,
-  peerCallsign = 'OPERATÖR',
+  peerCallsign,
   peerUid = '',
   senderNames = {},
   burnGhosts = {},
@@ -63,6 +65,7 @@ export default function ChatWindow({
   footer,
   onMessagesError,
 }) {
+  const { t } = useTranslation('messages')
   const scrollRef = useRef(/** @type {HTMLDivElement | null} */ (null))
   const contentRef = useRef(/** @type {HTMLDivElement | null} */ (null))
   const loadMoreRef = useRef(/** @type {HTMLDivElement | null} */ (null))
@@ -167,12 +170,12 @@ export default function ChatWindow({
       }
     } catch (err) {
       emitFirebaseError(err)
-      setError(err instanceof Error ? err.message : 'Eski mesajlar yüklenemedi.')
+      setError(err instanceof Error ? err.message : t('errors.messagesLoadFailed'))
     } finally {
       loadingOlderRef.current = false
       setLoadingOlder(false)
     }
-  }, [mode, refId, setError])
+  }, [mode, refId, setError, t])
 
   useEffect(() => {
     if (!uid || !mode || !refId) {
@@ -220,7 +223,7 @@ export default function ChatWindow({
       onError: (err) => {
         if (!active) return
         emitFirebaseError(err)
-        setError(err instanceof Error ? err.message : 'Mesaj kanalı kesildi.')
+        setError(err instanceof Error ? err.message : t('errors.messagesDisconnected'))
         setMessagesLoading(false)
       },
     })
@@ -229,7 +232,7 @@ export default function ChatWindow({
       active = false
       unsub()
     }
-  }, [uid, mode, refId, channelId, chatId, setError])
+  }, [uid, mode, refId, channelId, chatId, setError, t])
 
   useEffect(() => {
     if (!uid || mode !== 'dm' || !chatId || liveMessages.length === 0) return
@@ -329,21 +332,21 @@ export default function ChatWindow({
           {loadingOlder ? (
             <span className="inline-flex items-center gap-2 text-[10px] text-zinc-500">
               <Loader2 className="size-3 animate-spin" aria-hidden />
-              Eski mesajlar yükleniyor…
+              {t('message.loadingOlder')}
             </span>
           ) : hasMoreOlder ? (
-            <span className="text-[10px] text-zinc-600">↑ Daha eski iletiler</span>
+            <span className="text-[10px] text-zinc-600">{t('message.loadMore')}</span>
           ) : null}
         </div>
 
         {messagesLoading && displayMessages.length === 0 ? (
           <div className="flex items-center justify-center gap-2 py-12 text-zinc-500">
             <Loader2 className="size-4 animate-spin" aria-hidden />
-            <span className="text-xs">Mesajlar yükleniyor…</span>
+            <span className="text-xs">{t('message.loading')}</span>
           </div>
         ) : displayMessages.length === 0 ? (
           <p className="py-12 text-center text-xs text-zinc-600">
-            Henüz mesaj yok — ilk iletimi gönderin.
+            {t('message.empty')}
           </p>
         ) : (
           displayMessages.map((msg) => (
@@ -356,7 +359,7 @@ export default function ChatWindow({
               senderLabel={
                 msg.senderId === uid
                   ? ''
-                  : senderNames[msg.senderId] ?? (mode === 'dm' ? peerCallsign : 'OPERATÖR')
+                  : senderNames[msg.senderId] ?? (mode === 'dm' ? (peerCallsign ?? t('message.defaultSender')) : t('message.defaultSender'))
               }
               onBurnDestroyed={onBurnDestroyed}
               onHideMessage={onHideMessage}
