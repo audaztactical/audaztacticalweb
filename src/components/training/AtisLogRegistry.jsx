@@ -1,5 +1,6 @@
 import { Fragment, useMemo, useState } from 'react'
 import { ChevronDown, FileDown } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import TacticalPanel from '../ui/TacticalPanel'
 import { useAuth } from '../../context/AuthContext'
 import { generateAtisShootingReportPdf } from '../../lib/atisShootingReportPdf'
@@ -7,16 +8,10 @@ import {
   extractAtisCaliberOptions,
   extractAtisDrillOptions,
   filterAtisLogs,
-  formatAtisDateCell,
-  formatAtisDurationCell,
-  formatAtisFilterSummary,
-  formatWeaponSpecsBlock,
   getAtisAccuracyPercent,
   getAtisAmmoName,
-  getAtisCaliberLabel,
   getAtisDistanceM,
   getAtisDrillName,
-  getAtisOperationNote,
   getAtisRoundsAndHits,
   getAtisTimingDetails,
   getAtisWeaponLabel,
@@ -24,14 +19,24 @@ import {
   isAtisTimed,
   selectAtisShootingLogs,
 } from '../../lib/atisLogRegistry'
-import { formatMeteoOverviewRows, getLogMeteoData } from '../../lib/meteoDataCapture'
+import { getLogMeteoData } from '../../lib/meteoDataCapture'
 import {
-  formatAccessoriesAtShotLines,
   getLogBarrelWearPercent,
   getLogYivConditionPercent,
 } from '../../lib/weaponMaintenanceAlarm'
 import { formatConditionBar } from '../../lib/weaponIlws'
 import { formatLogAmmoCostLabel, resolveLogAmmoCost, formatAmmoCostTry } from '../../lib/ammoCost'
+import {
+  formatAtisAccessoriesLinesDisplay,
+  formatAtisCaliberLabelDisplay,
+  formatAtisDateCellDisplay,
+  formatAtisDurationCellDisplay,
+  formatAtisFilterSummaryDisplay,
+  formatAtisMeteoRowsDisplay,
+  formatAtisOperationNoteDisplay,
+  formatAtisWeaponSpecsLinesDisplay,
+  trainingLocale,
+} from '../../lib/trainingDisplayText'
 
 const filterSelectClass =
   'dossier-blood-select min-w-[8.5rem] flex-1 rounded border border-accent/35 bg-app-bg py-1.5 pl-2 pr-7 font-mono-technical text-[9px] uppercase text-app-text outline-none focus:border-accent/60'
@@ -47,6 +52,7 @@ const FILTER_INITIAL = {
  * @param {{ rangeLogs: Record<string, unknown>[]; inventory?: Record<string, unknown>[]; loading?: boolean }} props
  */
 export default function AtisLogRegistry({ rangeLogs, inventory = [], loading = false }) {
+  const { t } = useTranslation('training')
   const { userData } = useAuth()
   const [filters, setFilters] = useState(FILTER_INITIAL)
   const [expandedId, setExpandedId] = useState(/** @type {string | null} */ (null))
@@ -68,7 +74,7 @@ export default function AtisLogRegistry({ rangeLogs, inventory = [], loading = f
         drillName: filters.drillName,
         timing: /** @type {import('../../lib/atisLogRegistry').TimingFilter} */ (filters.timing),
       }),
-    [atisLogs, filters]
+    [atisLogs, filters],
   )
 
   const patchFilter = (/** @type {Partial<typeof FILTER_INITIAL>} */ next) => {
@@ -98,7 +104,7 @@ export default function AtisLogRegistry({ rangeLogs, inventory = [], loading = f
         logs: filtered,
         operator: userData,
         filterActive,
-        filterLabel: formatAtisFilterSummary(filters),
+        filterLabel: formatAtisFilterSummaryDisplay(filters),
         inventory,
       })
     } finally {
@@ -117,10 +123,10 @@ export default function AtisLogRegistry({ rangeLogs, inventory = [], loading = f
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-accent/90">
-              ATIŞ KAYITLARI VE FİLTRELEME
+              {t('sectors.atis.history.title')}
             </p>
             <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-app-text/45">
-              range_logs · canlı senkron · {filtered.length}/{atisLogs.length} KAYIT
+              {t('sectors.atis.history.syncMeta', { filtered: filtered.length, total: atisLogs.length })}
             </p>
           </div>
           {filtered.length > 0 ? (
@@ -131,7 +137,7 @@ export default function AtisLogRegistry({ rangeLogs, inventory = [], loading = f
               className="inline-flex items-center gap-2 rounded border border-accent/45 bg-accent/10 px-3 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-[0.14em] text-accent transition hover:border-accent/65 hover:bg-accent/16 disabled:opacity-50"
             >
               <FileDown className="size-3.5" strokeWidth={2} aria-hidden />
-              {bulkPdfBusy ? 'HAZIRLANIYOR…' : 'PDF İNDİR'}
+              {bulkPdfBusy ? t('sectors.atis.history.preparingPdf') : t('sectors.atis.history.downloadPdf')}
             </button>
           ) : null}
         </div>
@@ -139,29 +145,33 @@ export default function AtisLogRegistry({ rangeLogs, inventory = [], loading = f
 
       <div className="border-b border-accent/12 bg-app-bg px-3 py-3">
         <p className="mb-2 font-mono-technical text-[7px] font-bold uppercase tracking-[0.24em] text-app-text/55">
-          FİLTRELEME BARİ
+          {t('sectors.atis.history.filterBar')}
         </p>
         <div className="flex flex-wrap gap-2">
           <label className="flex min-w-[10rem] flex-1 flex-col gap-0.5">
-            <span className="font-mono-technical text-[7px] uppercase text-app-text/45">SİLAH TİPİ</span>
+            <span className="font-mono-technical text-[7px] uppercase text-app-text/45">
+              {t('sectors.atis.history.weaponType')}
+            </span>
             <select
               className={filterSelectClass}
               value={filters.weaponType}
               onChange={(e) => patchFilter({ weaponType: e.target.value })}
             >
-              <option value="ALL">TÜMÜ</option>
-              <option value="HANDGUN">TABANCA</option>
-              <option value="RIFLE">TÜFEK</option>
+              <option value="ALL">{t('sectors.atis.history.all')}</option>
+              <option value="HANDGUN">{t('sectors.atis.history.handgun')}</option>
+              <option value="RIFLE">{t('sectors.atis.history.rifle')}</option>
             </select>
           </label>
           <label className="flex min-w-[10rem] flex-1 flex-col gap-0.5">
-            <span className="font-mono-technical text-[7px] uppercase text-app-text/45">KALİBRE</span>
+            <span className="font-mono-technical text-[7px] uppercase text-app-text/45">
+              {t('sectors.atis.history.caliber')}
+            </span>
             <select
               className={filterSelectClass}
               value={filters.caliberKey}
               onChange={(e) => patchFilter({ caliberKey: e.target.value })}
             >
-              <option value="ALL">TÜMÜ</option>
+              <option value="ALL">{t('sectors.atis.history.all')}</option>
               {caliberOptions.map((c) => (
                 <option key={c.key} value={c.key}>
                   {c.label}
@@ -170,13 +180,15 @@ export default function AtisLogRegistry({ rangeLogs, inventory = [], loading = f
             </select>
           </label>
           <label className="flex min-w-[10rem] flex-1 flex-col gap-0.5">
-            <span className="font-mono-technical text-[7px] uppercase text-app-text/45">ATIŞ TÜRÜ</span>
+            <span className="font-mono-technical text-[7px] uppercase text-app-text/45">
+              {t('sectors.atis.history.drillType')}
+            </span>
             <select
               className={filterSelectClass}
               value={filters.drillName}
               onChange={(e) => patchFilter({ drillName: e.target.value })}
             >
-              <option value="ALL">TÜMÜ</option>
+              <option value="ALL">{t('sectors.atis.history.all')}</option>
               {drillOptions.map((d) => (
                 <option key={d} value={d}>
                   {d}
@@ -185,15 +197,17 @@ export default function AtisLogRegistry({ rangeLogs, inventory = [], loading = f
             </select>
           </label>
           <label className="flex min-w-[10rem] flex-1 flex-col gap-0.5">
-            <span className="font-mono-technical text-[7px] uppercase text-app-text/45">SÜRE</span>
+            <span className="font-mono-technical text-[7px] uppercase text-app-text/45">
+              {t('sectors.atis.history.timing')}
+            </span>
             <select
               className={filterSelectClass}
               value={filters.timing}
               onChange={(e) => patchFilter({ timing: e.target.value })}
             >
-              <option value="ALL">TÜMÜ</option>
-              <option value="TIMED">SÜRELİ</option>
-              <option value="UNTIMED">SÜRESİZ</option>
+              <option value="ALL">{t('sectors.atis.history.all')}</option>
+              <option value="TIMED">{t('sectors.atis.history.timed')}</option>
+              <option value="UNTIMED">{t('sectors.atis.history.untimed')}</option>
             </select>
           </label>
         </div>
@@ -201,25 +215,27 @@ export default function AtisLogRegistry({ rangeLogs, inventory = [], loading = f
 
       <div className="ilws-green-scroll max-h-[min(52vh,520px)] overflow-auto">
         {loading ? (
-          <p className="p-8 text-center font-mono-technical text-[10px] uppercase text-app-text/55">SENKRON…</p>
+          <p className="p-8 text-center font-mono-technical text-[10px] uppercase text-app-text/55">
+            {t('sectors.atis.history.syncing')}
+          </p>
         ) : filtered.length === 0 ? (
           <p className="p-8 text-center font-mono-technical text-[10px] uppercase text-app-text/45">
-            {atisLogs.length === 0 ? 'ATIŞ_KAYDI_YOK' : 'FİLTRE_SONUCU_YOK'}
+            {atisLogs.length === 0 ? t('sectors.atis.history.empty') : t('sectors.atis.history.noFilterResults')}
           </p>
         ) : (
           <table className="w-full min-w-[720px] border-collapse text-left">
             <thead className="sticky top-0 z-[2] bg-app-bg">
               <tr className="border-b border-accent/25 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-accent/80">
                 <th className="w-8 px-2 py-2" aria-hidden />
-                <th className="px-3 py-2">TARİH</th>
-                <th className="px-3 py-2">SİLAH</th>
-                <th className="px-3 py-2">ATIŞ TÜRÜ</th>
-                <th className="px-3 py-2">MESAFE</th>
-                <th className="px-3 py-2">ATIM/İSABET</th>
-                <th className="px-3 py-2">MALİYET</th>
-                <th className="px-3 py-2">SKOR (%)</th>
-                <th className="px-3 py-2">SÜRE</th>
-                <th className="px-3 py-2 text-right">RAPOR</th>
+                <th className="px-3 py-2">{t('sectors.atis.history.columns.date')}</th>
+                <th className="px-3 py-2">{t('sectors.atis.history.columns.weapon')}</th>
+                <th className="px-3 py-2">{t('sectors.atis.history.columns.drill')}</th>
+                <th className="px-3 py-2">{t('sectors.atis.history.columns.distance')}</th>
+                <th className="px-3 py-2">{t('sectors.atis.history.columns.roundsHits')}</th>
+                <th className="px-3 py-2">{t('sectors.atis.history.columns.cost')}</th>
+                <th className="px-3 py-2">{t('sectors.atis.history.columns.score')}</th>
+                <th className="px-3 py-2">{t('sectors.atis.history.columns.duration')}</th>
+                <th className="px-3 py-2 text-right">{t('sectors.atis.history.columns.report')}</th>
               </tr>
             </thead>
             <tbody>
@@ -230,9 +246,9 @@ export default function AtisLogRegistry({ rangeLogs, inventory = [], loading = f
                 const ammoCost = resolveLogAmmoCost(row, inventory)
                 const costLabel = formatLogAmmoCostLabel(row, inventory)
                 const accuracy = getAtisAccuracyPercent(row)
-                const duration = formatAtisDurationCell(row)
+                const duration = formatAtisDurationCellDisplay(row)
                 const timing = getAtisTimingDetails(row)
-                const specLines = formatWeaponSpecsBlock(row)
+                const specLines = formatAtisWeaponSpecsLinesDisplay(row)
 
                 return (
                   <Fragment key={id}>
@@ -256,7 +272,9 @@ export default function AtisLogRegistry({ rangeLogs, inventory = [], loading = f
                           aria-hidden
                         />
                       </td>
-                      <td className="whitespace-nowrap px-3 py-2 tabular-nums text-app-text/70">{formatAtisDateCell(row)}</td>
+                      <td className="whitespace-nowrap px-3 py-2 tabular-nums text-app-text/70">
+                        {formatAtisDateCellDisplay(row)}
+                      </td>
                       <td className="max-w-[140px] truncate px-3 py-2 text-app-text" title={getAtisWeaponLabel(row)}>
                         {getAtisWeaponLabel(row)}
                       </td>
@@ -266,7 +284,9 @@ export default function AtisLogRegistry({ rangeLogs, inventory = [], loading = f
                         {totalRoundsFired} / {totalHits}
                       </td>
                       <td className="px-3 py-2 tabular-nums text-accent">{costLabel}</td>
-                      <td className="px-3 py-2 tabular-nums text-accent">%{accuracy.toLocaleString('tr-TR')}</td>
+                      <td className="px-3 py-2 tabular-nums text-accent">
+                        %{accuracy.toLocaleString(trainingLocale())}
+                      </td>
                       <td
                         className={`px-3 py-2 tabular-nums ${duration.muted ? 'text-app-text/45' : 'text-[#5ec8ff]'}`}
                       >
@@ -296,32 +316,40 @@ export default function AtisLogRegistry({ rangeLogs, inventory = [], loading = f
                         >
                           <div className="min-h-0 overflow-hidden">
                             <div className="mx-3 mb-3 mt-1 rounded border border-accent/20 bg-black/50 p-3 font-mono-technical text-[8px] uppercase">
-                              <p className="mb-2 font-bold tracking-wider text-accent/85">DETAY PANELİ</p>
+                              <p className="mb-2 font-bold tracking-wider text-accent/85">
+                                {t('sectors.atis.history.detail.title')}
+                              </p>
                               {isAtisTimed(row) && timing ? (
                                 <div className="mb-3 grid gap-2 sm:grid-cols-2">
                                   <p className="rounded border border-[#00b4ff]/25 bg-[#00b4ff]/5 px-2 py-1.5">
-                                    <span className="text-app-text/55">İLK ATIŞ SÜRESİ · </span>
+                                    <span className="text-app-text/55">
+                                      {t('sectors.atis.history.detail.firstShot')} ·{' '}
+                                    </span>
                                     <span className="text-[#5ec8ff]">{timing.firstShot}</span>
                                   </p>
                                   <p className="rounded border border-[#00b4ff]/25 bg-[#00b4ff]/5 px-2 py-1.5">
-                                    <span className="text-app-text/55">ORTALAMA SPLIT · </span>
+                                    <span className="text-app-text/55">
+                                      {t('sectors.atis.history.detail.avgSplit')} ·{' '}
+                                    </span>
                                     <span className="text-[#5ec8ff]">{timing.split}</span>
                                   </p>
                                 </div>
                               ) : (
-                                <p className="mb-3 text-app-text/45">SÜRE VERİSİ · SÜRESİZ ATIŞ</p>
+                                <p className="mb-3 text-app-text/45">{t('sectors.atis.history.detail.noTiming')}</p>
                               )}
                               <p className="mb-1 text-app-text/55">
-                                MÜHİMMAT: <span className="text-accent">{getAtisAmmoName(row)}</span>
+                                {t('sectors.atis.history.detail.ammo')}:{' '}
+                                <span className="text-accent">{getAtisAmmoName(row)}</span>
                                 <span className="mx-2 text-app-text/20">|</span>
-                                KALİBRE: <span className="text-app-text/90">{getAtisCaliberLabel(row)}</span>
+                                {t('sectors.atis.history.detail.caliber')}:{' '}
+                                <span className="text-app-text/90">{formatAtisCaliberLabelDisplay(row)}</span>
                                 {ammoCost ? (
                                   <>
                                     <span className="mx-2 text-app-text/20">|</span>
-                                    BİRİM_FİYAT:{' '}
+                                    {t('sectors.atis.history.detail.unitPrice')}:{' '}
                                     <span className="text-accent">{formatAmmoCostTry(ammoCost.unitPrice)}</span>
                                     <span className="mx-2 text-app-text/20">|</span>
-                                    TOPLAM_MALİYET:{' '}
+                                    {t('sectors.atis.history.detail.totalCost')}:{' '}
                                     <span className="text-accent">{formatAmmoCostTry(ammoCost.totalCost)}</span>
                                   </>
                                 ) : null}
@@ -329,10 +357,12 @@ export default function AtisLogRegistry({ rangeLogs, inventory = [], loading = f
                               {(() => {
                                 const meteo = getLogMeteoData(row)
                                 if (!meteo) return null
-                                const rows = formatMeteoOverviewRows(meteo)
+                                const rows = formatAtisMeteoRowsDisplay(meteo)
                                 return (
                                   <div className="mb-3 rounded border border-sky-500/25 bg-sky-500/5 px-2 py-2">
-                                    <p className="mb-1 text-[7px] font-bold text-sky-400/85">METEO-DATA (KAYIT ANI)</p>
+                                    <p className="mb-1 text-[7px] font-bold text-sky-400/85">
+                                      {t('sectors.atis.history.detail.meteo')}
+                                    </p>
                                     <ul className="space-y-0.5 text-app-text/90">
                                       {rows.map(([label, value]) => (
                                         <li key={label}>
@@ -345,9 +375,11 @@ export default function AtisLogRegistry({ rangeLogs, inventory = [], loading = f
                                 )
                               })()}
                               <div className="mb-3 rounded border border-[#7ab4ff]/25 bg-[#7ab4ff]/5 px-2 py-2">
-                                <p className="mb-1 text-[7px] font-bold text-[#7ab4ff]/80">OPTİK / AKSESUAR DURUMU</p>
+                                <p className="mb-1 text-[7px] font-bold text-[#7ab4ff]/80">
+                                  {t('sectors.atis.history.detail.accessories')}
+                                </p>
                                 <ul className="space-y-0.5 text-app-text/90">
-                                  {formatAccessoriesAtShotLines(row.accessoriesAtShot).map((line) => (
+                                  {formatAtisAccessoriesLinesDisplay(row.accessoriesAtShot).map((line) => (
                                     <li key={line}>{line}</li>
                                   ))}
                                 </ul>
@@ -358,12 +390,17 @@ export default function AtisLogRegistry({ rangeLogs, inventory = [], loading = f
                                 if (yiv == null) return null
                                 return (
                                   <div className="mb-3 rounded border border-accent/25 bg-accent/5 px-2 py-2">
-                                    <p className="mb-1 text-[7px] font-bold text-accent/80">NAMLU / YİV-SET KONDİSYONU (KAYIT ANI)</p>
+                                    <p className="mb-1 text-[7px] font-bold text-accent/80">
+                                      {t('sectors.atis.history.detail.barrel')}
+                                    </p>
                                     <p className="text-accent">
-                                      [{formatConditionBar(yiv)}] %{yiv} KONDİSYON
+                                      [{formatConditionBar(yiv)}]{' '}
+                                      {t('sectors.atis.history.detail.condition', { percent: yiv })}
                                     </p>
                                     {wear != null ? (
-                                      <p className="mt-0.5 text-[8px] text-amber-400/90">AŞINMA: %{wear}</p>
+                                      <p className="mt-0.5 text-[8px] text-amber-400/90">
+                                        {t('sectors.atis.history.detail.wear', { percent: wear })}
+                                      </p>
                                     ) : null}
                                   </div>
                                 )
@@ -376,8 +413,12 @@ export default function AtisLogRegistry({ rangeLogs, inventory = [], loading = f
                                 </ul>
                               ) : null}
                               <div className="rounded border border-white/10 bg-app-bg px-2 py-2">
-                                <p className="mb-1 text-[7px] text-app-text/45">OPERASYON NOTU</p>
-                                <p className="normal-case leading-relaxed text-app-text/90">{getAtisOperationNote(row)}</p>
+                                <p className="mb-1 text-[7px] text-app-text/45">
+                                  {t('sectors.atis.history.detail.operationNote')}
+                                </p>
+                                <p className="normal-case leading-relaxed text-app-text/90">
+                                  {formatAtisOperationNoteDisplay(row)}
+                                </p>
                               </div>
                             </div>
                           </div>

@@ -36,10 +36,181 @@
       "subtitle": "Grup oturumu — group_trainings · training_results"
     }
   },
+  "common": {
+    "terminal": {
+      "saving": "Aktarılıyor…",
+      "fieldMetrics": "Saha metrikleri",
+      "successRate": "Başarı oranı",
+      "criticalViolation": "Kritik ihlal · skor sıfırlandı",
+      "backToCategories": "Kategorilere dön",
+      "individualMode": {
+        "kicker": "Bireysel kayıt modu",
+        "hint": "Kayıtlar yalnızca size aittir · canlı grup eğitimi için Grup eğitimi sektörünü açın"
+      }
+    }
+  },
   "sectors": {
     "atis": {
       "title": "ATIŞ",
-      "sectorLabel": "RNG-01 · Atış sektörü"
+      "sectorLabel": "RNG-01 · Atış sektörü",
+      "tabs": {
+        "aria": "Atış terminal görünümü",
+        "form": "Atış formu",
+        "registry": "Kayıt defteri"
+      },
+      "preview": {
+        "title": "ATIŞ · RNG-01 · Canlı önizleme",
+        "imageAlt": "Atış",
+        "awaitingWeapon": "Silah seçimi bekleniyor",
+        "ammoPrefix": "MHM",
+        "roundsUnit": "adet",
+        "accuracy": "İsabet %{{percent}} · {{hits}}/{{rounds}}"
+      },
+      "form": {
+        "title": "Atış kaydı · Veri girişi",
+        "weaponSelect": "Silah seçimi",
+        "weaponPlaceholder": "— Silah seçin —",
+        "noWeapons": "Cephanelikte kayıtlı silah yok · önce ILWS ile ekleyin",
+        "drillType": "Atış türü",
+        "customDrillPlaceholder": "Özel drill adını yazın…",
+        "distance": "Mesafe (metre)",
+        "distancePlaceholder": "örn. 7",
+        "timingMode": "Süre modu",
+        "timed": "Süreli atış",
+        "untimed": "Süresiz atış",
+        "untimedNote": "Kayıt notu: {{note}}",
+        "untimedNoteValue": "Süresiz atış",
+        "firstShot": "İlk atış süresi (sn)",
+        "split": "Split süresi (sn)",
+        "totalTime": "Toplam süre (sn)",
+        "logistics": "Lojistik · mühimmat",
+        "ammoPlaceholder": "— Mühimmat seçin —",
+        "noAmmo": "Mühimmat deposu boş · ILWS MHM ekleyin",
+        "ammoStock": "STOK {{count}}",
+        "roundsFired": "Atım sayısı",
+        "hits": "İsabet adedi",
+        "operationNote": "Operasyon notu",
+        "operationNotePlaceholder": "Etiketler, gözlem, #KılıftanÇekiş vb.",
+        "submit": "Atış kaydını onayla",
+        "clampToStock": "Atım sayısını stoka sığdır ({{stock}})"
+      },
+      "validation": {
+        "sessionRequired": "Oturum gerekli",
+        "noWeaponsInArmory": "Cephanelikte silah yok",
+        "ammoDepotEmpty": "Mühimmat deposu boş",
+        "weaponRequired": "Silah seçimi gerekli",
+        "drillRequired": "Atış türü seçimi gerekli",
+        "customDrillRequired": "Özel drill adı gerekli",
+        "ammoRequired": "Mühimmat seçimi gerekli",
+        "ammoRequiredNoCaliber": "Mühimmat seçimi gerekli · kalibre eşleşmesi yok",
+        "ammoNotFound": "Mühimmat kaydı bulunamadı",
+        "insufficientStock": "Stok yetersiz · mevcut {{stock}} · atım {{rounds}} · sayıyı düşürün",
+        "insufficientStockShort": "Stok yetersiz · mevcut {{stock}} adet",
+        "roundsRequired": "Toplam atım sayısı gerekli",
+        "hitsInvalid": "İsabet sayısı geçersiz",
+        "timingRequired": "Süreli atışta süre gerekli",
+        "hitsExceedRounds": "İsabet atım sayısını aşamaz · otomatik sınırlandı",
+        "channelDisconnected": "Veri kanalı kesildi · yeniden dene"
+      },
+      "messages": {
+        "submitSuccess": "Kayıt aktarıldı · stok güncellendi",
+        "submitFailed": "Kayıt başarısız · yeniden dene{{hint}}",
+        "partialSync": "Kayıt kısmen aktarıldı · senkron hatası",
+        "resupplyRequired": "Stok yetersiz · ikmal gerekli",
+        "permissionDenied": " · yetki / kurallar"
+      },
+      "drills": {
+        "selectPlaceholder": "— Drill seçin —",
+        "customAdd": "[+] Yeni atış türü ekle",
+        "levels": {
+          "1": {
+            "title": "Seviye 1: Temel mekanikler",
+            "l1-draw-first": "Draw & first shot (kılıftan kütleye & ilk atış)",
+            "l1-double-tap": "Double tap (çift hızlı atış)",
+            "l1-ready": "Ready position (hazır duruş / hazır pozisyon)"
+          },
+          "2": {
+            "title": "Seviye 2: Manipülasyon ve geçiş",
+            "l2-reload": "Reload drills (şarjör değiştirme taktikleri)",
+            "l2-rifle-pistol": "Rifle to pistol transition (tüfekten tabancaya geçiş drilli)",
+            "l2-malfunction": "Malfunction clearance (silah tutukluk giderme)"
+          },
+          "3": {
+            "title": "Seviye 3: Dinamik ve reaksiyon",
+            "l3-mozambique": "Mozambique drill (2 gövde, 1 baş)",
+            "l3-multi-target": "Multi-target transition (çoklu hedef arası geçiş)"
+          }
+        }
+      },
+      "history": {
+        "title": "Atış kayıtları ve filtreleme",
+        "syncMeta": "range_logs · canlı senkron · {{filtered}}/{{total}} kayıt",
+        "filterBar": "Filtreleme barı",
+        "weaponType": "Silah tipi",
+        "caliber": "Kalibre",
+        "drillType": "Atış türü",
+        "timing": "Süre",
+        "all": "Tümü",
+        "handgun": "Tabanca",
+        "rifle": "Tüfek",
+        "timed": "Süreli",
+        "untimed": "Süresiz",
+        "syncing": "Senkron…",
+        "empty": "Atış kaydı yok",
+        "noFilterResults": "Filtre sonucu yok",
+        "downloadPdf": "PDF indir",
+        "preparingPdf": "Hazırlanıyor…",
+        "columns": {
+          "date": "Tarih",
+          "weapon": "Silah",
+          "drill": "Atış türü",
+          "distance": "Mesafe",
+          "roundsHits": "Atım/isabet",
+          "cost": "Maliyet",
+          "score": "Skor (%)",
+          "duration": "Süre",
+          "report": "Rapor"
+        },
+        "detail": {
+          "title": "Detay paneli",
+          "firstShot": "İlk atış süresi",
+          "avgSplit": "Ortalama split",
+          "noTiming": "Süre verisi · süresiz atış",
+          "ammo": "Mühimmat",
+          "caliber": "Kalibre",
+          "unitPrice": "Birim fiyat",
+          "totalCost": "Toplam maliyet",
+          "meteo": "Meteo-data (kayıt anı)",
+          "accessories": "Optik / aksesuar durumu",
+          "accessoryNoData": "Kayıt anında veri yok",
+          "barrel": "Namlu / yiv-set kondisyonu (kayıt anı)",
+          "condition": "%{{percent}} kondisyon",
+          "wear": "Aşınma: %{{percent}}",
+          "operationNote": "Operasyon notu",
+          "noOperationNote": "Operasyon notu kayıtlı değil.",
+          "specName": "Ad",
+          "specBrand": "Marka",
+          "specCaliber": "Kalibre",
+          "specCode": "Kod",
+          "specOptic": "Optik",
+          "specSerial": "Seri",
+          "level": "Seviye {{level}}",
+          "undefinedCaliber": "Tanımsız"
+        },
+        "filterSummary": {
+          "weapon": "Silah: {{value}}",
+          "caliber": "Kalibre: {{value}}",
+          "drill": "Atış türü: {{value}}",
+          "timing": "Süre: {{value}}"
+        },
+        "meteo": {
+          "temperature": "Sıcaklık",
+          "wind": "Rüzgar",
+          "humidity": "Nem",
+          "location": "Konum",
+          "noRecord": "Kayıt yok"
+        }
+      }
     },
     "cqb": {
       "title": "CQB",

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { labelClass } from './trainingTerminalTokens'
 
 /**
@@ -9,15 +10,18 @@ import { labelClass } from './trainingTerminalTokens'
  * }} props
  */
 export default function TrainingMetricGrid({
-  title = 'SAHA METRİKLERİ',
+  title,
   children,
   footer,
   gridClassName = 'grid grid-cols-2 gap-3 sm:grid-cols-3',
 }) {
+  const { t } = useTranslation('training')
+  const resolvedTitle = title ?? t('common.terminal.fieldMetrics')
+
   return (
     <div className="rounded border border-accent/20 bg-black/40 p-3">
       <p className="mb-3 font-mono-technical text-[7px] font-bold uppercase tracking-[0.2em] text-accent/80">
-        {title}
+        {resolvedTitle}
       </p>
       <div className={gridClassName}>{children}</div>
       {footer}

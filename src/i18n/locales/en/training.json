@@ -36,10 +36,181 @@
       "subtitle": "Group session — group_trainings · training_results"
     }
   },
+  "common": {
+    "terminal": {
+      "saving": "Transferring…",
+      "fieldMetrics": "Field metrics",
+      "successRate": "Success rate",
+      "criticalViolation": "Critical violation · score zeroed",
+      "backToCategories": "Back to categories",
+      "individualMode": {
+        "kicker": "Individual record mode",
+        "hint": "Records belong to you only · open the Group training sector for live group training"
+      }
+    }
+  },
   "sectors": {
     "atis": {
       "title": "Marksmanship",
-      "sectorLabel": "RNG-01 · Marksmanship sector"
+      "sectorLabel": "RNG-01 · Marksmanship sector",
+      "tabs": {
+        "aria": "Marksmanship terminal view",
+        "form": "Shooting form",
+        "registry": "Log registry"
+      },
+      "preview": {
+        "title": "Marksmanship · RNG-01 · Live preview",
+        "imageAlt": "Marksmanship",
+        "awaitingWeapon": "Awaiting weapon selection",
+        "ammoPrefix": "AMMO",
+        "roundsUnit": "rnd",
+        "accuracy": "Hit %{{percent}} · {{hits}}/{{rounds}}"
+      },
+      "form": {
+        "title": "Shooting log · Data entry",
+        "weaponSelect": "Weapon selection",
+        "weaponPlaceholder": "— Select weapon —",
+        "noWeapons": "No weapons in armory · add via ILWS first",
+        "drillType": "Shoot type",
+        "customDrillPlaceholder": "Enter custom drill name…",
+        "distance": "Distance (meters)",
+        "distancePlaceholder": "e.g. 7",
+        "timingMode": "Timing mode",
+        "timed": "Timed fire",
+        "untimed": "Untimed fire",
+        "untimedNote": "Log note: {{note}}",
+        "untimedNoteValue": "Untimed fire",
+        "firstShot": "First shot time (sec)",
+        "split": "Split time (sec)",
+        "totalTime": "Total time (sec)",
+        "logistics": "Logistics · ammunition",
+        "ammoPlaceholder": "— Select ammunition —",
+        "noAmmo": "Ammo depot empty · add ILWS ammo",
+        "ammoStock": "STOCK {{count}}",
+        "roundsFired": "Rounds fired",
+        "hits": "Hits",
+        "operationNote": "Operation note",
+        "operationNotePlaceholder": "Tags, observations, #FromHolster etc.",
+        "submit": "Confirm shooting log",
+        "clampToStock": "Fit round count to stock ({{stock}})"
+      },
+      "validation": {
+        "sessionRequired": "Session required",
+        "noWeaponsInArmory": "No weapons in armory",
+        "ammoDepotEmpty": "Ammo depot empty",
+        "weaponRequired": "Weapon selection required",
+        "drillRequired": "Shoot type selection required",
+        "customDrillRequired": "Custom drill name required",
+        "ammoRequired": "Ammunition selection required",
+        "ammoRequiredNoCaliber": "Ammunition selection required · no caliber match",
+        "ammoNotFound": "Ammunition record not found",
+        "insufficientStock": "Insufficient stock · available {{stock}} · rounds {{rounds}} · reduce count",
+        "insufficientStockShort": "Insufficient stock · available {{stock}} rnd",
+        "roundsRequired": "Total round count required",
+        "hitsInvalid": "Hit count invalid",
+        "timingRequired": "Time required for timed fire",
+        "hitsExceedRounds": "Hits cannot exceed rounds · auto-capped",
+        "channelDisconnected": "Data channel lost · retry"
+      },
+      "messages": {
+        "submitSuccess": "Log transferred · stock updated",
+        "submitFailed": "Log failed · retry{{hint}}",
+        "partialSync": "Log partially transferred · sync error",
+        "resupplyRequired": "Insufficient stock · resupply required",
+        "permissionDenied": " · permission / rules"
+      },
+      "drills": {
+        "selectPlaceholder": "— Select drill —",
+        "customAdd": "[+] Add new shoot type",
+        "levels": {
+          "1": {
+            "title": "Level 1: Basic mechanics",
+            "l1-draw-first": "Draw & first shot (from holster to ready & first shot)",
+            "l1-double-tap": "Double tap (two rapid shots)",
+            "l1-ready": "Ready position (ready stance / ready position)"
+          },
+          "2": {
+            "title": "Level 2: Manipulation and transition",
+            "l2-reload": "Reload drills (magazine change tactics)",
+            "l2-rifle-pistol": "Rifle to pistol transition (rifle-to-pistol transition drill)",
+            "l2-malfunction": "Malfunction clearance (weapon stoppage clearance)"
+          },
+          "3": {
+            "title": "Level 3: Dynamic and reaction",
+            "l3-mozambique": "Mozambique drill (2 body, 1 head)",
+            "l3-multi-target": "Multi-target transition (multi-target transitions)"
+          }
+        }
+      },
+      "history": {
+        "title": "Shooting logs and filters",
+        "syncMeta": "range_logs · live sync · {{filtered}}/{{total}} records",
+        "filterBar": "Filter bar",
+        "weaponType": "Weapon type",
+        "caliber": "Caliber",
+        "drillType": "Shoot type",
+        "timing": "Duration",
+        "all": "All",
+        "handgun": "Handgun",
+        "rifle": "Rifle",
+        "timed": "Timed",
+        "untimed": "Untimed",
+        "syncing": "Syncing…",
+        "empty": "No shooting logs",
+        "noFilterResults": "No filter results",
+        "downloadPdf": "Download PDF",
+        "preparingPdf": "Preparing…",
+        "columns": {
+          "date": "Date",
+          "weapon": "Weapon",
+          "drill": "Shoot type",
+          "distance": "Distance",
+          "roundsHits": "Rounds/hits",
+          "cost": "Cost",
+          "score": "Score (%)",
+          "duration": "Duration",
+          "report": "Report"
+        },
+        "detail": {
+          "title": "Detail panel",
+          "firstShot": "First shot time",
+          "avgSplit": "Average split",
+          "noTiming": "Timing data · untimed fire",
+          "ammo": "Ammunition",
+          "caliber": "Caliber",
+          "unitPrice": "Unit price",
+          "totalCost": "Total cost",
+          "meteo": "Meteo-data (at log time)",
+          "accessories": "Optic / accessory status",
+          "accessoryNoData": "No data at log time",
+          "barrel": "Barrel / rifling condition (at log time)",
+          "condition": "%{{percent}} condition",
+          "wear": "Wear: %{{percent}}",
+          "operationNote": "Operation note",
+          "noOperationNote": "No operation note recorded.",
+          "specName": "Name",
+          "specBrand": "Brand",
+          "specCaliber": "Caliber",
+          "specCode": "Code",
+          "specOptic": "Optic",
+          "specSerial": "Serial",
+          "level": "Level {{level}}",
+          "undefinedCaliber": "Undefined"
+        },
+        "filterSummary": {
+          "weapon": "Weapon: {{value}}",
+          "caliber": "Caliber: {{value}}",
+          "drill": "Shoot type: {{value}}",
+          "timing": "Duration: {{value}}"
+        },
+        "meteo": {
+          "temperature": "Temperature",
+          "wind": "Wind",
+          "humidity": "Humidity",
+          "location": "Location",
+          "noRecord": "No record"
+        }
+      }
     },
     "cqb": {
       "title": "CQB",

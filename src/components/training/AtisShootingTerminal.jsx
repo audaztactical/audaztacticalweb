@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, ChevronLeft } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import atisImg from '../../assets/atis.png'
 import MatrixWireVisualizer from '../armory/MatrixWireVisualizer'
 import TacticalPanel from '../ui/TacticalPanel'
@@ -17,6 +18,10 @@ import { sanitizeShotCounts } from '../../lib/atisShotCounts'
 import { submitAtisRecord } from '../../lib/atisSubmit'
 import { invNum, invStr, tacticalCategoryLabel } from '../../lib/inventoryIlws'
 import { filterWeaponRows, getAttachedAccessoryId, weaponDisplayName } from '../../lib/weaponIlws'
+import {
+  formatAtisSubmitBlockedReason,
+  trainingLocale,
+} from '../../lib/trainingDisplayText'
 import AtisLogRegistry from './AtisLogRegistry'
 import AtisDrillPicker from './AtisDrillPicker'
 import OperatorInstructorRecordsEmbed from './OperatorInstructorRecordsEmbed'
@@ -76,6 +81,7 @@ export default function AtisShootingTerminal({
   logsLoading = false,
   listenError,
 }) {
+  const { t } = useTranslation('training')
   const { user } = useAuth()
   const uid = user?.uid ?? ''
 
@@ -134,33 +140,36 @@ export default function AtisShootingTerminal({
     if (match) setForm((f) => ({ ...f, ammoId: String(match.id) }))
   }, [selectedWeapon, ammoRows, form.ammoId])
 
-  const submitBlockedReason = useMemo(() => {
+  const submitBlockedReasonKey = useMemo(() => {
     if (saving) return null
-    if (!uid) return 'OTURUM_GEREKLİ'
-    if (weapons.length === 0) return 'CEPHANELİKTE_SİLAH_YOK'
-    if (ammoRows.length === 0) return 'MÜHİMMAT_DEPOSU_BOŞ'
-    if (!form.weaponId) return 'Silah seçimi gerekli'
-    if (!form.drillKey) return 'ATIŞ_TÜRÜ_SEÇİMİ_GEREKLİ'
-    if (showCustomDrill && !form.customDrillName.trim()) return 'ÖZEL_DRILL_ADI_GEREKLİ'
+    if (!uid) return { key: 'sessionRequired' }
+    if (weapons.length === 0) return { key: 'noWeaponsInArmory' }
+    if (ammoRows.length === 0) return { key: 'ammoDepotEmpty' }
+    if (!form.weaponId) return { key: 'weaponRequired' }
+    if (!form.drillKey) return { key: 'drillRequired' }
+    if (showCustomDrill && !form.customDrillName.trim()) return { key: 'customDrillRequired' }
     if (!form.ammoId) {
       return selectedWeapon
-        ? 'MÜHİMMAT_SEÇİMİ_GEREKLİ · KALİBRE_EŞLEŞMESİ_YOK'
-        : 'MÜHİMMAT_SEÇİMİ_GEREKLİ'
+        ? { key: 'ammoRequiredNoCaliber' }
+        : { key: 'ammoRequired' }
     }
-    if (!selectedAmmo) return 'MÜHİMMAT_KAYDI_BULUNAMADI'
+    if (!selectedAmmo) return { key: 'ammoNotFound' }
     if (insufficientStock) {
-      return `STOK_YETERSİZ · MEVCUT ${ammoStock} · ATIM ${liveCounts.totalRoundsFired} · SAYIYI_DÜŞÜRÜN`
+      return {
+        key: 'insufficientStock',
+        params: { stock: ammoStock, rounds: liveCounts.totalRoundsFired },
+      }
     }
-    if (liveCounts.totalRoundsFired <= 0) return 'TOPLAM_ATIM_SAYISI_GEREKLİ'
+    if (liveCounts.totalRoundsFired <= 0) return { key: 'roundsRequired' }
     if (liveCounts.totalHits < 0 || liveCounts.totalHits > liveCounts.totalRoundsFired) {
-      return 'İSABET_SAYISI_GEÇERSİZ'
+      return { key: 'hitsInvalid' }
     }
     if (form.isTimed) {
       const hasTime =
         invStr(form.split).trim() ||
         invStr(form.total).trim() ||
         invStr(form.firstShot).trim()
-      if (!hasTime) return 'SÜRELİ_ATIŞTA_SÜRE_GEREKLİ'
+      if (!hasTime) return { key: 'timingRequired' }
     }
     return null
   }, [
@@ -185,7 +194,8 @@ export default function AtisShootingTerminal({
     form.firstShot,
   ])
 
-  const canSubmit = submitBlockedReason == null
+  const submitBlockedReason = formatAtisSubmitBlockedReason(submitBlockedReasonKey)
+  const canSubmit = submitBlockedReasonKey == null
 
   const patch = useCallback((/** @type {Partial<typeof INITIAL_FORM>} */ next) => {
     setForm((f) => ({ ...f, ...next }))
@@ -238,7 +248,12 @@ export default function AtisShootingTerminal({
 
     const counts = sanitizeShotCounts(form.roundsFired, form.hits)
     if (counts.totalRoundsFired > getCurrentStock(selectedAmmo)) {
-      setStockError(`STOK_YETERSİZ · MEVCUT ${getCurrentStock(selectedAmmo)} · İSTENEN ${counts.totalRoundsFired}`)
+      setStockError(
+        t('sectors.atis.validation.insufficientStock', {
+          stock: getCurrentStock(selectedAmmo),
+          rounds: counts.totalRoundsFired,
+        }),
+      )
       return
     }
 
@@ -282,13 +297,18 @@ export default function AtisShootingTerminal({
           ? err.message
           : ''
       if (code === 'INSUFFICIENT_AMMO') {
-        setStockError('STOK_YETERSİZ · İKMAL_GEREKLİ')
+        setStockError(t('sectors.atis.messages.resupplyRequired'))
       } else if (code === 'AMMO_SYNC_FAILED' || code === 'WEAPON_SYNC_FAILED') {
-        setSubmitError(message || 'KAYIT_KISMEN_AKTARILDI · SENKRON_HATASI')
+        setSubmitError(message || t('sectors.atis.messages.partialSync'))
         setSubmitOk(true)
       } else {
-        const hint = code === 'permission-denied' ? ' · YETKİ / KURALLAR' : code ? ` · ${code}` : ''
-        setSubmitError(`KAYIT_BAŞARISIZ · YENİDEN_DENE${hint}`)
+        const hint =
+          code === 'permission-denied'
+            ? t('sectors.atis.messages.permissionDenied')
+            : code
+              ? ` · ${code}`
+              : ''
+        setSubmitError(t('sectors.atis.messages.submitFailed', { hint }))
         if (import.meta.env.DEV && message) {
           console.error('[AtisShootingTerminal]', err)
         }
@@ -315,13 +335,13 @@ export default function AtisShootingTerminal({
           className="inline-flex w-fit items-center gap-2 rounded border border-accent/50 bg-accent/12 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent transition hover:bg-accent/20"
         >
           <ChevronLeft className="size-3.5" aria-hidden />
-          KATEGORİLERE DÖN
+          {t('common.terminal.backToCategories')}
         </button>
 
         <div
           className="flex w-full gap-2 rounded border border-accent/25 bg-black/60 p-1 sm:w-auto"
           role="tablist"
-          aria-label="Atış terminal görünümü"
+          aria-label={t('sectors.atis.tabs.aria')}
         >
           <button
             type="button"
@@ -330,7 +350,7 @@ export default function AtisShootingTerminal({
             onClick={() => setViewMode('form')}
             className={tabBtnClass(viewMode === 'form')}
           >
-            ATIŞ FORMU
+            {t('sectors.atis.tabs.form')}
           </button>
           <button
             type="button"
@@ -339,7 +359,7 @@ export default function AtisShootingTerminal({
             onClick={() => setViewMode('registry')}
             className={tabBtnClass(viewMode === 'registry')}
           >
-            KAYIT DEFTERİ
+            {t('sectors.atis.tabs.registry')}
           </button>
         </div>
       </div>
@@ -352,9 +372,9 @@ export default function AtisShootingTerminal({
           <span className="pointer-events-none absolute left-2 top-2 z-10 h-4 w-4 border-l border-t border-accent/40" />
           <span className="pointer-events-none absolute right-2 top-2 z-10 h-4 w-4 border-r border-t border-accent/40" />
           <p className="border-b border-accent/15 bg-app-bg px-4 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-accent/90">
-            ATIŞ · RNG-01 · CANLI ÖNİZLEME
+            {t('sectors.atis.preview.title')}
           </p>
-          <MatrixWireVisualizer hubMode variant="pistol" imageSrc={atisImg} imageAlt="Atış" label="" />
+          <MatrixWireVisualizer hubMode variant="pistol" imageSrc={atisImg} imageAlt={t('sectors.atis.preview.imageAlt')} label="" />
           <div className="border-t border-accent/15 bg-black/50 px-4 py-3 font-mono-technical text-[9px] uppercase">
             {weaponSpecsPreview ? (
               <>
@@ -370,16 +390,22 @@ export default function AtisShootingTerminal({
                 </p>
               </>
             ) : (
-              <p className="text-app-text/45">Silah seçimi bekleniyor</p>
+              <p className="text-app-text/45">{t('sectors.atis.preview.awaitingWeapon')}</p>
             )}
             {selectedAmmo ? (
               <p className="mt-2 border-t border-white/10 pt-2 text-app-text/55">
-                MHM: <span className="text-accent">{getCaliberName(selectedAmmo)}</span>
-                <span className="ml-2 tabular-nums text-app-text">{ammoStock.toLocaleString('tr-TR')} ADET</span>
+                {t('sectors.atis.preview.ammoPrefix')}: <span className="text-accent">{getCaliberName(selectedAmmo)}</span>
+                <span className="ml-2 tabular-nums text-app-text">
+                  {ammoStock.toLocaleString(trainingLocale())} {t('sectors.atis.preview.roundsUnit').toUpperCase()}
+                </span>
               </p>
             ) : null}
             <p className="mt-2 tabular-nums text-accent">
-              İSABET %{liveCounts.accuracy.toLocaleString('tr-TR')} · {liveCounts.totalHits}/{liveCounts.totalRoundsFired}
+              {t('sectors.atis.preview.accuracy', {
+                percent: liveCounts.accuracy.toLocaleString(trainingLocale()),
+                hits: liveCounts.totalHits,
+                rounds: liveCounts.totalRoundsFired,
+              })}
             </p>
           </div>
         </TacticalPanel>
@@ -388,22 +414,24 @@ export default function AtisShootingTerminal({
           <span className="pointer-events-none absolute bottom-2 left-2 z-10 h-4 w-4 border-b border-l border-accent/40" />
           <span className="pointer-events-none absolute bottom-2 right-2 z-10 h-4 w-4 border-b border-r border-accent/40" />
           <p className="border-b border-accent/15 bg-app-bg px-4 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-app-text">
-            ATIŞ KAYDI · VERİ GİRİŞİ
+            {t('sectors.atis.form.title')}
           </p>
 
           {!ready ? (
-            <p className="p-6 font-mono-technical text-[10px] uppercase text-app-text/55">OTURUM_GEREKLİ</p>
+            <p className="p-6 font-mono-technical text-[10px] uppercase text-app-text/55">
+              {t('sectors.atis.validation.sessionRequired')}
+            </p>
           ) : listenError ? (
             <p className="m-4 rounded border border-red-500/40 bg-red-950/25 px-3 py-2 font-mono-technical text-[10px] text-red-300">
-              VERİ_KANALI_KESİLDİ · YENİDEN_DENE
+              {t('sectors.atis.validation.channelDisconnected')}
             </p>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4 p-4 sm:p-5">
               <fieldset className="space-y-2">
-                <legend className={labelClass}>SİLAH SEÇİMİ</legend>
+                <legend className={labelClass}>{t('sectors.atis.form.weaponSelect')}</legend>
                 {weapons.length === 0 ? (
                   <p className="font-mono-technical text-[10px] uppercase text-amber-400/90">
-                    CEPHANELİKTE_KAYITLI_SİLAH_YOK · ÖNCE_ILWS_İLE_EKLEYİN
+                    {t('sectors.atis.form.noWeapons')}
                   </p>
                 ) : (
                   <select
@@ -412,7 +440,7 @@ export default function AtisShootingTerminal({
                     onChange={(e) => patch({ weaponId: e.target.value, ammoId: '' })}
                     required
                   >
-                    <option value="">— SİLAH SEÇİN —</option>
+                    <option value="">{t('sectors.atis.form.weaponPlaceholder')}</option>
                     {weapons.map((w) => (
                       <option key={String(w.id)} value={String(w.id)}>
                         {weaponDisplayName(w)}
@@ -425,7 +453,7 @@ export default function AtisShootingTerminal({
               </fieldset>
 
               <fieldset className="space-y-2">
-                <legend className={labelClass}>ATIŞ TÜRÜ</legend>
+                <legend className={labelClass}>{t('sectors.atis.form.drillType')}</legend>
                 <AtisDrillPicker
                   value={form.drillKey}
                   onChange={(drillKey) => patch({ drillKey, customDrillName: '' })}
@@ -434,7 +462,7 @@ export default function AtisShootingTerminal({
                 {showCustomDrill ? (
                   <input
                     className={inputClass}
-                    placeholder="Özel drill adını yazın…"
+                    placeholder={t('sectors.atis.form.customDrillPlaceholder')}
                     value={form.customDrillName}
                     onChange={(e) => patch({ customDrillName: e.target.value })}
                     required
@@ -444,13 +472,13 @@ export default function AtisShootingTerminal({
               </fieldset>
 
               <label className="block space-y-1">
-                <span className={labelClass}>MESAFE (METRE)</span>
+                <span className={labelClass}>{t('sectors.atis.form.distance')}</span>
                 <input
                   type="number"
                   min={0}
                   step={0.5}
                   className={`${inputClass} tabular-nums`}
-                  placeholder="örn. 7"
+                  placeholder={t('sectors.atis.form.distancePlaceholder')}
                   value={form.distanceM}
                   onChange={(e) => patch({ distanceM: e.target.value })}
                   required
@@ -458,7 +486,7 @@ export default function AtisShootingTerminal({
               </label>
 
               <fieldset className="space-y-3 rounded border border-accent/20 bg-black/40 p-3">
-                <legend className={`${labelClass} text-accent/80`}>SÜRE MODU</legend>
+                <legend className={`${labelClass} text-accent/80`}>{t('sectors.atis.form.timingMode')}</legend>
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -469,7 +497,7 @@ export default function AtisShootingTerminal({
                         : 'border-white/15 text-app-text/55 hover:border-white/25'
                     }`}
                   >
-                    SÜRELİ ATIŞ
+                    {t('sectors.atis.form.timed')}
                   </button>
                   <button
                     type="button"
@@ -480,17 +508,19 @@ export default function AtisShootingTerminal({
                         : 'border-white/15 text-app-text/55 hover:border-white/25'
                     }`}
                   >
-                    SÜRESİZ ATIŞ
+                    {t('sectors.atis.form.untimed')}
                   </button>
                 </div>
                 {!form.isTimed ? (
                   <p className="font-mono-technical text-[8px] uppercase text-app-text/55">
-                    Kayıt notu: <span className="text-accent">Süresiz Atış</span>
+                    {t('sectors.atis.form.untimedNote', {
+                      note: t('sectors.atis.form.untimedNoteValue'),
+                    })}
                   </p>
                 ) : (
                   <div className="grid gap-3 sm:grid-cols-3">
                     <label className="block space-y-1">
-                      <span className={labelClass}>İLK ATIŞ SÜRESİ (SN)</span>
+                      <span className={labelClass}>{t('sectors.atis.form.firstShot')}</span>
                       <input
                         type="number"
                         min={0}
@@ -503,7 +533,7 @@ export default function AtisShootingTerminal({
                       />
                     </label>
                     <label className="block space-y-1">
-                      <span className={labelClass}>SPLIT SÜRESİ (SN)</span>
+                      <span className={labelClass}>{t('sectors.atis.form.split')}</span>
                       <input
                         type="number"
                         min={0}
@@ -516,7 +546,7 @@ export default function AtisShootingTerminal({
                       />
                     </label>
                     <label className="block space-y-1">
-                      <span className={labelClass}>TOPLAM SÜRE (SN)</span>
+                      <span className={labelClass}>{t('sectors.atis.form.totalTime')}</span>
                       <input
                         type="number"
                         min={0}
@@ -533,10 +563,10 @@ export default function AtisShootingTerminal({
               </fieldset>
 
               <fieldset className="space-y-2 rounded border border-accent/25 bg-accent/[0.03] p-3">
-                <legend className={`${labelClass} text-accent/90`}>LOJİSTİK · MÜHİMMAT</legend>
+                <legend className={`${labelClass} text-accent/90`}>{t('sectors.atis.form.logistics')}</legend>
                 {ammoRows.length === 0 ? (
                   <p className="font-mono-technical text-[10px] uppercase text-amber-400/90">
-                    MÜHİMMAT_DEPOSU_BOŞ · ILWS_MHM_EKLEYİN
+                    {t('sectors.atis.form.noAmmo')}
                   </p>
                 ) : (
                   <select
@@ -549,12 +579,12 @@ export default function AtisShootingTerminal({
                     onChange={(e) => patch({ ammoId: e.target.value })}
                     required
                   >
-                    <option value="">— MÜHİMMAT SEÇİN —</option>
+                    <option value="">{t('sectors.atis.form.ammoPlaceholder')}</option>
                     {ammoRows.map((a) => {
                       const stock = getCurrentStock(a)
                       return (
                         <option key={String(a.id)} value={String(a.id)}>
-                          {ammoDisplayLabel(a)} · STOK {stock.toLocaleString('tr-TR')}
+                          {ammoDisplayLabel(a)} · {t('sectors.atis.form.ammoStock', { count: stock.toLocaleString(trainingLocale()) })}
                         </option>
                       )
                     })}
@@ -563,14 +593,15 @@ export default function AtisShootingTerminal({
                 {insufficientStock || stockError ? (
                   <p className="flex items-center gap-1.5 font-mono-technical text-[9px] font-bold uppercase text-red-400">
                     <AlertTriangle className="size-3.5 shrink-0" aria-hidden />
-                    {stockError ?? `STOK_YETERSİZ · MEVCUT ${ammoStock} ADET`}
+                    {stockError ??
+                      t('sectors.atis.validation.insufficientStockShort', { stock: ammoStock })}
                   </p>
                 ) : null}
               </fieldset>
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="block space-y-1">
-                  <span className={labelClass}>ATIM SAYISI</span>
+                  <span className={labelClass}>{t('sectors.atis.form.roundsFired')}</span>
                   <input
                     type="number"
                     min={1}
@@ -582,7 +613,7 @@ export default function AtisShootingTerminal({
                   />
                 </label>
                 <label className="block space-y-1">
-                  <span className={labelClass}>İSABET ADEDİ</span>
+                  <span className={labelClass}>{t('sectors.atis.form.hits')}</span>
                   <input
                     type="number"
                     min={0}
@@ -597,15 +628,15 @@ export default function AtisShootingTerminal({
               {hitsCapped ? (
                 <p className="flex items-center gap-1.5 font-mono-technical text-[9px] font-bold uppercase text-red-400">
                   <AlertTriangle className="size-3.5 shrink-0" aria-hidden />
-                  İSABET_ATIM_SAYISINI_AŞAMAZ · OTOMATİK_SINIRLANDI
+                  {t('sectors.atis.validation.hitsExceedRounds')}
                 </p>
               ) : null}
 
               <label className="block space-y-1">
-                <span className={labelClass}>OPERASYON NOTU</span>
+                <span className={labelClass}>{t('sectors.atis.form.operationNote')}</span>
                 <textarea
                   className={textareaClass}
-                  placeholder="Etiketler, gözlem, #KılıftanÇekiş vb."
+                  placeholder={t('sectors.atis.form.operationNotePlaceholder')}
                   value={form.operationNote}
                   onChange={(e) => patch({ operationNote: e.target.value })}
                   rows={4}
@@ -615,7 +646,7 @@ export default function AtisShootingTerminal({
 
               {submitOk ? (
                 <p className="rounded border border-accent/40 bg-accent/10 px-3 py-2 text-center font-mono-technical text-[9px] font-bold uppercase text-accent">
-                  KAYIT_AKTARILDI · STOK_GÜNCELLENDİ
+                  {t('sectors.atis.messages.submitSuccess')}
                 </p>
               ) : null}
               {submitError ? (
@@ -634,7 +665,7 @@ export default function AtisShootingTerminal({
                         onClick={clampRoundsToStock}
                         className="mt-2 block w-full rounded border border-amber-400/50 py-1.5 text-[8px] text-amber-200 hover:bg-amber-500/15"
                       >
-                        ATIM_SAYISINI_STOKA_SIĞDIR ({ammoStock})
+                        {t('sectors.atis.form.clampToStock', { stock: ammoStock })}
                       </button>
                     ) : null}
                   </p>
@@ -644,7 +675,7 @@ export default function AtisShootingTerminal({
                   disabled={saving || !canSubmit}
                   className="flex-1 rounded border border-accent/55 bg-accent/12 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent shadow-[0_0_24px_-8px_color-mix(in_srgb,var(--accent-color)_35%,transparent)]] hover:bg-accent/20 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  {saving ? 'AKTARILIYOR…' : 'Atış Kaydını Onayla'}
+                  {saving ? t('common.terminal.saving') : t('sectors.atis.form.submit')}
                 </button>
               </div>
             </form>

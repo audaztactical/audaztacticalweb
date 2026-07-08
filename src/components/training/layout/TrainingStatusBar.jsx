@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import SuccessScorePreview from '../SuccessScorePreview'
 
 /**
@@ -20,10 +21,13 @@ export default function TrainingStatusBar({
   saving = false,
   canSubmit = true,
   submitLabel,
-  savingLabel = 'AKTARILIYOR…',
+  savingLabel,
   successMessage = null,
   errorMessage = null,
 }) {
+  const { t } = useTranslation('training')
+  const resolvedSavingLabel = savingLabel ?? t('common.terminal.saving')
+
   return (
     <>
       {successMessage ? (
@@ -49,7 +53,7 @@ export default function TrainingStatusBar({
           disabled={saving || !canSubmit}
           className="w-full rounded border border-accent/55 bg-accent/12 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent shadow-[0_0_24px_-8px_color-mix(in_srgb,var(--accent-color)_35%,transparent)]] hover:bg-accent/20 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {saving ? savingLabel : submitLabel}
+          {saving ? resolvedSavingLabel : submitLabel}
         </button>
       </div>
     </>
