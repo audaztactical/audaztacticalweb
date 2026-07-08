@@ -9,7 +9,7 @@ import {
   Shield,
   Target,
 } from 'lucide-react'
-import { canikImg, muhimmatImg, optikImg } from './Armory'
+import { canikImg, muhimmatImg, optikImg, preloadArmoryHubImages } from './Armory'
 import HudFluffDecor from '../components/dashboard/HudFluffDecor'
 import HudTicker from '../components/ui/HudTicker'
 import IlwsCategoryHubCard from '../components/armory/IlwsCategoryHubCard'
@@ -116,6 +116,11 @@ const AMMO_FORM_INITIAL = {
 export default function Cephanelik() {
   const { user } = useAuth()
   const uid = user?.uid ?? null
+
+  useEffect(() => {
+    preloadArmoryHubImages()
+  }, [])
+
   const { items, addItem, updateItem, deleteItem, loading, ready, listenError } = useAudazData('inventory')
   const { items: rangeLogs } = useAudazData('range_logs')
   const { items: auditEntries } = useAudazData('armory_audit_trail')
@@ -529,6 +534,7 @@ export default function Cephanelik() {
                   modelVariant="pistol"
                   imageSrc={canikImg}
                   imageAlt="Silah envanteri"
+                  imagePriority="high"
                   onEnter={() => enterCategory('weapons')}
                 />
                 <IlwsCategoryHubCard
@@ -536,6 +542,7 @@ export default function Cephanelik() {
                   modelVariant="reddot"
                   imageSrc={optikImg}
                   imageAlt="Aksesuar envanteri"
+                  imagePriority="high"
                   onEnter={() => enterCategory('attachments')}
                 />
                 <IlwsCategoryHubCard
@@ -543,6 +550,7 @@ export default function Cephanelik() {
                   modelVariant="cartridge"
                   imageSrc={muhimmatImg}
                   imageAlt="Mühimmat envanteri"
+                  imagePriority="auto"
                   onEnter={() => enterCategory('ammo')}
                 />
               </div>

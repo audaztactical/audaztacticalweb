@@ -86,13 +86,7 @@ export default function MatrixWireVisualizer({
 
   const imgLoading = hubMode ? 'eager' : imagePriority === 'high' ? 'eager' : 'lazy'
   /** @type {'high' | 'low' | 'auto'} */
-  const imgFetchPriority = hubMode
-    ? imagePriority === 'low'
-      ? 'auto'
-      : 'high'
-    : imagePriority === 'high'
-      ? 'high'
-      : 'auto'
+  const imgFetchPriority = imagePriority === 'high' ? 'high' : imagePriority === 'low' ? 'low' : 'auto'
 
   return (
     <div
@@ -159,7 +153,7 @@ export default function MatrixWireVisualizer({
             className={[
               'matrix-viz-asset max-h-[78%] max-w-[72%] select-none object-contain [transform-style:preserve-3d]',
               hubMode ? 'transition-opacity duration-300' : '',
-              hubMode && !imageReady ? 'opacity-0' : 'opacity-100',
+              !hubMode && !imageReady ? 'opacity-0' : 'opacity-100',
             ].join(' ')}
             style={{ filter: IMG_GLOW }}
           />

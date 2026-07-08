@@ -7,9 +7,17 @@ import MatrixWireVisualizer from './MatrixWireVisualizer'
  *   modelVariant: 'pistol' | 'reddot' | 'cartridge'
  *   imageSrc: string
  *   imageAlt?: string
+ *   imagePriority?: 'high' | 'low' | 'auto'
  * }} props
  */
-export default function IlwsCategoryHubCard({ title, onEnter, modelVariant, imageSrc, imageAlt }) {
+export default function IlwsCategoryHubCard({
+  title,
+  onEnter,
+  modelVariant,
+  imageSrc,
+  imageAlt,
+  imagePriority = 'auto',
+}) {
   return (
     <button
       type="button"
@@ -25,6 +33,7 @@ export default function IlwsCategoryHubCard({ title, onEnter, modelVariant, imag
           variant={modelVariant}
           imageSrc={imageSrc}
           imageAlt={imageAlt}
+          imagePriority={imagePriority}
           label=""
         />
       </div>
