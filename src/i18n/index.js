@@ -16,6 +16,8 @@ export function detectBrowserLanguage() {
   return raw.startsWith('tr') ? 'tr' : 'en'
 }
 
+const isDev = typeof import.meta !== 'undefined' && Boolean(import.meta.env?.DEV)
+
 i18n.use(initReactI18next).init({
   resources: {
     tr: { common: trCommon, dashboard: trDashboard },
@@ -27,6 +29,14 @@ i18n.use(initReactI18next).init({
   defaultNS: 'common',
   ns: ['common', 'dashboard'],
   interpolation: { escapeValue: false },
+  ...(isDev
+    ? {
+        missingKeyHandler(lngs, ns, key) {
+          const lng = Array.isArray(lngs) ? lngs[0] : lngs
+          console.warn(`[i18n] Missing translation key "${ns}:${key}" (lng: ${lng})`)
+        },
+      }
+    : {}),
 })
 
 export default i18n

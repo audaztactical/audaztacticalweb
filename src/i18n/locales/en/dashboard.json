@@ -152,7 +152,7 @@
     "weatherRow": "Weather",
     "probability": "Probability",
     "amount": "Amount",
-    "wind": "Wind",
+    "windRow": "Wind",
     "sea": "Sea state",
     "region": "Region",
     "coordinates": "Coordinates",

@@ -167,7 +167,7 @@ export default function CommandSideWidgets({ signalSeries: _legacySignal }) {
                       value={precipRows.amount}
                     />
                     <MetDataRow
-                      label={t('widgets.wind')}
+                      label={t('widgets.windRow')}
                       loading={loading}
                       loadingText={t('widgets.loading')}
                       value={data ? `${data.windSpeedKmh} km/h` : '—'}
