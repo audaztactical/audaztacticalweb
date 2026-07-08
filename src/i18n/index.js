@@ -16,6 +16,8 @@ import trForum from './locales/tr/forum.json'
 import enForum from './locales/en/forum.json'
 import trIntel from './locales/tr/intel.json'
 import enIntel from './locales/en/intel.json'
+import trTraining from './locales/tr/training.json'
+import enTraining from './locales/en/training.json'
 
 export const SUPPORTED_LANGUAGES = /** @type {const} */ (['tr', 'en'])
 
@@ -32,14 +34,14 @@ const isDev = typeof import.meta !== 'undefined' && Boolean(import.meta.env?.DEV
 
 i18n.use(initReactI18next).init({
   resources: {
-    tr: { common: trCommon, dashboard: trDashboard, nav: trNav, profile: trProfile, messages: trMessages, academy: trAcademy, forum: trForum, intel: trIntel },
-    en: { common: enCommon, dashboard: enDashboard, nav: enNav, profile: enProfile, messages: enMessages, academy: enAcademy, forum: enForum, intel: enIntel },
+    tr: { common: trCommon, dashboard: trDashboard, nav: trNav, profile: trProfile, messages: trMessages, academy: trAcademy, forum: trForum, intel: trIntel, training: trTraining },
+    en: { common: enCommon, dashboard: enDashboard, nav: enNav, profile: enProfile, messages: enMessages, academy: enAcademy, forum: enForum, intel: enIntel, training: enTraining },
   },
   lng: detectBrowserLanguage(),
   fallbackLng: 'en',
   supportedLngs: [...SUPPORTED_LANGUAGES],
   defaultNS: 'common',
-  ns: ['common', 'dashboard', 'nav', 'profile', 'messages', 'academy', 'forum', 'intel'],
+  ns: ['common', 'dashboard', 'nav', 'profile', 'messages', 'academy', 'forum', 'intel', 'training'],
   interpolation: { escapeValue: false },
   ...(isDev
     ? {

@@ -1,0 +1,83 @@
+{
+  "page": {
+    "kicker": "Antrenman ve operasyon",
+    "hubTitle": "Taktik eğitim terminali",
+    "hubSubtitle": "Bireysel antrenman tüm kullanıcılara açık · grup ve komuta panelleri rol bazlı",
+    "sectorSelect": "Sektör seçimi",
+    "categoriesAria": "Operasyon kategorileri"
+  },
+  "headers": {
+    "atis": {
+      "title": "ATIŞ · RNG-01",
+      "subtitle": "Kişisel atış kayıtları — range_logs (bireysel kanal)"
+    },
+    "cqb": {
+      "title": "CQB · CQB-02",
+      "subtitle": "Kişisel CQB drill kayıtları — range_logs (bireysel kanal)"
+    },
+    "fof": {
+      "title": "FOF · FOF-03",
+      "subtitle": "Kişisel FOF kayıtları — range_logs (bireysel kanal)"
+    },
+    "vbss": {
+      "title": "VBSS · VBS-04",
+      "subtitle": "Canlı HUD (vbss_evaluations) · kişisel kayıtlar (vbss_logs)"
+    },
+    "tccc": {
+      "title": "TCCC · MED-05",
+      "subtitle": "Canlı HUD (tccc_evaluations) · kişisel kayıtlar (tccc_logs)"
+    },
+    "egitim": {
+      "title": "EĞİTİM · EDU-06",
+      "subtitle": "Kişisel eğitim planları — trainings (bireysel kanal)"
+    },
+    "grup-egitimi": {
+      "title": "GRUP EĞİTİMİ · GRP-07",
+      "subtitle": "Grup oturumu — group_trainings · training_results"
+    }
+  },
+  "sectors": {
+    "atis": {
+      "title": "ATIŞ",
+      "sectorLabel": "RNG-01 · Atış sektörü"
+    },
+    "cqb": {
+      "title": "CQB",
+      "sectorLabel": "CQB-02 · Yakın mesafe"
+    },
+    "fof": {
+      "title": "FOF",
+      "sectorLabel": "FOF-03 · Kuvvet karşılaşması"
+    },
+    "vbss": {
+      "title": "VBSS",
+      "sectorLabel": "VBS-04 · Gemi operasyonu"
+    },
+    "tccc": {
+      "title": "TCCC",
+      "sectorLabel": "MED-05 · Taktik saha bakımı"
+    },
+    "egitim": {
+      "title": "EĞİTİM",
+      "sectorLabel": "EDU-06 · Eğitim planı"
+    },
+    "grup-egitimi": {
+      "title": "Grup eğitimi",
+      "sectorLabel": "GRP-07 · Grup oturumu"
+    },
+    "egitmen-komuta": {
+      "title": "Eğitmen kontrol paneli",
+      "sectorLabel": "CMD-09 · Komuta"
+    }
+  },
+  "hub": {
+    "activeSession": "[ Eğitmen oturumu aktif ]",
+    "activeSingle": "\"{{name}}\" canlı — Grup eğitimi sektöründen katılın.",
+    "activeMultiple": "{{count}} aktif grup eğitimi — Grup eğitimi sektöründen katılın.",
+    "highlightActive": "Aktif eğitim",
+    "highlightCount": "{{count}} aktif",
+    "profileLoading": "Erişim profili doğrulanıyor…",
+    "groupHint": "Kişisel sektörler açık ·",
+    "groupLink": "grup eğitimi için Taktik Timim →"
+  }
+}

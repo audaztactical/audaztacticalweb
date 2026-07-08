@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import HudTicker from '../components/ui/HudTicker'
 import AtisShootingTerminal from '../components/training/AtisShootingTerminal'
 import CqbTerminal from '../components/training/CqbTerminal'
@@ -17,6 +18,10 @@ import { TrainingSessionProvider, useTrainingSession } from '../context/Training
 import { useAuth } from '../context/AuthContext'
 import { filterIndividualTrainingRecords } from '../lib/trainingGroupFields'
 import { useAudazData } from '../hooks/useAudazData'
+import {
+  formatTrainingHeaderSubtitle,
+  formatTrainingHeaderTitle,
+} from '../lib/trainingDisplayText'
 
 /** @typedef {import('../components/training/trainingCategories').TrainingCategory} TrainingCategory */
 
@@ -33,6 +38,7 @@ function itemTypeIsTrainingFromState(state) {
 }
 
 function TrainingInner() {
+  const { t } = useTranslation('training')
   const { role, userData, profileLoading } = useAuth()
   const userGroup = useMemo(() => resolveUserGroup(userData), [userData])
   const isInstructor = role === 'instructor'
@@ -198,37 +204,8 @@ function TrainingInner() {
   const showEgitim = activeCategory?.id === 'egitim'
   const showGrupEgitimi = activeCategory?.id === 'grup-egitimi' && canAccessGrupEgitimi
 
-  const headerTitle = showAtis
-    ? 'ATIŞ · RNG-01'
-    : showCqb
-      ? 'CQB · CQB-02'
-      : showFof
-        ? 'FOF · FOF-03'
-        : showVbss
-          ? 'VBSS · VBS-04'
-          : showTccc
-            ? 'TCCC · MED-05'
-            : showEgitim
-              ? 'EĞİTİM · EDU-06'
-              : showGrupEgitimi
-                ? 'GRUP EĞİTİMİ · GRP-07'
-                : 'TAKTİK EĞİTİM TERMINALİ'
-
-  const headerSubtitle = showAtis
-    ? 'Kişisel atış kayıtları — range_logs (bireysel kanal)'
-    : showCqb
-      ? 'Kişisel CQB drill kayıtları — range_logs (bireysel kanal)'
-      : showFof
-        ? 'Kişisel FOF kayıtları — range_logs (bireysel kanal)'
-        : showVbss
-          ? 'Canlı HUD (vbss_evaluations) · kişisel kayıtlar (vbss_logs)'
-          : showTccc
-            ? 'Canlı HUD (tccc_evaluations) · kişisel kayıtlar (tccc_logs)'
-            : showEgitim
-              ? 'Kişisel eğitim planları — trainings (bireysel kanal)'
-              : showGrupEgitimi
-                ? 'Grup oturumu — group_trainings · training_results'
-                : 'Bireysel antrenman tüm kullanıcılara açık · grup ve komuta panelleri rol bazlı'
+  const headerTitle = formatTrainingHeaderTitle(activeCategory)
+  const headerSubtitle = formatTrainingHeaderSubtitle(activeCategory)
 
   const terminalProps = {
     onBack: exitCategory,
@@ -242,7 +219,7 @@ function TrainingInner() {
         <header className="flex flex-wrap items-end justify-between gap-3 border-b border-white/10 pb-3">
           <div className="min-w-0 flex-1">
             <p className="font-mono-technical text-[10px] font-semibold uppercase tracking-[0.32em] text-accent/85">
-              [ ANTRENMAN VE OPERASYON ]
+              [ {t('page.kicker')} ]
             </p>
             <h1 className="font-display mt-1 text-lg font-bold tracking-[0.1em] text-app-text sm:text-xl">
               {headerTitle}
@@ -308,9 +285,9 @@ function TrainingInner() {
         ) : showGrupEgitimi ? (
           <GroupTrainingTerminal onBack={exitCategory} initialTrainingId={deepLinkTrainingId} />
         ) : (
-          <section aria-label="Operasyon kategorileri">
+          <section aria-label={t('page.categoriesAria')}>
             <p className="mb-3 font-mono-technical text-[8px] font-bold uppercase tracking-[0.28em] text-accent/70">
-              Sektör Seçimi
+              {t('page.sectorSelect')}
             </p>
             <TrainingCategoryHub onCategorySelect={handleCategorySelect} />
           </section>

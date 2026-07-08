@@ -1,0 +1,83 @@
+{
+  "page": {
+    "kicker": "Training & ops",
+    "hubTitle": "Tactical training terminal",
+    "hubSubtitle": "Individual training open to all users · group and command panels are role-based",
+    "sectorSelect": "Sector selection",
+    "categoriesAria": "Operation categories"
+  },
+  "headers": {
+    "atis": {
+      "title": "Marksmanship · RNG-01",
+      "subtitle": "Personal shooting records — range_logs (individual channel)"
+    },
+    "cqb": {
+      "title": "CQB · CQB-02",
+      "subtitle": "Personal CQB drill records — range_logs (individual channel)"
+    },
+    "fof": {
+      "title": "FOF · FOF-03",
+      "subtitle": "Personal FOF records — range_logs (individual channel)"
+    },
+    "vbss": {
+      "title": "VBSS · VBS-04",
+      "subtitle": "Live HUD (vbss_evaluations) · personal records (vbss_logs)"
+    },
+    "tccc": {
+      "title": "TCCC · MED-05",
+      "subtitle": "Live HUD (tccc_evaluations) · personal records (tccc_logs)"
+    },
+    "egitim": {
+      "title": "Training · EDU-06",
+      "subtitle": "Personal training plans — trainings (individual channel)"
+    },
+    "grup-egitimi": {
+      "title": "Group training · GRP-07",
+      "subtitle": "Group session — group_trainings · training_results"
+    }
+  },
+  "sectors": {
+    "atis": {
+      "title": "Marksmanship",
+      "sectorLabel": "RNG-01 · Marksmanship sector"
+    },
+    "cqb": {
+      "title": "CQB",
+      "sectorLabel": "CQB-02 · Close quarters"
+    },
+    "fof": {
+      "title": "FOF",
+      "sectorLabel": "FOF-03 · Force on force"
+    },
+    "vbss": {
+      "title": "VBSS",
+      "sectorLabel": "VBS-04 · Vessel boarding"
+    },
+    "tccc": {
+      "title": "TCCC",
+      "sectorLabel": "MED-05 · Tactical field care"
+    },
+    "egitim": {
+      "title": "Training",
+      "sectorLabel": "EDU-06 · Training plan"
+    },
+    "grup-egitimi": {
+      "title": "Group training",
+      "sectorLabel": "GRP-07 · Group session"
+    },
+    "egitmen-komuta": {
+      "title": "Instructor command panel",
+      "sectorLabel": "CMD-09 · Command"
+    }
+  },
+  "hub": {
+    "activeSession": "[ Instructor session active ]",
+    "activeSingle": "\"{{name}}\" is live — join from the Group training sector.",
+    "activeMultiple": "{{count}} active group trainings — join from the Group training sector.",
+    "highlightActive": "Active training",
+    "highlightCount": "{{count}} active",
+    "profileLoading": "Verifying access profile…",
+    "groupHint": "Individual sectors open ·",
+    "groupLink": "Tactical team for group training →"
+  }
+}

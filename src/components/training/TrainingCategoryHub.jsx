@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import TrainingCategoryCard from './TrainingCategoryCard'
 import {
   filterTrainingCategoriesByAccess,
@@ -9,6 +10,10 @@ import {
 } from './trainingCategories'
 import { useActiveGroupTrainings } from '../../hooks/useActiveGroupTrainings'
 import { useAuth } from '../../context/AuthContext'
+import {
+  formatTrainingCategoryTitle,
+  formatTrainingSectorLabel,
+} from '../../lib/trainingDisplayText'
 
 /**
  * @param {{
@@ -16,6 +21,7 @@ import { useAuth } from '../../context/AuthContext'
  * }} props
  */
 export default function TrainingCategoryHub({ onCategorySelect }) {
+  const { t } = useTranslation('training')
   const navigate = useNavigate()
   const { role, userData, profileLoading } = useAuth()
   const userGroup = resolveUserGroup(userData)
@@ -33,17 +39,17 @@ export default function TrainingCategoryHub({ onCategorySelect }) {
     const highlightLabel =
       isGroupSector && hasLiveGroupTraining
         ? activeGroupTrainings.length > 1
-          ? `${activeGroupTrainings.length} AKTİF`
-          : 'AKTİF EĞİTİM'
+          ? t('hub.highlightCount', { count: activeGroupTrainings.length })
+          : t('hub.highlightActive')
         : undefined
 
     return (
       <TrainingCategoryCard
         key={category.id}
-        title={category.title}
+        title={formatTrainingCategoryTitle(category.id)}
         imageSrc={category.imageSrc}
         opsCode={category.opsCode}
-        sectorLabel={category.sectorLabel}
+        sectorLabel={formatTrainingSectorLabel(category.id)}
         vizVariant={category.vizVariant}
         highlightLabel={highlightLabel}
         imagePriority={index < 2 ? 'high' : 'low'}
@@ -64,12 +70,12 @@ export default function TrainingCategoryHub({ onCategorySelect }) {
       {canSeeGroupTraining && hasLiveGroupTraining ? (
         <div className="rounded-lg border border-accent/30 bg-accent/[0.06] px-4 py-3">
           <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.3em] text-accent/85">
-            [ EĞİTMEN OTURUMU AKTİF ]
+            {t('hub.activeSession')}
           </p>
           <p className="mt-1 font-mono-technical text-xs text-app-text/90">
             {activeGroupTrainings.length === 1
-              ? `"${activeGroupTrainings[0].trainingName}" canlı — Grup Eğitimi sektöründen katılın.`
-              : `${activeGroupTrainings.length} aktif grup eğitimi — Grup Eğitimi sektöründen katılın.`}
+              ? t('hub.activeSingle', { name: activeGroupTrainings[0].trainingName })
+              : t('hub.activeMultiple', { count: activeGroupTrainings.length })}
           </p>
         </div>
       ) : null}
@@ -91,15 +97,15 @@ export default function TrainingCategoryHub({ onCategorySelect }) {
 
       {profileLoading ? (
         <p className="font-mono-technical text-[9px] uppercase tracking-wider text-app-text/45">
-          Erişim profili doğrulanıyor…
+          {t('hub.profileLoading')}
         </p>
       ) : null}
 
       {!profileLoading && visibleCategories.length < TRAINING_CATEGORIES.length && !isInstructor ? (
         <p className="font-mono-technical text-[8px] uppercase tracking-[0.2em] text-app-text/45">
-          Kişisel sektörler açık ·{' '}
+          {t('hub.groupHint')}{' '}
           <Link to="/ayarlar" className="text-accent/80 transition hover:text-accent">
-            grup eğitimi için Taktik Timim →
+            {t('hub.groupLink')}
           </Link>
         </p>
       ) : null}
