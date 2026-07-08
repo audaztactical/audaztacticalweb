@@ -47,4 +47,18 @@ i18n.use(initReactI18next).init({
     : {}),
 })
 
+/** @param {unknown} lng */
+export function normalizeAppLanguage(lng) {
+  return String(lng ?? '').toLowerCase().startsWith('tr') ? 'tr' : 'en'
+}
+
+/** CSS text-transform: uppercase locale kuralları için <html lang> senkronu. */
+export function syncDocumentLanguage(lng) {
+  if (typeof document === 'undefined') return
+  document.documentElement.lang = normalizeAppLanguage(lng)
+}
+
+syncDocumentLanguage(i18n.language)
+i18n.on('languageChanged', syncDocumentLanguage)
+
 export default i18n
