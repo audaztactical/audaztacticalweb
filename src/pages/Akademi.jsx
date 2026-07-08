@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
+import { useTranslation } from 'react-i18next'
 import { BookOpen, ExternalLink, Loader2, Lock, PlayCircle, ShieldAlert, X } from 'lucide-react'
 import PageShell from '../components/layout/PageShell'
 import TacticalPanel from '../components/ui/TacticalPanel'
+import i18n from '../i18n'
 import { emitFirebaseError } from '../lib/firebaseErrorBus'
 import {
   formatAkademiDate,
@@ -14,22 +16,28 @@ import {
 /** Geçici bakım — false yapınca tam Akademi içeriği geri gelir. */
 const AKADEMI_COMING_SOON = true
 
-const akademiShellProps = {
-  fullWidth: true,
-  hideSector: true,
-  className: 'w-full px-6 sm:px-8 lg:px-10',
-  title: 'Audaz Akademi',
-  subtitle: 'Saha doktrinleri ve eğitim video kütüphanesi — komuta merkezi içerik akışı.',
+function useAkademiShellProps() {
+  const { t } = useTranslation('academy')
+  return {
+    fullWidth: true,
+    hideSector: true,
+    className: 'w-full px-6 sm:px-8 lg:px-10',
+    title: t('header.title'),
+    subtitle: t('header.subtitle'),
+  }
 }
 
 function AkademiComingSoonScreen() {
+  const { t } = useTranslation('academy')
+  const shellProps = useAkademiShellProps()
+
   return (
-    <PageShell {...akademiShellProps}>
+    <PageShell {...shellProps}>
       <div className="flex min-h-[min(58vh,480px)] w-full flex-col items-center justify-center py-8">
         <TacticalPanel className="w-full max-w-4xl border-accent/25 bg-app-bg/95 p-0 shadow-[0_0_24px_-8px_color-mix(in_srgb,var(--accent-color)_35%,transparent)]]">
           <div className="border-b border-accent/15 bg-app-bg px-6 py-4 text-center sm:px-8">
             <p className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.32em] text-accent/85">
-              SİSTEM ERİŞİMİ: AKADEMİ
+              {t('comingSoon.badge')}
             </p>
           </div>
           <div className="flex flex-col items-center p-8 text-center sm:p-12">
@@ -38,13 +46,13 @@ function AkademiComingSoonScreen() {
               <Lock className="absolute -bottom-1 -right-1 size-4 rounded-full border border-accent/40 bg-black p-0.5 text-accent/80" strokeWidth={2} aria-hidden />
             </div>
             <p className="font-mono-technical text-3xl font-bold uppercase tracking-[0.22em] text-accent">
-              GELİŞTİRME AŞAMASINDA
+              {t('comingSoon.title')}
             </p>
             <p className="mt-2 font-mono-technical text-sm font-bold uppercase tracking-[0.28em] text-accent/75">
-              YAKINDA AKTİF
+              {t('comingSoon.subtitle')}
             </p>
             <p className="mt-6 max-w-2xl font-mono-technical text-base leading-relaxed text-app-text/60">
-              Bu modül şu an operasyon dışı. Diğer taktik kanallar (Karargah, Cephanelik, Antrenman) normal erişime açıktır.
+              {t('comingSoon.body')}
             </p>
           </div>
         </TacticalPanel>
@@ -89,7 +97,10 @@ function AkademiTabButton({ label, active, onSelect }) {
  * }} props
  */
 function DoctrineReaderModal({ doctrine, onClose }) {
+  const { t } = useTranslation('academy')
   if (!doctrine) return null
+
+  const emptyBody = `*${t('doctrineModal.emptyBody')}*`
 
   return (
     <div
@@ -105,7 +116,9 @@ function DoctrineReaderModal({ doctrine, onClose }) {
       >
         <div className="flex items-start justify-between gap-3 border-b border-zinc-800 px-5 py-4">
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-zinc-500">[ SAHA DOKTRİNİ ]</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-zinc-500">
+              {t('doctrineModal.badge')}
+            </p>
             <h2 id="doctrine-reader-title" className="mt-1 truncate text-lg font-semibold text-zinc-100">
               {doctrine.title}
             </h2>
@@ -117,7 +130,7 @@ function DoctrineReaderModal({ doctrine, onClose }) {
             type="button"
             onClick={onClose}
             className="shrink-0 rounded p-1.5 text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-200"
-            aria-label="Kapat"
+            aria-label={t('doctrineModal.close')}
           >
             <X className="size-5" strokeWidth={1.75} aria-hidden />
           </button>
@@ -128,7 +141,7 @@ function DoctrineReaderModal({ doctrine, onClose }) {
             <p className="mb-4 border-l-2 border-lime-500/40 pl-3 text-sm italic text-zinc-400">{doctrine.teaser}</p>
           ) : null}
           <div className="prose prose-invert max-w-none text-sm leading-relaxed text-zinc-300 prose-headings:text-zinc-100 prose-a:text-lime-400">
-            <ReactMarkdown>{doctrine.body || '*İçerik henüz eklenmemiş.*'}</ReactMarkdown>
+            <ReactMarkdown>{doctrine.body || emptyBody}</ReactMarkdown>
           </div>
         </div>
       </div>
@@ -143,6 +156,7 @@ function DoctrineReaderModal({ doctrine, onClose }) {
  * }} props
  */
 function VideoPlayerModal({ video, onClose }) {
+  const { t } = useTranslation('academy')
   if (!video) return null
 
   const embedUrl = toVideoEmbedUrl(video.url)
@@ -162,7 +176,9 @@ function VideoPlayerModal({ video, onClose }) {
       >
         <div className="flex items-start justify-between gap-3 border-b border-zinc-800 px-5 py-4">
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-zinc-500">[ EĞİTİM VİDEOSU ]</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-zinc-500">
+              {t('videoModal.badge')}
+            </p>
             <h2 id="video-player-title" className="mt-1 truncate text-lg font-semibold text-zinc-100">
               {video.title}
             </h2>
@@ -171,7 +187,7 @@ function VideoPlayerModal({ video, onClose }) {
             type="button"
             onClick={onClose}
             className="shrink-0 rounded p-1.5 text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-200"
-            aria-label="Kapat"
+            aria-label={t('videoModal.close')}
           >
             <X className="size-5" strokeWidth={1.75} aria-hidden />
           </button>
@@ -190,7 +206,7 @@ function VideoPlayerModal({ video, onClose }) {
             </div>
           ) : (
             <div className="rounded border border-zinc-800 bg-zinc-900/50 px-4 py-8 text-center">
-              <p className="text-sm text-zinc-400">Bu bağlantı gömülü oynatıcıda desteklenmiyor.</p>
+              <p className="text-sm text-zinc-400">{t('videoModal.embedUnsupported')}</p>
               <a
                 href={video.url}
                 target="_blank"
@@ -198,7 +214,7 @@ function VideoPlayerModal({ video, onClose }) {
                 className="mt-4 inline-flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-widest text-lime-400 hover:text-lime-300"
               >
                 <ExternalLink className="size-4" aria-hidden />
-                Yeni sekmede izle
+                {t('videoModal.openExternal')}
               </a>
             </div>
           )}
@@ -209,6 +225,8 @@ function VideoPlayerModal({ video, onClose }) {
 }
 
 function AkademiContent() {
+  const { t } = useTranslation('academy')
+  const shellProps = useAkademiShellProps()
   const [activeTab, setActiveTab] = useState(/** @type {AkademiTab} */ ('doktrinler'))
 
   const [doctrines, setDoctrines] = useState(/** @type {AkademiDoctrine[]} */ ([]))
@@ -231,7 +249,7 @@ function AkademiContent() {
       },
       (err) => {
         emitFirebaseError(err)
-        setDoctrinesError(err instanceof Error ? err.message : 'Doktrinler yüklenemedi.')
+        setDoctrinesError(err instanceof Error ? err.message : i18n.t('doctrines.loadFailed', { ns: 'academy' }))
         setDoctrinesLoading(false)
       },
     )
@@ -248,7 +266,7 @@ function AkademiContent() {
       },
       (err) => {
         emitFirebaseError(err)
-        setVideosError(err instanceof Error ? err.message : 'Videolar yüklenemedi.')
+        setVideosError(err instanceof Error ? err.message : i18n.t('videos.loadFailed', { ns: 'academy' }))
         setVideosLoading(false)
       },
     )
@@ -256,28 +274,28 @@ function AkademiContent() {
   }, [])
 
   return (
-    <PageShell {...akademiShellProps}>
+    <PageShell {...shellProps}>
       <div className="mb-6 flex flex-wrap gap-2">
         <AkademiTabButton
           id="doktrinler"
-          label="[ SAHA DOKTRİNLERİ ]"
+          label={t('tabs.doctrines')}
           active={activeTab === 'doktrinler'}
           onSelect={() => setActiveTab('doktrinler')}
         />
         <AkademiTabButton
           id="videolar"
-          label="[ EĞİTİM VİDEOLARI ]"
+          label={t('tabs.videos')}
           active={activeTab === 'videolar'}
           onSelect={() => setActiveTab('videolar')}
         />
       </div>
 
       {activeTab === 'doktrinler' ? (
-        <section aria-label="Saha doktrinleri">
+        <section aria-label={t('doctrines.sectionAria')}>
           {doctrinesLoading ? (
             <div className="flex items-center justify-center gap-2 py-16 font-mono text-xs text-zinc-500">
               <Loader2 className="size-4 animate-spin text-lime-500/60" aria-hidden />
-              Doktrinler senkronize ediliyor…
+              {t('doctrines.loading')}
             </div>
           ) : doctrinesError ? (
             <p className="rounded border border-red-900/50 bg-red-950/20 px-4 py-3 font-mono text-xs text-red-300">
@@ -285,7 +303,7 @@ function AkademiContent() {
             </p>
           ) : doctrines.length === 0 ? (
             <p className="rounded border border-zinc-800 bg-zinc-950/40 px-4 py-10 text-center font-mono text-xs text-zinc-500">
-              Henüz doktrin yok. Komuta merkezi içerik eklediğinde burada listelenecek.
+              {t('doctrines.empty')}
             </p>
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -312,7 +330,7 @@ function AkademiContent() {
                     onClick={() => setReadingDoctrine(doc)}
                     className="mt-auto self-start rounded border border-zinc-700 px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-lime-400 transition hover:border-lime-500/50 hover:bg-lime-950/30"
                   >
-                    [ OKU ]
+                    {t('doctrines.read')}
                   </button>
                 </article>
               ))}
@@ -320,11 +338,11 @@ function AkademiContent() {
           )}
         </section>
       ) : (
-        <section aria-label="Eğitim videoları">
+        <section aria-label={t('videos.sectionAria')}>
           {videosLoading ? (
             <div className="flex items-center justify-center gap-2 py-16 font-mono text-xs text-zinc-500">
               <Loader2 className="size-4 animate-spin text-lime-500/60" aria-hidden />
-              Videolar senkronize ediliyor…
+              {t('videos.loading')}
             </div>
           ) : videosError ? (
             <p className="rounded border border-red-900/50 bg-red-950/20 px-4 py-3 font-mono text-xs text-red-300">
@@ -332,7 +350,7 @@ function AkademiContent() {
             </p>
           ) : videos.length === 0 ? (
             <p className="rounded border border-zinc-800 bg-zinc-950/40 px-4 py-10 text-center font-mono text-xs text-zinc-500">
-              Henüz eğitim videosu yok.
+              {t('videos.empty')}
             </p>
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -346,7 +364,7 @@ function AkademiContent() {
                     <div className="min-w-0">
                       <h3 className="font-mono text-sm font-bold uppercase tracking-wide text-zinc-100">{video.title}</h3>
                       <p className="mt-1 text-[10px] uppercase tracking-wider text-zinc-500">
-                        Eğitmen / Kategori · Genel Eğitim
+                        {t('videos.categoryMeta')}
                       </p>
                       <p className="mt-1 font-mono text-[10px] text-zinc-600">{formatAkademiDate(video.createdAt)}</p>
                     </div>
@@ -356,7 +374,7 @@ function AkademiContent() {
                     onClick={() => setWatchingVideo(video)}
                     className="mt-auto self-start rounded border border-zinc-700 px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-lime-400 transition hover:border-lime-500/50 hover:bg-lime-950/30"
                   >
-                    [ İZLE ]
+                    {t('videos.watch')}
                   </button>
                 </article>
               ))}

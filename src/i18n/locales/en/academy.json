@@ -1,0 +1,42 @@
+{
+  "header": {
+    "title": "Audaz Academy",
+    "subtitle": "Field doctrines and training video library — command center content feed."
+  },
+  "comingSoon": {
+    "badge": "System access: academy",
+    "title": "Under development",
+    "subtitle": "Coming soon",
+    "body": "This module is currently offline. Other tactical channels (Command, Armory, Training) remain accessible."
+  },
+  "tabs": {
+    "doctrines": "[ Field doctrines ]",
+    "videos": "[ Training videos ]"
+  },
+  "doctrines": {
+    "sectionAria": "Field doctrines",
+    "loading": "Syncing doctrines…",
+    "loadFailed": "Could not load doctrines.",
+    "empty": "No doctrines yet. Items will appear here when command center adds content.",
+    "read": "[ Read ]"
+  },
+  "videos": {
+    "sectionAria": "Training videos",
+    "loading": "Syncing videos…",
+    "loadFailed": "Could not load videos.",
+    "empty": "No training videos yet.",
+    "categoryMeta": "Instructor / Category · General training",
+    "watch": "[ Watch ]"
+  },
+  "doctrineModal": {
+    "badge": "[ Field doctrine ]",
+    "close": "Close",
+    "emptyBody": "Content not yet added."
+  },
+  "videoModal": {
+    "badge": "[ Training video ]",
+    "close": "Close",
+    "embedUnsupported": "This link is not supported in the embedded player.",
+    "openExternal": "Watch in new tab"
+  }
+}

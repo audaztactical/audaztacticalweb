@@ -10,6 +10,8 @@ import trProfile from './locales/tr/profile.json'
 import enProfile from './locales/en/profile.json'
 import trMessages from './locales/tr/messages.json'
 import enMessages from './locales/en/messages.json'
+import trAcademy from './locales/tr/academy.json'
+import enAcademy from './locales/en/academy.json'
 
 export const SUPPORTED_LANGUAGES = /** @type {const} */ (['tr', 'en'])
 
@@ -26,14 +28,14 @@ const isDev = typeof import.meta !== 'undefined' && Boolean(import.meta.env?.DEV
 
 i18n.use(initReactI18next).init({
   resources: {
-    tr: { common: trCommon, dashboard: trDashboard, nav: trNav, profile: trProfile, messages: trMessages },
-    en: { common: enCommon, dashboard: enDashboard, nav: enNav, profile: enProfile, messages: enMessages },
+    tr: { common: trCommon, dashboard: trDashboard, nav: trNav, profile: trProfile, messages: trMessages, academy: trAcademy },
+    en: { common: enCommon, dashboard: enDashboard, nav: enNav, profile: enProfile, messages: enMessages, academy: enAcademy },
   },
   lng: detectBrowserLanguage(),
   fallbackLng: 'en',
   supportedLngs: [...SUPPORTED_LANGUAGES],
   defaultNS: 'common',
-  ns: ['common', 'dashboard', 'nav', 'profile', 'messages'],
+  ns: ['common', 'dashboard', 'nav', 'profile', 'messages', 'academy'],
   interpolation: { escapeValue: false },
   ...(isDev
     ? {

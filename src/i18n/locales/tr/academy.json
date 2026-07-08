@@ -1,0 +1,42 @@
+{
+  "header": {
+    "title": "Audaz Akademi",
+    "subtitle": "Saha doktrinleri ve eğitim video kütüphanesi — komuta merkezi içerik akışı."
+  },
+  "comingSoon": {
+    "badge": "Sistem erişimi: akademi",
+    "title": "Geliştirme aşamasında",
+    "subtitle": "Yakında aktif",
+    "body": "Bu modül şu an operasyon dışı. Diğer taktik kanallar (Karargah, Cephanelik, Antrenman) normal erişime açıktır."
+  },
+  "tabs": {
+    "doctrines": "[ Saha doktrinleri ]",
+    "videos": "[ Eğitim videoları ]"
+  },
+  "doctrines": {
+    "sectionAria": "Saha doktrinleri",
+    "loading": "Doktrinler senkronize ediliyor…",
+    "loadFailed": "Doktrinler yüklenemedi.",
+    "empty": "Henüz doktrin yok. Komuta merkezi içerik eklediğinde burada listelenecek.",
+    "read": "[ Oku ]"
+  },
+  "videos": {
+    "sectionAria": "Eğitim videoları",
+    "loading": "Videolar senkronize ediliyor…",
+    "loadFailed": "Videolar yüklenemedi.",
+    "empty": "Henüz eğitim videosu yok.",
+    "categoryMeta": "Eğitmen / Kategori · Genel eğitim",
+    "watch": "[ İzle ]"
+  },
+  "doctrineModal": {
+    "badge": "[ Saha doktrini ]",
+    "close": "Kapat",
+    "emptyBody": "İçerik henüz eklenmemiş."
+  },
+  "videoModal": {
+    "badge": "[ Eğitim videosu ]",
+    "close": "Kapat",
+    "embedUnsupported": "Bu bağlantı gömülü oynatıcıda desteklenmiyor.",
+    "openExternal": "Yeni sekmede izle"
+  }
+}
