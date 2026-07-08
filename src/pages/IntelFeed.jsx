@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ExternalLink, Globe, Languages, Loader2, Radio, ShieldAlert } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import VideoNewsGrid from '../components/intel/VideoNewsGrid'
 import { emitFirebaseError } from '../lib/firebaseErrorBus'
-import { formatIntelTimestamp, subscribeIntelFeed } from '../lib/firestoreIntelFeed'
+import { formatIntelTimestampDisplay } from '../lib/intelDisplayText'
+import { subscribeIntelFeed } from '../lib/firestoreIntelFeed'
+import i18n from '../i18n'
 
 /** @typedef {import('../lib/firestoreIntelFeed').IntelFeedItem} IntelFeedItem */
 /** @typedef {'written' | 'video'} IntelFeedTab */
@@ -42,6 +45,7 @@ const cardVariants = {
  * @param {{ item: IntelFeedItem }} props
  */
 function IntelCard({ item }) {
+  const { t } = useTranslation('intel')
   const [showTurkish, setShowTurkish] = useState(true)
 
   const title = showTurkish ? item.trTitle || item.enTitle : item.enTitle || item.trTitle
@@ -75,7 +79,7 @@ function IntelCard({ item }) {
           <span className="truncate">{item.source}</span>
         </p>
         <time className="shrink-0 font-mono-technical text-[9px] tabular-nums text-gray-500">
-          {formatIntelTimestamp(item.timestamp)}
+          {formatIntelTimestampDisplay(item.timestamp)}
         </time>
       </header>
 
@@ -89,10 +93,10 @@ function IntelCard({ item }) {
           className="space-y-3"
         >
           <h2 className="font-display text-sm font-bold uppercase leading-tight tracking-wide text-gray-100 sm:text-base">
-            {title || 'BAŞLIK YOK'}
+            {title || t('card.noTitle')}
           </h2>
           <p className="font-mono-technical text-[11px] leading-relaxed text-gray-400">
-            {summary || 'Özet mevcut değil.'}
+            {summary || t('card.noSummary')}
           </p>
         </motion.div>
       </AnimatePresence>
@@ -109,7 +113,7 @@ function IntelCard({ item }) {
               </span>
             ))
           ) : (
-            <span className="font-mono-technical text-[8px] uppercase text-gray-600">ETİKET YOK</span>
+            <span className="font-mono-technical text-[8px] uppercase text-gray-600">{t('card.noTags')}</span>
           )}
         </div>
 
@@ -122,7 +126,7 @@ function IntelCard({ item }) {
               className="inline-flex items-center gap-1.5 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-gray-500 transition hover:text-[#ffaa00]"
             >
               <ExternalLink className="size-3 shrink-0" aria-hidden />
-              KAYNAĞA GİT
+              {t('card.goToSource')}
             </a>
           ) : null}
 
@@ -133,7 +137,7 @@ function IntelCard({ item }) {
               className="inline-flex shrink-0 items-center gap-1.5 rounded border border-gray-700 bg-black/40 px-2.5 py-1.5 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-[#ffaa00] transition hover:border-[#ffaa00]/60 hover:bg-[#ffaa00]/10"
             >
               <Languages className="size-3" aria-hidden />
-              {showTurkish ? 'ORİJİNAL DİL' : 'ŞİFREYİ ÇÖZ (TR)'}
+              {showTurkish ? t('card.showOriginal') : t('card.showTurkish')}
             </button>
           ) : null}
         </div>
@@ -143,6 +147,7 @@ function IntelCard({ item }) {
 }
 
 export default function IntelFeed() {
+  const { t } = useTranslation('intel')
   const [feedTab, setFeedTab] = useState(/** @type {IntelFeedTab} */ ('written'))
   const [items, setItems] = useState(/** @type {IntelFeedItem[]} */ ([]))
   const [loading, setLoading] = useState(true)
@@ -159,7 +164,7 @@ export default function IntelFeed() {
       },
       (err) => {
         emitFirebaseError(err)
-        setError('Haber akışı senkronize edilemedi.')
+        setError(i18n.t('written.loadFailed', { ns: 'intel' }))
         setLoading(false)
       },
     )
@@ -185,27 +190,27 @@ export default function IntelFeed() {
           <div className="min-w-0 space-y-2">
             <h1 className="font-display flex items-center gap-3 text-2xl font-bold tracking-[0.14em] text-app-text sm:text-3xl">
               <Globe className="size-7 shrink-0 text-[#ffaa00]" strokeWidth={1.5} aria-hidden />
-              KÜRESEL HABER AĞI
+              {t('header.title')}
             </h1>
             <p className="max-w-2xl font-mono-technical text-[10px] leading-relaxed text-app-text/55">
-              Küresel taktik ve askeri kaynaklardan canlı haber akışı · yazılı ve video haberler
+              {t('header.subtitle')}
             </p>
           </div>
         </header>
 
         <nav
           className="flex flex-wrap gap-1 border-b border-gray-800"
-          aria-label="Haber alt sekmeleri"
+          aria-label={t('tabs.aria')}
         >
           <IntelFeedTabButton
             active={feedTab === 'written'}
             onClick={() => setFeedTab('written')}
-            label="Yazılı Haberler"
+            label={t('tabs.written')}
           />
           <IntelFeedTabButton
             active={feedTab === 'video'}
             onClick={() => setFeedTab('video')}
-            label="Video Haberler"
+            label={t('tabs.video')}
           />
         </nav>
 
@@ -214,7 +219,7 @@ export default function IntelFeed() {
         ) : loading ? (
           <p className="flex items-center justify-center gap-2 py-24 font-mono-technical text-[10px] uppercase text-app-text/55">
             <Loader2 className="size-4 animate-spin text-[#ffaa00]" aria-hidden />
-            Haber paketleri alınıyor…
+            {t('written.loading')}
           </p>
         ) : error ? (
           <p className="rounded border border-red-500/35 bg-red-950/20 px-4 py-8 text-center font-mono-technical text-[10px] uppercase text-red-300">
@@ -224,10 +229,10 @@ export default function IntelFeed() {
           <div className="rounded border border-gray-800 bg-[#111]/80 px-6 py-16 text-center">
             <Radio className="mx-auto size-8 text-gray-600" aria-hidden />
             <p className="mt-4 font-mono-technical text-[10px] uppercase tracking-wider text-gray-500">
-              HENÜZ HABER KAYDI YOK
+              {t('written.emptyTitle')}
             </p>
             <p className="mt-2 font-mono-technical text-[9px] text-gray-600">
-              news_feed koleksiyonuna kayıt eklendiğinde akış burada görünür.
+              {t('written.emptyHint')}
             </p>
           </div>
         ) : (

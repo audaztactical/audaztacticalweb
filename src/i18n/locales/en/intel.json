@@ -1,0 +1,43 @@
+{
+  "header": {
+    "title": "Global intel network",
+    "subtitle": "Live feed from global tactical and military sources · written and video news"
+  },
+  "tabs": {
+    "aria": "News sub-tabs",
+    "written": "Written news",
+    "video": "Video news"
+  },
+  "written": {
+    "loading": "Fetching news packages…",
+    "loadFailed": "Could not sync news feed.",
+    "emptyTitle": "No news records yet",
+    "emptyHint": "Items appear here when records are added to the news_feed collection."
+  },
+  "card": {
+    "noTitle": "No title",
+    "noSummary": "No summary available.",
+    "noTags": "No tags",
+    "goToSource": "Go to source",
+    "showOriginal": "Original language",
+    "showTurkish": "Decode (TR)"
+  },
+  "video": {
+    "filterLabel": "Channel filter",
+    "filterAll": "All",
+    "defaultOrigin": "Tactical video news",
+    "loading": "Fetching video packages…",
+    "loadFailed": "Could not load video news feed.",
+    "loadMoreFailed": "Could not load additional video packages.",
+    "openVideo": "Open video",
+    "close": "Close",
+    "modalHint": "Use the external link if the source page cannot open in the embedded viewer.",
+    "openAtSource": "Open at source",
+    "emptyAllTitle": "No video news records yet",
+    "emptyAllHint": "Items appear here when records are added to video_news from tactical YouTube channels.",
+    "emptyFilteredTitle": "No records found for {{channel}}",
+    "emptyFilteredHint": "Try a different channel filter or wait for new records to sync.",
+    "loadMore": "[ Load more ]",
+    "loadingMore": "[ Scanning signal... ]"
+  }
+}

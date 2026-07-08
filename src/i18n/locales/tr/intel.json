@@ -1,0 +1,43 @@
+{
+  "header": {
+    "title": "Küresel haber ağı",
+    "subtitle": "Küresel taktik ve askeri kaynaklardan canlı haber akışı · yazılı ve video haberler"
+  },
+  "tabs": {
+    "aria": "Haber alt sekmeleri",
+    "written": "Yazılı haberler",
+    "video": "Video haberler"
+  },
+  "written": {
+    "loading": "Haber paketleri alınıyor…",
+    "loadFailed": "Haber akışı senkronize edilemedi.",
+    "emptyTitle": "Henüz haber kaydı yok",
+    "emptyHint": "news_feed koleksiyonuna kayıt eklendiğinde akış burada görünür."
+  },
+  "card": {
+    "noTitle": "Başlık yok",
+    "noSummary": "Özet mevcut değil.",
+    "noTags": "Etiket yok",
+    "goToSource": "Kaynağa git",
+    "showOriginal": "Orijinal dil",
+    "showTurkish": "Şifreyi çöz (TR)"
+  },
+  "video": {
+    "filterLabel": "Kanal filtresi",
+    "filterAll": "Tümü",
+    "defaultOrigin": "Taktiksel video haberi",
+    "loading": "Video paketleri alınıyor…",
+    "loadFailed": "Video haber akışı yüklenemedi.",
+    "loadMoreFailed": "Ek video paketleri alınamadı.",
+    "openVideo": "Videoyu aç",
+    "close": "Kapat",
+    "modalHint": "Kaynak sayfa gömülü görüntüleyicide açılamazsa harici bağlantıyı kullanın.",
+    "openAtSource": "Kaynakta aç",
+    "emptyAllTitle": "Henüz video haber kaydı yok",
+    "emptyAllHint": "Taktik YouTube kanallarından video_news koleksiyonuna kayıt eklendiğinde burada görünür.",
+    "emptyFilteredTitle": "{{channel}} için kayıt bulunamadı",
+    "emptyFilteredHint": "Farklı bir kanal filtresi seçin veya yeni kayıtların senkronunu bekleyin.",
+    "loadMore": "[ Daha fazla yükle ]",
+    "loadingMore": "[ Sinyal aranıyor... ]"
+  }
+}

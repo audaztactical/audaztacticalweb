@@ -1,13 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ExternalLink, Filter, Loader2, Play, Radio, Video, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
 import {
   fetchVideoNewsPage,
-  formatVideoNewsDisplayDate,
   subscribeYoutubeChannelFilters,
   VIDEO_NEWS_PAGE_SIZE,
 } from '../../lib/firestoreVideoNews'
+import {
+  formatVideoChannelFilterLabel,
+  formatVideoNewsDisplayDateDisplay,
+  formatVideoOriginDisplay,
+  INTEL_VIDEO_FILTER_ALL,
+} from '../../lib/intelDisplayText'
+import i18n from '../../i18n'
 
 /** @typedef {import('../../lib/firestoreVideoNews').VideoNewsItem} VideoNewsItem */
 /** @typedef {import('firebase/firestore').QueryDocumentSnapshot} QueryDocumentSnapshot */
@@ -20,13 +27,6 @@ function resolveVideoEmbedUrl(item) {
   const match = item.url.match(/[?&]v=([^&]+)/)
   if (match?.[1]) return `https://www.youtube.com/embed/${match[1]}`
   return item.url
-}
-
-/**
- * @param {VideoNewsItem} item
- */
-function displayOrigin(item) {
-  return item.origin?.trim() || 'Taktiksel Video Haberi'
 }
 
 const cardVariants = {
@@ -42,6 +42,8 @@ const cardVariants = {
  * @param {{ item: VideoNewsItem, onOpen: (item: VideoNewsItem) => void }} props
  */
 function VideoNewsCard({ item, onOpen }) {
+  const { t } = useTranslation('intel')
+
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-sm border border-gray-800 bg-app-bg transition-all duration-300 hover:border-[#ffaa00] hover:shadow-[0_0_22px_-6px_rgba(255,170,0,0.3)]">
       <div className="relative aspect-video overflow-hidden border-b border-gray-800 bg-black/60">
@@ -67,10 +69,10 @@ function VideoNewsCard({ item, onOpen }) {
       <div className="flex flex-1 flex-col p-4">
         <header className="mb-2 flex items-start justify-between gap-2 border-b border-gray-800/80 pb-2">
           <p className="font-mono-technical text-[9px] uppercase tracking-wider text-gray-500">
-            {displayOrigin(item)}
+            {formatVideoOriginDisplay(item.origin)}
           </p>
           <time className="shrink-0 font-mono-technical text-[9px] tabular-nums text-gray-600">
-            {formatVideoNewsDisplayDate(item)}
+            {formatVideoNewsDisplayDateDisplay(item)}
           </time>
         </header>
 
@@ -90,7 +92,7 @@ function VideoNewsCard({ item, onOpen }) {
           className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded border border-[#ffaa00]/40 bg-[#ffaa00]/10 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#ffaa00] transition hover:border-[#ffaa00]/70 hover:bg-[#ffaa00]/15"
         >
           <Play className="size-3.5" aria-hidden />
-          Videoyu Aç
+          {t('video.openVideo')}
         </button>
       </div>
     </article>
@@ -101,6 +103,8 @@ function VideoNewsCard({ item, onOpen }) {
  * @param {{ item: VideoNewsItem, onClose: () => void }} props
  */
 function VideoNewsModal({ item, onClose }) {
+  const { t } = useTranslation('intel')
+
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === 'Escape') onClose()
@@ -130,7 +134,7 @@ function VideoNewsModal({ item, onClose }) {
         <header className="flex items-start justify-between gap-3 border-b border-gray-800 px-4 py-3">
           <div className="min-w-0">
             <p className="font-mono-technical text-[9px] uppercase tracking-wider text-[#ffaa00]">
-              {displayOrigin(item)}
+              {formatVideoOriginDisplay(item.origin)}
             </p>
             <h2 id="video-modal-title" className="font-display mt-1 text-sm font-bold uppercase text-app-text">
               {item.title}
@@ -140,7 +144,7 @@ function VideoNewsModal({ item, onClose }) {
             type="button"
             onClick={onClose}
             className="shrink-0 rounded border border-gray-700 p-1.5 text-gray-400 transition hover:border-gray-600 hover:text-app-text"
-            aria-label="Kapat"
+            aria-label={t('video.close')}
           >
             <X className="size-4" aria-hidden />
           </button>
@@ -159,7 +163,7 @@ function VideoNewsModal({ item, onClose }) {
 
         <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-800 px-4 py-3">
           <p className="font-mono-technical text-[9px] text-gray-500">
-            Kaynak sayfa gömülü görüntüleyicide açılamazsa harici bağlantıyı kullanın.
+            {t('video.modalHint')}
           </p>
           <a
             href={item.url}
@@ -168,7 +172,7 @@ function VideoNewsModal({ item, onClose }) {
             className="inline-flex items-center gap-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#ffaa00] hover:text-[#ffcc55]"
           >
             <ExternalLink className="size-3.5" aria-hidden />
-            KAYNAKTA AÇ
+            {t('video.openAtSource')}
           </a>
         </footer>
       </motion.div>
@@ -177,15 +181,16 @@ function VideoNewsModal({ item, onClose }) {
 }
 
 export default function VideoNewsGrid() {
+  const { t } = useTranslation('intel')
   const [videos, setVideos] = useState(/** @type {VideoNewsItem[]} */ ([]))
-  const [selectedFilter, setSelectedFilter] = useState('TÜMÜ')
+  const [selectedFilter, setSelectedFilter] = useState(INTEL_VIDEO_FILTER_ALL)
   const [lastDoc, setLastDoc] = useState(/** @type {QueryDocumentSnapshot | null} */ (null))
   const [hasMore, setHasMore] = useState(true)
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState(/** @type {string | null} */ (null))
   const [activeVideo, setActiveVideo] = useState(/** @type {VideoNewsItem | null} */ (null))
-  const [channelFilters, setChannelFilters] = useState(/** @type {string[]} */ (['TÜMÜ']))
+  const [channelFilters, setChannelFilters] = useState(/** @type {string[]} */ ([INTEL_VIDEO_FILTER_ALL]))
 
   const fetchSeq = useRef(0)
 
@@ -195,7 +200,7 @@ export default function VideoNewsGrid() {
 
   useEffect(() => {
     if (!channelFilters.includes(selectedFilter)) {
-      setSelectedFilter('TÜMÜ')
+      setSelectedFilter(INTEL_VIDEO_FILTER_ALL)
     }
   }, [channelFilters, selectedFilter])
 
@@ -221,7 +226,7 @@ export default function VideoNewsGrid() {
     } catch (err) {
       if (seq !== fetchSeq.current) return
       emitFirebaseError(err)
-      setError('Video haber akışı yüklenemedi.')
+      setError(i18n.t('video.loadFailed', { ns: 'intel' }))
       setVideos([])
       setLastDoc(null)
       setHasMore(false)
@@ -256,13 +261,14 @@ export default function VideoNewsGrid() {
       setHasMore(result.hasMore)
     } catch (err) {
       emitFirebaseError(err)
-      setError('Ek video paketleri alınamadı.')
+      setError(i18n.t('video.loadMoreFailed', { ns: 'intel' }))
     } finally {
       setLoadingMore(false)
     }
   }
 
   const showInitialLoader = loading && videos.length === 0
+  const selectedFilterLabel = formatVideoChannelFilterLabel(selectedFilter)
 
   return (
     <div className="space-y-5">
@@ -272,7 +278,7 @@ export default function VideoNewsGrid() {
           className="mb-2 flex items-center gap-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-gray-500"
         >
           <Filter className="size-3.5 text-[#ffaa00]/70" aria-hidden />
-          Kanal filtresi
+          {t('video.filterLabel')}
         </label>
         <div className="relative max-w-md">
           <select
@@ -284,7 +290,7 @@ export default function VideoNewsGrid() {
           >
             {channelFilters.map((channel) => (
               <option key={channel} value={channel} className="bg-app-bg text-gray-300">
-                {channel}
+                {formatVideoChannelFilterLabel(channel)}
               </option>
             ))}
           </select>
@@ -306,18 +312,20 @@ export default function VideoNewsGrid() {
       {showInitialLoader ? (
         <p className="flex items-center justify-center gap-2 py-24 font-mono-technical text-[10px] uppercase text-app-text/55">
           <Loader2 className="size-4 animate-spin text-[#ffaa00]" aria-hidden />
-          Video paketleri alınıyor…
+          {t('video.loading')}
         </p>
       ) : !loading && videos.length === 0 ? (
         <div className="rounded border border-gray-800 bg-[#111]/80 px-6 py-16 text-center">
           <Radio className="mx-auto size-8 text-gray-600" aria-hidden />
           <p className="mt-4 font-mono-technical text-[10px] uppercase tracking-wider text-gray-500">
-            {selectedFilter === 'TÜMÜ'
-              ? 'HENÜZ VİDEO HABER KAYDI YOK'
-              : `${selectedFilter} İÇİN KAYIT BULUNAMADI`}
+            {selectedFilter === INTEL_VIDEO_FILTER_ALL
+              ? t('video.emptyAllTitle')
+              : t('video.emptyFilteredTitle', { channel: selectedFilterLabel })}
           </p>
           <p className="mt-2 font-mono-technical text-[9px] text-gray-600">
-            Taktik YouTube kanallarından video_news koleksiyonuna kayıt eklendiğinde burada görünür.
+            {selectedFilter === INTEL_VIDEO_FILTER_ALL
+              ? t('video.emptyAllHint')
+              : t('video.emptyFilteredHint')}
           </p>
         </div>
       ) : (
@@ -347,10 +355,10 @@ export default function VideoNewsGrid() {
                 {loadingMore ? (
                   <>
                     <Loader2 className="size-3.5 animate-spin text-[#ffaa00]" aria-hidden />
-                    [ SİNYAL ARANIYOR... ]
+                    {t('video.loadingMore')}
                   </>
                 ) : (
-                  '[ DAHA FAZLA YÜKLE ]'
+                  t('video.loadMore')
                 )}
               </button>
             </div>
