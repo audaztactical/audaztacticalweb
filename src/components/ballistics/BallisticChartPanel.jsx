@@ -119,8 +119,8 @@ function MetricChart({
           <span className="ml-1 font-normal text-app-text/45">({metric.unit})</span>
         </p>
       ) : null}
-      <div className={compact ? 'h-52 min-h-[12rem] w-full sm:h-56' : 'h-56 min-h-[13rem] w-full sm:h-64'}>
-        <ResponsiveContainer width="100%" height="100%">
+      <div className={compact ? 'h-52 min-h-[12rem] w-full min-w-0 sm:h-56' : 'h-56 min-h-[13rem] w-full min-w-0 sm:h-64'}>
+        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={50}>
           <ComposedChart
             data={chartData}
             margin={{ top: 8, right: 12, left: 4, bottom: 4 }}

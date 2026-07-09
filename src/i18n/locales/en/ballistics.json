@@ -172,8 +172,8 @@
     },
     "lockReference": "LOCK REFERENCE",
     "updateReference": "UPDATE REFERENCE",
-    "clearReference": "UNLOCK",
-    "clearReferenceAria": "Clear reference lock",
+    "clearReference": "CLEAR REFERENCE",
+    "clearReferenceAria": "Clear reference lock and return to zero-based totals",
     "refBadge": "REF: {{distance}}m",
     "deltaBadge": "DELTA",
     "deltaModeHint": "Values are deltas from the locked reference"

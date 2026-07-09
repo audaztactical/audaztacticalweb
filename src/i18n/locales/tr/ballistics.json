@@ -172,8 +172,8 @@
     },
     "lockReference": "REFERANSI KİLİTLE",
     "updateReference": "REFERANSI GÜNCELLE",
-    "clearReference": "KİLİDİ AÇ",
-    "clearReferenceAria": "Referans kilidini aç",
+    "clearReference": "REFERANSI SIFIRLA",
+    "clearReferenceAria": "Referans kilidini kaldır ve sıfırdan toplam moda dön",
     "refBadge": "REF: {{distance}}m",
     "deltaBadge": "FARK",
     "deltaModeHint": "Değerler kilitli referansa göre farktır"

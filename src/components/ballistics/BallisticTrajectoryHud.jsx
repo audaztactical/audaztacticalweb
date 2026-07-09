@@ -3,6 +3,14 @@ import { useTranslation } from 'react-i18next'
 import { motion as Motion } from 'framer-motion'
 
 /**
+ * @param {number} value
+ * @param {number} fallback
+ */
+function finiteOr(value, fallback) {
+  return Number.isFinite(value) ? value : fallback
+}
+
+/**
  * Sonuç setine göre basitleştirilmiş yörünge HUD animasyonu (dekoratif).
  * @param {{ results: import('../../lib/ballisticsEngine.js').BallisticsPointResult[], activeDistance: number }} props
  */
@@ -16,13 +24,15 @@ export default function BallisticTrajectoryHud({ results, activeDistance }) {
     const h = 44
     const baseY = 12
     const maxR = Math.max(...results.map((r) => r.distance), 1)
-    const maxDrop = Math.max(...results.map((r) => Math.abs(r.dropCm)), 1)
+    const maxDrop = Math.max(...results.map((r) => Math.abs(Number(r.dropCm) || 0)), 1)
+    const distance = Number(activeDistance)
+    const safeDistance = Number.isFinite(distance) ? distance : results[0].distance
 
     const pts = results.map((r) => {
       const x = 8 + (r.distance / maxR) * w
-      const dropNorm = Math.abs(r.dropCm) / maxDrop
+      const dropNorm = Math.abs(Number(r.dropCm) || 0) / maxDrop
       const y = baseY + dropNorm * h
-      return { x, y }
+      return { x: finiteOr(x, 8), y: finiteOr(y, baseY) }
     })
 
     let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`
@@ -31,10 +41,10 @@ export default function BallisticTrajectoryHud({ results, activeDistance }) {
     }
 
     const active = results.reduce((best, r) =>
-      Math.abs(r.distance - activeDistance) < Math.abs(best.distance - activeDistance) ? r : best,
+      Math.abs(r.distance - safeDistance) < Math.abs(best.distance - safeDistance) ? r : best,
     )
-    const ax = 8 + (active.distance / maxR) * w
-    const ay = baseY + (Math.abs(active.dropCm) / maxDrop) * h
+    const ax = finiteOr(8 + (active.distance / maxR) * w, 8)
+    const ay = finiteOr(baseY + (Math.abs(Number(active.dropCm) || 0) / maxDrop) * h, baseY)
 
     return { pathD: d, bulletX: ax, bulletY: ay, maxRange: maxR }
   }, [results, activeDistance])
@@ -43,7 +53,7 @@ export default function BallisticTrajectoryHud({ results, activeDistance }) {
     <div className="relative shrink-0 overflow-hidden rounded-lg border border-emerald-500/20 bg-black/60 p-1.5 sm:p-2">
       <p className="mb-0.5 font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-emerald-500/80">
         {t('trajectory.label', {
-          active: Math.round(activeDistance),
+          active: Math.round(Number.isFinite(activeDistance) ? activeDistance : 0),
           max: Math.round(maxRange),
         })}
       </p>
@@ -72,18 +82,25 @@ export default function BallisticTrajectoryHud({ results, activeDistance }) {
           strokeDasharray="4 3"
           opacity="0.85"
         />
+        {/* cx/cy must be set as SVG attrs — Framer animate-only leaves them undefined on first paint */}
         <Motion.circle
+          cx={bulletX}
+          cy={bulletY}
           r="4"
           fill="#22c55e"
           filter="url(#bulletGlow)"
+          initial={false}
           animate={{ cx: bulletX, cy: bulletY }}
           transition={{ type: 'spring', stiffness: 280, damping: 28 }}
         />
         <Motion.circle
+          cx={bulletX}
+          cy={bulletY}
           r="8"
           fill="none"
           stroke="rgba(34,197,94,0.35)"
           strokeWidth="1"
+          initial={false}
           animate={{ cx: bulletX, cy: bulletY }}
           transition={{ type: 'spring', stiffness: 280, damping: 28 }}
         />

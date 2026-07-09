@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Crosshair, Lock, Target, X } from 'lucide-react'
+import { Crosshair, Lock, Pin, Target, Unlock } from 'lucide-react'
 import { pickNearestResult } from './BallisticChartPanel.jsx'
 import { isDualClickUnitDisplay, parseClickUnitSystem } from '../../lib/clickUnitSystem.js'
 import { elevationDirection, windDirection } from '../../lib/ballisticsDisplayText.js'
@@ -142,6 +142,7 @@ export default function BallisticQuickReferencePanel({
 }) {
   const { t } = useTranslation('ballistics')
   const [mode, setMode] = useState(/** @type {QuickRefMode} */ ('tik'))
+  /** Session-only; always starts unlocked (null). Never persisted. */
   const [lockedRefDistance, setLockedRefDistance] = useState(/** @type {number | null} */ (null))
 
   useEffect(() => {
@@ -158,7 +159,7 @@ export default function BallisticQuickReferencePanel({
   )
 
   const referenceResult = useMemo(() => {
-    if (lockedRefDistance == null) return null
+    if (lockedRefDistance === null) return null
     return pickNearestResult(results, lockedRefDistance)
   }, [results, lockedRefDistance])
 
@@ -172,9 +173,11 @@ export default function BallisticQuickReferencePanel({
 
   if (!activeResult) return null
 
+  // Locked only when user explicitly set a distance AND that row exists in results.
+  const isLocked = lockedRefDistance !== null && referenceResult != null
   const display = resolveDisplayValues(
     activeResult,
-    referenceResult,
+    isLocked ? referenceResult : null,
     clickUnitSystem,
     clickValueMoa,
     clickValueMrad,
@@ -184,10 +187,11 @@ export default function BallisticQuickReferencePanel({
   const dropHint = bodySizeHint(display.dropCm, t)
   const windHint = bodySizeHint(display.windageCm, t)
   const unitLabel = display.hasClickValue ? t('quickRef.tikLabel') : display.angleUnit
-  const isLocked = lockedRefDistance != null && Boolean(referenceResult)
 
   const lockReference = () => {
-    setLockedRefDistance(Math.round(activeDistance))
+    const d = Math.round(Number(activeDistance))
+    if (!Number.isFinite(d)) return
+    setLockedRefDistance(d)
   }
 
   const clearReference = () => {
@@ -233,31 +237,40 @@ export default function BallisticQuickReferencePanel({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 border-b border-amber-500/10 px-3 py-1.5">
-        <button
-          type="button"
-          onClick={lockReference}
-          className="inline-flex items-center gap-1.5 rounded border border-amber-500/40 bg-amber-500/10 px-2 py-1 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-amber-200 transition hover:border-amber-400/55 hover:bg-amber-500/15"
-        >
-          <Lock className="size-3 shrink-0" aria-hidden />
-          {isLocked ? t('quickRef.updateReference') : t('quickRef.lockReference')}
-        </button>
-        {isLocked ? (
+      <div className="flex flex-wrap items-center gap-2 border-b border-amber-500/10 bg-amber-500/[0.03] px-3 py-2">
+        {!isLocked ? (
           <button
             type="button"
-            onClick={clearReference}
-            aria-label={t('quickRef.clearReferenceAria')}
-            className="inline-flex items-center gap-1 rounded border border-white/15 px-2 py-1 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-app-text/60 transition hover:border-white/25 hover:text-app-text/90"
+            onClick={lockReference}
+            className="inline-flex items-center gap-1.5 rounded border border-amber-400/50 bg-amber-500/15 px-2.5 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-amber-100 shadow-[0_0_12px_rgba(251,191,36,0.12)] transition hover:border-amber-300/60 hover:bg-amber-500/25"
           >
-            <X className="size-3 shrink-0" aria-hidden />
-            {t('quickRef.clearReference')}
+            <Pin className="size-3.5 shrink-0" aria-hidden />
+            {t('quickRef.lockReference')}
           </button>
-        ) : null}
-        {isLocked ? (
-          <span className="font-mono-technical text-[8px] uppercase tracking-wider text-amber-500/55">
-            {t('quickRef.deltaModeHint')}
-          </span>
-        ) : null}
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={lockReference}
+              className="inline-flex items-center gap-1.5 rounded border border-amber-500/40 bg-amber-500/10 px-2.5 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-amber-200 transition hover:border-amber-400/55 hover:bg-amber-500/15"
+            >
+              <Pin className="size-3.5 shrink-0" aria-hidden />
+              {t('quickRef.updateReference')}
+            </button>
+            <button
+              type="button"
+              onClick={clearReference}
+              aria-label={t('quickRef.clearReferenceAria')}
+              className="inline-flex items-center gap-1 rounded border border-white/20 px-2.5 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-app-text/70 transition hover:border-white/30 hover:text-app-text/95"
+            >
+              <Unlock className="size-3.5 shrink-0" aria-hidden />
+              {t('quickRef.clearReference')}
+            </button>
+            <span className="font-mono-technical text-[8px] uppercase tracking-wider text-amber-500/55">
+              {t('quickRef.deltaModeHint')}
+            </span>
+          </>
+        )}
       </div>
 
       <div className="grid gap-2 px-3 py-2.5 sm:grid-cols-[minmax(0,7rem)_1fr] sm:items-center sm:gap-3">
@@ -352,7 +365,7 @@ export default function BallisticQuickReferencePanel({
           {summaryRows.map(({ target, row }, index) => {
             const rowDisplay = resolveDisplayValues(
               row,
-              referenceResult,
+              isLocked ? referenceResult : null,
               clickUnitSystem,
               clickValueMoa,
               clickValueMrad,
@@ -361,7 +374,7 @@ export default function BallisticQuickReferencePanel({
             const rowWind = windDirection(rowDisplay.windageCm)
             const isActive = Math.abs(row.distance - activeDistance) < 1
             const isRefRow =
-              lockedRefDistance != null && Math.abs(row.distance - lockedRefDistance) < 1
+              isLocked && Math.abs(row.distance - lockedRefDistance) < 1
             const unitShort = rowDisplay.hasClickValue
               ? t('quickRef.abbrev.tik')
               : rowDisplay.angleUnit.slice(0, 1)
