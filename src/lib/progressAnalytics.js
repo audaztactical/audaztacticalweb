@@ -18,7 +18,14 @@ import {
   isUnverifiedObservedEval,
   getObservedEvalActivityTitle,
 } from './observedEvalRegistry'
-import { progressT, labelProgressSubTopic } from './progressDisplayText.js'
+import {
+  formatAtisActivityTitle,
+  formatCqbActivityTitle,
+  formatFofActivityTitle,
+  formatVbssActivityTitle,
+  labelProgressSubTopic,
+  progressT,
+} from './progressDisplayText.js'
 
 const CQB_CRITICAL_ERROR_IDS = new Set(['fatal_funnel_hang', 'muzzle_flagging'])
 
@@ -517,20 +524,18 @@ export function countLogCriticalErrors(row) {
 export function getLogActivityTitle(row) {
   if (isObservedEvalLog(row)) return getObservedEvalActivityTitle(row)
   const tag = getLogDisciplineTag(row)
+  // Prefer key-based i18n display helpers — never use stored TR drillName/shootType summaries.
+  if (tag === 'CQB') return formatCqbActivityTitle(row)
+  if (tag === 'ATIS') return formatAtisActivityTitle(row)
+  if (tag === 'FOF') return formatFofActivityTitle(row)
+  if (tag === 'VBSS') return formatVbssActivityTitle(row)
+  if (tag === 'TCCC') {
+    const drill = invStr(row.drillName ?? row.shootType).trim()
+    if (drill) return drill
+    return getTcccPhase(row) || progressT('activityTitles.drillFallbacks.tccc')
+  }
   const drill = invStr(row.drillName ?? row.shootType).trim()
   if (drill) return drill
-  if (tag === 'TCCC') return getTcccPhase(row) || progressT('activityTitles.drillFallbacks.tccc')
-  if (tag === 'CQB') return invStr(row.roomTopology).trim() || progressT('activityTitles.drillFallbacks.cqb')
-  if (tag === 'ATIS') return getAtisDrillName(row)
-  if (tag === 'FOF') return getFofScenarioType(row) || progressT('activityTitles.drillFallbacks.fof')
-  if (tag === 'VBSS') {
-    const vessel = getVbssVesselType(row)
-    const insertion = getVbssInsertionMethod(row)
-    return (
-      [vessel, insertion].filter((p) => p && p !== '—').join(' · ') ||
-      progressT('activityTitles.drillFallbacks.vbss')
-    )
-  }
   return progressT('activityTitles.sessionFallback', { tag })
 }
 
@@ -710,29 +715,23 @@ function disciplineAllLabel(discipline) {
 const MERGE_FALLBACK_DISCIPLINES = new Set(/** @type {DisciplineFilter[]} */ (['fof', 'vbss']))
 
 /**
- * Firestore range_logs kaydından görünen görev/konu etiketi (drillName / shootType).
+ * Firestore range_logs kaydından görünen görev/konu etiketi.
+ * Display-facing — uses i18n helpers (not stored TR drillName summaries).
  * @param {Record<string, unknown>} row
  */
 export function getLogTopicLabel(row) {
+  const tag = getLogDisciplineTag(row)
+  if (tag === 'CQB') return formatCqbActivityTitle(row)
+  if (tag === 'ATIS') return formatAtisActivityTitle(row)
+  if (tag === 'FOF') return formatFofActivityTitle(row)
+  if (tag === 'VBSS') return formatVbssActivityTitle(row)
+
   const drill = invStr(row.drillName ?? row.shootType).trim()
   if (drill && drill !== '—') return drill
 
-  const tag = getLogDisciplineTag(row)
-  if (tag === 'ATIS') {
-    const atis = getAtisDrillName(row)
-    return atis !== '—' ? atis : ''
-  }
-  if (tag === 'CQB') return invStr(row.roomTopology).trim()
-  if (tag === 'TCCC') return getTcccPhase(row) !== '—' ? getTcccPhase(row) : ''
-  if (tag === 'FOF') {
-    const scenario = getFofScenarioType(row)
-    return scenario !== '—' ? scenario : ''
-  }
-  if (tag === 'VBSS') {
-    const vessel = getVbssVesselType(row)
-    const insertion = getVbssInsertionMethod(row)
-    const parts = [vessel, insertion].filter((p) => p && p !== '—')
-    return parts.length ? parts.join(' · ') : ''
+  if (tag === 'TCCC') {
+    const phase = getTcccPhase(row)
+    return phase !== '—' ? phase : ''
   }
   return ''
 }

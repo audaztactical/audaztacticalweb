@@ -165,9 +165,9 @@ export function TcccHudTooltipContent({ logRow }) {
   const model = buildTcccHudTooltipModel(logRow)
 
   return (
-    <div className={TACTICAL_TOOLTIP_CLASS} role="tooltip" style={{ width: 'max-content', minWidth: 300 }}>
-      <div className="max-h-[300px] overflow-x-hidden overflow-y-auto pr-1">
-        <div className="space-y-1.5 font-mono text-[10px] uppercase leading-relaxed tracking-wide">
+    <div className={TACTICAL_TOOLTIP_CLASS} role="tooltip">
+      <div className="max-h-[min(50vh,300px)] overflow-x-hidden overflow-y-auto pr-1">
+        <div className="space-y-1.5 font-mono text-[10px] uppercase leading-relaxed tracking-wide break-words">
         <p
           className={
             model.failed
@@ -209,16 +209,8 @@ export function TcccHudTooltipContent({ logRow }) {
   )
 }
 
-/** Recharts tooltip — STRES-PERFORMANS DALGASI: sabit üst Y, sınır kaçışı, offset. */
-const STRESS_PERFORMANCE_WAVE_TOOLTIP = {
-  offset: 25,
-  allowEscapeViewBox: { x: false, y: true },
-  /** @param {{ x?: number } | undefined} coord */
-  position: (coord) => ({
-    x: coord?.x ?? 0,
-    y: 50,
-  }),
-}
+/** Recharts tooltip — STRES-PERFORMANS DALGASI: portal + viewport clamp (see TcccReactionWaveChart). */
+const STRESS_PERFORMANCE_WAVE_TOOLTIP = {}
 
 /**
  * TCCC stres dalgası — uzun debrief tooltip jitter önlenir.
@@ -1157,7 +1149,7 @@ export default function ProgressHudPanels({
       </header>
 
       <section
-        className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"
+        className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
         aria-hidden={gridInert ? true : undefined}
         {...(gridInert ? { inert: true } : {})}
       >

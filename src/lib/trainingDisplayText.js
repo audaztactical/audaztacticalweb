@@ -11,6 +11,11 @@ import {
 } from './atisLogRegistry'
 import {
   CQB_CUSTOM,
+  ROOM_TOPOLOGY_OPTIONS,
+  ENTRY_METHOD_OPTIONS,
+  BREACHING_TYPE_OPTIONS,
+  DOOR_STATE_OPTIONS,
+  TEAM_SIZE_OPTIONS,
   TACTICAL_ERROR_GROUPS,
   decodeCustomTacticalError,
   isCustomTacticalError,
@@ -573,6 +578,37 @@ const CQB_CUSTOM_FIELD_MAP = {
 }
 
 /**
+ * Resolve a stored CQB select value that may be a key OR a legacy TR label.
+ * @param {'roomTopology' | 'entryMethod' | 'breachingType' | 'doorState' | 'teamSize'} optionType
+ * @param {string} raw
+ */
+function resolveCqbOptionIdFromStored(optionType, raw) {
+  const value = String(raw ?? '').trim()
+  if (!value || value === '—' || value === 'Özel') return ''
+  const options =
+    optionType === 'roomTopology'
+      ? ROOM_TOPOLOGY_OPTIONS
+      : optionType === 'entryMethod'
+        ? ENTRY_METHOD_OPTIONS
+        : optionType === 'breachingType'
+          ? BREACHING_TYPE_OPTIONS
+          : optionType === 'doorState'
+            ? DOOR_STATE_OPTIONS
+            : TEAM_SIZE_OPTIONS
+  const byId = options.find((o) => o.id === value)
+  if (byId) return byId.id
+  const byLabel = options.find((o) => o.label.toLocaleLowerCase('tr-TR') === value.toLocaleLowerCase('tr-TR'))
+  if (byLabel) return byLabel.id
+  // Compound stored labels like "Dinamik · Criss-Cross" may match entry method labels exactly
+  const byPartial = options.find(
+    (o) =>
+      o.label.toLocaleLowerCase('tr-TR') === value.toLocaleLowerCase('tr-TR') ||
+      value.toLocaleLowerCase('tr-TR').includes(o.label.toLocaleLowerCase('tr-TR')),
+  )
+  return byPartial?.id ?? ''
+}
+
+/**
  * @param {Record<string, unknown>} row
  * @param {'roomTopology' | 'entryMethod' | 'breachingType' | 'doorState'} field
  */
@@ -581,23 +617,27 @@ export function formatCqbSelectFieldDisplay(row, field) {
   const key = String(row[keyField] ?? '').trim()
   const customField = CQB_CUSTOM_FIELD_MAP[field]
   const custom = customField ? String(row[customField] ?? '').trim() : ''
+  const optionType =
+    field === 'roomTopology'
+      ? 'roomTopology'
+      : field === 'entryMethod'
+        ? 'entryMethod'
+        : field === 'breachingType'
+          ? 'breachingType'
+          : 'doorState'
   if (key === CQB_CUSTOM) {
     return custom || i18n.t('sectors.cqb.errors.customPhase', { ns: 'training' })
   }
   if (key) {
-    const optionType =
-      field === 'roomTopology'
-        ? 'roomTopology'
-        : field === 'entryMethod'
-          ? 'entryMethod'
-          : field === 'breachingType'
-            ? 'breachingType'
-            : 'doorState'
     return formatCqbOptionLabel(optionType, key, key)
   }
   const storedLabel = String(row[field] ?? '').trim()
-  if (storedLabel && storedLabel !== 'Özel' && storedLabel !== '—') return storedLabel
-  return '—'
+  if (!storedLabel || storedLabel === 'Özel' || storedLabel === '—') return '—'
+  const resolvedId = resolveCqbOptionIdFromStored(optionType, storedLabel)
+  if (resolvedId && resolvedId !== CQB_CUSTOM) {
+    return formatCqbOptionLabel(optionType, resolvedId, storedLabel)
+  }
+  return storedLabel
 }
 
 /** @param {'scenarioType' | 'simSystem' | 'engagementType'} optionType */

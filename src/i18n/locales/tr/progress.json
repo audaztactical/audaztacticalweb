@@ -236,7 +236,8 @@
       "tccc": "TCCC DRILL",
       "cqb": "CQB DRILL",
       "fof": "FOF DRILL",
-      "vbss": "VBSS DRILL"
+      "vbss": "VBSS DRILL",
+      "atis": "ATIS DRILL"
     }
   },
   "radarErrors": {

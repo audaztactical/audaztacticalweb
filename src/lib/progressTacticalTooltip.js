@@ -2,7 +2,6 @@ import { getAtisRoundsAndHits, getAtisDrillName, isAtisShootingLog } from './ati
 import { isCqbLog } from './cqbLogRegistry'
 import { isFofLog } from './fofLogRegistry'
 import { isVbssLog } from './vbssLogRegistry'
-import { labelTacticalError } from './cqbOptions'
 import { invNum, invStr } from './inventoryIlws'
 import {
   countLogCriticalErrors,
@@ -10,7 +9,7 @@ import {
   getLogDisciplineTag,
 } from './progressAnalytics'
 import { getLogCompletionTimeSec, resolveLogFocusId } from './progressHudAnalytics'
-import { progressT } from './progressDisplayText'
+import { formatProgressTacticalErrorLabel, progressT } from './progressDisplayText'
 import { isTcccSimulationLog } from './simulationHistoryHelpers'
 import { buildTcccHudTooltipModel, isTcccSimulationFailed } from './tcccSimHudAnalytics'
 
@@ -57,18 +56,17 @@ function hasCriticalViolation(row) {
 
 /** @param {Record<string, unknown>} row */
 function formatTacticalErrorsList(row) {
+  const tag = getLogDisciplineTag(row)
   const labels = []
   if (row.blueOnBlue) labels.push(progressT('tooltips.blueOnBlue'))
   const errors = Array.isArray(row.tacticalErrors) ? row.tacticalErrors : []
   for (const raw of errors) {
     const id = invStr(raw).trim()
     if (!id) continue
-    labels.push(labelTacticalError(id).toUpperCase())
+    labels.push(formatProgressTacticalErrorLabel(id, tag).toUpperCase())
   }
-  const fromLabels = Array.isArray(row.tacticalErrorsLabels)
-    ? row.tacticalErrorsLabels.map((l) => invStr(l).trim()).filter(Boolean)
-    : []
-  const merged = [...new Set([...labels, ...fromLabels])]
+  // Do NOT merge stored tacticalErrorsLabels (TR snapshots) — IDs + i18n only.
+  const merged = [...new Set(labels)]
   return merged.length ? merged.join(' · ') : progressT('tooltips.cleanLane')
 }
 

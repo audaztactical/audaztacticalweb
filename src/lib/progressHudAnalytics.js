@@ -2,7 +2,6 @@ import { isAtisShootingLog, getAtisAccuracyPercent, getAtisRoundsAndHits } from 
 import { isCqbLog } from './cqbLogRegistry'
 import { isFofLog } from './fofLogRegistry'
 import { isVbssLog } from './vbssLogRegistry'
-import { labelTacticalError } from './cqbOptions'
 import { invNum, invStr } from './inventoryIlws'
 import {
   filterSimulationLogs,
@@ -19,7 +18,7 @@ import {
   buildTcccReactionChartPoints,
   resolveTcccReactionChartEfficiency,
 } from './tcccSimHudAnalytics'
-import { progressLocale, progressT } from './progressDisplayText.js'
+import { formatProgressTacticalErrorLabel, progressLocale, progressT } from './progressDisplayText.js'
 
 /** @param {Record<string, unknown>} row */
 export function getLogCompletionTimeSec(row) {
@@ -164,7 +163,7 @@ export function buildChronicErrorRadar(logs) {
     for (const raw of errors) {
       const id = invStr(raw).trim()
       if (!id) continue
-      const label = labelTacticalError(id).toUpperCase()
+      const label = formatProgressTacticalErrorLabel(id, getLogDisciplineTag(row)).toUpperCase()
       const code = ERROR_CODES[/** @type {keyof typeof ERROR_CODES} */ (id)] ?? `ERR_${id.slice(0, 8).toUpperCase()}`
       bump(id, label, code)
     }

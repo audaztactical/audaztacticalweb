@@ -1,6 +1,16 @@
 import i18n from '../i18n'
-import { formatTrainingCategoryTitle } from './trainingDisplayText.js'
+import {
+  formatAtisDrillNameDisplay,
+  formatCqbOptionLabel,
+  formatCqbSelectFieldDisplay,
+  formatCqbTacticalErrorLabel,
+  formatFofSelectFieldDisplay,
+  formatFofTacticalErrorLabel,
+  formatTrainingCategoryTitle,
+  formatVbssSelectFieldDisplay,
+} from './trainingDisplayText.js'
 import { humanizeOrsPenaltyCode } from './dashboardDisplayText.js'
+import { invStr } from './inventoryIlws.js'
 
 const NS = 'progress'
 
@@ -118,3 +128,69 @@ export function formatTcccOrsPenaltyBanner(abbrev) {
 }
 
 export { humanizeOrsPenaltyCode }
+
+/**
+ * CQB feed/title line — same field helpers as CQB registry / PDF (never raw TR drillName).
+ * @param {Record<string, unknown>} row
+ */
+export function formatCqbActivityTitle(row) {
+  const teamRaw = invStr(row.teamSize).trim()
+  let team = ''
+  if (teamRaw && teamRaw !== '—') {
+    const teamId =
+      ['1-Man', '2-Man', '3-Man', '4-Man Team'].find((id) => id === teamRaw) ||
+      (teamRaw.match(/^[1-4]/) ? `${teamRaw.match(/^[1-4]/)?.[0]}-Man` : '')
+    team = teamId
+      ? formatCqbOptionLabel('teamSize', teamId === '4' ? '4-Man Team' : teamId.includes('Man') ? teamId : `${teamId}-Man`, teamRaw)
+      : formatCqbOptionLabel('teamSize', teamRaw, teamRaw)
+  }
+  const parts = [
+    formatCqbSelectFieldDisplay(row, 'roomTopology'),
+    formatCqbSelectFieldDisplay(row, 'entryMethod'),
+    formatCqbSelectFieldDisplay(row, 'breachingType'),
+    team,
+  ].filter((p) => p && p !== '—')
+  return parts.join(' · ') || progressT('activityTitles.drillFallbacks.cqb')
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ */
+export function formatFofActivityTitle(row) {
+  const scenario = formatFofSelectFieldDisplay(row, 'scenarioType')
+  const sim = formatFofSelectFieldDisplay(row, 'simSystem')
+  const parts = [scenario, sim].filter((p) => p && p !== '—')
+  return parts.join(' · ') || progressT('activityTitles.drillFallbacks.fof')
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ */
+export function formatVbssActivityTitle(row) {
+  const vessel = formatVbssSelectFieldDisplay(row, 'vesselType')
+  const insertion = formatVbssSelectFieldDisplay(row, 'insertionMethod')
+  const parts = [vessel, insertion].filter((p) => p && p !== '—')
+  return parts.join(' · ') || progressT('activityTitles.drillFallbacks.vbss')
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ */
+export function formatAtisActivityTitle(row) {
+  return formatAtisDrillNameDisplay(row) || progressT('activityTitles.drillFallbacks.atis', {
+    defaultValue: 'ATIS DRILL',
+  })
+}
+
+/**
+ * Route tactical error IDs through training i18n (not cqbOptions TR presets).
+ * @param {string} errorId
+ * @param {string} [disciplineTag]
+ */
+export function formatProgressTacticalErrorLabel(errorId, disciplineTag = '') {
+  const id = String(errorId ?? '').trim()
+  if (!id) return '—'
+  const tag = String(disciplineTag ?? '').toUpperCase()
+  if (tag === 'FOF') return formatFofTacticalErrorLabel(id)
+  return formatCqbTacticalErrorLabel(id)
+}
