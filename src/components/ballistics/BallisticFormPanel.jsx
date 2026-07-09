@@ -212,10 +212,12 @@ function computeAutoExpandFlags({
  *   selectedProfileId: string
  *   onSelectProfile: (id: string) => void
  *   onSaveProfile: () => void
+ *   onDeleteProfile?: () => void | Promise<void>
  *   onArmoryFill: () => void
  *   onCalculate: () => void
  *   calculating: boolean
  *   profileSaving: boolean
+ *   profileDeleting?: boolean
  *   autoExpandTrigger?: number
  *   onUnlockInventorySection?: (group: 'weapon' | 'optic' | 'ammo') => void
  *   onMarkInventoryOverrides?: (paths: string[]) => void
@@ -236,10 +238,12 @@ export default function BallisticFormPanel({
   selectedProfileId,
   onSelectProfile,
   onSaveProfile,
+  onDeleteProfile,
   onArmoryFill,
   onCalculate,
   calculating,
   profileSaving,
+  profileDeleting = false,
   autoExpandTrigger = 0,
   onUnlockInventorySection,
   onMarkInventoryOverrides,
@@ -255,6 +259,7 @@ export default function BallisticFormPanel({
 
   const [openSections, setOpenSections] = useState(DEFAULT_OPEN)
   const [unlockTarget, setUnlockTarget] = useState(/** @type {'weapon' | 'optic' | 'ammo' | null} */ (null))
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const userToggledRef = useRef(/** @type {Set<FormSectionId>} */ (new Set()))
   const prevAutoExpandTriggerRef = useRef(0)
   const prevArmoryRevisionRef = useRef(0)
@@ -382,6 +387,52 @@ export default function BallisticFormPanel({
           setUnlockTarget(null)
         }}
       />
+
+      {deleteConfirmOpen ? (
+        <div className="fixed inset-0 z-[250] flex items-end justify-center bg-black/75 p-3 sm:items-center">
+          <button
+            type="button"
+            className="absolute inset-0 cursor-default"
+            aria-label={t('form.deleteModal.closeAria')}
+            onClick={() => !profileDeleting && setDeleteConfirmOpen(false)}
+          />
+          <div className="relative z-[1] w-full max-w-md rounded-lg border border-rose-500/40 bg-app-bg p-4 shadow-2xl">
+            <p className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.22em] text-rose-400">
+              {t('form.deleteModal.title')}
+            </p>
+            <p className="mt-3 font-mono-technical text-xs leading-relaxed text-slate-200">
+              {t('form.deleteModal.body', {
+                name: String(form.profileName || selectedProfileId || '—').trim() || '—',
+              })}
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                type="button"
+                className={deleteCancelBtnClass}
+                disabled={profileDeleting}
+                onClick={() => setDeleteConfirmOpen(false)}
+              >
+                {t('form.deleteModal.cancel')}
+              </button>
+              <button
+                type="button"
+                className={deleteConfirmBtnClass}
+                disabled={profileDeleting}
+                onClick={async () => {
+                  try {
+                    await onDeleteProfile?.()
+                  } finally {
+                    setDeleteConfirmOpen(false)
+                  }
+                }}
+              >
+                {profileDeleting ? t('form.deletingProfile') : t('form.deleteModal.confirm')}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <div className="flex min-h-0 flex-1 flex-col">
         <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-y-contain pb-1 [-webkit-overflow-scrolling:touch]">
       <FormAccordionSection
@@ -404,10 +455,20 @@ export default function BallisticFormPanel({
           ))}
         </select>
         <div className="flex flex-wrap gap-2">
-          <button type="button" className={btnSecondary} onClick={onSaveProfile} disabled={profileSaving}>
+          <button type="button" className={btnSecondary} onClick={onSaveProfile} disabled={profileSaving || profileDeleting}>
             {profileSaving ? t('form.savingProfile') : t('form.saveProfile')}
           </button>
-          <button type="button" className={btnArmory} onClick={onArmoryFill}>
+          {selectedProfileId ? (
+            <button
+              type="button"
+              className={btnDanger}
+              onClick={() => setDeleteConfirmOpen(true)}
+              disabled={profileSaving || profileDeleting}
+            >
+              {profileDeleting ? t('form.deletingProfile') : t('form.deleteProfile')}
+            </button>
+          ) : null}
+          <button type="button" className={btnArmory} onClick={onArmoryFill} disabled={profileDeleting}>
             {t('form.armoryFill')}
           </button>
         </div>
@@ -882,5 +943,11 @@ const btnSecondary =
   'rounded border border-white/15 px-2 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-app-text/75 hover:bg-white/5'
 const btnArmory =
   'rounded border border-cyan-500/40 bg-cyan-500/[0.06] px-2 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-cyan-300/95 hover:border-cyan-400/55 hover:bg-cyan-500/10'
+const btnDanger =
+  'rounded border border-rose-500/50 bg-rose-500/10 px-2 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-rose-300 hover:border-rose-400/60 hover:bg-rose-500/15 disabled:cursor-not-allowed disabled:opacity-45'
 const btnAccent =
   'rounded border border-emerald-500/45 bg-emerald-500/10 px-2 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-emerald-400 hover:bg-emerald-500/15'
+const deleteCancelBtnClass =
+  'flex-1 rounded border border-white/15 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-app-text/70 hover:bg-white/5 disabled:opacity-45 sm:flex-none'
+const deleteConfirmBtnClass =
+  'flex-1 rounded border border-rose-500/50 bg-rose-500/15 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-rose-300 hover:bg-rose-500/22 disabled:opacity-45 sm:flex-none'

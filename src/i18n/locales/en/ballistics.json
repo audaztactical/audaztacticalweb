@@ -87,10 +87,19 @@
     "saveProfile": "Save Profile",
     "savingProfile": "Saving…",
     "deleteProfile": "Delete Profile",
+    "deletingProfile": "Deleting…",
     "armoryFill": "Load from Armory",
     "calculateCta": "Calculate",
     "calculatingCta": "Calculating…",
-    "clickUnitHint": "Select a unit system before entering click value."
+    "clickUnitHint": "Select a unit system before entering click value.",
+    "deleteModal": {
+      "title": "Delete Profile",
+      "body": "Are you sure you want to delete the \"{{name}}\" profile? This action cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Yes, Delete",
+      "closeAria": "Close"
+    },
+    "profileDeleted": "Profile deleted"
   },
   "chart": {
     "waiting": "AWAITING CALCULATION",

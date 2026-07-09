@@ -77,7 +77,8 @@ export default function Balistik() {
   const { t, i18n } = useTranslation('ballistics')
   const navigate = useNavigate()
   const { items: inventoryItems } = useAudazData('inventory')
-  const { profiles, createProfile, updateProfile, loading: profilesLoading } = useBallisticProfiles()
+  const { profiles, createProfile, updateProfile, deleteProfile, loading: profilesLoading } =
+    useBallisticProfiles()
 
   const [form, setForm] = useState(() => ({
     profileName: '',
@@ -94,8 +95,10 @@ export default function Balistik() {
   const [calcError, setCalcError] = useState('')
   const [calculating, setCalculating] = useState(false)
   const [profileSaving, setProfileSaving] = useState(false)
+  const [profileDeleting, setProfileDeleting] = useState(false)
   const [armoryOpen, setArmoryOpen] = useState(false)
   const [armoryFillNotice, setArmoryFillNotice] = useState('')
+  const [profileNotice, setProfileNotice] = useState('')
   const [pdfBusy, setPdfBusy] = useState(false)
   const [resultTab, setResultTab] = useState(/** @type {'chart' | 'table'} */ ('chart'))
   const [accordionAutoExpandTrigger, setAccordionAutoExpandTrigger] = useState(0)
@@ -134,7 +137,18 @@ export default function Balistik() {
     (id) => {
       setSelectedProfileId(id)
       setArmoryFillNotice('')
-      if (!id) return
+      setProfileNotice('')
+      if (!id) {
+        setForm({
+          profileName: '',
+          weaponDisplayLabel: '',
+          ...createDefaultBallisticProfileFields(),
+        })
+        setOutput(null)
+        setCalcError('')
+        bumpAccordionAutoExpand()
+        return
+      }
       const row = profiles.find((p) => String(p.id) === id)
       if (!row) return
       setForm({
@@ -156,6 +170,7 @@ export default function Balistik() {
 
   const handleSaveProfile = useCallback(async () => {
     setProfileSaving(true)
+    setProfileNotice('')
     try {
       const payload = normalizeBallisticProfile(form)
       if (selectedProfileId) {
@@ -168,6 +183,33 @@ export default function Balistik() {
       setProfileSaving(false)
     }
   }, [form, selectedProfileId, createProfile, updateProfile])
+
+  const resetFormToBlank = useCallback(() => {
+    setSelectedProfileId('')
+    setForm({
+      profileName: '',
+      weaponDisplayLabel: '',
+      ...createDefaultBallisticProfileFields(),
+    })
+    setEnv(DEFAULT_ENV)
+    setOutput(null)
+    setCalcError('')
+    setArmoryFillNotice('')
+    bumpAccordionAutoExpand()
+  }, [bumpAccordionAutoExpand])
+
+  const handleDeleteProfile = useCallback(async () => {
+    if (!selectedProfileId) return
+    setProfileDeleting(true)
+    setProfileNotice('')
+    try {
+      await deleteProfile(selectedProfileId)
+      resetFormToBlank()
+      setProfileNotice(t('form.profileDeleted'))
+    } finally {
+      setProfileDeleting(false)
+    }
+  }, [selectedProfileId, deleteProfile, resetFormToBlank, t])
 
   const handleUnlockInventorySection = useCallback((group) => {
     setForm((prev) => {
@@ -304,6 +346,15 @@ export default function Balistik() {
         </p>
       ) : null}
 
+      {profileNotice ? (
+        <p
+          role="status"
+          className="rounded border border-emerald-500/40 bg-emerald-950/25 px-3 py-2 font-mono-technical text-xs text-emerald-300"
+        >
+          {profileNotice}
+        </p>
+      ) : null}
+
       <div className="relative z-[1] grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(0,22rem)_1fr] lg:h-[calc(100dvh-11rem)] lg:max-h-[calc(100dvh-11rem)] xl:grid-cols-[minmax(0,24rem)_1fr]">
         <TacticalPanel className="flex min-h-0 max-h-[min(68dvh,640px)] flex-col overflow-hidden p-3 sm:max-h-[min(72dvh,680px)] sm:p-4 lg:h-full lg:max-h-full">
           <BallisticFormPanel
@@ -321,10 +372,12 @@ export default function Balistik() {
             selectedProfileId={selectedProfileId}
             onSelectProfile={handleSelectProfile}
             onSaveProfile={handleSaveProfile}
+            onDeleteProfile={handleDeleteProfile}
             onArmoryFill={() => setArmoryOpen(true)}
             onCalculate={handleCalculate}
             calculating={calculating}
             profileSaving={profileSaving}
+            profileDeleting={profileDeleting}
             autoExpandTrigger={accordionAutoExpandTrigger}
             onUnlockInventorySection={handleUnlockInventorySection}
             onMarkInventoryOverrides={handleMarkInventoryOverrides}

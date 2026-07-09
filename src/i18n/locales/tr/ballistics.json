@@ -87,10 +87,19 @@
     "saveProfile": "Profili Kaydet",
     "savingProfile": "Kaydediliyor…",
     "deleteProfile": "Profili Sil",
+    "deletingProfile": "Siliniyor…",
     "armoryFill": "Cephanelikten Getir",
     "calculateCta": "Hesapla",
     "calculatingCta": "Hesaplanıyor…",
-    "clickUnitHint": "Tık değeri girmek için önce birim sistemi seçin."
+    "clickUnitHint": "Tık değeri girmek için önce birim sistemi seçin.",
+    "deleteModal": {
+      "title": "Profili Sil",
+      "body": "\"{{name}}\" profilini silmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
+      "cancel": "Vazgeç",
+      "confirm": "Evet, Sil",
+      "closeAria": "Kapat"
+    },
+    "profileDeleted": "Profil silindi"
   },
   "chart": {
     "waiting": "HESAPLAMA BEKLİYOR",
