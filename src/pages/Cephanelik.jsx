@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Crosshair,
   Focus,
@@ -26,7 +27,6 @@ import { useAudazData } from '../hooks/useAudazData'
 import { audazCommitDeploymentBatch, runAudazFirestore } from '../lib/dataManager'
 import {
   ILWS_FILTERS,
-  TACTICAL_CATEGORIES,
   invNum,
   isWeaponTacticalCategoryId,
   matchesIlwsFilter,
@@ -48,6 +48,7 @@ import {
   OPTIC_BALLISTIC_FORM_EMPTY,
   AMMO_BALLISTIC_FORM_EMPTY,
 } from '../lib/inventoryBallisticFields'
+import { labelFilter, tacticalCategoryOptions } from '../lib/armoryDisplayText'
 
 /** @typedef {import('../lib/inventoryIlws').IlwsFilterId} IlwsFilterId */
 /** @typedef {null | 'weapons' | 'attachments' | 'ammo'} IlwsActiveCategory */
@@ -114,6 +115,7 @@ const AMMO_FORM_INITIAL = {
 }
 
 export default function Cephanelik() {
+  const { t, i18n } = useTranslation('armory')
   const { user } = useAuth()
   const uid = user?.uid ?? null
 
@@ -150,6 +152,8 @@ export default function Cephanelik() {
     ballisticType: '',
     linkedWeaponName: '',
   })
+
+  const categoryOptions = useMemo(() => tacticalCategoryOptions(), [i18n.language])
 
   const inspectLiveRow = useMemo(() => {
     if (!inspectRow?.id) return null
@@ -197,10 +201,10 @@ export default function Cephanelik() {
 
   const commitDeploymentBatch = useCallback(
     async (batchOps) => {
-      if (!uid) throw new Error('Oturum gerekli')
+      if (!uid) throw new Error(t('page.sessionRequired'))
       return runAudazFirestore(() => audazCommitDeploymentBatch(uid, batchOps))
     },
-    [uid]
+    [uid, t]
   )
 
   useEffect(() => {
@@ -455,7 +459,7 @@ export default function Cephanelik() {
         <div className="flex flex-col gap-3 border-b border-white/10 pb-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
           <div className="min-w-0 flex-1">
             <h1 className="font-display text-base font-bold tracking-[0.08em] text-app-text sm:text-lg md:text-xl">
-              Cephanelik
+              {t('page.title')}
             </h1>
           </div>
           <div className="flex w-full min-w-0 flex-col items-stretch gap-2 sm:w-auto sm:shrink-0 sm:items-end">
@@ -468,7 +472,7 @@ export default function Cephanelik() {
                 className="inline-flex w-full items-center justify-center gap-2 rounded border border-accent/45 bg-accent/12 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent shadow-[0_0_14px_-4px_rgba(255,180,0,0.35)] hover:bg-accent/18 disabled:opacity-50 sm:w-auto"
               >
                 <Plus className="size-3.5" strokeWidth={2} aria-hidden />
-                <span className="truncate">+ YENİ_ENVANTER_KAYDI</span>
+                <span className="truncate">{t('page.newInventory')}</span>
               </button>
             ) : null}
           </div>
@@ -477,7 +481,9 @@ export default function Cephanelik() {
         <TacticalPanel className="border-[#004DFF]/20 bg-[#0c0c0e]/96 p-0 backdrop-blur-sm">
           {activeCategory ? (
             <div className="flex flex-wrap items-center gap-1.5 border-b border-white/10 bg-app-bg px-3 py-2 sm:px-4">
-              <span className="mr-1 font-mono-technical text-[8px] uppercase tracking-widest text-app-text/45">FİLTRE</span>
+              <span className="mr-1 font-mono-technical text-[8px] uppercase tracking-widest text-app-text/45">
+                {t('page.filter')}
+              </span>
               {ILWS_FILTERS.filter((f) => {
                 if (f.id === 'ALL') return true
                 if (activeCategory === 'weapons') return isWeaponTacticalCategoryId(f.id)
@@ -492,7 +498,7 @@ export default function Cephanelik() {
                     active={filter === f.id}
                     onClick={() => setFilter(f.id)}
                     icon={<Icon className="size-3.5" strokeWidth={1.5} />}
-                    code={f.code}
+                    code={labelFilter(f.id)}
                   />
                 )
               })}
@@ -501,7 +507,7 @@ export default function Cephanelik() {
 
           <div className="p-3 sm:p-4">
             {listenError ? (
-              <p className="mb-2 font-mono-technical text-[10px] text-amber-400/90">VERİ_KANALI_UYARISI · YENİDEN_DENE</p>
+              <p className="mb-2 font-mono-technical text-[10px] text-amber-400/90">{t('page.channelWarning')}</p>
             ) : null}
             {!ready ? (
               <div className="flex min-h-[30vh] items-center justify-center">
@@ -515,7 +521,7 @@ export default function Cephanelik() {
               <div className="flex min-h-[32vh] flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-white/12 bg-black/30 py-12">
                 <Lock className="size-12 text-slate-700" strokeWidth={1} aria-hidden />
                 <p className="font-mono-technical text-[10px] uppercase tracking-widest text-app-text/45">
-                  CEPHANELİK_BOŞ · LOJİSTİK_DESTEK_BEKLENİYOR
+                  {t('page.empty')}
                 </p>
                 {activeCategory !== 'weapons' && activeCategory !== 'attachments' && activeCategory !== 'ammo' ? (
                   <button
@@ -523,33 +529,33 @@ export default function Cephanelik() {
                     onClick={openCreate}
                     className="rounded border border-accent/40 px-3 py-1.5 font-mono-technical text-[9px] font-bold uppercase text-accent"
                   >
-                    + YENİ_ENVANTER_KAYDI
+                    {t('page.newInventory')}
                   </button>
                 ) : null}
               </div>
             ) : activeCategory === null ? (
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 <IlwsCategoryHubCard
-                  title="SİLAHLARIM"
+                  title={t('hub.weapons.title')}
                   modelVariant="pistol"
                   imageSrc={canikImg}
-                  imageAlt="Silah envanteri"
+                  imageAlt={t('hub.weapons.imageAlt')}
                   imagePriority="high"
                   onEnter={() => enterCategory('weapons')}
                 />
                 <IlwsCategoryHubCard
-                  title="AKSESUARLARIM"
+                  title={t('hub.attachments.title')}
                   modelVariant="reddot"
                   imageSrc={optikImg}
-                  imageAlt="Aksesuar envanteri"
+                  imageAlt={t('hub.attachments.imageAlt')}
                   imagePriority="high"
                   onEnter={() => enterCategory('attachments')}
                 />
                 <IlwsCategoryHubCard
-                  title="MÜHİMMAT DEPOSU"
+                  title={t('hub.ammo.title')}
                   modelVariant="cartridge"
                   imageSrc={muhimmatImg}
-                  imageAlt="Mühimmat envanteri"
+                  imageAlt={t('hub.ammo.imageAlt')}
                   imagePriority="auto"
                   onEnter={() => enterCategory('ammo')}
                 />
@@ -626,13 +632,13 @@ export default function Cephanelik() {
           <button
             type="button"
             className="absolute inset-0 cursor-default"
-            aria-label="Kapat"
+            aria-label={t('page.closeAria')}
             onClick={() => !saving && setModalOpen(false)}
           />
           <TacticalPanel className="relative z-[1] mx-auto my-3 w-full max-w-lg border-[#004DFF]/25 bg-app-bg/98 p-0 shadow-2xl backdrop-blur-md sm:my-0">
             <div className="border-b border-white/10 bg-app-bg px-3 py-2 sm:px-4">
               <p className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] text-accent/90">
-                {editingId ? 'ENVANTER_DÜZENLE' : 'YENİ_ENVANTER_KAYDI'}
+                {editingId ? t('page.editInventory') : t('page.newInventory').replace(/^\+\s*/, '')}
               </p>
             </div>
             <form
@@ -640,17 +646,21 @@ export default function Cephanelik() {
               className="max-h-[calc(100dvh-5.5rem)] space-y-3 overflow-y-auto overscroll-contain px-3 py-3 [-webkit-overflow-scrolling:touch] sm:max-h-none sm:overflow-visible sm:px-4 sm:py-4"
             >
               <label className="block">
-                <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">ÖĞE_ADI</span>
+                <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">
+                  {t('forms.itemName')}
+                </span>
                 <input className={inputClass} value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required />
               </label>
               <label className="block">
-                <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">KOD_KATEGORİ</span>
+                <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">
+                  {t('forms.categoryCode')}
+                </span>
                 <select
                   className={`${selectClass} mt-1`}
                   value={form.tacticalCategory}
                   onChange={(e) => setForm((f) => ({ ...f, tacticalCategory: e.target.value }))}
                 >
-                  {TACTICAL_CATEGORIES.map((c) => (
+                  {categoryOptions.map((c) => (
                     <option key={c.value} value={c.value}>
                       {c.label}
                     </option>
@@ -658,7 +668,9 @@ export default function Cephanelik() {
                 </select>
               </label>
               <label className="block">
-                <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">TEKNİK_TANIM</span>
+                <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">
+                  {t('forms.technicalDescription')}
+                </span>
                 <textarea
                   className={`${inputClass} min-h-[3rem] resize-y border border-white/10 bg-black/30 px-2 py-2`}
                   value={form.technicalDescription}
@@ -668,19 +680,27 @@ export default function Cephanelik() {
               </label>
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="block">
-                  <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">MARKA</span>
+                  <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">
+                    {t('forms.brand')}
+                  </span>
                   <input className={inputClass} value={form.brand} onChange={(e) => setForm((f) => ({ ...f, brand: e.target.value }))} />
                 </label>
                 <label className="block">
-                  <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">SERİ_NO</span>
+                  <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">
+                    {t('forms.serialNo')}
+                  </span>
                   <input className={inputClass} value={form.serialNo} onChange={(e) => setForm((f) => ({ ...f, serialNo: e.target.value }))} />
                 </label>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="block">
-                  <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">ADET</span>
+                  <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">
+                    {t('forms.quantity')}
+                  </span>
                   <input
                     className={inputClass}
+                    type="number"
+                    step={1}
                     inputMode="numeric"
                     value={form.quantity}
                     onChange={(e) => setForm((f) => ({ ...f, quantity: e.target.value }))}
@@ -688,16 +708,22 @@ export default function Cephanelik() {
                   />
                 </label>
                 <label className="block">
-                  <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">KALİBRE</span>
+                  <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">
+                    {t('forms.calibre')}
+                  </span>
                   <input className={inputClass} value={form.calibre} onChange={(e) => setForm((f) => ({ ...f, calibre: e.target.value }))} />
                 </label>
               </div>
               {isWeaponTacticalCategoryId(form.tacticalCategory) ? (
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="block">
-                    <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">KONDİSYON_%</span>
+                    <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">
+                      {t('forms.conditionPercent')}
+                    </span>
                     <input
                       className={inputClass}
+                      type="number"
+                      step={1}
                       inputMode="numeric"
                       min={1}
                       max={100}
@@ -706,7 +732,9 @@ export default function Cephanelik() {
                     />
                   </label>
                   <label className="block">
-                    <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">SON_BAKIM</span>
+                    <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">
+                      {t('forms.lastMaintenance')}
+                    </span>
                     <input
                       type="date"
                       className={`${inputClass} rounded border border-white/10 bg-black/25 px-2`}
@@ -719,7 +747,7 @@ export default function Cephanelik() {
               {form.tacticalCategory === 'OPT' ? (
                 <label className="block">
                   <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">
-                    BAĞLI_SİLAH (CANIK_YP9 vb.)
+                    {t('forms.linkedWeapon')}
                   </span>
                   <input
                     className={inputClass}
@@ -731,7 +759,9 @@ export default function Cephanelik() {
               ) : null}
               {form.tacticalCategory === 'MHM' ? (
                 <label className="block">
-                  <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">BALİSTİK_TİP</span>
+                  <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">
+                    {t('forms.ballisticType')}
+                  </span>
                   <input
                     className={inputClass}
                     value={form.ballisticType}
@@ -747,14 +777,14 @@ export default function Cephanelik() {
                   disabled={saving}
                   className="rounded border border-white/15 px-3 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-app-text/70 hover:bg-white/5"
                 >
-                  İPTAL
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
                   className="rounded border border-accent/45 bg-accent/12 px-3 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent disabled:opacity-50"
                 >
-                  {saving ? '…' : editingId ? 'GÜNCELLE' : 'KAYDET'}
+                  {saving ? t('common.saving') : editingId ? t('common.update') : t('common.save')}
                 </button>
               </div>
             </form>

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Plus } from 'lucide-react'
 import MatrixWireVisualizer from './MatrixWireVisualizer'
 import InventoryBallisticEditPanel from './InventoryBallisticEditPanel'
@@ -9,7 +10,6 @@ import {
   ammoStokKodu,
   getAmmoCreatedAt,
   getAmmoTransactionLogs,
-  getCaliberName,
   getCriticalThreshold,
   getCurrentStock,
   getSafetyMarginBar,
@@ -19,17 +19,13 @@ import {
 import { processUnsyncedRangeLogsForAmmo } from '../../lib/ammoRangeSync'
 import { matchesIsoDateRange, matchesTypeFilter } from '../../lib/logSummaryFilters'
 import { todayIsoDate } from '../../lib/weaponIlws'
+import { armoryLocale, displayCaliberName, labelAmmoTxType } from '../../lib/armoryDisplayText'
+
 const filterSelectClass =
   'dossier-blood-select mt-0.5 w-full rounded border border-accent/35 bg-app-bg py-1 pl-1.5 pr-6 font-mono-technical text-[8px] uppercase text-app-text outline-none'
 
 const filterDateClass =
   'mt-0.5 w-full rounded border border-accent/50 bg-app-bg px-1.5 py-1 font-mono-technical text-[8px] text-accent outline-none [color-scheme:dark]'
-
-const TX_FILTERS = [
-  { value: 'ALL', label: 'TÜM İŞLEMLER' },
-  { value: AMMO_TX_TYPES.SUPPLY, label: 'İKMAL' },
-  { value: AMMO_TX_TYPES.TRAINING, label: 'ANTRENMAN HARCAMASI' },
-]
 
 const panelScroll = 'ilws-green-scroll min-h-0 overflow-y-auto overscroll-y-contain'
 
@@ -58,6 +54,17 @@ export default function AmmoDeepDive({
   updateItem,
   deleteItem,
 }) {
+  const { t, i18n } = useTranslation('armory')
+  const locale = armoryLocale()
+  const txFilters = useMemo(
+    () => [
+      { value: 'ALL', label: t('ammoDeepDive.allActions') },
+      { value: AMMO_TX_TYPES.SUPPLY, label: labelAmmoTxType(AMMO_TX_TYPES.SUPPLY) },
+      { value: AMMO_TX_TYPES.TRAINING, label: labelAmmoTxType(AMMO_TX_TYPES.TRAINING) },
+    ],
+    [t, i18n.language]
+  )
+
   const [selectedId, setSelectedId] = useState(/** @type {string | null} */ (null))
   const [isViewingLogs, setIsViewingLogs] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -119,7 +126,7 @@ export default function AmmoDeepDive({
   const safetyPct = getSafetyMarginPercent(stock, threshold)
   const safetyBar = getSafetyMarginBar(stock, threshold)
   const critical = selected ? isAmmoCritical(selected) : false
-  const entryDate = selected ? getAmmoCreatedAt(selected) : '—'
+  const entryDate = selected ? getAmmoCreatedAt(selected) : t('common.emDash')
 
   const transactionLogs = useMemo(() => {
     if (!selected) return []
@@ -145,7 +152,7 @@ export default function AmmoDeepDive({
     async (row, e) => {
       e.stopPropagation()
       const id = String(row.id)
-      const ok = window.confirm(`MÜHİMMAT KAYDI SİLİNSİN MI?\n\n${ammoDisplayLabel(row)}`)
+      const ok = window.confirm(t('ammoDeepDive.deleteConfirm', { label: ammoDisplayLabel(row) }))
       if (!ok) return
       setBusy(true)
       try {
@@ -155,7 +162,7 @@ export default function AmmoDeepDive({
         setBusy(false)
       }
     },
-    [deleteItem, selectedId]
+    [deleteItem, selectedId, t]
   )
 
   return (
@@ -166,18 +173,20 @@ export default function AmmoDeepDive({
         className="inline-flex items-center gap-2 rounded border border-accent/50 bg-accent/12 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent shadow-[0_0_12px_-4px_rgba(255,180,0,0.4)] transition hover:bg-accent/20"
       >
         <span aria-hidden>↩️</span>
-        GERİ DÖN / RETURN
+        {t('ammoDeepDive.back')}
       </button>
 
       <div className={terminalGrid}>
         <div className="flex min-h-0 flex-col gap-2">
           <TacticalPanel className="flex min-h-0 flex-1 flex-col overflow-hidden border-white/10 bg-black/40 p-0">
             <p className="shrink-0 border-b border-white/10 bg-app-bg px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-accent/85">
-              MÜHİMMAT_RAFI
+              {t('ammoDeepDive.rackTitle')}
             </p>
             <ul className={`min-h-0 flex-1 space-y-1 p-2 ${panelScroll}`}>
               {ammo.length === 0 ? (
-                <li className="py-8 text-center font-mono-technical text-[9px] uppercase text-app-text/45">MHM_KAYDI_YOK</li>
+                <li className="py-8 text-center font-mono-technical text-[9px] uppercase text-app-text/45">
+                  {t('ammoDeepDive.empty')}
+                </li>
               ) : (
                 ammo.map((row) => {
                   const id = String(row.id)
@@ -199,8 +208,10 @@ export default function AmmoDeepDive({
                       >
                         {active ? <span className="mb-1 block animate-pulse text-accent">[ ➔ ]</span> : null}
                         <span className="block text-[8px] text-app-text/55">[{ammoStokKodu(id)}]</span>
-                        <span className="block truncate text-[10px] font-bold uppercase">{getCaliberName(row)}</span>
-                        <span className="mt-0.5 block text-[8px] tabular-nums text-app-text/55">{qty} ADET</span>
+                        <span className="block truncate text-[10px] font-bold uppercase">{displayCaliberName(row)}</span>
+                        <span className="mt-0.5 block text-[8px] tabular-nums text-app-text/55">
+                          {t('ammoDeepDive.qtyUnit', { qty })}
+                        </span>
                       </button>
                       <button
                         type="button"
@@ -208,7 +219,7 @@ export default function AmmoDeepDive({
                         onClick={(e) => deleteAmmo(row, e)}
                         className="shrink-0 self-stretch rounded border border-red-500/35 px-1.5 font-mono-technical text-[8px] font-bold uppercase text-red-400 hover:bg-red-950/40 disabled:opacity-40"
                       >
-                        [ ❌ SİL ]
+                        {t('ammoDeepDive.delete')}
                       </button>
                     </li>
                   )
@@ -222,22 +233,22 @@ export default function AmmoDeepDive({
                 className="flex w-full items-center justify-center gap-1.5 rounded border border-accent/40 bg-accent/10 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-accent hover:bg-accent/16"
               >
                 <Plus className="size-3" aria-hidden />
-                + YENİ_MÜHİMMAT_KAYDI
+                {t('ammoDeepDive.addAmmo')}
               </button>
             </div>
           </TacticalPanel>
 
           <TacticalPanel className="shrink-0 border border-accent/25 bg-black/50 p-0">
             <p className="border-b border-accent/30 bg-app-bg px-3 py-1.5 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-accent/90">
-              [ DEPO_ÖZETİ ]
+              {t('ammoDeepDive.depotSummary')}
             </p>
             <div className="grid grid-cols-2 gap-2 p-2 font-mono-technical text-[9px] uppercase">
               <p className="rounded border border-white/10 bg-black/40 px-2 py-1.5 text-center">
-                <span className="block text-[7px] text-app-text/55">KALİBRE</span>
+                <span className="block text-[7px] text-app-text/55">{t('ammoDeepDive.calibre')}</span>
                 <span className="text-accent">{inventoryStats.total}</span>
               </p>
               <p className="rounded border border-red-500/30 bg-red-950/15 px-2 py-1.5 text-center">
-                <span className="block text-[7px] text-app-text/55">KRİTİK</span>
+                <span className="block text-[7px] text-app-text/55">{t('ammoDeepDive.critical')}</span>
                 <span className="text-red-400">{inventoryStats.critical}</span>
               </p>
             </div>
@@ -246,7 +257,7 @@ export default function AmmoDeepDive({
 
         <TacticalPanel className="flex min-h-0 flex-col overflow-hidden border-white/10 bg-black/40 p-0">
           <p className="shrink-0 border-b border-white/10 bg-app-bg px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-accent/80">
-            {isViewingLogs ? 'Harcama Defteri' : '3D Görünüm'}
+            {isViewingLogs ? t('ammoDeepDive.spendLedger') : t('ammoDeepDive.view3d')}
           </p>
           {selected ? (
             <div className="flex min-h-0 flex-1 flex-col">
@@ -255,10 +266,13 @@ export default function AmmoDeepDive({
                   <div className="flex shrink-0 items-start justify-between gap-2 border-b border-[#00b4ff]/25 bg-[#050a12] px-3 py-2">
                     <div>
                       <p className="font-mono-technical text-[8px] font-bold uppercase tracking-wider text-[#5ec8ff]">
-                        MÜHİMMAT HARCAMA / İKMAL KAYIT DEFTERİ
+                        {t('ammoDeepDive.ledgerTitle')}
                       </p>
                       <p className="mt-0.5 font-mono-technical text-[7px] tabular-nums text-app-text/55">
-                        {filteredTransactions.length}/{transactionLogs.length} KAYIT
+                        {t('ammoDeepDive.recordCount', {
+                          filtered: filteredTransactions.length,
+                          total: transactionLogs.length,
+                        })}
                       </p>
                     </div>
                     <button
@@ -266,17 +280,21 @@ export default function AmmoDeepDive({
                       onClick={() => setIsViewingLogs(false)}
                       className="shrink-0 rounded border border-red-500/55 bg-red-950/25 px-2 py-1 font-mono-technical text-[8px] font-bold uppercase tracking-wide text-red-400 shadow-[0_0_12px_rgba(239,68,68,0.25)] transition hover:bg-red-950/45"
                     >
-                      [ ↩️ MONİTÖRE GERİ DÖN / RETURN ]
+                      {t('ammoDeepDive.returnToMonitor')}
                     </button>
                   </div>
                   <div className={`min-h-0 flex-1 space-y-2 p-3 ${panelScroll}`}>
                     <div className="grid gap-1.5 rounded border border-[#00b4ff]/35 bg-[#00b4ff]/5 p-2">
-                      <p className="font-mono-technical text-[7px] font-bold uppercase text-[#5ec8ff]/80">FİLTRE</p>
+                      <p className="font-mono-technical text-[7px] font-bold uppercase text-[#5ec8ff]/80">
+                        {t('ammoDeepDive.filter')}
+                      </p>
                       <div className="grid gap-1.5 sm:grid-cols-3">
                         <label className="block">
-                          <span className="font-mono-technical text-[7px] uppercase text-app-text/55">İŞLEM TÜRÜ</span>
+                          <span className="font-mono-technical text-[7px] uppercase text-app-text/55">
+                            {t('ammoDeepDive.actionType')}
+                          </span>
                           <select className={filterSelectClass} value={txTypeFilter} onChange={(e) => setTxTypeFilter(e.target.value)}>
-                            {TX_FILTERS.map((f) => (
+                            {txFilters.map((f) => (
                               <option key={f.value} value={f.value}>
                                 {f.label}
                               </option>
@@ -284,7 +302,9 @@ export default function AmmoDeepDive({
                           </select>
                         </label>
                         <label className="block">
-                          <span className="font-mono-technical text-[7px] uppercase text-app-text/55">TARİH BAŞ</span>
+                          <span className="font-mono-technical text-[7px] uppercase text-app-text/55">
+                            {t('ammoDeepDive.dateFrom')}
+                          </span>
                           <input
                             type="date"
                             className={filterDateClass}
@@ -294,7 +314,9 @@ export default function AmmoDeepDive({
                           />
                         </label>
                         <label className="block">
-                          <span className="font-mono-technical text-[7px] uppercase text-app-text/55">TARİH BİT</span>
+                          <span className="font-mono-technical text-[7px] uppercase text-app-text/55">
+                            {t('ammoDeepDive.dateTo')}
+                          </span>
                           <input
                             type="date"
                             className={filterDateClass}
@@ -308,9 +330,13 @@ export default function AmmoDeepDive({
                     </div>
                     <ul className="space-y-1.5 rounded border border-[#00b4ff]/30 bg-black/30 p-2">
                       {transactionLogs.length === 0 ? (
-                        <li className="font-mono-technical text-[9px] uppercase text-app-text/45">KAYIT_YOK</li>
+                        <li className="font-mono-technical text-[9px] uppercase text-app-text/45">
+                          {t('ammoDeepDive.noRecords')}
+                        </li>
                       ) : filteredTransactions.length === 0 ? (
-                        <li className="font-mono-technical text-[9px] uppercase text-app-text/45">FİLTRE_SONUCU_YOK</li>
+                        <li className="font-mono-technical text-[9px] uppercase text-app-text/45">
+                          {t('ammoDeepDive.noFilterResults')}
+                        </li>
                       ) : (
                         filteredTransactions.map((log, i) => (
                           <li
@@ -319,15 +345,17 @@ export default function AmmoDeepDive({
                           >
                             <span className="text-app-text/55">{log.date}</span>
                             <span className={`ml-2 ${log.type === AMMO_TX_TYPES.SUPPLY ? 'text-accent' : 'text-amber-400'}`}>
-                              {log.type}
+                              {labelAmmoTxType(log.type)}
                             </span>
                             <span className={`ml-2 tabular-nums ${log.amount >= 0 ? 'text-accent' : 'text-red-400'}`}>
                               {log.amount >= 0 ? '+' : ''}
                               {log.amount}
                             </span>
-                            <p className="mt-0.5 normal-case text-app-text/90">{log.note || '—'}</p>
+                            <p className="mt-0.5 normal-case text-app-text/90">{log.note || t('common.emDash')}</p>
                             {log.balanceAfter != null ? (
-                              <p className="mt-0.5 text-[7px] text-app-text/55">BAKİYE: {log.balanceAfter}</p>
+                              <p className="mt-0.5 text-[7px] text-app-text/55">
+                                {t('ammoDeepDive.balance', { balance: log.balanceAfter })}
+                              </p>
                             ) : null}
                           </li>
                         ))
@@ -340,34 +368,35 @@ export default function AmmoDeepDive({
                   <MatrixWireVisualizer
                     variant="cartridge"
                     imageSrc={imageSrc}
-                    imageAlt={getCaliberName(selected)}
+                    imageAlt={displayCaliberName(selected)}
                     label=""
                   />
                   <div className="shrink-0 space-y-3 border-t border-white/10 px-3 py-3">
                     <p className="font-mono-technical text-[9px] uppercase text-app-text/55">
-                      KALİBRE: <span className="text-accent">{getCaliberName(selected)}</span>
+                      {t('ammoDeepDive.calibreLabel')} <span className="text-accent">{displayCaliberName(selected)}</span>
                     </p>
                     <p className="font-mono-technical text-[9px] uppercase tracking-[0.12em] text-accent">
-                      Envantere Giriş: <span className="tabular-nums">{entryDate}</span>
+                      {t('ammoDeepDive.inventoryEntry')} <span className="tabular-nums">{entryDate}</span>
                     </p>
                     <p className="font-mono-technical text-2xl font-bold tabular-nums tracking-wider text-accent sm:text-3xl">
-                      MEVCUT STOK: <span className="text-app-text">{totalStock.toLocaleString('tr-TR')}</span>{' '}
-                      <span className="text-lg text-app-text/70">ADET</span>
+                      {t('ammoDeepDive.currentStock')}{' '}
+                      <span className="text-app-text">{totalStock.toLocaleString(locale)}</span>{' '}
+                      <span className="text-lg text-app-text/70">{t('ammoDeepDive.unit')}</span>
                     </p>
                     <p className="font-mono-technical text-sm font-bold tabular-nums uppercase tracking-wider text-app-text/55">
-                      SEÇİLİ MÜHİMMAT:{' '}
-                      <span className="text-accent">{stock.toLocaleString('tr-TR')}</span>{' '}
-                      <span className="text-xs text-app-text/70">ADET</span>
+                      {t('ammoDeepDive.selectedAmmo')}{' '}
+                      <span className="text-accent">{stock.toLocaleString(locale)}</span>{' '}
+                      <span className="text-xs text-app-text/70">{t('ammoDeepDive.unit')}</span>
                     </p>
                     <div className="rounded border border-accent/25 bg-black/40 px-2 py-2">
                       <p className="font-mono-technical text-[8px] uppercase text-app-text/55">
-                        EMNİYET SINIRI: <span className="text-accent">{safetyBar}</span>{' '}
+                        {t('ammoDeepDive.safetyMargin')} <span className="text-accent">{safetyBar}</span>{' '}
                         <span className="tabular-nums">%{safetyPct}</span>
                       </p>
                     </div>
                     {critical ? (
                       <p className="animate-pulse rounded border border-red-500/50 bg-red-950/30 px-2 py-2 text-center font-mono-technical text-[9px] font-bold uppercase text-red-400 shadow-[0_0_16px_rgba(239,68,68,0.35)]">
-                        [ ⚠️ KRİTİK SEVİYE / İKMAL GEREKLİ ]
+                        {t('ammoDeepDive.criticalAlert')}
                       </p>
                     ) : null}
                   </div>
@@ -376,25 +405,27 @@ export default function AmmoDeepDive({
             </div>
           ) : (
             <p className="flex flex-1 items-center justify-center p-6 font-mono-technical text-[9px] uppercase text-app-text/45">
-              KALİBRE_SEÇİN
+              {t('ammoDeepDive.selectCalibre')}
             </p>
           )}
         </TacticalPanel>
 
         <TacticalPanel className="flex min-h-0 flex-col overflow-hidden border-white/10 bg-black/40 p-0">
           <p className="shrink-0 border-b border-white/10 bg-app-bg px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-accent/80">
-            ANALİTİK_HUB
+            {t('ammoDeepDive.analyticsHub')}
           </p>
           {selected ? (
             <div className={`min-h-0 flex-1 space-y-3 p-3 ${panelScroll}`}>
               <InventoryBallisticEditPanel kind="ammo" row={selected} updateItem={updateItem} />
               <div className="rounded border border-accent/30 bg-black/50 p-3">
                 <p className="font-mono-technical text-[8px] font-bold uppercase tracking-wider text-app-text/55">
-                  KRİTİK_EŞİK (ADET)
+                  {t('ammoDeepDive.criticalThreshold')}
                 </p>
-                <p className="mt-1 font-mono-technical text-xl font-bold tabular-nums text-accent">{threshold.toLocaleString('tr-TR')}</p>
+                <p className="mt-1 font-mono-technical text-xl font-bold tabular-nums text-accent">
+                  {threshold.toLocaleString(locale)}
+                </p>
                 <p className="mt-2 font-mono-technical text-[8px] uppercase text-app-text/45">
-                  Mevcut: <span className="text-accent">{stock}</span> · Emniyet: %{safetyPct}
+                  {t('ammoDeepDive.currentSafety', { stock, pct: safetyPct })}
                 </p>
               </div>
               <button
@@ -403,12 +434,12 @@ export default function AmmoDeepDive({
                 disabled={!selected}
                 className="w-full rounded border border-[#00b4ff]/55 bg-[#00b4ff]/12 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-[#5ec8ff] shadow-[0_0_18px_rgba(0,180,255,0.28)] transition hover:bg-[#00b4ff]/20 disabled:opacity-40"
               >
-                [ 🔍 HARCAMA KAYITLARINI GÖRÜNTÜLE ]
+                {t('ammoDeepDive.viewSpendLogs')}
               </button>
             </div>
           ) : (
             <p className="flex flex-1 items-center justify-center p-6 font-mono-technical text-[9px] uppercase text-app-text/45">
-              KALİBRE_SEÇİN
+              {t('ammoDeepDive.selectCalibre')}
             </p>
           )}
         </TacticalPanel>

@@ -1,6 +1,8 @@
+import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import TacticalPanel from '../ui/TacticalPanel'
 import BallisticInfoCollapsible from './BallisticInfoCollapsible'
-import { WEAPON_CATEGORY_OPTIONS } from '../../lib/weaponIlws'
+import { weaponCategoryOptions } from '../../lib/armoryDisplayText'
 
 const labelClass =
   'block font-mono-technical text-xs font-bold uppercase tracking-[0.2em] text-app-text/55 sm:text-[8px]'
@@ -38,29 +40,32 @@ const submitBtnClass =
  * }} props
  */
 export default function WeaponCreateModal({ open, saving, form, onClose, onChange, onSubmit }) {
+  const { t, i18n } = useTranslation('armory')
+  const categoryOptions = useMemo(() => weaponCategoryOptions(), [i18n.language])
+
   if (!open) return null
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/75 p-3 backdrop-blur-sm sm:items-center sm:overflow-y-auto sm:overscroll-y-contain sm:[-webkit-overflow-scrolling:touch]">
-      <button type="button" className="absolute inset-0 cursor-default" aria-label="Kapat" onClick={() => !saving && onClose()} />
+      <button type="button" className="absolute inset-0 cursor-default" aria-label={t('page.closeAria')} onClick={() => !saving && onClose()} />
       <TacticalPanel className="relative z-[1] flex max-h-[80vh] w-full max-w-lg flex-col overflow-hidden border-accent/20 bg-app-bg/98 p-0 shadow-2xl backdrop-blur-md sm:my-3 sm:max-h-none">
         <div className="shrink-0 border-b border-white/10 bg-app-bg px-3 py-1.5 sm:px-4 sm:py-2">
           <p className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] text-accent/90">
-            + YENİ_SİLAH_KAYDI
+            {t('forms.weaponModalTitle')}
           </p>
-          <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-app-text/45">Silah Rafı · Cephanelik</p>
+          <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-app-text/45">{t('forms.weaponModalSubtitle')}</p>
         </div>
         <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div className="flex flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-3 py-2 [-webkit-overflow-scrolling:touch] sm:gap-3 sm:px-4 sm:py-4">
             <label className="block space-y-1">
-              <span className={labelClass}>SİLAH_TİPİ</span>
+              <span className={labelClass}>{t('forms.weaponType')}</span>
               <select
                 className={selectClass}
                 value={form.tacticalCategory}
                 onChange={(e) => onChange({ tacticalCategory: e.target.value })}
                 required
               >
-                {WEAPON_CATEGORY_OPTIONS.map((c) => (
+                {categoryOptions.map((c) => (
                   <option key={c.value} value={c.value}>
                     {c.label}
                   </option>
@@ -68,11 +73,11 @@ export default function WeaponCreateModal({ open, saving, form, onClose, onChang
               </select>
             </label>
             <label className="block space-y-1">
-              <span className={labelClass}>ÖĞE_ADI</span>
+              <span className={labelClass}>{t('forms.itemName')}</span>
               <input className={inputClass} value={form.name} onChange={(e) => onChange({ name: e.target.value })} required />
             </label>
             <label className="block space-y-1">
-              <span className={labelClass}>TEKNİK_TANIM</span>
+              <span className={labelClass}>{t('forms.technicalDescription')}</span>
               <textarea
                 className={textareaClass}
                 value={form.technicalDescription}
@@ -82,16 +87,16 @@ export default function WeaponCreateModal({ open, saving, form, onClose, onChang
             </label>
             <div className="grid gap-2 sm:grid-cols-2 sm:gap-3">
               <label className="block space-y-1">
-                <span className={labelClass}>MARKA</span>
+                <span className={labelClass}>{t('forms.brand')}</span>
                 <input className={inputClass} value={form.brand} onChange={(e) => onChange({ brand: e.target.value })} />
               </label>
               <label className="block space-y-1">
-                <span className={labelClass}>SERİ_NO</span>
+                <span className={labelClass}>{t('forms.serialNo')}</span>
                 <input className={inputClass} value={form.serialNo} onChange={(e) => onChange({ serialNo: e.target.value })} />
               </label>
             </div>
             <label className="block space-y-1">
-              <span className={labelClass}>KALİBRE</span>
+              <span className={labelClass}>{t('forms.calibre')}</span>
               <input className={inputClass} value={form.calibre} onChange={(e) => onChange({ calibre: e.target.value })} placeholder="9×19" />
             </label>
             <BallisticInfoCollapsible
@@ -107,10 +112,10 @@ export default function WeaponCreateModal({ open, saving, form, onClose, onChang
           </div>
           <div className={actionBarClass}>
             <button type="button" onClick={onClose} disabled={saving} className={cancelBtnClass}>
-              İPTAL
+              {t('common.cancel')}
             </button>
             <button type="submit" disabled={saving} className={submitBtnClass}>
-              {saving ? '…' : 'KAYDET'}
+              {saving ? t('common.saving') : t('common.save')}
             </button>
           </div>
         </form>

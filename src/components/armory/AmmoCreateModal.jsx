@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import TacticalPanel from '../ui/TacticalPanel'
 import BallisticInfoCollapsible from './BallisticInfoCollapsible'
 
@@ -33,22 +34,24 @@ const submitBtnClass =
  * }} props
  */
 export default function AmmoCreateModal({ open, saving, form, onClose, onChange, onSubmit }) {
+  const { t } = useTranslation('armory')
+
   if (!open) return null
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/75 p-3 backdrop-blur-sm sm:items-center sm:overflow-y-auto sm:overscroll-y-contain sm:[-webkit-overflow-scrolling:touch]">
-      <button type="button" className="absolute inset-0 cursor-default" aria-label="Kapat" onClick={() => !saving && onClose()} />
+      <button type="button" className="absolute inset-0 cursor-default" aria-label={t('page.closeAria')} onClick={() => !saving && onClose()} />
       <TacticalPanel className="relative z-[1] flex max-h-[80vh] w-full max-w-lg flex-col overflow-hidden border-accent/20 bg-app-bg/98 p-0 shadow-2xl backdrop-blur-md sm:my-3 sm:max-h-none">
         <div className="shrink-0 border-b border-white/10 bg-app-bg px-3 py-1.5 sm:px-4 sm:py-2">
           <p className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] text-accent/90">
-            + YENİ_MÜHİMMAT_KAYDI
+            {t('forms.ammoModalTitle')}
           </p>
-          <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-app-text/45">MHM · KALİBRE · STOK</p>
+          <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-app-text/45">{t('forms.ammoModalSubtitle')}</p>
         </div>
         <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div className="flex flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-3 py-2 [-webkit-overflow-scrolling:touch] sm:gap-3 sm:px-4 sm:py-4">
             <label className="block space-y-1">
-              <span className={labelClass}>KALİBRE_ADI (GÖRÜNEN)</span>
+              <span className={labelClass}>{t('forms.caliberName')}</span>
               <input
                 className={inputClass}
                 placeholder="9x19mm Parabellum"
@@ -58,7 +61,7 @@ export default function AmmoCreateModal({ open, saving, form, onClose, onChange,
               />
             </label>
             <label className="block space-y-1">
-              <span className={labelClass}>KALİBRE_KODU</span>
+              <span className={labelClass}>{t('forms.calibreCode')}</span>
               <input
                 className={inputClass}
                 placeholder="9x19"
@@ -68,17 +71,18 @@ export default function AmmoCreateModal({ open, saving, form, onClose, onChange,
             </label>
             <div className="grid gap-2 sm:grid-cols-2 sm:gap-3">
               <label className="block space-y-1">
-                <span className={labelClass}>BAŞLANGIÇ_STOK</span>
+                <span className={labelClass}>{t('forms.initialStock')}</span>
                 <input
                   type="number"
                   min={0}
+                  step={1}
                   className={inputClass}
                   value={form.initialStock}
                   onChange={(e) => onChange({ initialStock: e.target.value })}
                 />
               </label>
               <label className="block space-y-1">
-                <span className={labelClass}>BİRİM_FİYAT</span>
+                <span className={labelClass}>{t('forms.unitPrice')}</span>
                 <input
                   type="number"
                   min={0}
@@ -90,10 +94,11 @@ export default function AmmoCreateModal({ open, saving, form, onClose, onChange,
                 />
               </label>
               <label className="block space-y-1 sm:col-span-2">
-                <span className={labelClass}>KRİTİK_EŞİK</span>
+                <span className={labelClass}>{t('forms.criticalThreshold')}</span>
                 <input
                   type="number"
                   min={1}
+                  step={1}
                   className={inputClass}
                   value={form.criticalThreshold}
                   onChange={(e) => onChange({ criticalThreshold: e.target.value })}
@@ -113,10 +118,10 @@ export default function AmmoCreateModal({ open, saving, form, onClose, onChange,
           </div>
           <div className={actionBarClass}>
             <button type="button" onClick={onClose} disabled={saving} className={cancelBtnClass}>
-              İPTAL
+              {t('common.cancel')}
             </button>
             <button type="submit" disabled={saving} className={submitBtnClass}>
-              {saving ? '…' : 'KAYDET'}
+              {saving ? t('common.saving') : t('common.save')}
             </button>
           </div>
         </form>

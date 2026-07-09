@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import TacticalPanel from '../ui/TacticalPanel'
 import {
   ATTACHMENT_PRESETS,
@@ -7,12 +8,18 @@ import {
   buildWeaponSpecs,
   getAttachmentLink,
   getOperationalStatus,
-  getTechnicalDescription,
   getTacticalCategory,
   invStr,
   isWeaponCategory,
   stokKodu,
 } from '../../lib/inventoryIlws'
+import {
+  displayTechnicalDescription,
+  labelAttachmentPreset,
+  labelMaintenanceLogText,
+  labelOperationalStatus,
+  labelSpecKey,
+} from '../../lib/armoryDisplayText'
 
 const colScroll = 'op-detay-col-scroll min-h-0 overflow-y-auto overscroll-y-contain'
 const selectClass =
@@ -26,9 +33,28 @@ const selectClass =
  * }} props
  */
 export default function IlwsInspectionTerminal({ row, onClose, onPatch }) {
+  const { t, i18n } = useTranslation('armory')
   const [status, setStatus] = useState('AKTİF')
   const [attachment, setAttachment] = useState('YOK')
   const [busy, setBusy] = useState(false)
+
+  const statusOptions = useMemo(
+    () =>
+      OPERATIONAL_STATUSES.map((s) => ({
+        value: s,
+        label: labelOperationalStatus(s),
+      })),
+    [i18n.language]
+  )
+
+  const attachmentOptions = useMemo(
+    () =>
+      ATTACHMENT_PRESETS.map((a) => ({
+        value: a,
+        label: labelAttachmentPreset(a),
+      })),
+    [i18n.language]
+  )
 
   useEffect(() => {
     if (!row) return undefined
@@ -59,7 +85,7 @@ export default function IlwsInspectionTerminal({ row, onClose, onPatch }) {
 
   return (
     <div className="fixed inset-0 z-[95] flex items-center justify-center p-3 sm:p-4" role="presentation">
-      <button type="button" className="absolute inset-0 bg-black/55 backdrop-blur-sm" aria-label="Kapat" onClick={onClose} />
+      <button type="button" className="absolute inset-0 bg-black/55 backdrop-blur-sm" aria-label={t('page.closeAria')} onClick={onClose} />
       <TacticalPanel
         className="relative z-[1] w-full max-w-5xl overflow-hidden border-[#004DFF]/25 bg-app-bg/98 p-0 shadow-2xl backdrop-blur-md"
         role="dialog"
@@ -73,13 +99,13 @@ export default function IlwsInspectionTerminal({ row, onClose, onPatch }) {
               onClick={onClose}
               className="absolute right-3 top-3 z-10 rounded border border-white/20 px-2 py-1 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-app-text/70 transition hover:border-white/35 hover:text-app-text sm:right-4"
             >
-              [ X_KAPAT ]
+              {t('inspection.close')}
             </button>
             <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.32em] text-accent/80">
-              SİLAH İNCELEME TERMİNALİ
+              {t('inspection.title')}
             </p>
             <p id="ilws-inspect-title" className="mt-0.5 font-mono-technical text-[10px] font-bold uppercase tracking-[0.12em] text-app-text/90">
-              STOK_KODU: {stokKodu(id)} · {invStr(row.name)}
+              {t('inspection.stockCode', { code: stokKodu(id), name: invStr(row.name) })}
             </p>
           </div>
 
@@ -87,28 +113,32 @@ export default function IlwsInspectionTerminal({ row, onClose, onPatch }) {
             <section className="flex min-h-0 max-h-[min(42vh,calc(85vh-4.5rem))] flex-col border-b border-white/10 md:max-h-full md:h-full md:border-b-0">
               <div className="shrink-0 border-b border-white/[0.06] px-3 py-2">
                 <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.28em] text-accent/90">
-                  TEKNİK_SPESİFİKASYON
+                  {t('inspection.techSpec')}
                 </p>
               </div>
               <div className={`${colScroll} max-h-[calc(85vh-8rem)] flex-1 px-3 py-3 md:max-h-none`}>
                 <ul className="space-y-2 font-mono text-[11px] text-app-text/90">
                   {specs.map((s) => (
                     <li key={s.key} className="flex gap-2 break-words border-b border-white/[0.06] pb-2">
-                      <span className="shrink-0 text-app-text/45">{s.key}:</span>
+                      <span className="shrink-0 text-app-text/45">{labelSpecKey(s.key)}:</span>
                       <span className="text-accent/90">{s.value}</span>
                     </li>
                   ))}
                 </ul>
                 {!weapon ? (
-                  <p className="mt-3 font-mono-technical text-[10px] text-app-text/55">{getTechnicalDescription(row)}</p>
+                  <p className="mt-3 font-mono-technical text-[10px] text-app-text/55">{displayTechnicalDescription(row)}</p>
                 ) : null}
                 <p className="mb-2 mt-5 font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-app-text/45">
-                  SİLAH_BAKIM_GÜNLÜĞÜ
+                  {t('inspection.maintLog')}
                 </p>
                 <ul className="space-y-2 font-mono text-[10px] leading-relaxed text-accent">
                   {maintLogs.map((log, i) => (
                     <li key={`${log.date}-${i}`} className="break-words">
-                      <span className="text-accent/55">[{log.date}]</span> {log.text} · DURUM: {log.status}
+                      {t('inspection.logLine', {
+                        date: log.date,
+                        text: labelMaintenanceLogText(log.text),
+                        status: labelMaintenanceLogText(log.status),
+                      })}
                     </li>
                   ))}
                 </ul>
@@ -119,11 +149,13 @@ export default function IlwsInspectionTerminal({ row, onClose, onPatch }) {
 
             <section className={`${colScroll} min-h-0 min-w-0 max-h-[min(48vh,calc(85vh-4.5rem))] px-4 py-4 md:max-h-[calc(85vh-4.5rem)] md:h-full`}>
               <p className="mb-4 font-mono-technical text-[8px] font-bold uppercase tracking-[0.28em] text-accent/75">
-                SİSTEM_KONTROLÜ
+                {t('inspection.systemControl')}
               </p>
 
               <label className="block">
-                <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">DURUM</span>
+                <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">
+                  {t('inspection.status')}
+                </span>
                 <select
                   className={`${selectClass} mt-1`}
                   value={status}
@@ -134,9 +166,9 @@ export default function IlwsInspectionTerminal({ row, onClose, onPatch }) {
                     await persistField({ operationalStatus: v })
                   }}
                 >
-                  {OPERATIONAL_STATUSES.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
+                  {statusOptions.map((s) => (
+                    <option key={s.value} value={s.value}>
+                      {s.label}
                     </option>
                   ))}
                 </select>
@@ -144,7 +176,7 @@ export default function IlwsInspectionTerminal({ row, onClose, onPatch }) {
 
               <label className="mt-4 block">
                 <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">
-                  EKLENTİ_BAĞLA
+                  {t('inspection.attachLink')}
                 </span>
                 <select
                   className={`${selectClass} mt-1`}
@@ -156,25 +188,27 @@ export default function IlwsInspectionTerminal({ row, onClose, onPatch }) {
                     await persistField({ attachmentLink: v })
                   }}
                 >
-                  {ATTACHMENT_PRESETS.map((a) => (
-                    <option key={a} value={a}>
-                      {a}
+                  {attachmentOptions.map((a) => (
+                    <option key={a.value} value={a.value}>
+                      {a.label}
                     </option>
                   ))}
                 </select>
               </label>
 
               <div className="mt-5 rounded border border-white/[0.08] bg-black/45 p-3">
-                <p className="font-mono-technical text-[8px] uppercase tracking-wider text-app-text/45">KATEGORİ_KODU</p>
+                <p className="font-mono-technical text-[8px] uppercase tracking-wider text-app-text/45">
+                  {t('inspection.categoryCode')}
+                </p>
                 <p className="mt-1 font-mono text-sm text-app-text">{getTacticalCategory(row)}</p>
               </div>
 
               <div className="mt-4 min-h-[6rem] min-w-0 rounded border border-white/[0.08] bg-black/45 px-3 py-3">
                 <p className="mb-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/45">
-                  DEBRİFİNG / NOT
+                  {t('inspection.debrief')}
                 </p>
                 <pre className="max-w-full whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-app-text/90">
-                  {getTechnicalDescription(row)}
+                  {displayTechnicalDescription(row)}
                 </pre>
               </div>
             </section>

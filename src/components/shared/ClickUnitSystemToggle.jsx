@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 const btnSecondary =
   'rounded border border-white/15 px-2.5 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-app-text/75 hover:bg-white/5'
 const btnAccent =
@@ -13,6 +15,7 @@ const btnAccent =
  * }} props
  */
 export default function ClickUnitSystemToggle({ value, onChange, disabled = false, labelClass, className = '' }) {
+  const { t } = useTranslation('common')
   const active = value === 'MOA' || value === 'MRAD' ? value : null
 
   return (
@@ -23,7 +26,7 @@ export default function ClickUnitSystemToggle({ value, onChange, disabled = fals
           'block font-mono-technical text-[9px] font-bold uppercase tracking-[0.18em] text-app-text/55'
         }
       >
-        Birim Sistemi
+        {t('unitSystem')}
       </span>
       <div className="flex gap-2">
         {/** @type {const} */ (['MOA', 'MRAD']).map((unit) => (

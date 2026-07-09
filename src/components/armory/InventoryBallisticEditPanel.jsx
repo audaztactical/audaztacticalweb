@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import BallisticInfoCollapsible from './BallisticInfoCollapsible'
 import {
   ammoBallisticFormFromRow,
@@ -20,6 +21,7 @@ import {
  * }} props
  */
 export default function InventoryBallisticEditPanel({ kind, row, updateItem }) {
+  const { t } = useTranslation('armory')
   const [form, setForm] = useState(() => formFromRow(kind, row))
   const [saving, setSaving] = useState(false)
 
@@ -57,7 +59,7 @@ export default function InventoryBallisticEditPanel({ kind, row, updateItem }) {
         disabled={saving}
         className="w-full rounded border border-emerald-500/35 py-1.5 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-50"
       >
-        {saving ? '…' : 'BALİSTİK BİLGİLERİ KAYDET'}
+        {saving ? t('common.saving') : t('ballistic.saveBallistic')}
       </button>
     </form>
   )

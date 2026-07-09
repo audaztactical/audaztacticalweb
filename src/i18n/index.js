@@ -24,6 +24,8 @@ import trHealth from './locales/tr/health.json'
 import enHealth from './locales/en/health.json'
 import trHealthPdf from './locales/tr/health-pdf.json'
 import enHealthPdf from './locales/en/health-pdf.json'
+import trArmory from './locales/tr/armory.json'
+import enArmory from './locales/en/armory.json'
 
 export const SUPPORTED_LANGUAGES = /** @type {const} */ (['tr', 'en'])
 
@@ -40,14 +42,14 @@ const isDev = typeof import.meta !== 'undefined' && Boolean(import.meta.env?.DEV
 
 i18n.use(initReactI18next).init({
   resources: {
-    tr: { common: trCommon, dashboard: trDashboard, nav: trNav, profile: trProfile, messages: trMessages, academy: trAcademy, forum: trForum, intel: trIntel, training: trTraining, 'training-pdf': trTrainingPdf, health: trHealth, 'health-pdf': trHealthPdf },
-    en: { common: enCommon, dashboard: enDashboard, nav: enNav, profile: enProfile, messages: enMessages, academy: enAcademy, forum: enForum, intel: enIntel, training: enTraining, 'training-pdf': enTrainingPdf, health: enHealth, 'health-pdf': enHealthPdf },
+    tr: { common: trCommon, dashboard: trDashboard, nav: trNav, profile: trProfile, messages: trMessages, academy: trAcademy, forum: trForum, intel: trIntel, training: trTraining, 'training-pdf': trTrainingPdf, health: trHealth, 'health-pdf': trHealthPdf, armory: trArmory },
+    en: { common: enCommon, dashboard: enDashboard, nav: enNav, profile: enProfile, messages: enMessages, academy: enAcademy, forum: enForum, intel: enIntel, training: enTraining, 'training-pdf': enTrainingPdf, health: enHealth, 'health-pdf': enHealthPdf, armory: enArmory },
   },
   lng: detectBrowserLanguage(),
   fallbackLng: 'en',
   supportedLngs: [...SUPPORTED_LANGUAGES],
   defaultNS: 'common',
-  ns: ['common', 'dashboard', 'nav', 'profile', 'messages', 'academy', 'forum', 'intel', 'training', 'training-pdf', 'health', 'health-pdf'],
+  ns: ['common', 'dashboard', 'nav', 'profile', 'messages', 'academy', 'forum', 'intel', 'training', 'training-pdf', 'health', 'health-pdf', 'armory'],
   interpolation: { escapeValue: false },
   ...(isDev
     ? {

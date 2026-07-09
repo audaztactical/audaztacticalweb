@@ -1,5 +1,6 @@
 /** @typedef {'ALL' | 'P_TFK' | 'T_TAB' | 'AV_TFK' | 'KNT' | 'OPT' | 'MHM'} IlwsFilterId */
 
+/** `code` is TR fallback; prefer `labelFilter` / `ilwsFilterOptions` from armoryDisplayText at render. */
 export const ILWS_FILTERS = [
   { id: /** @type {IlwsFilterId} */ ('ALL'), code: 'Tümü' },
   { id: 'P_TFK', code: 'Piyade Tüfeği' },
@@ -10,6 +11,7 @@ export const ILWS_FILTERS = [
   { id: 'MHM', code: 'Mühimmat' },
 ]
 
+/** `label` is TR fallback; prefer `labelTacticalCategory` / `tacticalCategoryOptions` at render. */
 export const TACTICAL_CATEGORIES = [
   { value: 'P_TFK', label: 'Piyade Tüfeği' },
   { value: 'T_TAB', label: 'Taktik Tabanca' },
@@ -19,7 +21,7 @@ export const TACTICAL_CATEGORIES = [
   { value: 'MHM', label: 'Mühimmat' },
 ]
 
-/** @param {string} tc */
+/** @param {string} tc — prefer `labelTacticalCategory` from armoryDisplayText in UI */
 export function tacticalCategoryLabel(tc) {
   const u = invStr(tc).toUpperCase()
   const found = TACTICAL_CATEGORIES.find((c) => c.value === u)

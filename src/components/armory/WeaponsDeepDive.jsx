@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Plus } from 'lucide-react'
 import MatrixWireVisualizer from './MatrixWireVisualizer'
 import TacticalPanel from '../ui/TacticalPanel'
@@ -25,6 +26,11 @@ import { WeaponMaintenanceAlarmFromInventory } from './WeaponMaintenanceAlarmPan
 import InventoryBallisticEditPanel from './InventoryBallisticEditPanel'
 import { syncDetachAccessory, syncMountAccessory } from '../../lib/armoryMountSync'
 import { invStr } from '../../lib/inventoryIlws'
+import {
+  armoryLocale,
+  labelWeaponMaintenanceType,
+  weaponMaintenanceTypeOptions,
+} from '../../lib/armoryDisplayText'
 
 const selectClass =
   'dossier-blood-select w-full rounded border border-accent/35 bg-app-bg py-2 pl-2 pr-8 font-mono-technical text-[10px] uppercase text-app-text outline-none'
@@ -59,6 +65,9 @@ export default function WeaponsDeepDive({
   deleteItem,
   commitDeploymentBatch,
 }) {
+  const { t, i18n } = useTranslation('armory')
+  const locale = armoryLocale()
+  const maintTypeOptions = useMemo(() => weaponMaintenanceTypeOptions(), [i18n.language])
   const optics = useMemo(() => filterOpticRows(allItems), [allItems])
   const [selectedId, setSelectedId] = useState(/** @type {string | null} */ (null))
   const [maintType, setMaintType] = useState(MAINTENANCE_TYPES[0])
@@ -102,7 +111,7 @@ export default function WeaponsDeepDive({
   const yivPercent = selected ? getYivConditionPercent(selected, rangeLogs) : 100
   const roundsSinceMaint = selected ? getRoundsSinceLastMaintenance(selected, rangeLogs) : 0
   const maintenanceLogs = selected ? getWeaponMaintenanceLogs(selected) : []
-  const inventoryEntryDate = selected ? getWeaponCreatedAt(selected) : '—'
+  const inventoryEntryDate = selected ? getWeaponCreatedAt(selected) : t('common.emDash')
 
   const periodicAlert = roundsSinceMaint > 500
   const criticalAlert = yivPercent < 30
@@ -112,7 +121,9 @@ export default function WeaponsDeepDive({
       e.stopPropagation()
       const id = String(weaponRow.id)
       const label = weaponDisplayName(weaponRow)
-      const ok = window.confirm(`SİLAH ENVANTERDEN TAMAMEN ÇIKARILSIN MI?\n\n[${weaponStokKodu(id)}] ${label}`)
+      const ok = window.confirm(
+        t('weaponsDeepDive.deleteConfirm', { code: weaponStokKodu(id), name: label })
+      )
       if (!ok) return
       setBusy(true)
       try {
@@ -137,7 +148,7 @@ export default function WeaponsDeepDive({
         setBusy(false)
       }
     },
-    [deleteItem, updateItem, selectedId, optics, allItems, commitDeploymentBatch]
+    [deleteItem, updateItem, selectedId, optics, allItems, commitDeploymentBatch, t]
   )
 
   const detachAccessory = useCallback(async () => {
@@ -217,7 +228,7 @@ export default function WeaponsDeepDive({
         className="inline-flex items-center gap-2 rounded border border-accent/50 bg-accent/12 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent shadow-[0_0_12px_-4px_rgba(255,180,0,0.4)] transition hover:bg-accent/20"
       >
         <span aria-hidden>↩️</span>
-        GERİ DÖN / RETURN
+        {t('weaponsDeepDive.back')}
       </button>
 
       <WeaponMaintenanceAlarmFromInventory
@@ -228,14 +239,15 @@ export default function WeaponsDeepDive({
       />
 
       <div className="grid min-h-[32rem] gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)_minmax(0,1.4fr)]">
-        {/* Sol — silah rafı */}
         <TacticalPanel className="flex min-h-0 flex-col border-white/10 bg-black/40 p-0">
           <p className="border-b border-white/10 bg-app-bg px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-accent/85">
-            Silah Rafı
+            {t('weaponsDeepDive.rackTitle')}
           </p>
           <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2 op-detay-col-scroll">
             {weapons.length === 0 ? (
-              <li className="py-8 text-center font-mono-technical text-[9px] uppercase text-app-text/45">SİLAH_KAYDI_YOK</li>
+              <li className="py-8 text-center font-mono-technical text-[9px] uppercase text-app-text/45">
+                {t('weaponsDeepDive.empty')}
+              </li>
             ) : (
               weapons.map((w) => {
                 const id = String(w.id)
@@ -261,9 +273,9 @@ export default function WeaponsDeepDive({
                       disabled={busy}
                       onClick={(e) => deleteWeapon(w, e)}
                       className="shrink-0 self-stretch rounded border border-red-500/35 px-1.5 font-mono-technical text-[8px] font-bold uppercase text-red-400 hover:bg-red-950/40 disabled:opacity-40"
-                      aria-label={`${weaponDisplayName(w)} sil`}
+                      aria-label={t('weaponsDeepDive.deleteAria', { name: weaponDisplayName(w) })}
                     >
-                      [ ❌ SİL ]
+                      {t('weaponsDeepDive.delete')}
                     </button>
                   </li>
                 )
@@ -277,15 +289,14 @@ export default function WeaponsDeepDive({
               className="flex w-full items-center justify-center gap-1.5 rounded border border-accent/40 bg-accent/10 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-accent hover:bg-accent/16"
             >
               <Plus className="size-3" aria-hidden />
-              + YENİ_SİLAH_KAYDI
+              {t('weaponsDeepDive.addWeapon')}
             </button>
           </div>
         </TacticalPanel>
 
-        {/* Orta — monitör */}
         <TacticalPanel className="flex min-h-0 flex-col border-white/10 bg-black/40 p-0">
           <p className="border-b border-white/10 bg-app-bg px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-accent/80">
-            3D Silah Görünümü
+            {t('weaponsDeepDive.view3d')}
           </p>
           {selected ? (
             <>
@@ -298,62 +309,71 @@ export default function WeaponsDeepDive({
               />
               <div className="space-y-3 border-t border-white/10 p-3 font-mono-technical text-[9px] uppercase">
                 <div>
-                  <p className="mb-1 text-app-text/55">Yiv-Set Durumu</p>
+                  <p className="mb-1 text-app-text/55">{t('weaponsDeepDive.yivStatus')}</p>
                   <p className="text-accent">
-                    Durum: [{formatConditionBar(yivPercent)}] %{yivPercent}
+                    {t('weaponsDeepDive.condition', {
+                      bar: formatConditionBar(yivPercent),
+                      percent: yivPercent,
+                    })}
                   </p>
                 </div>
                 <div className="text-app-text/55">
                   <span>
-                    TOPLAM ATIM SAYISI: <span className="tabular-nums text-app-text">{totalRounds.toLocaleString('tr-TR')}</span>
+                    {t('weaponsDeepDive.totalRounds')}{' '}
+                    <span className="tabular-nums text-app-text">{totalRounds.toLocaleString(locale)}</span>
                   </span>
                 </div>
                 <p className="font-mono-technical text-[9px] uppercase tracking-[0.12em] text-accent">
-                  Envantere Giriş Tarihi: <span className="tabular-nums">{inventoryEntryDate}</span>
+                  {t('weaponsDeepDive.inventoryEntryDate')} <span className="tabular-nums">{inventoryEntryDate}</span>
                 </p>
               </div>
             </>
           ) : (
             <p className="flex flex-1 items-center justify-center p-6 font-mono-technical text-[9px] uppercase text-app-text/45">
-              SİLAH_SEÇİN
+              {t('weaponsDeepDive.selectWeapon')}
             </p>
           )}
         </TacticalPanel>
 
-        {/* Sağ — lojistik */}
         <TacticalPanel className="flex min-h-0 flex-col border-white/10 bg-black/40 p-0">
           <p className="border-b border-white/10 bg-app-bg px-3 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.24em] text-[#7ab4ff]/85">
-            Bakım Terminali
+            {t('weaponsDeepDive.maintTerminal')}
           </p>
           {!selected ? (
-            <p className="p-6 font-mono-technical text-[9px] uppercase text-app-text/45">TERMİNAL_BEKLEMEDE</p>
+            <p className="p-6 font-mono-technical text-[9px] uppercase text-app-text/45">
+              {t('weaponsDeepDive.terminalWaiting')}
+            </p>
           ) : (
             <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3 op-detay-col-scroll">
               {periodicAlert ? (
                 <p className="animate-pulse rounded border border-orange-500/60 bg-orange-950/30 px-2 py-1.5 text-center font-mono-technical text-[8px] font-bold text-orange-400">
-                  [ 🛠️ PERIYODIK BAKIM ZAMANI ]
+                  {t('weaponsDeepDive.periodicAlert')}
                 </p>
               ) : null}
               {criticalAlert ? (
                 <p className="animate-pulse rounded border border-red-500/70 bg-red-950/40 px-2 py-1.5 text-center font-mono-technical text-[8px] font-bold text-red-400">
-                  [ ⚠️ YİV-SET KRİTİK / NAMLU DEĞİŞİMİ ]
+                  {t('weaponsDeepDive.criticalAlert')}
                 </p>
               ) : null}
 
               <InventoryBallisticEditPanel kind="weapon" row={selected} updateItem={updateItem} />
 
               <div className="space-y-2 border-b border-white/10 pb-3">
-                <p className="font-mono-technical text-[8px] font-bold uppercase text-app-text/55">AKSESUAR:</p>
+                <p className="font-mono-technical text-[8px] font-bold uppercase text-app-text/55">
+                  {t('weaponsDeepDive.accessory')}
+                </p>
                 {attachedOptic ? (
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-mono text-[10px] text-[#7ab4ff]">{invStr(attachedOptic.name) || '—'}</span>
+                    <span className="font-mono text-[10px] text-[#7ab4ff]">
+                      {invStr(attachedOptic.name) || t('common.emDash')}
+                    </span>
                     <button
                       type="button"
                       disabled={busy}
                       onClick={detachAccessory}
                       className="rounded border border-red-500/40 px-2 py-1 font-mono-technical text-[8px] uppercase text-red-400 hover:bg-red-950/30"
                     >
-                      [ ⌧ SÖK / DETACH ]
+                      {t('weaponsDeepDive.detach')}
                     </button>
                   </div>
                 ) : (
@@ -364,7 +384,7 @@ export default function WeaponsDeepDive({
                       onChange={(e) => setAttachId(e.target.value)}
                       disabled={busy || idleOptics.length === 0}
                     >
-                      <option value="">— Aksesuar Seç —</option>
+                      <option value="">{t('weaponsDeepDive.selectAccessory')}</option>
                       {idleOptics.map((o) => (
                         <option key={String(o.id)} value={String(o.id)}>
                           {invStr(o.name) || String(o.id)}
@@ -377,7 +397,7 @@ export default function WeaponsDeepDive({
                       onClick={attachAccessory}
                       className="shrink-0 rounded border border-accent/40 px-2 py-2 font-mono-technical text-[8px] uppercase text-accent hover:bg-accent/10 disabled:opacity-40"
                     >
-                      MONTAJ
+                      {t('weaponsDeepDive.mount')}
                     </button>
                   </div>
                 )}
@@ -385,17 +405,20 @@ export default function WeaponsDeepDive({
 
               <div ref={maintFormRef} className="space-y-2">
                 <p className="font-mono-technical text-[8px] font-bold uppercase tracking-wider text-app-text/55">
-                  Bakım Günlüğü
+                  {t('weaponsDeepDive.maintLog')}
                 </p>
                 <p className="font-mono text-[8px] text-app-text/45">
-                  SON_BAKIMDAN_ATIM: <span className="text-accent">{roundsSinceMaint.toLocaleString('tr-TR')}</span>
+                  {t('weaponsDeepDive.roundsSinceMaint')}{' '}
+                  <span className="text-accent">{roundsSinceMaint.toLocaleString(locale)}</span>
                 </p>
 
                 <form onSubmit={submitMaintenance} className="space-y-2 rounded border border-white/10 bg-black/50 p-2">
-                  <p className="font-mono-technical text-[7px] font-bold uppercase text-accent/80">Yeni Bakım Kaydı</p>
+                  <p className="font-mono-technical text-[7px] font-bold uppercase text-accent/80">
+                    {t('weaponsDeepDive.newMaintEntry')}
+                  </p>
                   <label className="block">
                     <span className="font-mono-technical text-[7px] font-bold uppercase tracking-wider text-app-text/55">
-                      BAKIM TARİHİ:
+                      {t('weaponsDeepDive.maintDate')}
                     </span>
                     <input
                       type="date"
@@ -413,15 +436,15 @@ export default function WeaponsDeepDive({
                     onChange={(e) => setMaintType(e.target.value)}
                     disabled={maintSaving}
                   >
-                    {MAINTENANCE_TYPES.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
+                    {maintTypeOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
                       </option>
                     ))}
                   </select>
                   <input
                     className="w-full border border-white/15 bg-transparent px-2 py-1.5 font-mono text-[10px] text-app-text outline-none focus:border-accent/40"
-                    placeholder="Bakım notu"
+                    placeholder={t('weaponsDeepDive.maintNotePlaceholder')}
                     value={maintNote}
                     onChange={(e) => setMaintNote(e.target.value)}
                     disabled={maintSaving}
@@ -431,7 +454,7 @@ export default function WeaponsDeepDive({
                     disabled={maintSaving}
                     className="w-full rounded border border-accent/35 py-1.5 font-mono-technical text-[8px] font-bold uppercase text-accent hover:bg-accent/10 disabled:opacity-50"
                   >
-                    {maintSaving ? '…' : 'KAYDET'}
+                    {maintSaving ? t('common.saving') : t('common.save')}
                   </button>
                 </form>
 
@@ -441,12 +464,13 @@ export default function WeaponsDeepDive({
 
                 <ul className="space-y-2">
                   {maintenanceLogs.length === 0 ? (
-                    <li className="font-mono text-[9px] text-app-text/45">BAKIM_KAYDI_YOK</li>
+                    <li className="font-mono text-[9px] text-app-text/45">{t('weaponsDeepDive.noMaintLogs')}</li>
                   ) : (
                     maintenanceLogs.map((log, i) => (
                       <li key={`${log.date}-${i}`} className="border-b border-dashed border-white/[0.06] pb-2 font-mono text-[9px] leading-snug text-accent/85">
-                        <span className="text-app-text/55">[{log.date}]</span> · ATIM:{log.rounds_at_maintenance} ·{' '}
-                        {log.maintenanceType}
+                        <span className="text-app-text/55">[{log.date}]</span> ·{' '}
+                        {t('weaponsDeepDive.logRounds', { rounds: log.rounds_at_maintenance })} ·{' '}
+                        {labelWeaponMaintenanceType(log.maintenanceType)}
                         {log.note ? ` · ${log.note}` : ''}
                       </li>
                     ))

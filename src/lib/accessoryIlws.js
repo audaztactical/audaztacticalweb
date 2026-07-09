@@ -3,6 +3,7 @@ import { getWeaponCreatedAt, weaponDisplayName } from './weaponIlws'
 
 /** @typedef {'OPTIK' | 'LAZER' | 'FENER' | 'TUTAMAK_SUSTURUCU'} AccessoryKind */
 
+/** `label` is TR fallback; prefer `labelAccessoryKind` / `accessoryKindOptions` at render. */
 export const ACCESSORY_KINDS = /** @type {{ value: AccessoryKind, label: string }[]} */ ([
   { value: 'OPTIK', label: 'OPTİK · Nişangah' },
   { value: 'LAZER', label: 'LAZER · İşaretleyici' },
@@ -17,7 +18,10 @@ export function resolveAccessoryKind(kind) {
   return 'OPTIK'
 }
 
-/** @param {Record<string, unknown>} row */
+/**
+ * TR fallback label. Prefer `labelAccessoryKindShort(resolveAccessoryKind(...))` from armoryDisplayText in UI.
+ * @param {Record<string, unknown>} row
+ */
 export function localizedAccessoryTypeLabel(row) {
   const map = {
     OPTIK: 'Nişangah',
@@ -64,7 +68,11 @@ export function isAccessoryIdle(row) {
   return getTacticalCategory(row) === 'OPT' && !isAccessoryMounted(row)
 }
 
-/** @param {Record<string, unknown>} row @param {Record<string, unknown> | null} [weapon] */
+/**
+ * Raw TR status for storage/compat. Prefer `formatAccessoryMountStatus` from armoryDisplayText in UI.
+ * @param {Record<string, unknown>} row
+ * @param {Record<string, unknown> | null} [weapon]
+ */
 export function getAccessoryMountStatusLabel(row, weapon = null) {
   if (!isAccessoryMounted(row)) return 'BOŞTA · ENSTALASYONA HAZIR'
   if (weapon) return `${weaponDisplayName(weapon).replace(/\s+/g, ' ').toUpperCase()} ÜZERİNDE`

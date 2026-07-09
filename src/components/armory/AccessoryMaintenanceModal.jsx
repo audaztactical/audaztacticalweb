@@ -1,5 +1,7 @@
-import { ACCESSORY_MAINTENANCE_TYPES } from '../../lib/accessoryIlws'
+import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { todayIsoDate } from '../../lib/weaponIlws'
+import { accessoryMaintenanceTypeOptions } from '../../lib/armoryDisplayText'
 
 const selectClass =
   'dossier-blood-select w-full rounded border border-accent/35 bg-app-bg py-2 pl-2 pr-8 font-mono-technical text-[10px] uppercase text-app-text outline-none'
@@ -38,6 +40,9 @@ export default function AccessoryMaintenanceModal({
   onClose,
   onSubmit,
 }) {
+  const { t, i18n } = useTranslation('armory')
+  const maintTypeOptions = useMemo(() => accessoryMaintenanceTypeOptions(), [i18n.language])
+
   if (!open) return null
 
   const disabled = saving || busy
@@ -49,7 +54,7 @@ export default function AccessoryMaintenanceModal({
       aria-modal="true"
       aria-labelledby="accessory-maint-modal-title"
     >
-      <button type="button" className="absolute inset-0 cursor-default" aria-label="Kapat" onClick={() => !disabled && onClose()} />
+      <button type="button" className="absolute inset-0 cursor-default" aria-label={t('page.closeAria')} onClick={() => !disabled && onClose()} />
       <div className="relative z-[1] w-full max-w-md border border-accent bg-app-bg p-0 shadow-[0_0_24px_-8px_color-mix(in_srgb,var(--accent-color)_35%,transparent)]]">
         <div className="flex items-start justify-between gap-2 border-b border-accent/30 bg-app-bg px-3 py-2 sm:px-4">
           <div>
@@ -57,24 +62,28 @@ export default function AccessoryMaintenanceModal({
               id="accessory-maint-modal-title"
               className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] text-accent"
             >
-              + YENİ TEKNİK KAYIT GİRİŞİ
+              {t('modals.accessoryMaint.title')}
             </p>
-            <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-app-text/45">TEKNİK_BAKIM · ONARIM_GÜNLÜĞÜ</p>
+            <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-app-text/45">
+              {t('modals.accessoryMaint.subtitle')}
+            </p>
           </div>
           <button
             type="button"
             onClick={onClose}
             disabled={disabled}
             className="shrink-0 rounded border border-white/15 px-2 py-1 font-mono-technical text-[9px] font-bold uppercase text-app-text/70 hover:border-accent/40 hover:text-accent disabled:opacity-40"
-            aria-label="Kapat"
+            aria-label={t('page.closeAria')}
           >
-            [ X ]
+            {t('modals.accessoryMaint.close')}
           </button>
         </div>
 
         <form onSubmit={onSubmit} className="space-y-3 px-3 py-3 sm:px-4 sm:py-4">
           <label className="block">
-            <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">BAKIM TÜRÜ</span>
+            <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">
+              {t('modals.accessoryMaint.maintType')}
+            </span>
             <select
               className={`${selectClass} mt-1`}
               value={maintenanceType}
@@ -82,15 +91,17 @@ export default function AccessoryMaintenanceModal({
               disabled={disabled}
               required
             >
-              {ACCESSORY_MAINTENANCE_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
+              {maintTypeOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
                 </option>
               ))}
             </select>
           </label>
           <label className="block">
-            <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">TARİH</span>
+            <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">
+              {t('modals.accessoryMaint.date')}
+            </span>
             <input
               type="date"
               className={`${dateInputClass} mt-1`}
@@ -102,10 +113,12 @@ export default function AccessoryMaintenanceModal({
             />
           </label>
           <label className="block">
-            <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">TEKNİK AÇIKLAMA</span>
+            <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-app-text/55">
+              {t('modals.accessoryMaint.techNote')}
+            </span>
             <textarea
               className={textareaClass}
-              placeholder="Teknik müdahale veya onarım detaylarını buraya işleyin..."
+              placeholder={t('modals.accessoryMaint.techNotePlaceholder')}
               value={maintenanceNote}
               onChange={(e) => onMaintenanceNoteChange(e.target.value)}
               disabled={disabled}
@@ -119,14 +132,14 @@ export default function AccessoryMaintenanceModal({
               disabled={disabled}
               className="rounded border border-white/15 px-3 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-app-text/70 hover:bg-white/5 disabled:opacity-40"
             >
-              [ ESC: KAPAT ]
+              {t('modals.accessoryMaint.cancel')}
             </button>
             <button
               type="submit"
               disabled={disabled}
               className="rounded border border-accent/55 bg-accent/15 px-4 py-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent shadow-[0_0_24px_-8px_color-mix(in_srgb,var(--accent-color)_35%,transparent)]] hover:bg-accent/25 disabled:opacity-50"
             >
-              {saving ? '…' : 'KAYDET'}
+              {saving ? t('common.saving') : t('common.save')}
             </button>
           </div>
         </form>

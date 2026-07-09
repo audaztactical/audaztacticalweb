@@ -14,7 +14,7 @@ import { filterWeaponRows, weaponDisplayName, weaponStokKodu } from '../../lib/w
  * }} props
  */
 export default function WeaponMaintenanceAlarmPanel({ weapons, rangeLogs, updateItem, className = '' }) {
-  const { t } = useTranslation('dashboard')
+  const { t } = useTranslation('armory')
   const alarmWeapons = useMemo(() => weapons.filter(isMaintenanceRequired), [weapons])
   const [modalWeapon, setModalWeapon] = useState(/** @type {Record<string, unknown> | null} */ (null))
 
@@ -28,7 +28,7 @@ export default function WeaponMaintenanceAlarmPanel({ weapons, rangeLogs, update
       >
         <p className="flex items-start gap-2 font-mono-technical text-[9px] font-bold uppercase leading-relaxed tracking-wide text-red-400">
           <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
-          <span>{t('maintenance.alert')}</span>
+          <span>{t('modals.weaponMaintAlarm.alert')}</span>
         </p>
         <ul className="space-y-1.5 border-t border-red-500/25 pt-2">
           {alarmWeapons.map((w) => (
@@ -44,7 +44,7 @@ export default function WeaponMaintenanceAlarmPanel({ weapons, rangeLogs, update
                 onClick={() => setModalWeapon(w)}
                 className="shrink-0 rounded border border-accent/50 bg-accent/10 px-2 py-1 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-accent hover:bg-accent/20"
               >
-                {t('maintenance.logButton')}
+                {t('modals.weaponMaintAlarm.logButton')}
               </button>
             </li>
           ))}

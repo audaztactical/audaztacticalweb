@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { MAINTENANCE_TYPES, todayIsoDate, weaponDisplayName, weaponStokKodu } from '../../lib/weaponIlws'
 import { submitWeaponMaintenanceLog } from '../../lib/weaponMaintenanceService'
-import { MAINTENANCE_ALERT_MESSAGE } from '../../lib/weaponMaintenanceAlarm'
 import TacticalPanel from '../ui/TacticalPanel'
+import { weaponMaintenanceTypeOptions } from '../../lib/armoryDisplayText'
 
 const inputClass =
   'w-full rounded border border-accent/30 bg-app-bg px-2 py-2 font-mono-technical text-sm text-slate-100 outline-none focus:border-accent/60'
@@ -33,6 +34,8 @@ export default function WeaponMaintenanceLogModal({
   onSuccess,
   lockDismiss = false,
 }) {
+  const { t, i18n } = useTranslation('armory')
+  const maintTypeOptions = useMemo(() => weaponMaintenanceTypeOptions(), [i18n.language])
   const [maintType, setMaintType] = useState(MAINTENANCE_TYPES[0])
   const [maintDate, setMaintDate] = useState(todayIsoDate)
   const [cleanedBy, setCleanedBy] = useState('')
@@ -68,7 +71,7 @@ export default function WeaponMaintenanceLogModal({
       onSuccess?.()
       if (!lockDismiss) onClose?.()
     } catch {
-      setError('BAKIM_KAYDI_AKTARILAMADI')
+      setError(t('modals.weaponMaint.error'))
     } finally {
       setSaving(false)
     }
@@ -77,14 +80,14 @@ export default function WeaponMaintenanceLogModal({
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/85 p-3 backdrop-blur-sm">
       {!lockDismiss ? (
-        <button type="button" className="absolute inset-0 cursor-default" aria-label="Kapat" onClick={() => !saving && onClose?.()} />
+        <button type="button" className="absolute inset-0 cursor-default" aria-label={t('page.closeAria')} onClick={() => !saving && onClose?.()} />
       ) : (
         <div className="absolute inset-0" aria-hidden />
       )}
       <TacticalPanel className="weapon-maint-alarm relative z-[1] w-full max-w-lg border-red-500/50 bg-app-bg/98 p-0 shadow-[0_0_40px_rgba(239,68,68,0.25)]">
         <div className="border-b border-red-500/40 bg-red-950/30 px-4 py-3">
           <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.2em] text-red-400">
-            [ ALERT: {MAINTENANCE_ALERT_MESSAGE} ]
+            {t('modals.weaponMaint.alertPrefix', { message: t('modals.weaponMaint.alertMessage') })}
           </p>
           <p className="mt-2 font-mono-technical text-[10px] uppercase text-accent">
             [{weaponStokKodu(String(weapon.id))}] {weaponDisplayName(weapon)}
@@ -92,21 +95,25 @@ export default function WeaponMaintenanceLogModal({
         </div>
         <form onSubmit={handleSubmit} className="space-y-3 px-4 py-4">
           <p className="font-mono-technical text-[8px] uppercase text-app-text/55">
-            Bakım kaydı girilmeden alarm kapanmaz.
+            {t('modals.weaponMaint.lockHint')}
           </p>
           <label className="block space-y-1">
-            <span className="font-mono-technical text-[8px] font-bold uppercase text-app-text/55">BAKIM TÜRÜ</span>
+            <span className="font-mono-technical text-[8px] font-bold uppercase text-app-text/55">
+              {t('modals.weaponMaint.maintType')}
+            </span>
             <select className={selectClass} value={maintType} onChange={(e) => setMaintType(e.target.value)} required>
-              {MAINTENANCE_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
+              {maintTypeOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
                 </option>
               ))}
             </select>
           </label>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block space-y-1">
-              <span className="font-mono-technical text-[8px] font-bold uppercase text-app-text/55">TARİH</span>
+              <span className="font-mono-technical text-[8px] font-bold uppercase text-app-text/55">
+                {t('modals.weaponMaint.date')}
+              </span>
               <input
                 type="date"
                 className={dateClass}
@@ -117,22 +124,26 @@ export default function WeaponMaintenanceLogModal({
               />
             </label>
             <label className="block space-y-1">
-              <span className="font-mono-technical text-[8px] font-bold uppercase text-app-text/55">TEMİZLEYEN / OPERATÖR</span>
+              <span className="font-mono-technical text-[8px] font-bold uppercase text-app-text/55">
+                {t('modals.weaponMaint.cleanedBy')}
+              </span>
               <input
                 className={inputClass}
                 value={cleanedBy}
                 onChange={(e) => setCleanedBy(e.target.value)}
-                placeholder="Çağrı işareti veya ad"
+                placeholder={t('modals.weaponMaint.cleanedByPlaceholder')}
               />
             </label>
           </div>
           <label className="block space-y-1">
-            <span className="font-mono-technical text-[8px] font-bold uppercase text-app-text/55">NOT</span>
+            <span className="font-mono-technical text-[8px] font-bold uppercase text-app-text/55">
+              {t('modals.weaponMaint.note')}
+            </span>
             <textarea
               className={`${inputClass} min-h-[4rem] resize-y`}
               value={maintNote}
               onChange={(e) => setMaintNote(e.target.value)}
-              placeholder="Yiv-set kontrolü, temizlik, parça değişimi…"
+              placeholder={t('modals.weaponMaint.notePlaceholder')}
             />
           </label>
           {error ? (
@@ -143,7 +154,7 @@ export default function WeaponMaintenanceLogModal({
             disabled={saving}
             className="w-full rounded border border-accent/55 bg-accent/12 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent disabled:opacity-40"
           >
-            {saving ? '…' : 'BAKIM KAYDINI ONAYLA · ALARMI KAPAT'}
+            {saving ? t('common.saving') : t('modals.weaponMaint.confirm')}
           </button>
         </form>
       </TacticalPanel>
