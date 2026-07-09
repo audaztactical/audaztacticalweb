@@ -1,0 +1,39 @@
+{
+  "titles": {
+    "default": "BALLISTIC TRAJECTORY REPORT",
+    "withProfile": "BALLISTIC TRAJECTORY · {{name}}"
+  },
+  "summary": {
+    "zeroAngle": "Zero angle: {{value}}°",
+    "airDensityRatio": "Air density ratio: {{value}}",
+    "speedOfSound": "Speed of sound: {{value}} m/s"
+  },
+  "sections": {
+    "rangeTable": "Range table",
+    "glossary": "GLOSSARY",
+    "glossaryContinue": "Glossary"
+  },
+  "glossary": {
+    "actionAdviceHeading": "What to do?"
+  },
+  "table": {
+    "columns": {
+      "m": "M (m)",
+      "dropCm": "Drop (cm)",
+      "windCm": "Wind (cm)",
+      "tof": "TOF (s)",
+      "velocityFps": "V (fps)",
+      "energy": "E (ft·lb)",
+      "moa": "MOA",
+      "mrad": "MRAD",
+      "mach": "Mach"
+    }
+  },
+  "fileNaming": {
+    "brand": "audaz",
+    "slug": "ballistics"
+  },
+  "continuation": {
+    "continue": "Continued"
+  }
+}

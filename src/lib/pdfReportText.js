@@ -2,6 +2,7 @@ import i18n from '../i18n'
 
 const NS = 'training-pdf'
 const HEALTH_NS = 'health-pdf'
+const BALLISTICS_PDF_NS = 'ballistics-pdf'
 
 /** @returns {'tr-TR' | 'en-US'} */
 export function pdfLocale() {
@@ -28,6 +29,24 @@ export function healthPdfT(key, params = {}) {
 /** @param {string} key */
 export function healthPdfReportTitle(key) {
   return healthPdfT(`titles.${key}`)
+}
+
+/**
+ * Ballistics report PDF copy (`ballistics-pdf` namespace).
+ * @param {string} key
+ * @param {Record<string, unknown>} [params]
+ */
+export function ballisticsPdfT(key, params = {}) {
+  return i18n.t(key, { ns: BALLISTICS_PDF_NS, ...params })
+}
+
+/**
+ * @param {string} [profileName]
+ */
+export function ballisticsPdfReportTitle(profileName) {
+  const name = String(profileName ?? '').trim()
+  if (name) return ballisticsPdfT('titles.withProfile', { name })
+  return ballisticsPdfT('titles.default')
 }
 
 /** @param {string} sector */

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   ChevronDown,
   CircleDot,
@@ -23,6 +24,7 @@ import {
   isArmorySessionFieldLocked,
   isArmorySessionFieldOverridden,
 } from '../../lib/inventoryFillLocks.js'
+import { labelDragModel, labelReticlePlane } from '../../lib/ballisticsDisplayText.js'
 
 const labelClass =
   'flex items-center gap-1 font-mono-technical text-[9px] font-bold uppercase tracking-[0.18em] text-app-text/55'
@@ -242,6 +244,7 @@ export default function BallisticFormPanel({
   onUnlockInventorySection,
   onMarkInventoryOverrides,
 }) {
+  const { t } = useTranslation('ballistics')
   const weapon = /** @type {Record<string, unknown>} */ (form.weapon ?? {})
   const optic = /** @type {Record<string, unknown>} */ (form.optic ?? {})
   const ammo = /** @type {Record<string, unknown>} */ (form.ammo ?? {})
@@ -383,7 +386,7 @@ export default function BallisticFormPanel({
         <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-y-contain pb-1 [-webkit-overflow-scrolling:touch]">
       <FormAccordionSection
         id="profile"
-        title="Profil"
+        title={t('form.sections.profile')}
         icon={User}
         open={openSections.profile}
         onToggle={toggleSection}
@@ -393,7 +396,7 @@ export default function BallisticFormPanel({
           value={selectedProfileId}
           onChange={(e) => onSelectProfile(e.target.value)}
         >
-          <option value="">— Profil seç —</option>
+          <option value="">{t('form.selectProfile')}</option>
           {profiles.map((p) => (
             <option key={String(p.id)} value={String(p.id)}>
               {String(p.profileName || p.id)}
@@ -402,36 +405,36 @@ export default function BallisticFormPanel({
         </select>
         <div className="flex flex-wrap gap-2">
           <button type="button" className={btnSecondary} onClick={onSaveProfile} disabled={profileSaving}>
-            {profileSaving ? 'Kaydediliyor…' : 'Profili Kaydet'}
+            {profileSaving ? t('form.savingProfile') : t('form.saveProfile')}
           </button>
           <button type="button" className={btnArmory} onClick={onArmoryFill}>
-            Cephanelikten Getir
+            {t('form.armoryFill')}
           </button>
         </div>
-        <Field label="Silah adı">
+        <Field label={t('form.fields.weaponName')}>
           <input
             readOnly
             disabled
             className={`${inputClass} cursor-not-allowed opacity-50 pointer-events-none bg-neutral-800/50`}
             value={String(form.weaponDisplayLabel ?? '')}
-            placeholder="Cephanelikten getir ile doldurulur"
-            aria-label="Silah adı"
+            placeholder={t('form.placeholders.weaponName')}
+            aria-label={t('form.fields.weaponName')}
           />
         </Field>
-        <Field label="Profil adı">
+        <Field label={t('form.fields.profileName')}>
           <input
             className={inputClass}
             value={String(form.profileName ?? '')}
             onChange={(e) => onFormChange({ profileName: e.target.value })}
-            placeholder="Bu profile bir isim verin (örn. Sabah Antrenmanı)"
-            aria-label="Profil adı"
+            placeholder={t('form.placeholders.profileName')}
+            aria-label={t('form.fields.profileName')}
           />
         </Field>
       </FormAccordionSection>
 
       <FormAccordionSection
         id="ammo"
-        title="Mermi"
+        title={t('form.sections.ammo')}
         icon={CircleDot}
         open={openSections.ammo}
         onToggle={toggleSection}
@@ -440,10 +443,12 @@ export default function BallisticFormPanel({
           <InventorySectionLockBar onUnlock={() => setUnlockTarget('ammo')} />
         ) : null}
         <div className="grid grid-cols-2 gap-2">
-          <Field label="Ağırlık (gr)" showOverride={fieldOverridden('ammo', 'bulletWeight')}>
+          <Field label={t('form.fields.bulletWeight')} showOverride={fieldOverridden('ammo', 'bulletWeight')}>
             <input
               type="number"
-              {...inventoryFieldProps('ammo', 'bulletWeight', 'Ağırlık (gr)')}
+              step="1"
+              min="0"
+              {...inventoryFieldProps('ammo', 'bulletWeight', t('form.fields.bulletWeight'))}
               value={ammo.bulletWeight ?? ''}
               onChange={(e) => {
                 if (fieldLocked('ammo', 'bulletWeight')) return
@@ -452,11 +457,12 @@ export default function BallisticFormPanel({
               }}
             />
           </Field>
-          <Field label="Çap (in)" showOverride={fieldOverridden('ammo', 'bulletDiameter')}>
+          <Field label={t('form.fields.bulletDiameter')} showOverride={fieldOverridden('ammo', 'bulletDiameter')}>
             <input
               type="number"
               step="0.001"
-              {...inventoryFieldProps('ammo', 'bulletDiameter', 'Çap (in)')}
+              min="0"
+              {...inventoryFieldProps('ammo', 'bulletDiameter', t('form.fields.bulletDiameter'))}
               value={ammo.bulletDiameter ?? ''}
               onChange={(e) => {
                 if (fieldLocked('ammo', 'bulletDiameter')) return
@@ -465,10 +471,12 @@ export default function BallisticFormPanel({
               }}
             />
           </Field>
-          <Field label="Namlu hızı (fps)" termKey="muzzleVelocity" showOverride={fieldOverridden('ammo', 'muzzleVelocity')}>
+          <Field label={t('form.fields.muzzleVelocity')} termKey="muzzleVelocity" showOverride={fieldOverridden('ammo', 'muzzleVelocity')}>
             <input
               type="number"
-              {...inventoryFieldProps('ammo', 'muzzleVelocity', 'Namlu hızı (fps)')}
+              step="1"
+              min="0"
+              {...inventoryFieldProps('ammo', 'muzzleVelocity', t('form.fields.muzzleVelocity'))}
               value={ammo.muzzleVelocity ?? ''}
               onChange={(e) => {
                 if (fieldLocked('ammo', 'muzzleVelocity')) return
@@ -477,11 +485,12 @@ export default function BallisticFormPanel({
               }}
             />
           </Field>
-          <Field label="BC" termKey="bc" showOverride={fieldOverridden('ammo', 'ballisticCoefficient')}>
+          <Field label={t('form.fields.bc')} termKey="bc" showOverride={fieldOverridden('ammo', 'ballisticCoefficient')}>
             <input
               type="number"
               step="0.001"
-              {...inventoryFieldProps('ammo', 'ballisticCoefficient', 'BC')}
+              min="0"
+              {...inventoryFieldProps('ammo', 'ballisticCoefficient', t('form.fields.bc'))}
               value={ammo.ballisticCoefficient ?? ''}
               onChange={(e) => {
                 if (fieldLocked('ammo', 'ballisticCoefficient')) return
@@ -491,7 +500,7 @@ export default function BallisticFormPanel({
             />
           </Field>
         </div>
-        <Field label="Drag modeli" termKey="g1G7DragModel" showOverride={fieldOverridden('ammo', 'bcModel')}>
+        <Field label={t('form.fields.dragModel')} termKey="g1G7DragModel" showOverride={fieldOverridden('ammo', 'bcModel')}>
           <div className="flex gap-2">
             {['G7', 'G1'].map((m) => (
               <button
@@ -505,7 +514,7 @@ export default function BallisticFormPanel({
                   markIfOverridden('ammo', 'bcModel')
                 }}
               >
-                {m}
+                {labelDragModel(m)}
               </button>
             ))}
           </div>
@@ -514,7 +523,7 @@ export default function BallisticFormPanel({
 
       <FormAccordionSection
         id="weapon"
-        title="Silah"
+        title={t('form.sections.weapon')}
         icon={Crosshair}
         open={openSections.weapon}
         onToggle={toggleSection}
@@ -523,11 +532,12 @@ export default function BallisticFormPanel({
           <InventorySectionLockBar onUnlock={() => setUnlockTarget('weapon')} />
         ) : null}
         <div className="grid grid-cols-2 gap-2">
-          <Field label="Sight height (cm)" termKey="sightHeight" showOverride={fieldOverridden('weapon', 'sightHeight')}>
+          <Field label={t('form.fields.sightHeight')} termKey="sightHeight" showOverride={fieldOverridden('weapon', 'sightHeight')}>
             <input
               type="number"
               step="0.1"
-              {...inventoryFieldProps('weapon', 'sightHeight', 'Sight height (cm)')}
+              min="0"
+              {...inventoryFieldProps('weapon', 'sightHeight', t('form.fields.sightHeight'))}
               value={weapon.sightHeight ?? ''}
               onChange={(e) => {
                 if (fieldLocked('weapon', 'sightHeight')) return
@@ -536,19 +546,22 @@ export default function BallisticFormPanel({
               }}
             />
           </Field>
-          <Field label="Zero (m)" termKey="zeroDistance">
+          <Field label={t('form.fields.zeroDistance')} termKey="zeroDistance">
             <input
               type="number"
+              step="1"
+              min="1"
               className={inputClass}
               value={weapon.zeroDistance ?? ''}
               onChange={(e) => patchWeapon({ zeroDistance: Number(e.target.value) })}
             />
           </Field>
-          <Field label="Namlu uz. (in)" showOverride={fieldOverridden('weapon', 'barrelLength')}>
+          <Field label={t('form.fields.barrelLength')} showOverride={fieldOverridden('weapon', 'barrelLength')}>
             <input
               type="number"
               step="0.1"
-              {...inventoryFieldProps('weapon', 'barrelLength', 'Namlu uz. (in)')}
+              min="0"
+              {...inventoryFieldProps('weapon', 'barrelLength', t('form.fields.barrelLength'))}
               value={weapon.barrelLength ?? ''}
               onChange={(e) => {
                 if (fieldLocked('weapon', 'barrelLength')) return
@@ -557,10 +570,10 @@ export default function BallisticFormPanel({
               }}
             />
           </Field>
-          <Field label="Yiv devri" termKey="twistRate" showOverride={fieldOverridden('weapon', 'twistRate')}>
+          <Field label={t('form.fields.twistRate')} termKey="twistRate" showOverride={fieldOverridden('weapon', 'twistRate')}>
             <input
-              {...inventoryFieldProps('weapon', 'twistRate', 'Yiv devri')}
-              placeholder="1:8"
+              {...inventoryFieldProps('weapon', 'twistRate', t('form.fields.twistRate'))}
+              placeholder={t('form.placeholders.twistRate')}
               value={weapon.twistRate ?? ''}
               onChange={(e) => {
                 if (fieldLocked('weapon', 'twistRate')) return
@@ -574,7 +587,7 @@ export default function BallisticFormPanel({
 
       <FormAccordionSection
         id="optic"
-        title="Optik"
+        title={t('form.sections.optic')}
         icon={Focus}
         open={openSections.optic}
         onToggle={toggleSection}
@@ -583,9 +596,9 @@ export default function BallisticFormPanel({
           <InventorySectionLockBar onUnlock={() => setUnlockTarget('optic')} />
         ) : null}
         <div className="grid grid-cols-2 gap-2">
-          <Field label="Büyütme" showOverride={fieldOverridden('optic', 'magnification')}>
+          <Field label={t('form.fields.magnification')} showOverride={fieldOverridden('optic', 'magnification')}>
             <input
-              {...inventoryFieldProps('optic', 'magnification', 'Büyütme')}
+              {...inventoryFieldProps('optic', 'magnification', t('form.fields.magnification'))}
               value={optic.magnification ?? ''}
               onChange={(e) => {
                 if (fieldLocked('optic', 'magnification')) return
@@ -594,9 +607,9 @@ export default function BallisticFormPanel({
               }}
             />
           </Field>
-          <Field label="Reticle" termKey="reticleType" showOverride={fieldOverridden('optic', 'reticleType')}>
+          <Field label={t('form.fields.reticle')} termKey="reticleType" showOverride={fieldOverridden('optic', 'reticleType')}>
             <input
-              {...inventoryFieldProps('optic', 'reticleType', 'Reticle')}
+              {...inventoryFieldProps('optic', 'reticleType', t('form.fields.reticle'))}
               value={optic.reticleType ?? ''}
               onChange={(e) => {
                 if (fieldLocked('optic', 'reticleType')) return
@@ -612,11 +625,12 @@ export default function BallisticFormPanel({
           disabled={fieldLocked('optic', 'clickUnitSystem')}
         />
         {clickUnit === 'MOA' ? (
-          <Field label="Tık Değeri (MOA)" termKey="moaClicks" showOverride={fieldOverridden('optic', 'clickValueMoa')}>
+          <Field label={t('form.fields.clickValueMoa')} termKey="moaClicks" showOverride={fieldOverridden('optic', 'clickValueMoa')}>
             <input
               type="number"
               step="0.125"
-              {...inventoryFieldProps('optic', 'clickValueMoa', 'Tık Değeri (MOA)')}
+              min="0"
+              {...inventoryFieldProps('optic', 'clickValueMoa', t('form.fields.clickValueMoa'))}
               value={optic.clickValueMoa ?? ''}
               onChange={(e) => {
                 if (fieldLocked('optic', 'clickValueMoa')) return
@@ -627,11 +641,12 @@ export default function BallisticFormPanel({
           </Field>
         ) : null}
         {clickUnit === 'MRAD' ? (
-          <Field label="Tık Değeri (MRAD)" termKey="mradClicks" showOverride={fieldOverridden('optic', 'clickValueMrad')}>
+          <Field label={t('form.fields.clickValueMrad')} termKey="mradClicks" showOverride={fieldOverridden('optic', 'clickValueMrad')}>
             <input
               type="number"
               step="0.05"
-              {...inventoryFieldProps('optic', 'clickValueMrad', 'Tık Değeri (MRAD)')}
+              min="0"
+              {...inventoryFieldProps('optic', 'clickValueMrad', t('form.fields.clickValueMrad'))}
               value={optic.clickValueMrad ?? ''}
               onChange={(e) => {
                 if (fieldLocked('optic', 'clickValueMrad')) return
@@ -643,12 +658,12 @@ export default function BallisticFormPanel({
         ) : null}
         {clickUnit ? null : (
           <p className="font-mono-technical text-[9px] text-app-text/40">
-            Tık değeri girmek için önce birim sistemi seçin.
+            {t('form.clickUnitHint')}
           </p>
         )}
-        <Field label="FFP / SFP" termKey="ffpSfp" showOverride={fieldOverridden('optic', 'ffpSfp')}>
+        <Field label={t('form.fields.ffpSfp')} termKey="ffpSfp" showOverride={fieldOverridden('optic', 'ffpSfp')}>
           <select
-            {...inventoryFieldProps('optic', 'ffpSfp', 'FFP / SFP')}
+            {...inventoryFieldProps('optic', 'ffpSfp', t('form.fields.ffpSfp'))}
             value={optic.ffpSfp ?? ''}
             onChange={(e) => {
               if (fieldLocked('optic', 'ffpSfp')) return
@@ -657,42 +672,45 @@ export default function BallisticFormPanel({
             }}
           >
             <option value="">—</option>
-            <option value="FFP">FFP</option>
-            <option value="SFP">SFP</option>
+            <option value="FFP">{labelReticlePlane('FFP')}</option>
+            <option value="SFP">{labelReticlePlane('SFP')}</option>
           </select>
         </Field>
       </FormAccordionSection>
 
       <FormAccordionSection
         id="env"
-        title="Çevre"
+        title={t('form.sections.env')}
         icon={Wind}
         open={openSections.env}
         onToggle={toggleSection}
         termKey="airDensity"
       >
         <div className="grid grid-cols-2 gap-2">
-          <Field label="Sıcaklık °C">
+          <Field label={t('form.fields.temperature')}>
             <input
               type="number"
+              step="1"
               className={inputClass}
               value={env.temperatureC ?? ''}
               onChange={(e) => onEnvChange({ temperatureC: Number(e.target.value) })}
             />
           </Field>
-          <Field label="Basınç hPa" termKey="pressureType">
+          <Field label={t('form.fields.pressure')} termKey="pressureType">
             <input
               type="number"
+              step="0.01"
+              min="0"
               className={inputClass}
               value={env.pressureHpa ?? ''}
               onChange={(e) => onEnvChange({ pressureHpa: Number(e.target.value) })}
             />
           </Field>
-          <Field label="Basınç modu" termKey="pressureType">
+          <Field label={t('form.fields.pressureMode')} termKey="pressureType">
             <div className="flex flex-wrap gap-1">
               {[
-                ['station', 'İstasyon'],
-                ['sea-level', 'Deniz sv.'],
+                ['station', t('form.pressureStation')],
+                ['sea-level', t('form.pressureSeaLevel')],
               ].map(([v, l]) => (
                 <button
                   key={v}
@@ -705,32 +723,37 @@ export default function BallisticFormPanel({
               ))}
             </div>
           </Field>
-          <Field label="Nem %">
+          <Field label={t('form.fields.humidity')}>
             <input
               type="number"
+              step="1"
+              min="0"
+              max="100"
               className={inputClass}
               value={env.humidityPercent ?? ''}
               onChange={(e) => onEnvChange({ humidityPercent: Number(e.target.value) })}
             />
           </Field>
-          <Field label="Rakım m">
+          <Field label={t('form.fields.altitude')}>
             <input
               type="number"
+              step="1"
               className={inputClass}
               value={env.altitudeM ?? ''}
               onChange={(e) => onEnvChange({ altitudeM: Number(e.target.value) })}
             />
           </Field>
-          <Field label="Rüzgar" termKey="crosswind">
+          <Field label={t('form.fields.windSpeed')} termKey="crosswind">
             <input
               type="number"
               step="0.1"
+              min="0"
               className={inputClass}
               value={env.windSpeed ?? ''}
               onChange={(e) => onEnvChange({ windSpeed: Number(e.target.value) })}
             />
           </Field>
-          <Field label="Rüzgar birimi">
+          <Field label={t('form.fields.windUnit')}>
             <div className="flex gap-1">
               {['mph', 'mps'].map((u) => (
                 <button
@@ -744,9 +767,10 @@ export default function BallisticFormPanel({
               ))}
             </div>
           </Field>
-          <Field label="Rüzgar açı °" termKey="crosswind">
+          <Field label={t('form.fields.windAngle')} termKey="crosswind">
             <input
               type="number"
+              step="1"
               className={inputClass}
               value={env.windAngleDegrees ?? 90}
               onChange={(e) => onEnvChange({ windAngleDegrees: Number(e.target.value) })}
@@ -757,7 +781,7 @@ export default function BallisticFormPanel({
 
       <FormAccordionSection
         id="advanced"
-        title="Gelişmiş"
+        title={t('form.sections.advanced')}
         icon={SlidersHorizontal}
         open={openSections.advanced}
         onToggle={toggleSection}
@@ -769,12 +793,13 @@ export default function BallisticFormPanel({
             checked={Boolean(advanced.coriolisEnabled)}
             onChange={(e) => patchAdvanced({ coriolisEnabled: e.target.checked })}
           />
-          Coriolis etkin
+          {t('form.fields.coriolisEnabled')}
         </label>
         <div className="grid grid-cols-2 gap-2">
-          <Field label="Enlem" termKey="coriolis">
+          <Field label={t('form.fields.latitude')} termKey="coriolis">
             <input
               type="number"
+              step="0.1"
               className={inputClass}
               value={advanced.latitude ?? ''}
               onChange={(e) =>
@@ -782,9 +807,10 @@ export default function BallisticFormPanel({
               }
             />
           </Field>
-          <Field label="Azimut °" termKey="coriolis">
+          <Field label={t('form.fields.azimuth')} termKey="coriolis">
             <input
               type="number"
+              step="1"
               className={inputClass}
               value={advanced.azimuthDegrees ?? ''}
               onChange={(e) =>
@@ -797,31 +823,37 @@ export default function BallisticFormPanel({
 
       <FormAccordionSection
         id="range"
-        title="Hedef aralığı"
+        title={t('form.sections.range')}
         icon={Ruler}
         open={openSections.range}
         onToggle={toggleSection}
       >
         <div className="grid grid-cols-3 gap-2">
-          <Field label="Min m">
+          <Field label={t('form.fields.rangeMin')}>
             <input
               type="number"
+              step="1"
+              min="1"
               className={inputClass}
               value={rangeMin}
               onChange={(e) => onRangeMin(Number(e.target.value))}
             />
           </Field>
-          <Field label="Max m">
+          <Field label={t('form.fields.rangeMax')}>
             <input
               type="number"
+              step="1"
+              min="1"
               className={inputClass}
               value={rangeMax}
               onChange={(e) => onRangeMax(Number(e.target.value))}
             />
           </Field>
-          <Field label="Adım m">
+          <Field label={t('form.fields.rangeStep')}>
             <input
               type="number"
+              step="1"
+              min="1"
               className={inputClass}
               value={rangeStep}
               onChange={(e) => onRangeStep(Number(e.target.value))}
@@ -838,7 +870,7 @@ export default function BallisticFormPanel({
             onClick={onCalculate}
             disabled={calculating}
           >
-            {calculating ? 'Hesaplanıyor…' : 'Hesapla'}
+            {calculating ? t('form.calculatingCta') : t('form.calculateCta')}
           </button>
         </div>
       </div>

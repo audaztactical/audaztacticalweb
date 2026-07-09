@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Info } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { getBallisticTerm } from '../../data/ballisticTerms.js'
 
 const VIEWPORT_MARGIN = 12
@@ -49,6 +50,7 @@ function computePopoverPosition(trigger, popoverSize) {
  * @param {{ termKey: string, className?: string }} props
  */
 export default function InfoTooltip({ termKey, className = '' }) {
+  const { t, i18n } = useTranslation('ballistics')
   const term = getBallisticTerm(termKey)
   const popoverId = useId()
   const triggerRef = useRef(/** @type {HTMLButtonElement | null} */ (null))
@@ -91,7 +93,7 @@ export default function InfoTooltip({ termKey, className = '' }) {
     const next = computePopoverPosition(trigger, measured)
     setCoords(next)
     popoverEl.style.visibility = 'visible'
-  }, [open, termKey])
+  }, [open, termKey, i18n.language])
 
   useEffect(() => {
     if (!open) return undefined
@@ -160,7 +162,7 @@ export default function InfoTooltip({ termKey, className = '' }) {
               {term.definition}
             </p>
             <p className="mt-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.18em] text-emerald-500/75">
-              Neden gerekli?
+              {t('tooltip.whyHeading')}
             </p>
             <p className="mt-1 font-mono-technical text-[11px] leading-relaxed text-slate-400/95">
               {term.whyItMatters}
@@ -168,7 +170,7 @@ export default function InfoTooltip({ termKey, className = '' }) {
             {term.actionAdvice ? (
               <>
                 <p className="mt-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.18em] text-amber-400/85">
-                  Ne yapmalı?
+                  {t('tooltip.actionHeading')}
                 </p>
                 <p className="mt-1 font-mono-technical text-[11px] leading-relaxed text-slate-300/95">
                   {term.actionAdvice}
@@ -186,7 +188,7 @@ export default function InfoTooltip({ termKey, className = '' }) {
         ref={triggerRef}
         type="button"
         className="group relative inline-flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center -m-3.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-emerald-500/60 sm:h-8 sm:w-8 sm:-m-1.5"
-        aria-label={`${term.termTr} hakkında bilgi`}
+        aria-label={t('tooltip.ariaAbout', { term: term.termTr })}
         aria-expanded={open}
         aria-controls={popoverId}
         onClick={toggle}

@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion as Motion } from 'framer-motion'
 
 /**
@@ -6,6 +7,7 @@ import { motion as Motion } from 'framer-motion'
  * @param {{ results: import('../../lib/ballisticsEngine.js').BallisticsPointResult[], activeDistance: number }} props
  */
 export default function BallisticTrajectoryHud({ results, activeDistance }) {
+  const { t } = useTranslation('ballistics')
   const { pathD, bulletX, bulletY, maxRange } = useMemo(() => {
     if (!results?.length) {
       return { pathD: 'M 8 52 L 292 52', bulletX: 8, bulletY: 52, maxRange: 1 }
@@ -40,7 +42,10 @@ export default function BallisticTrajectoryHud({ results, activeDistance }) {
   return (
     <div className="relative shrink-0 overflow-hidden rounded-lg border border-emerald-500/20 bg-black/60 p-1.5 sm:p-2">
       <p className="mb-0.5 font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-emerald-500/80">
-        YÖRÜNGE GÖRÜNÜMÜ · {Math.round(activeDistance)} m / {Math.round(maxRange)} m
+        {t('trajectory.label', {
+          active: Math.round(activeDistance),
+          max: Math.round(maxRange),
+        })}
       </p>
       <svg viewBox="0 0 300 64" className="h-12 w-full sm:h-14" aria-hidden>
         <defs>

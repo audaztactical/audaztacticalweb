@@ -1,0 +1,39 @@
+{
+  "titles": {
+    "default": "BALİSTİK TRAJEKTORİ RAPORU",
+    "withProfile": "BALİSTİK TRAJEKTORİ · {{name}}"
+  },
+  "summary": {
+    "zeroAngle": "Sıfırlama açısı: {{value}}°",
+    "airDensityRatio": "Hava yoğunluğu oranı: {{value}}",
+    "speedOfSound": "Ses hızı: {{value}} m/s"
+  },
+  "sections": {
+    "rangeTable": "Menzil tablosu",
+    "glossary": "TERİM AÇIKLAMALARI",
+    "glossaryContinue": "Terim açıklamaları"
+  },
+  "glossary": {
+    "actionAdviceHeading": "Ne yapmalı?"
+  },
+  "table": {
+    "columns": {
+      "m": "M (m)",
+      "dropCm": "Drop (cm)",
+      "windCm": "Wind (cm)",
+      "tof": "TOF (s)",
+      "velocityFps": "V (fps)",
+      "energy": "E (ft·lb)",
+      "moa": "MOA",
+      "mrad": "MRAD",
+      "mach": "Mach"
+    }
+  },
+  "fileNaming": {
+    "brand": "audaz",
+    "slug": "balistik"
+  },
+  "continuation": {
+    "continue": "Devam"
+  }
+}

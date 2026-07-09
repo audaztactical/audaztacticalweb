@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Download, Package, Target } from 'lucide-react'
 import HudFluffDecor from '../components/dashboard/HudFluffDecor'
 import TacticalPanel from '../components/ui/TacticalPanel'
@@ -21,6 +22,7 @@ import {
 import { exportBallisticReportPdf } from '../lib/ballisticReportPdf'
 import { angleTableCellsForRow, buildAngleTableColumns } from '../lib/clickUnitSystem'
 import { buildArmorySessionFromArmoryFill } from '../lib/inventoryFillLocks'
+import { labelTableColumn } from '../lib/ballisticsDisplayText'
 import { weaponDisplayName } from '../lib/weaponIlws'
 
 /** @typedef {import('../lib/ballisticsEngine.js').BallisticsEngineOutput} BallisticsEngineOutput */
@@ -61,17 +63,18 @@ const DEFAULT_ENV = {
   windAngleDegrees: 90,
 }
 
-/** @type {{ label: string, termKey: string }[]} */
+/** @type {{ columnId: string, termKey: string }[]} */
 const TABLE_COLUMNS_BASE = [
-  { label: 'M', termKey: 'distance' },
-  { label: 'Drop', termKey: 'drop' },
-  { label: 'Wind', termKey: 'windage' },
-  { label: 'TOF', termKey: 'timeOfFlight' },
-  { label: 'fps', termKey: 'velocity' },
-  { label: 'E', termKey: 'remainingEnergy' },
+  { columnId: 'm', termKey: 'distance' },
+  { columnId: 'drop', termKey: 'drop' },
+  { columnId: 'wind', termKey: 'windage' },
+  { columnId: 'tof', termKey: 'timeOfFlight' },
+  { columnId: 'fps', termKey: 'velocity' },
+  { columnId: 'energy', termKey: 'remainingEnergy' },
 ]
 
 export default function Balistik() {
+  const { t, i18n } = useTranslation('ballistics')
   const navigate = useNavigate()
   const { items: inventoryItems } = useAudazData('inventory')
   const { profiles, createProfile, updateProfile, loading: profilesLoading } = useBallisticProfiles()
@@ -106,8 +109,17 @@ export default function Balistik() {
   const clickUnitSystem = form.optic?.clickUnitSystem ?? null
 
   const tableColumns = useMemo(
-    () => [...TABLE_COLUMNS_BASE, ...buildAngleTableColumns(clickUnitSystem), { label: 'Mach', termKey: 'machNumber' }],
-    [clickUnitSystem],
+    () => [
+      ...TABLE_COLUMNS_BASE.map((col) => ({
+        ...col,
+        label: labelTableColumn(col.columnId),
+      })),
+      ...buildAngleTableColumns(clickUnitSystem),
+      { label: labelTableColumn('mach'), termKey: 'machNumber', columnId: 'mach' },
+    ],
+    // Recompute labels when language changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [clickUnitSystem, i18n.language],
   )
 
   const onFormChange = useCallback((patch) => {
@@ -208,14 +220,10 @@ export default function Balistik() {
         console.info('[Balistik] Silahtan Doldur armorySession', armorySession)
         return nextForm
       })
-      setArmoryFillNotice(
-        draft.linkedAmmoId
-          ? ''
-          : 'Bu silahın kalibresine uygun mühimmat envanterde bulunamadı. Mühimmat alanlarını elle girin.',
-      )
+      setArmoryFillNotice(draft.linkedAmmoId ? '' : t('armoryModal.missingAmmoNotice'))
       setArmoryOpen(false)
     },
-    [inventoryItems],
+    [inventoryItems, t],
   )
 
   const handleCalculate = useCallback(() => {
@@ -231,11 +239,11 @@ export default function Balistik() {
       setActiveDistance(targets[0] ?? 100)
     } catch (err) {
       setOutput(null)
-      setCalcError(err instanceof Error ? err.message : 'Hesaplama hatası')
+      setCalcError(err instanceof Error ? err.message : t('errors.calcFailed'))
     } finally {
       setCalculating(false)
     }
-  }, [form, env, rangeMin, rangeMax, rangeStep])
+  }, [form, env, rangeMin, rangeMax, rangeStep, t])
 
   const handleExportPdf = useCallback(async () => {
     if (!output) return
@@ -269,18 +277,18 @@ export default function Balistik() {
       <header className="relative z-[1] flex flex-wrap items-end justify-between gap-3 border-b border-white/10 pb-4">
         <div>
           <p className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.32em] text-emerald-500/90">
-            BLST-01 · BALİSTİK TERMİNAL
+            {t('page.code')}
           </p>
           <h1 className="mt-1 flex items-center gap-2 font-display text-xl font-bold tracking-tight text-app-text sm:text-2xl">
             <Target className="size-6 text-emerald-400" strokeWidth={1.5} aria-hidden />
-            Balistik Terminal
+            {t('page.title')}
           </h1>
           <p className="mt-1 max-w-xl font-mono-technical text-[10px] leading-relaxed text-app-text/50">
-            Profil + cephanelik verisi → doğrulanmış motor. Çevre koşulları oturum bazlı; profile kaydedilmez.
+            {t('page.subtitle')}
           </p>
         </div>
         {profilesLoading ? (
-          <span className="font-mono text-[10px] text-app-text/45">Profiller yükleniyor…</span>
+          <span className="font-mono text-[10px] text-app-text/45">{t('page.loading')}</span>
         ) : null}
       </header>
 
@@ -328,12 +336,12 @@ export default function Balistik() {
             <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-y-contain [-webkit-overflow-scrolling:touch] [scrollbar-gutter:stable] sm:gap-4">
               <div className="grid shrink-0 grid-cols-1 gap-2 sm:grid-cols-3">
                 {[
-                  ['Sıfırlama açısı', `${output.launchAngleDegrees.toFixed(3)}°`, 'launchAngle'],
-                  ['Yoğunluk oranı', output.airDensityRatio.toFixed(4), 'airDensity'],
-                  ['Ses hızı', `${output.speedOfSoundMps.toFixed(1)} m/s`, 'machNumber'],
+                  [t('page.summary.zeroAngle'), `${output.launchAngleDegrees.toFixed(3)}°`, 'launchAngle'],
+                  [t('page.summary.airDensityRatio'), output.airDensityRatio.toFixed(4), 'airDensity'],
+                  [t('page.summary.speedOfSound'), `${output.speedOfSoundMps.toFixed(1)} m/s`, 'machNumber'],
                 ].map(([label, val, key]) => (
                   <div
-                    key={label}
+                    key={String(key)}
                     className="rounded border border-emerald-500/25 bg-black/50 px-3 py-2"
                   >
                     <p className="flex items-center gap-1 font-mono-technical text-[8px] uppercase tracking-wider text-emerald-500/75">
@@ -356,11 +364,11 @@ export default function Balistik() {
               <div
                 className="flex shrink-0 gap-1 rounded-lg border border-white/10 bg-black/50 p-1"
                 role="tablist"
-                aria-label="Sonuç görünümü"
+                aria-label={t('page.tabs.aria')}
               >
                 {[
-                  { id: 'chart', label: 'GRAFİK' },
-                  { id: 'table', label: 'TAM TABLO' },
+                  { id: 'chart', label: t('page.tabs.chart') },
+                  { id: 'table', label: t('page.tabs.table') },
                 ].map(({ id, label }, index) => {
                   const active = resultTab === id
                   return (
@@ -419,7 +427,7 @@ export default function Balistik() {
                 >
                   <div className="flex shrink-0 items-center justify-between gap-2 border-b border-white/10 bg-app-bg/95 px-3 py-2 backdrop-blur-sm">
                     <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.22em] text-emerald-500/80">
-                      Tam sonuç tablosu
+                      {t('page.fullTableTitle')}
                     </p>
                     <button
                       type="button"
@@ -428,7 +436,7 @@ export default function Balistik() {
                       disabled={pdfBusy}
                     >
                       <Download className="size-3.5" aria-hidden />
-                      {pdfBusy ? 'PDF…' : 'PDF'}
+                      {pdfBusy ? t('page.exporting') : t('page.exportPdf')}
                     </button>
                   </div>
                   <div className="overflow-x-auto">
@@ -479,7 +487,7 @@ export default function Balistik() {
             <div className="flex flex-1 flex-col items-center justify-center py-16 text-center">
               <Target className="mb-3 size-10 text-emerald-500/30" strokeWidth={1} aria-hidden />
               <p className="font-mono-technical text-[10px] uppercase tracking-[0.24em] text-app-text/45">
-                Parametreleri girin ve Hesapla&apos;ya basın
+                {t('page.emptyState')}
               </p>
             </div>
           )}
@@ -491,21 +499,20 @@ export default function Balistik() {
           <button
             type="button"
             className="absolute inset-0 cursor-default"
-            aria-label="Kapat"
+            aria-label={t('armoryModal.close')}
             onClick={() => setArmoryOpen(false)}
           />
           <TacticalPanel className="relative z-[1] max-h-[70vh] w-full max-w-md overflow-hidden p-0">
             <div className="border-b border-white/10 px-4 py-2">
               <p className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.24em] text-cyan-400/90">
-                Cephanelikten getir
+                {t('armoryModal.title')}
               </p>
             </div>
             {weapons.length === 0 ? (
               <div className="px-4 py-8 text-center">
                 <Package className="mx-auto size-8 text-cyan-500/35" strokeWidth={1.25} aria-hidden />
                 <p className="mt-4 font-mono-technical text-xs leading-relaxed text-app-text/65">
-                  Cephanelik&apos;te henüz kayıtlı bir silahınız yok. Önce Cephanelik&apos;e bir silah eklemeniz
-                  gerekiyor.
+                  {t('armoryModal.empty')}
                 </p>
                 <button
                   type="button"
@@ -515,11 +522,11 @@ export default function Balistik() {
                     navigate('/cephanelik')
                   }}
                 >
-                  Cephanelik&apos;e Git
+                  {t('armoryModal.goToArmory')}
                 </button>
               </div>
             ) : (
-            <ul className="max-h-[50vh] overflow-y-auto p-2">
+            <ul className="max-h-[50vh] overflow-y-auto p-2" aria-label={t('armoryModal.selectWeapon')}>
               {weapons.map((w) => (
                   <li key={String(w.id)}>
                     <button

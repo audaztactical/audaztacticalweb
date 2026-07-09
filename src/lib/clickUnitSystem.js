@@ -1,4 +1,6 @@
 import { invStr } from './inventoryIlws.js'
+import { ballisticsPdfT } from './pdfReportText.js'
+import { labelTableColumn } from './ballisticsDisplayText.js'
 
 /** @typedef {'MOA' | 'MRAD'} ClickUnitSystem */
 
@@ -29,19 +31,19 @@ export function resolveClickUnitSystem(unitSystem) {
 
 /**
  * @param {unknown} unitSystem
- * @returns {{ label: string, termKey: string }[]}
+ * @returns {{ label: string, termKey: string, columnId: string }[]}
  */
 export function buildAngleTableColumns(unitSystem) {
   if (isDualClickUnitDisplay(unitSystem)) {
     return [
-      { label: 'MOA', termKey: 'moaClicks' },
-      { label: 'MRAD', termKey: 'mradClicks' },
+      { label: labelTableColumn('moa'), termKey: 'moaClicks', columnId: 'moa' },
+      { label: labelTableColumn('mrad'), termKey: 'mradClicks', columnId: 'mrad' },
     ]
   }
   if (parseClickUnitSystem(unitSystem) === 'MOA') {
-    return [{ label: 'MOA', termKey: 'moaClicks' }]
+    return [{ label: labelTableColumn('moa'), termKey: 'moaClicks', columnId: 'moa' }]
   }
-  return [{ label: 'MRAD', termKey: 'mradClicks' }]
+  return [{ label: labelTableColumn('mrad'), termKey: 'mradClicks', columnId: 'mrad' }]
 }
 
 /**
@@ -63,14 +65,21 @@ export function angleTableCellsForRow(r, unitSystem) {
  * @returns {string[]}
  */
 export function buildPdfRangeTableHead(unitSystem) {
-  const base = ['M (m)', 'Drop (cm)', 'Wind (cm)', 'TOF (s)', 'V (fps)', 'E (ft·lb)']
+  const base = [
+    ballisticsPdfT('table.columns.m'),
+    ballisticsPdfT('table.columns.dropCm'),
+    ballisticsPdfT('table.columns.windCm'),
+    ballisticsPdfT('table.columns.tof'),
+    ballisticsPdfT('table.columns.velocityFps'),
+    ballisticsPdfT('table.columns.energy'),
+  ]
   if (isDualClickUnitDisplay(unitSystem)) {
-    return [...base, 'MOA', 'MRAD', 'Mach']
+    return [...base, ballisticsPdfT('table.columns.moa'), ballisticsPdfT('table.columns.mrad'), ballisticsPdfT('table.columns.mach')]
   }
   if (parseClickUnitSystem(unitSystem) === 'MOA') {
-    return [...base, 'MOA', 'Mach']
+    return [...base, ballisticsPdfT('table.columns.moa'), ballisticsPdfT('table.columns.mach')]
   }
-  return [...base, 'MRAD', 'Mach']
+  return [...base, ballisticsPdfT('table.columns.mrad'), ballisticsPdfT('table.columns.mach')]
 }
 
 /**

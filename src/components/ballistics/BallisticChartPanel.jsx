@@ -1,9 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import debounce from 'lodash/debounce'
 import {
   isDualClickUnitDisplay,
   parseClickUnitSystem,
 } from '../../lib/clickUnitSystem.js'
+import {
+  CHART_METRIC_IDS,
+  CHART_METRIC_STYLE,
+  chartMetricMeta,
+  labelChartMetric,
+} from '../../lib/ballisticsDisplayText.js'
 import {
   CartesianGrid,
   ComposedChart,
@@ -15,107 +22,11 @@ import {
   YAxis,
 } from 'recharts'
 
-/** @typedef {'drop'|'velocity'|'energy'|'moa'|'mrad'|'mach'} ChartMetricId */
+/** @typedef {import('../../lib/ballisticsDisplayText.js').ChartMetricId} ChartMetricId */
 
-/** @type {Record<ChartMetricId, {
- *   id: ChartMetricId
- *   label: string
- *   shortLabel: string
- *   dataKey: string
- *   unit: string
- *   axisTickColor: string
- *   stroke: string
- *   strokeWidth: number
- *   useGradient?: boolean
- *   activeDot: { r: number, fill: string, stroke: string }
- *   refLineColor: string
- *   cursorColor: string
- * }>} */
-export const CHART_METRICS = {
-  drop: {
-    id: 'drop',
-    label: 'Drop (Düşüş, cm)',
-    shortLabel: 'Drop',
-    dataKey: 'dropCm',
-    unit: 'cm',
-    axisTickColor: 'rgba(34,197,94,0.85)',
-    stroke: 'url(#dropLineGrad)',
-    strokeWidth: 2.5,
-    useGradient: true,
-    activeDot: { r: 5, fill: '#22c55e', stroke: '#052e16' },
-    refLineColor: 'rgba(34,197,94,0.55)',
-    cursorColor: 'rgba(34,197,94,0.35)',
-  },
-  velocity: {
-    id: 'velocity',
-    label: 'Velocity (Kalan Hız, fps)',
-    shortLabel: 'Velocity',
-    dataKey: 'velocity',
-    unit: 'fps',
-    axisTickColor: 'rgba(251,191,36,0.85)',
-    stroke: '#fbbf24',
-    strokeWidth: 2,
-    activeDot: { r: 4, fill: '#fbbf24', stroke: '#422006' },
-    refLineColor: 'rgba(251,191,36,0.55)',
-    cursorColor: 'rgba(251,191,36,0.35)',
-  },
-  energy: {
-    id: 'energy',
-    label: 'Energy (Kalan Enerji, ft·lb)',
-    shortLabel: 'Energy',
-    dataKey: 'energy',
-    unit: 'ft·lb',
-    axisTickColor: 'rgba(249,115,22,0.85)',
-    stroke: '#f97316',
-    strokeWidth: 2,
-    activeDot: { r: 4, fill: '#f97316', stroke: '#431407' },
-    refLineColor: 'rgba(249,115,22,0.55)',
-    cursorColor: 'rgba(249,115,22,0.35)',
-  },
-  moa: {
-    id: 'moa',
-    label: 'MOA (MOA Düzeltmesi)',
-    shortLabel: 'MOA',
-    dataKey: 'moa',
-    unit: 'MOA',
-    axisTickColor: 'rgba(59,130,246,0.85)',
-    stroke: '#3b82f6',
-    strokeWidth: 2,
-    activeDot: { r: 4, fill: '#3b82f6', stroke: '#172554' },
-    refLineColor: 'rgba(59,130,246,0.55)',
-    cursorColor: 'rgba(59,130,246,0.35)',
-  },
-  mrad: {
-    id: 'mrad',
-    label: 'MRAD (MRAD Düzeltmesi)',
-    shortLabel: 'MRAD',
-    dataKey: 'mrad',
-    unit: 'MRAD',
-    axisTickColor: 'rgba(168,85,247,0.85)',
-    stroke: '#a855f7',
-    strokeWidth: 2,
-    activeDot: { r: 4, fill: '#a855f7', stroke: '#3b0764' },
-    refLineColor: 'rgba(168,85,247,0.55)',
-    cursorColor: 'rgba(168,85,247,0.35)',
-  },
-  mach: {
-    id: 'mach',
-    label: 'Mach (Mach Sayısı)',
-    shortLabel: 'Mach',
-    dataKey: 'mach',
-    unit: 'Mach',
-    axisTickColor: 'rgba(6,182,212,0.85)',
-    stroke: '#06b6d4',
-    strokeWidth: 2,
-    activeDot: { r: 4, fill: '#06b6d4', stroke: '#083344' },
-    refLineColor: 'rgba(6,182,212,0.55)',
-    cursorColor: 'rgba(6,182,212,0.35)',
-  },
-}
-
-export const CHART_METRIC_IDS = /** @type {ChartMetricId[]} */ (
-  Object.keys(CHART_METRICS)
-)
+/** @deprecated Prefer chartMetricMeta / labelChartMetric — kept for import compatibility */
+export const CHART_METRICS = CHART_METRIC_STYLE
+export { CHART_METRIC_IDS }
 
 /**
  * @param {import('../../lib/ballisticsEngine.js').BallisticsPointResult[]} results
@@ -162,7 +73,7 @@ function MetricSelect({ id, label, value, onChange, exclude, metricIds = CHART_M
       >
         {options.map((metricId) => (
           <option key={metricId} value={metricId} className="bg-[#0a0a0a] text-slate-100">
-            {CHART_METRICS[metricId].label}
+            {labelChartMetric(metricId)}
           </option>
         ))}
       </select>
@@ -194,14 +105,15 @@ function MetricChart({
   showHeader = false,
   tooltipContent,
 }) {
-  const metric = CHART_METRICS[metricId]
+  const metric = chartMetricMeta(metricId)
+  if (!metric) return null
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-1">
       {showHeader ? (
         <p
           className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.2em]"
-          style={{ color: metric.stroke.startsWith('#') ? metric.stroke : '#22c55e' }}
+          style={{ color: String(metric.stroke).startsWith('#') ? metric.stroke : '#22c55e' }}
         >
           {metric.shortLabel}
           <span className="ml-1 font-normal text-app-text/45">({metric.unit})</span>
@@ -286,6 +198,7 @@ export default function BallisticChartPanel({
   rangeMax,
   clickUnitSystem = null,
 }) {
+  const { t, i18n } = useTranslation('ballistics')
   const [primaryMetric, setPrimaryMetric] = useState(/** @type {ChartMetricId} */ ('drop'))
   const [compareMode, setCompareMode] = useState(false)
   const [secondaryMetric, setSecondaryMetric] = useState(/** @type {ChartMetricId} */ ('velocity'))
@@ -382,32 +295,32 @@ export default function BallisticChartPanel({
             {r.distance} m
           </p>
           <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 font-mono-technical text-[10px] text-slate-300">
-            <dt className="text-slate-500">Drop</dt>
+            <dt className="text-slate-500">{t('chart.tooltip.drop')}</dt>
             <dd>{Math.abs(r.dropCm).toFixed(1)} cm</dd>
-            <dt className="text-slate-500">Windage</dt>
+            <dt className="text-slate-500">{t('chart.tooltip.windage')}</dt>
             <dd>{Math.abs(r.windageCm).toFixed(1)} cm</dd>
-            <dt className="text-slate-500">TOF</dt>
+            <dt className="text-slate-500">{t('chart.tooltip.tof')}</dt>
             <dd>{r.timeOfFlightSeconds.toFixed(3)} s</dd>
-            <dt className="text-slate-500">Hız</dt>
+            <dt className="text-slate-500">{t('chart.tooltip.velocity')}</dt>
             <dd>{r.velocityRemaining.toFixed(0)} fps</dd>
-            <dt className="text-slate-500">Enerji</dt>
+            <dt className="text-slate-500">{t('chart.tooltip.energy')}</dt>
             <dd>{r.energyRemaining.toFixed(0)} ft·lb</dd>
             {dualUnitDisplay || unit === 'MOA' ? (
               <>
-                <dt className="text-slate-500">MOA drop</dt>
+                <dt className="text-slate-500">{t('chart.tooltip.moaDrop')}</dt>
                 <dd>{r.dropMOA.toFixed(2)}</dd>
               </>
             ) : null}
             {dualUnitDisplay || unit === 'MRAD' ? (
               <>
-                <dt className="text-slate-500">MRAD drop</dt>
+                <dt className="text-slate-500">{t('chart.tooltip.mradDrop')}</dt>
                 <dd>{r.dropMRAD.toFixed(2)}</dd>
               </>
             ) : null}
             {dualUnitDisplay || unit === 'MOA' ? (
               r.dropClicksMoa != null ? (
                 <>
-                  <dt className="text-slate-500">MOA tık</dt>
+                  <dt className="text-slate-500">{t('chart.tooltip.moaClicks')}</dt>
                   <dd>{r.dropClicksMoa.toFixed(1)}</dd>
                 </>
               ) : null
@@ -415,7 +328,7 @@ export default function BallisticChartPanel({
             {dualUnitDisplay || unit === 'MRAD' ? (
               r.dropClicksMrad != null ? (
                 <>
-                  <dt className="text-slate-500">MRAD tık</dt>
+                  <dt className="text-slate-500">{t('chart.tooltip.mradClicks')}</dt>
                   <dd>{r.dropClicksMrad.toFixed(1)}</dd>
                 </>
               ) : null
@@ -424,13 +337,13 @@ export default function BallisticChartPanel({
         </div>
       )
     },
-    [dualUnitDisplay, unit],
+    [dualUnitDisplay, unit, t, i18n.language],
   )
 
   if (!chartData.length) {
     return (
       <p className="py-12 text-center font-mono-technical text-[10px] uppercase tracking-wider text-app-text/45">
-        HESAPLAMA BEKLİYOR
+        {t('chart.waiting')}
       </p>
     )
   }
@@ -442,14 +355,14 @@ export default function BallisticChartPanel({
       <div className="flex flex-wrap items-end gap-3 rounded-lg border border-white/10 bg-black/30 px-3 py-3">
         <MetricSelect
           id="balistik-metric-primary"
-          label="Metrik"
+          label={t('chart.metric')}
           value={primaryMetric}
           onChange={handlePrimaryMetricChange}
           metricIds={availableMetrics}
         />
         <div className="flex shrink-0 flex-col gap-1">
           <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.18em] text-app-text/45">
-            Görünüm
+            {t('chart.view')}
           </span>
           <button
             type="button"
@@ -462,13 +375,13 @@ export default function BallisticChartPanel({
                 : 'border-white/15 bg-black/40 text-app-text/55 hover:border-white/25 hover:text-app-text/75',
             ].join(' ')}
           >
-            Karşılaştır
+            {t('chart.compare')}
           </button>
         </div>
         {compareMode ? (
           <MetricSelect
             id="balistik-metric-secondary"
-            label="2. Metrik"
+            label={t('chart.metricSecondary')}
             value={secondaryMetric}
             onChange={setSecondaryMetric}
             exclude={primaryMetric}
@@ -514,7 +427,7 @@ export default function BallisticChartPanel({
       <div className="rounded-lg border border-white/10 bg-black/40 px-3 py-2">
         <div className="mb-2 flex items-center justify-between gap-2">
           <span className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.2em] text-emerald-500/80">
-            Mesafe seçici
+            {t('chart.distanceSlider')}
           </span>
           <span className="font-mono-technical text-sm tabular-nums text-emerald-400">
             {Math.round(activeDistance)} m
@@ -528,27 +441,27 @@ export default function BallisticChartPanel({
           value={Math.min(rangeMax, Math.max(rangeMin, activeDistance))}
           onChange={handleSliderChange}
           className="h-2 w-full cursor-pointer accent-emerald-500"
-          aria-label="Aktif mesafe"
+          aria-label={t('chart.activeDistanceAria')}
         />
       </div>
 
       {activeResult ? (
         <div className="grid grid-cols-2 gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/[0.04] p-3 sm:grid-cols-4">
           {[
-            ['Drop', `${Math.abs(activeResult.dropCm).toFixed(1)} cm`],
-            ['Wind', `${Math.abs(activeResult.windageCm).toFixed(1)} cm`],
-            ['TOF', `${activeResult.timeOfFlightSeconds.toFixed(3)} s`],
-            ['Hız', `${activeResult.velocityRemaining.toFixed(0)} fps`],
-            ['Enerji', `${activeResult.energyRemaining.toFixed(0)} ft·lb`],
+            [t('chart.summary.drop'), `${Math.abs(activeResult.dropCm).toFixed(1)} cm`],
+            [t('chart.summary.wind'), `${Math.abs(activeResult.windageCm).toFixed(1)} cm`],
+            [t('chart.summary.tof'), `${activeResult.timeOfFlightSeconds.toFixed(3)} s`],
+            [t('chart.summary.velocity'), `${activeResult.velocityRemaining.toFixed(0)} fps`],
+            [t('chart.summary.energy'), `${activeResult.energyRemaining.toFixed(0)} ft·lb`],
             ...(dualUnitDisplay || unit === 'MOA'
-              ? [['MOA', activeResult.dropMOA.toFixed(2)]]
+              ? [[t('chart.summary.moa'), activeResult.dropMOA.toFixed(2)]]
               : []),
             ...(dualUnitDisplay || unit === 'MRAD'
-              ? [['MRAD', activeResult.dropMRAD.toFixed(2)]]
+              ? [[t('chart.summary.mrad'), activeResult.dropMRAD.toFixed(2)]]
               : []),
-            ['Mach', activeResult.machNumber.toFixed(3)],
+            [t('chart.summary.mach'), activeResult.machNumber.toFixed(3)],
           ].map(([k, v]) => (
-            <div key={k}>
+            <div key={String(k)}>
               <p className="font-mono-technical text-[8px] uppercase tracking-wider text-app-text/45">{k}</p>
               <p className="font-mono-technical text-xs tabular-nums text-slate-100">{v}</p>
             </div>

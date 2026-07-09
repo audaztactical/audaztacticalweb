@@ -1,0 +1,369 @@
+{
+  "page": {
+    "code": "BLST-01 · BALLISTICS TERMINAL",
+    "title": "Ballistics Terminal",
+    "subtitle": "Profile + armory data → verified engine. Environment is session-only; not saved to the profile.",
+    "loading": "Loading profiles…",
+    "emptyState": "Enter parameters and press Calculate",
+    "calculate": "Calculate",
+    "calculating": "Calculating…",
+    "calcError": "Calculation error",
+    "tabs": {
+      "chart": "CHART",
+      "table": "FULL TABLE",
+      "aria": "Result view"
+    },
+    "fullTableTitle": "Full results table",
+    "exportPdf": "PDF",
+    "exporting": "PDF…",
+    "summary": {
+      "zeroAngle": "Zero angle",
+      "airDensityRatio": "Density ratio",
+      "speedOfSound": "Speed of sound"
+    }
+  },
+  "armoryModal": {
+    "title": "Load from Armory",
+    "empty": "You have no weapons in Armory yet. Add a weapon in Armory first.",
+    "goToArmory": "Go to Armory",
+    "close": "Close",
+    "selectWeapon": "Select weapon",
+    "missingAmmoNotice": "No ammo matching this weapon's caliber was found in inventory. Enter ammo fields manually."
+  },
+  "form": {
+    "sections": {
+      "profile": "Profile",
+      "ammo": "Ammo",
+      "weapon": "Weapon",
+      "optic": "Optic",
+      "env": "Environment",
+      "advanced": "Advanced",
+      "range": "Target range"
+    },
+    "fields": {
+      "weaponName": "Weapon name",
+      "profileName": "Profile name",
+      "bulletWeight": "Weight (gr)",
+      "bulletDiameter": "Diameter (in)",
+      "muzzleVelocity": "Muzzle velocity (fps)",
+      "bc": "BC",
+      "dragModel": "Drag model",
+      "sightHeight": "Sight height (cm)",
+      "zeroDistance": "Zero (m)",
+      "barrelLength": "Barrel length (in)",
+      "twistRate": "Twist rate",
+      "magnification": "Magnification",
+      "reticle": "Reticle",
+      "clickValueMoa": "Click value (MOA)",
+      "clickValueMrad": "Click value (MRAD)",
+      "ffpSfp": "FFP / SFP",
+      "temperature": "Temperature °C",
+      "pressure": "Pressure hPa",
+      "pressureMode": "Pressure mode",
+      "humidity": "Humidity %",
+      "altitude": "Altitude m",
+      "windSpeed": "Wind",
+      "windUnit": "Wind unit",
+      "windAngle": "Wind angle °",
+      "coriolisEnabled": "Coriolis enabled",
+      "latitude": "Latitude",
+      "azimuth": "Azimuth °",
+      "rangeMin": "Min m",
+      "rangeMax": "Max m",
+      "rangeStep": "Step m"
+    },
+    "placeholders": {
+      "weaponName": "Filled via Load from Armory",
+      "profileName": "Name this profile (e.g. Morning Practice)",
+      "twistRate": "1:8"
+    },
+    "pressureStation": "Station",
+    "pressureSeaLevel": "Sea level",
+    "dragG1": "G1",
+    "dragG7": "G7",
+    "ffp": "FFP",
+    "sfp": "SFP",
+    "selectProfile": "— Select profile —",
+    "saveProfile": "Save Profile",
+    "savingProfile": "Saving…",
+    "deleteProfile": "Delete Profile",
+    "armoryFill": "Load from Armory",
+    "calculateCta": "Calculate",
+    "calculatingCta": "Calculating…",
+    "clickUnitHint": "Select a unit system before entering click value."
+  },
+  "chart": {
+    "waiting": "AWAITING CALCULATION",
+    "metric": "Metric",
+    "metricSecondary": "2nd Metric",
+    "view": "View",
+    "compare": "Compare",
+    "distanceSlider": "Distance selector",
+    "activeDistanceAria": "Active distance",
+    "metrics": {
+      "drop": { "label": "Drop (cm)", "shortLabel": "Drop", "unit": "cm" },
+      "velocity": { "label": "Velocity (remaining, fps)", "shortLabel": "Velocity", "unit": "fps" },
+      "energy": { "label": "Energy (remaining, ft·lb)", "shortLabel": "Energy", "unit": "ft·lb" },
+      "moa": { "label": "MOA (drop correction)", "shortLabel": "MOA", "unit": "MOA" },
+      "mrad": { "label": "MRAD (drop correction)", "shortLabel": "MRAD", "unit": "MRAD" },
+      "mach": { "label": "Mach number", "shortLabel": "Mach", "unit": "Mach" }
+    },
+    "tooltip": {
+      "drop": "Drop",
+      "windage": "Windage",
+      "tof": "TOF",
+      "velocity": "Velocity",
+      "energy": "Energy",
+      "moaDrop": "MOA drop",
+      "mradDrop": "MRAD drop",
+      "moaClicks": "MOA clicks",
+      "mradClicks": "MRAD clicks"
+    },
+    "summary": {
+      "drop": "Drop",
+      "wind": "Wind",
+      "tof": "TOF",
+      "velocity": "Velocity",
+      "energy": "Energy",
+      "moa": "MOA",
+      "mrad": "MRAD",
+      "mach": "Mach"
+    }
+  },
+  "quickRef": {
+    "title": "Quick Reference",
+    "modeTik": "CLICK",
+    "modeNisangah": "HOLD",
+    "ariaTik": "Click mode",
+    "ariaNisangah": "Holdover mode",
+    "ariaMode": "Display mode",
+    "distance": "Distance",
+    "up": "UP",
+    "down": "DOWN",
+    "left": "LEFT",
+    "right": "RIGHT",
+    "noWind": "NO WIND",
+    "noWindAim": "No wind correction needed",
+    "tikLabel": "CLICK",
+    "noClickValue": "No click value — showing {{unit}}",
+    "noClickValuePickUnit": " (select unit)",
+    "aimInstruction": "Hold ~{{n}} cm {{dir}} of the target",
+    "windInstruction": "Hold ~{{n}} cm {{dir}}",
+    "bodyHints": {
+      "hand": "~one hand width",
+      "shoulder": "~shoulder width",
+      "halfBody": "~half body width"
+    },
+    "abbrev": {
+      "tik": "C",
+      "up": "UP",
+      "down": "DN",
+      "left": "LFT",
+      "right": "RGT"
+    }
+  },
+  "table": {
+    "columns": {
+      "m": "M",
+      "drop": "Drop",
+      "wind": "Wind",
+      "tof": "TOF",
+      "fps": "fps",
+      "energy": "E",
+      "moa": "MOA",
+      "mrad": "MRAD",
+      "mach": "Mach"
+    }
+  },
+  "locks": {
+    "readonlyBanner": "Armory data · read-only",
+    "unlock": "Unlock",
+    "unlockTitle": "Unlock",
+    "close": "Close",
+    "cancel": "Cancel",
+    "confirmEdit": "Yes, Edit",
+    "overrideTitle": "Manually changed — no longer synced with Armory",
+    "unlockWarning": "These values were loaded automatically from Armory. If you change them, this profile will no longer stay in sync with the inventory record and you will need to update it manually. Continue?"
+  },
+  "trajectory": {
+    "label": "TRAJECTORY VIEW · {{active}} m / {{max}} m"
+  },
+  "tooltip": {
+    "whyHeading": "Why it matters",
+    "actionHeading": "What to do",
+    "ariaAbout": "About {{term}}"
+  },
+  "errors": {
+    "calcFailed": "Calculation error"
+  },
+  "terms": {
+    "bc": {
+      "termEn": "BC (Ballistic Coefficient)",
+      "termTr": "Balistik Katsayı",
+      "definition": "A number that describes how efficiently a bullet slips through the air. A higher BC means less drag and less wind drift.",
+      "whyItMatters": "It feeds drop, windage, and remaining-velocity calculations directly. A wrong BC throws the whole table off.",
+      "actionAdvice": "Enter the manufacturer or ammo-box BC with the matching drag model (G1/G7). If unsure, compare against a verified reference profile for the same caliber."
+    },
+    "g1G7DragModel": {
+      "termEn": "G1 / G7 Drag Model",
+      "termTr": "Sürükleme Modeli (G1 / G7)",
+      "definition": "Chooses which standard drag curve the engine uses. G1 suits classic shapes; G7 is better for modern long, boat-tail bullets.",
+      "whyItMatters": "BC must be used with the same model it was published under. Mixing a G7 BC with a G1 model produces large errors.",
+      "actionAdvice": "Pick the model that matches your published BC. For modern long bullets, G7 is usually more accurate."
+    },
+    "twistRate": {
+      "termEn": "Twist Rate",
+      "termTr": "Yiv Devri",
+      "definition": "The distance the barrel rifling needs to rotate the bullet one full turn. Example: 1:8 means one turn every 8 inches.",
+      "whyItMatters": "Stable flight needs twist matched to bullet weight and diameter. On the table it mainly validates ammo choice.",
+      "actionAdvice": "Enter the twist stamped on the barrel. With heavy bullets, confirm a faster (shorter) twist is compatible."
+    },
+    "muzzleVelocity": {
+      "termEn": "Muzzle Velocity",
+      "termTr": "Namlu Çıkış Hızı",
+      "definition": "Bullet speed as it leaves the muzzle, usually in feet per second (fps).",
+      "whyItMatters": "It is the starting point for the entire trajectory. Even a few fps changes long-range drop and windage.",
+      "actionAdvice": "Use a chronograph reading when you have one; otherwise enter factory data and verify against real field velocity over time."
+    },
+    "sightHeight": {
+      "termEn": "Sight Height",
+      "termTr": "Optik–Namlu Yükseklik Farkı",
+      "definition": "Vertical distance between the optic (or sight) centerline and the bore axis, usually entered in centimeters.",
+      "whyItMatters": "The bullet leaves below the line of sight; zero and drop math are wrong without this height.",
+      "actionAdvice": "Measure optic center to bore axis with a ruler and enter the value in centimeters."
+    },
+    "zeroDistance": {
+      "termEn": "Zero Distance",
+      "termTr": "Sıfırlama Mesafesi",
+      "definition": "The range where the line of sight and the bullet path intersect again. At that distance, point of aim matches point of impact.",
+      "whyItMatters": "Zero sets launch angle and the near-to-mid range drop table. A wrong zero shifts every range.",
+      "actionAdvice": "Enter the distance you actually zeroed at. Re-verify after ammo or optic changes."
+    },
+    "moaMrad": {
+      "termEn": "MOA / MRAD",
+      "termTr": "Açısal Ölçü Birimi",
+      "definition": "Angular units for drop and windage. MOA (minute of angle) and MRAD (milliradian) are the two most common on optics.",
+      "whyItMatters": "Table angles tell you how much to dial. Do not mix MOA and MRAD.",
+      "actionAdvice": "Use the MOA column for MOA optics and the MRAD column for MRAD optics; never swap units."
+    },
+    "clickValue": {
+      "termEn": "Click Value",
+      "termTr": "Tık Değeri",
+      "definition": "How far one turret click moves the reticle, in MOA or MRAD (e.g. 0.25 MOA/click).",
+      "whyItMatters": "You need it to turn calculated corrections into field dials. Without click value the table is hard to apply.",
+      "actionAdvice": "Enter the click value from the optic box; divide table angle by click value to get click count."
+    },
+    "ffpSfp": {
+      "termEn": "FFP / SFP",
+      "termTr": "Ön / Arka Odak Düzlemi",
+      "definition": "FFP (First Focal Plane): reticle scales with magnification. SFP (Second Focal Plane): reticle stays fixed while the target grows.",
+      "whyItMatters": "Focal plane changes how mil-dot or MOA holdovers behave when you change zoom.",
+      "actionAdvice": "On SFP, apply reticle holds only at the calibrated magnification; on FFP, magnification does not matter."
+    },
+    "reticleType": {
+      "termEn": "Reticle Type",
+      "termTr": "Nişangah Tipi",
+      "definition": "The reticle pattern inside the optic: mil-dot, BDC, MOA-based, Christmas tree, etc. Each supports different ranging and wind reads.",
+      "whyItMatters": "Profile reticle type reminds you which correction method and table units to use.",
+      "actionAdvice": "Use the reading method that matches your reticle (mil, MOA, BDC) and apply table values to its subtensions."
+    },
+    "coriolis": {
+      "termEn": "Coriolis Effect",
+      "termTr": "Coriolis Etkisi (Dünya Dönüşü Sapması)",
+      "definition": "Earth's rotation causes a small horizontal and vertical drift at very long range. Most noticeable past ~800 m and at higher latitudes.",
+      "whyItMatters": "On elite long-range shots it can add a few centimeters of error. Off, it barely affects mid-range practice.",
+      "actionAdvice": "Enter latitude and firing azimuth for precision past 800 m; leave it off for typical mid-range practice."
+    },
+    "airDensity": {
+      "termEn": "Air Density (Altitude / Pressure / Humidity)",
+      "termTr": "Hava Yoğunluğu Etkisi",
+      "definition": "Temperature, pressure, humidity, and altitude change air density. Denser air slows the bullet sooner.",
+      "whyItMatters": "The same load drops differently on a summer mountain than on a flat plain. Without real atmosphere, the table will not match the day.",
+      "actionAdvice": "Enter real temperature, pressure, and altitude for the shooting day; prefer a field barometer or weather station."
+    },
+    "crosswind": {
+      "termEn": "Crosswind Component",
+      "termTr": "Rüzgar Dik Bileşeni",
+      "definition": "The wind component acting fully across the bullet path. A full 90° crosswind produces the largest drift.",
+      "whyItMatters": "It is the main input to horizontal windage. Wrong speed or angle makes the windage column unreliable.",
+      "actionAdvice": "Measure wind with a Kestrel, flags, or vegetation; apply the table drift opposite the wind on the optic or hold."
+    },
+    "pressureType": {
+      "termEn": "Station vs Sea-Level Pressure",
+      "termTr": "İstasyon / Deniz Seviyesi Basıncı",
+      "definition": "Station pressure is the true barometer reading where you stand. Sea-level pressure (QNH) is altitude-corrected reference pressure.",
+      "whyItMatters": "Wrong mode double-counts or under-counts density; range and drop can drift badly. Ranges and mountains usually use station pressure.",
+      "actionAdvice": "Choose Station if the barometer shows local pressure; use the mode that matches QNH/METAR if that is your source."
+    },
+    "launchAngle": {
+      "termEn": "Launch Angle",
+      "termTr": "Namlu Açısı",
+      "definition": "Upward bore angle relative to horizontal. Computed automatically from zero distance.",
+      "whyItMatters": "It is the fundamental angle that shapes the trajectory. After zeroing, the engine uses it behind the scenes.",
+      "actionAdvice": "This value is calculated for you; if zero distance is correct, no extra setting is needed."
+    },
+    "distance": {
+      "termEn": "Distance",
+      "termTr": "Mesafe",
+      "definition": "Target range from the muzzle in meters. Each table row is a different range.",
+      "whyItMatters": "Drop, wind, velocity, and energy are all computed for that range; range selection is the table foundation.",
+      "actionAdvice": "Measure the real engagement distance with a laser or map and use the nearest computed row."
+    },
+    "drop": {
+      "termEn": "Bullet Drop",
+      "termTr": "Düşüş",
+      "definition": "How far the bullet falls below the line of sight, shown in centimeters.",
+      "whyItMatters": "Tells you how much to hold high or dial up at longer ranges.",
+      "actionAdvice": "Hold that much high or dial the optic up by the same amount."
+    },
+    "windage": {
+      "termEn": "Windage",
+      "termTr": "Rüzgar Sapması",
+      "definition": "How far wind drifts the bullet horizontally, in centimeters.",
+      "whyItMatters": "Lets you correct for crosswind; drift grows with range and time of flight.",
+      "actionAdvice": "Dial opposite the wind or hold into the wind by that amount."
+    },
+    "timeOfFlight": {
+      "termEn": "Time of Flight (TOF)",
+      "termTr": "Uçuş Süresi",
+      "definition": "Seconds from muzzle exit to the target range.",
+      "whyItMatters": "Longer TOF means more wind effect and more lead on moving targets.",
+      "actionAdvice": "Lead moving targets by roughly this time; expect more drift when TOF is long and wind shifts."
+    },
+    "velocity": {
+      "termEn": "Remaining Velocity",
+      "termTr": "Kalan Hız",
+      "definition": "Bullet speed at the target range, in feet per second (fps).",
+      "whyItMatters": "As speed falls, wind and drop grow; stability can change in the transonic region.",
+      "actionAdvice": "When velocity falls quickly, be extra careful with wind and drop; use it to set effective hunting range."
+    },
+    "remainingEnergy": {
+      "termEn": "Remaining Energy",
+      "termTr": "Kalan Enerji",
+      "definition": "Kinetic energy left at the target range, usually in ft·lb or joules.",
+      "whyItMatters": "Shows how much terminal “punch” remains for hunting or incapacitation judgments.",
+      "actionAdvice": "As energy drops, stopping effect drops; set effective range accordingly for hunting."
+    },
+    "moaClicks": {
+      "termEn": "MOA Drop Correction",
+      "termTr": "MOA Düzeltmesi",
+      "definition": "Angular correction needed so the bullet meets the line of sight at that range, in MOA.",
+      "whyItMatters": "Lets MOA-click optics convert drop straight into turret dials.",
+      "actionAdvice": "Dial up by this MOA (or divide by your click value to get click count)."
+    },
+    "mradClicks": {
+      "termEn": "MRAD Drop Correction",
+      "termTr": "MRAD Düzeltmesi",
+      "definition": "Angular drop correction at the target range in milliradians.",
+      "whyItMatters": "Lets MRAD/mil optics apply drop corrections quickly.",
+      "actionAdvice": "Dial up by this MRAD; if clicks are 0.1 MRAD, divide by 0.1 for click count."
+    },
+    "machNumber": {
+      "termEn": "Mach Number",
+      "termTr": "Mach Sayısı",
+      "definition": "Bullet speed divided by local speed of sound. Mach 1 is sonic; above is supersonic, below is subsonic.",
+      "whyItMatters": "Drag changes sharply near the speed of sound. Mach shows which flight regime you are in.",
+      "actionAdvice": "Near 1.0 (transonic) the bullet can become unstable; expect precision to suffer—be cautious."
+    }
+  }
+}

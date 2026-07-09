@@ -9,6 +9,11 @@ import {
 } from './ballisticChartImage.js'
 import { preparePdfAssets, setPdfFont } from './pdfFontLoader'
 import {
+  ballisticsPdfReportTitle,
+  ballisticsPdfT,
+  pdfFilenameSegment,
+} from './pdfReportText'
+import {
   PDF_COLORS,
   PDF_FONT_SIZE,
   PDF_LAYOUT,
@@ -274,7 +279,15 @@ export async function chartContainerToPngDataUrl(container, options = {}) {
 function ensureSpace(doc, pageW, pageH, logoDataUrl, logoDims, reportTitle, y, needed = 20) {
   if (y + needed <= pageH - PDF_LAYOUT.margin) return y
   doc.addPage()
-  return setupReportContinuationPage(doc, pageW, pageH, logoDataUrl, logoDims, reportTitle, 'Devam')
+  return setupReportContinuationPage(
+    doc,
+    pageW,
+    pageH,
+    logoDataUrl,
+    logoDims,
+    reportTitle,
+    ballisticsPdfT('continuation.continue'),
+  )
 }
 
 /**
@@ -302,8 +315,9 @@ function drawTermGlossarySection(
   termKeys,
 ) {
   let y = ensureSpace(doc, pageW, pageH, logoDataUrl, logoDims, reportTitle, startY, 24)
-  layoutLog.push(`Sayfa ${doc.getNumberOfPages()}: TERİM AÇIKLAMALARI (y=${y.toFixed(1)})`)
-  y = drawSectionTitle(doc, margin, pageW, 'TERİM AÇIKLAMALARI', y)
+  const glossaryTitle = ballisticsPdfT('sections.glossary')
+  layoutLog.push(`Sayfa ${doc.getNumberOfPages()}: ${glossaryTitle} (y=${y.toFixed(1)})`)
+  y = drawSectionTitle(doc, margin, pageW, glossaryTitle, y)
 
   setPdfFont(doc, 'normal')
   doc.setFontSize(PDF_FONT_SIZE.body)
@@ -332,7 +346,7 @@ function drawTermGlossarySection(
     if (term.actionAdvice) {
       setPdfFont(doc, 'bold')
       doc.setTextColor(...PDF_COLORS.muted)
-      doc.text('Ne yapmalı?', margin, y)
+      doc.text(ballisticsPdfT('glossary.actionAdviceHeading'), margin, y)
       y += 4
       setPdfFont(doc, 'normal')
       doc.setTextColor(...PDF_COLORS.text)
@@ -362,9 +376,7 @@ export async function exportBallisticReportPdf(output, meta = {}) {
   const margin = PDF_LAYOUT.margin
   const layoutLog = []
 
-  const title = meta.profileName
-    ? `BALİSTİK TRAJEKTORİ · ${meta.profileName}`
-    : 'BALİSTİK TRAJEKTORİ RAPORU'
+  const title = ballisticsPdfReportTitle(meta.profileName)
 
   const { reportId, contentStartY } = setupReportFirstPage(
     doc,
@@ -382,14 +394,27 @@ export async function exportBallisticReportPdf(output, meta = {}) {
   doc.setFontSize(PDF_FONT_SIZE.body)
   doc.setTextColor(...PDF_COLORS.text)
   let y = contentStartY
-  doc.text(`Sıfırlama açısı: ${output.launchAngleDegrees.toFixed(4)}°`, margin, y)
+  doc.text(
+    ballisticsPdfT('summary.zeroAngle', { value: output.launchAngleDegrees.toFixed(4) }),
+    margin,
+    y,
+  )
   y += 5
-  doc.text(`Hava yoğunluğu oranı: ${output.airDensityRatio.toFixed(4)}`, margin, y)
+  doc.text(
+    ballisticsPdfT('summary.airDensityRatio', { value: output.airDensityRatio.toFixed(4) }),
+    margin,
+    y,
+  )
   y += 5
-  doc.text(`Ses hızı: ${output.speedOfSoundMps.toFixed(1)} m/s`, margin, y)
+  doc.text(
+    ballisticsPdfT('summary.speedOfSound', { value: output.speedOfSoundMps.toFixed(1) }),
+    margin,
+    y,
+  )
   y += 8
 
-  const tableStart = drawSectionTitle(doc, margin, pageW, 'Menzil tablosu', y)
+  const rangeTableTitle = ballisticsPdfT('sections.rangeTable')
+  const tableStart = drawSectionTitle(doc, margin, pageW, rangeTableTitle, y)
   autoTable(doc, {
     startY: tableStart,
     head: [buildPdfRangeTableHead(clickUnitSystem)],
@@ -398,18 +423,28 @@ export async function exportBallisticReportPdf(output, meta = {}) {
   })
 
   layoutLog.push(
-    `Sayfa ${doc.getNumberOfPages()}: Menzil tablosu bitti (finalY=${(doc.lastAutoTable?.finalY ?? tableStart).toFixed(1)})`,
+    `Sayfa ${doc.getNumberOfPages()}: ${rangeTableTitle} bitti (finalY=${(doc.lastAutoTable?.finalY ?? tableStart).toFixed(1)})`,
   )
 
   doc.addPage()
-  y = setupReportContinuationPage(doc, pageW, pageH, logoDataUrl, logoDims, title, 'Terim açıklamaları')
-  layoutLog.push(`Sayfa ${doc.getNumberOfPages()}: Terim açıklamaları başlangıcı`)
+  y = setupReportContinuationPage(
+    doc,
+    pageW,
+    pageH,
+    logoDataUrl,
+    logoDims,
+    title,
+    ballisticsPdfT('sections.glossaryContinue'),
+  )
+  layoutLog.push(`Sayfa ${doc.getNumberOfPages()}: ${ballisticsPdfT('sections.glossaryContinue')} başlangıcı`)
 
   drawTermGlossarySection(doc, margin, pageW, pageH, logoDataUrl, logoDims, title, y, layoutLog, glossaryTermKeys)
 
   stampPdfFooters(doc, reportId)
 
-  doc.save(meta.saveTo ?? `audaz-balistik-${Date.now()}.pdf`)
+  const brand = pdfFilenameSegment(ballisticsPdfT('fileNaming.brand'))
+  const slug = pdfFilenameSegment(ballisticsPdfT('fileNaming.slug'))
+  doc.save(meta.saveTo ?? `${brand}-${slug}-${Date.now()}.pdf`)
 
   return {
     pageCount: doc.getNumberOfPages(),

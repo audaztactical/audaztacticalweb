@@ -1,3 +1,5 @@
+import { getBallisticTermI18n } from '../lib/ballisticsDisplayText.js'
+
 /**
  * Balistik modülü terim sözlüğü — InfoTooltip ve form etiketleri için.
  * @typedef {Object} BallisticTerm
@@ -308,10 +310,13 @@ export const BALLISTIC_TERMS = [
 const TERM_MAP = new Map(BALLISTIC_TERMS.map((t) => [t.termKey, t]))
 
 /**
+ * Prefers i18n (`ballistics.terms.*`); falls back to static BALLISTIC_TERMS.
  * @param {string} termKey
  * @returns {BallisticTerm | undefined}
  */
 export function getBallisticTerm(termKey) {
+  const fromI18n = getBallisticTermI18n(termKey)
+  if (fromI18n) return fromI18n
   return TERM_MAP.get(termKey)
 }
 

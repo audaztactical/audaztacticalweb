@@ -1,38 +1,13 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Crosshair, Target } from 'lucide-react'
 import { pickNearestResult } from './BallisticChartPanel.jsx'
 import { isDualClickUnitDisplay, parseClickUnitSystem } from '../../lib/clickUnitSystem.js'
+import { elevationDirection, windDirection } from '../../lib/ballisticsDisplayText.js'
 
 /** @typedef {'tik' | 'nisangah'} QuickRefMode */
 
 const QUICK_REF_TARGETS = [100, 300, 500, 700, 900, 1200]
-
-/**
- * @param {number} dropCm — pozitif = mermi LOS altında → dürbünü yukarı
- * @returns {{ arrow: string, label: string }}
- */
-function elevationCue(dropCm) {
-  const dialUp = dropCm >= 0
-  return {
-    arrow: dialUp ? '↑' : '↓',
-    label: dialUp ? 'YUKARI' : 'AŞAĞI',
-  }
-}
-
-/**
- * @param {number} windageCm — pozitif = sağ sapma → nişanı sola al
- * @returns {{ arrow: string, label: string }}
- */
-function windCue(windageCm) {
-  if (Math.abs(windageCm) < 0.05) {
-    return { arrow: '·', label: '—' }
-  }
-  const aimLeft = windageCm > 0
-  return {
-    arrow: aimLeft ? '←' : '→',
-    label: aimLeft ? 'SOLA' : 'SAĞA',
-  }
-}
 
 /**
  * @param {import('../../lib/ballisticsEngine.js').BallisticsPointResult} result
@@ -82,13 +57,14 @@ function formatClickCount(value) {
 
 /**
  * @param {number} cm
+ * @param {(key: string) => string} t
  */
-function bodySizeHint(cm) {
+function bodySizeHint(cm, t) {
   const v = Math.abs(cm)
   if (v < 4) return null
-  if (v < 12) return '~bir el genişliği'
-  if (v < 24) return '~omuz genişliği'
-  if (v < 40) return '~yarım gövde'
+  if (v < 12) return t('quickRef.bodyHints.hand')
+  if (v < 24) return t('quickRef.bodyHints.shoulder')
+  if (v < 40) return t('quickRef.bodyHints.halfBody')
   return null
 }
 
@@ -128,6 +104,7 @@ export default function BallisticQuickReferencePanel({
   clickValueMoa,
   clickValueMrad,
 }) {
+  const { t } = useTranslation('ballistics')
   const [mode, setMode] = useState(/** @type {QuickRefMode} */ ('tik'))
 
   const activeResult = useMemo(
@@ -148,22 +125,22 @@ export default function BallisticQuickReferencePanel({
   const dropCm = activeResult.dropCm
   const windCm = activeResult.windageCm
   const elev = resolveElevationWind(activeResult, clickUnitSystem, clickValueMoa, clickValueMrad)
-  const elevCue = elevationCue(dropCm)
-  const wind = windCue(windCm)
-  const dropHint = bodySizeHint(dropCm)
-  const windHint = bodySizeHint(windCm)
-  const unitLabel = elev.hasClickValue ? 'TİK' : elev.angleUnit
+  const elevCue = elevationDirection(dropCm)
+  const wind = windDirection(windCm)
+  const dropHint = bodySizeHint(dropCm, t)
+  const windHint = bodySizeHint(windCm, t)
+  const unitLabel = elev.hasClickValue ? t('quickRef.tikLabel') : elev.angleUnit
 
   return (
     <div className="shrink-0 overflow-hidden rounded-lg border border-amber-500/25 bg-gradient-to-br from-amber-950/20 via-black/55 to-emerald-950/15 shadow-[inset_0_1px_0_rgba(251,191,36,0.12)]">
       <div className="flex items-center justify-between gap-2 border-b border-amber-500/15 px-3 py-2">
         <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.26em] text-amber-400/85">
-          Hızlı Referans
+          {t('quickRef.title')}
         </p>
         <div
           className="relative flex w-[9.5rem] shrink-0 rounded-full border border-white/10 bg-black/50 p-0.5"
           role="group"
-          aria-label="Gösterim modu"
+          aria-label={t('quickRef.ariaMode')}
         >
           <span
             className={`pointer-events-none absolute inset-y-0.5 w-[calc(50%-2px)] rounded-full bg-gradient-to-r from-amber-400 to-amber-500 shadow-[0_0_12px_rgba(251,191,36,0.35)] transition-transform duration-200 ${
@@ -171,11 +148,11 @@ export default function BallisticQuickReferencePanel({
             }`}
             aria-hidden
           />
-          <ModePill active={mode === 'tik'} label="Tık modu" onClick={() => setMode('tik')}>
-            TIK
+          <ModePill active={mode === 'tik'} label={t('quickRef.ariaTik')} onClick={() => setMode('tik')}>
+            {t('quickRef.modeTik')}
           </ModePill>
-          <ModePill active={mode === 'nisangah'} label="Nişangah modu" onClick={() => setMode('nisangah')}>
-            NİŞAN
+          <ModePill active={mode === 'nisangah'} label={t('quickRef.ariaNisangah')} onClick={() => setMode('nisangah')}>
+            {t('quickRef.modeNisangah')}
           </ModePill>
         </div>
       </div>
@@ -183,7 +160,7 @@ export default function BallisticQuickReferencePanel({
       <div className="grid gap-2 px-3 py-2.5 sm:grid-cols-[minmax(0,7rem)_1fr] sm:items-center sm:gap-3">
         <div className="rounded-md border border-amber-500/20 bg-black/40 px-2.5 py-2 text-center sm:py-2.5">
           <p className="font-mono-technical text-[7px] uppercase tracking-[0.2em] text-amber-500/65">
-            Mesafe
+            {t('quickRef.distance')}
           </p>
           <p className="mt-0.5 font-mono-technical text-2xl font-black tabular-nums leading-none text-amber-50 sm:text-3xl">
             {Math.round(activeDistance)}
@@ -195,8 +172,8 @@ export default function BallisticQuickReferencePanel({
           <div className="space-y-1.5">
             {!elev.hasClickValue ? (
               <p className="rounded border border-amber-500/20 bg-amber-950/30 px-2 py-1 font-mono-technical text-[9px] leading-snug text-amber-200/85">
-                Tık değeri yok — {elev.angleUnit} gösteriliyor
-                {!isDualClickUnitDisplay(clickUnitSystem) ? null : ' (birim seçin)'}
+                {t('quickRef.noClickValue', { unit: elev.angleUnit })}
+                {!isDualClickUnitDisplay(clickUnitSystem) ? null : t('quickRef.noClickValuePickUnit')}
               </p>
             ) : null}
             <div className="flex items-baseline gap-2 font-mono-technical text-lg font-black leading-none text-slate-50 sm:text-xl">
@@ -210,33 +187,32 @@ export default function BallisticQuickReferencePanel({
               <span className="text-amber-300">{wind.arrow}</span>
               <span className="tabular-nums">{formatClickCount(elev.windValue)}</span>
               <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400/90">
-                {unitLabel} {wind.label !== '—' ? wind.label : 'RÜZGAR YOK'}
+                {unitLabel} {!wind.none ? wind.label : t('quickRef.noWind')}
               </span>
             </div>
           </div>
         ) : (
           <div className="space-y-1.5 font-mono-technical text-sm font-bold leading-snug text-slate-50 sm:text-base">
             <p>
-              Nişan noktasını hedefin{' '}
-              <span className="text-amber-200">
-                ~{Math.abs(dropCm).toFixed(1)} cm {elevCue.label}
-              </span>
-              ına alın
+              {t('quickRef.aimInstruction', {
+                n: Math.abs(dropCm).toFixed(1),
+                dir: elevCue.label,
+              })}
             </p>
             {dropHint ? <p className="text-[9px] font-normal text-app-text/45">{dropHint}</p> : null}
             <p>
-              {wind.label !== '—' ? (
-                <>
-                  <span className="text-amber-200">
-                    ~{Math.abs(windCm).toFixed(1)} cm {wind.label}
-                  </span>
-                  ına alın
-                </>
+              {!wind.none ? (
+                <span className="text-amber-200">
+                  {t('quickRef.windInstruction', {
+                    n: Math.abs(windCm).toFixed(1),
+                    dir: wind.label,
+                  })}
+                </span>
               ) : (
-                <span className="text-app-text/55">Rüzgar düzeltmesi gerekmez</span>
+                <span className="text-app-text/55">{t('quickRef.noWindAim')}</span>
               )}
             </p>
-            {windHint && wind.label !== '—' ? (
+            {windHint && !wind.none ? (
               <p className="text-[9px] font-normal text-app-text/45">{windHint}</p>
             ) : null}
           </div>
@@ -247,10 +223,10 @@ export default function BallisticQuickReferencePanel({
         <ul className="grid gap-1 border-t border-amber-500/15 px-2 py-2 sm:px-3">
           {summaryRows.map(({ target, row }, index) => {
             const e = resolveElevationWind(row, clickUnitSystem, clickValueMoa, clickValueMrad)
-            const rowElev = elevationCue(row.dropCm)
-            const rowWind = windCue(row.windageCm)
+            const rowElev = elevationDirection(row.dropCm)
+            const rowWind = windDirection(row.windageCm)
             const isActive = Math.abs(row.distance - activeDistance) < 1
-            const unitShort = e.hasClickValue ? 'T' : e.angleUnit.slice(0, 1)
+            const unitShort = e.hasClickValue ? t('quickRef.abbrev.tik') : e.angleUnit.slice(0, 1)
 
             return (
               <li
@@ -283,21 +259,21 @@ export default function BallisticQuickReferencePanel({
                     <span className="min-w-0 flex-1 truncate tabular-nums">
                       <span className="text-amber-300/90">{rowElev.arrow}</span>
                       {formatClickCount(e.elevationValue)}
-                      {unitShort} {rowElev.label.slice(0, 3)}
+                      {unitShort} {rowElev.abbrev}
                     </span>
                     <span className="shrink-0 tabular-nums text-slate-400/80">
                       <span className="text-amber-300/90">{rowWind.arrow}</span>
                       {formatClickCount(e.windValue)}
                       {unitShort}{' '}
-                      {rowWind.label !== '—' ? rowWind.label.slice(0, 4) : '—'}
+                      {!rowWind.none ? rowWind.abbrev : '—'}
                     </span>
                   </>
                 ) : (
                   <span className="min-w-0 flex-1 truncate tabular-nums">
-                    {Math.abs(row.dropCm).toFixed(0)}cm {rowElev.label.slice(0, 3)}
+                    {Math.abs(row.dropCm).toFixed(0)}cm {rowElev.abbrev}
                     <span className="mx-1 text-white/15">·</span>
-                    {rowWind.label !== '—'
-                      ? `${Math.abs(row.windageCm).toFixed(0)}cm ${rowWind.label.slice(0, 4)}`
+                    {!rowWind.none
+                      ? `${Math.abs(row.windageCm).toFixed(0)}cm ${rowWind.abbrev}`
                       : '—'}
                   </span>
                 )}
