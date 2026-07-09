@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Anchor, ArrowLeft, ClipboardList, Loader2, Radio, Ship, Users } from 'lucide-react'
 import AmberAlert from '../common/AmberAlert'
 import BentoCard from '../instructor/cleanTactical/BentoCard'
@@ -21,6 +22,10 @@ import { emitFirebaseError } from '../../lib/firebaseErrorBus'
 import { VBSS_EVALUATION_PHASES, VBSS_PHASE_SUB_CRITERIA } from '../../lib/vbssEvaluationPayload'
 import { readStoredPhaseScore } from '../../lib/evaluationSubScores'
 import { PhaseSubScoresDisplay } from './PhaseSubCriteriaFields'
+import {
+  formatObservedEvalPhaseTitle,
+  formatObservedEvalPhaseSubtitle,
+} from '../../lib/trainingDisplayText'
 import { useOperatorGroup } from '../../hooks/useOperatorGroup'
 import IndividualTrainingSessionHeader from './IndividualTrainingSessionHeader'
 import VbssObservedEvalForm from './VbssObservedEvalForm'
@@ -92,6 +97,7 @@ export default function VbssTerminal({
   logsListenError = null,
   addLog,
 }) {
+  const { t } = useTranslation('training')
   const { user } = useAuth()
   const uid = user?.uid ?? ''
   const { trainingType, membership, isMember, groupLoading } = useTrainingSession()
@@ -136,7 +142,7 @@ export default function VbssTerminal({
       (err) => {
         if (!active) return
         emitFirebaseError(err)
-        setSyncError(err instanceof Error ? err.message : 'Senkronizasyon kesildi.')
+        setSyncError(err instanceof Error ? err.message : t('sectors.vbss.hud.syncDisconnected'))
         setSyncLoading(false)
       },
     )
@@ -145,7 +151,7 @@ export default function VbssTerminal({
       active = false
       unsub()
     }
-  }, [syncEnabled, groupId, uid])
+  }, [syncEnabled, groupId, uid, t])
 
   useEffect(() => {
     if (!syncEnabled) {
@@ -177,7 +183,9 @@ export default function VbssTerminal({
     return (
       <div className="w-full min-w-0 max-w-none space-y-4">
         <IndividualTrainingSessionHeader />
-        <p className="font-mono-technical text-[10px] uppercase text-zinc-500">Oturum gerekli</p>
+        <p className="font-mono-technical text-[10px] uppercase text-zinc-500">
+          {t('sectors.vbss.hud.sessionRequired')}
+        </p>
       </div>
     )
   }
@@ -196,25 +204,25 @@ export default function VbssTerminal({
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <button type="button" onClick={onBack} className={ctBackBtn}>
           <ArrowLeft className="size-3.5" aria-hidden />
-          Kategorilere dön
+          {t('common.terminal.backToCategories')}
         </button>
 
         <div
           className="flex w-full flex-wrap gap-1.5 rounded border border-accent/25 bg-black/60 p-1 sm:w-auto"
           role="tablist"
-          aria-label="VBSS terminal görünümü"
+          aria-label={t('sectors.vbss.tabs.aria')}
         >
           <button type="button" role="tab" aria-selected={viewMode === 'hud'} onClick={() => setViewMode('hud')} className={tabBtnClassCompact(viewMode === 'hud')}>
-            CANLI HUD
+            {t('sectors.vbss.tabs.hud')}
           </button>
           <button type="button" role="tab" aria-selected={viewMode === 'pdf'} onClick={() => setViewMode('pdf')} className={tabBtnClassCompact(viewMode === 'pdf')}>
-            PDF FORMU
+            {t('sectors.vbss.tabs.pdf')}
           </button>
           <button type="button" role="tab" aria-selected={viewMode === 'entry'} onClick={() => setViewMode('entry')} className={tabBtnClassCompact(viewMode === 'entry')}>
-            KAYIT GİR
+            {t('sectors.vbss.tabs.entry')}
           </button>
           <button type="button" role="tab" aria-selected={viewMode === 'observed'} onClick={() => setViewMode('observed')} className={tabBtnClassCompact(viewMode === 'observed')}>
-            KAYITLARIM
+            {t('sectors.vbss.tabs.observed')}
           </button>
         </div>
 
@@ -233,53 +241,55 @@ export default function VbssTerminal({
         addLog ? (
           <VbssObservedEvalForm addLog={addLog} hidePdfBanner onSubmitted={() => setViewMode('observed')} />
         ) : (
-          <p className={ctMsgErr}>Kayıt kanalı hazır değil.</p>
+          <p className={ctMsgErr}>{t('sectors.vbss.hud.logChannelNotReady')}</p>
         )
       ) : viewMode === 'observed' ? (
         <>
           {!logsReady ? (
-            <p className="font-mono-technical text-[10px] uppercase text-app-text/55">KAYIT_KANALI_SENKRON…</p>
+            <p className="font-mono-technical text-[10px] uppercase text-app-text/55">
+              {t('sectors.vbss.hud.logChannelSyncing')}
+            </p>
           ) : logsListenError ? (
-            <p className={ctMsgErr}>Kayıt kanalı kesildi · {logsListenError.message}</p>
+            <p className={ctMsgErr}>
+              {t('sectors.vbss.hud.logChannelDisconnected', { message: logsListenError.message })}
+            </p>
           ) : null}
           <VbssLogRegistry logs={logs} loading={logsLoading} />
         </>
       ) : (
         <>
       <header className="border-b border-zinc-800 pb-3">
-        <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">[ VBSS · GÖREV HUD ]</p>
+        <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">{t('sectors.vbss.hud.kicker')}</p>
         <h2 className="mt-1 text-lg font-semibold tracking-tight text-zinc-100 sm:text-xl">
-          Gemi Operasyonu — Canlı Terminal
+          {t('sectors.vbss.hud.title')}
         </h2>
-        <p className="mt-1 max-w-2xl text-sm text-zinc-500">
-          Eğitmen değerlendirmesi anlık yansır · operatör veri girişi yok
-        </p>
+        <p className="mt-1 max-w-2xl text-sm text-zinc-500">{t('sectors.vbss.hud.subtitle')}</p>
       </header>
 
       {!isGroupMode ? (
-        <AmberAlert label="[ GRUP MODU GEREKLİ ]">
-          Canlı operasyon HUD&apos;u için üstteki eğitim tipini <strong>Grup</strong> olarak seçin. Eğitmen panelindeki
-          Gemi Operasyonu değerlendirmesi yalnızca grup oturumunda bu ekrana akar.
+        <AmberAlert label={t('sectors.vbss.hud.groupModeRequired.label')}>
+          {t('sectors.vbss.hud.groupModeRequired.body')}
         </AmberAlert>
       ) : groupLoading || operatorGroupLoading ? (
         <div className="flex min-h-[200px] items-center justify-center gap-2 text-zinc-400">
           <Loader2 className="size-5 animate-spin" aria-hidden />
-          <span className="text-sm">Grup doğrulanıyor…</span>
+          <span className="text-sm">{t('sectors.vbss.hud.groupVerifying')}</span>
         </div>
       ) : !isMember || !groupId ? (
-        <AmberAlert label="[ GRUP ÜYELİĞİ ]">
-          Canlı değerlendirme için bir taktik grubuna dahil olmalısınız.{' '}
+        <AmberAlert label={t('sectors.vbss.hud.groupMembership.label')}>
+          {t('sectors.vbss.hud.groupMembership.body')}{' '}
           <Link to="/ayarlar" className="font-bold text-accent underline-offset-2 hover:underline">
-            Taktik Timim →
+            {t('sectors.vbss.hud.groupMembership.settingsLink')}
           </Link>
         </AmberAlert>
       ) : (
         <>
           {combinedError ? (
-            <p className={ctMsgErr}>Veri kanalı kesildi · {combinedError}</p>
+            <p className={ctMsgErr}>
+              {t('sectors.vbss.hud.dataChannelDisconnected', { message: combinedError })}
+            </p>
           ) : null}
 
-          {/* Üst panel — canlı durum + kronometre */}
           <div
             className={`${ctCard} grid gap-4 border-zinc-800/90 sm:grid-cols-3`}
             aria-live="polite"
@@ -294,29 +304,26 @@ export default function VbssTerminal({
                   <span className="relative inline-flex size-2.5 rounded-full bg-red-500" />
                 </span>
                 <span className="text-sm font-semibold uppercase tracking-wide text-red-400">
-                  🔴 Canlı operasyon
+                  {t('sectors.vbss.hud.liveOperation')}
                 </span>
               </div>
               <p className="text-xs text-zinc-500">
                 {syncLoading
-                  ? 'Senkron bağlanıyor…'
+                  ? t('sectors.vbss.hud.syncConnecting')
                   : hasScores
-                    ? 'Eğitmen değerlendirmesi alındı'
-                    : 'Eğitmen değerlendirmesi bekleniyor'}
+                    ? t('sectors.vbss.hud.evalReceived')
+                    : t('sectors.vbss.hud.evalPending')}
               </p>
               {latestEvaluation?.overallScore > 0 ? (
                 <p className="mt-1 text-xs text-zinc-400">
-                  Genel skor:{' '}
-                  <span className="font-semibold tabular-nums text-zinc-100">
-                    {latestEvaluation.overallScore}/10
-                  </span>
+                  {t('sectors.vbss.hud.overallScore', { score: latestEvaluation.overallScore })}
                 </p>
               ) : null}
             </div>
 
             <div className="flex flex-col items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950/60 px-4 py-3 sm:col-span-1">
               <span className="text-xs font-medium uppercase tracking-widest text-zinc-500">
-                Operasyon süresi
+                {t('sectors.vbss.hud.operationDuration')}
               </span>
               <p
                 className={`mt-1 font-mono text-3xl font-bold tabular-nums tracking-tight ${
@@ -327,37 +334,38 @@ export default function VbssTerminal({
               </p>
               <p className="mt-1 flex items-center gap-1 text-xs text-zinc-500">
                 <Radio className="size-3" strokeWidth={1.5} aria-hidden />
-                Kronometre aktif
+                {t('sectors.vbss.hud.chronoActive')}
               </p>
             </div>
 
             <div className="flex flex-col items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950/60 px-4 py-3 sm:col-span-1">
               <span className="text-xs font-medium uppercase tracking-widest text-zinc-500">
-                Hedef operasyon süresi
+                {t('sectors.vbss.hud.targetDuration')}
               </span>
               <p className="mt-1 font-mono text-3xl font-bold tabular-nums tracking-tight text-emerald-400/90">
                 {targetLabel}
               </p>
               <p className={ctHelperText}>
                 {latestEvaluation?.isTimed
-                  ? 'Eğitmenin belirlediği hedef süre (sn)'
-                  : 'Zamanlı oturum tanımlanmadı'}
+                  ? t('sectors.vbss.hud.targetDurationHint')
+                  : t('sectors.vbss.hud.noTimedSession')}
               </p>
             </div>
           </div>
 
-          {/* Orta panel — safhalar */}
           <div className={`${ctBentoGrid} w-full min-w-0`}>
             {VBSS_EVALUATION_PHASES.map((meta, index) => {
               const score = getPhaseScore(latestEvaluation, meta.id)
               const Icon = PHASE_ICONS[meta.id]
               const pending = score == null
+              const phaseTitle = formatObservedEvalPhaseTitle('vbss', meta.id, meta.title)
+              const phaseSubtitle = formatObservedEvalPhaseSubtitle('vbss', meta.id, meta.subtitle)
 
               return (
                 <div key={meta.id} className={ctBentoSpan4}>
                   <BentoCard
-                    title={meta.title}
-                    description={meta.subtitle}
+                    title={phaseTitle}
+                    description={phaseSubtitle}
                     icon={Icon}
                     delay={index * 0.04}
                     className={
@@ -368,13 +376,13 @@ export default function VbssTerminal({
                   >
                     {pending ? (
                       <p className="py-6 text-center text-sm italic text-zinc-500">
-                        Değerlendirme bekleniyor…
+                        {t('sectors.vbss.hud.phasePending')}
                       </p>
                     ) : (
                       <div className="space-y-3">
                         <div className="flex items-end justify-between gap-3">
                           <div>
-                            <p className="text-xs font-medium text-zinc-500">Safha ortalaması</p>
+                            <p className="text-xs font-medium text-zinc-500">{t('sectors.vbss.hud.phaseAverage')}</p>
                             <p className="font-mono text-3xl font-bold tabular-nums text-zinc-100">
                               {score}
                               <span className="text-lg font-medium text-zinc-500">/10</span>
@@ -393,6 +401,8 @@ export default function VbssTerminal({
                           criteria={VBSS_PHASE_SUB_CRITERIA[meta.id]}
                           maxScore={10}
                           compact
+                          discipline="vbss"
+                          phaseId={meta.id}
                         />
                       </div>
                     )}
@@ -402,33 +412,35 @@ export default function VbssTerminal({
             })}
           </div>
 
-          {/* Alt panel — gözlem notları */}
           <div className={`${ctCard} border-zinc-800/90`}>
             <header className="mb-4 flex items-center gap-2 border-b border-zinc-800 pb-3">
               <ClipboardList className="size-4 shrink-0 text-zinc-400" strokeWidth={1.5} aria-hidden />
               <div>
-                <h3 className={ctCardTitle}>Gözlem notları</h3>
-                <p className={ctCardDesc}>Eğitmen · operationalNotes · canlı</p>
+                <h3 className={ctCardTitle}>{t('sectors.vbss.hud.observationNotes.title')}</h3>
+                <p className={ctCardDesc}>{t('sectors.vbss.hud.observationNotes.desc')}</p>
               </div>
             </header>
 
             {!latestEvaluation ? (
               <p className="py-4 text-center text-sm italic text-zinc-500">
-                Henüz gözlem notu yok — eğitmen kayıt yaptığında burada görünür.
+                {t('sectors.vbss.hud.observationNotes.empty')}
               </p>
             ) : (
               <ul className="space-y-4">
                 {VBSS_EVALUATION_PHASES.map((meta) => {
                   const note = getPhaseObservation(latestEvaluation, meta.id)
+                  const phaseTitle = formatObservedEvalPhaseTitle('vbss', meta.id, meta.title)
                   return (
                     <li
                       key={meta.id}
                       className="rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2.5"
                     >
-                      <p className="text-xs font-medium text-zinc-500">{meta.title}</p>
+                      <p className="text-xs font-medium text-zinc-500">{phaseTitle}</p>
                       <p className="mt-1 text-sm leading-relaxed text-zinc-300">
                         {note || (
-                          <span className="italic text-zinc-600">Bu safha için not girilmedi.</span>
+                          <span className="italic text-zinc-600">
+                            {t('sectors.vbss.hud.observationNotes.noNoteForPhase')}
+                          </span>
                         )}
                       </p>
                     </li>
@@ -439,8 +451,10 @@ export default function VbssTerminal({
           </div>
 
           <p className="text-center text-xs text-zinc-600">
-            Firestore · vbss_evaluations · onSnapshot
-            {latestEvaluation ? ` · oturum ${latestEvaluation.id.slice(0, 8)}` : ''}
+            {t('sectors.vbss.hud.firestoreMeta')}
+            {latestEvaluation
+              ? t('sectors.vbss.hud.firestoreSession', { id: latestEvaluation.id.slice(0, 8) })
+              : ''}
           </p>
         </>
       )}

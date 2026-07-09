@@ -658,7 +658,247 @@
     },
     "vbss": {
       "title": "VBSS",
-      "sectorLabel": "VBS-04 · Gemi operasyonu"
+      "sectorLabel": "VBS-04 · Gemi operasyonu",
+      "tabs": {
+        "aria": "VBSS terminal görünümü",
+        "hud": "Canlı HUD",
+        "pdf": "PDF formu",
+        "entry": "Kayıt gir",
+        "observed": "Kayıtlarım"
+      },
+      "hud": {
+        "kicker": "[ VBSS · GÖREV HUD ]",
+        "title": "Gemi operasyonu — canlı terminal",
+        "subtitle": "Eğitmen değerlendirmesi anlık yansır · operatör veri girişi yok",
+        "sessionRequired": "Oturum gerekli",
+        "syncDisconnected": "Senkronizasyon kesildi.",
+        "logChannelNotReady": "Kayıt kanalı hazır değil.",
+        "logChannelSyncing": "Kayıt kanalı senkron…",
+        "logChannelDisconnected": "Kayıt kanalı kesildi · {{message}}",
+        "groupModeRequired": {
+          "label": "[ GRUP MODU GEREKLİ ]",
+          "body": "Canlı operasyon HUD'u için üstteki eğitim tipini Grup olarak seçin. Eğitmen panelindeki Gemi Operasyonu değerlendirmesi yalnızca grup oturumunda bu ekrana akar."
+        },
+        "groupVerifying": "Grup doğrulanıyor…",
+        "groupMembership": {
+          "label": "[ GRUP ÜYELİĞİ ]",
+          "body": "Canlı değerlendirme için bir taktik grubuna dahil olmalısınız.",
+          "settingsLink": "Taktik Timim →"
+        },
+        "dataChannelDisconnected": "Veri kanalı kesildi · {{message}}",
+        "liveOperation": "🔴 Canlı operasyon",
+        "syncConnecting": "Senkron bağlanıyor…",
+        "evalReceived": "Eğitmen değerlendirmesi alındı",
+        "evalPending": "Eğitmen değerlendirmesi bekleniyor",
+        "overallScore": "Genel skor: {{score}}/10",
+        "operationDuration": "Operasyon süresi",
+        "chronoActive": "Kronometre aktif",
+        "targetDuration": "Hedef operasyon süresi",
+        "targetDurationHint": "Eğitmenin belirlediği hedef süre (sn)",
+        "noTimedSession": "Zamanlı oturum tanımlanmadı",
+        "phasePending": "Değerlendirme bekleniyor…",
+        "phaseAverage": "Safha ortalaması",
+        "observationNotes": {
+          "title": "Gözlem notları",
+          "desc": "Eğitmen · operationalNotes · canlı",
+          "empty": "Henüz gözlem notu yok — eğitmen kayıt yaptığında burada görünür.",
+          "noNoteForPhase": "Bu safha için not girilmedi."
+        },
+        "firestoreMeta": "Firestore · vbss_evaluations · onSnapshot",
+        "firestoreSession": " · oturum {{id}}"
+      },
+      "pdfPanel": {
+        "kicker": "[ VBSS GÖZLEM FORMU · OBS-V1 ]",
+        "description": "Boş gözlem formunu indirin. Arkadaşınız sahadaki performansınızı safha safha işaretlesin; imza ve skor kutucuklarını doldurduktan sonra \"Kayıt Gir\" sekmesinden sonuçları uygulamaya aktarın.",
+        "bulletPhases": "· 3 safha: Boarding / Clearing / Control",
+        "bulletScores": "· Skor 0–10 + gözlem notu satırları",
+        "bulletSignature": "· Gözlemci imza alanı",
+        "download": "PDF formu indir",
+        "downloaded": "Form indirildi · {{formId}}",
+        "pdfFailed": "PDF oluşturulamadı"
+      },
+      "observedEval": {
+        "pdfBanner": {
+          "kicker": "[ PDF GÖZLEM FORMU ]",
+          "hint": "Formu indirin, arkadaşınıza gözlem yaptırın, işaretlemeleri aşağıya girin.",
+          "download": "PDF formu indir"
+        },
+        "form": {
+          "metaPanel": "Gözlem meta · metrikler",
+          "observerName": "Gözlemci adı *",
+          "observerCallsign": "Gözlemci callsign",
+          "observedDate": "Saha tarihi *",
+          "timedSession": "Zamanlı oturum",
+          "targetDurationSec": "Hedef operasyon süresi (sn)",
+          "phaseAverages": "Faz ortalamaları",
+          "overallScore": "Genel skor: {{score}}",
+          "phaseScoresPanel": "VBSS faz skorları · analiz",
+          "generalOperationNote": "Genel operasyon notu",
+          "generalOperationNotePlaceholder": "Saha gözlemi, koordinasyon, #etiketler…",
+          "submit": "VBSS kaydını onayla",
+          "imageAlt": "VBSS"
+        },
+        "validation": {
+          "observerNameRequired": "Gözlemci adı zorunludur.",
+          "observedAtRequired": "Saha tarihi zorunludur.",
+          "targetDurationInvalid": "Hedef operasyon süresi geçersiz.",
+          "criterionScoreRequired": "{{phase}} · {{criterion}} için geçerli skor seçin ({{min}}–{{max}})."
+        },
+        "messages": {
+          "submitSuccess": "VBSS gözlem kaydı aktarıldı.",
+          "submitFailed": "Kayıt başarısız",
+          "pdfDownloaded": "PDF indirildi · {{formId}}",
+          "pdfFailed": "PDF oluşturulamadı"
+        },
+        "registry": {
+          "syncing": "Kayıtlar senkronize ediliyor…",
+          "empty": "Henüz gözlemli VBSS kaydı yok — PDF formu indirip kayıt girin.",
+          "observerPrefix": "Gözlem · {{name}}",
+          "overall": "Genel: {{score}}/10",
+          "success": "Başarı: %{{percent}}",
+          "target": "Hedef: {{seconds}}s",
+          "badgeUnverified": "Gözlem · doğrulanmadı",
+          "badgeVerified": "Gözlem · onaylı"
+        }
+      },
+      "drill": {
+        "metricsPanel": "VBSS metrikleri · deniz operasyonu",
+        "tacticalPanel": "Taktik süreler · ek metrikler",
+        "form": {
+          "boardingPoint": "Boarding point *",
+          "boardingPointPlaceholder": "— Giriş noktası —",
+          "customBoardingPlaceholder": "Özel giriş noktası…",
+          "vesselType": "Vessel type *",
+          "vesselTypePlaceholder": "— Gemi tipi —",
+          "customVesselPlaceholder": "Özel gemi tipi…",
+          "searchDuration": "Search duration (sn) *",
+          "threatLevel": "Threat level *",
+          "threatLevelPlaceholder": "— Tehdit —",
+          "seaState": "Deniz durumu *",
+          "seaStatePlaceholder": "— Deniz durumu —",
+          "customSeaPlaceholder": "Özel deniz durumu…",
+          "boardingTime": "Gemiye çıkış (sn)",
+          "bridgeControlTime": "Köprüüstü (sn)",
+          "engineRoomTime": "Makine d. (sn)",
+          "containmentTime": "Emniyet (sn)",
+          "vesselSpeed": "Gemi hızı (kt)",
+          "crewCount": "Mürettebat",
+          "tacticalErrors": "Taktik hatalar",
+          "operationNote": "Operasyon notu",
+          "submit": "VBSS kaydını onayla"
+        },
+        "validation": {
+          "sessionRequired": "Oturum gerekli",
+          "boardingPointRequired": "Boarding point gerekli",
+          "customBoardingRequired": "Özel giriş noktası gerekli",
+          "vesselTypeRequired": "Vessel type gerekli",
+          "customVesselRequired": "Özel gemi tipi gerekli",
+          "searchDurationRequired": "Search duration zorunlu · sn > 0",
+          "threatLevelRequired": "Threat level gerekli",
+          "seaStateRequired": "Deniz durumu gerekli",
+          "customSeaRequired": "Özel deniz durumu gerekli"
+        },
+        "messages": {
+          "submitSuccess": "VBSS kaydı aktarıldı · vbss_logs",
+          "submitFailed": "VBSS kayıt başarısız · yeniden dene{{hint}}"
+        },
+        "toggles": {
+          "contrabandFound": "Kaçak malzeme",
+          "biometricCheck": "Biyometrik kimlik",
+          "scuttlingAttempt": "Batırma girişimi",
+          "commsBlackoutSuccess": "Telsiz kör etme"
+        }
+      },
+      "options": {
+        "boardingPoint": {
+          "fast_rope_heli": "Helikopter (Fast-Rope)",
+          "hook_and_ladder_bot": "Bot (Kanca ve Merdiven)",
+          "boat_to_boat": "Bot-Bot / Boat-to-Boat",
+          "compliant_pier": "İskele / Rıhtım Binişi",
+          "custom": "Özel / Diğer (Giriş Alanı)"
+        },
+        "vesselType": {
+          "cargo_container": "Kargo / Konteyner Gemisi",
+          "tanker_vessel": "Petrol / Kimyasal Tanker",
+          "speed_yacht": "Sürat Teknesi / Yat",
+          "fishing_vessel": "Balıkçı Teknesi / Botu",
+          "custom": "Özel / Diğer (Giriş Alanı)"
+        },
+        "threatLevel": {
+          "low": "Düşük (Low)",
+          "moderate": "Orta (Moderate)",
+          "high": "Yüksek (High)",
+          "critical": "Kritik (Critical)"
+        },
+        "seaState": {
+          "0-Calm": "0 · Sakin (Calm)",
+          "1-Smooth": "1 · Durgun (Smooth)",
+          "2-Slight": "2 · Hafif Dalga (Slight)",
+          "3-Moderate": "3 · Orta (Moderate)",
+          "4-Rough": "4 · Kabarık (Rough)",
+          "custom": "[+] Özel deniz durumu"
+        },
+        "tacticalErrors": {
+          "fatal_funnel_hang": "Ölüm hunisinde asılı kalma / Fatal funnel hang",
+          "poor_corner_piercing": "Zayıf köşe delme / Poor corner piercing"
+        }
+      },
+      "history": {
+        "title": "Geçmiş VBSS kayıtları · deniz müdahale",
+        "syncMeta": "vbss_logs · canlı senkron · {{filtered}}/{{total}} kayıt",
+        "filterBar": "Filtreleme barı",
+        "seaState": "Deniz durumu",
+        "all": "Tümü",
+        "syncing": "Senkron…",
+        "empty": "VBSS kaydı yok",
+        "noFilterResults": "Filtre sonucu yok",
+        "downloadFiltered": "Filtreleneni indir",
+        "downloadAll": "Tümünü indir",
+        "preparingPdf": "Hazırlanıyor…",
+        "columns": {
+          "date": "Tarih",
+          "insertionMethod": "İntikal metodu",
+          "vesselType": "Gemi / unsur tipi",
+          "seaState": "Deniz durumu",
+          "vesselSpeed": "Gemi hızı",
+          "boardingTime": "Gemiye çıkış",
+          "bridgeControl": "Köprüüstü",
+          "engineRoom": "Makine d.",
+          "containment": "Emniyet",
+          "crew": "Mürettebat",
+          "successRate": "Başarı oranı (%)",
+          "report": "Rapor"
+        },
+        "detail": {
+          "title": "VBSS detay paneli · deniz müdahale",
+          "successRate": "Başarı oranı:",
+          "insertionMethod": "İntikal metodu:",
+          "vesselType": "Gemi / unsur tipi:",
+          "seaState": "Deniz durumu:",
+          "boardingTime": "Gemiye çıkış süresi:",
+          "bridgeControl": "Köprüüstü kontrolü:",
+          "engineRoom": "Makine dairesi kontrolü:",
+          "containment": "Mürettebat emniyete alma:",
+          "vesselSpeed": "Geminin hızı:",
+          "crewCount": "Mürettebat sayısı:",
+          "contraband": "Kaçak malzeme / silah:",
+          "biometric": "Biyometrik kimlik:",
+          "scuttling": "Batırma / sabotaj:",
+          "commsBlackout": "Telsiz kör etme:",
+          "operationNote": "Operasyon notu",
+          "noOperationNote": "Operasyon notu kayıtlı değil."
+        },
+        "bool": {
+          "yes": "Evet",
+          "no": "Hayır"
+        },
+        "filterSummary": {
+          "boarding": "Giriş: {{value}}",
+          "vessel": "Gemi: {{value}}",
+          "threat": "Tehdit: {{value}}",
+          "sea": "Deniz: {{value}}"
+        }
+      }
     },
     "tccc": {
       "title": "TCCC",

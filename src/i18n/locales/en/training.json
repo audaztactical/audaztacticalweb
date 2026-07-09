@@ -658,7 +658,247 @@
     },
     "vbss": {
       "title": "VBSS",
-      "sectorLabel": "VBS-04 · Vessel boarding"
+      "sectorLabel": "VBS-04 · Vessel boarding",
+      "tabs": {
+        "aria": "VBSS terminal view",
+        "hud": "Live HUD",
+        "pdf": "PDF form",
+        "entry": "Enter record",
+        "observed": "My records"
+      },
+      "hud": {
+        "kicker": "[ VBSS · MISSION HUD ]",
+        "title": "Vessel operation — live terminal",
+        "subtitle": "Instructor evaluation streams live · no operator data entry",
+        "sessionRequired": "Session required",
+        "syncDisconnected": "Synchronization lost.",
+        "logChannelNotReady": "Record channel not ready.",
+        "logChannelSyncing": "Record channel syncing…",
+        "logChannelDisconnected": "Record channel lost · {{message}}",
+        "groupModeRequired": {
+          "label": "[ GROUP MODE REQUIRED ]",
+          "body": "Select Group as the training type above for the live operation HUD. Ship operation evaluations from the instructor panel only flow to this screen in a group session."
+        },
+        "groupVerifying": "Verifying group…",
+        "groupMembership": {
+          "label": "[ GROUP MEMBERSHIP ]",
+          "body": "You must belong to a tactical group for live evaluation.",
+          "settingsLink": "My tactical team →"
+        },
+        "dataChannelDisconnected": "Data channel lost · {{message}}",
+        "liveOperation": "🔴 Live operation",
+        "syncConnecting": "Connecting sync…",
+        "evalReceived": "Instructor evaluation received",
+        "evalPending": "Awaiting instructor evaluation",
+        "overallScore": "Overall score: {{score}}/10",
+        "operationDuration": "Operation duration",
+        "chronoActive": "Chronometer active",
+        "targetDuration": "Target operation duration",
+        "targetDurationHint": "Target duration set by instructor (sec)",
+        "noTimedSession": "No timed session defined",
+        "phasePending": "Awaiting evaluation…",
+        "phaseAverage": "Phase average",
+        "observationNotes": {
+          "title": "Observation notes",
+          "desc": "Instructor · operationalNotes · live",
+          "empty": "No observation notes yet — they appear here when the instructor logs a record.",
+          "noNoteForPhase": "No note entered for this phase."
+        },
+        "firestoreMeta": "Firestore · vbss_evaluations · onSnapshot",
+        "firestoreSession": " · session {{id}}"
+      },
+      "pdfPanel": {
+        "kicker": "[ VBSS OBSERVATION FORM · OBS-V1 ]",
+        "description": "Download the blank observation form. Have a peer mark your performance phase by phase; after filling signature and score boxes, transfer results via the Enter record tab.",
+        "bulletPhases": "· 3 phases: Boarding / Clearing / Control",
+        "bulletScores": "· Score 0–10 + observation note rows",
+        "bulletSignature": "· Observer signature field",
+        "download": "Download PDF form",
+        "downloaded": "Form downloaded · {{formId}}",
+        "pdfFailed": "Could not generate PDF"
+      },
+      "observedEval": {
+        "pdfBanner": {
+          "kicker": "[ PDF OBSERVATION FORM ]",
+          "hint": "Download the form, have a peer observe you, then enter the markings below.",
+          "download": "Download PDF form"
+        },
+        "form": {
+          "metaPanel": "Observation meta · metrics",
+          "observerName": "Observer name *",
+          "observerCallsign": "Observer callsign",
+          "observedDate": "Field date *",
+          "timedSession": "Timed session",
+          "targetDurationSec": "Target operation duration (sec)",
+          "phaseAverages": "Phase averages",
+          "overallScore": "Overall score: {{score}}",
+          "phaseScoresPanel": "VBSS phase scores · analysis",
+          "generalOperationNote": "General operation note",
+          "generalOperationNotePlaceholder": "Field observation, coordination, #tags…",
+          "submit": "Confirm VBSS record",
+          "imageAlt": "VBSS"
+        },
+        "validation": {
+          "observerNameRequired": "Observer name is required.",
+          "observedAtRequired": "Field date is required.",
+          "targetDurationInvalid": "Target operation duration is invalid.",
+          "criterionScoreRequired": "Select a valid score for {{phase}} · {{criterion}} ({{min}}–{{max}})."
+        },
+        "messages": {
+          "submitSuccess": "VBSS observation record transferred.",
+          "submitFailed": "Record failed",
+          "pdfDownloaded": "PDF downloaded · {{formId}}",
+          "pdfFailed": "Could not generate PDF"
+        },
+        "registry": {
+          "syncing": "Syncing records…",
+          "empty": "No observed VBSS records yet — download the PDF form and enter a record.",
+          "observerPrefix": "Observation · {{name}}",
+          "overall": "Overall: {{score}}/10",
+          "success": "Success: {{percent}}%",
+          "target": "Target: {{seconds}}s",
+          "badgeUnverified": "Observation · unverified",
+          "badgeVerified": "Observation · verified"
+        }
+      },
+      "drill": {
+        "metricsPanel": "VBSS metrics · maritime operation",
+        "tacticalPanel": "Tactical timings · additional metrics",
+        "form": {
+          "boardingPoint": "Boarding point *",
+          "boardingPointPlaceholder": "— Boarding point —",
+          "customBoardingPlaceholder": "Custom boarding point…",
+          "vesselType": "Vessel type *",
+          "vesselTypePlaceholder": "— Vessel type —",
+          "customVesselPlaceholder": "Custom vessel type…",
+          "searchDuration": "Search duration (sec) *",
+          "threatLevel": "Threat level *",
+          "threatLevelPlaceholder": "— Threat —",
+          "seaState": "Sea state *",
+          "seaStatePlaceholder": "— Sea state —",
+          "customSeaPlaceholder": "Custom sea state…",
+          "boardingTime": "Boarding time (sec)",
+          "bridgeControlTime": "Bridge (sec)",
+          "engineRoomTime": "Engine room (sec)",
+          "containmentTime": "Containment (sec)",
+          "vesselSpeed": "Vessel speed (kt)",
+          "crewCount": "Crew",
+          "tacticalErrors": "Tactical errors",
+          "operationNote": "Operation note",
+          "submit": "Confirm VBSS record"
+        },
+        "validation": {
+          "sessionRequired": "Session required",
+          "boardingPointRequired": "Boarding point required",
+          "customBoardingRequired": "Custom boarding point required",
+          "vesselTypeRequired": "Vessel type required",
+          "customVesselRequired": "Custom vessel type required",
+          "searchDurationRequired": "Search duration required · sec > 0",
+          "threatLevelRequired": "Threat level required",
+          "seaStateRequired": "Sea state required",
+          "customSeaRequired": "Custom sea state required"
+        },
+        "messages": {
+          "submitSuccess": "VBSS record transferred · vbss_logs",
+          "submitFailed": "VBSS record failed · retry{{hint}}"
+        },
+        "toggles": {
+          "contrabandFound": "Contraband",
+          "biometricCheck": "Biometric ID",
+          "scuttlingAttempt": "Scuttling attempt",
+          "commsBlackoutSuccess": "Comms blackout"
+        }
+      },
+      "options": {
+        "boardingPoint": {
+          "fast_rope_heli": "Helicopter (Fast-Rope)",
+          "hook_and_ladder_bot": "Boat (Hook and Ladder)",
+          "boat_to_boat": "Boat-to-Boat",
+          "compliant_pier": "Pier / Wharf boarding",
+          "custom": "Custom / Other (entry point)"
+        },
+        "vesselType": {
+          "cargo_container": "Cargo / Container ship",
+          "tanker_vessel": "Oil / Chemical tanker",
+          "speed_yacht": "Speedboat / Yacht",
+          "fishing_vessel": "Fishing vessel / Boat",
+          "custom": "Custom / Other (entry point)"
+        },
+        "threatLevel": {
+          "low": "Low",
+          "moderate": "Moderate",
+          "high": "High",
+          "critical": "Critical"
+        },
+        "seaState": {
+          "0-Calm": "0 · Calm",
+          "1-Smooth": "1 · Smooth",
+          "2-Slight": "2 · Slight",
+          "3-Moderate": "3 · Moderate",
+          "4-Rough": "4 · Rough",
+          "custom": "[+] Custom sea state"
+        },
+        "tacticalErrors": {
+          "fatal_funnel_hang": "Fatal funnel hang",
+          "poor_corner_piercing": "Poor corner piercing"
+        }
+      },
+      "history": {
+        "title": "Past VBSS records · maritime intervention",
+        "syncMeta": "vbss_logs · live sync · {{filtered}}/{{total}} records",
+        "filterBar": "Filter bar",
+        "seaState": "Sea state",
+        "all": "All",
+        "syncing": "Syncing…",
+        "empty": "No VBSS records",
+        "noFilterResults": "No filter results",
+        "downloadFiltered": "Download filtered",
+        "downloadAll": "Download all",
+        "preparingPdf": "Preparing…",
+        "columns": {
+          "date": "Date",
+          "insertionMethod": "Insertion method",
+          "vesselType": "Vessel / asset type",
+          "seaState": "Sea state",
+          "vesselSpeed": "Vessel speed",
+          "boardingTime": "Boarding",
+          "bridgeControl": "Bridge",
+          "engineRoom": "Engine room",
+          "containment": "Containment",
+          "crew": "Crew",
+          "successRate": "Success rate (%)",
+          "report": "Report"
+        },
+        "detail": {
+          "title": "VBSS detail panel · maritime intervention",
+          "successRate": "Success rate:",
+          "insertionMethod": "Insertion method:",
+          "vesselType": "Vessel / asset type:",
+          "seaState": "Sea state:",
+          "boardingTime": "Boarding time:",
+          "bridgeControl": "Bridge control:",
+          "engineRoom": "Engine room control:",
+          "containment": "Crew containment:",
+          "vesselSpeed": "Vessel speed:",
+          "crewCount": "Crew count:",
+          "contraband": "Contraband / weapons:",
+          "biometric": "Biometric ID:",
+          "scuttling": "Scuttling / sabotage:",
+          "commsBlackout": "Comms blackout:",
+          "operationNote": "Operation note",
+          "noOperationNote": "No operation note on file."
+        },
+        "bool": {
+          "yes": "Yes",
+          "no": "No"
+        },
+        "filterSummary": {
+          "boarding": "Boarding: {{value}}",
+          "vessel": "Vessel: {{value}}",
+          "threat": "Threat: {{value}}",
+          "sea": "Sea: {{value}}"
+        }
+      }
     },
     "tccc": {
       "title": "TCCC",

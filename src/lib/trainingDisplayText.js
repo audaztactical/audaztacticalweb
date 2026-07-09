@@ -31,6 +31,22 @@ import {
   getFofTacticalErrorIds,
 } from './fofLogRegistry'
 import { formatMeteoOverviewRows } from './meteoDataCapture'
+import { VBSS_EVALUATION_PHASES } from './evaluationPhaseDefinitions'
+import { VBSS_PHASE_SUB_CRITERIA } from './evaluationPhaseCriteria'
+import {
+  isUnverifiedObservedEval,
+  observedEvalTimestampMs,
+} from './observedEvalRegistry'
+import { OBSERVED_EVAL_TYPE } from './observedEvalConstants'
+import { VBSS_CUSTOM } from './vbssOptions'
+import { VBSS_TACTICAL_ERROR_OPTIONS } from './vbssTacticalErrors'
+import {
+  getVbssLogTimestampMs,
+  getVbssOperationNote,
+  getVbssSeaState,
+  getVbssInsertionMethod,
+  getVbssVesselType,
+} from './vbssLogRegistry'
 
 /** @typedef {import('../components/training/trainingCategories').TrainingCategory} TrainingCategory */
 
@@ -777,4 +793,215 @@ export function resolveObservedEvalCriterionLabel(criterion, discipline, phaseId
     return formatObservedEvalCriterionLabel(discipline, phaseId, criterion.id, criterion.label)
   }
   return criterion.label ?? ''
+}
+
+/** @param {'boardingPoint' | 'vesselType' | 'threatLevel' | 'seaState'} optionType */
+function vbssOptionKey(optionType, optionId) {
+  const id = String(optionId ?? '').trim()
+  if (id === VBSS_CUSTOM) return `sectors.vbss.options.${optionType}.custom`
+  return `sectors.vbss.options.${optionType}.${id}`
+}
+
+/**
+ * @param {'boardingPoint' | 'vesselType' | 'threatLevel' | 'seaState'} optionType
+ * @param {string} optionId
+ * @param {string} [fallback]
+ */
+export function formatVbssOptionLabel(optionType, optionId, fallback = '') {
+  const id = String(optionId ?? '').trim()
+  if (!id) return fallback || '—'
+  return i18n.t(vbssOptionKey(optionType, id), {
+    ns: 'training',
+    defaultValue: fallback || id,
+  })
+}
+
+/** @param {string} errorId */
+export function formatVbssTacticalErrorLabel(errorId) {
+  const id = String(errorId ?? '').trim()
+  if (!id) return '—'
+  const match = VBSS_TACTICAL_ERROR_OPTIONS.find((o) => o.id === id)
+  return i18n.t(`sectors.vbss.options.tacticalErrors.${id}`, {
+    ns: 'training',
+    defaultValue: match?.label ?? id,
+  })
+}
+
+/**
+ * @param {string | null | undefined} reasonKey
+ */
+export function formatVbssDrillSubmitBlockedReason(reasonKey) {
+  if (!reasonKey) return null
+  const keyMap = {
+    OTURUM_GEREKLİ: 'sessionRequired',
+    BOARDING_POINT_GEREKLİ: 'boardingPointRequired',
+    ÖZEL_GİRİŞ_NOKTASI_GEREKLİ: 'customBoardingRequired',
+    VESSEL_TYPE_GEREKLİ: 'vesselTypeRequired',
+    ÖZEL_GEMİ_TİPİ_GEREKLİ: 'customVesselRequired',
+    'SEARCH_DURATION_ZORUNLU · SN > 0': 'searchDurationRequired',
+    THREAT_LEVEL_GEREKLİ: 'threatLevelRequired',
+    DENİZ_DURUMU_GEREKLİ: 'seaStateRequired',
+    ÖZEL_DENİZ_DURUMU_GEREKLİ: 'customSeaRequired',
+  }
+  const mapped = keyMap[reasonKey] ?? reasonKey
+  return i18n.t(`sectors.vbss.drill.validation.${mapped}`, {
+    ns: 'training',
+    defaultValue: reasonKey,
+  })
+}
+
+/**
+ * @param {string | null | undefined} err
+ */
+export function formatVbssObservedEvalValidationError(err) {
+  if (!err) return null
+  const staticMap = {
+    'Gözlemci adı zorunludur.': 'observerNameRequired',
+    'Saha tarihi zorunludur.': 'observedAtRequired',
+    'Hedef operasyon süresi geçersiz.': 'targetDurationInvalid',
+  }
+  if (staticMap[err]) {
+    return i18n.t(`sectors.vbss.observedEval.validation.${staticMap[err]}`, { ns: 'training' })
+  }
+
+  const scoreMatch = err.match(/^(.+) · (.+) için geçerli skor seçin \((\d+)–(\d+)\)\.$/)
+  if (scoreMatch) {
+    const [, phaseTitle, criterionLabel, min, max] = scoreMatch
+    for (const meta of VBSS_EVALUATION_PHASES) {
+      if (meta.title === phaseTitle) {
+        const criteria = VBSS_PHASE_SUB_CRITERIA[meta.id] ?? []
+        for (const c of criteria) {
+          if (c.label === criterionLabel) {
+            return i18n.t('sectors.vbss.observedEval.validation.criterionScoreRequired', {
+              ns: 'training',
+              phase: formatObservedEvalPhaseTitle('vbss', meta.id, meta.title),
+              criterion: formatObservedEvalCriterionLabel('vbss', meta.id, c.id, c.label),
+              min,
+              max,
+            })
+          }
+        }
+      }
+    }
+  }
+  return err
+}
+
+/** @param {Record<string, unknown>} row */
+export function formatVbssDateCellDisplay(row) {
+  const ms = getVbssLogTimestampMs(row)
+  if (!ms) return '—'
+  return new Date(ms).toLocaleString(trainingLocale(), {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  })
+}
+
+/** @param {boolean} value */
+export function formatVbssBoolDisplay(value) {
+  return i18n.t(`sectors.vbss.history.bool.${value ? 'yes' : 'no'}`, { ns: 'training' })
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ * @param {'insertionMethod' | 'vesselType' | 'seaState'} field
+ */
+export function formatVbssSelectFieldDisplay(row, field) {
+  const label =
+    field === 'insertionMethod'
+      ? getVbssInsertionMethod(row)
+      : field === 'vesselType'
+        ? getVbssVesselType(row)
+        : getVbssSeaState(row)
+  if (!label || label === '—') return '—'
+  if (label.startsWith('custom:')) {
+    return label.slice(7).trim() || i18n.t('sectors.vbss.options.boardingPoint.custom', { ns: 'training' })
+  }
+  const optionType =
+    field === 'insertionMethod'
+      ? 'boardingPoint'
+      : field === 'vesselType'
+        ? 'vesselType'
+        : 'seaState'
+  const keyField =
+    field === 'insertionMethod'
+      ? 'insertionMethodKey'
+      : field === 'vesselType'
+        ? 'vesselTypeKey'
+        : 'seaStateKey'
+  const key = String(row[keyField] ?? '').trim()
+  if (key && key !== VBSS_CUSTOM) {
+    return formatVbssOptionLabel(optionType, key, label)
+  }
+  return label
+}
+
+/** @param {Record<string, unknown>} row */
+export function formatVbssOperationNoteDisplay(row) {
+  const note = getVbssOperationNote(row)
+  if (note === 'Operasyon notu kayıtlı değil.') {
+    return i18n.t('sectors.vbss.history.detail.noOperationNote', { ns: 'training' })
+  }
+  return note
+}
+
+/**
+ * @param {{ seaStateKey?: string; boardingPointKey?: string; vesselTypeKey?: string; threatLevelKey?: string }} filters
+ */
+export function formatVbssFilterSummaryDisplay(filters) {
+  const parts = []
+  if (filters.boardingPointKey && filters.boardingPointKey !== 'ALL') {
+    parts.push(
+      i18n.t('sectors.vbss.history.filterSummary.boarding', {
+        ns: 'training',
+        value: filters.boardingPointKey,
+      }),
+    )
+  }
+  if (filters.vesselTypeKey && filters.vesselTypeKey !== 'ALL') {
+    parts.push(
+      i18n.t('sectors.vbss.history.filterSummary.vessel', {
+        ns: 'training',
+        value: filters.vesselTypeKey,
+      }),
+    )
+  }
+  if (filters.threatLevelKey && filters.threatLevelKey !== 'ALL') {
+    parts.push(
+      i18n.t('sectors.vbss.history.filterSummary.threat', {
+        ns: 'training',
+        value: filters.threatLevelKey,
+      }),
+    )
+  }
+  if (filters.seaStateKey && filters.seaStateKey !== 'ALL') {
+    parts.push(
+      i18n.t('sectors.vbss.history.filterSummary.sea', {
+        ns: 'training',
+        value: filters.seaStateKey,
+      }),
+    )
+  }
+  return parts.join(' · ')
+}
+
+/** @param {Record<string, unknown>} row */
+export function formatVbssObservedEvalDateDisplay(row) {
+  const ms = observedEvalTimestampMs(row)
+  if (!ms) return '—'
+  return new Date(ms).toLocaleString(trainingLocale(), {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+/** @param {Record<string, unknown>} row */
+export function formatVbssObservedEvalTypeLabel(row) {
+  if (String(row?.type ?? '') !== OBSERVED_EVAL_TYPE) return '—'
+  return isUnverifiedObservedEval(row)
+    ? i18n.t('sectors.vbss.observedEval.registry.badgeUnverified', { ns: 'training' })
+    : i18n.t('sectors.vbss.observedEval.registry.badgeVerified', { ns: 'training' })
 }
