@@ -63,7 +63,7 @@ import {
   getEgitimPlanTimestampMs,
   isEgitimSandboxPlan,
 } from './egitimLogRegistry'
-import { invNum } from './inventoryIlws'
+import { invNum, invStr } from './inventoryIlws'
 import { timestampToMs } from './firestoreSnapshot'
 import { getRangeAssetDef } from './rangeLayoutAssets'
 
