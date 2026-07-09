@@ -3,7 +3,7 @@ import { PDF_FONT_FAMILY, preparePdfAssets, setPdfFont } from './pdfFontLoader'
 import { TCCC_MARCH_ACTION_CHIPS, TCCC_MARCH_EVALUATION_PHASES } from './tcccEvaluationPayload'
 import { TCCC_PHASE_SUB_CRITERIA } from './evaluationPhaseCriteria'
 import { TCCC_OBSERVED_PDF_FORM_VERSION } from './observedEvalConstants'
-import { pdfReportTitle, pdfT } from './pdfReportText'
+import { pdfObservationFormFilename, pdfReportTitle, pdfT } from './pdfReportText'
 import {
   formatObservedEvalCriterionLabel,
   formatObservedEvalPhaseSubtitle,
@@ -175,7 +175,7 @@ export async function generateTcccObservationFormPdf(operator = {}) {
   doc.text(pdfT('obsForm.tccc.disclaimer'), margin, y)
 
   stampPdfFooters(doc, formId)
-  doc.save(`TCCC-Gozlem-Formu-${formId}.pdf`)
+  doc.save(pdfObservationFormFilename('tccc', formId))
   return formId
 }
 

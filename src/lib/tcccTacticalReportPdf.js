@@ -19,12 +19,14 @@ import {
 import { getLogMeteoData } from './meteoDataCapture'
 import { preparePdfAssets, setPdfFont } from './pdfFontLoader'
 import {
+  pdfExtractSingleLogDateStamp,
   pdfFilterLine,
   pdfFormatPercent,
   pdfMeteoRows,
   pdfParamValueHead,
   pdfRecordLabel,
   pdfT,
+  pdfTacticalReportFilename,
 } from './pdfReportText'
 import { formatTcccOperationNoteDisplay } from './trainingDisplayText'
 import {
@@ -188,13 +190,9 @@ function drawBulkSummaryPage(doc, margin, pageW, startY, logs, filterActive, fil
 }
 
 function buildPdfFilename(logs, callsign) {
-  const safeCallsign = callsign.replace(/[^\w-]+/g, '_').slice(0, 24)
-  if (logs.length === 1) {
-    const logMs = formatTcccDateCell(logs[0]).replace(/[^\d]/g, '').slice(0, 12) || 'rapor'
-    return `AUDAZ-TCCC-${safeCallsign}-${logMs}.pdf`
-  }
-  const stamp = new Date().toISOString().slice(0, 10)
-  return `AUDAZ-TCCC-Toplu-${safeCallsign}-${logs.length}kayit-${stamp}.pdf`
+  const singleStamp =
+    logs.length === 1 ? pdfExtractSingleLogDateStamp(formatTcccDateCell(logs[0])) : ''
+  return pdfTacticalReportFilename('tccc', callsign, logs.length, singleStamp)
 }
 
 /**

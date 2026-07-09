@@ -27,6 +27,7 @@ import {
 import { getLogMeteoData } from './meteoDataCapture'
 import { preparePdfAssets, setPdfFont } from './pdfFontLoader'
 import {
+  pdfExtractSingleLogDateStamp,
   pdfFilterLine,
   pdfFormatNumber,
   pdfFormatPercent,
@@ -34,6 +35,7 @@ import {
   pdfParamValueHead,
   pdfRecordLabel,
   pdfT,
+  pdfTacticalReportFilename,
   pdfYesNo,
 } from './pdfReportText'
 import { formatFofDebriefNotesDisplay } from './trainingDisplayText'
@@ -210,13 +212,9 @@ function drawBulkSummaryPage(doc, margin, pageW, startY, logs, filterActive, fil
  * @param {string} callsign
  */
 function buildPdfFilename(logs, callsign) {
-  const safeCallsign = callsign.replace(/[^\w-]+/g, '_').slice(0, 24)
-  if (logs.length === 1) {
-    const logMs = formatFofDateCell(logs[0]).replace(/[^\d]/g, '').slice(0, 12) || 'rapor'
-    return `AUDAZ-FOF-${safeCallsign}-${logMs}.pdf`
-  }
-  const stamp = new Date().toISOString().slice(0, 10)
-  return `AUDAZ-FOF-Toplu-${safeCallsign}-${logs.length}kayit-${stamp}.pdf`
+  const singleStamp =
+    logs.length === 1 ? pdfExtractSingleLogDateStamp(formatFofDateCell(logs[0])) : ''
+  return pdfTacticalReportFilename('fof', callsign, logs.length, singleStamp)
 }
 
 /**

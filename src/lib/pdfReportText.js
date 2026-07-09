@@ -97,3 +97,81 @@ export function pdfMeteoRows(meteo) {
     [pdfT('common.meteo.location'), meteo.locationLabel || '—'],
   ]
 }
+
+/** @type {Record<string, string>} */
+const PDF_FILENAME_ASCII_MAP = {
+  ı: 'i',
+  İ: 'I',
+  ş: 's',
+  Ş: 'S',
+  ğ: 'g',
+  Ğ: 'G',
+  ü: 'u',
+  Ü: 'U',
+  ö: 'o',
+  Ö: 'O',
+  ç: 'c',
+  Ç: 'C',
+}
+
+/**
+ * ASCII-safe filename segment (no Turkish chars, spaces, or unsafe symbols).
+ * @param {unknown} value
+ */
+export function pdfFilenameSegment(value) {
+  const raw = String(value ?? '')
+  let normalized = ''
+  for (const ch of raw) {
+    normalized += PDF_FILENAME_ASCII_MAP[ch] ?? ch
+  }
+  return normalized
+    .replace(/[^\w-]+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '')
+}
+
+/** @param {unknown} callsign */
+export function pdfSafeCallsign(callsign) {
+  return pdfFilenameSegment(callsign).slice(0, 24) || pdfFilenameSegment(pdfT('common.defaultOperator'))
+}
+
+/**
+ * @param {string} formattedDateCell
+ */
+export function pdfExtractSingleLogDateStamp(formattedDateCell) {
+  const digits = String(formattedDateCell ?? '').replace(/[^\d]/g, '').slice(0, 12)
+  return digits || pdfFilenameSegment(pdfT('fileNaming.reportFallback'))
+}
+
+/**
+ * @param {'atis' | 'cqb' | 'fof' | 'vbss' | 'tccc'} sector
+ * @param {string} callsign
+ * @param {number} logCount
+ * @param {string} [singleLogDateStamp]
+ */
+export function pdfTacticalReportFilename(sector, callsign, logCount, singleLogDateStamp = '') {
+  const brand = pdfFilenameSegment(pdfT('fileNaming.brand'))
+  const sectorSlug = pdfFilenameSegment(pdfT(`fileNaming.sectors.${sector}`))
+  const safeCallsign = pdfSafeCallsign(callsign)
+
+  if (logCount === 1) {
+    const stamp = pdfFilenameSegment(singleLogDateStamp || pdfT('fileNaming.reportFallback'))
+    return `${brand}-${sectorSlug}-${safeCallsign}-${stamp}.pdf`
+  }
+
+  const dateStamp = new Date().toISOString().slice(0, 10)
+  const bulk = pdfFilenameSegment(pdfT('fileNaming.bulk'))
+  const records = pdfFilenameSegment(pdfT('fileNaming.records'))
+  return `${brand}-${sectorSlug}-${bulk}-${safeCallsign}-${logCount}${records}-${dateStamp}.pdf`
+}
+
+/**
+ * @param {'vbss' | 'tccc'} sector
+ * @param {string} formId
+ */
+export function pdfObservationFormFilename(sector, formId) {
+  const prefix = pdfFilenameSegment(pdfT(`fileNaming.obsForm.${sector}`))
+  const id = pdfFilenameSegment(formId)
+  return `${prefix}-${id}.pdf`
+}
+

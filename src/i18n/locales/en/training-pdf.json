@@ -241,5 +241,22 @@
       "casualtyStatus": "Casualty status: ☐ STABLE    ☐ EXPECTED / K.I.A",
       "disclaimer": "This form contains unverified observation data · Instructor approval is handled separately."
     }
+  },
+  "fileNaming": {
+    "brand": "AUDAZ",
+    "bulk": "Bulk",
+    "records": "records",
+    "reportFallback": "report",
+    "sectors": {
+      "atis": "Shooting",
+      "cqb": "CQB",
+      "fof": "FOF",
+      "vbss": "VBSS",
+      "tccc": "TCCC"
+    },
+    "obsForm": {
+      "vbss": "VBSS-Observation-Form",
+      "tccc": "TCCC-Observation-Form"
+    }
   }
 }

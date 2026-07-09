@@ -3,7 +3,7 @@ import { PDF_FONT_FAMILY, preparePdfAssets, setPdfFont } from './pdfFontLoader'
 import { VBSS_EVALUATION_PHASES } from './vbssEvaluationPayload'
 import { VBSS_PHASE_SUB_CRITERIA } from './evaluationPhaseCriteria'
 import { VBSS_OBSERVED_PDF_FORM_VERSION } from './observedEvalConstants'
-import { pdfReportTitle, pdfT } from './pdfReportText'
+import { pdfObservationFormFilename, pdfReportTitle, pdfT } from './pdfReportText'
 import {
   formatObservedEvalCriterionLabel,
   formatObservedEvalPhaseSubtitle,
@@ -179,7 +179,7 @@ export async function generateVbssObservationFormPdf(operator = {}) {
   doc.text(pdfT('obsForm.vbss.disclaimer'), margin, phasesEnd)
 
   stampPdfFooters(doc, formId)
-  doc.save(`VBSS-Gozlem-Formu-${formId}.pdf`)
+  doc.save(pdfObservationFormFilename('vbss', formId))
   return formId
 }
 

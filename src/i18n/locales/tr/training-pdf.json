@@ -241,5 +241,22 @@
       "casualtyStatus": "Yaralı durumu: ☐ STABLE    ☐ EKS / K.İ.A",
       "disclaimer": "Bu form doğrulanmamış gözlem kaydı içindir · Eğitmen onayı ayrı kanaldan yapılır."
     }
+  },
+  "fileNaming": {
+    "brand": "AUDAZ",
+    "bulk": "Toplu",
+    "records": "kayit",
+    "reportFallback": "rapor",
+    "sectors": {
+      "atis": "Atis",
+      "cqb": "CQB",
+      "fof": "FOF",
+      "vbss": "VBSS",
+      "tccc": "TCCC"
+    },
+    "obsForm": {
+      "vbss": "VBSS-Gozlem-Formu",
+      "tccc": "TCCC-Gozlem-Formu"
+    }
   }
 }

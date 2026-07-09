@@ -18,12 +18,14 @@ import {
 import { getLogMeteoData } from './meteoDataCapture'
 import { preparePdfAssets, setPdfFont } from './pdfFontLoader'
 import {
+  pdfExtractSingleLogDateStamp,
   pdfFilterLine,
   pdfFormatPercent,
   pdfMeteoRows,
   pdfParamValueHead,
   pdfRecordLabel,
   pdfT,
+  pdfTacticalReportFilename,
 } from './pdfReportText'
 import { formatVbssOperationNoteDisplay } from './trainingDisplayText'
 import {
@@ -156,13 +158,9 @@ function drawBulkSummaryPage(doc, margin, pageW, startY, logs, filterActive, fil
 }
 
 function buildPdfFilename(logs, callsign) {
-  const safeCallsign = callsign.replace(/[^\w-]+/g, '_').slice(0, 24)
-  if (logs.length === 1) {
-    const logMs = formatVbssDateCell(logs[0]).replace(/[^\d]/g, '').slice(0, 12) || 'rapor'
-    return `AUDAZ-VBSS-${safeCallsign}-${logMs}.pdf`
-  }
-  const stamp = new Date().toISOString().slice(0, 10)
-  return `AUDAZ-VBSS-Toplu-${safeCallsign}-${logs.length}kayit-${stamp}.pdf`
+  const singleStamp =
+    logs.length === 1 ? pdfExtractSingleLogDateStamp(formatVbssDateCell(logs[0])) : ''
+  return pdfTacticalReportFilename('vbss', callsign, logs.length, singleStamp)
 }
 
 /**
