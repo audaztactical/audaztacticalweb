@@ -18,6 +18,7 @@ import {
   isUnverifiedObservedEval,
   getObservedEvalActivityTitle,
 } from './observedEvalRegistry'
+import { progressT, labelProgressSubTopic } from './progressDisplayText.js'
 
 const CQB_CRITICAL_ERROR_IDS = new Set(['fatal_funnel_hang', 'muzzle_flagging'])
 
@@ -518,175 +519,191 @@ export function getLogActivityTitle(row) {
   const tag = getLogDisciplineTag(row)
   const drill = invStr(row.drillName ?? row.shootType).trim()
   if (drill) return drill
-  if (tag === 'TCCC') return getTcccPhase(row) || 'TCCC DRILL'
-  if (tag === 'CQB') return invStr(row.roomTopology).trim() || 'CQB DRILL'
+  if (tag === 'TCCC') return getTcccPhase(row) || progressT('activityTitles.drillFallbacks.tccc')
+  if (tag === 'CQB') return invStr(row.roomTopology).trim() || progressT('activityTitles.drillFallbacks.cqb')
   if (tag === 'ATIS') return getAtisDrillName(row)
-  if (tag === 'FOF') return getFofScenarioType(row) || 'FOF DRILL'
+  if (tag === 'FOF') return getFofScenarioType(row) || progressT('activityTitles.drillFallbacks.fof')
   if (tag === 'VBSS') {
     const vessel = getVbssVesselType(row)
     const insertion = getVbssInsertionMethod(row)
-    return [vessel, insertion].filter((p) => p && p !== '—').join(' · ') || 'VBSS DRILL'
+    return (
+      [vessel, insertion].filter((p) => p && p !== '—').join(' · ') ||
+      progressT('activityTitles.drillFallbacks.vbss')
+    )
   }
-  return `${tag} OTURUMU`
+  return progressT('activityTitles.sessionFallback', { tag })
 }
 
-/** @type {{ id: DisciplineFilter; label: string }[]} */
+/** @returns {{ id: DisciplineFilter; label: string }[]} */
+export function getDisciplineOptions() {
+  return /** @type {DisciplineFilter[]} */ (['all', 'atis', 'cqb', 'tccc', 'fof', 'vbss']).map((id) => ({
+    id,
+    label: progressT(`filters.disciplines.${id}`),
+  }))
+}
+
+/** @type {{ id: DisciplineFilter; label: string }[]} — labels resolve via getters for live i18n */
 export const DISCIPLINE_OPTIONS = [
-  { id: 'all', label: 'TÜM DİSİPLİNLER' },
-  { id: 'atis', label: 'ATIŞ BECERİSİ (ATIS)' },
-  { id: 'cqb', label: 'YAKIN MESAFE MUHAREBESİ (CQB)' },
-  { id: 'tccc', label: 'TAKTİK SAĞLIK (TCCC)' },
-  { id: 'fof', label: 'KUVVET KARŞILAŞMASI (FOF)' },
-  { id: 'vbss', label: 'VBSS / MARITIME (VBSS)' },
+  { id: 'all', get label() { return progressT('filters.disciplines.all') } },
+  { id: 'atis', get label() { return progressT('filters.disciplines.atis') } },
+  { id: 'cqb', get label() { return progressT('filters.disciplines.cqb') } },
+  { id: 'tccc', get label() { return progressT('filters.disciplines.tccc') } },
+  { id: 'fof', get label() { return progressT('filters.disciplines.fof') } },
+  { id: 'vbss', get label() { return progressT('filters.disciplines.vbss') } },
 ]
 
 /** @typedef {{ id: string; label: string; match: (row: Record<string, unknown>) => boolean }} SubTopicOption */
 
-/** @type {Record<DisciplineFilter, SubTopicOption[]>} */
-const FALLBACK_SUBTOPIC_OPTIONS = {
-  all: [{ id: 'all', label: 'TÜM GÖREVLER', match: () => true }],
-  atis: [
-    { id: 'all', label: 'TÜM ATIŞ KONULARI', match: () => true },
-    {
-      id: 'basic_pistol',
-      label: 'TEMEL TABANCA',
-      match: (row) => {
-        const name = getAtisDrillName(row).toLowerCase()
-        return (
-          name.includes('draw') ||
-          name.includes('first shot') ||
-          name.includes('ready') ||
-          name.includes('tabanca')
-        )
+/**
+ * Fallback subtopic templates — labels via i18n getters (match fns unchanged).
+ * @returns {Record<DisciplineFilter, SubTopicOption[]>}
+ */
+function getFallbackSubTopicOptions() {
+  /** @param {DisciplineFilter} disc @param {string} id */
+  const L = (disc, id) => labelProgressSubTopic(disc, id)
+
+  return {
+    all: [{ id: 'all', label: L('all', 'all'), match: () => true }],
+    atis: [
+      { id: 'all', label: L('atis', 'all'), match: () => true },
+      {
+        id: 'basic_pistol',
+        label: L('atis', 'basic_pistol'),
+        match: (row) => {
+          const name = getAtisDrillName(row).toLowerCase()
+          return (
+            name.includes('draw') ||
+            name.includes('first shot') ||
+            name.includes('ready') ||
+            name.includes('tabanca')
+          )
+        },
       },
-    },
-    {
-      id: 'stress_shooting',
-      label: 'STRES ATIŞI',
-      match: (row) => {
-        const name = getAtisDrillName(row).toLowerCase()
-        const level = invNum(row.drillLevel)
-        return level >= 3 || name.includes('mozambique') || name.includes('multi-target')
+      {
+        id: 'stress_shooting',
+        label: L('atis', 'stress_shooting'),
+        match: (row) => {
+          const name = getAtisDrillName(row).toLowerCase()
+          const level = invNum(row.drillLevel)
+          return level >= 3 || name.includes('mozambique') || name.includes('multi-target')
+        },
       },
-    },
-    {
-      id: 'double_tap',
-      label: 'DOUBLE TAP',
-      match: (row) => getAtisDrillName(row).toLowerCase().includes('double'),
-    },
-  ],
-  cqb: [
-    { id: 'all', label: 'TÜM CQB GÖREVLERİ', match: () => true },
-    {
-      id: 'room_clear',
-      label: 'ODA TEMİZLEME',
-      match: (row) => invStr(row.roomTopology).length > 0,
-    },
-    {
-      id: 'breach_entry',
-      label: 'KIRMA & GİRİŞ',
-      match: (row) =>
-        invStr(row.breachingType).length > 0 || invStr(row.entryMethod).length > 0,
-    },
-  ],
-  tccc: [
-    { id: 'all', label: 'TÜM TCCC GÖREVLERİ', match: () => true },
-    {
-      id: 'ifak_speed',
-      label: 'IFAK HIZI',
-      match: (row) => {
-        const note = invStr(row.operationNote).toLowerCase()
-        return note.includes('ifak') || invStr(row.injuryToTqTime).length > 0
+      {
+        id: 'double_tap',
+        label: L('atis', 'double_tap'),
+        match: (row) => getAtisDrillName(row).toLowerCase().includes('double'),
       },
-    },
-    {
-      id: 'care_under_fire',
-      label: 'ATEŞ ALTINDA BAKIM (CUF)',
-      match: (row) => {
-        const phase = getTcccPhase(row).toLowerCase()
-        return phase.includes('cuf') || phase.includes('ateş altında')
+    ],
+    cqb: [
+      { id: 'all', label: L('cqb', 'all'), match: () => true },
+      {
+        id: 'room_clear',
+        label: L('cqb', 'room_clear'),
+        match: (row) => invStr(row.roomTopology).length > 0,
       },
-    },
-    {
-      id: 'medevac_9line',
-      label: '9-LINE MEDEVAC',
-      match: (row) => {
-        const phase = getTcccPhase(row).toLowerCase()
-        const note = invStr(row.operationNote).toLowerCase()
-        return phase.includes('tevac') || phase.includes('tahliye') || note.includes('9-line') || note.includes('medevac')
+      {
+        id: 'breach_entry',
+        label: L('cqb', 'breach_entry'),
+        match: (row) =>
+          invStr(row.breachingType).length > 0 || invStr(row.entryMethod).length > 0,
       },
-    },
-  ],
-  fof: [
-    { id: 'all', label: 'TÜM FOF GÖREVLERİ', match: () => true },
-    {
-      id: 'rehine_kurtarma_simulasyon',
-      label: 'REHİNE KURTARMA - SİMÜLASYON',
-      match: (row) =>
-        isFofLog(row) &&
-        (invStr(row.scenarioTypeKey) === 'hostage_rescue' ||
-          getFofScenarioType(row).toLowerCase().includes('rehine')),
-    },
-    {
-      id: 'aktif_atici_active_shooter',
-      label: 'AKTİF ATICI (ACTIVE SHOOTER) MÜDAHALE',
-      match: (row) =>
-        isFofLog(row) &&
-        (invStr(row.scenarioTypeKey) === 'active_shooter' ||
-          getFofScenarioType(row).toLowerCase().includes('nişancı') ||
-          getFofScenarioType(row).toLowerCase().includes('shooter')),
-    },
-    {
-      id: 'ekip_bazli_karsilasma_fof',
-      label: 'EKİP BAZLI KARŞILAŞMA (FORCE ON FORCE)',
-      match: (row) => isFofLog(row),
-    },
-  ],
-  vbss: [
-    { id: 'all', label: 'TÜM VBSS GÖREVLERİ', match: () => true },
-    {
-      id: 'kargo_konteyner_bot',
-      label: 'KARGO / KONTEYNER GEMİSİ SIZMA (BOT)',
-      match: (row) =>
-        isVbssLog(row) &&
-        (invStr(row.vesselTypeKey) === 'cargo_container' ||
-          getVbssVesselType(row).toLowerCase().includes('kargo') ||
-          getVbssVesselType(row).toLowerCase().includes('konteyner')),
-    },
-    {
-      id: 'merdiven_kanca_vbss',
-      label: 'MERDİVEN / KANCA İLE TIRMANMA (VBSS)',
-      match: (row) =>
-        isVbssLog(row) &&
-        (invStr(row.insertionMethodKey) === 'hook_and_ladder_bot' ||
-          getVbssInsertionMethod(row).toLowerCase().includes('kanca') ||
-          getVbssInsertionMethod(row).toLowerCase().includes('merdiven')),
-    },
-    {
-      id: 'dar_koridor_guverte',
-      label: 'DAR KORİDOR VE GÜVERTE TEMİZLİĞİ',
-      match: (row) => {
-        if (!isVbssLog(row)) return false
-        const blob = [
-          invStr(row.drillName),
-          invStr(row.shootType),
-          invStr(row.operationNote),
-        ]
-          .join(' ')
-          .toLowerCase()
-        return blob.includes('koridor') || blob.includes('güverte') || blob.includes('guverte')
+    ],
+    tccc: [
+      { id: 'all', label: L('tccc', 'all'), match: () => true },
+      {
+        id: 'ifak_speed',
+        label: L('tccc', 'ifak_speed'),
+        match: (row) => {
+          const note = invStr(row.operationNote).toLowerCase()
+          return note.includes('ifak') || invStr(row.injuryToTqTime).length > 0
+        },
       },
-    },
-  ],
+      {
+        id: 'care_under_fire',
+        label: L('tccc', 'care_under_fire'),
+        match: (row) => {
+          const phase = getTcccPhase(row).toLowerCase()
+          return phase.includes('cuf') || phase.includes('ateş altında')
+        },
+      },
+      {
+        id: 'medevac_9line',
+        label: L('tccc', 'medevac_9line'),
+        match: (row) => {
+          const phase = getTcccPhase(row).toLowerCase()
+          const note = invStr(row.operationNote).toLowerCase()
+          return (
+            phase.includes('tevac') ||
+            phase.includes('tahliye') ||
+            note.includes('9-line') ||
+            note.includes('medevac')
+          )
+        },
+      },
+    ],
+    fof: [
+      { id: 'all', label: L('fof', 'all'), match: () => true },
+      {
+        id: 'rehine_kurtarma_simulasyon',
+        label: L('fof', 'rehine_kurtarma_simulasyon'),
+        match: (row) =>
+          isFofLog(row) &&
+          (invStr(row.scenarioTypeKey) === 'hostage_rescue' ||
+            getFofScenarioType(row).toLowerCase().includes('rehine')),
+      },
+      {
+        id: 'aktif_atici_active_shooter',
+        label: L('fof', 'aktif_atici_active_shooter'),
+        match: (row) =>
+          isFofLog(row) &&
+          (invStr(row.scenarioTypeKey) === 'active_shooter' ||
+            getFofScenarioType(row).toLowerCase().includes('nişancı') ||
+            getFofScenarioType(row).toLowerCase().includes('shooter')),
+      },
+      {
+        id: 'ekip_bazli_karsilasma_fof',
+        label: L('fof', 'ekip_bazli_karsilasma_fof'),
+        match: (row) => isFofLog(row),
+      },
+    ],
+    vbss: [
+      { id: 'all', label: L('vbss', 'all'), match: () => true },
+      {
+        id: 'kargo_konteyner_bot',
+        label: L('vbss', 'kargo_konteyner_bot'),
+        match: (row) =>
+          isVbssLog(row) &&
+          (invStr(row.vesselTypeKey) === 'cargo_container' ||
+            getVbssVesselType(row).toLowerCase().includes('kargo') ||
+            getVbssVesselType(row).toLowerCase().includes('konteyner')),
+      },
+      {
+        id: 'merdiven_kanca_vbss',
+        label: L('vbss', 'merdiven_kanca_vbss'),
+        match: (row) =>
+          isVbssLog(row) &&
+          (invStr(row.insertionMethodKey) === 'hook_and_ladder_bot' ||
+            getVbssInsertionMethod(row).toLowerCase().includes('kanca') ||
+            getVbssInsertionMethod(row).toLowerCase().includes('merdiven')),
+      },
+      {
+        id: 'dar_koridor_guverte',
+        label: L('vbss', 'dar_koridor_guverte'),
+        match: (row) => {
+          if (!isVbssLog(row)) return false
+          const blob = [invStr(row.drillName), invStr(row.shootType), invStr(row.operationNote)]
+            .join(' ')
+            .toLowerCase()
+          return blob.includes('koridor') || blob.includes('güverte') || blob.includes('guverte')
+        },
+      },
+    ],
+  }
 }
 
-const DISCIPLINE_ALL_LABELS = {
-  all: 'TÜM GÖREVLER',
-  atis: 'TÜM ATIŞ KONULARI',
-  cqb: 'TÜM CQB GÖREVLERİ',
-  tccc: 'TÜM TCCC GÖREVLERİ',
-  fof: 'TÜM FOF GÖREVLERİ',
-  vbss: 'TÜM VBSS GÖREVLERİ',
+/** @param {DisciplineFilter} discipline */
+function disciplineAllLabel(discipline) {
+  return labelProgressSubTopic(discipline, 'all')
 }
 
 /** FOF/VBSS: Firestore + varsayılan şablon birlikte listelenir */
@@ -748,7 +765,8 @@ export function getLogTopicId(row) {
  * @returns {SubTopicOption[]}
  */
 export function buildSubTopicOptions(logs, discipline) {
-  const allLabel = DISCIPLINE_ALL_LABELS[discipline] ?? DISCIPLINE_ALL_LABELS.all
+  const allLabel = disciplineAllLabel(discipline)
+  const fallbackMap = getFallbackSubTopicOptions()
 
   if (discipline === 'all') {
     return [{ id: 'all', label: allLabel, match: () => true }]
@@ -774,15 +792,15 @@ export function buildSubTopicOptions(logs, discipline) {
     a[1].localeCompare(b[1], 'tr', { sensitivity: 'base' })
   )
 
-  for (const [id, label] of sorted) {
+  for (const [id, rawLabel] of sorted) {
     options.push({
       id,
-      label,
+      label: labelProgressSubTopic(discipline, id, rawLabel),
       match: (row) => matchesDiscipline(row, discipline) && getLogTopicId(row) === id,
     })
   }
 
-  const fallback = FALLBACK_SUBTOPIC_OPTIONS[discipline] ?? []
+  const fallback = fallbackMap[discipline] ?? []
   const mergeFallback = sorted.length === 0 || MERGE_FALLBACK_DISCIPLINES.has(discipline)
   if (mergeFallback) {
     for (const fb of fallback) {

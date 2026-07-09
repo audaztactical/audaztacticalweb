@@ -19,6 +19,7 @@ import {
   buildTcccReactionChartPoints,
   resolveTcccReactionChartEfficiency,
 } from './tcccSimHudAnalytics'
+import { progressLocale, progressT } from './progressDisplayText.js'
 
 /** @param {Record<string, unknown>} row */
 export function getLogCompletionTimeSec(row) {
@@ -157,7 +158,7 @@ export function buildChronicErrorRadar(logs) {
 
   for (const row of logs) {
     if (row.blueOnBlue) {
-      bump('blue_on_blue', 'MAVİ-MAVİ (FOF)', ERROR_CODES.blue_on_blue)
+      bump('blue_on_blue', progressT('radarErrors.blueOnBlueFof'), ERROR_CODES.blue_on_blue)
     }
     const errors = Array.isArray(row.tacticalErrors) ? row.tacticalErrors : []
     for (const raw of errors) {
@@ -221,7 +222,7 @@ export function buildStressPerformanceWave(logs) {
       id: resolveLogFocusId(row),
       ms,
       value: Math.min(100, Math.max(0, value)),
-      label: d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
+      label: d.toLocaleTimeString(progressLocale(), { hour: '2-digit', minute: '2-digit' }),
     })
   }
 

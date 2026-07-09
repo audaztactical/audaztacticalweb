@@ -10,12 +10,13 @@ import {
   getLogDisciplineTag,
 } from './progressAnalytics'
 import { getLogCompletionTimeSec, resolveLogFocusId } from './progressHudAnalytics'
+import { progressT } from './progressDisplayText'
 import { isTcccSimulationLog } from './simulationHistoryHelpers'
 import { buildTcccHudTooltipModel, isTcccSimulationFailed } from './tcccSimHudAnalytics'
 
 /** @param {Record<string, unknown>[]} logs */
 export function buildLogsById(logs) {
-  /** @type {Map<string, Record<string, unknown>>} */
+  /** @type {Map<string, Record<string, unknown>} */
   const map = new Map()
   for (const row of logs) {
     map.set(resolveLogFocusId(row), row)
@@ -57,7 +58,7 @@ function hasCriticalViolation(row) {
 /** @param {Record<string, unknown>} row */
 function formatTacticalErrorsList(row) {
   const labels = []
-  if (row.blueOnBlue) labels.push('MAVİ-MAVİ')
+  if (row.blueOnBlue) labels.push(progressT('tooltips.blueOnBlue'))
   const errors = Array.isArray(row.tacticalErrors) ? row.tacticalErrors : []
   for (const raw of errors) {
     const id = invStr(raw).trim()
@@ -68,19 +69,20 @@ function formatTacticalErrorsList(row) {
     ? row.tacticalErrorsLabels.map((l) => invStr(l).trim()).filter(Boolean)
     : []
   const merged = [...new Set([...labels, ...fromLabels])]
-  return merged.length ? merged.join(' · ') : 'TEMİZ HAT'
+  return merged.length ? merged.join(' · ') : progressT('tooltips.cleanLane')
 }
 
 /** @param {Record<string, unknown> | null | undefined} row */
 export function buildTacticalTooltipLines(row) {
   if (!row) {
-    return ['VERİ BULUNAMADI']
+    return [progressT('tooltips.dataNotFound')]
   }
 
   const tag = getLogDisciplineTag(row)
   const drill = getLogActivityTitle(row) || getAtisDrillName(row) || '—'
   const critical = hasCriticalViolation(row)
   const penalty = estimateLogOrsPenalty(row)
+  const criticalStatus = critical ? progressT('tooltips.criticalYes') : progressT('tooltips.criticalClean')
 
   if (tag === 'ATIS' && isAtisShootingLog(row)) {
     const td = row.timingData && typeof row.timingData === 'object' ? row.timingData : {}
@@ -89,25 +91,28 @@ export function buildTacticalTooltipLines(row) {
     const split = invNum(o.split)
     const { totalRoundsFired, totalHits } = getAtisRoundsAndHits(row)
     return [
-      `• HEDEF ID / DRILL: ${drill}`,
-      `• REAKSİYON / İLK ATIŞ: ${formatSec(first)} sn`,
-      `• SPLIT (ATIŞ ARASI) SÜRE: ${formatSec(split)} sn`,
-      `• ATILAN / VURULAN: ${totalRoundsFired || '—'} / ${totalHits || '—'}`,
-      `• KRİTİK İHLAL: ${critical ? '⚠️ VAR' : '✅ TEMİZ'}`,
+      progressT('tooltips.atis.drill', { drill }),
+      progressT('tooltips.atis.firstShot', { sec: formatSec(first) }),
+      progressT('tooltips.atis.split', { sec: formatSec(split) }),
+      progressT('tooltips.atis.roundsHits', {
+        rounds: totalRoundsFired || '—',
+        hits: totalHits || '—',
+      }),
+      progressT('tooltips.atis.critical', { status: criticalStatus }),
     ]
   }
 
   if (isTcccSimulationLog(row)) {
     const model = buildTcccHudTooltipModel(row)
     const lines = [
-      `• OPERASYON DURUMU: ${model.statusLabel}`,
-      `• TOPLAM SÜRE: ${model.elapsedTime} SN`,
-      `• GECİKME SÜRESİ: ${model.overtimeLabel}`,
-      `• TELSİZ MODU: ${model.simulationMode}`,
-      `• REAKSİYON VERİMLİLİĞİ: %${model.efficiency}`,
+      progressT('hud.tccc.opStatus', { status: model.statusLabel }),
+      progressT('hud.tccc.totalTime', { time: model.elapsedTime }),
+      progressT('hud.tccc.delayTime', { time: model.overtimeLabel }),
+      progressT('hud.tccc.radioMode', { mode: model.simulationMode }),
+      progressT('hud.tccc.efficiency', { value: model.efficiency }),
     ]
     if (model.failed && model.rejectionReasons.length > 0) {
-      lines.push('• İHLAL / RED GEREKÇELERİ:')
+      lines.push(progressT('hud.tccc.rejectionHeadingShort'))
       for (const reason of model.rejectionReasons) {
         lines.push(`  ${reason.startsWith('•') ? reason : `• ${reason}`}`)
       }
@@ -119,21 +124,21 @@ export function buildTacticalTooltipLines(row) {
     const sec = getLogCompletionTimeSec(row)
     const opLabel =
       tag === 'FOF' || isFofLog(row)
-        ? 'SENARYO SÜRESİ'
+        ? progressT('tooltips.ops.scenarioDuration')
         : tag === 'VBSS' || isVbssLog(row)
-          ? 'BOARDING SÜRESİ'
-          : 'OPERASYON SÜRESİ'
+          ? progressT('tooltips.ops.boardingDuration')
+          : progressT('tooltips.ops.operationDuration')
     return [
-      `• ${opLabel}: ${formatSec(sec)} sn`,
-      `• SEKTÖR BOŞLUĞU / İHLAL: ${formatTacticalErrorsList(row)}`,
-      `• CEZA ETKİSİ: -${penalty} ORS`,
+      progressT('tooltips.ops.durationLine', { label: opLabel, sec: formatSec(sec) }),
+      progressT('tooltips.ops.sectorGap', { errors: formatTacticalErrorsList(row) }),
+      progressT('tooltips.ops.penalty', { penalty }),
     ]
   }
 
   return [
-    `• OTURUM: ${drill}`,
-    `• DİSİPLİN: ${tag}`,
-    `• KRİTİK İHLAL: ${critical ? '⚠️ VAR' : '✅ TEMİZ'}`,
-    `• CEZA ETKİSİ: -${penalty} ORS`,
+    progressT('tooltips.generic.session', { drill }),
+    progressT('tooltips.generic.discipline', { tag }),
+    progressT('tooltips.generic.critical', { status: criticalStatus }),
+    progressT('tooltips.generic.penalty', { penalty }),
   ]
 }

@@ -6,6 +6,7 @@ import {
   VBSS_OBSERVED_EVAL_KIND,
   VERIFICATION_STATUS_UNVERIFIED,
 } from './observedEvalConstants'
+import { progressLocale, progressT } from './progressDisplayText.js'
 
 /**
  * @param {Record<string, unknown>} row
@@ -78,14 +79,14 @@ export function getObservedEvalSuccessPercent(row) {
  */
 export function getObservedEvalActivityTitle(row) {
   if (isVbssObservedEval(row)) {
-    const observer = invStr(row?.observerName).trim() || 'Gözlemci'
-    return `VBSS Gözlem · ${observer}`
+    const observer = invStr(row?.observerName).trim() || progressT('activityTitles.observerFallback')
+    return progressT('activityTitles.observedVbss', { observer })
   }
   if (isTcccObservedEval(row)) {
-    const observer = invStr(row?.observerName).trim() || 'Gözlemci'
-    return `TCCC MARCH Gözlem · ${observer}`
+    const observer = invStr(row?.observerName).trim() || progressT('activityTitles.observerFallback')
+    return progressT('activityTitles.observedTccc', { observer })
   }
-  return 'Gözlem kaydı'
+  return progressT('activityTitles.observedDefault')
 }
 
 /**
@@ -109,7 +110,7 @@ export function sortObservedEvalLogsDesc(rows) {
 export function formatObservedEvalDate(row) {
   const ms = observedEvalTimestampMs(row)
   if (!ms) return '—'
-  return new Date(ms).toLocaleString('tr-TR', {
+  return new Date(ms).toLocaleString(progressLocale(), {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
@@ -123,5 +124,7 @@ export function formatObservedEvalDate(row) {
  */
 export function observedEvalTypeLabel(row) {
   if (String(row?.type ?? '') !== OBSERVED_EVAL_TYPE) return '—'
-  return isUnverifiedObservedEval(row) ? 'Gözlem · Doğrulanmadı' : 'Gözlem · Onaylı'
+  return isUnverifiedObservedEval(row)
+    ? progressT('activityTitles.unverified')
+    : progressT('activityTitles.verified')
 }

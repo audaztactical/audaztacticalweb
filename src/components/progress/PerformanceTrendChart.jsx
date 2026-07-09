@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Bar,
   BarChart,
@@ -61,6 +62,7 @@ function getTooltipContentStyle({ coordinate, viewBox }) {
  * }} props
  */
 export default function PerformanceTrendChart({ series, barsAnimate, variant = 'compact' }) {
+  const { t } = useTranslation('progress')
   const expanded = variant === 'expanded'
 
   const chartData = useMemo(
@@ -94,7 +96,7 @@ export default function PerformanceTrendChart({ series, barsAnimate, variant = '
   if (series.length === 0) {
     return (
       <p className="py-8 text-center font-mono text-[10px] uppercase tracking-wider text-app-text/45">
-        TREND VERİSİ YOK
+        {t('trend.empty')}
       </p>
     )
   }

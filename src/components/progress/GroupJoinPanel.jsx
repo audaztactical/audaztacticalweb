@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Loader2, Users } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { joinGroupByPassword, normalizeGroupPassword } from '../../lib/firestoreGroups'
@@ -11,6 +12,7 @@ const inputClass =
  * @param {{ onJoined?: () => void; bare?: boolean }} props
  */
 export default function GroupJoinPanel({ onJoined, bare = false }) {
+  const { t } = useTranslation('progress')
   const { user } = useAuth()
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
@@ -23,13 +25,13 @@ export default function GroupJoinPanel({ onJoined, bare = false }) {
     setSuccess(false)
 
     if (!user?.uid) {
-      setMessage('Oturum gerekli')
+      setMessage(t('groupJoin.errors.authRequired'))
       return
     }
 
     const code = normalizeGroupPassword(password)
     if (code.length < 4) {
-      setMessage('Grup şifresi en az 4 karakter olmalı')
+      setMessage(t('groupJoin.errors.passwordTooShort'))
       return
     }
 
@@ -38,20 +40,20 @@ export default function GroupJoinPanel({ onJoined, bare = false }) {
       const result = await joinGroupByPassword(user.uid, code)
       if (result.alreadyMember) {
         setSuccess(true)
-        setMessage(`• [BAŞARILI]: Zaten "${result.group.groupName}" grubundasınız.`)
+        setMessage(t('groupJoin.success.alreadyMember', { name: result.group.groupName }))
       } else {
         setSuccess(true)
-        setMessage('• [BAŞARILI]: Gruba başarıyla dahil oldunuz!')
+        setMessage(t('groupJoin.success.joined'))
       }
       setPassword('')
       onJoined?.()
     } catch (err) {
       emitFirebaseError(err)
-      const code = err?.code ?? ''
-      if (code === 'group-not-found') {
-        setMessage('Grup şifresi geçersiz — eğitmeninizden kodu doğrulayın.')
+      const errCode = err?.code ?? ''
+      if (errCode === 'group-not-found') {
+        setMessage(t('groupJoin.errors.invalidPassword'))
       } else {
-        setMessage(err instanceof Error ? err.message : 'Gruba katılım başarısız')
+        setMessage(err instanceof Error ? err.message : t('groupJoin.errors.joinFailed'))
       }
     } finally {
       setBusy(false)
@@ -61,12 +63,14 @@ export default function GroupJoinPanel({ onJoined, bare = false }) {
   const form = (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:flex-row sm:items-end">
       <label className="min-w-0 flex-1 space-y-1.5">
-        <span className="font-mono text-[9px] font-bold uppercase text-app-text/55">Grup Şifresi</span>
+        <span className="font-mono text-[9px] font-bold uppercase text-app-text/55">
+          {t('groupJoin.passwordLabel')}
+        </span>
         <input
           type="text"
           value={password}
           onChange={(e) => setPassword(normalizeGroupPassword(e.target.value))}
-          placeholder="ÖRN: ALPHA99"
+          placeholder={t('groupJoin.placeholder')}
           className={inputClass}
           autoComplete="off"
           required
@@ -78,7 +82,7 @@ export default function GroupJoinPanel({ onJoined, bare = false }) {
         className="inline-flex h-[42px] shrink-0 items-center justify-center gap-2 rounded border border-emerald-600/45 bg-emerald-950/40 px-5 font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-300 transition hover:border-emerald-500/70 disabled:opacity-50"
       >
         {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
-        KATIL
+        {t('groupJoin.submit')}
       </button>
     </form>
   )
@@ -98,7 +102,7 @@ export default function GroupJoinPanel({ onJoined, bare = false }) {
     return (
       <div>
         <p className="mb-3 font-mono-technical text-[9px] uppercase leading-relaxed text-app-text/55">
-          Eğitmeninizden aldığınız grup şifresi ile taktik timinize katılın.
+          {t('groupJoin.hint')}
         </p>
         {form}
         {feedback}
@@ -110,7 +114,7 @@ export default function GroupJoinPanel({ onJoined, bare = false }) {
     <section className="rounded-xl border border-emerald-900/35 bg-slate-950/80 p-4">
       <p className="mb-3 flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-400">
         <Users className="size-4 shrink-0" strokeWidth={1.5} aria-hidden />
-        [ 🦅 TİME/GRUBA DAHİL OL ]
+        {t('groupJoin.title')}
       </p>
       {form}
       {feedback}

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslation } from 'react-i18next'
 import { Activity, AlertTriangle, Crosshair, Maximize2, Radio, TrendingUp, X } from 'lucide-react'
 import { useCompactShell } from '../../hooks/useCompactShell'
 import {
@@ -9,6 +10,7 @@ import {
   resolveLogFocusId,
 } from '../../lib/progressHudAnalytics'
 import { invStr } from '../../lib/inventoryIlws'
+import { labelHudPanelTitle } from '../../lib/progressDisplayText'
 import { buildLogsById, buildTacticalTooltipLines } from '../../lib/progressTacticalTooltip'
 import { buildTcccHudTooltipModel, buildTcccReactionChartPoints } from '../../lib/tcccSimHudAnalytics'
 import PerformanceTrendChart from './PerformanceTrendChart'
@@ -27,14 +29,6 @@ const TAG_DOT = {
   FOF: 'bg-violet-400 shadow-[0_0_12px_rgba(167,139,250,0.65)]',
   VBSS: 'bg-blue-400 shadow-[0_0_12px_rgba(96,165,250,0.65)]',
   OTHER: 'bg-slate-400',
-}
-
-const PANEL_TITLES = {
-  MATRIX: 'TAKTİK KARAKTER MATRİSİ',
-  RADAR: 'KRONİK HATA RADARI',
-  WAVE: 'STRES-PERFORMANS DALGASI',
-  TCCC: 'ANALİTİK TCCC REAKSİYON DALGASI',
-  TREND: 'PERFORMANS TRENDİ',
 }
 
 const PANEL_ACCENTS = {
@@ -65,6 +59,7 @@ const PANEL_ICONS = {
  * }} props
  */
 function HudPanelHeader({ title, accentClass, icon, badge, trailing, onExpand, variant = 'compact' }) {
+  const { t } = useTranslation('progress')
   const Icon = icon
   const titleClass =
     variant === 'expanded'
@@ -100,7 +95,7 @@ function HudPanelHeader({ title, accentClass, icon, badge, trailing, onExpand, v
             type="button"
             onClick={onExpand}
             className="rounded border border-slate-700 bg-slate-900/80 p-1.5 text-app-text/70 transition-colors hover:border-emerald-600/50 hover:text-emerald-400"
-            aria-label={`${title} tam ekran`}
+            aria-label={t('hud.overlay.expandAria', { title })}
           >
             <Maximize2 className="size-4" strokeWidth={1.75} aria-hidden />
           </button>
@@ -157,10 +152,12 @@ export function HudInlineAccordion({ open, panelId, children }) {
  * @param {{ logRow: Record<string, unknown> | null }} props
  */
 export function TcccHudTooltipContent({ logRow }) {
+  const { t } = useTranslation('progress')
+
   if (!logRow) {
     return (
       <div className={TACTICAL_TOOLTIP_CLASS} role="tooltip">
-        <p className="font-mono text-xs uppercase text-app-text/55">VERİ BULUNAMADI</p>
+        <p className="font-mono text-xs uppercase text-app-text/55">{t('hud.tccc.dataNotFound')}</p>
       </div>
     )
   }
@@ -178,18 +175,18 @@ export function TcccHudTooltipContent({ logRow }) {
               : 'font-bold text-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.45)]'
           }
         >
-          • OPERASYON DURUMU: {model.statusLabel}
+          {t('hud.tccc.opStatus', { status: model.statusLabel })}
         </p>
-        <p className="text-amber-400">• TOPLAM SÜRE: {model.elapsedTime} SN</p>
+        <p className="text-amber-400">{t('hud.tccc.totalTime', { time: model.elapsedTime })}</p>
         <p className={model.overtimeSec > 0 ? 'text-red-400' : 'text-emerald-400/90'}>
-          • GECİKME SÜRESİ: {model.overtimeLabel}
+          {t('hud.tccc.delayTime', { time: model.overtimeLabel })}
         </p>
-        <p className="text-amber-300/90">• TELSİZ MODU: {model.simulationMode}</p>
-        <p className="text-app-text/70">• REAKSİYON VERİMLİLİĞİ: %{model.efficiency}</p>
+        <p className="text-amber-300/90">{t('hud.tccc.radioMode', { mode: model.simulationMode })}</p>
+        <p className="text-app-text/70">{t('hud.tccc.efficiency', { value: model.efficiency })}</p>
 
         {model.failed ? (
           <div className="mt-2 border-t border-red-900/50 pt-2">
-            <p className="mb-1.5 text-[9px] font-bold text-red-300">• İHLAL / RED GEREKÇELERİ (TAM METİN)</p>
+            <p className="mb-1.5 text-[9px] font-bold text-red-300">{t('hud.tccc.rejectionHeading')}</p>
             {model.rejectionReasons.length > 0 ? (
               model.rejectionReasons.map((reason, idx) => (
                 <p
@@ -201,7 +198,7 @@ export function TcccHudTooltipContent({ logRow }) {
               ))
             ) : (
               <p className="mt-1 border-t border-red-900/50 pt-1 font-mono text-[10px] uppercase text-red-400">
-                • İletim hatası · ayrıntı arşivlenmedi
+                • {t('tcccSim.txError')}
               </p>
             )}
           </div>
@@ -241,15 +238,16 @@ function StressPerformanceTcccChart(props) {
  * @param {{ logs: Record<string, unknown>[] }} props
  */
 function TcccSimulationDebriefSidebar({ logs }) {
+  const { t } = useTranslation('progress')
   const operations = useMemo(() => buildTcccReactionChartPoints(logs, 8).slice().reverse(), [logs])
 
   if (operations.length === 0) {
     return (
       <aside className="flex h-full min-h-[200px] w-full shrink-0 flex-col rounded-lg border border-amber-900/40 bg-black/40 p-3 lg:w-[min(100%,22rem)]">
         <p className="font-mono text-[9px] font-bold uppercase tracking-wider text-amber-500/80">
-          [ SON 8 OTURUM · DEBRİEF ]
+          [ {t('hud.tccc.debriefTitle')} ]
         </p>
-        <p className="mt-4 font-mono text-[10px] uppercase text-app-text/45">KAYIT YOK</p>
+        <p className="mt-4 font-mono text-[10px] uppercase text-app-text/45">{t('hud.tccc.debriefEmpty')}</p>
       </aside>
     )
   }
@@ -257,7 +255,7 @@ function TcccSimulationDebriefSidebar({ logs }) {
   return (
     <aside className="flex h-full min-h-0 w-full shrink-0 flex-col overflow-hidden rounded-lg border border-amber-900/40 bg-black/40 lg:w-[min(100%,22rem)]">
       <p className="shrink-0 border-b border-amber-900/35 px-3 py-2 font-mono text-[9px] font-bold uppercase tracking-wider text-amber-500/80">
-        [ SON {operations.length} OTURUM · TAM DEBRİEF ]
+        [ {t('hud.tccc.debriefTitle')} ]
       </p>
       <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
         {operations.map((op) => {
@@ -281,7 +279,8 @@ function TcccSimulationDebriefSidebar({ logs }) {
                 {model.statusLabel}
               </p>
               <p className="mt-1 text-amber-400/90">
-                SÜRE: {model.elapsedTime} SN · GECİKME: {model.overtimeLabel}
+                {t('hud.tccc.totalTime', { time: model.elapsedTime })} ·{' '}
+                {t('hud.tccc.delayTime', { time: model.overtimeLabel })}
               </p>
               {model.failed && model.rejectionReasons.length > 0 ? (
                 <div className="mt-2 space-y-1 border-t border-red-900/40 pt-2">
@@ -292,7 +291,7 @@ function TcccSimulationDebriefSidebar({ logs }) {
                   ))}
                 </div>
               ) : (
-                <p className="mt-2 text-[9px] text-emerald-500/80">PROTOKOL TEMİZ · RED YOK</p>
+                <p className="mt-2 text-[9px] text-emerald-500/80">{t('hud.tccc.protocolClean')}</p>
               )}
             </li>
           )
@@ -322,6 +321,7 @@ export function TacticalCharacterMatrix({
   embeddedInOverlay = false,
   embeddedInAccordion = false,
 }) {
+  const { t } = useTranslation('progress')
   const expanded = variant === 'expanded'
   const logsById = useMemo(() => buildLogsById(logs), [logs])
   const [tooltip, setTooltip] = useState(/** @type {{ x: number; y: number; lines: string[] } | null} */ (null))
@@ -363,14 +363,14 @@ export function TacticalCharacterMatrix({
       />
       {!suppressHeader ? (
         <HudPanelHeader
-          title={PANEL_TITLES.MATRIX}
+          title={labelHudPanelTitle('MATRIX')}
           accentClass="text-emerald-400"
           icon={Crosshair}
           variant={variant}
           onExpand={onExpand}
           badge={
             focusedLogId ? (
-              <span className="ml-2 text-[8px] font-bold text-amber-400/90">· LOCK_ON</span>
+              <span className="ml-2 text-[8px] font-bold text-amber-400/90">{t('hud.matrix.lockOn')}</span>
             ) : null
           }
         />
@@ -388,36 +388,40 @@ export function TacticalCharacterMatrix({
                 : 'aspect-[4/3] w-full shrink-0',
         ].join(' ')}
       >
-        <figcaption className="sr-only">Reaksiyon süresi ve isabet matrisi</figcaption>
+        <figcaption className="sr-only">{labelHudPanelTitle('MATRIX')}</figcaption>
         <ul className="absolute inset-0 grid list-none grid-cols-2 grid-rows-2 p-0">
           <li
             className={`border-r border-b border-emerald-900/25 p-1 font-bold uppercase text-emerald-500/70 ${cornerText}`}
           >
-            ÖLÜMCÜL
+            {t('hud.matrix.lethal')}
           </li>
           <li
             className={`border-b border-emerald-900/25 p-1 text-right font-bold uppercase text-amber-500/70 ${cornerText}`}
           >
-            AGRESİF
+            {t('hud.matrix.aggressive')}
           </li>
           <li
             className={`border-r border-emerald-900/25 p-1 font-bold uppercase text-app-text/55 ${cornerText}`}
           >
-            TEREDDÜTLÜ
+            {t('hud.matrix.hesitant')}
           </li>
-          <li className={`p-1 text-right font-bold uppercase text-rose-500/80 ${cornerText}`}>PERVASIZ</li>
+          <li className={`p-1 text-right font-bold uppercase text-rose-500/80 ${cornerText}`}>
+            {t('hud.matrix.reckless')}
+          </li>
         </ul>
-        <p className={`absolute bottom-8 left-3 m-0 uppercase text-app-text/45 ${axisText}`}>REAKSİYON SN →</p>
+        <p className={`absolute bottom-8 left-3 m-0 uppercase text-app-text/45 ${axisText}`}>
+          {t('hud.matrix.axisReaction')}
+        </p>
         <p
           className={`absolute left-3 top-10 m-0 origin-left -rotate-90 uppercase text-app-text/45 ${axisText}`}
         >
-          İSABET % ↑
+          {t('hud.matrix.axisAccuracy')}
         </p>
         {visiblePoints.length === 0 ? (
           <p
             className={`absolute inset-0 m-0 flex items-center justify-center uppercase text-app-text/45 ${emptyText}`}
           >
-            {focusedLogId ? 'LOCK_ON · OTURUM MATRİS VERİSİ YOK' : 'MATRİS VERİSİ YOK'}
+            {focusedLogId ? t('hud.matrix.emptyLocked') : t('hud.matrix.empty')}
           </p>
         ) : (
           visiblePoints.map((p, i) => {
@@ -429,7 +433,7 @@ export function TacticalCharacterMatrix({
               <span
                 key={p.id}
                 role="img"
-                aria-label={`${p.tag} matris noktası`}
+                aria-label={`${p.tag} · ${labelHudPanelTitle('MATRIX')}`}
                 className={[
                   'absolute cursor-crosshair rounded-full',
                   isLocked ? dotLocked : dotNormal,
@@ -480,6 +484,7 @@ export function ChronicErrorRadar({
   embeddedInOverlay = false,
   embeddedInAccordion = false,
 }) {
+  const { t } = useTranslation('progress')
   const expanded = variant === 'expanded'
   const logsById = useMemo(() => buildLogsById(logs), [logs])
   const [tooltip, setTooltip] = useState(/** @type {{ x: number; y: number; lines: string[] } | null} */ (null))
@@ -492,14 +497,14 @@ export function ChronicErrorRadar({
       ) : null}
       {!suppressHeader ? (
         <HudPanelHeader
-          title={PANEL_TITLES.RADAR}
+          title={labelHudPanelTitle('RADAR')}
           accentClass="text-rose-400/90"
           icon={AlertTriangle}
           variant={variant}
           onExpand={onExpand}
           badge={
             focusedLogId ? (
-              <span className="ml-2 text-[8px] font-bold text-rose-300/90">· TEK GÖREV</span>
+              <span className="ml-2 text-[8px] font-bold text-rose-300/90">· {t('hud.radar.singleTask')}</span>
             ) : null
           }
         />
@@ -509,7 +514,7 @@ export function ChronicErrorRadar({
         <p
           className={`text-center uppercase text-app-text/45 ${embeddedInOverlay ? 'flex flex-1 items-center justify-center text-xs' : expanded ? 'py-6 text-[11px] sm:text-xs' : 'py-6 text-[9px] sm:text-[10px]'}`}
         >
-          {focusedLogId ? 'BU OTURUMDA KRİTİK HATA YOK' : 'HATA KAYDI YOK · TEMİZ HAT'}
+          {focusedLogId ? t('hud.radar.emptyLocked') : t('hud.radar.empty')}
         </p>
       ) : (
         <ul
@@ -538,9 +543,9 @@ export function ChronicErrorRadar({
                 className="cursor-crosshair"
                 onMouseMove={(e) => {
                   const base = [
-                    `• İHLAL: ${item.label}`,
-                    `• KOD: ${item.code}`,
-                    `• FLAG_FREQ: ${item.count}`,
+                    `• ${t('hud.radar.tooltipViolation')}: ${item.label}`,
+                    `• ${t('hud.radar.tooltipCode')}: ${item.code}`,
+                    `• ${t('hud.radar.tooltipFreq')}: ${item.count}`,
                   ]
                   const drill = sampleLog ? buildTacticalTooltipLines(sampleLog) : []
                   setTooltip({ x: e.clientX, y: e.clientY, lines: [...base, ...drill] })
@@ -625,6 +630,7 @@ export function StressPerformanceWave({
   embeddedInOverlay = false,
   embeddedInAccordion = false,
 }) {
+  const { t } = useTranslation('progress')
   const expanded = variant === 'expanded'
   const logsById = useMemo(() => buildLogsById(logs), [logs])
   const wave = useMemo(() => buildStressPerformanceWave(logs), [logs])
@@ -676,14 +682,14 @@ export function StressPerformanceWave({
       />
       {!suppressHeader ? (
         <HudPanelHeader
-          title={PANEL_TITLES.WAVE}
+          title={labelHudPanelTitle('WAVE')}
           accentClass="text-emerald-400"
           icon={Activity}
           variant={variant}
           onExpand={onExpand}
           badge={
             focusedLogId ? (
-              <span className="ml-2 text-[8px] font-bold text-amber-400/90">· OTURUM İZOLE</span>
+              <span className="ml-2 text-[8px] font-bold text-amber-400/90">· {t('hud.wave.sessionIsolated')}</span>
             ) : null
           }
           trailing={
@@ -713,7 +719,7 @@ export function StressPerformanceWave({
         <p
           className={`text-center uppercase text-app-text/45 ${embeddedInOverlay ? 'flex flex-1 items-center justify-center text-xs' : expanded ? 'py-8 text-[11px] sm:text-xs' : 'py-8 text-[9px] sm:text-[10px]'}`}
         >
-          {wave.source === 'tccc_sim' ? '≥2 TCCC SİMÜLASYON KAYDI GEREKLİ' : 'AYNI GÜN İÇİNDE ≥2 OTURUM GEREKLİ'}
+          {wave.source === 'tccc_sim' ? t('hud.wave.emptyTccc') : t('hud.wave.emptyDaily')}
         </p>
       ) : (
         <figure
@@ -835,7 +841,7 @@ export function TcccReactionWavePanel({
       />
       {!suppressHeader ? (
         <HudPanelHeader
-          title={`[ ${PANEL_TITLES.TCCC} ]`}
+          title={`[ ${labelHudPanelTitle('TCCC')} ]`}
           accentClass="text-amber-400"
           icon={Radio}
           variant={variant}
@@ -967,8 +973,10 @@ export function HudPanelExpandOverlay({
   barsAnimate = false,
   compact = false,
 }) {
+  const { t } = useTranslation('progress')
   const TitleIcon = PANEL_ICONS[panelId]
   const accent = PANEL_ACCENTS[panelId]
+  const panelTitle = labelHudPanelTitle(panelId)
   const matrixLogs = useMemo(() => {
     if (!focusedLogId) return logs
     return logs.filter((row) => resolveLogFocusId(row) === focusedLogId)
@@ -1027,17 +1035,14 @@ export function HudPanelExpandOverlay({
             ? 'right-3 top-3 border-slate-600 bg-slate-900/90 px-3 py-2 text-[10px] text-app-text/85 hover:border-amber-500/60 hover:text-amber-300'
             : 'right-4 top-4 border-amber-500/70 bg-amber-950/60 px-3 py-2 text-[10px] text-amber-100 shadow-[0_0_28px_rgba(245,158,11,0.45)] hover:border-rose-500/80 hover:bg-rose-950/70 hover:text-rose-50 md:right-8 md:top-8 md:px-4 md:py-2.5',
         ].join(' ')}
-        aria-label="Kapat"
+        aria-label={t('hud.overlay.close')}
       >
         <span className="inline-flex items-center gap-2">
           <X className="size-4 shrink-0" strokeWidth={2} aria-hidden />
           {compact ? (
-            <span>KAPAT</span>
+            <span>{t('hud.overlay.close')}</span>
           ) : (
-            <>
-              <span className="hidden sm:inline">[ ODAKTAN ÇIK / ESC ]</span>
-              <span className="sm:hidden">[ ÇIK / ESC ]</span>
-            </>
+            <span>[ {t('hud.overlay.exitFocus')} ]</span>
           )}
         </span>
       </button>
@@ -1049,7 +1054,7 @@ export function HudPanelExpandOverlay({
         ].join(' ')}
       >
         <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-emerald-500/80 sm:text-[10px] sm:tracking-[0.32em]">
-          {compact ? 'HUD DETAY · MOBİL' : 'TAM EKRAN · HUD ENTEGRASYONU'}
+          {compact ? t('hud.detailMode') : t('hud.overlay.fullscreenHud')}
         </p>
         <div className="mt-1.5 flex items-center gap-2 sm:mt-2">
           <TitleIcon className={`size-4 shrink-0 sm:size-5 ${accent}`} strokeWidth={1.5} aria-hidden />
@@ -1057,9 +1062,11 @@ export function HudPanelExpandOverlay({
             id="hud-expand-title"
             className={`text-sm font-bold uppercase tracking-[0.18em] sm:text-base sm:tracking-[0.24em] md:text-lg ${accent}`}
           >
-            {PANEL_TITLES[panelId]}
+            {panelTitle}
             {focusedLogId ? (
-              <span className="ml-2 text-[9px] font-bold text-amber-400/90 sm:text-[10px]">· LOCK_ON</span>
+              <span className="ml-2 text-[9px] font-bold text-amber-400/90 sm:text-[10px]">
+                {t('hud.matrix.lockOn')}
+              </span>
             ) : null}
           </h2>
         </div>
@@ -1086,7 +1093,7 @@ export function HudPanelExpandOverlay({
 
       {!compact ? (
         <p className="relative z-10 shrink-0 text-center text-[8px] uppercase tracking-widest text-app-text/45">
-          ESC · TAM EKRAN MODU
+          {t('hud.overlay.escHint')} · {t('hud.overlay.fullscreenHud')}
         </p>
       ) : null}
     </div>
@@ -1115,6 +1122,7 @@ export default function ProgressHudPanels({
   trendSeries = [],
   barsAnimate = false,
 }) {
+  const { t } = useTranslation('progress')
   const compact = useCompactShell()
   const errorLogs = radarLogs ?? logs
   const matrixLogs = useMemo(() => {
@@ -1141,9 +1149,9 @@ export default function ProgressHudPanels({
       <header className="flex items-center gap-2 border-b border-emerald-900/30 pb-2">
         <Radio className="size-4 text-emerald-500" aria-hidden />
         <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-emerald-400/90 sm:text-[10px] sm:tracking-[0.28em]">
-          Analitik Modüller
+          {t('hud.sectionTitle')}
           {focusedLogId ? (
-            <span className="ml-2 text-amber-400/90">· detay modu</span>
+            <span className="ml-2 text-amber-400/90">{t('hud.detailModeBadge')}</span>
           ) : null}
         </p>
       </header>

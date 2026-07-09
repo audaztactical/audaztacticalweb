@@ -1,0 +1,270 @@
+{
+  "page": {
+    "title": "Achievements",
+    "subtitle": "Personal Performance Analytics",
+    "backToCommand": "RETURN TO COMMAND",
+    "operatorLabel": "OPERATOR",
+    "operatorFallback": "OPERATOR",
+    "syncing": "Syncing operator data…"
+  },
+  "orsHud": {
+    "kicker": "{{abbrev}} · OPERATIONAL READINESS",
+    "motorSyncing": "MOTOR SYNC...",
+    "livePenalties": "LIVE · {{count}} PENALTY",
+    "motorActive": "LIVE · MOTOR ACTIVE",
+    "awaitingData": "AWAITING DATA",
+    "tcccPenaltyBanner": "{{code}} · −14 {{abbrev}}"
+  },
+  "filters": {
+    "matrixTitle": "TACTICAL FILTER MATRIX",
+    "mainDiscipline": "PRIMARY DISCIPLINE",
+    "subTopic": "SUB-TASK / TOPIC",
+    "subTopicLocked": "· LOCKED",
+    "timeframe": "TIME RANGE",
+    "timeframes": {
+      "7d": "7 DAYS",
+      "30d": "30 DAYS",
+      "all": "ALL TIME"
+    },
+    "allTasks": "ALL TASKS",
+    "filterDisabledAllDisciplines": "ALL DISCIPLINES · TASK FILTER DISABLED",
+    "noRecordsTemplateList": "NO RECORDS IN THIS DISCIPLINE · TEMPLATE LIST",
+    "taskCountSync": "{{count}} tasks · synced",
+    "disciplines": {
+      "all": "ALL DISCIPLINES",
+      "atis": "MARKSMANSHIP (ATIS)",
+      "cqb": "CLOSE QUARTERS BATTLE (CQB)",
+      "tccc": "TACTICAL MEDICINE (TCCC)",
+      "fof": "FORCE-ON-FORCE (FOF)",
+      "vbss": "VBSS / MARITIME (VBSS)"
+    },
+    "subTopics": {
+      "all": {
+        "all": "ALL TASKS"
+      },
+      "atis": {
+        "all": "ALL MARKSMANSHIP TOPICS",
+        "basic_pistol": "BASIC PISTOL",
+        "stress_shooting": "STRESS SHOOTING",
+        "double_tap": "DOUBLE TAP"
+      },
+      "cqb": {
+        "all": "ALL CQB TASKS",
+        "room_clear": "ROOM CLEARING",
+        "breach_entry": "BREACH & ENTRY"
+      },
+      "tccc": {
+        "all": "ALL TCCC TASKS",
+        "ifak_speed": "IFAK SPEED",
+        "care_under_fire": "CARE UNDER FIRE (CUF)",
+        "medevac_9line": "9-LINE MEDEVAC"
+      },
+      "fof": {
+        "all": "ALL FOF TASKS",
+        "rehine_kurtarma_simulasyon": "HOSTAGE RESCUE — SIMULATION",
+        "aktif_atici_active_shooter": "ACTIVE SHOOTER RESPONSE",
+        "ekip_bazli_karsilasma_fof": "TEAM-BASED ENGAGEMENT (FORCE ON FORCE)"
+      },
+      "vbss": {
+        "all": "ALL VBSS TASKS",
+        "kargo_konteyner_bot": "CARGO / CONTAINER SHIP INFILTRATION (BOAT)",
+        "merdiven_kanca_vbss": "HOOK & LADDER CLIMB (VBSS)",
+        "dar_koridor_guverte": "NARROW CORRIDOR & DECK CLEARING"
+      }
+    }
+  },
+  "focus": {
+    "lockedBanner": "[⚠️ SESSION LOCKED: LOG_ID_{{id}}] — ISOLATING SPECIFIC EVENT DATA",
+    "releaseLock": "RELEASE LOCK / X",
+    "trendLockLabel": "LOCK"
+  },
+  "kpi": {
+    "overallSuccess": "OVERALL SUCCESS RATE",
+    "totalEvents": "TOTAL LOGGED EVENTS",
+    "avgAccuracy": "AVERAGE ACCURACY",
+    "criticalErrors": "CRITICAL ERRORS",
+    "sub": {
+      "singleSessionLocked": "Single session · target locked",
+      "sessionsAllCategories": "{{count}} sessions · All Categories",
+      "sessionsFiltered": "{{count}} sessions · filtered",
+      "isolatedSession": "Isolated session",
+      "recordedSessions": "Recorded sessions",
+      "violationThisTask": "VIOLATION ON THIS TASK",
+      "securityViolation": "SECURITY VIOLATION DETECTED",
+      "withinTarget": "Within Target"
+    },
+    "disciplineSuccess": {
+      "atis": "MARKSMANSHIP SUCCESS RATE",
+      "cqb": "CQB SUCCESS RATE",
+      "fof": "FOF SUCCESS RATE",
+      "atisSub": "{{count}} SESSIONS · ATIS",
+      "cqbSub": "{{count}} SESSIONS · CLOSE QUARTERS",
+      "fofSub": "{{count}} sessions · FOF"
+    }
+  },
+  "tacticalTeamCta": {
+    "kicker": "Tactical team",
+    "body": "To join a group or view your roster, go to Settings → Tactical Team →"
+  },
+  "trend": {
+    "title": "PERFORMANCE TREND",
+    "lastSessions": "LAST {{count}} SESSIONS",
+    "empty": "NO TREND DATA",
+    "expandAria": "Expand performance trend fullscreen"
+  },
+  "activityFeed": {
+    "title": "LIVE ACTIVITY FEED",
+    "empty": "ACTIVITY FEED EMPTY",
+    "unverified": "Observation · Unverified",
+    "transmissionOk": "Transmission Active",
+    "transmissionFailure": "Transmission Failure"
+  },
+  "footer": {
+    "connectionLive": "Live connection",
+    "connectionOffline": "Offline",
+    "totalLogs": "Total: {{count}}",
+    "filteredLogs": "Filtered: {{count}}"
+  },
+  "hud": {
+    "sectionTitle": "Analytics Modules",
+    "detailMode": "HUD DETAIL · MOBILE",
+    "detailModeBadge": "· detail mode",
+    "panels": {
+      "MATRIX": "TACTICAL CHARACTER MATRIX",
+      "RADAR": "CHRONIC ERROR RADAR",
+      "WAVE": "STRESS-PERFORMANCE WAVE",
+      "TCCC": "ANALYTIC TCCC REACTION WAVE",
+      "TREND": "PERFORMANCE TREND"
+    },
+    "matrix": {
+      "lethal": "LETHAL",
+      "aggressive": "AGGRESSIVE",
+      "hesitant": "HESITANT",
+      "reckless": "RECKLESS",
+      "axisReaction": "REACTION SEC →",
+      "axisAccuracy": "ACCURACY % ↑",
+      "empty": "NO MATRIX DATA",
+      "emptyLocked": "LOCK_ON · NO SESSION MATRIX DATA",
+      "lockOn": "· LOCK_ON",
+      "srCaption": "SR"
+    },
+    "radar": {
+      "empty": "NO ERROR LOG · CLEAN LANE",
+      "emptyLocked": "NO CRITICAL ERRORS THIS SESSION",
+      "singleTask": "SINGLE TASK",
+      "tooltipViolation": "VIOLATION",
+      "tooltipCode": "CODE",
+      "tooltipFreq": "FREQ"
+    },
+    "wave": {
+      "emptyTccc": "≥2 TCCC SIMULATION LOGS REQUIRED",
+      "emptyDaily": "≥2 SESSIONS REQUIRED SAME DAY",
+      "sessionIsolated": "SESSION ISOLATED"
+    },
+    "tccc": {
+      "debriefTitle": "DEBRIEF / REJECTION ANALYSIS",
+      "debriefEmpty": "NO RECORDS",
+      "protocolClean": "PROTOCOL CLEAN · NO REJECTIONS",
+      "dataNotFound": "DATA NOT FOUND",
+      "opStatus": "• OPERATION STATUS: {{status}}",
+      "totalTime": "• TOTAL TIME: {{time}} SEC",
+      "delayTime": "• DELAY TIME: {{time}}",
+      "radioMode": "• RADIO MODE: {{mode}}",
+      "efficiency": "• REACTION EFFICIENCY: {{value}}%",
+      "rejectionHeading": "• VIOLATION / REJECTION REASONS (FULL TEXT)",
+      "rejectionHeadingShort": "• VIOLATION / REJECTION REASONS:"
+    },
+    "overlay": {
+      "close": "CLOSE",
+      "exitFocus": "EXIT FOCUS / ESC",
+      "fullscreenHud": "FULLSCREEN · HUD INTEGRATION",
+      "escHint": "ESC",
+      "expandAria": "Expand {{title}}"
+    }
+  },
+  "charts": {
+    "tcccWaveEmpty": "NO MEDEVAC / CASEVAC SIMULATION LOGS",
+    "tcccWaveCaption": "REACTION EFFICIENCY %"
+  },
+  "tooltips": {
+    "dataNotFound": "DATA NOT FOUND",
+    "cleanLane": "CLEAN LANE",
+    "blueOnBlue": "BLUE-ON-BLUE",
+    "criticalYes": "⚠️ YES",
+    "criticalClean": "✅ CLEAN",
+    "atis": {
+      "drill": "• TARGET ID / DRILL: {{drill}}",
+      "firstShot": "• REACTION / FIRST SHOT: {{sec}} sec",
+      "split": "• SPLIT (INTER-SHOT) TIME: {{sec}} sec",
+      "roundsHits": "• FIRED / HITS: {{rounds}} / {{hits}}",
+      "critical": "• CRITICAL VIOLATION: {{status}}"
+    },
+    "ops": {
+      "scenarioDuration": "SCENARIO DURATION",
+      "boardingDuration": "BOARDING DURATION",
+      "operationDuration": "OPERATION DURATION",
+      "durationLine": "• {{label}}: {{sec}} sec",
+      "sectorGap": "• SECTOR GAP / VIOLATION: {{errors}}",
+      "penalty": "• PENALTY IMPACT: -{{penalty}} ORS"
+    },
+    "generic": {
+      "session": "• SESSION: {{drill}}",
+      "discipline": "• DISCIPLINE: {{tag}}",
+      "critical": "• CRITICAL VIOLATION: {{status}}",
+      "penalty": "• PENALTY IMPACT: -{{penalty}} ORS"
+    }
+  },
+  "tcccSim": {
+    "success": "Success",
+    "failure": "Failure",
+    "txError": "Transmission error",
+    "cleanNoError": "CLEAN / NO ERROR",
+    "medevac": "MEDEVAC 9-LINE",
+    "casevac": "CASEVAC MIST",
+    "overtimeNone": "NONE / WITHIN TIME LIMIT",
+    "overtimeNeg": "-{{sec}} SEC"
+  },
+  "activityTitles": {
+    "observerFallback": "Observer",
+    "observedVbss": "VBSS Observation · {{observer}}",
+    "observedTccc": "TCCC MARCH Observation · {{observer}}",
+    "observedDefault": "Observation log",
+    "unverified": "Observation · Unverified",
+    "verified": "Observation · Verified",
+    "sessionFallback": "{{tag}} SESSION",
+    "drillFallbacks": {
+      "tccc": "TCCC DRILL",
+      "cqb": "CQB DRILL",
+      "fof": "FOF DRILL",
+      "vbss": "VBSS DRILL"
+    }
+  },
+  "radarErrors": {
+    "blueOnBlueFof": "BLUE-ON-BLUE (FOF)"
+  },
+  "disciplineTags": {
+    "ATIS": "ATIS",
+    "CQB": "CQB",
+    "TCCC": "TCCC",
+    "FOF": "FOF",
+    "VBSS": "VBSS",
+    "OTHER": "OTHER"
+  },
+  "groupJoin": {
+    "title": "[ 🦅 JOIN TEAM/GROUP ]",
+    "passwordLabel": "Group Password",
+    "placeholder": "E.G. ALPHA99",
+    "submit": "JOIN",
+    "hint": "Join your tactical team with the group password from your instructor.",
+    "errors": {
+      "authRequired": "Sign-in required",
+      "passwordTooShort": "Group password must be at least 4 characters",
+      "invalidPassword": "Invalid group password — verify the code with your instructor.",
+      "joinFailed": "Failed to join group"
+    },
+    "success": {
+      "alreadyMember": "• [SUCCESS]: You are already in \"{{name}}\".",
+      "joined": "• [SUCCESS]: You have successfully joined the group!"
+    }
+  }
+}

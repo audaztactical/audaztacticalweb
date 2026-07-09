@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { collection, onSnapshot, orderBy, query } from 'firebase/firestore'
+import { useTranslation } from 'react-i18next'
 import {
   Activity,
   ArrowLeft,
@@ -25,7 +26,6 @@ import { emitFirebaseError } from '../lib/firebaseErrorBus'
 import { computeORS } from '../lib/orsEngine'
 import { filterObservedEvalLogs } from '../lib/observedEvalRegistry'
 import {
-  DISCIPLINE_OPTIONS,
   buildActivityFeed,
   buildSubTopicOptions,
   buildTrendSeries,
@@ -34,6 +34,15 @@ import {
   getLogDisciplineTag,
   getLogSuccessOrAccuracy,
 } from '../lib/progressAnalytics'
+import {
+  formatProgressDisciplineTag,
+  formatTcccOrsPenaltyBanner,
+  getProgressDisciplineOptions,
+  humanizeProgressFeedTitle,
+  labelProgressSubTopic,
+  labelProgressTimeframe,
+  progressLocale,
+} from '../lib/progressDisplayText'
 import PerformanceTrendChart from '../components/progress/PerformanceTrendChart'
 import ProgressHudPanels, { EXPANDED_HUD_PANEL_IDS } from '../components/progress/ProgressHudPanels'
 import { resolveLogFocusId } from '../lib/progressHudAnalytics'
@@ -42,11 +51,7 @@ import { buildLogsById } from '../lib/progressTacticalTooltip'
 /** @typedef {import('../lib/progressAnalytics').DisciplineFilter} DisciplineFilter */
 /** @typedef {import('../lib/progressAnalytics').TimeframeFilter} TimeframeFilter */
 
-const TIMEFRAME_TABS = [
-  { id: /** @type {TimeframeFilter} */ ('7d'), label: '7 GÜN' },
-  { id: '30d', label: '30 GÜN' },
-  { id: 'all', label: 'TÜM ZAMANLAR' },
-]
+const TIMEFRAME_TAB_IDS = /** @type {TimeframeFilter[]} */ (['7d', '30d', 'all'])
 
 const TAG_COLORS = {
   ATIS: 'border-sky-500/40 bg-sky-950/40 text-sky-400',
@@ -161,6 +166,9 @@ function TacticalFilterSelect({ label, value, options, onChange, disabled = fals
 }
 
 function OrsHudReadout({ score, loading = false, penaltyCount = 0, tcccPenaltyActive = false }) {
+  const { t } = useTranslation('progress')
+  const { t: tDash } = useTranslation('dashboard')
+  const abbrev = tDash('ors.abbrev')
   const tone = orsScoreTone(score)
   return (
     <div
@@ -171,7 +179,7 @@ function OrsHudReadout({ score, loading = false, penaltyCount = 0, tcccPenaltyAc
       ].join(' ')}
     >
       <p className="font-mono text-[8px] font-bold uppercase tracking-[0.28em] text-app-text/55">
-        ORS · OPERASYONEL HAZIRLIK
+        {t('orsHud.kicker', { abbrev })}
       </p>
       {loading ? (
         <p className="mt-1 font-mono text-lg font-black uppercase tracking-wider text-app-text/45 animate-pulse">
@@ -184,14 +192,16 @@ function OrsHudReadout({ score, loading = false, penaltyCount = 0, tcccPenaltyAc
       )}
       <p className="mt-1 font-mono text-[8px] font-bold uppercase tracking-wider text-app-text/45">
         {loading
-          ? 'MOTOR SENKRON...'
+          ? t('orsHud.motorSyncing')
           : score != null
-            ? `CANLI · ${penaltyCount > 0 ? `${penaltyCount} CEZA` : 'MOTOR AKTİF'}`
-            : 'VERİ BEKLENİYOR'}
+            ? penaltyCount > 0
+              ? t('orsHud.livePenalties', { count: penaltyCount })
+              : t('orsHud.motorActive')
+            : t('orsHud.awaitingData')}
       </p>
       {tcccPenaltyActive && !loading ? (
         <p className="mt-1 font-mono text-[8px] font-bold uppercase tracking-wider text-rose-400 animate-pulse">
-          TCCC eşik altında · −14 ORS
+          {formatTcccOrsPenaltyBanner(abbrev)}
         </p>
       ) : null}
     </div>
@@ -250,22 +260,16 @@ function KpiCard({ label, value, sub, accent = 'emerald', progress, animate = fa
 
 /** @typedef {typeof EXPANDED_HUD_PANEL_IDS[number]} ExpandedHudPanelId */
 
-/** @param {string} title */
-function humanizeFeedTitle(title) {
-  return String(title ?? '')
-    .replace(/\s·\sTRANSMISSION OK\b/gi, ' · İletim Aktif')
-    .replace(/\bTRANSMISSION OK\b/gi, 'İletim Aktif')
-    .replace(/\bTRANSMISSION FAILURE\b/gi, 'İletim Hatası')
-}
-
 /**
  * @param {{ feed: { id: string; tag: string; title: string; timestampMs: number; success: number | null; unverified?: boolean }[] }} props
  */
 function ActivityFeedPanel({ feed, selectedLogId = null, onSelectLog }) {
+  const { t } = useTranslation('progress')
+
   if (feed.length === 0) {
     return (
       <p className="py-8 text-center font-mono text-[10px] uppercase tracking-wider text-app-text/45">
-        KAYIT AKIŞI BOŞ
+        {t('activityFeed.empty')}
       </p>
     )
   }
@@ -275,7 +279,7 @@ function ActivityFeedPanel({ feed, selectedLogId = null, onSelectLog }) {
       {feed.map((item) => {
         const tagClass = TAG_COLORS[/** @type {keyof typeof TAG_COLORS} */ (item.tag)] ?? TAG_COLORS.OTHER
         const when = item.timestampMs
-          ? new Date(item.timestampMs).toLocaleString('tr-TR', {
+          ? new Date(item.timestampMs).toLocaleString(progressLocale(), {
               day: '2-digit',
               month: 'short',
               hour: '2-digit',
@@ -300,14 +304,16 @@ function ActivityFeedPanel({ feed, selectedLogId = null, onSelectLog }) {
             aria-pressed={selected}
           >
             <span className={`shrink-0 rounded border px-1.5 py-0.5 font-mono text-[8px] font-bold ${tagClass}`}>
-              [{item.tag}]
+              [{formatProgressDisciplineTag(item.tag)}]
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate font-mono text-[11px] font-bold uppercase text-app-text">{humanizeFeedTitle(item.title)}</p>
+              <p className="truncate font-mono text-[11px] font-bold uppercase text-app-text">
+                {humanizeProgressFeedTitle(item.title)}
+              </p>
               <p className="mt-0.5 font-mono text-[9px] text-app-text/55">{when}</p>
               {item.unverified ? (
                 <p className="mt-1 font-mono text-[8px] font-bold uppercase tracking-wider text-amber-500/85">
-                  Gözlem · Doğrulanmadı
+                  {t('activityFeed.unverified')}
                 </p>
               ) : null}
             </div>
@@ -332,6 +338,7 @@ function ActivityFeedPanel({ feed, selectedLogId = null, onSelectLog }) {
  * @param {{ logId: string; onRelease: () => void }} props
  */
 function LogFocusBanner({ logId, onRelease }) {
+  const { t } = useTranslation('progress')
   const shortId = logId.length > 12 ? logId.slice(-8).toUpperCase() : logId.toUpperCase()
 
   return (
@@ -341,9 +348,7 @@ function LogFocusBanner({ logId, onRelease }) {
     >
       <p className="flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-amber-300">
         <Crosshair className="size-4 shrink-0 text-rose-400" strokeWidth={1.5} aria-hidden />
-        <span>
-          [⚠️ OTURUMA KİLİTLENDİ: LOG_ID_{shortId}] - SPESİFİK ETKİNLİK VERİSİ İZOLE EDİLİYOR
-        </span>
+        <span>{t('focus.lockedBanner', { id: shortId })}</span>
       </p>
       <button
         type="button"
@@ -351,7 +356,7 @@ function LogFocusBanner({ logId, onRelease }) {
         className="inline-flex items-center gap-1.5 rounded border border-rose-500/50 bg-rose-950/40 px-3 py-1.5 font-mono text-[9px] font-bold uppercase tracking-wider text-rose-300 transition-colors hover:border-rose-400/70 hover:bg-rose-950/60"
       >
         <X className="size-3.5" aria-hidden />
-        KİLİDİ KALDIR / X
+        {t('focus.releaseLock')}
       </button>
     </div>
   )
@@ -361,6 +366,7 @@ function LogFocusBanner({ logId, onRelease }) {
  * @param {{ onBack?: () => void }} props
  */
 export default function ProgressTracker({ onBack }) {
+  const { t, i18n } = useTranslation('progress')
   const navigate = useNavigate()
   const { user, userData, loading, profileLoading, isConfigured } = useAuth()
   const inv = useAudazData('inventory')
@@ -386,9 +392,11 @@ export default function ProgressTracker({ onBack }) {
   const uid = user?.uid ?? null
   const authBusy = loading || profileLoading
   const waitingUser = authBusy || !user
-  const callsign = (userData?.callsign || user?.displayName || 'OPERATÖR').trim()
+  const callsign = (userData?.callsign || user?.displayName || t('page.operatorFallback')).trim()
 
   const handleBack = onBack ?? (() => navigate('/dashboard'))
+
+  const disciplineOptions = useMemo(() => getProgressDisciplineOptions(), [i18n.language])
 
   useEffect(() => {
     if (!uid || !isFirebaseConfigured() || !db) {
@@ -448,7 +456,10 @@ export default function ProgressTracker({ onBack }) {
     setSubTopic('all')
   }, [discipline])
 
-  const subTopics = useMemo(() => buildSubTopicOptions(logs, discipline), [logs, discipline])
+  const subTopics = useMemo(
+    () => buildSubTopicOptions(logs, discipline),
+    [logs, discipline, i18n.language],
+  )
 
   useEffect(() => {
     if (discipline === 'all') {
@@ -510,12 +521,12 @@ export default function ProgressTracker({ onBack }) {
     return [
       {
         id: resolveLogFocusId(focusedLog),
-        label: 'LOCK',
+        label: t('focus.trendLockLabel'),
         value: getLogSuccessOrAccuracy(focusedLog) ?? 0,
         tag: getLogDisciplineTag(focusedLog),
       },
     ]
-  }, [focusedLog, trendSeries])
+  }, [focusedLog, trendSeries, t])
 
   const trendChartSeries = useMemo(() => {
     const byId = buildLogsById(filteredLogs)
@@ -565,11 +576,19 @@ export default function ProgressTracker({ onBack }) {
 
   const syncing = waitingUser || logsLoading
 
+  const subTopicSelectOptions =
+    subTopics.length > 0
+      ? subTopics.map((opt) => ({
+          id: opt.id,
+          label: labelProgressSubTopic(discipline, opt.id, opt.label),
+        }))
+      : [{ id: 'all', label: t('filters.allTasks') }]
+
   return (
     <div className="px-4 sm:px-6 md:px-8">
     <PageShell
-      title="Başarı Takibi"
-      subtitle="Kişisel Performans Analizi"
+      title={t('page.title')}
+      subtitle={t('page.subtitle')}
       headerAction={<BarChart2 className="size-6 text-emerald-500/80" strokeWidth={1.5} aria-hidden />}
     >
       <div className="space-y-5 font-mono text-slate-100">
@@ -580,7 +599,7 @@ export default function ProgressTracker({ onBack }) {
             className="inline-flex items-center gap-2 rounded-sm border border-slate-800 bg-slate-900/60 px-4 py-2 text-xs font-bold uppercase tracking-wider text-app-text/70 transition-colors hover:border-emerald-800/50 hover:text-emerald-400"
           >
             <ArrowLeft className="size-4 shrink-0" strokeWidth={2} aria-hidden />
-            KOMUTA MERKEZİNE DÖN
+            {t('page.backToCommand')}
           </button>
           <div className="flex flex-col items-end gap-2">
             <OrsHudReadout
@@ -590,7 +609,9 @@ export default function ProgressTracker({ onBack }) {
               tcccPenaltyActive={tcccOrsPenaltyActive}
             />
             <div className="text-right">
-              <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-app-text/55">OPERATÖR</p>
+              <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-app-text/55">
+                {t('page.operatorLabel')}
+              </p>
               <p className="text-sm font-bold uppercase tracking-wider text-app-text">{callsign}</p>
             </div>
           </div>
@@ -599,7 +620,7 @@ export default function ProgressTracker({ onBack }) {
         {syncing ? (
           <div className="space-y-4 animate-pulse">
             <p className="font-mono text-[10px] font-bold uppercase tracking-[0.28em] text-emerald-500/80">
-              Operatör verisi senkronize ediliyor…
+              {t('page.syncing')}
             </p>
             <div className="h-14 rounded-lg border border-slate-800 bg-slate-900/50" />
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -618,47 +639,43 @@ export default function ProgressTracker({ onBack }) {
               <div className="mb-4 flex items-center gap-2">
                 <Filter className="size-4 text-emerald-500" strokeWidth={1.5} aria-hidden />
                 <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-emerald-400">
-                  TAKTİK FİLTRE MATRİSİ
+                  {t('filters.matrixTitle')}
                 </p>
               </div>
 
               <div className="grid gap-3 overflow-visible lg:grid-cols-3 lg:items-start">
                 <TacticalFilterSelect
-                  label="ANA DİSİPLİN"
+                  label={t('filters.mainDiscipline')}
                   value={discipline}
-                  options={DISCIPLINE_OPTIONS}
+                  options={disciplineOptions}
                   onChange={(id) => setDiscipline(/** @type {DisciplineFilter} */ (id))}
                 />
 
                 <TacticalFilterSelect
                   label={
                     <>
-                      ALT GÖREV / KONU
+                      {t('filters.subTopic')}
                       {subTopicDisabled ? (
-                        <span className="ml-2 text-emerald-600/80">· KİLİTLİ</span>
+                        <span className="ml-2 text-emerald-600/80">{t('filters.subTopicLocked')}</span>
                       ) : null}
                     </>
                   }
                   value={subTopicDisabled ? 'all' : subTopic}
                   disabled={subTopicDisabled}
-                  options={
-                    subTopics.length > 0
-                      ? subTopics.map((opt) => ({ id: opt.id, label: opt.label }))
-                      : [{ id: 'all', label: 'TÜM GÖREVLER' }]
-                  }
+                  options={subTopicSelectOptions}
                   onChange={setSubTopic}
                   hint={
                     subTopicDisabled ? (
                       <p className="font-mono text-[8px] uppercase tracking-wider text-app-text/45">
-                        TÜM DİSİPLİNLER · GÖREV FİLTRESİ DEVRE DIŞI
+                        {t('filters.filterDisabledAllDisciplines')}
                       </p>
                     ) : subTopics.length <= 1 ? (
                       <p className="font-mono text-[8px] uppercase tracking-wider text-amber-600/80">
-                        BU DİSİPLİNDE KAYIT YOK · ŞABLON LİSTESİ
+                        {t('filters.noRecordsTemplateList')}
                       </p>
                     ) : (
                       <p className="font-mono text-[8px] uppercase tracking-wider text-emerald-600/70">
-                        {subTopics.length - 1} görev · senkron
+                        {t('filters.taskCountSync', { count: subTopics.length - 1 })}
                       </p>
                     )
                   }
@@ -666,16 +683,16 @@ export default function ProgressTracker({ onBack }) {
 
                 <div className="space-y-1.5">
                   <span className="text-[9px] font-bold uppercase tracking-wider text-app-text/55">
-                    ZAMAN ARALIĞI
+                    {t('filters.timeframe')}
                   </span>
                   <div className="flex gap-1 rounded-sm border border-slate-800 bg-slate-900 p-1">
-                    {TIMEFRAME_TABS.map((tab) => {
-                      const active = timeframe === tab.id
+                    {TIMEFRAME_TAB_IDS.map((tabId) => {
+                      const active = timeframe === tabId
                       return (
                         <button
-                          key={tab.id}
+                          key={tabId}
                           type="button"
-                          onClick={() => setTimeframe(tab.id)}
+                          onClick={() => setTimeframe(tabId)}
                           className={[
                             'flex-1 rounded-sm px-2 py-2 font-mono text-[9px] font-bold uppercase tracking-wider transition-all',
                             active
@@ -683,7 +700,7 @@ export default function ProgressTracker({ onBack }) {
                               : 'text-app-text/55 hover:text-app-text/90',
                           ].join(' ')}
                         >
-                          {tab.label}
+                          {labelProgressTimeframe(tabId)}
                         </button>
                       )
                     })}
@@ -705,10 +722,10 @@ export default function ProgressTracker({ onBack }) {
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400/90">
-                  Taktik tim
+                  {t('tacticalTeamCta.kicker')}
                 </span>
                 <span className="mt-0.5 block font-mono text-[11px] text-app-text/65 group-hover:text-app-text/85">
-                  Grubuna katılmak veya kadronu görmek için Ayarlar → Taktik Tim bölümüne git →
+                  {t('tacticalTeamCta.body')}
                 </span>
               </span>
               <ChevronRight className="size-4 shrink-0 text-emerald-500/70" strokeWidth={1.75} aria-hidden />
@@ -716,41 +733,41 @@ export default function ProgressTracker({ onBack }) {
 
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <KpiCard
-                label="GENEL BAŞARI ORANI"
+                label={t('kpi.overallSuccess')}
                 value={`%${displayOverallSuccess}`}
                 sub={
                   focusedLog
-                    ? 'Tek oturum · hedef kilitli'
+                    ? t('kpi.sub.singleSessionLocked')
                     : discipline === 'all'
-                      ? `${filteredLogs.length} oturum · Tüm Kategoriler`
-                      : `${filteredLogs.length} oturum · filtrelenmiş`
+                      ? t('kpi.sub.sessionsAllCategories', { count: filteredLogs.length })
+                      : t('kpi.sub.sessionsFiltered', { count: filteredLogs.length })
                 }
                 progress={displayOverallSuccess}
                 animate={barsAnimate}
                 accent="emerald"
               />
               <KpiCard
-                label="TOPLAM KAYITLI OLAY"
+                label={t('kpi.totalEvents')}
                 value={displayStats.totalEvents}
-                sub={focusedLog ? 'İzole oturum' : 'Kayıtlı oturumlar'}
+                sub={focusedLog ? t('kpi.sub.isolatedSession') : t('kpi.sub.recordedSessions')}
                 accent="slate"
               />
               <KpiCard
-                label="ORTALAMA İSABET"
+                label={t('kpi.avgAccuracy')}
                 value={`%${displayStats.avgAccuracy}`}
                 progress={displayStats.avgAccuracy}
                 animate={barsAnimate}
                 accent="amber"
               />
               <KpiCard
-                label="KRİTİK HATALAR"
+                label={t('kpi.criticalErrors')}
                 value={displayStats.criticalErrors}
                 sub={
                   displayStats.criticalErrors > 0
                     ? focusedLog
-                      ? 'BU GÖREVDE İHLAL'
-                      : 'GÜVENLİK İHLALİ TESPİT EDİLDİ'
-                    : 'Hedef Dahilinde'
+                      ? t('kpi.sub.violationThisTask')
+                      : t('kpi.sub.securityViolation')
+                    : t('kpi.sub.withinTarget')
                 }
                 accent="rose"
                 warning={displayStats.criticalErrors > 0}
@@ -760,25 +777,31 @@ export default function ProgressTracker({ onBack }) {
             {!focusedLog && discipline === 'all' && displayStats.disciplineSuccess ? (
               <div className="grid gap-3 sm:grid-cols-3">
                 <KpiCard
-                  label="ATIŞ BAŞARI ORANI"
+                  label={t('kpi.disciplineSuccess.atis')}
                   value={`%${displayStats.disciplineSuccess.atis}`}
-                  sub={`${displayStats.categoryTotals?.atis ?? 0} OTURUM · ATIS`}
+                  sub={t('kpi.disciplineSuccess.atisSub', {
+                    count: displayStats.categoryTotals?.atis ?? 0,
+                  })}
                   progress={displayStats.disciplineSuccess.atis}
                   animate={barsAnimate}
                   accent="slate"
                 />
                 <KpiCard
-                  label="CQB BAŞARI ORANI"
+                  label={t('kpi.disciplineSuccess.cqb')}
                   value={`%${displayStats.disciplineSuccess.cqb}`}
-                  sub={`${displayStats.categoryTotals?.cqb ?? 0} OTURUM · YAKIN MESAFE`}
+                  sub={t('kpi.disciplineSuccess.cqbSub', {
+                    count: displayStats.categoryTotals?.cqb ?? 0,
+                  })}
                   progress={displayStats.disciplineSuccess.cqb}
                   animate={barsAnimate}
                   accent="amber"
                 />
                 <KpiCard
-                  label="FOF BAŞARI ORANI"
+                  label={t('kpi.disciplineSuccess.fof')}
                   value={`%${displayStats.disciplineSuccess.fof}`}
-                  sub={`${displayStats.categoryTotals?.fof ?? 0} oturum · FOF`}
+                  sub={t('kpi.disciplineSuccess.fofSub', {
+                    count: displayStats.categoryTotals?.fof ?? 0,
+                  })}
                   progress={displayStats.disciplineSuccess.fof}
                   animate={barsAnimate}
                   accent="slate"
@@ -797,18 +820,18 @@ export default function ProgressTracker({ onBack }) {
                     <div className="flex min-w-0 items-center gap-2">
                       <TrendingUp className="size-4 shrink-0 text-emerald-500" strokeWidth={1.5} aria-hidden />
                       <h2 className="text-[10px] font-bold uppercase tracking-[0.18em] text-app-text sm:text-[11px] sm:tracking-[0.2em]">
-                        PERFORMANS TRENDİ
+                        {t('trend.title')}
                       </h2>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
                       <span className="font-mono text-[8px] uppercase text-app-text/45 sm:text-[9px]">
-                        SON {trendSeries.length} OTURUM
+                        {t('trend.lastSessions', { count: trendSeries.length })}
                       </span>
                       <button
                         type="button"
                         onClick={handleTrendExpand}
                         className="rounded border border-slate-700 bg-slate-900/80 p-1.5 text-app-text/70 transition-colors hover:border-emerald-600/50 hover:text-emerald-400"
-                        aria-label="Performans trendi tam ekran"
+                        aria-label={t('trend.expandAria')}
                       >
                         <Maximize2 className="size-4" strokeWidth={1.75} aria-hidden />
                       </button>
@@ -823,7 +846,7 @@ export default function ProgressTracker({ onBack }) {
                   <div className="flex items-center gap-2">
                     <Activity className="size-4 text-sky-400" strokeWidth={1.5} aria-hidden />
                     <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-app-text">
-                      CANLI KAYIT AKIŞI
+                      {t('activityFeed.title')}
                     </h2>
                   </div>
                   <Clock className="size-4 text-app-text/45" strokeWidth={1.5} aria-hidden />
@@ -850,15 +873,15 @@ export default function ProgressTracker({ onBack }) {
               <div className="flex flex-wrap items-center gap-4 text-[9px] uppercase tracking-wider text-app-text/45">
                 <span className="inline-flex items-center gap-1.5">
                   <Target className="size-3.5 text-emerald-500" aria-hidden />
-                  {isConfigured ? 'Canlı bağlantı' : 'Çevrimdışı'}
+                  {isConfigured ? t('footer.connectionLive') : t('footer.connectionOffline')}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <Shield className="size-3.5 text-amber-500" aria-hidden />
-                  Toplam: {logs.length}
+                  {t('footer.totalLogs', { count: logs.length })}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <Award className="size-3.5 text-rose-500" aria-hidden />
-                  Filtrelenen: {filteredLogs.length}
+                  {t('footer.filteredLogs', { count: filteredLogs.length })}
                 </span>
               </div>
             </div>

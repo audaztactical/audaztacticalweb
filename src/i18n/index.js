@@ -30,6 +30,8 @@ import trBallistics from './locales/tr/ballistics.json'
 import enBallistics from './locales/en/ballistics.json'
 import trBallisticsPdf from './locales/tr/ballistics-pdf.json'
 import enBallisticsPdf from './locales/en/ballistics-pdf.json'
+import trProgress from './locales/tr/progress.json'
+import enProgress from './locales/en/progress.json'
 
 export const SUPPORTED_LANGUAGES = /** @type {const} */ (['tr', 'en'])
 
@@ -46,14 +48,14 @@ const isDev = typeof import.meta !== 'undefined' && Boolean(import.meta.env?.DEV
 
 i18n.use(initReactI18next).init({
   resources: {
-    tr: { common: trCommon, dashboard: trDashboard, nav: trNav, profile: trProfile, messages: trMessages, academy: trAcademy, forum: trForum, intel: trIntel, training: trTraining, 'training-pdf': trTrainingPdf, health: trHealth, 'health-pdf': trHealthPdf, armory: trArmory, ballistics: trBallistics, 'ballistics-pdf': trBallisticsPdf },
-    en: { common: enCommon, dashboard: enDashboard, nav: enNav, profile: enProfile, messages: enMessages, academy: enAcademy, forum: enForum, intel: enIntel, training: enTraining, 'training-pdf': enTrainingPdf, health: enHealth, 'health-pdf': enHealthPdf, armory: enArmory, ballistics: enBallistics, 'ballistics-pdf': enBallisticsPdf },
+    tr: { common: trCommon, dashboard: trDashboard, nav: trNav, profile: trProfile, messages: trMessages, academy: trAcademy, forum: trForum, intel: trIntel, training: trTraining, 'training-pdf': trTrainingPdf, health: trHealth, 'health-pdf': trHealthPdf, armory: trArmory, ballistics: trBallistics, 'ballistics-pdf': trBallisticsPdf, progress: trProgress },
+    en: { common: enCommon, dashboard: enDashboard, nav: enNav, profile: enProfile, messages: enMessages, academy: enAcademy, forum: enForum, intel: enIntel, training: enTraining, 'training-pdf': enTrainingPdf, health: enHealth, 'health-pdf': enHealthPdf, armory: enArmory, ballistics: enBallistics, 'ballistics-pdf': enBallisticsPdf, progress: enProgress },
   },
   lng: detectBrowserLanguage(),
   fallbackLng: 'en',
   supportedLngs: [...SUPPORTED_LANGUAGES],
   defaultNS: 'common',
-  ns: ['common', 'dashboard', 'nav', 'profile', 'messages', 'academy', 'forum', 'intel', 'training', 'training-pdf', 'health', 'health-pdf', 'armory', 'ballistics', 'ballistics-pdf'],
+  ns: ['common', 'dashboard', 'nav', 'profile', 'messages', 'academy', 'forum', 'intel', 'training', 'training-pdf', 'health', 'health-pdf', 'armory', 'ballistics', 'ballistics-pdf', 'progress'],
   interpolation: { escapeValue: false },
   ...(isDev
     ? {

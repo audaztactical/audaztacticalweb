@@ -1,5 +1,6 @@
 import { invNum, invStr } from './inventoryIlws'
 import { getProgressLogTimestampMs } from './progressAnalytics'
+import { progressLocale, progressT } from './progressDisplayText'
 import {
   filterSimulationLogs,
   formatSimulationTimingSec,
@@ -19,9 +20,9 @@ import {
  */
 export function getTcccSimStatusLabel(row) {
   const stored = invStr(row.tcccSimStatus).toUpperCase()
-  if (stored === 'BAŞARILI' || stored === 'BASARILI') return 'Başarılı'
-  if (stored === 'BAŞARISIZ' || stored === 'BASARISIZ') return 'Başarısız'
-  return getSimulationSuccess(row) ? 'Başarılı' : 'Başarısız'
+  if (stored === 'BAŞARILI' || stored === 'BASARILI') return progressT('tcccSim.success')
+  if (stored === 'BAŞARISIZ' || stored === 'BASARISIZ') return progressT('tcccSim.failure')
+  return getSimulationSuccess(row) ? progressT('tcccSim.success') : progressT('tcccSim.failure')
 }
 
 /**
@@ -41,16 +42,16 @@ export function getTcccSimRejectionSnippet(row) {
   const reasons = getStoredRejectionReasons(row)
   if (reasons.length > 0) return reasons[0].replace(/^•\s*/, '')
   if (isTcccSimulationFailed(row)) {
-    return invStr(row.medevacFailureReason).trim() || 'İletim hatası'
+    return invStr(row.medevacFailureReason).trim() || progressT('tcccSim.txError')
   }
-  return 'TEMİZ / HATA YOK'
+  return progressT('tcccSim.cleanNoError')
 }
 
 /**
  * @param {Record<string, unknown>} row
  */
 export function getTcccSimulationModeLabel(row) {
-  return getSimulationMode(row) === 'casevac' ? 'CASEVAC MIST' : 'MEDEVAC 9-LINE'
+  return getSimulationMode(row) === 'casevac' ? progressT('tcccSim.casevac') : progressT('tcccSim.medevac')
 }
 
 /**
@@ -68,8 +69,8 @@ export function buildTcccHudTooltipModel(row) {
     overtimeSec,
     overtimeLabel:
       overtimeSec > 0
-        ? `-${formatSimulationTimingSec(overtimeSec)} SN`
-        : 'YOK / SÜRE SINIRI İÇİNDE',
+        ? progressT('tcccSim.overtimeNeg', { sec: formatSimulationTimingSec(overtimeSec) })
+        : progressT('tcccSim.overtimeNone'),
     simulationMode: getTcccSimulationModeLabel(row),
     efficiency: resolveTcccReactionChartEfficiency(row),
     rejectionReasons: getStoredRejectionReasons(row),
@@ -103,25 +104,22 @@ export function resolveTcccReactionChartEfficiency(row) {
  * @param {number} idx
  */
 export function formatTcccReactionChartTimestamp(row, idx) {
+  const locale = progressLocale()
+  const opts = {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }
   const ms = getProgressLogTimestampMs(row)
   if (ms > 0) {
-    return new Date(ms).toLocaleString('tr-TR', {
-      day: '2-digit',
-      month: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
+    return new Date(ms).toLocaleString(locale, opts)
   }
   const raw = invStr(row.timestamp)
   if (raw) {
     const d = new Date(raw)
     if (!Number.isNaN(d.getTime())) {
-      return d.toLocaleString('tr-TR', {
-        day: '2-digit',
-        month: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
+      return d.toLocaleString(locale, opts)
     }
   }
   return `O${idx + 1}`

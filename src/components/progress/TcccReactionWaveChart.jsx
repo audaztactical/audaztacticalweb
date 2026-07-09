@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Area,
   AreaChart,
@@ -90,6 +91,7 @@ export default function TcccReactionWaveChart({
   stableDebriefTooltip = false,
   rechartsTooltipProps = null,
 }) {
+  const { t } = useTranslation('progress')
   const expanded = variant === 'expanded'
   const emerald = accent === 'emerald'
   const stroke = emerald ? '#34d399' : '#f59e0b'
@@ -136,7 +138,7 @@ export default function TcccReactionWaveChart({
   if (series.length === 0) {
     return (
       <p className="py-8 text-center font-mono text-[10px] uppercase tracking-wider text-app-text/45">
-        MEDEVAC / CASEVAC SİMÜLASYON KAYDI YOK
+        {t('charts.tcccWaveEmpty')}
       </p>
     )
   }
@@ -214,7 +216,7 @@ export default function TcccReactionWaveChart({
         </ResponsiveContainer>
       </div>
       <p className={`mt-2 text-center font-mono text-[8px] uppercase tracking-wider ${captionClass}`}>
-        Y EKSENİ · STRES / REAKSİYON VERİMLİLİĞİ % · SON {series.length} OTURUM
+        {t('charts.tcccWaveCaption')}
       </p>
     </div>
   )

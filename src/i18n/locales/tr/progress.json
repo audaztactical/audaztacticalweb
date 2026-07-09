@@ -1,0 +1,270 @@
+{
+  "page": {
+    "title": "Başarı Takibi",
+    "subtitle": "Kişisel Performans Analizi",
+    "backToCommand": "KOMUTA MERKEZİNE DÖN",
+    "operatorLabel": "OPERATÖR",
+    "operatorFallback": "OPERATÖR",
+    "syncing": "Operatör verisi senkronize ediliyor…"
+  },
+  "orsHud": {
+    "kicker": "{{abbrev}} · OPERASYONEL HAZIRLIK",
+    "motorSyncing": "MOTOR SENKRON...",
+    "livePenalties": "CANLI · {{count}} CEZA",
+    "motorActive": "CANLI · MOTOR AKTİF",
+    "awaitingData": "VERİ BEKLENİYOR",
+    "tcccPenaltyBanner": "{{code}} · −14 {{abbrev}}"
+  },
+  "filters": {
+    "matrixTitle": "TAKTİK FİLTRE MATRİSİ",
+    "mainDiscipline": "ANA DİSİPLİN",
+    "subTopic": "ALT GÖREV / KONU",
+    "subTopicLocked": "· KİLİTLİ",
+    "timeframe": "ZAMAN ARALIĞI",
+    "timeframes": {
+      "7d": "7 GÜN",
+      "30d": "30 GÜN",
+      "all": "TÜM ZAMANLAR"
+    },
+    "allTasks": "TÜM GÖREVLER",
+    "filterDisabledAllDisciplines": "TÜM DİSİPLİNLER · GÖREV FİLTRESİ DEVRE DIŞI",
+    "noRecordsTemplateList": "BU DİSİPLİNDE KAYIT YOK · ŞABLON LİSTESİ",
+    "taskCountSync": "{{count}} görev · senkron",
+    "disciplines": {
+      "all": "TÜM DİSİPLİNLER",
+      "atis": "ATIŞ BECERİSİ (ATIS)",
+      "cqb": "YAKIN MESAFE MUHAREBESİ (CQB)",
+      "tccc": "TAKTİK SAĞLIK (TCCC)",
+      "fof": "KUVVET KARŞILAŞMASI (FOF)",
+      "vbss": "VBSS / MARITIME (VBSS)"
+    },
+    "subTopics": {
+      "all": {
+        "all": "TÜM GÖREVLER"
+      },
+      "atis": {
+        "all": "TÜM ATIŞ KONULARI",
+        "basic_pistol": "TEMEL TABANCA",
+        "stress_shooting": "STRES ATIŞI",
+        "double_tap": "DOUBLE TAP"
+      },
+      "cqb": {
+        "all": "TÜM CQB GÖREVLERİ",
+        "room_clear": "ODA TEMİZLEME",
+        "breach_entry": "KIRMA & GİRİŞ"
+      },
+      "tccc": {
+        "all": "TÜM TCCC GÖREVLERİ",
+        "ifak_speed": "IFAK HIZI",
+        "care_under_fire": "ATEŞ ALTINDA BAKIM (CUF)",
+        "medevac_9line": "9-LINE MEDEVAC"
+      },
+      "fof": {
+        "all": "TÜM FOF GÖREVLERİ",
+        "rehine_kurtarma_simulasyon": "REHİNE KURTARMA - SİMÜLASYON",
+        "aktif_atici_active_shooter": "AKTİF ATICI (ACTIVE SHOOTER) MÜDAHALE",
+        "ekip_bazli_karsilasma_fof": "EKİP BAZLI KARŞILAŞMA (FORCE ON FORCE)"
+      },
+      "vbss": {
+        "all": "TÜM VBSS GÖREVLERİ",
+        "kargo_konteyner_bot": "KARGO / KONTEYNER GEMİSİ SIZMA (BOT)",
+        "merdiven_kanca_vbss": "MERDİVEN / KANCA İLE TIRMANMA (VBSS)",
+        "dar_koridor_guverte": "DAR KORİDOR VE GÜVERTE TEMİZLİĞİ"
+      }
+    }
+  },
+  "focus": {
+    "lockedBanner": "[⚠️ OTURUMA KİLİTLENDİ: LOG_ID_{{id}}] - SPESİFİK ETKİNLİK VERİSİ İZOLE EDİLİYOR",
+    "releaseLock": "KİLİDİ KALDIR / X",
+    "trendLockLabel": "LOCK"
+  },
+  "kpi": {
+    "overallSuccess": "GENEL BAŞARI ORANI",
+    "totalEvents": "TOPLAM KAYITLI OLAY",
+    "avgAccuracy": "ORTALAMA İSABET",
+    "criticalErrors": "KRİTİK HATALAR",
+    "sub": {
+      "singleSessionLocked": "Tek oturum · hedef kilitli",
+      "sessionsAllCategories": "{{count}} oturum · Tüm Kategoriler",
+      "sessionsFiltered": "{{count}} oturum · filtrelenmiş",
+      "isolatedSession": "İzole oturum",
+      "recordedSessions": "Kayıtlı oturumlar",
+      "violationThisTask": "BU GÖREVDE İHLAL",
+      "securityViolation": "GÜVENLİK İHLALİ TESPİT EDİLDİ",
+      "withinTarget": "Hedef Dahilinde"
+    },
+    "disciplineSuccess": {
+      "atis": "ATIŞ BAŞARI ORANI",
+      "cqb": "CQB BAŞARI ORANI",
+      "fof": "FOF BAŞARI ORANI",
+      "atisSub": "{{count}} OTURUM · ATIS",
+      "cqbSub": "{{count}} OTURUM · YAKIN MESAFE",
+      "fofSub": "{{count}} oturum · FOF"
+    }
+  },
+  "tacticalTeamCta": {
+    "kicker": "Taktik tim",
+    "body": "Grubuna katılmak veya kadronu görmek için Ayarlar → Taktik Tim bölümüne git →"
+  },
+  "trend": {
+    "title": "PERFORMANS TRENDİ",
+    "lastSessions": "SON {{count}} OTURUM",
+    "empty": "TREND VERİSİ YOK",
+    "expandAria": "Performans trendi tam ekran"
+  },
+  "activityFeed": {
+    "title": "CANLI KAYIT AKIŞI",
+    "empty": "KAYIT AKIŞI BOŞ",
+    "unverified": "Gözlem · Doğrulanmadı",
+    "transmissionOk": "İletim Aktif",
+    "transmissionFailure": "İletim Hatası"
+  },
+  "footer": {
+    "connectionLive": "Canlı bağlantı",
+    "connectionOffline": "Çevrimdışı",
+    "totalLogs": "Toplam: {{count}}",
+    "filteredLogs": "Filtrelenen: {{count}}"
+  },
+  "hud": {
+    "sectionTitle": "Analitik Modüller",
+    "detailMode": "HUD DETAY · MOBİL",
+    "detailModeBadge": "· detay modu",
+    "panels": {
+      "MATRIX": "TAKTİK KARAKTER MATRİSİ",
+      "RADAR": "KRONİK HATA RADARI",
+      "WAVE": "STRES-PERFORMANS DALGASI",
+      "TCCC": "ANALİTİK TCCC REAKSİYON DALGASI",
+      "TREND": "PERFORMANS TRENDİ"
+    },
+    "matrix": {
+      "lethal": "ÖLÜMCÜL",
+      "aggressive": "AGRESİF",
+      "hesitant": "TEREDDÜTLÜ",
+      "reckless": "PERVASIZ",
+      "axisReaction": "REAKSİYON SN →",
+      "axisAccuracy": "İSABET % ↑",
+      "empty": "MATRİS VERİSİ YOK",
+      "emptyLocked": "LOCK_ON · OTURUM MATRİS VERİSİ YOK",
+      "lockOn": "· LOCK_ON",
+      "srCaption": "SR"
+    },
+    "radar": {
+      "empty": "HATA KAYDI YOK · TEMİZ HAT",
+      "emptyLocked": "BU OTURUMDA KRİTİK HATA YOK",
+      "singleTask": "TEK GÖREV",
+      "tooltipViolation": "İHLAL",
+      "tooltipCode": "KOD",
+      "tooltipFreq": "SIKLIK"
+    },
+    "wave": {
+      "emptyTccc": "≥2 TCCC SİMÜLASYON KAYDI GEREKLİ",
+      "emptyDaily": "AYNI GÜN İÇİNDE ≥2 OTURUM GEREKLİ",
+      "sessionIsolated": "OTURUM İZOLE"
+    },
+    "tccc": {
+      "debriefTitle": "DEBRIEF / RED ANALİZİ",
+      "debriefEmpty": "KAYIT YOK",
+      "protocolClean": "PROTOKOL TEMİZ · RED YOK",
+      "dataNotFound": "VERİ BULUNAMADI",
+      "opStatus": "• OPERASYON DURUMU: {{status}}",
+      "totalTime": "• TOPLAM SÜRE: {{time}} SN",
+      "delayTime": "• GECİKME SÜRESİ: {{time}}",
+      "radioMode": "• TELSİZ MODU: {{mode}}",
+      "efficiency": "• REAKSİYON VERİMLİLİĞİ: %{{value}}",
+      "rejectionHeading": "• İHLAL / RED GEREKÇELERİ (TAM METİN)",
+      "rejectionHeadingShort": "• İHLAL / RED GEREKÇELERİ:"
+    },
+    "overlay": {
+      "close": "KAPAT",
+      "exitFocus": "ODAKTAN ÇIK / ESC",
+      "fullscreenHud": "TAM EKRAN · HUD ENTEGRASYONU",
+      "escHint": "ESC",
+      "expandAria": "{{title}} genişlet"
+    }
+  },
+  "charts": {
+    "tcccWaveEmpty": "MEDEVAC / CASEVAC SİMÜLASYON KAYDI YOK",
+    "tcccWaveCaption": "REAKSİYON VERİMLİLİĞİ %"
+  },
+  "tooltips": {
+    "dataNotFound": "VERİ BULUNAMADI",
+    "cleanLane": "TEMİZ HAT",
+    "blueOnBlue": "MAVİ-MAVİ",
+    "criticalYes": "⚠️ VAR",
+    "criticalClean": "✅ TEMİZ",
+    "atis": {
+      "drill": "• HEDEF ID / DRILL: {{drill}}",
+      "firstShot": "• REAKSİYON / İLK ATIŞ: {{sec}} sn",
+      "split": "• SPLIT (ATIŞ ARASI) SÜRE: {{sec}} sn",
+      "roundsHits": "• ATILAN / VURULAN: {{rounds}} / {{hits}}",
+      "critical": "• KRİTİK İHLAL: {{status}}"
+    },
+    "ops": {
+      "scenarioDuration": "SENARYO SÜRESİ",
+      "boardingDuration": "BOARDING SÜRESİ",
+      "operationDuration": "OPERASYON SÜRESİ",
+      "durationLine": "• {{label}}: {{sec}} sn",
+      "sectorGap": "• SEKTÖR BOŞLUĞU / İHLAL: {{errors}}",
+      "penalty": "• CEZA ETKİSİ: -{{penalty}} ORS"
+    },
+    "generic": {
+      "session": "• OTURUM: {{drill}}",
+      "discipline": "• DİSİPLİN: {{tag}}",
+      "critical": "• KRİTİK İHLAL: {{status}}",
+      "penalty": "• CEZA ETKİSİ: -{{penalty}} ORS"
+    }
+  },
+  "tcccSim": {
+    "success": "Başarılı",
+    "failure": "Başarısız",
+    "txError": "İletim hatası",
+    "cleanNoError": "TEMİZ / HATA YOK",
+    "medevac": "MEDEVAC 9-LINE",
+    "casevac": "CASEVAC MIST",
+    "overtimeNone": "YOK / SÜRE SINIRI İÇİNDE",
+    "overtimeNeg": "-{{sec}} SN"
+  },
+  "activityTitles": {
+    "observerFallback": "Gözlemci",
+    "observedVbss": "VBSS Gözlem · {{observer}}",
+    "observedTccc": "TCCC MARCH Gözlem · {{observer}}",
+    "observedDefault": "Gözlem kaydı",
+    "unverified": "Gözlem · Doğrulanmadı",
+    "verified": "Gözlem · Onaylı",
+    "sessionFallback": "{{tag}} OTURUMU",
+    "drillFallbacks": {
+      "tccc": "TCCC DRILL",
+      "cqb": "CQB DRILL",
+      "fof": "FOF DRILL",
+      "vbss": "VBSS DRILL"
+    }
+  },
+  "radarErrors": {
+    "blueOnBlueFof": "MAVİ-MAVİ (FOF)"
+  },
+  "disciplineTags": {
+    "ATIS": "ATIS",
+    "CQB": "CQB",
+    "TCCC": "TCCC",
+    "FOF": "FOF",
+    "VBSS": "VBSS",
+    "OTHER": "OTHER"
+  },
+  "groupJoin": {
+    "title": "[ 🦅 TİME/GRUBA DAHİL OL ]",
+    "passwordLabel": "Grup Şifresi",
+    "placeholder": "ÖRN: ALPHA99",
+    "submit": "KATIL",
+    "hint": "Eğitmeninizden aldığınız grup şifresi ile taktik timinize katılın.",
+    "errors": {
+      "authRequired": "Oturum gerekli",
+      "passwordTooShort": "Grup şifresi en az 4 karakter olmalı",
+      "invalidPassword": "Grup şifresi geçersiz — eğitmeninizden kodu doğrulayın.",
+      "joinFailed": "Gruba katılım başarısız"
+    },
+    "success": {
+      "alreadyMember": "• [BAŞARILI]: Zaten \"{{name}}\" grubundasınız.",
+      "joined": "• [BAŞARILI]: Gruba başarıyla dahil oldunuz!"
+    }
+  }
+}
