@@ -1178,7 +1178,246 @@
     },
     "egitim": {
       "title": "EĞİTİM",
-      "sectorLabel": "EDU-06 · Eğitim planı"
+      "sectorLabel": "EDU-06 · Eğitim planı",
+      "tabs": {
+        "aria": "Eğitim terminal görünümü",
+        "form": "Eğitim planlama formu",
+        "sandbox": "Taktik sandbox",
+        "registry": "Planlanan eğitimler takvimi"
+      },
+      "session": {
+        "required": "Oturum gerekli",
+        "channelDisconnected": "Veri kanalı kesildi · yeniden dene"
+      },
+      "form": {
+        "metricsPanel": "Eğitim kurulum · takvim metrikleri",
+        "logisticsPanel": "Lojistik · eğitim hedefleri",
+        "selectPlaceholder": "— Seçin —",
+        "trainingFocus": "Eğitim odağı",
+        "customTrainingFocusPlaceholder": "Özel eğitim odağı / disiplin…",
+        "difficultyLevel": "Zorluk / stres seviyesi",
+        "targetDate": "Hedef tarih / saat",
+        "estimatedDuration": "Tahmini süre (dk)",
+        "tacticalPlanSummary": "Taktik plan özeti",
+        "summaryFocus": "Odak: {{value}}",
+        "summaryDifficulty": "Zorluk: {{value}}",
+        "summaryDuration": "Süre: {{value}}",
+        "summaryLogistics": "Lojistik: {{count}} / 4",
+        "summaryStatus": "Durum: {{status}}",
+        "statusPlanned": "PLANLANDI",
+        "logisticsSection": "// Lojistik ve kaynak gereksinimleri",
+        "operationNoteSection": "// Operasyon notu / eğitim hedefleri",
+        "operationNotePlaceholder": "Öğrenme çıktıları, KPI, koç notları, sahne güvenliği…",
+        "imageAlt": "Eğitim",
+        "toggles": {
+          "weaponsReady": "Silah bakım / emniyet kontrolü",
+          "ammoAllocated": "Mühimmat / şarjör tahsisi",
+          "ppeChecked": "Balistik / koruyucu donanım",
+          "tcccKitReady": "Sıhhiye / acil müdahale çantası"
+        },
+        "submit": "Eğitim planını onayla",
+        "submitting": "Aktarılıyor…"
+      },
+      "validation": {
+        "sessionRequired": "Oturum gerekli",
+        "trainingFocusRequired": "Eğitim odağı gerekli",
+        "customTrainingFocusRequired": "Özel eğitim odağı gerekli",
+        "difficultyRequired": "Zorluk seviyesi gerekli",
+        "targetDateRequired": "Hedef tarih gerekli",
+        "estimatedDurationRequired": "Tahmini süre gerekli",
+        "permissionDenied": " · Yetki / kurallar"
+      },
+      "messages": {
+        "submitSuccess": "Eğitim planı aktarıldı · trainings",
+        "submitFailed": "Eğitim planı başarısız · yeniden dene{{hint}}"
+      },
+      "options": {
+        "trainingFocus": {
+          "atis_mastery": "Atış ustalığı (ATIŞ)",
+          "cqb_tactics": "Meskun mahal taktikleri (CQB)",
+          "fof_simulation": "Force-on-Force simülasyonu (FOF)",
+          "vbss_maritime": "Deniz borda geçişi (VBSS)",
+          "tccc_medical": "Taktik saha sağlığı (TCCC)",
+          "custom": "Özel / diğer odak",
+          "customFocus": "Özel odak"
+        },
+        "difficultyLevel": {
+          "green_low": "Yeşil · düşük stres",
+          "amber_medium": "Kehribar · orta stres",
+          "red_hardcore": "Kırmızı · hardcore"
+        }
+      },
+      "status": {
+        "planned": "PLANLANDI",
+        "active": "AKTİF",
+        "completed": "TAMAMLANDI",
+        "cancelled": "İPTAL"
+      },
+      "history": {
+        "title": "Planlanan eğitimler takvimi · eğitim planlama",
+        "syncMeta": "trainings · canlı senkron · {{filtered}}/{{total}} plan",
+        "filterBar": "Filtreleme barı",
+        "trainingFocus": "Eğitim odağı",
+        "schedule": "Takvim",
+        "all": "Tümü",
+        "upcoming": "Yaklaşan",
+        "past": "Geçmiş",
+        "syncing": "Senkron…",
+        "empty": "Eğitim planı yok",
+        "noFilterResults": "Filtre sonucu yok",
+        "durationMinutes": "{{count}} dk",
+        "logisticsObjects": "{{count}} obj",
+        "columns": {
+          "targetDate": "Hedef tarih",
+          "type": "Tip",
+          "trainingFocus": "Eğitim odağı",
+          "difficulty": "Zorluk",
+          "duration": "Süre",
+          "logistics": "Lojistik",
+          "status": "Durum",
+          "schedule": "Takvim"
+        },
+        "scheduleLabel": {
+          "upcoming": "Yaklaşan",
+          "past": "Geçmiş"
+        },
+        "planKind": {
+          "sandbox": "Taktik sandbox",
+          "plan": "Eğitim planı"
+        },
+        "bool": {
+          "yes": "Evet",
+          "no": "Hayır"
+        },
+        "detail": {
+          "sandboxTitle": "Taktik sandbox detay · layout önizleme",
+          "planTitle": "Eğitim planı detay paneli",
+          "layoutPreview": "Layout önizleme · {{objects}} nesne · {{arrows}} ok · {{shapes}} çizim · {{mode}}",
+          "editMode": "Düzenleme modu",
+          "readOnlyMode": "Salt okunur",
+          "editInterface": "Arayüzü düzenle",
+          "noLayoutData": "Sandbox kaydı · layout verisi yok",
+          "focus": "Odak:",
+          "difficulty": "Zorluk:",
+          "target": "Hedef:",
+          "duration": "Süre:",
+          "weaponsReady": "Silah hazır:",
+          "ammoAllocated": "Mühimmat:",
+          "ppe": "PPE:",
+          "tcccKit": "TCCC çantası:",
+          "designNote": "Tasarım notu:",
+          "trainingGoals": "Eğitim hedefleri:",
+          "noOperationNote": "Eğitim hedefi / not kayıtlı değil."
+        }
+      },
+      "sandbox": {
+        "title": "Taktik sandbox · sınırsız vektör planı",
+        "editingBanner": "Mevcut senaryo düzenleniyor · kaydet ile veritabanına yaz",
+        "canvasAria": "Taktik poligon düzenleyici",
+        "readOnlyOverlay": "Salt okunur önizleme · arayüzü düzenle ile düzenle",
+        "assetLibrary": "Taktik varlık kütüphanesi",
+        "liveControl": "Canlı kontrol · simülasyon metrikleri",
+        "clearScene": "Sahneyi temizle",
+        "saveChanges": "Değişiklikleri kaydet",
+        "saveChangesBusy": "Kaydediliyor…",
+        "saveScenario": "Senaryo kaydet",
+        "saveScenarioBusy": "Kaydediliyor…",
+        "designControls": "Tasarım kontrolleri",
+        "strokeWidth": "Çizim kalınlığı · {{width}}px",
+        "arrowTypesLabel": "Ok çeşitleri",
+        "editLabel": "Etiket düzenle",
+        "labelPlaceholder": "Nesne etiketi…",
+        "labelPlaceholderNoSelection": "Önce bir nesne seçin",
+        "alignHorizontal": "Yatay hizala",
+        "alignVertical": "Dikey hizala",
+        "selectionHint": "Kutu seçimi · Delete tuşu veya nesne sil ile grup silme",
+        "selectionCounts": "· {{objects}} nesne · {{arrows}} ok · {{shapes}} çizim",
+        "targetDate": "Hedef tarih",
+        "duration": "Süre (dk)",
+        "difficulty": "Zorluk",
+        "designNoteSection": "// Tasarım notu / eğitim hedefleri",
+        "designNotePlaceholder": "Drill akışı, ateş hattı, güvenlik şeridi, KPI…",
+        "statusBar": {
+          "drawMode": "Çizim · {{tool}} · kalınlık {{width}}px",
+          "arrowDraw": "Ok çiz · {{type}}",
+          "eraser": "Silgi · öğeye tıklayın",
+          "marquee": "Kutu seçim · sürükleyerek çoklu seç",
+          "select": "Seçim · taşı · köşeden boyutlandır · Delete ile sil{{assetSuffix}}",
+          "selectAsset": " · varlık: {{label}}",
+          "toolFallback": "Araç",
+          "zoomPan": " · tekerlek: zoom {{zoom}}% · space / orta tuş: pan"
+        },
+        "metrics": {
+          "designedArea": "Tasarlanan alan:",
+          "targetCount": "Hedef sayısı:",
+          "coverCount": "Siper sayısı:",
+          "tacticalRisk": "Taktik hata riski:"
+        },
+        "risk": {
+          "low": "Düşük",
+          "medium": "Orta",
+          "high": "Yüksek"
+        },
+        "validation": {
+          "targetDateRequired": "Hedef tarih gerekli",
+          "difficultyRequired": "Zorluk seviyesi gerekli",
+          "minOneObjectRequired": "En az bir nesne gerekli"
+        },
+        "messages": {
+          "changesSaved": "Değişiklikler kaydedildi",
+          "scenarioTransferred": "Senaryo trainings aktarıldı",
+          "saveChangesFailed": "Değişiklik kaydı başarısız{{hint}}",
+          "scenarioSaveFailed": "Senaryo kayıt başarısız{{hint}}"
+        },
+        "toolbar": {
+          "aria": "Taktik çizim araç çubuğu",
+          "tools": {
+            "select": "Seç · taşı · boyutlandır",
+            "marquee": "Kutu ile çoklu seçim",
+            "arrow": "Taktik ok çiz",
+            "line": "Çizgi",
+            "circle": "Daire",
+            "triangle": "Üçgen",
+            "rectangle": "Dikdörtgen",
+            "eraser": "Silgi"
+          }
+        },
+        "arrowTypes": {
+          "infiltration": "İntikal yönü",
+          "fire_line": "Ateş hattı",
+          "evac": "Tahliye / destek"
+        },
+        "assets": {
+          "groups": {
+            "targets": "Hedef tipleri",
+            "cover": "Siperler & barikatlar",
+            "cqb": "CQB odacıklar",
+            "special": "Özel ekipman"
+          },
+          "items": {
+            "silhouette_paper": { "label": "Karton silüet", "shortLabel": "SLH" },
+            "steel_popper": { "label": "Metal popper", "shortLabel": "POP" },
+            "moving_target": { "label": "Raylı hareketli hedef", "shortLabel": "MOV" },
+            "concrete_wall": { "label": "Beton blok", "shortLabel": "BET" },
+            "tire_stack": { "label": "Lastik yığını", "shortLabel": "LST" },
+            "sandbag_barrier": { "label": "Kum torbası", "shortLabel": "KUM" },
+            "low_cover": { "label": "Alçak siper", "shortLabel": "ALC" },
+            "center_fed_room": { "label": "Merkez girişli", "shortLabel": "MER" },
+            "corner_fed_room": { "label": "Köşe girişli", "shortLabel": "KSE" },
+            "l_shape_wall": { "label": "L-duvar", "shortLabel": "L-D" },
+            "corridor_module": { "label": "Koridor", "shortLabel": "KOR" },
+            "strobe_light": { "label": "Strobe kule", "shortLabel": "STR" },
+            "speaker_array": { "label": "Ses simülatörü", "shortLabel": "SES" },
+            "laser_gate": { "label": "Kronometre sensörü", "shortLabel": "LZR" },
+            "smoke_generator": { "label": "Duman cihazı", "shortLabel": "DMN" }
+          }
+        }
+      },
+      "preview": {
+        "canvasAriaReadOnly": "Taktik layout salt okunur önizleme",
+        "canvasAriaEdit": "Taktik layout önizleme",
+        "readOnlyBadge": "Salt okunur"
+      }
     },
     "grup-egitimi": {
       "title": "Grup eğitimi",

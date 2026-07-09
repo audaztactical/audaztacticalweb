@@ -57,6 +57,13 @@ import {
   getTcccInjuryType,
   getTcccTourniquetLocation,
 } from './tcccLogRegistry'
+import { EGITIM_CUSTOM } from './egitimOptions'
+import {
+  getEgitimOperationNote,
+  getEgitimPlanTimestampMs,
+  isEgitimSandboxPlan,
+} from './egitimLogRegistry'
+import { invNum } from './inventoryIlws'
 
 /** @typedef {import('../components/training/trainingCategories').TrainingCategory} TrainingCategory */
 
@@ -1229,4 +1236,261 @@ export function formatTcccObservedEvalTypeLabel(row) {
   return isUnverifiedObservedEval(row)
     ? i18n.t('sectors.tccc.observedEval.registry.badgeUnverified', { ns: 'training' })
     : i18n.t('sectors.tccc.observedEval.registry.badgeVerified', { ns: 'training' })
+}
+
+/** @typedef {'trainingFocus' | 'difficultyLevel'} EgitimOptionType */
+
+/**
+ * @param {EgitimOptionType} optionType
+ * @param {string} optionId
+ * @param {string} [fallback]
+ */
+export function formatEgitimOptionLabel(optionType, optionId, fallback = '') {
+  const id = String(optionId || '').trim()
+  if (!id) return fallback || '—'
+  if (id === EGITIM_CUSTOM) return i18n.t(`sectors.egitim.options.${optionType}.custom`, { ns: 'training' })
+  const key = `sectors.egitim.options.${optionType}.${id}`
+  if (i18n.exists(key, { ns: 'training' })) {
+    return i18n.t(key, { ns: 'training' })
+  }
+  return fallback || id
+}
+
+/** @param {string | null | undefined} reasonKey */
+export function formatEgitimSubmitBlockedReason(reasonKey) {
+  if (!reasonKey) return null
+  const map = {
+    OTURUM_GEREKLİ: 'sessionRequired',
+    EĞİTİM_ODAĞI_GEREKLİ: 'trainingFocusRequired',
+    ÖZEL_EĞİTİM_ODAĞI_GEREKLİ: 'customTrainingFocusRequired',
+    ZORLUK_SEVİYESİ_GEREKLİ: 'difficultyRequired',
+    HEDEF_TARİH_GEREKLİ: 'targetDateRequired',
+    TAHMİNİ_SÜRE_GEREKLİ: 'estimatedDurationRequired',
+  }
+  const mapped = map[reasonKey]
+  if (mapped) {
+    return i18n.t(`sectors.egitim.validation.${mapped}`, { ns: 'training' })
+  }
+  return reasonKey
+}
+
+/**
+ * @param {string} errorKey
+ * @param {string} [code]
+ */
+export function formatEgitimSubmitError(errorKey, code = '') {
+  const hint =
+    code === 'permission-denied'
+      ? i18n.t('sectors.egitim.validation.permissionDenied', { ns: 'training' })
+      : code
+        ? ` · ${code}`
+        : ''
+  if (errorKey === 'SUBMIT_FAILED') {
+    return i18n.t('sectors.egitim.messages.submitFailed', { ns: 'training', hint })
+  }
+  return errorKey
+}
+
+/** @param {string} status */
+export function formatEgitimStatusDisplay(status) {
+  const s = String(status || '').trim().toLowerCase()
+  const map = {
+    planned: 'planned',
+    active: 'active',
+    in_progress: 'active',
+    completed: 'completed',
+    done: 'completed',
+    cancelled: 'cancelled',
+  }
+  const key = map[s]
+  if (key) return i18n.t(`sectors.egitim.status.${key}`, { ns: 'training' })
+  if (s) return s.toUpperCase()
+  return '—'
+}
+
+/** @param {Record<string, unknown>} row */
+export function formatEgitimDateCellDisplay(row) {
+  const label = String(row.targetDateLabel ?? '').trim()
+  if (label) return label
+  const ms = getEgitimPlanTimestampMs(row)
+  if (!ms) return '—'
+  return new Date(ms).toLocaleString(trainingLocale(), {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  })
+}
+
+/** @param {Record<string, unknown>} row */
+export function formatEgitimDurationDisplay(row) {
+  const n = invNum(row.estimatedDurationMin)
+  if (n > 0) {
+    return i18n.t('sectors.egitim.history.durationMinutes', { ns: 'training', count: Math.round(n) })
+  }
+  const label = String(row.estimatedDuration ?? '').trim()
+  return label || '—'
+}
+
+/** @param {Record<string, unknown>} row */
+export function formatEgitimTrainingFocusDisplay(row) {
+  const label = String(row.trainingFocus || row.title || '').trim()
+  if (label) return label
+  const key = String(row.trainingFocusKey || row.discipline || '').trim()
+  const custom = String(row.customTrainingFocus || '').trim()
+  if (key === EGITIM_CUSTOM) {
+    return custom || i18n.t('sectors.egitim.options.trainingFocus.customFocus', { ns: 'training' })
+  }
+  if (key.startsWith('custom:')) return key.slice(7).trim() || i18n.t('sectors.egitim.options.trainingFocus.customFocus', { ns: 'training' })
+  if (key) return formatEgitimOptionLabel('trainingFocus', key, key)
+  return '—'
+}
+
+/** @param {Record<string, unknown>} row */
+export function formatEgitimDifficultyDisplay(row) {
+  const label = String(row.difficultyLevel || '').trim()
+  if (label && !String(row.difficultyLevelKey || '').trim()) return label
+  const key = String(row.difficultyLevelKey || '').trim()
+  if (key) return formatEgitimOptionLabel('difficultyLevel', key, label || key)
+  return label || '—'
+}
+
+/** @param {Record<string, unknown>} row */
+export function formatEgitimOperationNoteDisplay(row) {
+  const note = getEgitimOperationNote(row)
+  if (note === 'Eğitim hedefi / not kayıtlı değil.') {
+    return i18n.t('sectors.egitim.history.detail.noOperationNote', { ns: 'training' })
+  }
+  return note
+}
+
+/** @param {Record<string, unknown>} row */
+export function formatEgitimPlanKindLabel(row) {
+  return isEgitimSandboxPlan(row)
+    ? i18n.t('sectors.egitim.history.planKind.sandbox', { ns: 'training' })
+    : i18n.t('sectors.egitim.history.planKind.plan', { ns: 'training' })
+}
+
+/** @param {boolean} value */
+export function formatEgitimBoolDisplay(value) {
+  return i18n.t(`sectors.egitim.history.bool.${value ? 'yes' : 'no'}`, { ns: 'training' })
+}
+
+/** @param {boolean} upcoming */
+export function formatEgitimScheduleLabel(upcoming) {
+  return i18n.t(`sectors.egitim.history.scheduleLabel.${upcoming ? 'upcoming' : 'past'}`, { ns: 'training' })
+}
+
+/** @param {number} count */
+export function formatEgitimLogisticsObjectsDisplay(count) {
+  return i18n.t('sectors.egitim.history.logisticsObjects', { ns: 'training', count })
+}
+
+/**
+ * @param {string} errorKey
+ * @param {string} [code]
+ */
+export function formatEgitimSandboxSaveError(errorKey, code = '') {
+  const hint = code ? ` · ${code}` : ''
+  const map = {
+    HEDEF_TARİH_GEREKLİ: 'targetDateRequired',
+    ZORLUK_SEVİYESİ_GEREKLİ: 'difficultyRequired',
+    EN_AZ_BİR_NESNE_GEREKLİ: 'minOneObjectRequired',
+    DEĞİŞİKLİK_KAYDI_BAŞARISIZ: 'saveChangesFailed',
+    SENARYO_KAYIT_BAŞARISIZ: 'scenarioSaveFailed',
+  }
+  const mapped = map[errorKey]
+  if (mapped === 'saveChangesFailed' || mapped === 'scenarioSaveFailed') {
+    return i18n.t(`sectors.egitim.sandbox.messages.${mapped}`, { ns: 'training', hint })
+  }
+  if (mapped) {
+    return i18n.t(`sectors.egitim.sandbox.validation.${mapped}`, { ns: 'training' })
+  }
+  return errorKey
+}
+
+/** @param {'green_low' | 'amber_medium' | 'red_hardcore' | string} riskLevel */
+export function formatEgitimSandboxRiskLabel(riskLevel) {
+  const map = {
+    green_low: 'low',
+    amber_medium: 'medium',
+    red_hardcore: 'high',
+  }
+  const key = map[riskLevel]
+  if (key) return i18n.t(`sectors.egitim.sandbox.risk.${key}`, { ns: 'training' })
+  return String(riskLevel || '—')
+}
+
+/** @param {string} groupId @param {string} [fallback] */
+export function formatEgitimSandboxAssetGroupTitle(groupId, fallback = '') {
+  const key = `sectors.egitim.sandbox.assets.groups.${groupId}`
+  if (i18n.exists(key, { ns: 'training' })) return i18n.t(key, { ns: 'training' })
+  return fallback || groupId
+}
+
+/**
+ * @param {string} type
+ * @param {'label' | 'shortLabel'} field
+ * @param {string} [fallback]
+ */
+export function formatEgitimSandboxAssetLabel(type, field, fallback = '') {
+  const key = `sectors.egitim.sandbox.assets.items.${type}.${field}`
+  if (i18n.exists(key, { ns: 'training' })) return i18n.t(key, { ns: 'training' })
+  return fallback || type
+}
+
+/** @param {string} toolId */
+export function formatEgitimSandboxToolLabel(toolId) {
+  const key = `sectors.egitim.sandbox.toolbar.tools.${toolId}`
+  if (i18n.exists(key, { ns: 'training' })) return i18n.t(key, { ns: 'training' })
+  return toolId
+}
+
+/** @param {string} arrowType */
+export function formatEgitimSandboxArrowTypeLabel(arrowType) {
+  const key = `sectors.egitim.sandbox.arrowTypes.${arrowType}`
+  if (i18n.exists(key, { ns: 'training' })) return i18n.t(key, { ns: 'training' })
+  return arrowType
+}
+
+/**
+ * @param {{
+ *   activeTool: string
+ *   strokeWidth?: number
+ *   selectedArrowType?: string
+ *   activeBrushLabel?: string
+ *   zoom?: number
+ * }} params
+ */
+export function formatEgitimSandboxStatusBar(params) {
+  const { activeTool, strokeWidth = 2, selectedArrowType = 'infiltration', activeBrushLabel = '', zoom = 1 } = params
+  let main = i18n.t('sectors.egitim.sandbox.statusBar.toolFallback', { ns: 'training' })
+
+  if (['line', 'circle', 'triangle', 'rectangle'].includes(activeTool)) {
+    main = i18n.t('sectors.egitim.sandbox.statusBar.drawMode', {
+      ns: 'training',
+      tool: activeTool.toUpperCase(),
+      width: strokeWidth,
+    })
+  } else if (activeTool === 'arrow') {
+    main = i18n.t('sectors.egitim.sandbox.statusBar.arrowDraw', {
+      ns: 'training',
+      type: formatEgitimSandboxArrowTypeLabel(selectedArrowType).toUpperCase(),
+    })
+  } else if (activeTool === 'eraser') {
+    main = i18n.t('sectors.egitim.sandbox.statusBar.eraser', { ns: 'training' })
+  } else if (activeTool === 'marquee') {
+    main = i18n.t('sectors.egitim.sandbox.statusBar.marquee', { ns: 'training' })
+  } else if (activeTool === 'select') {
+    const assetSuffix = activeBrushLabel
+      ? i18n.t('sectors.egitim.sandbox.statusBar.selectAsset', { ns: 'training', label: activeBrushLabel })
+      : ''
+    main = i18n.t('sectors.egitim.sandbox.statusBar.select', { ns: 'training', assetSuffix })
+  }
+
+  return (
+    main +
+    i18n.t('sectors.egitim.sandbox.statusBar.zoomPan', {
+      ns: 'training',
+      zoom: Math.round(zoom * 100),
+    })
+  )
 }

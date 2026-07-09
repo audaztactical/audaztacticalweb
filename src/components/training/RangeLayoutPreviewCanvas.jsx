@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   drawLayoutObject,
   drawRangeGrid,
@@ -26,6 +27,7 @@ export default function RangeLayoutPreviewCanvas({
   className = '',
   height = 220,
 }) {
+  const { t } = useTranslation('training')
   const canvasRef = useRef(/** @type {HTMLCanvasElement | null} */ (null))
 
   useEffect(() => {
@@ -67,14 +69,17 @@ export default function RangeLayoutPreviewCanvas({
       <canvas
         ref={canvasRef}
         className={`block w-full ${readOnly ? 'pointer-events-none cursor-default' : 'cursor-crosshair'}`}
-        aria-label={readOnly ? 'Taktik layout salt okunur önizleme' : 'Taktik layout önizleme'}
+        aria-label={
+          readOnly
+            ? t('sectors.egitim.preview.canvasAriaReadOnly')
+            : t('sectors.egitim.preview.canvasAriaEdit')
+        }
       />
       {readOnly ? (
         <span className="pointer-events-none absolute right-2 top-2 rounded border border-accent/35 bg-black/70 px-2 py-0.5 font-mono-technical text-[7px] font-bold uppercase tracking-wider text-accent/90">
-          SALT OKUNUR
+          {t('sectors.egitim.preview.readOnlyBadge')}
         </span>
       ) : null}
     </div>
   )
 }
-

@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { ChevronLeft } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import egitimImg from '../../assets/egitim.png'
 import MatrixWireVisualizer from '../armory/MatrixWireVisualizer'
 import TacticalPanel from '../ui/TacticalPanel'
@@ -12,6 +13,11 @@ import {
   TRAINING_FOCUS_OPTIONS,
 } from '../../lib/egitimOptions'
 import { invNum } from '../../lib/inventoryIlws'
+import {
+  formatEgitimOptionLabel,
+  formatEgitimSubmitBlockedReason,
+  formatEgitimSubmitError,
+} from '../../lib/trainingDisplayText'
 import EgitimLogRegistry from './EgitimLogRegistry'
 import TacticalRangeSandbox from './TacticalRangeSandbox'
 import IndividualTrainingSessionHeader from './IndividualTrainingSessionHeader'
@@ -46,6 +52,8 @@ const toggleClass = (active) =>
  *   customValue: string
  *   onCustomChange: (value: string) => void
  *   customPlaceholder: string
+ *   selectPlaceholder: string
+ *   formatOption: (id: string, label: string) => string
  * }} p
  */
 function EgitimSelectField({
@@ -57,15 +65,17 @@ function EgitimSelectField({
   customValue,
   onCustomChange,
   customPlaceholder,
+  selectPlaceholder,
+  formatOption,
 }) {
   return (
     <fieldset className="space-y-2">
       <legend className={labelClass}>{legend}</legend>
       <select className={selectClass} value={value} onChange={(e) => onChange(e.target.value)} required>
-        <option value="">— SEÇİN —</option>
+        <option value="">{selectPlaceholder}</option>
         {options.map((o) => (
           <option key={o.id} value={o.id}>
-            {o.label}
+            {formatOption(o.id, o.label)}
           </option>
         ))}
       </select>
@@ -102,6 +112,7 @@ export default function EgitimTerminal({
   plansLoading = false,
   listenError,
 }) {
+  const { t } = useTranslation('training')
   const { user } = useAuth()
   const uid = user?.uid ?? ''
 
@@ -128,18 +139,29 @@ export default function EgitimTerminal({
   ].filter(Boolean).length
 
   const focusLabel = useMemo(() => {
+    if (form.trainingFocus === EGITIM_CUSTOM) {
+      return (
+        form.customTrainingFocus.trim() ||
+        t('sectors.egitim.options.trainingFocus.customFocus')
+      )
+    }
     const opt = TRAINING_FOCUS_OPTIONS.find((o) => o.id === form.trainingFocus)
-    if (form.trainingFocus === EGITIM_CUSTOM) return form.customTrainingFocus.trim() || 'Özel odak'
-    return opt?.label ?? '—'
-  }, [form.trainingFocus, form.customTrainingFocus])
+    return formatEgitimOptionLabel('trainingFocus', form.trainingFocus, opt?.label ?? '—')
+  }, [form.trainingFocus, form.customTrainingFocus, t])
 
   const difficultyLabel = useMemo(() => {
-    return DIFFICULTY_LEVEL_OPTIONS.find((o) => o.id === form.difficultyLevel)?.label ?? '—'
+    const opt = DIFFICULTY_LEVEL_OPTIONS.find((o) => o.id === form.difficultyLevel)
+    return formatEgitimOptionLabel('difficultyLevel', form.difficultyLevel, opt?.label ?? '—')
   }, [form.difficultyLevel])
 
   const durationMin = Math.max(0, Math.round(invNum(form.estimatedDuration)))
 
-  const submitBlockedReason = useMemo(() => {
+  const durationSummary = useMemo(() => {
+    if (durationMin <= 0) return '—'
+    return t('sectors.egitim.history.durationMinutes', { count: durationMin })
+  }, [durationMin, t])
+
+  const submitBlockedReasonKey = useMemo(() => {
     if (saving) return null
     if (!uid) return 'OTURUM_GEREKLİ'
     if (!form.trainingFocus) return 'EĞİTİM_ODAĞI_GEREKLİ'
@@ -159,7 +181,8 @@ export default function EgitimTerminal({
     showCustomFocus,
   ])
 
-  const canSubmit = submitBlockedReason == null
+  const submitBlockedReason = formatEgitimSubmitBlockedReason(submitBlockedReasonKey)
+  const canSubmit = submitBlockedReasonKey == null
 
   const patch = useCallback((/** @type {Partial<typeof EGITIM_INITIAL_FORM>} */ next) => {
     setForm((f) => ({ ...f, ...next }))
@@ -194,8 +217,7 @@ export default function EgitimTerminal({
       setForm({ ...EGITIM_INITIAL_FORM })
     } catch (err) {
       const code = err && typeof err === 'object' && 'code' in err ? String(err.code) : ''
-      const hint = code === 'permission-denied' ? ' · YETKİ / KURALLAR' : code ? ` · ${code}` : ''
-      setSubmitError(`EĞİTİM_PLANI_BAŞARISIZ · YENİDEN_DENE${hint}`)
+      setSubmitError(formatEgitimSubmitError('SUBMIT_FAILED', code))
       if (import.meta.env.DEV && err && typeof err === 'object' && 'message' in err) {
         console.error('[EgitimTerminal]', err)
       }
@@ -212,7 +234,7 @@ export default function EgitimTerminal({
     }`
 
   return (
-    <div className="space-y-4">
+    <div className="w-full min-w-0 space-y-4">
       <IndividualTrainingSessionHeader />
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <button
@@ -221,13 +243,13 @@ export default function EgitimTerminal({
           className="inline-flex w-fit items-center gap-2 rounded border border-accent/50 bg-accent/12 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent transition hover:bg-accent/20"
         >
           <ChevronLeft className="size-3.5" aria-hidden />
-          KATEGORİLERE DÖN
+          {t('common.terminal.backToCategories')}
         </button>
 
         <div
           className="flex w-full gap-2 rounded border border-accent/25 bg-black/60 p-1 sm:w-auto"
           role="tablist"
-          aria-label="Eğitim terminal görünümü"
+          aria-label={t('sectors.egitim.tabs.aria')}
         >
           <button
             type="button"
@@ -236,7 +258,7 @@ export default function EgitimTerminal({
             onClick={() => setViewMode('form')}
             className={tabBtnClass(viewMode === 'form')}
           >
-            EĞİTİM PLANLAMA FORMU
+            {t('sectors.egitim.tabs.form')}
           </button>
           <button
             type="button"
@@ -250,7 +272,7 @@ export default function EgitimTerminal({
             }}
             className={tabBtnClass(viewMode === 'sandbox')}
           >
-            TAKTİK SANDBOX
+            {t('sectors.egitim.tabs.sandbox')}
           </button>
           <button
             type="button"
@@ -259,7 +281,7 @@ export default function EgitimTerminal({
             onClick={() => setViewMode('registry')}
             className={tabBtnClass(viewMode === 'registry')}
           >
-            PLANLANAN EĞİTİMLER TAKVİMİ
+            {t('sectors.egitim.tabs.registry')}
           </button>
         </div>
       </div>
@@ -281,10 +303,12 @@ export default function EgitimTerminal({
         />
       ) : viewMode === 'sandbox' ? (
         !ready ? (
-          <p className="font-mono-technical text-[10px] uppercase text-app-text/55">OTURUM_GEREKLİ</p>
+          <p className="font-mono-technical text-[10px] uppercase text-app-text/55">
+            {t('sectors.egitim.session.required')}
+          </p>
         ) : listenError ? (
           <p className="rounded border border-red-500/40 bg-red-950/25 px-3 py-2 font-mono-technical text-[10px] text-red-300">
-            VERİ_KANALI_KESİLDİ · YENİDEN_DENE
+            {t('sectors.egitim.session.channelDisconnected')}
           </p>
         ) : (
           <TacticalRangeSandbox
@@ -300,10 +324,12 @@ export default function EgitimTerminal({
           />
         )
       ) : !ready ? (
-        <p className="font-mono-technical text-[10px] uppercase text-app-text/55">OTURUM_GEREKLİ</p>
+        <p className="font-mono-technical text-[10px] uppercase text-app-text/55">
+          {t('sectors.egitim.session.required')}
+        </p>
       ) : listenError ? (
         <p className="rounded border border-red-500/40 bg-red-950/25 px-3 py-2 font-mono-technical text-[10px] text-red-300">
-          VERİ_KANALI_KESİLDİ · YENİDEN_DENE
+          {t('sectors.egitim.session.channelDisconnected')}
         </p>
       ) : (
         <form
@@ -314,22 +340,24 @@ export default function EgitimTerminal({
             <span className="pointer-events-none absolute left-2 top-2 z-10 h-4 w-4 border-l border-t border-accent/40" />
             <span className="pointer-events-none absolute right-2 top-2 z-10 h-4 w-4 border-r border-t border-accent/40" />
             <p className="shrink-0 border-b border-accent/15 bg-app-bg px-4 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-accent/90">
-              EĞİTİM KURULUM · TAKVİM METRİKLERİ
+              {t('sectors.egitim.form.metricsPanel')}
             </p>
 
             <div className="grid min-h-0 flex-1 grid-rows-[auto_auto_auto_auto_1fr] gap-3 p-4 sm:p-5">
               <EgitimSelectField
-                legend="EĞİTİM ODAĞI"
+                legend={t('sectors.egitim.form.trainingFocus')}
                 value={form.trainingFocus}
                 options={TRAINING_FOCUS_OPTIONS}
                 onChange={(v) => patch({ trainingFocus: v, customTrainingFocus: '' })}
                 showCustom={showCustomFocus}
                 customValue={form.customTrainingFocus}
                 onCustomChange={(v) => patch({ customTrainingFocus: v })}
-                customPlaceholder="Özel eğitim odağı / disiplin…"
+                customPlaceholder={t('sectors.egitim.form.customTrainingFocusPlaceholder')}
+                selectPlaceholder={t('sectors.egitim.form.selectPlaceholder')}
+                formatOption={(id, label) => formatEgitimOptionLabel('trainingFocus', id, label)}
               />
               <EgitimSelectField
-                legend="ZORLUK / STRES SEVİYESİ"
+                legend={t('sectors.egitim.form.difficultyLevel')}
                 value={form.difficultyLevel}
                 options={DIFFICULTY_LEVEL_OPTIONS}
                 onChange={(v) => patch({ difficultyLevel: v })}
@@ -337,11 +365,13 @@ export default function EgitimTerminal({
                 customValue=""
                 onCustomChange={() => {}}
                 customPlaceholder=""
+                selectPlaceholder={t('sectors.egitim.form.selectPlaceholder')}
+                formatOption={(id, label) => formatEgitimOptionLabel('difficultyLevel', id, label)}
               />
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <label className="block space-y-1">
-                  <span className={labelClass}>HEDEF TARİH / SAAT</span>
+                  <span className={labelClass}>{t('sectors.egitim.form.targetDate')}</span>
                   <input
                     type="datetime-local"
                     className={`${inputClass} tabular-nums`}
@@ -351,7 +381,7 @@ export default function EgitimTerminal({
                   />
                 </label>
                 <label className="block space-y-1">
-                  <span className={labelClass}>TAHMİNİ SÜRE (DK)</span>
+                  <span className={labelClass}>{t('sectors.egitim.form.estimatedDuration')}</span>
                   <input
                     type="number"
                     min={0}
@@ -368,22 +398,24 @@ export default function EgitimTerminal({
 
               <div className="flex min-h-0 flex-col justify-end border border-accent/20 bg-app-bg p-3">
                 <p className="mb-2 font-mono-technical text-[7px] font-bold uppercase tracking-[0.22em] text-accent/75">
-                  TAKTİK PLAN ÖZETİ
+                  {t('sectors.egitim.form.tacticalPlanSummary')}
                 </p>
                 <div className="space-y-1.5 font-mono-technical text-[9px] uppercase leading-relaxed text-app-text/70">
                   <p>
-                    ODAK: <span className="text-slate-100">{focusLabel}</span>
+                    {t('sectors.egitim.form.summaryFocus', { value: focusLabel })}
                   </p>
                   <p>
-                    ZORLUK: <span className="text-accent">{difficultyLabel}</span>
+                    {t('sectors.egitim.form.summaryDifficulty', { value: difficultyLabel })}
                   </p>
                   <p>
-                    SÜRE: <span className="text-[#5ec8ff]">{durationMin > 0 ? `${durationMin} dk` : '—'}</span>
+                    {t('sectors.egitim.form.summaryDuration', { value: durationSummary })}
                   </p>
                   <p>
-                    LOJİSTİK: <span className="text-accent">{logisticsCount} / 4</span>
+                    {t('sectors.egitim.form.summaryLogistics', { count: logisticsCount })}
                     {' · '}
-                    DURUM: <span className="text-app-text">PLANLANDI</span>
+                    {t('sectors.egitim.form.summaryStatus', {
+                      status: t('sectors.egitim.form.statusPlanned'),
+                    })}
                   </p>
                 </div>
                 <div className="mt-3 border-t border-accent/12 pt-3 max-lg:hidden">
@@ -391,7 +423,7 @@ export default function EgitimTerminal({
                     hubMode
                     variant="cartridge"
                     imageSrc={egitimImg}
-                    imageAlt="Eğitim"
+                    imageAlt={t('sectors.egitim.form.imageAlt')}
                     label=""
                   />
                 </div>
@@ -403,59 +435,35 @@ export default function EgitimTerminal({
             <span className="pointer-events-none absolute bottom-2 left-2 z-10 h-4 w-4 border-b border-l border-accent/40" />
             <span className="pointer-events-none absolute bottom-2 right-2 z-10 h-4 w-4 border-b border-r border-accent/40" />
             <p className="shrink-0 border-b border-accent/15 bg-app-bg px-4 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-app-text">
-              LOJİSTİK · EĞİTİM HEDEFLERİ
+              {t('sectors.egitim.form.logisticsPanel')}
             </p>
 
             <div className="grid min-h-0 flex-1 grid-rows-[auto_1fr] gap-3 p-4 sm:p-5">
               <div className="min-h-0 shrink-0 space-y-3">
                 <p className="font-mono text-xs tracking-wider text-green-500/70">
-                  // LOJİSTİK VE KAYNAK GEREKSİNİMLERİ
+                  {t('sectors.egitim.form.logisticsSection')}
                 </p>
                 <div className="grid gap-2 sm:grid-cols-2">
-                  <label className={toggleClass(form.weaponsReady)}>
-                    <input
-                      type="checkbox"
-                      className="mt-1 size-4 shrink-0 accent-accent"
-                      checked={form.weaponsReady}
-                      onChange={(e) => patch({ weaponsReady: e.target.checked })}
-                    />
-                    <span className="font-mono-technical text-sm leading-snug">
-                      Silah Bakım / Emniyet Kontrolü
-                    </span>
-                  </label>
-                  <label className={toggleClass(form.ammoAllocated)}>
-                    <input
-                      type="checkbox"
-                      className="mt-1 size-4 shrink-0 accent-accent"
-                      checked={form.ammoAllocated}
-                      onChange={(e) => patch({ ammoAllocated: e.target.checked })}
-                    />
-                    <span className="font-mono-technical text-sm leading-snug">
-                      Mühimmat / Şarjör Tahsisi
-                    </span>
-                  </label>
-                  <label className={toggleClass(form.ppeChecked)}>
-                    <input
-                      type="checkbox"
-                      className="mt-1 size-4 shrink-0 accent-accent"
-                      checked={form.ppeChecked}
-                      onChange={(e) => patch({ ppeChecked: e.target.checked })}
-                    />
-                    <span className="font-mono-technical text-sm leading-snug">
-                      Balistik / Koruyucu Donanım
-                    </span>
-                  </label>
-                  <label className={toggleClass(form.tcccKitReady)}>
-                    <input
-                      type="checkbox"
-                      className="mt-1 size-4 shrink-0 accent-accent"
-                      checked={form.tcccKitReady}
-                      onChange={(e) => patch({ tcccKitReady: e.target.checked })}
-                    />
-                    <span className="font-mono-technical text-sm leading-snug">
-                      Sıhhiye / Acil Müdahale Çantası
-                    </span>
-                  </label>
+                  {(
+                    [
+                      ['weaponsReady', form.weaponsReady],
+                      ['ammoAllocated', form.ammoAllocated],
+                      ['ppeChecked', form.ppeChecked],
+                      ['tcccKitReady', form.tcccKitReady],
+                    ]
+                  ).map(([key, checked]) => (
+                    <label key={key} className={toggleClass(checked)}>
+                      <input
+                        type="checkbox"
+                        className="mt-1 size-4 shrink-0 accent-accent"
+                        checked={checked}
+                        onChange={(e) => patch({ [key]: e.target.checked })}
+                      />
+                      <span className="font-mono-technical text-sm leading-snug">
+                        {t(`sectors.egitim.form.toggles.${key}`)}
+                      </span>
+                    </label>
+                  ))}
                 </div>
               </div>
 
@@ -464,12 +472,12 @@ export default function EgitimTerminal({
                   htmlFor="egitim-operation-note"
                   className="block shrink-0 font-mono text-xs tracking-wider text-green-500/70"
                 >
-                  // OPERASYON NOTU / EĞİTİM HEDEFLERİ
+                  {t('sectors.egitim.form.operationNoteSection')}
                 </label>
                 <textarea
                   id="egitim-operation-note"
                   className={operationNoteTextareaClass}
-                  placeholder="Öğrenme çıktıları, KPI, koç notları, sahne güvenliği…"
+                  placeholder={t('sectors.egitim.form.operationNotePlaceholder')}
                   value={form.operationNote}
                   onChange={(e) => patch({ operationNote: e.target.value })}
                   maxLength={2000}
@@ -481,7 +489,7 @@ export default function EgitimTerminal({
           <div className="space-y-3 lg:col-span-2">
             {submitOk ? (
               <p className="rounded border border-accent/40 bg-accent/10 px-3 py-2 text-center font-mono-technical text-[9px] font-bold uppercase text-accent">
-                EĞİTİM_PLANI_AKTARILDI · TRAININGS
+                {t('sectors.egitim.messages.submitSuccess')}
               </p>
             ) : null}
             {submitError ? (
@@ -501,7 +509,7 @@ export default function EgitimTerminal({
                 disabled={saving || !canSubmit}
                 className="w-full rounded border border-accent/55 bg-accent/12 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent shadow-[0_0_24px_-8px_color-mix(in_srgb,var(--accent-color)_35%,transparent)]] hover:bg-accent/20 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {saving ? 'AKTARILIYOR…' : 'EĞİTİM_PLANINI_ONAYLA'}
+                {saving ? t('sectors.egitim.form.submitting') : t('sectors.egitim.form.submit')}
               </button>
             </div>
           </div>

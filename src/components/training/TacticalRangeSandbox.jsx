@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import TacticalPanel from '../ui/TacticalPanel'
 import { DIFFICULTY_LEVEL_OPTIONS } from '../../lib/egitimOptions'
 import { submitEgitimSandboxPlan, updateEgitimSandboxPlan } from '../../lib/egitimSubmit'
@@ -51,6 +52,15 @@ import {
   isShapeValid,
   updateShapeDraft,
 } from '../../lib/rangeLayoutPrimitives'
+import {
+  formatEgitimOptionLabel,
+  formatEgitimSandboxArrowTypeLabel,
+  formatEgitimSandboxAssetGroupTitle,
+  formatEgitimSandboxAssetLabel,
+  formatEgitimSandboxRiskLabel,
+  formatEgitimSandboxSaveError,
+  formatEgitimSandboxStatusBar,
+} from '../../lib/trainingDisplayText'
 
 const STROKE_WIDTH_OPTIONS = [2, 4, 6, 8, 10]
 
@@ -124,6 +134,7 @@ export default function TacticalRangeSandbox({
   layoutBlueprint = null,
   readOnly = false,
 }) {
+  const { t } = useTranslation('training')
   const canvasRef = useRef(/** @type {HTMLCanvasElement | null} */ (null))
   const wrapRef = useRef(/** @type {HTMLDivElement | null} */ (null))
   const interactionRef = useRef(
@@ -941,7 +952,7 @@ export default function TacticalRangeSandbox({
       setSaveOk(true)
     } catch (err) {
       const code = err && typeof err === 'object' && 'code' in err ? String(err.code) : ''
-      setSaveError(`DEĞİŞİKLİK_KAYDI_BAŞARISIZ${code ? ` · ${code}` : ''}`)
+      setSaveError(formatEgitimSandboxSaveError('DEĞİŞİKLİK_KAYDI_BAŞARISIZ', code))
     } finally {
       setSaving(false)
     }
@@ -950,15 +961,15 @@ export default function TacticalRangeSandbox({
   const handleSaveScenario = async () => {
     if (!userId) return
     if (!targetDate.trim()) {
-      setSaveError('HEDEF_TARİH_GEREKLİ')
+      setSaveError(formatEgitimSandboxSaveError('HEDEF_TARİH_GEREKLİ'))
       return
     }
     if (!difficultyLevel) {
-      setSaveError('ZORLUK_SEVİYESİ_GEREKLİ')
+      setSaveError(formatEgitimSandboxSaveError('ZORLUK_SEVİYESİ_GEREKLİ'))
       return
     }
     if (canvasObjects.length === 0) {
-      setSaveError('EN_AZ_BİR_NESNE_GEREKLİ')
+      setSaveError(formatEgitimSandboxSaveError('EN_AZ_BİR_NESNE_GEREKLİ'))
       return
     }
 
@@ -992,24 +1003,40 @@ export default function TacticalRangeSandbox({
       setPan({ x: 0, y: 0 })
     } catch (err) {
       const code = err && typeof err === 'object' && 'code' in err ? String(err.code) : ''
-      setSaveError(`SENARYO_KAYIT_BAŞARISIZ${code ? ` · ${code}` : ''}`)
+      setSaveError(formatEgitimSandboxSaveError('SENARYO_KAYIT_BAŞARISIZ', code))
     } finally {
       setSaving(false)
     }
   }
 
+  const statusBarText = formatEgitimSandboxStatusBar({
+    activeTool,
+    strokeWidth,
+    selectedArrowType,
+    activeBrushLabel: activeBrush
+      ? formatEgitimSandboxAssetLabel(activeBrush.type, 'label', activeBrush.label)
+      : '',
+    zoom,
+  })
+
+  const arrowTypeOptions = [
+    { id: 'infiltration', color: '#22d3ee' },
+    { id: 'fire_line', color: '#ff3355' },
+    { id: 'evac', color: '#fbbf24' },
+  ]
+
   return (
-    <div className="grid min-h-0 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)] lg:items-stretch">
+    <div className="grid min-h-0 w-full min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)] lg:items-stretch">
       <TacticalPanel className="relative flex min-h-0 flex-col overflow-hidden border-accent/25 bg-app-bg/95 p-0 shadow-[0_0_10px_rgba(34,197,94,0.15)]">
         <span className="pointer-events-none absolute left-2 top-2 z-10 h-4 w-4 border-l border-t border-accent/40" />
         <span className="pointer-events-none absolute right-2 top-2 z-10 h-4 w-4 border-r border-t border-accent/40" />
         <div className="shrink-0 border-b border-accent/15 bg-app-bg px-4 py-2">
           <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-accent/90">
-            TAKTİK SANDBOX · SINIRSIZ VEKTÖR PLANI
+            {t('sectors.egitim.sandbox.title')}
           </p>
           {isEditingExisting ? (
             <p className="mt-1 font-mono-technical text-[8px] uppercase tracking-wider text-accent/90">
-              MEVCUT SENARYO DÜZENLENİYOR · KAYDET İLE VERİTABANINA YAZ
+              {t('sectors.egitim.sandbox.editingBanner')}
             </p>
           ) : null}
         </div>
@@ -1049,30 +1076,18 @@ export default function TacticalRangeSandbox({
               onMouseUp={handleCanvasMouseUp}
               onMouseLeave={handleCanvasMouseUp}
               onContextMenu={(e) => e.preventDefault()}
-              aria-label="Taktik poligon düzenleyici"
+              aria-label={t('sectors.egitim.sandbox.canvasAria')}
             />
           </div>
           {readOnly ? (
             <div className="pointer-events-none absolute inset-3 z-10 flex items-start justify-end p-3 sm:inset-4">
               <span className="rounded border border-accent/40 bg-black/80 px-2 py-1 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-accent">
-                SALT OKUNUR ÖNİZLEME · ARAYÜZÜ DÜZENLE İLE DÜZENLE
+                {t('sectors.egitim.sandbox.readOnlyOverlay')}
               </span>
             </div>
           ) : null}
           <p className="mt-2 font-mono-technical text-[8px] uppercase text-app-text/55">
-            {isPrimitiveDrawMode(activeTool)
-              ? `ÇİZİM · ${activeTool.toUpperCase()} · KALINLIK ${strokeWidth}px`
-              : activeTool === 'arrow'
-                ? `OK ÇİZ · ${selectedArrowType === 'fire_line' ? 'ATEŞ HATTI' : selectedArrowType === 'evac' ? 'TAHLİYE' : 'İNTİKAL'}`
-                : activeTool === 'eraser'
-                  ? 'SİLGI · Öğeye tıklayın'
-                  : activeTool === 'marquee'
-                    ? 'KUTU SEÇİM · Sürükleyerek çoklu seç'
-                    : activeTool === 'select'
-                      ? `SEÇİM · Taşı · Köşeden boyutlandır · Delete ile sil${activeBrush ? ` · VARLIK: ${activeBrush.label}` : ''}`
-                      : 'ARAÇ'}
-            {' · '}
-            TEKERLEK: ZOOM {Math.round(zoom * 100)}% · SPACE / ORTA TUŞ: PAN
+            {statusBarText}
           </p>
         </div>
       </TacticalPanel>
@@ -1082,7 +1097,7 @@ export default function TacticalRangeSandbox({
           <span className="pointer-events-none absolute bottom-2 left-2 z-10 h-3 w-3 border-b border-l border-accent/40" />
           <span className="pointer-events-none absolute bottom-2 right-2 z-10 h-3 w-3 border-b border-r border-accent/40" />
           <p className="shrink-0 border-b border-accent/15 bg-app-bg px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-app-text">
-            TAKTİK VARLIK KÜTÜPHANESİ
+            {t('sectors.egitim.sandbox.assetLibrary')}
           </p>
           <div className="ilws-green-scroll min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
             {RANGE_ASSET_GROUPS.map((group) => {
@@ -1097,13 +1112,15 @@ export default function TacticalRangeSandbox({
                     onClick={() => setOpenGroup(open ? '' : group.id)}
                     className="flex w-full items-center justify-between border-b border-accent/10 bg-app-bg px-3 py-2 text-left font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent/85"
                   >
-                    {group.title}
+                    {formatEgitimSandboxAssetGroupTitle(group.id, group.title)}
                     <span className="text-app-text/55">{open ? '−' : '+'}</span>
                   </button>
                   {open ? (
                     <div className="grid gap-1.5 p-2 sm:grid-cols-2">
                       {group.items.map((item) => {
                         const active = activeBrush?.type === item.type
+                        const shortLabel = formatEgitimSandboxAssetLabel(item.type, 'shortLabel', item.shortLabel)
+                        const itemLabel = formatEgitimSandboxAssetLabel(item.type, 'label', item.label)
                         return (
                           <button
                             key={item.type}
@@ -1120,9 +1137,9 @@ export default function TacticalRangeSandbox({
                               className="mb-1 inline-block rounded px-1 font-mono-technical text-[8px] font-bold"
                               style={{ color: item.color, border: `1px solid ${item.color}44` }}
                             >
-                              {item.shortLabel}
+                              {shortLabel}
                             </span>
-                            <span className="block font-mono-technical text-sm leading-snug">{item.label}</span>
+                            <span className="block font-mono-technical text-sm leading-snug">{itemLabel}</span>
                           </button>
                         )
                       })}
@@ -1136,7 +1153,7 @@ export default function TacticalRangeSandbox({
 
         <TacticalPanel className="relative flex min-h-0 flex-col border-accent/25 bg-app-bg/95 p-0 shadow-[0_0_10px_rgba(34,197,94,0.12)]">
           <p className="shrink-0 border-b border-accent/15 bg-app-bg px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-accent/90">
-            CANLI KONTROL · SİMÜLASYON METRİKLERİ
+            {t('sectors.egitim.sandbox.liveControl')}
           </p>
           <div className="grid min-h-0 flex-1 grid-rows-[auto_auto_auto_1fr] gap-3 p-3">
             <div className="flex flex-wrap gap-2">
@@ -1145,7 +1162,7 @@ export default function TacticalRangeSandbox({
                 onClick={clearScene}
                 className="rounded border border-red-500/60 bg-red-950/30 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-red-300 shadow-[0_0_12px_rgba(239,68,68,0.25)] hover:bg-red-950/50"
               >
-                SAHNEYI TEMİZLE
+                {t('sectors.egitim.sandbox.clearScene')}
               </button>
               {isEditingExisting ? (
                 <button
@@ -1154,7 +1171,7 @@ export default function TacticalRangeSandbox({
                   onClick={handleSaveChanges}
                   className="col-span-2 flex-1 rounded border border-accent/70 bg-accent/18 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent shadow-[0_0_16px_rgba(251,191,36,0.35)] hover:bg-accent/28 disabled:opacity-40"
                 >
-                  {saving ? 'KAYDEDİLİYOR…' : 'DEĞİŞİKLİKLERİ KAYDET'}
+                  {saving ? t('sectors.egitim.sandbox.saveChangesBusy') : t('sectors.egitim.sandbox.saveChanges')}
                 </button>
               ) : (
                 <button
@@ -1163,17 +1180,19 @@ export default function TacticalRangeSandbox({
                   onClick={handleSaveScenario}
                   className="flex-1 rounded border border-accent/60 bg-accent/15 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent shadow-[0_0_16px_rgba(34,197,94,0.35)] hover:bg-accent/25 disabled:opacity-40"
                 >
-                  {saving ? 'KAYDEDİLİYOR…' : 'SENARYO KAYDET'}
+                  {saving ? t('sectors.egitim.sandbox.saveScenarioBusy') : t('sectors.egitim.sandbox.saveScenario')}
                 </button>
               )}
             </div>
 
             <div className="space-y-2 rounded border border-accent/25 bg-black/40 p-2.5 shadow-[0_0_10px_rgba(251,191,36,0.08)]">
               <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-accent/90">
-                TASARIM KONTROLLERİ
+                {t('sectors.egitim.sandbox.designControls')}
               </p>
               <div className="space-y-1">
-                <span className={labelClass}>ÇİZİM KALINLIĞI · {strokeWidth}px</span>
+                <span className={labelClass}>
+                  {t('sectors.egitim.sandbox.strokeWidth', { width: strokeWidth })}
+                </span>
                 <input
                   type="range"
                   min={2}
@@ -1192,13 +1211,9 @@ export default function TacticalRangeSandbox({
                 </div>
               </div>
               <div className="space-y-1">
-                <span className={labelClass}>OK ÇEŞİTLERİ</span>
+                <span className={labelClass}>{t('sectors.egitim.sandbox.arrowTypesLabel')}</span>
                 <div className="grid gap-1.5">
-                  {[
-                    { id: 'infiltration', label: 'İNTİKAL YÖNÜ', color: '#22d3ee' },
-                    { id: 'fire_line', label: 'ATEŞ HATTI', color: '#ff3355' },
-                    { id: 'evac', label: 'TAHLİYE / DESTEK', color: '#fbbf24' },
-                  ].map((opt) => (
+                  {arrowTypeOptions.map((opt) => (
                     <button
                       key={opt.id}
                       type="button"
@@ -1214,20 +1229,24 @@ export default function TacticalRangeSandbox({
                           : undefined
                       }
                     >
-                      {opt.label}
+                      {formatEgitimSandboxArrowTypeLabel(opt.id)}
                     </button>
                   ))}
                 </div>
               </div>
               <label className="block space-y-1">
-                <span className={labelClass}>ETİKET DÜZENLE</span>
+                <span className={labelClass}>{t('sectors.egitim.sandbox.editLabel')}</span>
                 <input
                   type="text"
                   className={`${inputClass} text-[10px] font-mono text-amber-400 placeholder:text-amber-400/30`}
                   value={selectedObject?.label ?? ''}
                   onChange={(e) => handleLabelChange(e.target.value)}
                   disabled={!selectedObject}
-                  placeholder={selectedObject ? 'Nesne etiketi…' : 'Önce bir nesne seçin'}
+                  placeholder={
+                    selectedObject
+                      ? t('sectors.egitim.sandbox.labelPlaceholder')
+                      : t('sectors.egitim.sandbox.labelPlaceholderNoSelection')
+                  }
                   maxLength={48}
                 />
               </label>
@@ -1238,7 +1257,7 @@ export default function TacticalRangeSandbox({
                   onClick={runHorizontalAlign}
                   className="rounded border border-[#5ec8ff]/40 bg-[#5ec8ff]/10 px-2 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-[#5ec8ff] hover:bg-[#5ec8ff]/20 disabled:opacity-35"
                 >
-                  YATAY HİZALA
+                  {t('sectors.egitim.sandbox.alignHorizontal')}
                 </button>
                 <button
                   type="button"
@@ -1246,18 +1265,20 @@ export default function TacticalRangeSandbox({
                   onClick={runVerticalAlign}
                   className="rounded border border-[#5ec8ff]/40 bg-[#5ec8ff]/10 px-2 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-[#5ec8ff] hover:bg-[#5ec8ff]/20 disabled:opacity-35"
                 >
-                  DİKEY HİZALA
+                  {t('sectors.egitim.sandbox.alignVertical')}
                 </button>
               </div>
               <p className="font-mono-technical text-[7px] uppercase leading-relaxed text-app-text/45">
-                Kutu seçimi · Delete tuşu veya NESNE SİL ile grup silme
+                {t('sectors.egitim.sandbox.selectionHint')}
               {selectedObjectIds.length > 0 ||
               selectedArrowIds.length > 0 ||
               selectedShapeIds.length > 0 ? (
                 <span className="text-accent">
-                  {' '}
-                  · {selectedObjectIds.length} NESNE · {selectedArrowIds.length} OK ·{' '}
-                  {selectedShapeIds.length} ÇİZİM
+                  {t('sectors.egitim.sandbox.selectionCounts', {
+                    objects: selectedObjectIds.length,
+                    arrows: selectedArrowIds.length,
+                    shapes: selectedShapeIds.length,
+                  })}
                 </span>
               ) : null}
               </p>
@@ -1265,7 +1286,9 @@ export default function TacticalRangeSandbox({
 
             {saveOk ? (
               <p className="rounded border border-accent/40 bg-accent/10 px-2 py-1.5 text-center font-mono-technical text-[8px] font-bold uppercase text-accent">
-                {isEditingExisting ? 'DEĞİŞİKLİKLER_KAYDEDİLDİ' : 'SENARYO_TRAININGS_AKTARILDI'}
+                {isEditingExisting
+                  ? t('sectors.egitim.sandbox.messages.changesSaved')
+                  : t('sectors.egitim.sandbox.messages.scenarioTransferred')}
               </p>
             ) : null}
             {saveError ? (
@@ -1276,23 +1299,28 @@ export default function TacticalRangeSandbox({
 
             <div className="grid grid-cols-2 gap-2 rounded border border-accent/20 bg-black/50 p-2.5 font-mono-technical text-[9px] uppercase shadow-[0_0_10px_rgba(34,197,94,0.1)]">
               <p className="text-app-text/55">
-                TASARLANAN ALAN: <span className="text-slate-100">{metrics.areaLabel}</span>
+                {t('sectors.egitim.sandbox.metrics.designedArea')}{' '}
+                <span className="text-slate-100">{metrics.areaLabel}</span>
               </p>
               <p className="text-app-text/55">
-                HEDEF SAYISI: <span className="text-red-400">{metrics.targetCount}</span>
+                {t('sectors.egitim.sandbox.metrics.targetCount')}{' '}
+                <span className="text-red-400">{metrics.targetCount}</span>
               </p>
               <p className="text-app-text/55">
-                SİPER SAYISI: <span className="text-[#5ec8ff]">{metrics.coverCount}</span>
+                {t('sectors.egitim.sandbox.metrics.coverCount')}{' '}
+                <span className="text-[#5ec8ff]">{metrics.coverCount}</span>
               </p>
               <p className="text-app-text/55">
-                TAKTİK HATA RİSKİ:{' '}
-                <span className={metrics.riskTone}>{metrics.riskLabel.toUpperCase()}</span>
+                {t('sectors.egitim.sandbox.metrics.tacticalRisk')}{' '}
+                <span className={metrics.riskTone}>
+                  {formatEgitimSandboxRiskLabel(metrics.riskLevel).toUpperCase()}
+                </span>
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
               <label className="block space-y-1">
-                <span className={labelClass}>HEDEF TARİH</span>
+                <span className={labelClass}>{t('sectors.egitim.sandbox.targetDate')}</span>
                 <input
                   type="datetime-local"
                   className={`${inputClass} text-[11px]`}
@@ -1301,7 +1329,7 @@ export default function TacticalRangeSandbox({
                 />
               </label>
               <label className="block space-y-1">
-                <span className={labelClass}>SÜRE (DK)</span>
+                <span className={labelClass}>{t('sectors.egitim.sandbox.duration')}</span>
                 <input
                   type="number"
                   min={0}
@@ -1311,7 +1339,7 @@ export default function TacticalRangeSandbox({
                 />
               </label>
               <label className="col-span-2 block space-y-1">
-                <span className={labelClass}>ZORLUK</span>
+                <span className={labelClass}>{t('sectors.egitim.sandbox.difficulty')}</span>
                 <select
                   className={selectClass}
                   value={difficultyLevel}
@@ -1319,7 +1347,7 @@ export default function TacticalRangeSandbox({
                 >
                   {DIFFICULTY_LEVEL_OPTIONS.map((o) => (
                     <option key={o.id} value={o.id}>
-                      {o.label}
+                      {formatEgitimOptionLabel('difficultyLevel', o.id, o.label)}
                     </option>
                   ))}
                 </select>
@@ -1331,12 +1359,12 @@ export default function TacticalRangeSandbox({
                 htmlFor="sandbox-design-note"
                 className="shrink-0 font-mono text-xs tracking-wider text-green-500/70"
               >
-                // TASARIM NOTU / EĞİTİM HEDEFLERİ
+                {t('sectors.egitim.sandbox.designNoteSection')}
               </label>
               <textarea
                 id="sandbox-design-note"
                 className={operationNoteTextareaClass}
-                placeholder="Drill akışı, ateş hattı, güvenlik şeridi, KPI…"
+                placeholder={t('sectors.egitim.sandbox.designNotePlaceholder')}
                 value={designNote}
                 onChange={(e) => setDesignNote(e.target.value)}
                 maxLength={2000}

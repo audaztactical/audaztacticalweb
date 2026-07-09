@@ -1178,7 +1178,246 @@
     },
     "egitim": {
       "title": "Training",
-      "sectorLabel": "EDU-06 · Training plan"
+      "sectorLabel": "EDU-06 · Training plan",
+      "tabs": {
+        "aria": "Training terminal view",
+        "form": "Training planning form",
+        "sandbox": "Tactical sandbox",
+        "registry": "Scheduled training calendar"
+      },
+      "session": {
+        "required": "Session required",
+        "channelDisconnected": "Data channel disconnected · retry"
+      },
+      "form": {
+        "metricsPanel": "Training setup · calendar metrics",
+        "logisticsPanel": "Logistics · training objectives",
+        "selectPlaceholder": "— Select —",
+        "trainingFocus": "Training focus",
+        "customTrainingFocusPlaceholder": "Custom training focus / discipline…",
+        "difficultyLevel": "Difficulty / stress level",
+        "targetDate": "Target date / time",
+        "estimatedDuration": "Estimated duration (min)",
+        "tacticalPlanSummary": "Tactical plan summary",
+        "summaryFocus": "Focus: {{value}}",
+        "summaryDifficulty": "Difficulty: {{value}}",
+        "summaryDuration": "Duration: {{value}}",
+        "summaryLogistics": "Logistics: {{count}} / 4",
+        "summaryStatus": "Status: {{status}}",
+        "statusPlanned": "PLANNED",
+        "logisticsSection": "// Logistics and resource requirements",
+        "operationNoteSection": "// Operation note / training objectives",
+        "operationNotePlaceholder": "Learning outcomes, KPIs, coach notes, range safety…",
+        "imageAlt": "Training",
+        "toggles": {
+          "weaponsReady": "Weapon maintenance / safety check",
+          "ammoAllocated": "Ammunition / magazine allocation",
+          "ppeChecked": "Ballistic / protective gear",
+          "tcccKitReady": "Medical / emergency response kit"
+        },
+        "submit": "Confirm training plan",
+        "submitting": "Transferring…"
+      },
+      "validation": {
+        "sessionRequired": "Session required",
+        "trainingFocusRequired": "Training focus required",
+        "customTrainingFocusRequired": "Custom training focus required",
+        "difficultyRequired": "Difficulty level required",
+        "targetDateRequired": "Target date required",
+        "estimatedDurationRequired": "Estimated duration required",
+        "permissionDenied": " · Permission / rules"
+      },
+      "messages": {
+        "submitSuccess": "Training plan transferred · trainings",
+        "submitFailed": "Training plan failed · retry{{hint}}"
+      },
+      "options": {
+        "trainingFocus": {
+          "atis_mastery": "Marksmanship mastery (ATIŞ)",
+          "cqb_tactics": "Urban tactics (CQB)",
+          "fof_simulation": "Force-on-Force simulation (FOF)",
+          "vbss_maritime": "Maritime boarding (VBSS)",
+          "tccc_medical": "Tactical field care (TCCC)",
+          "custom": "Custom / other focus",
+          "customFocus": "Custom focus"
+        },
+        "difficultyLevel": {
+          "green_low": "Green · low stress",
+          "amber_medium": "Amber · medium stress",
+          "red_hardcore": "Red · hardcore"
+        }
+      },
+      "status": {
+        "planned": "PLANNED",
+        "active": "ACTIVE",
+        "completed": "COMPLETED",
+        "cancelled": "CANCELLED"
+      },
+      "history": {
+        "title": "Scheduled training calendar · training planning",
+        "syncMeta": "trainings · live sync · {{filtered}}/{{total}} plan",
+        "filterBar": "Filter bar",
+        "trainingFocus": "Training focus",
+        "schedule": "Schedule",
+        "all": "All",
+        "upcoming": "Upcoming",
+        "past": "Past",
+        "syncing": "Syncing…",
+        "empty": "No training plans",
+        "noFilterResults": "No filter results",
+        "durationMinutes": "{{count}} min",
+        "logisticsObjects": "{{count}} obj",
+        "columns": {
+          "targetDate": "Target date",
+          "type": "Type",
+          "trainingFocus": "Training focus",
+          "difficulty": "Difficulty",
+          "duration": "Duration",
+          "logistics": "Logistics",
+          "status": "Status",
+          "schedule": "Schedule"
+        },
+        "scheduleLabel": {
+          "upcoming": "Upcoming",
+          "past": "Past"
+        },
+        "planKind": {
+          "sandbox": "Tactical sandbox",
+          "plan": "Training plan"
+        },
+        "bool": {
+          "yes": "Yes",
+          "no": "No"
+        },
+        "detail": {
+          "sandboxTitle": "Tactical sandbox detail · layout preview",
+          "planTitle": "Training plan detail panel",
+          "layoutPreview": "Layout preview · {{objects}} objects · {{arrows}} arrows · {{shapes}} drawings · {{mode}}",
+          "editMode": "Edit mode",
+          "readOnlyMode": "Read-only",
+          "editInterface": "Edit in interface",
+          "noLayoutData": "Sandbox record · no layout data",
+          "focus": "Focus:",
+          "difficulty": "Difficulty:",
+          "target": "Target:",
+          "duration": "Duration:",
+          "weaponsReady": "Weapons ready:",
+          "ammoAllocated": "Ammunition:",
+          "ppe": "PPE:",
+          "tcccKit": "TCCC kit:",
+          "designNote": "Design note:",
+          "trainingGoals": "Training objectives:",
+          "noOperationNote": "No training goal / note recorded."
+        }
+      },
+      "sandbox": {
+        "title": "Tactical sandbox · unlimited vector plan",
+        "editingBanner": "Editing existing scenario · save to write to database",
+        "canvasAria": "Tactical range layout editor",
+        "readOnlyOverlay": "Read-only preview · use Edit in interface to modify",
+        "assetLibrary": "Tactical asset library",
+        "liveControl": "Live control · simulation metrics",
+        "clearScene": "Clear scene",
+        "saveChanges": "Save changes",
+        "saveChangesBusy": "Saving…",
+        "saveScenario": "Save scenario",
+        "saveScenarioBusy": "Saving…",
+        "designControls": "Design controls",
+        "strokeWidth": "Stroke width · {{width}}px",
+        "arrowTypesLabel": "Arrow types",
+        "editLabel": "Edit label",
+        "labelPlaceholder": "Object label…",
+        "labelPlaceholderNoSelection": "Select an object first",
+        "alignHorizontal": "Align horizontal",
+        "alignVertical": "Align vertical",
+        "selectionHint": "Box select · Delete key or delete object for group removal",
+        "selectionCounts": "· {{objects}} objects · {{arrows}} arrows · {{shapes}} drawings",
+        "targetDate": "Target date",
+        "duration": "Duration (min)",
+        "difficulty": "Difficulty",
+        "designNoteSection": "// Design note / training objectives",
+        "designNotePlaceholder": "Drill flow, fire lines, safety lanes, KPIs…",
+        "statusBar": {
+          "drawMode": "Draw · {{tool}} · width {{width}}px",
+          "arrowDraw": "Draw arrow · {{type}}",
+          "eraser": "Eraser · click element",
+          "marquee": "Box select · drag for multi-select",
+          "select": "Select · move · resize corner · Delete to remove{{assetSuffix}}",
+          "selectAsset": " · asset: {{label}}",
+          "toolFallback": "Tool",
+          "zoomPan": " · wheel: zoom {{zoom}}% · space / middle click: pan"
+        },
+        "metrics": {
+          "designedArea": "Designed area:",
+          "targetCount": "Target count:",
+          "coverCount": "Cover count:",
+          "tacticalRisk": "Tactical risk:"
+        },
+        "risk": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        },
+        "validation": {
+          "targetDateRequired": "Target date required",
+          "difficultyRequired": "Difficulty level required",
+          "minOneObjectRequired": "At least one object required"
+        },
+        "messages": {
+          "changesSaved": "Changes saved",
+          "scenarioTransferred": "Scenario transferred · trainings",
+          "saveChangesFailed": "Save changes failed{{hint}}",
+          "scenarioSaveFailed": "Scenario save failed{{hint}}"
+        },
+        "toolbar": {
+          "aria": "Tactical drawing toolbar",
+          "tools": {
+            "select": "Select · move · resize",
+            "marquee": "Box multi-select",
+            "arrow": "Draw tactical arrow",
+            "line": "Line",
+            "circle": "Circle",
+            "triangle": "Triangle",
+            "rectangle": "Rectangle",
+            "eraser": "Eraser"
+          }
+        },
+        "arrowTypes": {
+          "infiltration": "Infiltration route",
+          "fire_line": "Fire line",
+          "evac": "Evacuation / support"
+        },
+        "assets": {
+          "groups": {
+            "targets": "Target types",
+            "cover": "Cover & barricades",
+            "cqb": "CQB room modules",
+            "special": "Special equipment"
+          },
+          "items": {
+            "silhouette_paper": { "label": "Paper silhouette", "shortLabel": "SLH" },
+            "steel_popper": { "label": "Steel popper", "shortLabel": "POP" },
+            "moving_target": { "label": "Rail moving target", "shortLabel": "MOV" },
+            "concrete_wall": { "label": "Concrete block", "shortLabel": "BET" },
+            "tire_stack": { "label": "Tire stack", "shortLabel": "LST" },
+            "sandbag_barrier": { "label": "Sandbag barrier", "shortLabel": "KUM" },
+            "low_cover": { "label": "Low cover", "shortLabel": "ALC" },
+            "center_fed_room": { "label": "Center-fed room", "shortLabel": "MER" },
+            "corner_fed_room": { "label": "Corner-fed room", "shortLabel": "KSE" },
+            "l_shape_wall": { "label": "L-wall", "shortLabel": "L-D" },
+            "corridor_module": { "label": "Corridor", "shortLabel": "KOR" },
+            "strobe_light": { "label": "Strobe tower", "shortLabel": "STR" },
+            "speaker_array": { "label": "Sound simulator", "shortLabel": "SES" },
+            "laser_gate": { "label": "Timer sensor", "shortLabel": "LZR" },
+            "smoke_generator": { "label": "Smoke generator", "shortLabel": "DMN" }
+          }
+        }
+      },
+      "preview": {
+        "canvasAriaReadOnly": "Tactical layout read-only preview",
+        "canvasAriaEdit": "Tactical layout preview",
+        "readOnlyBadge": "Read-only"
+      }
     },
     "grup-egitimi": {
       "title": "Group training",
