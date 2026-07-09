@@ -412,6 +412,7 @@ export default function Balistik() {
                 clickUnitSystem={clickUnitSystem}
                 clickValueMoa={form.optic?.clickValueMoa}
                 clickValueMrad={form.optic?.clickValueMrad}
+                resetKey={selectedProfileId || 'blank'}
               />
 
               <div

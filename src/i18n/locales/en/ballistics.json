@@ -169,7 +169,14 @@
       "down": "DN",
       "left": "LFT",
       "right": "RGT"
-    }
+    },
+    "lockReference": "LOCK REFERENCE",
+    "updateReference": "UPDATE REFERENCE",
+    "clearReference": "UNLOCK",
+    "clearReferenceAria": "Clear reference lock",
+    "refBadge": "REF: {{distance}}m",
+    "deltaBadge": "DELTA",
+    "deltaModeHint": "Values are deltas from the locked reference"
   },
   "table": {
     "columns": {

@@ -169,7 +169,14 @@
       "down": "AŞA",
       "left": "SOL",
       "right": "SAĞ"
-    }
+    },
+    "lockReference": "REFERANSI KİLİTLE",
+    "updateReference": "REFERANSI GÜNCELLE",
+    "clearReference": "KİLİDİ AÇ",
+    "clearReferenceAria": "Referans kilidini aç",
+    "refBadge": "REF: {{distance}}m",
+    "deltaBadge": "FARK",
+    "deltaModeHint": "Değerler kilitli referansa göre farktır"
   },
   "table": {
     "columns": {
