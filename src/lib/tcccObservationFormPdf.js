@@ -3,11 +3,17 @@ import { PDF_FONT_FAMILY, preparePdfAssets, setPdfFont } from './pdfFontLoader'
 import { TCCC_MARCH_ACTION_CHIPS, TCCC_MARCH_EVALUATION_PHASES } from './tcccEvaluationPayload'
 import { TCCC_PHASE_SUB_CRITERIA } from './evaluationPhaseCriteria'
 import { TCCC_OBSERVED_PDF_FORM_VERSION } from './observedEvalConstants'
+import { pdfReportTitle, pdfT } from './pdfReportText'
+import {
+  formatObservedEvalCriterionLabel,
+  formatObservedEvalPhaseSubtitle,
+  formatObservedEvalPhaseTitle,
+  formatTcccMarchActionChipLabel,
+} from './trainingDisplayText'
 import {
   PDF_COLORS,
   PDF_FONT_SIZE,
   PDF_LAYOUT,
-  PDF_REPORT_TITLES,
   drawEmptyFormBox,
   drawFormFieldLine,
   drawObservationFormHeader,
@@ -46,7 +52,7 @@ export async function generateTcccObservationFormPdf(operator = {}) {
   const pageW = doc.internal.pageSize.getWidth()
   const pageH = doc.internal.pageSize.getHeight()
   const margin = PDF_LAYOUT.margin
-  const formTitle = PDF_REPORT_TITLES.tcccObsForm
+  const formTitle = pdfReportTitle('tcccObsForm')
 
   const { logoDataUrl, logoDims } = await preparePdfAssets(doc)
   let y = drawObservationFormHeader(
@@ -61,37 +67,34 @@ export async function generateTcccObservationFormPdf(operator = {}) {
   )
 
   const operatorName = operator?.callsign || operator?.username || operator?.displayName || ''
-  y = drawSectionTitle(doc, margin, pageW, 'Operatör / Gözlemci Bilgileri', y)
+  y = drawSectionTitle(doc, margin, pageW, pdfT('obsForm.tccc.operatorObserverInfo'), y)
   setPdfFont(doc, 'normal')
   doc.setFontSize(PDF_FONT_SIZE.body)
   doc.setTextColor(...PDF_COLORS.muted)
-  doc.text('Operatör:', margin, y)
+  doc.text(pdfT('obsForm.tccc.operatorLabel'), margin, y)
   doc.setTextColor(...PDF_COLORS.text)
   doc.text(operatorName || '________________________________', margin + 48, y)
   y += 7
   doc.setTextColor(...PDF_COLORS.muted)
-  doc.text('Gözlemci adı:', margin, y)
+  doc.text(pdfT('obsForm.tccc.observerName'), margin, y)
   doc.text('________________________________', margin + 48, y)
   y += 7
-  doc.text('Gözlemci callsign:', margin, y)
+  doc.text(pdfT('obsForm.tccc.observerCallsign'), margin, y)
   doc.text('________________________', margin + 48, y)
   y += 7
-  doc.text('Saha tarihi:', margin, y)
+  doc.text(pdfT('obsForm.tccc.fieldDate'), margin, y)
   doc.text('____ / ____ / ______', margin + 48, y)
   y += 7
-  doc.text('Gözlemci imza:', margin, y)
+  doc.text(pdfT('obsForm.tccc.observerSignature'), margin, y)
   drawFormFieldLine(doc, margin + 48, y, 72)
   y += 8
-  doc.text('☐ Zamanlı müdahale    Hedef süre (sn): ________', margin, y)
+  doc.text(pdfT('obsForm.tccc.timedSession'), margin, y)
   y += 10
 
   setPdfFont(doc, 'normal')
   doc.setFontSize(PDF_FONT_SIZE.small)
   doc.setTextColor(...PDF_COLORS.muted)
-  const instr = doc.splitTextToSize(
-    'Talimat: Gözlemci MARCH protokolünü safha safha işaretler. Kritik hata (K.İ.A) varsa skor 0 sayılır.',
-    pageW - margin * 2,
-  )
+  const instr = doc.splitTextToSize(pdfT('obsForm.tccc.instruction'), pageW - margin * 2)
   doc.text(instr, margin, y)
   y += instr.length * 4 + 4
 
@@ -103,30 +106,32 @@ export async function generateTcccObservationFormPdf(operator = {}) {
       y = PDF_LAYOUT.headerHeight + 6
     }
 
-    y = drawSectionTitle(doc, margin, pageW, `${meta.letter} — ${meta.title}`, y)
+    const phaseTitle = formatObservedEvalPhaseTitle('tccc', meta.id, meta.title)
+    y = drawSectionTitle(doc, margin, pageW, `${meta.letter} — ${phaseTitle}`, y)
     setPdfFont(doc, 'normal')
     doc.setFontSize(PDF_FONT_SIZE.small)
     doc.setTextColor(...PDF_COLORS.muted)
-    doc.text(meta.subtitle, margin, y)
+    doc.text(formatObservedEvalPhaseSubtitle('tccc', meta.id, meta.subtitle), margin, y)
     y += 6
 
     doc.setTextColor(...PDF_COLORS.error)
-    doc.text('☐ KRİTİK HATA (K.İ.A)', margin, y)
+    doc.text(pdfT('obsForm.tccc.criticalError'), margin, y)
     y += 6
     doc.setTextColor(...PDF_COLORS.muted)
     const criteria = TCCC_PHASE_SUB_CRITERIA[meta.id] ?? []
     for (const criterion of criteria) {
-      doc.text(`${criterion.label} (1–10):`, margin, y)
+      const label = formatObservedEvalCriterionLabel('tccc', meta.id, criterion.id, criterion.label)
+      doc.text(pdfT('obsForm.tccc.scoreRange', { label }), margin, y)
       drawScoreBoxes1to10(doc, margin + 48, y - 3.5)
       y += 10
     }
     if (!criteria.length) {
-      doc.text('SKOR (1–10):', margin, y)
+      doc.text(pdfT('obsForm.tccc.scoreFallback'), margin, y)
       drawScoreBoxes1to10(doc, margin + 28, y - 3.5)
       y += 6
     }
 
-    doc.text('TAKTİK MÜDAHALE (uygulananları işaretleyin):', margin, y)
+    doc.text(pdfT('obsForm.tccc.tacticalActions'), margin, y)
     y += 5
     setPdfFont(doc, 'normal')
     doc.setFontSize(PDF_FONT_SIZE.small)
@@ -134,7 +139,8 @@ export async function generateTcccObservationFormPdf(operator = {}) {
     const chips = TCCC_MARCH_ACTION_CHIPS[meta.id]
     let chipX = margin
     for (const chip of chips) {
-      const label = `☐ ${chip.label}`
+      const chipLabel = formatTcccMarchActionChipLabel(meta.id, chip.id, chip.label)
+      const label = `☐ ${chipLabel}`
       const w = doc.getTextWidth(label) + 4
       if (chipX + w > pageW - margin) {
         chipX = margin
@@ -146,7 +152,7 @@ export async function generateTcccObservationFormPdf(operator = {}) {
     y += 8
 
     doc.setTextColor(...PDF_COLORS.muted)
-    doc.text('GÖZLEM NOTU:', margin, y)
+    doc.text(pdfT('obsForm.tccc.observationNote'), margin, y)
     y += 4
     drawFormFieldLine(doc, margin, y + 8, pageW - margin * 2)
     drawFormFieldLine(doc, margin, y + 16, pageW - margin * 2)
@@ -160,17 +166,13 @@ export async function generateTcccObservationFormPdf(operator = {}) {
     y = PDF_LAYOUT.headerHeight + 6
   }
   doc.setTextColor(...PDF_COLORS.muted)
-  doc.text('Yaralı durumu: ☐ STABLE    ☐ EKS / K.İ.A', margin, y)
+  doc.text(pdfT('obsForm.tccc.casualtyStatus'), margin, y)
   y += 8
 
   setPdfFont(doc, 'normal')
   doc.setFontSize(PDF_FONT_SIZE.small)
   doc.setTextColor(...PDF_COLORS.muted)
-  doc.text(
-    'Bu form doğrulanmamış gözlem kaydı içindir · Eğitmen onayı ayrı kanaldan yapılır.',
-    margin,
-    y,
-  )
+  doc.text(pdfT('obsForm.tccc.disclaimer'), margin, y)
 
   stampPdfFooters(doc, formId)
   doc.save(`TCCC-Gozlem-Formu-${formId}.pdf`)

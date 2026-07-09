@@ -3,11 +3,16 @@ import { PDF_FONT_FAMILY, preparePdfAssets, setPdfFont } from './pdfFontLoader'
 import { VBSS_EVALUATION_PHASES } from './vbssEvaluationPayload'
 import { VBSS_PHASE_SUB_CRITERIA } from './evaluationPhaseCriteria'
 import { VBSS_OBSERVED_PDF_FORM_VERSION } from './observedEvalConstants'
+import { pdfReportTitle, pdfT } from './pdfReportText'
+import {
+  formatObservedEvalCriterionLabel,
+  formatObservedEvalPhaseSubtitle,
+  formatObservedEvalPhaseTitle,
+} from './trainingDisplayText'
 import {
   PDF_COLORS,
   PDF_FONT_SIZE,
   PDF_LAYOUT,
-  PDF_REPORT_TITLES,
   drawEmptyFormBox,
   drawFormFieldLine,
   drawObservationFormHeader,
@@ -49,31 +54,31 @@ function drawScoreBoxes(doc, startX, y, count, startIndex = 0) {
 function drawMetaBlock(doc, y, pageW, operator) {
   const margin = PDF_LAYOUT.margin
   const operatorName = operator?.callsign || operator?.username || operator?.displayName || ''
-  let cursor = drawSectionTitle(doc, margin, pageW, 'Operatör / Gözlemci Bilgileri', y)
+  let cursor = drawSectionTitle(doc, margin, pageW, pdfT('obsForm.vbss.operatorObserverInfo'), y)
 
   setPdfFont(doc, 'normal')
   doc.setFontSize(PDF_FONT_SIZE.body)
   doc.setTextColor(...PDF_COLORS.muted)
-  doc.text('Operatör (callsign / ad):', margin, cursor)
+  doc.text(pdfT('obsForm.vbss.operatorLabel'), margin, cursor)
   doc.setTextColor(...PDF_COLORS.text)
   doc.text(operatorName || '________________________________', margin + 48, cursor)
   cursor += 7
   doc.setTextColor(...PDF_COLORS.muted)
-  doc.text('Gözlemci adı:', margin, cursor)
+  doc.text(pdfT('obsForm.vbss.observerName'), margin, cursor)
   doc.text('________________________________', margin + 48, cursor)
   cursor += 7
-  doc.text('Gözlemci callsign:', margin, cursor)
+  doc.text(pdfT('obsForm.vbss.observerCallsign'), margin, cursor)
   doc.text('________________________', margin + 48, cursor)
   cursor += 7
-  doc.text('Saha tarihi:', margin, cursor)
+  doc.text(pdfT('obsForm.vbss.fieldDate'), margin, cursor)
   doc.text('____ / ____ / ______', margin + 48, cursor)
-  doc.text('Lokasyon:', margin + 95, cursor)
+  doc.text(pdfT('obsForm.vbss.location'), margin + 95, cursor)
   doc.text('____________________', margin + 115, cursor)
   cursor += 7
-  doc.text('Gözlemci imza:', margin, cursor)
+  doc.text(pdfT('obsForm.vbss.observerSignature'), margin, cursor)
   drawFormFieldLine(doc, margin + 48, cursor, 72)
   cursor += 8
-  doc.text('☐ Zamanlı oturum    Hedef operasyon süresi (sn): ________', margin, cursor)
+  doc.text(pdfT('obsForm.vbss.timedSession'), margin, cursor)
 
   return cursor + 8
 }
@@ -94,10 +99,7 @@ function drawPhases(doc, startY, pageW, pageH, logoDataUrl, logoDims, formTitle)
   setPdfFont(doc, 'normal')
   doc.setFontSize(PDF_FONT_SIZE.small)
   doc.setTextColor(...PDF_COLORS.muted)
-  const instr = doc.splitTextToSize(
-    'Talimat: Gözlemci sahadaki performansı işaretler. Operatör, işaretlemeleri uygulamaya kendi eliyle girer.',
-    pageW - margin * 2,
-  )
+  const instr = doc.splitTextToSize(pdfT('obsForm.vbss.instruction'), pageW - margin * 2)
   doc.text(instr, margin, y)
   y += instr.length * 4 + 6
 
@@ -109,26 +111,33 @@ function drawPhases(doc, startY, pageW, pageH, logoDataUrl, logoDims, formTitle)
       y = PDF_LAYOUT.headerHeight + 6
     }
 
-    y = drawSectionTitle(doc, margin, pageW, meta.title, y)
+    y = drawSectionTitle(
+      doc,
+      margin,
+      pageW,
+      formatObservedEvalPhaseTitle('vbss', meta.id, meta.title),
+      y
+    )
     setPdfFont(doc, 'normal')
     doc.setFontSize(PDF_FONT_SIZE.small)
     doc.setTextColor(...PDF_COLORS.muted)
-    doc.text(meta.subtitle, margin, y)
+    doc.text(formatObservedEvalPhaseSubtitle('vbss', meta.id, meta.subtitle), margin, y)
     y += 6
 
     const criteria = VBSS_PHASE_SUB_CRITERIA[meta.id] ?? []
     for (const criterion of criteria) {
-      doc.text(`${criterion.label} (0–10):`, margin, y)
+      const label = formatObservedEvalCriterionLabel('vbss', meta.id, criterion.id, criterion.label)
+      doc.text(pdfT('obsForm.vbss.scoreRange', { label }), margin, y)
       drawScoreBoxes(doc, margin + 48, y - 3.5, 11, 0)
       y += 10
     }
     if (!criteria.length) {
-      doc.text('SKOR (0–10):', margin, y)
+      doc.text(pdfT('obsForm.vbss.scoreFallback'), margin, y)
       drawScoreBoxes(doc, margin + 28, y - 3.5, 11, 0)
       y += 10
     }
 
-    doc.text('GÖZLEM NOTU:', margin, y)
+    doc.text(pdfT('obsForm.vbss.observationNote'), margin, y)
     y += 4
     drawFormFieldLine(doc, margin, y + 8, pageW - margin * 2)
     drawFormFieldLine(doc, margin, y + 16, pageW - margin * 2)
@@ -147,7 +156,7 @@ export async function generateVbssObservationFormPdf(operator = {}) {
   const pageW = doc.internal.pageSize.getWidth()
   const pageH = doc.internal.pageSize.getHeight()
   const margin = PDF_LAYOUT.margin
-  const formTitle = PDF_REPORT_TITLES.vbssObsForm
+  const formTitle = pdfReportTitle('vbssObsForm')
 
   const { logoDataUrl, logoDims } = await preparePdfAssets(doc)
   const headerEnd = drawObservationFormHeader(
@@ -167,11 +176,7 @@ export async function generateVbssObservationFormPdf(operator = {}) {
   setPdfFont(doc, 'normal')
   doc.setFontSize(PDF_FONT_SIZE.small)
   doc.setTextColor(...PDF_COLORS.muted)
-  doc.text(
-    'Bu form doğrulanmamış gözlem kaydı içindir · Eğitmen onayı ayrı kanaldan yapılır.',
-    margin,
-    phasesEnd,
-  )
+  doc.text(pdfT('obsForm.vbss.disclaimer'), margin, phasesEnd)
 
   stampPdfFooters(doc, formId)
   doc.save(`VBSS-Gozlem-Formu-${formId}.pdf`)

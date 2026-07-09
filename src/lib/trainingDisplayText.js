@@ -65,6 +65,7 @@ import {
 } from './egitimLogRegistry'
 import { invNum } from './inventoryIlws'
 import { timestampToMs } from './firestoreSnapshot'
+import { getRangeAssetDef } from './rangeLayoutAssets'
 
 /** @typedef {import('../components/training/trainingCategories').TrainingCategory} TrainingCategory */
 
@@ -1436,6 +1437,43 @@ export function formatEgitimSandboxAssetLabel(type, field, fallback = '') {
   const key = `sectors.egitim.sandbox.assets.items.${type}.${field}`
   if (i18n.exists(key, { ns: 'training' })) return i18n.t(key, { ns: 'training' })
   return fallback || type
+}
+
+/**
+ * @param {string} type
+ * @param {string} [storedLabel]
+ */
+export function resolveSandboxPlacedObjectLabel(type, storedLabel = '') {
+  const def = getRangeAssetDef(type)
+  if (!def) return String(storedLabel || '').trim()
+  const stored = String(storedLabel || '').trim()
+  if (!stored || stored === def.label) {
+    return formatEgitimSandboxAssetLabel(type, 'label', def.label)
+  }
+  const enLabel = i18n.t(`sectors.egitim.sandbox.assets.items.${type}.label`, {
+    ns: 'training',
+    lng: 'en',
+    defaultValue: def.label,
+  })
+  const trLabel = i18n.t(`sectors.egitim.sandbox.assets.items.${type}.label`, {
+    ns: 'training',
+    lng: 'tr',
+    defaultValue: def.label,
+  })
+  if (stored === enLabel || stored === trLabel) {
+    return formatEgitimSandboxAssetLabel(type, 'label', def.label)
+  }
+  return stored
+}
+
+/**
+ * @param {import('./rangeLayoutMetrics').CanvasLayoutObject} obj
+ */
+export function localizeSandboxCanvasObject(obj) {
+  return {
+    ...obj,
+    label: resolveSandboxPlacedObjectLabel(obj.type, obj.label),
+  }
 }
 
 /** @param {string} toolId */

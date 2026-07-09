@@ -60,6 +60,8 @@ import {
   formatEgitimSandboxRiskLabel,
   formatEgitimSandboxSaveError,
   formatEgitimSandboxStatusBar,
+  localizeSandboxCanvasObject,
+  resolveSandboxPlacedObjectLabel,
 } from '../../lib/trainingDisplayText'
 
 const STROKE_WIDTH_OPTIONS = [2, 4, 6, 8, 10]
@@ -134,7 +136,7 @@ export default function TacticalRangeSandbox({
   layoutBlueprint = null,
   readOnly = false,
 }) {
-  const { t } = useTranslation('training')
+  const { t, i18n } = useTranslation('training')
   const canvasRef = useRef(/** @type {HTMLCanvasElement | null} */ (null))
   const wrapRef = useRef(/** @type {HTMLDivElement | null} */ (null))
   const interactionRef = useRef(
@@ -236,7 +238,7 @@ export default function TacticalRangeSandbox({
     (/** @type {SandboxLayoutBlueprint | null} */ blueprint) => {
       purgeDrawingState()
       if (!blueprint) return
-      setCanvasObjects(blueprint.objects.map((o) => ({ ...o })))
+      setCanvasObjects(blueprint.objects.map((o) => localizeSandboxCanvasObject({ ...o })))
       setTacticalArrows(blueprint.tacticalArrows.map((a) => ({ ...a })))
       setDrawnShapes(blueprint.drawnShapes.map((s) => ({ ...s })))
       setSaveOk(false)
@@ -508,6 +510,10 @@ export default function TacticalRangeSandbox({
     }
   }, [deleteSelectedItems])
 
+  useEffect(() => {
+    setCanvasObjects((prev) => prev.map(localizeSandboxCanvasObject))
+  }, [i18n.language])
+
   const addObjectAt = useCallback(
     (/** @type {number} */ mx, /** @type {number} */ my, /** @type {import('../../lib/rangeLayoutAssets').RangeLayoutAssetDef} */ brush) => {
       const id = `obj_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
@@ -517,7 +523,7 @@ export default function TacticalRangeSandbox({
         category: brush.category,
         x: roundMeter(mx),
         y: roundMeter(my),
-        label: brush.label,
+        label: resolveSandboxPlacedObjectLabel(brush.type, brush.label),
       }
       setCanvasObjects((prev) => [...prev, next])
       setSelectedId(id)

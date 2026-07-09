@@ -1,4 +1,5 @@
 import { PDF_FONT_FAMILY, setPdfFont } from './pdfFontLoader'
+import { pdfFormatDateTime, pdfReportTitle, pdfT } from './pdfReportText'
 
 /** @typedef {{ callsign?: string, username?: string, email?: string, bloodType?: string, displayName?: string }} OperatorInfo */
 
@@ -112,9 +113,9 @@ export function drawPdfHeader(doc, pageW, logoDataUrl, logoDims, reportTitle) {
   setPdfFont(doc, 'normal')
   doc.setFontSize(PDF_FONT_SIZE.brandSub)
   doc.setTextColor(...PDF_COLORS.headerSubtext)
-  doc.text('Operasyonel Kayıt Sistemi', brandX, logoY + 10.5)
+  doc.text(pdfT('common.brandSub'), brandX, logoY + 10.5)
 
-  const now = new Date().toLocaleString('tr-TR')
+  const now = pdfFormatDateTime()
   setPdfFont(doc, 'bold')
   doc.setFontSize(PDF_FONT_SIZE.subtitle)
   doc.setTextColor(...PDF_COLORS.headerText)
@@ -139,21 +140,22 @@ export function drawPdfOperatorBlock(doc, pageW, operator, reportId) {
   setPdfFont(doc, 'bold')
   doc.setFontSize(PDF_FONT_SIZE.section)
   doc.setTextColor(...PDF_COLORS.text)
-  doc.text('Operatör Bilgileri', margin, y)
+  doc.text(pdfT('common.operatorInfo'), margin, y)
   y += 6
 
-  const callsign = operator?.callsign || operator?.username || operator?.displayName || 'Operatör'
+  const callsign =
+    operator?.callsign || operator?.username || operator?.displayName || pdfT('common.defaultOperator')
   const blood = operator?.bloodType || '—'
-  const created = new Date().toLocaleString('tr-TR')
+  const created = pdfFormatDateTime()
 
   setPdfFont(doc, 'normal')
   doc.setFontSize(PDF_FONT_SIZE.body)
   doc.setTextColor(...PDF_COLORS.muted)
-  doc.text(`Çağrı adı: ${callsign}`, margin, y)
-  doc.text(`Kan grubu: ${blood}`, pageW / 2, y)
+  doc.text(`${pdfT('common.callsign')}: ${callsign}`, margin, y)
+  doc.text(`${pdfT('common.bloodType')}: ${blood}`, pageW / 2, y)
   y += 5
-  doc.text(`Rapor ID: ${reportId}`, margin, y)
-  doc.text(`Oluşturma: ${created}`, pageW / 2, y)
+  doc.text(`${pdfT('common.reportId')}: ${reportId}`, margin, y)
+  doc.text(`${pdfT('common.created')}: ${created}`, pageW / 2, y)
   y += 4
 
   doc.setDrawColor(...PDF_COLORS.accent)
@@ -265,7 +267,7 @@ export function stampPdfFooters(doc, reportId) {
     doc.setTextColor(...PDF_COLORS.footerText)
     doc.text('AUDAZ TACTICAL', PDF_LAYOUT.margin, y)
     doc.text(reportId, pageW / 2, y, { align: 'center' })
-    doc.text(`Sayfa ${i} / ${total}`, pageW - PDF_LAYOUT.margin, y, { align: 'right' })
+    doc.text(pdfT('common.page', { current: i, total }), pageW - PDF_LAYOUT.margin, y, { align: 'right' })
   }
 }
 
@@ -296,7 +298,7 @@ export function drawPdfContinuationLabel(doc, margin, label, startY) {
 export function setupReportFirstPage(doc, pageW, pageH, logoDataUrl, logoDims, reportTitleKey, operator) {
   paintPdfPage(doc, pageW, pageH)
   const reportId = generateReportId()
-  const reportTitle = PDF_REPORT_TITLES[reportTitleKey] ?? reportTitleKey
+  const reportTitle = pdfReportTitle(reportTitleKey)
   drawPdfHeader(doc, pageW, logoDataUrl, logoDims, reportTitle)
   const { callsign, contentStartY } = drawPdfOperatorBlock(doc, pageW, operator, reportId)
   return { reportId, callsign, contentStartY, reportTitle }
@@ -364,7 +366,7 @@ export function drawObservationFormHeader(doc, pageW, pageH, logoDataUrl, logoDi
   setPdfFont(doc, 'normal')
   doc.setFontSize(PDF_FONT_SIZE.small)
   doc.setTextColor(...PDF_COLORS.muted)
-  doc.text(`Form ID: ${formId} · ${versionLabel}`, margin, y)
+  doc.text(pdfT('common.formId', { id: formId, version: versionLabel }), margin, y)
   return y + 6
 }
 

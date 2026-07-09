@@ -18,8 +18,16 @@ import {
   getCqbTeamSize,
   getCqbThreatNeutralized,
 } from './cqbLogRegistry'
-import { formatMeteoOverviewRows, getLogMeteoData } from './meteoDataCapture'
+import { getLogMeteoData } from './meteoDataCapture'
 import { preparePdfAssets, setPdfFont } from './pdfFontLoader'
+import {
+  pdfFilterLine,
+  pdfFormatNumber,
+  pdfMeteoRows,
+  pdfParamValueHead,
+  pdfRecordLabel,
+  pdfT,
+} from './pdfReportText'
 import {
   PDF_COLORS,
   PDF_FONT_SIZE,
@@ -43,12 +51,12 @@ import {
  */
 function drawEnvironmentalConditions(doc, startY, margin, pageW, log) {
   const meteo = getLogMeteoData(log)
-  const tableStart = drawSectionTitle(doc, margin, pageW, 'Çevresel Koşullar · Meteo-Veri', startY)
+  const tableStart = drawSectionTitle(doc, margin, pageW, pdfT('common.environmentalConditions'), startY)
 
   autoTable(doc, {
     startY: tableStart,
-    head: [['Parametre', 'Değer']],
-    body: formatMeteoOverviewRows(meteo),
+    head: [pdfParamValueHead()],
+    body: pdfMeteoRows(meteo),
     ...getAutoTableOptions(margin),
   })
 
@@ -69,23 +77,23 @@ function drawLogDetailSection(doc, margin, pageW, log, startY) {
   const errorCount = countCqbTacticalErrors(log)
   const note = getCqbOperationNote(log)
 
-  const detailStart = drawSectionTitle(doc, margin, pageW, 'Eğitim Detayları', startY)
+  const detailStart = drawSectionTitle(doc, margin, pageW, pdfT('common.trainingDetails'), startY)
   autoTable(doc, {
     startY: detailStart,
-    head: [['Parametre', 'Değer']],
+    head: [pdfParamValueHead()],
     body: [
-      ['Tarih', formatCqbDateCell(log)],
-      ['Oda topolojisi', getCqbRoomTopology(log)],
-      ['Giriş metodu', getCqbEntryMethod(log)],
-      ['Kırma tipi', getCqbBreachingType(log)],
-      ['Kapı durumu', getCqbDoorState(log)],
-      ['Takım boyutu', getCqbTeamSize(log)],
-      ['Tehdit / Etkisiz', `${threats} / ${neutralized}`],
-      ['Temizleme süresi', formatCqbClearanceTime(log)],
-      ['İsabet skoru', `%${getCqbAccuracyScore(log).toLocaleString('tr-TR')}`],
-      ['Güvenlik ihlalleri', String(getCqbSafetyViolations(log))],
-      ['Taktik karar', getCqbTacticalDecision(log)],
-      ['Başarı oranı', `%${getCqbSuccessPercent(log).toLocaleString('tr-TR')}`],
+      [pdfT('cqb.fields.date'), formatCqbDateCell(log)],
+      [pdfT('cqb.fields.topology'), getCqbRoomTopology(log)],
+      [pdfT('cqb.fields.entryMethod'), getCqbEntryMethod(log)],
+      [pdfT('cqb.fields.breachingType'), getCqbBreachingType(log)],
+      [pdfT('cqb.fields.doorState'), getCqbDoorState(log)],
+      [pdfT('cqb.fields.teamSize'), getCqbTeamSize(log)],
+      [pdfT('cqb.fields.threatNeutralized'), `${threats} / ${neutralized}`],
+      [pdfT('cqb.fields.clearanceTime'), formatCqbClearanceTime(log)],
+      [pdfT('cqb.fields.accuracyScore'), `%${pdfFormatNumber(getCqbAccuracyScore(log))}`],
+      [pdfT('cqb.fields.safetyViolations'), String(getCqbSafetyViolations(log))],
+      [pdfT('cqb.fields.tacticalDecision'), getCqbTacticalDecision(log)],
+      [pdfT('cqb.fields.successRate'), `%${pdfFormatNumber(getCqbSuccessPercent(log))}`],
     ],
     ...getAutoTableOptions(margin),
   })
@@ -94,7 +102,7 @@ function drawLogDetailSection(doc, margin, pageW, log, startY) {
   let cursorY = (doc.lastAutoTable?.finalY ?? detailStart) + 8
 
   if (errorCount > 0) {
-    cursorY = drawSectionTitle(doc, margin, pageW, 'Taktik Hatalar', cursorY)
+    cursorY = drawSectionTitle(doc, margin, pageW, pdfT('common.tacticalErrors'), cursorY)
 
     const errorRows = errorGroups.flatMap((group) =>
       group.labels.map((label) => [group.phaseTitle, label])
@@ -102,7 +110,7 @@ function drawLogDetailSection(doc, margin, pageW, log, startY) {
 
     autoTable(doc, {
       startY: cursorY,
-      head: [['Faz', 'Hata']],
+      head: [[pdfT('cqb.errors.phase'), pdfT('cqb.errors.error')]],
       body: errorRows,
       ...getErrorTableOptions(margin, { styles: { fontSize: PDF_FONT_SIZE.small } }),
     })
@@ -111,7 +119,7 @@ function drawLogDetailSection(doc, margin, pageW, log, startY) {
     cursorY = (doc.lastAutoTable?.finalY ?? cursorY) + 8
   }
 
-  cursorY = drawSectionTitle(doc, margin, pageW, 'Değerlendirme Notları', cursorY)
+  cursorY = drawSectionTitle(doc, margin, pageW, pdfT('common.evaluationNotes'), cursorY)
   setPdfFont(doc, 'normal')
   doc.setFontSize(PDF_FONT_SIZE.body)
   doc.setTextColor(...PDF_COLORS.text)
@@ -140,35 +148,39 @@ function drawBulkSummaryPage(doc, margin, pageW, startY, logs, filterActive, fil
       : 0
   const totalViolations = logs.reduce((sum, row) => sum + getCqbSafetyViolations(row), 0)
 
-  let y = drawSectionTitle(doc, margin, pageW, 'Performans Özeti', startY)
+  let y = drawSectionTitle(doc, margin, pageW, pdfT('common.performanceSummary'), startY)
 
   setPdfFont(doc, 'normal')
   doc.setFontSize(PDF_FONT_SIZE.body)
   doc.setTextColor(...PDF_COLORS.muted)
-  doc.text(`Kayıt sayısı: ${logs.length}`, margin, y)
+  doc.text(pdfT('common.recordCount', { count: logs.length }), margin, y)
   y += 5
-  doc.text(`Ortalama isabet skoru: %${avgAccuracy.toLocaleString('tr-TR')}`, margin, y)
+  doc.text(pdfT('cqb.summary.avgAccuracy', { percent: pdfFormatNumber(avgAccuracy) }), margin, y)
   y += 5
-  doc.text(`Toplam güvenlik ihlali: ${totalViolations}`, margin, y)
+  doc.text(pdfT('cqb.summary.totalViolations', { count: totalViolations }), margin, y)
   y += 5
-  doc.text(
-    filterActive ? `Filtre: ${filterLabel}` : 'Filtre: Yok — tüm kayıtlar',
-    margin,
-    y
-  )
+  doc.text(pdfFilterLine(filterActive, filterLabel), margin, y)
   y += 8
 
   autoTable(doc, {
     startY: y,
-    head: [['Tarih', 'Topoloji', 'Clearance', 'İsabet %', 'İhlal', 'Karar', 'Başarı %']],
+    head: [[
+      pdfT('cqb.bulkColumns.date'),
+      pdfT('cqb.bulkColumns.topology'),
+      pdfT('cqb.bulkColumns.clearance'),
+      pdfT('cqb.bulkColumns.accuracy'),
+      pdfT('cqb.bulkColumns.violations'),
+      pdfT('cqb.bulkColumns.decision'),
+      pdfT('cqb.bulkColumns.success'),
+    ]],
     body: logs.map((row) => [
       formatCqbDateCell(row),
       getCqbRoomTopology(row),
       formatCqbClearanceTime(row),
-      `%${getCqbAccuracyScore(row).toLocaleString('tr-TR')}`,
+      `%${pdfFormatNumber(getCqbAccuracyScore(row))}`,
       String(getCqbSafetyViolations(row)),
       getCqbTacticalDecision(row),
-      `%${getCqbSuccessPercent(row).toLocaleString('tr-TR')}`,
+      `%${pdfFormatNumber(getCqbSuccessPercent(row))}`,
     ]),
     ...getAutoTableOptions(margin, { styles: { fontSize: PDF_FONT_SIZE.small } }),
   })
@@ -238,7 +250,7 @@ export async function generateCqbTacticalReportPdf({
         logoDataUrl,
         logoDims,
         reportTitle,
-        `Kayıt ${index + 1} / ${rows.length}`,
+        pdfRecordLabel(index, rows.length),
       )
     }
 

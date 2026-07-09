@@ -1,0 +1,245 @@
+{
+  "titles": {
+    "atis": "ATIŞ TAKTİK PERFORMANS RAPORU",
+    "cqb": "CQB TAKTİK DEĞERLENDİRME RAPORU",
+    "fof": "FOF KUVVET KARŞILAŞMASI RAPORU",
+    "vbss": "VBSS GEMİ OPERASYON RAPORU",
+    "tccc": "TCCC TAKTİK SAĞLIK RAPORU",
+    "vbssObsForm": "VBSS GÖZLEM FORMU",
+    "tcccObsForm": "TCCC MARCH GÖZLEM FORMU"
+  },
+  "common": {
+    "brandSub": "Operasyonel Kayıt Sistemi",
+    "operatorInfo": "Operatör Bilgileri",
+    "callsign": "Çağrı adı",
+    "bloodType": "Kan grubu",
+    "reportId": "Rapor ID",
+    "created": "Oluşturma",
+    "defaultOperator": "Operatör",
+    "parameter": "Parametre",
+    "value": "Değer",
+    "page": "Sayfa {{current}} / {{total}}",
+    "formId": "Form ID: {{id}} · {{version}}",
+    "yes": "EVET",
+    "no": "HAYIR",
+    "applied": "UYGULANDI",
+    "environmentalConditions": "Çevresel Koşullar · Meteo-Veri",
+    "trainingDetails": "Eğitim Detayları",
+    "evaluationNotes": "Değerlendirme Notları",
+    "performanceSummary": "Performans Özeti",
+    "tacticalErrors": "Taktik Hatalar",
+    "operationSummary": "Operasyon Özeti",
+    "engagementSummary": "Müdahale Özeti",
+    "clinicalSummary": "Klinik ve Taktik Özet",
+    "medicalNotes": "Tıbbi Notlar",
+    "recordCount": "Kayıt sayısı: {{count}}",
+    "filterNone": "Filtre: Yok — tüm kayıtlar",
+    "filterActive": "Filtre: {{label}}",
+    "recordLabel": "Kayıt {{index}} / {{total}}",
+    "hitRatioChart": "İsabet oranı grafiği",
+    "hits": "İsabet {{count}}",
+    "misses": "Kaçırma {{count}}",
+    "timingAnalysis": "Süre Analizi",
+    "timingLine": "İlk atış: {{first}} · Split: {{split}} · Toplam: {{total}}",
+    "weaponSpecs": "Silah Spesifikasyonu",
+    "meteo": {
+      "temperature": "Sıcaklık",
+      "wind": "Rüzgar",
+      "humidity": "Nem",
+      "location": "Konum",
+      "noRecord": "Kayıt yok"
+    }
+  },
+  "atis": {
+    "fields": {
+      "date": "Tarih",
+      "weapon": "Silah",
+      "drillType": "Atış türü",
+      "distance": "Mesafe",
+      "roundsHits": "Atım / İsabet",
+      "accuracy": "İsabet oranı",
+      "duration": "Süre",
+      "caliber": "Kalibre",
+      "ammo": "Mühimmat",
+      "unitPrice": "Birim fiyat",
+      "totalCost": "Toplam maliyet"
+    },
+    "summary": {
+      "totalRoundsHits": "Toplam atım / isabet: {{rounds}} / {{hits}}",
+      "avgAccuracy": "Ortalama isabet: %{{percent}}",
+      "totalAmmoCost": "Toplam mühimmat maliyeti: {{cost}}"
+    },
+    "bulkColumns": {
+      "date": "Tarih",
+      "weapon": "Silah",
+      "drillType": "Atış türü",
+      "distance": "Mesafe",
+      "roundsHits": "Atım/İsabet",
+      "score": "Skor %",
+      "cost": "Maliyet"
+    }
+  },
+  "cqb": {
+    "fields": {
+      "date": "Tarih",
+      "topology": "Oda topolojisi",
+      "entryMethod": "Giriş metodu",
+      "breachingType": "Kırma tipi",
+      "doorState": "Kapı durumu",
+      "teamSize": "Takım boyutu",
+      "threatNeutralized": "Tehdit / Etkisiz",
+      "clearanceTime": "Temizleme süresi",
+      "accuracyScore": "İsabet skoru",
+      "safetyViolations": "Güvenlik ihlalleri",
+      "tacticalDecision": "Taktik karar",
+      "successRate": "Başarı oranı"
+    },
+    "errors": {
+      "phase": "Faz",
+      "error": "Hata"
+    },
+    "summary": {
+      "avgAccuracy": "Ortalama isabet skoru: %{{percent}}",
+      "totalViolations": "Toplam güvenlik ihlali: {{count}}"
+    },
+    "bulkColumns": {
+      "date": "Tarih",
+      "topology": "Topoloji",
+      "clearance": "Clearance",
+      "accuracy": "İsabet %",
+      "violations": "İhlal",
+      "decision": "Karar",
+      "success": "Başarı %"
+    }
+  },
+  "fof": {
+    "fields": {
+      "date": "Tarih",
+      "scenarioType": "Senaryo tipi",
+      "simSystem": "Simülasyon sistemi",
+      "engagementType": "Angajman tipi",
+      "opforCount": "OPFOR sayısı",
+      "simDuration": "Simülasyon süresi",
+      "timeToFirstShot": "İlk atış süresi",
+      "engagementRounds": "Angajman atışları",
+      "decisionAccuracy": "Karar doğruluğu",
+      "hitTakenRatio": "Vuruş/Alınan oranı",
+      "hitsTaken": "Alınan vuruş",
+      "lethalNonLethal": "Öldürücü / Öldürücü olmayan",
+      "coverUtilization": "Siper kullanımı",
+      "friendlyCasualties": "Dost kaybı",
+      "blueOnBlue": "Blue-on-blue",
+      "tcccUnderFire": "TCCC (ateş altında)",
+      "successRate": "Başarı oranı"
+    },
+    "errors": {
+      "error": "Hata"
+    },
+    "summary": {
+      "avgDecision": "Ortalama karar doğruluğu: %{{percent}}",
+      "avgSuccess": "Ortalama başarı: %{{percent}}"
+    },
+    "bulkColumns": {
+      "date": "Tarih",
+      "engagement": "Angajman",
+      "duration": "Süre",
+      "decision": "Karar %",
+      "hitTaken": "Hit/Taken",
+      "success": "Başarı %"
+    }
+  },
+  "vbss": {
+    "fields": {
+      "date": "Tarih",
+      "boardingPoint": "Biniş noktası",
+      "vesselType": "Gemi tipi",
+      "searchDuration": "Arama süresi",
+      "threatLevel": "Tehdit seviyesi",
+      "seaState": "Deniz durumu",
+      "vesselSpeed": "Gemi hızı",
+      "boardingTime": "Gemiye çıkış",
+      "bridgeControl": "Köprüüstü kontrol",
+      "engineRoom": "Makine dairesi",
+      "containment": "Emniyete alma",
+      "successRate": "Başarı oranı"
+    },
+    "summary": {
+      "avgSuccess": "Ortalama başarı: %{{percent}}"
+    },
+    "bulkColumns": {
+      "date": "Tarih",
+      "entryPoint": "Giriş Noktası",
+      "vesselType": "Gemi Tipi",
+      "searchDuration": "Arama Süresi",
+      "threat": "Tehdit",
+      "success": "Başarı %"
+    }
+  },
+  "tccc": {
+    "fields": {
+      "date": "Tarih",
+      "casualtyType": "Yaralı tipi",
+      "interventionTime": "Müdahale süresi",
+      "procedure": "Uygulanan prosedür",
+      "outcome": "Sonuç",
+      "injuryType": "Yaralanma tipi",
+      "phase": "TCCC fazı",
+      "tourniquetLocation": "Turnike konumu",
+      "evacWaiting": "Tahliye bekleme",
+      "systolicBp": "Sistolik BP",
+      "successRate": "Başarı oranı"
+    },
+    "marchSummary": "MARCH müdahale özeti",
+    "marchColumns": {
+      "phase": "Faz",
+      "treatments": "Uygulanan müdahaleler"
+    },
+    "appliedTreatments": "Uygulanan tedaviler:",
+    "operationNote": "Operasyon notu:",
+    "summary": {
+      "avgSuccess": "Ortalama başarı: %{{percent}}"
+    },
+    "bulkColumns": {
+      "date": "Tarih",
+      "casualtyType": "Yaralı Tipi",
+      "intervention": "Müdahale",
+      "procedure": "Prosedür",
+      "outcome": "Sonuç",
+      "success": "Başarı %"
+    }
+  },
+  "obsForm": {
+    "vbss": {
+      "operatorObserverInfo": "Operatör / Gözlemci Bilgileri",
+      "operatorLabel": "Operatör (callsign / ad):",
+      "observerName": "Gözlemci adı:",
+      "observerCallsign": "Gözlemci callsign:",
+      "fieldDate": "Saha tarihi:",
+      "location": "Lokasyon:",
+      "observerSignature": "Gözlemci imza:",
+      "timedSession": "☐ Zamanlı oturum    Hedef operasyon süresi (sn): ________",
+      "instruction": "Talimat: Gözlemci sahadaki performansı işaretler. Operatör, işaretlemeleri uygulamaya kendi eliyle girer.",
+      "scoreRange": "{{label}} (0–10):",
+      "scoreFallback": "SKOR (0–10):",
+      "observationNote": "GÖZLEM NOTU:",
+      "disclaimer": "Bu form doğrulanmamış gözlem kaydı içindir · Eğitmen onayı ayrı kanaldan yapılır."
+    },
+    "tccc": {
+      "operatorObserverInfo": "Operatör / Gözlemci Bilgileri",
+      "operatorLabel": "Operatör:",
+      "observerName": "Gözlemci adı:",
+      "observerCallsign": "Gözlemci callsign:",
+      "fieldDate": "Saha tarihi:",
+      "observerSignature": "Gözlemci imza:",
+      "timedSession": "☐ Zamanlı müdahale    Hedef süre (sn): ________",
+      "instruction": "Talimat: Gözlemci MARCH protokolünü safha safha işaretler. Kritik hata (K.İ.A) varsa skor 0 sayılır.",
+      "criticalError": "☐ KRİTİK HATA (K.İ.A)",
+      "scoreRange": "{{label}} (1–10):",
+      "scoreFallback": "SKOR (1–10):",
+      "tacticalActions": "TAKTİK MÜDAHALE (uygulananları işaretleyin):",
+      "observationNote": "GÖZLEM NOTU:",
+      "casualtyStatus": "Yaralı durumu: ☐ STABLE    ☐ EKS / K.İ.A",
+      "disclaimer": "Bu form doğrulanmamış gözlem kaydı içindir · Eğitmen onayı ayrı kanaldan yapılır."
+    }
+  }
+}

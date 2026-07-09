@@ -17,8 +17,16 @@ import {
   getTcccSuccessPercent,
   getTcccTourniquetLocation,
 } from './tcccLogRegistry'
-import { formatMeteoOverviewRows, getLogMeteoData } from './meteoDataCapture'
+import { getLogMeteoData } from './meteoDataCapture'
 import { preparePdfAssets, setPdfFont } from './pdfFontLoader'
+import {
+  pdfFilterLine,
+  pdfFormatNumber,
+  pdfMeteoRows,
+  pdfParamValueHead,
+  pdfRecordLabel,
+  pdfT,
+} from './pdfReportText'
 import {
   PDF_COLORS,
   PDF_FONT_SIZE,
@@ -41,12 +49,12 @@ import {
  */
 function drawEnvironmentalConditions(doc, startY, margin, pageW, log) {
   const meteo = getLogMeteoData(log)
-  const tableStart = drawSectionTitle(doc, margin, pageW, 'Çevresel Koşullar · Meteo-Veri', startY)
+  const tableStart = drawSectionTitle(doc, margin, pageW, pdfT('common.environmentalConditions'), startY)
 
   autoTable(doc, {
     startY: tableStart,
-    head: [['Parametre', 'Değer']],
-    body: formatMeteoOverviewRows(meteo),
+    head: [pdfParamValueHead()],
+    body: pdfMeteoRows(meteo),
     ...getAutoTableOptions(margin),
   })
 
@@ -62,23 +70,23 @@ function drawEnvironmentalConditions(doc, startY, margin, pageW, log) {
  * @param {number} startY
  */
 function drawClinicalSummary(doc, margin, pageW, log, startY) {
-  const summaryStart = drawSectionTitle(doc, margin, pageW, 'Klinik ve Taktik Özet', startY)
+  const summaryStart = drawSectionTitle(doc, margin, pageW, pdfT('common.clinicalSummary'), startY)
 
   autoTable(doc, {
     startY: summaryStart,
-    head: [['Parametre', 'Değer']],
+    head: [pdfParamValueHead()],
     body: [
-      ['Tarih', formatTcccDateCell(log)],
-      ['Yaralı tipi', getTcccCasualtyType(log)],
-      ['Müdahale süresi', formatTcccInterventionTime(log)],
-      ['Uygulanan prosedür', getTcccProcedurePerformed(log)],
-      ['Sonuç', getTcccOutcome(log)],
-      ['Yaralanma tipi', getTcccInjuryType(log)],
-      ['TCCC fazı', getTcccPhase(log)],
-      ['Turnike konumu', getTcccTourniquetLocation(log)],
-      ['Tahliye bekleme', formatTcccEvacWaitingTime(log)],
-      ['Sistolik BP', formatTcccSystolicBp(log)],
-      ['Başarı oranı', `%${getTcccSuccessPercent(log).toLocaleString('tr-TR')}`],
+      [pdfT('tccc.fields.date'), formatTcccDateCell(log)],
+      [pdfT('tccc.fields.casualtyType'), getTcccCasualtyType(log)],
+      [pdfT('tccc.fields.interventionTime'), formatTcccInterventionTime(log)],
+      [pdfT('tccc.fields.procedure'), getTcccProcedurePerformed(log)],
+      [pdfT('tccc.fields.outcome'), getTcccOutcome(log)],
+      [pdfT('tccc.fields.injuryType'), getTcccInjuryType(log)],
+      [pdfT('tccc.fields.phase'), getTcccPhase(log)],
+      [pdfT('tccc.fields.tourniquetLocation'), getTcccTourniquetLocation(log)],
+      [pdfT('tccc.fields.evacWaiting'), formatTcccEvacWaitingTime(log)],
+      [pdfT('tccc.fields.systolicBp'), formatTcccSystolicBp(log)],
+      [pdfT('tccc.fields.successRate'), `%${pdfFormatNumber(getTcccSuccessPercent(log))}`],
     ],
     ...getAutoTableOptions(margin),
   })
@@ -88,11 +96,11 @@ function drawClinicalSummary(doc, margin, pageW, log, startY) {
 
   const marchSections = getTcccMarchSectionsForReport(log)
   if (marchSections.length > 0) {
-    cursorY = drawSectionTitle(doc, margin, pageW, 'MARCH müdahale özeti', cursorY)
+    cursorY = drawSectionTitle(doc, margin, pageW, pdfT('tccc.marchSummary'), cursorY)
 
     autoTable(doc, {
       startY: cursorY,
-      head: [['Faz', 'Uygulanan müdahaleler']],
+      head: [[pdfT('tccc.marchColumns.phase'), pdfT('tccc.marchColumns.treatments')]],
       body: marchSections.map((section) => [section.step, section.items.join(' · ')]),
       ...getAutoTableOptions(margin, { styles: { fontSize: PDF_FONT_SIZE.table } }),
     })
@@ -103,14 +111,14 @@ function drawClinicalSummary(doc, margin, pageW, log, startY) {
   const treatments = getTcccAppliedTreatmentsSummary(log)
   const note = getTcccOperationNote(log)
 
-  cursorY = drawSectionTitle(doc, margin, pageW, 'Tıbbi Notlar', cursorY)
+  cursorY = drawSectionTitle(doc, margin, pageW, pdfT('common.medicalNotes'), cursorY)
   setPdfFont(doc, 'normal')
   doc.setFontSize(PDF_FONT_SIZE.body)
   doc.setTextColor(...PDF_COLORS.text)
 
   if (treatments !== '—') {
     doc.setTextColor(...PDF_COLORS.muted)
-    doc.text('Uygulanan tedaviler:', margin, cursorY)
+    doc.text(pdfT('tccc.appliedTreatments'), margin, cursorY)
     cursorY += 5
     doc.setTextColor(...PDF_COLORS.text)
     const treatmentLines = doc.splitTextToSize(treatments, pageW - margin * 2)
@@ -119,7 +127,7 @@ function drawClinicalSummary(doc, margin, pageW, log, startY) {
   }
 
   doc.setTextColor(...PDF_COLORS.muted)
-  doc.text('Operasyon notu:', margin, cursorY)
+  doc.text(pdfT('tccc.operationNote'), margin, cursorY)
   cursorY += 5
   doc.setTextColor(...PDF_COLORS.text)
 
@@ -145,32 +153,35 @@ function drawBulkSummaryPage(doc, margin, pageW, startY, logs, filterActive, fil
         10
       : 0
 
-  let y = drawSectionTitle(doc, margin, pageW, 'Performans Özeti', startY)
+  let y = drawSectionTitle(doc, margin, pageW, pdfT('common.performanceSummary'), startY)
 
   setPdfFont(doc, 'normal')
   doc.setFontSize(PDF_FONT_SIZE.body)
   doc.setTextColor(...PDF_COLORS.muted)
-  doc.text(`Kayıt sayısı: ${logs.length}`, margin, y)
+  doc.text(pdfT('common.recordCount', { count: logs.length }), margin, y)
   y += 5
-  doc.text(`Ortalama başarı: %${avgSuccess.toLocaleString('tr-TR')}`, margin, y)
+  doc.text(pdfT('tccc.summary.avgSuccess', { percent: pdfFormatNumber(avgSuccess) }), margin, y)
   y += 5
-  doc.text(
-    filterActive ? `Filtre: ${filterLabel}` : 'Filtre: Yok — tüm kayıtlar',
-    margin,
-    y
-  )
+  doc.text(pdfFilterLine(filterActive, filterLabel), margin, y)
   y += 8
 
   autoTable(doc, {
     startY: y,
-    head: [['Tarih', 'Yaralı Tipi', 'Müdahale', 'Prosedür', 'Sonuç', 'Başarı %']],
+    head: [[
+      pdfT('tccc.bulkColumns.date'),
+      pdfT('tccc.bulkColumns.casualtyType'),
+      pdfT('tccc.bulkColumns.intervention'),
+      pdfT('tccc.bulkColumns.procedure'),
+      pdfT('tccc.bulkColumns.outcome'),
+      pdfT('tccc.bulkColumns.success'),
+    ]],
     body: logs.map((row) => [
       formatTcccDateCell(row),
       getTcccCasualtyType(row),
       formatTcccInterventionTime(row),
       getTcccProcedurePerformed(row),
       getTcccOutcome(row),
-      `%${getTcccSuccessPercent(row).toLocaleString('tr-TR')}`,
+      `%${pdfFormatNumber(getTcccSuccessPercent(row))}`,
     ]),
     ...getAutoTableOptions(margin, { styles: { fontSize: PDF_FONT_SIZE.table } }),
   })
@@ -236,7 +247,7 @@ export async function generateTcccTacticalReportPdf({
         logoDataUrl,
         logoDims,
         reportTitle,
-        `Kayıt ${index + 1} / ${rows.length}`,
+        pdfRecordLabel(index, rows.length),
       )
     }
 

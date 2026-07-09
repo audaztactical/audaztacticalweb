@@ -16,8 +16,16 @@ import {
   getVbssThreatLevel,
   getVbssVesselType,
 } from './vbssLogRegistry'
-import { formatMeteoOverviewRows, getLogMeteoData } from './meteoDataCapture'
+import { getLogMeteoData } from './meteoDataCapture'
 import { preparePdfAssets, setPdfFont } from './pdfFontLoader'
+import {
+  pdfFilterLine,
+  pdfFormatNumber,
+  pdfMeteoRows,
+  pdfParamValueHead,
+  pdfRecordLabel,
+  pdfT,
+} from './pdfReportText'
 import {
   PDF_COLORS,
   PDF_FONT_SIZE,
@@ -40,12 +48,12 @@ import {
  */
 function drawEnvironmentalConditions(doc, startY, margin, pageW, log) {
   const meteo = getLogMeteoData(log)
-  const tableStart = drawSectionTitle(doc, margin, pageW, 'Çevresel Koşullar · Meteo-Veri', startY)
+  const tableStart = drawSectionTitle(doc, margin, pageW, pdfT('common.environmentalConditions'), startY)
 
   autoTable(doc, {
     startY: tableStart,
-    head: [['Parametre', 'Değer']],
-    body: formatMeteoOverviewRows(meteo),
+    head: [pdfParamValueHead()],
+    body: pdfMeteoRows(meteo),
     ...getAutoTableOptions(margin),
   })
 
@@ -61,24 +69,24 @@ function drawEnvironmentalConditions(doc, startY, margin, pageW, log) {
  * @param {number} startY
  */
 function drawVbssSummary(doc, margin, pageW, log, startY) {
-  const summaryStart = drawSectionTitle(doc, margin, pageW, 'Operasyon Özeti', startY)
+  const summaryStart = drawSectionTitle(doc, margin, pageW, pdfT('common.operationSummary'), startY)
 
   autoTable(doc, {
     startY: summaryStart,
-    head: [['Parametre', 'Değer']],
+    head: [pdfParamValueHead()],
     body: [
-      ['Tarih', formatVbssDateCell(log)],
-      ['Biniş noktası', getVbssBoardingPoint(log)],
-      ['Gemi tipi', getVbssVesselType(log)],
-      ['Arama süresi', formatVbssSearchDuration(log)],
-      ['Tehdit seviyesi', getVbssThreatLevel(log)],
-      ['Deniz durumu', getVbssSeaState(log)],
-      ['Gemi hızı', formatVbssVesselSpeed(log)],
-      ['Gemiye çıkış', formatVbssBoardingTime(log)],
-      ['Köprüüstü kontrol', formatVbssBridgeControlTime(log)],
-      ['Makine dairesi', formatVbssEngineRoomControlTime(log)],
-      ['Emniyete alma', formatVbssContainmentTime(log)],
-      ['Başarı oranı', `%${getVbssSuccessPercent(log).toLocaleString('tr-TR')}`],
+      [pdfT('vbss.fields.date'), formatVbssDateCell(log)],
+      [pdfT('vbss.fields.boardingPoint'), getVbssBoardingPoint(log)],
+      [pdfT('vbss.fields.vesselType'), getVbssVesselType(log)],
+      [pdfT('vbss.fields.searchDuration'), formatVbssSearchDuration(log)],
+      [pdfT('vbss.fields.threatLevel'), getVbssThreatLevel(log)],
+      [pdfT('vbss.fields.seaState'), getVbssSeaState(log)],
+      [pdfT('vbss.fields.vesselSpeed'), formatVbssVesselSpeed(log)],
+      [pdfT('vbss.fields.boardingTime'), formatVbssBoardingTime(log)],
+      [pdfT('vbss.fields.bridgeControl'), formatVbssBridgeControlTime(log)],
+      [pdfT('vbss.fields.engineRoom'), formatVbssEngineRoomControlTime(log)],
+      [pdfT('vbss.fields.containment'), formatVbssContainmentTime(log)],
+      [pdfT('vbss.fields.successRate'), `%${pdfFormatNumber(getVbssSuccessPercent(log))}`],
     ],
     ...getAutoTableOptions(margin),
   })
@@ -86,7 +94,7 @@ function drawVbssSummary(doc, margin, pageW, log, startY) {
   // @ts-expect-error jspdf-autotable plugin
   let cursorY = (doc.lastAutoTable?.finalY ?? summaryStart) + 8
 
-  cursorY = drawSectionTitle(doc, margin, pageW, 'Değerlendirme Notları', cursorY)
+  cursorY = drawSectionTitle(doc, margin, pageW, pdfT('common.evaluationNotes'), cursorY)
   setPdfFont(doc, 'normal')
   doc.setFontSize(PDF_FONT_SIZE.body)
   doc.setTextColor(...PDF_COLORS.text)
@@ -113,32 +121,35 @@ function drawBulkSummaryPage(doc, margin, pageW, startY, logs, filterActive, fil
         10
       : 0
 
-  let y = drawSectionTitle(doc, margin, pageW, 'Performans Özeti', startY)
+  let y = drawSectionTitle(doc, margin, pageW, pdfT('common.performanceSummary'), startY)
 
   setPdfFont(doc, 'normal')
   doc.setFontSize(PDF_FONT_SIZE.body)
   doc.setTextColor(...PDF_COLORS.muted)
-  doc.text(`Kayıt sayısı: ${logs.length}`, margin, y)
+  doc.text(pdfT('common.recordCount', { count: logs.length }), margin, y)
   y += 5
-  doc.text(`Ortalama başarı: %${avgSuccess.toLocaleString('tr-TR')}`, margin, y)
+  doc.text(pdfT('vbss.summary.avgSuccess', { percent: pdfFormatNumber(avgSuccess) }), margin, y)
   y += 5
-  doc.text(
-    filterActive ? `Filtre: ${filterLabel}` : 'Filtre: Yok — tüm kayıtlar',
-    margin,
-    y
-  )
+  doc.text(pdfFilterLine(filterActive, filterLabel), margin, y)
   y += 8
 
   autoTable(doc, {
     startY: y,
-    head: [['Tarih', 'Giriş Noktası', 'Gemi Tipi', 'Arama Süresi', 'Tehdit', 'Başarı %']],
+    head: [[
+      pdfT('vbss.bulkColumns.date'),
+      pdfT('vbss.bulkColumns.entryPoint'),
+      pdfT('vbss.bulkColumns.vesselType'),
+      pdfT('vbss.bulkColumns.searchDuration'),
+      pdfT('vbss.bulkColumns.threat'),
+      pdfT('vbss.bulkColumns.success'),
+    ]],
     body: logs.map((row) => [
       formatVbssDateCell(row),
       getVbssBoardingPoint(row),
       getVbssVesselType(row),
       formatVbssSearchDuration(row),
       getVbssThreatLevel(row),
-      `%${getVbssSuccessPercent(row).toLocaleString('tr-TR')}`,
+      `%${pdfFormatNumber(getVbssSuccessPercent(row))}`,
     ]),
     ...getAutoTableOptions(margin, { styles: { fontSize: PDF_FONT_SIZE.table } }),
   })
@@ -204,7 +215,7 @@ export async function generateVbssTacticalReportPdf({
         logoDataUrl,
         logoDims,
         reportTitle,
-        `Kayıt ${index + 1} / ${rows.length}`,
+        pdfRecordLabel(index, rows.length),
       )
     }
 

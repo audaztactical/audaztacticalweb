@@ -25,8 +25,17 @@ import {
   getFofSuccessPercent,
   getFofTacticalErrors,
 } from './fofLogRegistry'
-import { formatMeteoOverviewRows, getLogMeteoData } from './meteoDataCapture'
+import { getLogMeteoData } from './meteoDataCapture'
 import { preparePdfAssets, setPdfFont } from './pdfFontLoader'
+import {
+  pdfFilterLine,
+  pdfFormatNumber,
+  pdfMeteoRows,
+  pdfParamValueHead,
+  pdfRecordLabel,
+  pdfT,
+  pdfYesNo,
+} from './pdfReportText'
 import {
   PDF_COLORS,
   PDF_FONT_SIZE,
@@ -50,12 +59,12 @@ import {
  */
 function drawEnvironmentalConditions(doc, startY, margin, pageW, log) {
   const meteo = getLogMeteoData(log)
-  const tableStart = drawSectionTitle(doc, margin, pageW, 'Çevresel Koşullar · Meteo-Veri', startY)
+  const tableStart = drawSectionTitle(doc, margin, pageW, pdfT('common.environmentalConditions'), startY)
 
   autoTable(doc, {
     startY: tableStart,
-    head: [['Parametre', 'Değer']],
-    body: formatMeteoOverviewRows(meteo),
+    head: [pdfParamValueHead()],
+    body: pdfMeteoRows(meteo),
     ...getAutoTableOptions(margin),
   })
 
@@ -71,29 +80,38 @@ function drawEnvironmentalConditions(doc, startY, margin, pageW, log) {
  * @param {number} startY
  */
 function drawEngagementSummary(doc, margin, pageW, log, startY) {
-  const summaryStart = drawSectionTitle(doc, margin, pageW, 'Müdahale Özeti', startY)
+  const summaryStart = drawSectionTitle(doc, margin, pageW, pdfT('common.engagementSummary'), startY)
 
   autoTable(doc, {
     startY: summaryStart,
-    head: [['Parametre', 'Değer']],
+    head: [pdfParamValueHead()],
     body: [
-      ['Tarih', formatFofDateCell(log)],
-      ['Senaryo tipi', getFofScenarioType(log)],
-      ['Simülasyon sistemi', getFofSimSystem(log)],
-      ['Angajman tipi', getFofEngagementType(log)],
-      ['OPFOR sayısı', String(getFofOpforCount(log))],
-      ['Simülasyon süresi', formatFofDuration(log)],
-      ['İlk atış süresi', formatFofTimeToFirstEngagement(log)],
-      ['Angajman atışları', String(getFofEngagementRounds(log))],
-      ['Karar doğruluğu', `%${getFofDecisionAccuracy(log).toLocaleString('tr-TR')}`],
-      ['Vuruş/Alınan oranı', `${getFofHitTakenRatioLabel(log)} (×${getFofHitTakenRatio(log).toLocaleString('tr-TR')})`],
-      ['Alınan vuruş', String(getFofHitsTaken(log))],
-      ['Öldürücü / Öldürücü olmayan', `${getFofLethalHits(log)} / ${getFofNonLethalHits(log)}`],
-      ['Siper kullanımı', formatFofCoverUtilization(log)],
-      ['Dost kaybı', String(getFofFriendlyCasualties(log))],
-      ['Blue-on-blue', getFofBlueOnBlue(log) ? 'EVET' : 'HAYIR'],
-      ['TCCC (ateş altında)', getFofSelfTcccApplied(log) ? 'UYGULANDI' : 'HAYIR'],
-      ['Başarı oranı', `%${getFofSuccessPercent(log).toLocaleString('tr-TR')}`],
+      [pdfT('fof.fields.date'), formatFofDateCell(log)],
+      [pdfT('fof.fields.scenarioType'), getFofScenarioType(log)],
+      [pdfT('fof.fields.simSystem'), getFofSimSystem(log)],
+      [pdfT('fof.fields.engagementType'), getFofEngagementType(log)],
+      [pdfT('fof.fields.opforCount'), String(getFofOpforCount(log))],
+      [pdfT('fof.fields.simDuration'), formatFofDuration(log)],
+      [pdfT('fof.fields.timeToFirstShot'), formatFofTimeToFirstEngagement(log)],
+      [pdfT('fof.fields.engagementRounds'), String(getFofEngagementRounds(log))],
+      [pdfT('fof.fields.decisionAccuracy'), `%${pdfFormatNumber(getFofDecisionAccuracy(log))}`],
+      [
+        pdfT('fof.fields.hitTakenRatio'),
+        `${getFofHitTakenRatioLabel(log)} (×${pdfFormatNumber(getFofHitTakenRatio(log))})`,
+      ],
+      [pdfT('fof.fields.hitsTaken'), String(getFofHitsTaken(log))],
+      [
+        pdfT('fof.fields.lethalNonLethal'),
+        `${getFofLethalHits(log)} / ${getFofNonLethalHits(log)}`,
+      ],
+      [pdfT('fof.fields.coverUtilization'), formatFofCoverUtilization(log)],
+      [pdfT('fof.fields.friendlyCasualties'), String(getFofFriendlyCasualties(log))],
+      [pdfT('fof.fields.blueOnBlue'), pdfYesNo(getFofBlueOnBlue(log))],
+      [
+        pdfT('fof.fields.tcccUnderFire'),
+        getFofSelfTcccApplied(log) ? pdfT('common.applied') : pdfT('common.no'),
+      ],
+      [pdfT('fof.fields.successRate'), `%${pdfFormatNumber(getFofSuccessPercent(log))}`],
     ],
     ...getAutoTableOptions(margin),
   })
@@ -103,11 +121,11 @@ function drawEngagementSummary(doc, margin, pageW, log, startY) {
 
   const errorCount = countFofTacticalErrors(log)
   if (errorCount > 0) {
-    cursorY = drawSectionTitle(doc, margin, pageW, 'Taktik Hatalar', cursorY)
+    cursorY = drawSectionTitle(doc, margin, pageW, pdfT('common.tacticalErrors'), cursorY)
 
     autoTable(doc, {
       startY: cursorY,
-      head: [['Hata']],
+      head: [[pdfT('fof.errors.error')]],
       body: getFofTacticalErrors(log).map((label) => [label]),
       ...getErrorTableOptions(margin),
     })
@@ -116,7 +134,7 @@ function drawEngagementSummary(doc, margin, pageW, log, startY) {
     cursorY = (doc.lastAutoTable?.finalY ?? cursorY) + 8
   }
 
-  cursorY = drawSectionTitle(doc, margin, pageW, 'Değerlendirme Notları', cursorY)
+  cursorY = drawSectionTitle(doc, margin, pageW, pdfT('common.evaluationNotes'), cursorY)
   setPdfFont(doc, 'normal')
   doc.setFontSize(PDF_FONT_SIZE.body)
   doc.setTextColor(...PDF_COLORS.text)
@@ -150,34 +168,37 @@ function drawBulkSummaryPage(doc, margin, pageW, startY, logs, filterActive, fil
         ) / 10
       : 0
 
-  let y = drawSectionTitle(doc, margin, pageW, 'Performans Özeti', startY)
+  let y = drawSectionTitle(doc, margin, pageW, pdfT('common.performanceSummary'), startY)
 
   setPdfFont(doc, 'normal')
   doc.setFontSize(PDF_FONT_SIZE.body)
   doc.setTextColor(...PDF_COLORS.muted)
-  doc.text(`Kayıt sayısı: ${logs.length}`, margin, y)
+  doc.text(pdfT('common.recordCount', { count: logs.length }), margin, y)
   y += 5
-  doc.text(`Ortalama karar doğruluğu: %${avgDecision.toLocaleString('tr-TR')}`, margin, y)
+  doc.text(pdfT('fof.summary.avgDecision', { percent: pdfFormatNumber(avgDecision) }), margin, y)
   y += 5
-  doc.text(`Ortalama başarı: %${avgSuccess.toLocaleString('tr-TR')}`, margin, y)
+  doc.text(pdfT('fof.summary.avgSuccess', { percent: pdfFormatNumber(avgSuccess) }), margin, y)
   y += 5
-  doc.text(
-    filterActive ? `Filtre: ${filterLabel}` : 'Filtre: Yok — tüm kayıtlar',
-    margin,
-    y
-  )
+  doc.text(pdfFilterLine(filterActive, filterLabel), margin, y)
   y += 8
 
   autoTable(doc, {
     startY: y,
-    head: [['Tarih', 'Angajman', 'Süre', 'Karar %', 'Hit/Taken', 'Başarı %']],
+    head: [[
+      pdfT('fof.bulkColumns.date'),
+      pdfT('fof.bulkColumns.engagement'),
+      pdfT('fof.bulkColumns.duration'),
+      pdfT('fof.bulkColumns.decision'),
+      pdfT('fof.bulkColumns.hitTaken'),
+      pdfT('fof.bulkColumns.success'),
+    ]],
     body: logs.map((row) => [
       formatFofDateCell(row),
       getFofEngagementType(row),
       formatFofDuration(row),
-      `%${getFofDecisionAccuracy(row).toLocaleString('tr-TR')}`,
+      `%${pdfFormatNumber(getFofDecisionAccuracy(row))}`,
       getFofHitTakenRatioLabel(row),
-      `%${getFofSuccessPercent(row).toLocaleString('tr-TR')}`,
+      `%${pdfFormatNumber(getFofSuccessPercent(row))}`,
     ]),
     ...getAutoTableOptions(margin),
   })
@@ -247,7 +268,7 @@ export async function generateFofTacticalReportPdf({
         logoDataUrl,
         logoDims,
         reportTitle,
-        `Kayıt ${index + 1} / ${rows.length}`,
+        pdfRecordLabel(index, rows.length),
       )
     }
 

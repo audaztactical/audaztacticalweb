@@ -1,0 +1,245 @@
+{
+  "titles": {
+    "atis": "SHOOTING TACTICAL PERFORMANCE REPORT",
+    "cqb": "CQB TACTICAL EVALUATION REPORT",
+    "fof": "FOF FORCE-ON-FORCE REPORT",
+    "vbss": "VBSS VESSEL OPERATION REPORT",
+    "tccc": "TCCC TACTICAL MEDICAL REPORT",
+    "vbssObsForm": "VBSS OBSERVATION FORM",
+    "tcccObsForm": "TCCC MARCH OBSERVATION FORM"
+  },
+  "common": {
+    "brandSub": "Operational Record System",
+    "operatorInfo": "Operator Information",
+    "callsign": "Callsign",
+    "bloodType": "Blood type",
+    "reportId": "Report ID",
+    "created": "Created",
+    "defaultOperator": "Operator",
+    "parameter": "Parameter",
+    "value": "Value",
+    "page": "Page {{current}} / {{total}}",
+    "formId": "Form ID: {{id}} · {{version}}",
+    "yes": "YES",
+    "no": "NO",
+    "applied": "APPLIED",
+    "environmentalConditions": "Environmental Conditions · Meteo Data",
+    "trainingDetails": "Training Details",
+    "evaluationNotes": "Evaluation Notes",
+    "performanceSummary": "Performance Summary",
+    "tacticalErrors": "Tactical Errors",
+    "operationSummary": "Operation Summary",
+    "engagementSummary": "Engagement Summary",
+    "clinicalSummary": "Clinical and Tactical Summary",
+    "medicalNotes": "Medical Notes",
+    "recordCount": "Record count: {{count}}",
+    "filterNone": "Filter: None — all records",
+    "filterActive": "Filter: {{label}}",
+    "recordLabel": "Record {{index}} / {{total}}",
+    "hitRatioChart": "Hit ratio chart",
+    "hits": "Hits {{count}}",
+    "misses": "Misses {{count}}",
+    "timingAnalysis": "Timing Analysis",
+    "timingLine": "First shot: {{first}} · Split: {{split}} · Total: {{total}}",
+    "weaponSpecs": "Weapon Specifications",
+    "meteo": {
+      "temperature": "Temperature",
+      "wind": "Wind",
+      "humidity": "Humidity",
+      "location": "Location",
+      "noRecord": "No record"
+    }
+  },
+  "atis": {
+    "fields": {
+      "date": "Date",
+      "weapon": "Weapon",
+      "drillType": "Drill type",
+      "distance": "Distance",
+      "roundsHits": "Rounds / Hits",
+      "accuracy": "Hit ratio",
+      "duration": "Duration",
+      "caliber": "Caliber",
+      "ammo": "Ammunition",
+      "unitPrice": "Unit price",
+      "totalCost": "Total cost"
+    },
+    "summary": {
+      "totalRoundsHits": "Total rounds / hits: {{rounds}} / {{hits}}",
+      "avgAccuracy": "Average hit ratio: {{percent}}%",
+      "totalAmmoCost": "Total ammunition cost: {{cost}}"
+    },
+    "bulkColumns": {
+      "date": "Date",
+      "weapon": "Weapon",
+      "drillType": "Drill type",
+      "distance": "Distance",
+      "roundsHits": "Rounds/Hits",
+      "score": "Score %",
+      "cost": "Cost"
+    }
+  },
+  "cqb": {
+    "fields": {
+      "date": "Date",
+      "topology": "Room topology",
+      "entryMethod": "Entry method",
+      "breachingType": "Breaching type",
+      "doorState": "Door state",
+      "teamSize": "Team size",
+      "threatNeutralized": "Threat / Neutralized",
+      "clearanceTime": "Clearance time",
+      "accuracyScore": "Accuracy score",
+      "safetyViolations": "Safety violations",
+      "tacticalDecision": "Tactical decision",
+      "successRate": "Success rate"
+    },
+    "errors": {
+      "phase": "Phase",
+      "error": "Error"
+    },
+    "summary": {
+      "avgAccuracy": "Average accuracy score: {{percent}}%",
+      "totalViolations": "Total safety violations: {{count}}"
+    },
+    "bulkColumns": {
+      "date": "Date",
+      "topology": "Topology",
+      "clearance": "Clearance",
+      "accuracy": "Accuracy %",
+      "violations": "Violations",
+      "decision": "Decision",
+      "success": "Success %"
+    }
+  },
+  "fof": {
+    "fields": {
+      "date": "Date",
+      "scenarioType": "Scenario type",
+      "simSystem": "Simulation system",
+      "engagementType": "Engagement type",
+      "opforCount": "OPFOR count",
+      "simDuration": "Simulation duration",
+      "timeToFirstShot": "Time to first shot",
+      "engagementRounds": "Engagement rounds",
+      "decisionAccuracy": "Decision accuracy",
+      "hitTakenRatio": "Hit/taken ratio",
+      "hitsTaken": "Hits taken",
+      "lethalNonLethal": "Lethal / Non-lethal",
+      "coverUtilization": "Cover utilization",
+      "friendlyCasualties": "Friendly casualties",
+      "blueOnBlue": "Blue-on-blue",
+      "tcccUnderFire": "TCCC (under fire)",
+      "successRate": "Success rate"
+    },
+    "errors": {
+      "error": "Error"
+    },
+    "summary": {
+      "avgDecision": "Average decision accuracy: {{percent}}%",
+      "avgSuccess": "Average success: {{percent}}%"
+    },
+    "bulkColumns": {
+      "date": "Date",
+      "engagement": "Engagement",
+      "duration": "Duration",
+      "decision": "Decision %",
+      "hitTaken": "Hit/Taken",
+      "success": "Success %"
+    }
+  },
+  "vbss": {
+    "fields": {
+      "date": "Date",
+      "boardingPoint": "Boarding point",
+      "vesselType": "Vessel type",
+      "searchDuration": "Search duration",
+      "threatLevel": "Threat level",
+      "seaState": "Sea state",
+      "vesselSpeed": "Vessel speed",
+      "boardingTime": "Boarding time",
+      "bridgeControl": "Bridge control",
+      "engineRoom": "Engine room",
+      "containment": "Containment",
+      "successRate": "Success rate"
+    },
+    "summary": {
+      "avgSuccess": "Average success: {{percent}}%"
+    },
+    "bulkColumns": {
+      "date": "Date",
+      "entryPoint": "Entry Point",
+      "vesselType": "Vessel Type",
+      "searchDuration": "Search Duration",
+      "threat": "Threat",
+      "success": "Success %"
+    }
+  },
+  "tccc": {
+    "fields": {
+      "date": "Date",
+      "casualtyType": "Casualty type",
+      "interventionTime": "Intervention time",
+      "procedure": "Procedure performed",
+      "outcome": "Outcome",
+      "injuryType": "Injury type",
+      "phase": "TCCC phase",
+      "tourniquetLocation": "Tourniquet location",
+      "evacWaiting": "Evacuation wait",
+      "systolicBp": "Systolic BP",
+      "successRate": "Success rate"
+    },
+    "marchSummary": "MARCH intervention summary",
+    "marchColumns": {
+      "phase": "Phase",
+      "treatments": "Applied treatments"
+    },
+    "appliedTreatments": "Applied treatments:",
+    "operationNote": "Operation note:",
+    "summary": {
+      "avgSuccess": "Average success: {{percent}}%"
+    },
+    "bulkColumns": {
+      "date": "Date",
+      "casualtyType": "Casualty Type",
+      "intervention": "Intervention",
+      "procedure": "Procedure",
+      "outcome": "Outcome",
+      "success": "Success %"
+    }
+  },
+  "obsForm": {
+    "vbss": {
+      "operatorObserverInfo": "Operator / Observer Information",
+      "operatorLabel": "Operator (callsign / name):",
+      "observerName": "Observer name:",
+      "observerCallsign": "Observer callsign:",
+      "fieldDate": "Field date:",
+      "location": "Location:",
+      "observerSignature": "Observer signature:",
+      "timedSession": "☐ Timed session    Target operation duration (sec): ________",
+      "instruction": "Instructions: The observer marks field performance. The operator enters the markings into the application.",
+      "scoreRange": "{{label}} (0–10):",
+      "scoreFallback": "SCORE (0–10):",
+      "observationNote": "OBSERVATION NOTE:",
+      "disclaimer": "This form contains unverified observation data · Instructor approval is handled separately."
+    },
+    "tccc": {
+      "operatorObserverInfo": "Operator / Observer Information",
+      "operatorLabel": "Operator:",
+      "observerName": "Observer name:",
+      "observerCallsign": "Observer callsign:",
+      "fieldDate": "Field date:",
+      "observerSignature": "Observer signature:",
+      "timedSession": "☐ Timed intervention    Target duration (sec): ________",
+      "instruction": "Instructions: The observer marks the MARCH protocol phase by phase. If a critical error (K.I.A) occurs, the score is 0.",
+      "criticalError": "☐ CRITICAL ERROR (K.I.A)",
+      "scoreRange": "{{label}} (1–10):",
+      "scoreFallback": "SCORE (1–10):",
+      "tacticalActions": "TACTICAL INTERVENTIONS (mark applied items):",
+      "observationNote": "OBSERVATION NOTE:",
+      "casualtyStatus": "Casualty status: ☐ STABLE    ☐ EXPECTED / K.I.A",
+      "disclaimer": "This form contains unverified observation data · Instructor approval is handled separately."
+    }
+  }
+}
