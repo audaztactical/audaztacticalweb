@@ -702,3 +702,79 @@ export function formatFofYesNoDisplay(value) {
 export function formatFofSelfTcccDisplay(value) {
   return i18n.t(`sectors.fof.history.detail.${value ? 'applied' : 'no'}`, { ns: 'training' })
 }
+
+/** @typedef {'vbss' | 'tccc'} ObservedEvalDiscipline */
+
+export function formatObservedEvalSelectPlaceholder() {
+  return i18n.t('common.observedEval.selectPlaceholder', { ns: 'training' })
+}
+
+/**
+ * @param {string} label
+ * @param {number} min
+ * @param {number} max
+ */
+export function formatObservedEvalScoreRangeLabel(label, min, max) {
+  return i18n.t('common.observedEval.scoreRange', { ns: 'training', label, min, max })
+}
+
+export function formatObservedEvalObservationNoteLabel() {
+  return i18n.t('common.observedEval.observationNote', { ns: 'training' })
+}
+
+/** @param {string} label */
+export function formatObservedEvalAriaScoreGroup(label) {
+  return i18n.t('common.observedEval.aria.scoreGroup', { ns: 'training', label })
+}
+
+/**
+ * @param {string} label
+ * @param {number} score
+ */
+export function formatObservedEvalAriaScoreButton(label, score) {
+  return i18n.t('common.observedEval.aria.scoreButton', { ns: 'training', label, score })
+}
+
+/**
+ * @param {ObservedEvalDiscipline} discipline
+ * @param {string} phaseId
+ * @param {string} [fallback]
+ */
+export function formatObservedEvalPhaseTitle(discipline, phaseId, fallback = '') {
+  const key = `common.observedEval.phases.${discipline}.${phaseId}.title`
+  return i18n.t(key, { ns: 'training', defaultValue: fallback })
+}
+
+/**
+ * @param {ObservedEvalDiscipline} discipline
+ * @param {string} phaseId
+ * @param {string} [fallback]
+ */
+export function formatObservedEvalPhaseSubtitle(discipline, phaseId, fallback = '') {
+  const key = `common.observedEval.phases.${discipline}.${phaseId}.subtitle`
+  return i18n.t(key, { ns: 'training', defaultValue: fallback })
+}
+
+/**
+ * @param {ObservedEvalDiscipline} discipline
+ * @param {string} phaseId
+ * @param {string} criterionId
+ * @param {string} [fallback]
+ */
+export function formatObservedEvalCriterionLabel(discipline, phaseId, criterionId, fallback = '') {
+  const key = `common.observedEval.criteria.${discipline}.${phaseId}.${criterionId}`
+  return i18n.t(key, { ns: 'training', defaultValue: fallback })
+}
+
+/**
+ * @param {import('./evaluationPhaseCriteria').EvaluationSubCriterion | null | undefined} criterion
+ * @param {ObservedEvalDiscipline | null | undefined} discipline
+ * @param {string | null | undefined} phaseId
+ */
+export function resolveObservedEvalCriterionLabel(criterion, discipline, phaseId) {
+  if (!criterion?.id) return ''
+  if (discipline && phaseId) {
+    return formatObservedEvalCriterionLabel(discipline, phaseId, criterion.id, criterion.label)
+  }
+  return criterion.label ?? ''
+}

@@ -47,6 +47,96 @@
         "kicker": "Bireysel kayıt modu",
         "hint": "Kayıtlar yalnızca size aittir · canlı grup eğitimi için Grup eğitimi sektörünü açın"
       }
+    },
+    "observedEval": {
+      "selectPlaceholder": "— Seçin —",
+      "scoreRange": "{{label}} ({{min}}–{{max}}) *",
+      "observationNote": "Gözlem notu",
+      "aria": {
+        "scoreGroup": "{{label}} skoru",
+        "scoreButton": "{{label}} skor {{score}}"
+      },
+      "phases": {
+        "vbss": {
+          "boarding": {
+            "title": "Safha 1: Sızma ve Biniş",
+            "subtitle": "Boarding — yöntem, hız, kancalama emniyeti"
+          },
+          "clearing": {
+            "title": "Safha 2: Gemi İçi İlerleme",
+            "subtitle": "Clearing — iletişim, köşe kontrolü, merdiven disiplini"
+          },
+          "control": {
+            "title": "Safha 3: Kontrol ve Güvenlik",
+            "subtitle": "Control — mürettebat yönetimi, köprü kontrolü, 360° emniyet"
+          }
+        },
+        "tccc": {
+          "m": {
+            "title": "M — Massive Hemorrhage",
+            "subtitle": "Büyük kanama kontrolü, turnike uygulaması"
+          },
+          "a": {
+            "title": "A — Airway",
+            "subtitle": "Havayolu açıklığı, NPA yerleşimi"
+          },
+          "r": {
+            "title": "R — Respiration",
+            "subtitle": "Solunum yönetimi, Chest Seal, Needle Decompression"
+          },
+          "c": {
+            "title": "C — Circulation",
+            "subtitle": "Dolaşım kontrolü, nabız takibi, IV/IO erişim"
+          },
+          "h": {
+            "title": "H — Hypothermia / Head",
+            "subtitle": "Hipotermi önleme, kafa travması kontrolü"
+          }
+        }
+      },
+      "criteria": {
+        "vbss": {
+          "boarding": {
+            "yontem": "Yöntem",
+            "h_z": "Hız",
+            "kancalama_emniyeti": "Kancalama emniyeti"
+          },
+          "clearing": {
+            "iletisim": "İletişim",
+            "kose_kontrolu": "Köşe kontrolü",
+            "merdiven_disiplini": "Merdiven disiplini"
+          },
+          "control": {
+            "murettebat_yonetimi": "Mürettebat yönetimi",
+            "kopru_kontrolu": "Köprü kontrolü",
+            "360_emniyet": "360° emniyet"
+          }
+        },
+        "tccc": {
+          "m": {
+            "buyuk_kanama_kontrolu": "Büyük kanama kontrolü",
+            "turnike_uygulamas": "Turnike uygulaması"
+          },
+          "a": {
+            "havayolu_ac_kl_g": "Havayolu açıklığı",
+            "npa_yerlesimi": "NPA yerleşimi"
+          },
+          "r": {
+            "solunum_yonetimi": "Solunum yönetimi",
+            "chest_seal": "Chest Seal",
+            "needle_decompression": "Needle Decompression"
+          },
+          "c": {
+            "dolas_m_kontrolu": "Dolaşım kontrolü",
+            "nab_z_takibi": "Nabız takibi",
+            "iv_io_erisim": "IV/IO erişim"
+          },
+          "h": {
+            "hipotermi_onleme": "Hipotermi önleme",
+            "kafa_travmas_kontrolu": "Kafa travması kontrolü"
+          }
+        }
+      }
     }
   },
   "sectors": {

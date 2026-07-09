@@ -47,6 +47,96 @@
         "kicker": "Individual record mode",
         "hint": "Records belong to you only · open the Group training sector for live group training"
       }
+    },
+    "observedEval": {
+      "selectPlaceholder": "— Select —",
+      "scoreRange": "{{label}} ({{min}}–{{max}}) *",
+      "observationNote": "Observation note",
+      "aria": {
+        "scoreGroup": "{{label}} score",
+        "scoreButton": "{{label}} score {{score}}"
+      },
+      "phases": {
+        "vbss": {
+          "boarding": {
+            "title": "Phase 1: Approach and boarding",
+            "subtitle": "Boarding — method, speed, hook safety"
+          },
+          "clearing": {
+            "title": "Phase 2: Ship interior advance",
+            "subtitle": "Clearing — communication, corner control, stairwell discipline"
+          },
+          "control": {
+            "title": "Phase 3: Control and security",
+            "subtitle": "Control — crew management, bridge control, 360° security"
+          }
+        },
+        "tccc": {
+          "m": {
+            "title": "M — Massive hemorrhage",
+            "subtitle": "Major hemorrhage control, tourniquet application"
+          },
+          "a": {
+            "title": "A — Airway",
+            "subtitle": "Airway patency, NPA placement"
+          },
+          "r": {
+            "title": "R — Respiration",
+            "subtitle": "Respiration management, chest seal, needle decompression"
+          },
+          "c": {
+            "title": "C — Circulation",
+            "subtitle": "Circulation control, pulse monitoring, IV/IO access"
+          },
+          "h": {
+            "title": "H — Hypothermia / head",
+            "subtitle": "Hypothermia prevention, head injury assessment"
+          }
+        }
+      },
+      "criteria": {
+        "vbss": {
+          "boarding": {
+            "yontem": "Method",
+            "h_z": "Speed",
+            "kancalama_emniyeti": "Hook safety"
+          },
+          "clearing": {
+            "iletisim": "Communication",
+            "kose_kontrolu": "Corner control",
+            "merdiven_disiplini": "Stairwell discipline"
+          },
+          "control": {
+            "murettebat_yonetimi": "Crew management",
+            "kopru_kontrolu": "Bridge control",
+            "360_emniyet": "360° security"
+          }
+        },
+        "tccc": {
+          "m": {
+            "buyuk_kanama_kontrolu": "Major hemorrhage control",
+            "turnike_uygulamas": "Tourniquet application"
+          },
+          "a": {
+            "havayolu_ac_kl_g": "Airway patency",
+            "npa_yerlesimi": "NPA placement"
+          },
+          "r": {
+            "solunum_yonetimi": "Respiration management",
+            "chest_seal": "Chest seal",
+            "needle_decompression": "Needle decompression"
+          },
+          "c": {
+            "dolas_m_kontrolu": "Circulation control",
+            "nab_z_takibi": "Pulse monitoring",
+            "iv_io_erisim": "IV/IO access"
+          },
+          "h": {
+            "hipotermi_onleme": "Hypothermia prevention",
+            "kafa_travmas_kontrolu": "Head injury assessment"
+          }
+        }
+      }
     }
   },
   "sectors": {
