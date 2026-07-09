@@ -105,6 +105,18 @@ export function getBallisticTermI18n(termKey) {
 }
 
 /**
+ * Locale-only glossary heading — EN → termEn, TR → termTr (no bilingual parentheses).
+ * @param {{ termEn?: string, termTr?: string } | null | undefined} term
+ */
+export function ballisticTermTitle(term) {
+  if (!term) return ''
+  const useTr = i18n.language?.startsWith('tr')
+  const primary = useTr ? term.termTr : term.termEn
+  const fallback = useTr ? term.termEn : term.termTr
+  return String(primary || fallback || '').trim()
+}
+
+/**
  * @param {ChartMetricId | string} id
  */
 export function labelChartMetric(id) {

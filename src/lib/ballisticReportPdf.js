@@ -2,6 +2,7 @@ import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import html2canvas from 'html2canvas'
 import { getBallisticTerm, tableColumnTermKeysForUnit } from '../data/ballisticTerms.js'
+import { ballisticTermTitle } from './ballisticsDisplayText.js'
 import { buildPdfRangeTableHead, pdfRangeTableRowForResult } from './clickUnitSystem.js'
 import {
   buildBallisticChartPngFromResults,
@@ -332,7 +333,7 @@ function drawTermGlossarySection(
     setPdfFont(doc, 'bold')
     doc.setFontSize(PDF_FONT_SIZE.body)
     doc.setTextColor(...PDF_COLORS.text)
-    doc.text(`${term.termTr} (${term.termEn})`, margin, y)
+    doc.text(ballisticTermTitle(term), margin, y)
     y += 5
 
     setPdfFont(doc, 'normal')

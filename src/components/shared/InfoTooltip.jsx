@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { Info } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { getBallisticTerm } from '../../data/ballisticTerms.js'
+import { ballisticTermTitle } from '../../lib/ballisticsDisplayText.js'
 
 const VIEWPORT_MARGIN = 12
 const GAP = 6
@@ -154,9 +155,7 @@ export default function InfoTooltip({ termKey, className = '' }) {
             }}
           >
             <p className="font-mono-technical text-[10px] font-bold uppercase leading-snug tracking-[0.12em] text-emerald-400/95">
-              {term.termEn}
-              <span className="mx-1 text-emerald-500/40">—</span>
-              <span className="text-slate-100">{term.termTr}</span>
+              {ballisticTermTitle(term)}
             </p>
             <p className="mt-2 font-mono-technical text-[11px] leading-relaxed text-slate-300/90">
               {term.definition}
@@ -188,7 +187,7 @@ export default function InfoTooltip({ termKey, className = '' }) {
         ref={triggerRef}
         type="button"
         className="group relative inline-flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center -m-3.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-emerald-500/60 sm:h-8 sm:w-8 sm:-m-1.5"
-        aria-label={t('tooltip.ariaAbout', { term: term.termTr })}
+        aria-label={t('tooltip.ariaAbout', { term: ballisticTermTitle(term) })}
         aria-expanded={open}
         aria-controls={popoverId}
         onClick={toggle}
