@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { AlertTriangle, ChevronLeft } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import cqbImg from '../../assets/cqb.png'
 import { useAuth } from '../../context/AuthContext'
 import { submitCqbRecord } from '../../lib/cqbSubmit'
@@ -17,6 +18,12 @@ import {
 } from '../../lib/cqbOptions'
 import { invNum, invStr } from '../../lib/inventoryIlws'
 import { calculateCqbSuccessPercent } from '../../lib/trainingSuccessScore'
+import {
+  formatCqbOptionLabel,
+  formatCqbSubmitBlockedReason,
+  formatCqbTacticalErrorGroupTitle,
+  formatCqbTacticalErrorLabel,
+} from '../../lib/trainingDisplayText'
 import CqbLogRegistry from './CqbLogRegistry'
 import OperatorInstructorRecordsEmbed from './OperatorInstructorRecordsEmbed'
 import IndividualTrainingSessionHeader from './IndividualTrainingSessionHeader'
@@ -57,12 +64,13 @@ function CqbSelectField({
   customValue,
   onCustomChange,
   customPlaceholder,
+  selectPlaceholder,
 }) {
   return (
     <fieldset className="space-y-2">
       <legend className={labelClass}>{legend}</legend>
       <select className={selectClass} value={value} onChange={(e) => onChange(e.target.value)} required>
-        <option value="">— SEÇİN —</option>
+        <option value="">{selectPlaceholder}</option>
         {options.map((o) => (
           <option key={o.id} value={o.id}>
             {o.label}
@@ -91,7 +99,7 @@ function CqbSelectField({
  */
 function CqbErrorPhaseCell({ group, selected, onToggle }) {
   return (
-    <TrainingPhaseBlock title={group.title}>
+    <TrainingPhaseBlock title={formatCqbTacticalErrorGroupTitle(group.id)}>
       {group.items.map((preset) => {
         const checked = selected.includes(preset.id)
         return (
@@ -102,7 +110,9 @@ function CqbErrorPhaseCell({ group, selected, onToggle }) {
               checked={checked}
               onChange={() => onToggle(preset.id)}
             />
-            <span className="font-mono-technical text-sm leading-snug">{preset.label}</span>
+            <span className="font-mono-technical text-sm leading-snug">
+              {formatCqbTacticalErrorLabel(preset.id)}
+            </span>
           </label>
         )
       })}
@@ -121,6 +131,7 @@ function CqbErrorPhaseCell({ group, selected, onToggle }) {
  * }} props
  */
 export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoading = false, listenError }) {
+  const { t } = useTranslation('training')
   const { user } = useAuth()
   const uid = user?.uid ?? ''
 
@@ -140,32 +151,32 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
   const neutralizedNum = Math.max(0, Math.floor(invNum(form.neutralizedCount)))
   const neutralizedInvalid = neutralizedNum > threatNum
 
-  const submitBlockedReason = useMemo(() => {
+  const submitBlockedReasonKey = useMemo(() => {
     if (saving) return null
-    if (!uid) return 'OTURUM_GEREKLİ'
-    if (!form.roomTopology) return 'Oda topolojisi gerekli'
-    if (showCustomRoom && !form.customRoomTopology.trim()) return 'ÖZEL_TOPOLOJİ_ADI_GEREKLİ'
-    if (!form.entryMethod) return 'GİRİŞ_METODU_GEREKLİ'
-    if (showCustomEntry && !form.customEntryMethod.trim()) return 'ÖZEL_GİRİŞ_METODU_GEREKLİ'
-    if (!form.breachingType) return 'KIRMA_TİPİ_GEREKLİ'
-    if (showCustomBreach && !form.customBreachingType.trim()) return 'ÖZEL_KIRMA_TİPİ_GEREKLİ'
-    if (!form.doorState) return 'KAPI_DURUMU_GEREKLİ'
-    if (!form.teamSize) return 'TAKIM_BOYUTU_GEREKLİ'
-    if (neutralizedInvalid) return 'ETKİSİZ_SAYISI_TEHDİTİ_AŞAMAZ'
+    if (!uid) return { key: 'sessionRequired' }
+    if (!form.roomTopology) return { key: 'roomTopologyRequired' }
+    if (showCustomRoom && !form.customRoomTopology.trim()) return { key: 'customRoomRequired' }
+    if (!form.entryMethod) return { key: 'entryMethodRequired' }
+    if (showCustomEntry && !form.customEntryMethod.trim()) return { key: 'customEntryRequired' }
+    if (!form.breachingType) return { key: 'breachingRequired' }
+    if (showCustomBreach && !form.customBreachingType.trim()) return { key: 'customBreachingRequired' }
+    if (!form.doorState) return { key: 'doorStateRequired' }
+    if (!form.teamSize) return { key: 'teamSizeRequired' }
+    if (neutralizedInvalid) return { key: 'neutralizedExceedsThreat' }
     const clearanceRaw = invStr(form.clearanceTimeMs).trim().replace(',', '.')
     const clearanceMs = clearanceRaw ? invNum(clearanceRaw) : NaN
     if (!clearanceRaw || !Number.isFinite(clearanceMs) || clearanceMs <= 0) {
-      return 'CLEARANCE_TIME_SN_GEREKLİ'
+      return { key: 'clearanceTimeRequired' }
     }
     const accuracyRaw = invStr(form.accuracyScore).trim().replace(',', '.')
     const accuracy = accuracyRaw ? invNum(accuracyRaw) : NaN
     if (!accuracyRaw || !Number.isFinite(accuracy) || accuracy < 0 || accuracy > 100) {
-      return 'ACCURACY_SCORE_0_100_GEREKLİ'
+      return { key: 'accuracyRequired' }
     }
     const safetyRaw = invStr(form.safetyViolations).trim()
     const safety = safetyRaw === '' ? NaN : invNum(safetyRaw)
-    if (!Number.isFinite(safety) || safety < 0) return 'GÜVENLİK_İHLALİ_SAYISI_GEREKLİ'
-    if (!form.tacticalDecision) return 'TAKTİK_KARAR_GEREKLİ'
+    if (!Number.isFinite(safety) || safety < 0) return { key: 'safetyRequired' }
+    if (!form.tacticalDecision) return { key: 'decisionRequired' }
     return null
   }, [
     saving,
@@ -188,7 +199,8 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
     form.tacticalDecision,
   ])
 
-  const canSubmit = submitBlockedReason == null
+  const submitBlockedReason = formatCqbSubmitBlockedReason(submitBlockedReasonKey)
+  const canSubmit = submitBlockedReasonKey == null
 
   const patch = useCallback((/** @type {Partial<typeof CQB_INITIAL_FORM>} */ next) => {
     setForm((f) => ({ ...f, ...next }))
@@ -264,7 +276,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
       capped = true
     }
     patch({ neutralizedCount: String(neutralized) })
-    setCountError(capped ? 'ETKİSİZ_SAYISI_TEHDİTİ_AŞAMAZ · OTOMATİK_SINIRLANDI' : null)
+    setCountError(capped ? t('sectors.cqb.validation.neutralizedAutoCapped') : null)
   }
 
   const onThreatChange = (value) => {
@@ -315,8 +327,13 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
         err && typeof err === 'object' && 'message' in err && typeof err.message === 'string'
           ? err.message
           : ''
-      const hint = code === 'permission-denied' ? ' · YETKİ / KURALLAR' : code ? ` · ${code}` : ''
-      setSubmitError(`CQB_KAYIT_BAŞARISIZ · YENİDEN_DENE${hint}`)
+      const hint =
+        code === 'permission-denied'
+          ? t('sectors.cqb.messages.permissionDenied')
+          : code
+            ? ` · ${code}`
+            : ''
+      setSubmitError(t('sectors.cqb.messages.submitFailed', { hint }))
       if (import.meta.env.DEV && message) {
         console.error('[CqbTerminal]', err)
       }
@@ -342,13 +359,13 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
           className="inline-flex w-fit items-center gap-2 rounded border border-accent/50 bg-accent/12 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent transition hover:bg-accent/20"
         >
           <ChevronLeft className="size-3.5" aria-hidden />
-          KATEGORİLERE DÖN
+          {t('common.terminal.backToCategories')}
         </button>
 
         <div
           className="flex w-full gap-2 rounded border border-accent/25 bg-black/60 p-1 sm:w-auto"
           role="tablist"
-          aria-label="CQB terminal görünümü"
+          aria-label={t('sectors.cqb.tabs.aria')}
         >
           <button
             type="button"
@@ -357,7 +374,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
             onClick={() => setViewMode('form')}
             className={tabBtnClass(viewMode === 'form')}
           >
-            CQB KAYIT FORMU
+            {t('sectors.cqb.tabs.form')}
           </button>
           <button
             type="button"
@@ -366,7 +383,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
             onClick={() => setViewMode('registry')}
             className={tabBtnClass(viewMode === 'registry')}
           >
-            GEÇMİŞ CQB KAYITLARI
+            {t('sectors.cqb.tabs.registry')}
           </button>
         </div>
       </div>
@@ -374,68 +391,86 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
       {viewMode === 'registry' ? (
         <CqbLogRegistry rangeLogs={rangeLogs} loading={logsLoading} />
       ) : !ready ? (
-        <p className="font-mono-technical text-[10px] uppercase text-app-text/55">OTURUM_GEREKLİ</p>
+        <p className="font-mono-technical text-[10px] uppercase text-app-text/55">
+          {t('sectors.cqb.validation.sessionRequired')}
+        </p>
       ) : listenError ? (
         <p className="rounded border border-red-500/40 bg-red-950/25 px-3 py-2 font-mono-technical text-[10px] text-red-300">
-          VERİ_KANALI_KESİLDİ · YENİDEN_DENE
+          {t('sectors.cqb.validation.channelDisconnected')}
         </p>
       ) : (
         <TrainingTerminalLayout
           onSubmit={handleSubmit}
           left={
-            <TrainingTerminalPanel title="OPERASYON KURULUMU · METRİKLER">
+            <TrainingTerminalPanel title={t('sectors.cqb.panels.setup')}>
               <CqbSelectField
-                legend="ODA TOPOLOJİSİ"
+                legend={t('sectors.cqb.form.roomTopology')}
                 value={form.roomTopology}
-                options={ROOM_TOPOLOGY_OPTIONS}
+                options={ROOM_TOPOLOGY_OPTIONS.map((o) => ({
+                  id: o.id,
+                  label: formatCqbOptionLabel('roomTopology', o.id, o.label),
+                }))}
                 onChange={(v) => patch({ roomTopology: v, customRoomTopology: '' })}
                 showCustom={showCustomRoom}
                 customValue={form.customRoomTopology}
                 onCustomChange={(v) => patch({ customRoomTopology: v })}
-                customPlaceholder="Özel oda topolojisi…"
+                customPlaceholder={t('sectors.cqb.form.customRoomTopology')}
+                selectPlaceholder={t('sectors.cqb.form.selectPlaceholder')}
               />
               <CqbSelectField
-                legend="GİRİŞ METODU"
+                legend={t('sectors.cqb.form.entryMethod')}
                 value={form.entryMethod}
-                options={ENTRY_METHOD_OPTIONS}
+                options={ENTRY_METHOD_OPTIONS.map((o) => ({
+                  id: o.id,
+                  label: formatCqbOptionLabel('entryMethod', o.id, o.label),
+                }))}
                 onChange={(v) => patch({ entryMethod: v, customEntryMethod: '' })}
                 showCustom={showCustomEntry}
                 customValue={form.customEntryMethod}
                 onCustomChange={(v) => patch({ customEntryMethod: v })}
-                customPlaceholder="Özel giriş metodu…"
+                customPlaceholder={t('sectors.cqb.form.customEntryMethod')}
+                selectPlaceholder={t('sectors.cqb.form.selectPlaceholder')}
               />
               <CqbSelectField
-                legend="KIRMA TİPİ"
+                legend={t('sectors.cqb.form.breachingType')}
                 value={form.breachingType}
-                options={BREACHING_TYPE_OPTIONS}
+                options={BREACHING_TYPE_OPTIONS.map((o) => ({
+                  id: o.id,
+                  label: formatCqbOptionLabel('breachingType', o.id, o.label),
+                }))}
                 onChange={(v) => patch({ breachingType: v, customBreachingType: '' })}
                 showCustom={showCustomBreach}
                 customValue={form.customBreachingType}
                 onCustomChange={(v) => patch({ customBreachingType: v })}
-                customPlaceholder="Özel kırma tipi…"
+                customPlaceholder={t('sectors.cqb.form.customBreachingType')}
+                selectPlaceholder={t('sectors.cqb.form.selectPlaceholder')}
               />
               <CqbSelectField
-                legend="KAPI DURUMU"
+                legend={t('sectors.cqb.form.doorState')}
                 value={form.doorState}
-                options={DOOR_STATE_OPTIONS}
+                options={DOOR_STATE_OPTIONS.map((o) => ({
+                  id: o.id,
+                  label: formatCqbOptionLabel('doorState', o.id, o.label),
+                }))}
                 onChange={(v) => patch({ doorState: v })}
                 showCustom={false}
                 customValue=""
                 onCustomChange={() => {}}
                 customPlaceholder=""
+                selectPlaceholder={t('sectors.cqb.form.selectPlaceholder')}
               />
               <fieldset className="space-y-2">
-                <legend className={labelClass}>TAKIM BOYUTU</legend>
+                <legend className={labelClass}>{t('sectors.cqb.form.teamSize')}</legend>
                 <select
                   className={selectClass}
                   value={form.teamSize}
                   onChange={(e) => patch({ teamSize: e.target.value })}
                   required
                 >
-                  <option value="">— TAKIM SEÇİN —</option>
+                  <option value="">{t('sectors.cqb.form.teamPlaceholder')}</option>
                   {TEAM_SIZE_OPTIONS.map((o) => (
                     <option key={o.id} value={o.id}>
-                      {o.label}
+                      {formatCqbOptionLabel('teamSize', o.id, o.label)}
                     </option>
                   ))}
                 </select>
@@ -450,7 +485,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                   ) : null
                 }
               >
-                <TrainingMetricField label="TEHDİT SAYISI">
+                <TrainingMetricField label={t('sectors.cqb.form.threatCount')}>
                   <input
                     type="number"
                     min={0}
@@ -460,7 +495,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                     onChange={(e) => onThreatChange(e.target.value)}
                   />
                 </TrainingMetricField>
-                <TrainingMetricField label="ETKİSİZ ALINAN">
+                <TrainingMetricField label={t('sectors.cqb.form.neutralizedCount')}>
                   <input
                     type="number"
                     min={0}
@@ -474,7 +509,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                     onChange={(e) => onNeutralizedChange(e.target.value)}
                   />
                 </TrainingMetricField>
-                <TrainingMetricField label="Temizleme Süresi (sn)">
+                <TrainingMetricField label={t('sectors.cqb.form.clearanceTime')}>
                   <input
                     type="number"
                     min={0.001}
@@ -486,7 +521,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                     onChange={(e) => patch({ clearanceTimeMs: e.target.value })}
                   />
                 </TrainingMetricField>
-                <TrainingMetricField label="İsabet Oranı (%)">
+                <TrainingMetricField label={t('sectors.cqb.form.accuracyScore')}>
                   <input
                     type="number"
                     min={0}
@@ -499,7 +534,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                     onChange={(e) => patch({ accuracyScore: e.target.value })}
                   />
                 </TrainingMetricField>
-                <TrainingMetricField label="Güvenlik İhlali">
+                <TrainingMetricField label={t('sectors.cqb.form.safetyViolations')}>
                   <input
                     type="number"
                     min={0}
@@ -509,17 +544,17 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                     onChange={(e) => patch({ safetyViolations: e.target.value })}
                   />
                 </TrainingMetricField>
-                <TrainingMetricField label="Taktik Karar" className="sm:col-span-1">
+                <TrainingMetricField label={t('sectors.cqb.form.tacticalDecision')} className="sm:col-span-1">
                   <select
                     className={selectClass}
                     value={form.tacticalDecision}
                     onChange={(e) => patch({ tacticalDecision: e.target.value })}
                     required
                   >
-                    <option value="">— KARAR SEÇİN —</option>
+                    <option value="">{t('sectors.cqb.form.decisionPlaceholder')}</option>
                     {TACTICAL_DECISION_OPTIONS.map((o) => (
                       <option key={o.id} value={o.id}>
-                        {o.label}
+                        {formatCqbOptionLabel('tacticalDecision', o.id, o.label)}
                       </option>
                     ))}
                   </select>
@@ -527,16 +562,18 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
               </TrainingMetricGrid>
               <TrainingVisualStage
                 imageSrc={cqbImg}
-                imageAlt="CQB"
+                imageAlt={t('sectors.cqb.preview.imageAlt')}
                 stats={
                   <>
                     <p>
-                      TEHDİT / ETKİSİZ:{' '}
-                      <span className="text-accent">
-                        {threatNum} / {neutralizedNum}
-                      </span>
+                      {t('sectors.cqb.preview.threatNeutralized', {
+                        threats: threatNum,
+                        neutralized: neutralizedNum,
+                      })}
                     </p>
-                    <p className="mt-0.5 text-accent">HATA: {totalTacticalErrorCount} İŞARETLİ</p>
+                    <p className="mt-0.5 text-accent">
+                      {t('sectors.cqb.preview.errorsMarked', { count: totalTacticalErrorCount })}
+                    </p>
                   </>
                 }
               />
@@ -544,7 +581,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
           }
           right={
             <TrainingTerminalPanel
-              title="TAKTİK HATALAR · ANALİZ"
+              title={t('sectors.cqb.panels.tacticalErrors')}
               titleClassName="text-app-text"
               corners="bottom"
               panelClassName="relative flex min-h-0 flex-col border-accent/25 bg-app-bg/95 p-0"
@@ -552,26 +589,21 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
             >
               <fieldset className="flex min-h-0 flex-1 flex-col space-y-3 overflow-hidden rounded border border-accent/20 bg-black/40 p-3">
                 <legend className={`${labelClass} text-accent/80`}>
-                  TAKTİK HATALAR · FAZ BAZLI
+                  {t('sectors.cqb.panels.errorsByPhase')}
                 </legend>
 
                 {totalTacticalErrorCount > 0 ? (
                   <div className="flex flex-wrap gap-1.5 border-b border-accent/10 pb-2">
-                    {form.tacticalErrors.map((id) => {
-                      const preset = TACTICAL_ERROR_GROUPS.flatMap((g) => g.items).find(
-                        (p) => p.id === id
-                      )
-                      return (
+                    {form.tacticalErrors.map((id) => (
                         <button
                           key={id}
                           type="button"
                           onClick={() => toggleTacticalError(id)}
                           className="rounded border border-accent/45 bg-accent/10 px-2 py-0.5 font-mono-technical text-[7px] uppercase text-accent hover:bg-accent/20"
                         >
-                          {preset?.label ?? id} ×
+                          {formatCqbTacticalErrorLabel(id)} ×
                         </button>
-                      )
-                    })}
+                      ))}
                     {form.customTacticalErrors.map((text) => (
                       <button
                         key={text}
@@ -599,13 +631,13 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
 
               <div className="shrink-0 rounded border border-amber-500/25 bg-amber-950/15 p-2.5">
                 <p className="mb-2 font-mono-technical text-[7px] font-bold uppercase tracking-[0.18em] text-amber-400/90">
-                  Özel Hata
+                  {t('sectors.cqb.errors.customTitle')}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <input
                     type="text"
                     className={`${inputClass} min-w-0 flex-1`}
-                    placeholder="Örn. Yanlış el sinyali, geç holster…"
+                    placeholder={t('sectors.cqb.errors.customPlaceholder')}
                     value={customErrorDraft}
                     onChange={(e) => setCustomErrorDraft(e.target.value)}
                     onKeyDown={(e) => {
@@ -622,16 +654,16 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                     disabled={!customErrorDraft.trim()}
                     className="shrink-0 rounded border border-amber-500/50 bg-amber-500/10 px-3 py-2 font-mono-technical text-[8px] font-bold uppercase text-amber-200 hover:bg-amber-500/20 disabled:opacity-40"
                   >
-                    Hata Ekle
+                    {t('sectors.cqb.errors.addError')}
                   </button>
                 </div>
               </div>
 
               <label className="mt-auto block shrink-0 space-y-1">
-                <span className={labelClass}>OPERASYON NOTU</span>
+                <span className={labelClass}>{t('sectors.cqb.form.operationNote')}</span>
                 <textarea
                   className={`${textareaClass} min-h-[4.5rem]`}
-                  placeholder="Saha gözlemi, koordinasyon, #etiketler…"
+                  placeholder={t('sectors.cqb.form.operationNotePlaceholder')}
                   value={form.operationNote}
                   onChange={(e) => patch({ operationNote: e.target.value })}
                   rows={3}
@@ -646,8 +678,8 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
               submitBlockedReason={submitBlockedReason}
               saving={saving}
               canSubmit={canSubmit}
-              submitLabel="CQB Kaydını Onayla"
-              successMessage={submitOk ? 'CQB_KAYDI_AKTARILDI · RANGE_LOGS' : null}
+              submitLabel={t('sectors.cqb.form.submit')}
+              successMessage={submitOk ? t('sectors.cqb.messages.submitSuccess') : null}
               errorMessage={submitError}
             />
           }

@@ -214,7 +214,200 @@
     },
     "cqb": {
       "title": "CQB",
-      "sectorLabel": "CQB-02 · Close quarters"
+      "sectorLabel": "CQB-02 · Close quarters",
+      "tabs": {
+        "aria": "CQB terminal view",
+        "form": "CQB log form",
+        "registry": "Past CQB logs"
+      },
+      "panels": {
+        "setup": "Operation setup · metrics",
+        "tacticalErrors": "Tactical errors · analysis",
+        "errorsByPhase": "Tactical errors · by phase"
+      },
+      "form": {
+        "selectPlaceholder": "— Select —",
+        "teamPlaceholder": "— Select team —",
+        "decisionPlaceholder": "— Select decision —",
+        "roomTopology": "Room topology",
+        "customRoomTopology": "Custom room topology…",
+        "entryMethod": "Entry method",
+        "customEntryMethod": "Custom entry method…",
+        "breachingType": "Breaching type",
+        "customBreachingType": "Custom breaching type…",
+        "doorState": "Door state",
+        "teamSize": "Team size",
+        "threatCount": "Threat count",
+        "neutralizedCount": "Neutralized",
+        "clearanceTime": "Clearance time (sec)",
+        "accuracyScore": "Hit rate (%)",
+        "safetyViolations": "Safety violation",
+        "tacticalDecision": "Tactical decision",
+        "operationNote": "Operation note",
+        "operationNotePlaceholder": "Field observation, coordination, #tags…",
+        "submit": "Confirm CQB log"
+      },
+      "preview": {
+        "imageAlt": "CQB",
+        "threatNeutralized": "Threat / neutralized: {{threats}} / {{neutralized}}",
+        "errorsMarked": "Errors: {{count}} marked"
+      },
+      "errors": {
+        "customTitle": "Custom error",
+        "customPlaceholder": "E.g. wrong hand signal, late holster…",
+        "addError": "Add error",
+        "customPhase": "Custom error",
+        "other": "Other",
+        "fallbackGroup": "Tactical errors",
+        "groups": {
+          "pre_entry": {
+            "title": "Pre-entry",
+            "breaching_delay": "Breaching delay",
+            "stack_exposure": "Stack exposure",
+            "noise_discipline_compromised": "Noise discipline breach",
+            "poor_threshold_pieing": "Poor threshold pieing"
+          },
+          "entry_phase": {
+            "title": "Entry phase",
+            "fatal_funnel_hang": "Fatal funnel hang",
+            "over_penetration": "Over-penetration",
+            "blind_entry": "Blind entry",
+            "slow_breach": "Slow breach"
+          },
+          "room_geometry": {
+            "title": "Room geometry",
+            "poor_corner_check": "Poor corner check",
+            "leaving_sectors_uncovered": "Uncovered sector",
+            "colliding_with_teammate": "Operator collision"
+          },
+          "weapon_comm": {
+            "title": "Weapon & comms",
+            "muzzle_flagging": "Muzzle flagging / blue-on-blue risk",
+            "tunnel_vision": "Tunnel vision",
+            "poor_comm_discipline": "Poor comm discipline"
+          }
+        },
+        "legacy": {
+          "slow_breaching": "Slow breaching",
+          "poor_corner_piercing": "Poor corner piercing",
+          "blue_on_blue": "Blue on blue"
+        }
+      },
+      "options": {
+        "roomTopology": {
+          "corner_fed": "Corner-fed",
+          "center_fed": "Center-fed",
+          "open_front": "Open front",
+          "l_shaped": "L-room",
+          "t_intersection": "T-intersection",
+          "corridor": "Corridor",
+          "custom": "[+] Custom room topology"
+        },
+        "entryMethod": {
+          "dynamic_buttonhook": "Dynamic · buttonhook",
+          "dynamic_criss_cross": "Dynamic · criss-cross",
+          "threshold_pieing": "Threshold pieing / slicing",
+          "limited_penetration": "Limited penetration",
+          "high_low": "High-low entry",
+          "custom": "[+] Custom entry method"
+        },
+        "breachingType": {
+          "manual": "Manual",
+          "mechanical": "Mechanical",
+          "ballistic": "Ballistic",
+          "explosive": "Explosive",
+          "custom": "[+] Custom breaching type"
+        },
+        "doorState": {
+          "open": "Open",
+          "closed_inward": "Closed · opens inward",
+          "closed_outward": "Closed · opens outward"
+        },
+        "teamSize": {
+          "1-Man": "1-Man",
+          "2-Man": "2-Man",
+          "3-Man": "3-Man",
+          "4-Man Team": "4-Man team"
+        },
+        "tacticalDecision": {
+          "fast": "Fast",
+          "correct": "Correct",
+          "hesitant": "Hesitant"
+        }
+      },
+      "validation": {
+        "sessionRequired": "Session required",
+        "channelDisconnected": "Data channel lost · retry",
+        "roomTopologyRequired": "Room topology required",
+        "customRoomRequired": "Custom topology name required",
+        "entryMethodRequired": "Entry method required",
+        "customEntryRequired": "Custom entry method required",
+        "breachingRequired": "Breaching type required",
+        "customBreachingRequired": "Custom breaching type required",
+        "doorStateRequired": "Door state required",
+        "teamSizeRequired": "Team size required",
+        "neutralizedExceedsThreat": "Neutralized count cannot exceed threats",
+        "neutralizedAutoCapped": "Neutralized count cannot exceed threats · auto-capped",
+        "clearanceTimeRequired": "Clearance time (sec) required",
+        "accuracyRequired": "Accuracy score 0–100 required",
+        "safetyRequired": "Safety violation count required",
+        "decisionRequired": "Tactical decision required"
+      },
+      "messages": {
+        "submitSuccess": "CQB log transferred · range_logs",
+        "submitFailed": "CQB log failed · retry{{hint}}",
+        "permissionDenied": " · permission / rules"
+      },
+      "history": {
+        "title": "Past CQB logs · filters",
+        "syncMeta": "range_logs · live sync · {{filtered}}/{{total}} records",
+        "filterBar": "Filter bar",
+        "roomTopology": "Room topology",
+        "entryMethod": "Entry method",
+        "team": "Team",
+        "all": "All",
+        "syncing": "Syncing…",
+        "empty": "No CQB logs",
+        "noFilterResults": "No filter results",
+        "downloadFiltered": "Download filtered",
+        "downloadAll": "Download all",
+        "preparingPdf": "Preparing…",
+        "columns": {
+          "date": "Date",
+          "topology": "Topology",
+          "entry": "Entry",
+          "clearance": "Clearance",
+          "accuracy": "Hit %",
+          "violations": "Violation",
+          "decision": "Decision",
+          "success": "Success %",
+          "report": "Report"
+        },
+        "detail": {
+          "title": "CQB tactical assessment · detail",
+          "breaching": "Breaching",
+          "door": "Door",
+          "threatNeutralized": "Threat/neutralized",
+          "team": "Team",
+          "meteo": "Meteo-data (at log time)",
+          "tacticalErrors": "Tactical errors · {{count}} records",
+          "noTacticalErrors": "No tactical error records",
+          "operationNote": "Operation note",
+          "noOperationNote": "No operation note recorded."
+        },
+        "filterSummary": {
+          "topology": "Topology: {{value}}",
+          "entry": "Entry: {{value}}",
+          "team": "Team: {{value}}"
+        },
+        "meteo": {
+          "temperature": "Temperature",
+          "wind": "Wind",
+          "humidity": "Humidity",
+          "location": "Location",
+          "noRecord": "No record"
+        }
+      }
     },
     "fof": {
       "title": "FOF",

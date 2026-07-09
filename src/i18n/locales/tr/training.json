@@ -214,7 +214,200 @@
     },
     "cqb": {
       "title": "CQB",
-      "sectorLabel": "CQB-02 · Yakın mesafe"
+      "sectorLabel": "CQB-02 · Yakın mesafe",
+      "tabs": {
+        "aria": "CQB terminal görünümü",
+        "form": "CQB kayıt formu",
+        "registry": "Geçmiş CQB kayıtları"
+      },
+      "panels": {
+        "setup": "Operasyon kurulumu · metrikler",
+        "tacticalErrors": "Taktik hatalar · analiz",
+        "errorsByPhase": "Taktik hatalar · faz bazlı"
+      },
+      "form": {
+        "selectPlaceholder": "— Seçin —",
+        "teamPlaceholder": "— Takım seçin —",
+        "decisionPlaceholder": "— Karar seçin —",
+        "roomTopology": "Oda topolojisi",
+        "customRoomTopology": "Özel oda topolojisi…",
+        "entryMethod": "Giriş metodu",
+        "customEntryMethod": "Özel giriş metodu…",
+        "breachingType": "Kırma tipi",
+        "customBreachingType": "Özel kırma tipi…",
+        "doorState": "Kapı durumu",
+        "teamSize": "Takım boyutu",
+        "threatCount": "Tehdit sayısı",
+        "neutralizedCount": "Etkisiz alınan",
+        "clearanceTime": "Temizleme süresi (sn)",
+        "accuracyScore": "İsabet oranı (%)",
+        "safetyViolations": "Güvenlik ihlali",
+        "tacticalDecision": "Taktik karar",
+        "operationNote": "Operasyon notu",
+        "operationNotePlaceholder": "Saha gözlemi, koordinasyon, #etiketler…",
+        "submit": "CQB kaydını onayla"
+      },
+      "preview": {
+        "imageAlt": "CQB",
+        "threatNeutralized": "Tehdit / etkisiz: {{threats}} / {{neutralized}}",
+        "errorsMarked": "Hata: {{count}} işaretli"
+      },
+      "errors": {
+        "customTitle": "Özel hata",
+        "customPlaceholder": "Örn. Yanlış el sinyali, geç holster…",
+        "addError": "Hata ekle",
+        "customPhase": "Özel hata",
+        "other": "Diğer",
+        "fallbackGroup": "Taktik hatalar",
+        "groups": {
+          "pre_entry": {
+            "title": "Giriş öncesi",
+            "breaching_delay": "Breaching gecikmesi",
+            "stack_exposure": "Kolda açık verme",
+            "noise_discipline_compromised": "Ses disiplini ihlali",
+            "poor_threshold_pieing": "Yetersiz dilimleme"
+          },
+          "entry_phase": {
+            "title": "Giriş fazı",
+            "fatal_funnel_hang": "Ölüm hunisinde çakılma",
+            "over_penetration": "Derine fazla kaçma",
+            "blind_entry": "Körlemesine giriş",
+            "slow_breach": "Yavaş kırma / slow breach"
+          },
+          "room_geometry": {
+            "title": "Oda geometrisi",
+            "poor_corner_check": "Gevşek köşe kontrolü",
+            "leaving_sectors_uncovered": "Sektör boşluğu",
+            "colliding_with_teammate": "Operatör çarpışması"
+          },
+          "weapon_comm": {
+            "title": "Silah ve iletişim",
+            "muzzle_flagging": "Namlu ihlali / dosta doğrultma",
+            "tunnel_vision": "Tünel vizyonu",
+            "poor_comm_discipline": "İletişim kopukluğu"
+          }
+        },
+        "legacy": {
+          "slow_breaching": "Yavaş kırma",
+          "poor_corner_piercing": "Zayıf köşe delme / poor corner piercing",
+          "blue_on_blue": "Mavi-mavi / blue on blue"
+        }
+      },
+      "options": {
+        "roomTopology": {
+          "corner_fed": "Köşe girişli",
+          "center_fed": "Merkez girişli",
+          "open_front": "Açık cephe",
+          "l_shaped": "L-oda",
+          "t_intersection": "T-kavşak",
+          "corridor": "Koridor",
+          "custom": "[+] Özel oda topolojisi"
+        },
+        "entryMethod": {
+          "dynamic_buttonhook": "Dinamik · buttonhook",
+          "dynamic_criss_cross": "Dinamik · criss-cross",
+          "threshold_pieing": "Dilimleme / açı açma",
+          "limited_penetration": "Sınırlı penetrasyon",
+          "high_low": "High-low giriş",
+          "custom": "[+] Özel giriş metodu"
+        },
+        "breachingType": {
+          "manual": "Manuel",
+          "mechanical": "Mekanik",
+          "ballistic": "Balistik",
+          "explosive": "Patlayıcı",
+          "custom": "[+] Özel kırma tipi"
+        },
+        "doorState": {
+          "open": "Açık",
+          "closed_inward": "Kapalı · içe açılır",
+          "closed_outward": "Kapalı · dışa açılır"
+        },
+        "teamSize": {
+          "1-Man": "1-Man",
+          "2-Man": "2-Man",
+          "3-Man": "3-Man",
+          "4-Man Team": "4-Man team"
+        },
+        "tacticalDecision": {
+          "fast": "Hızlı",
+          "correct": "Doğru",
+          "hesitant": "Tereddütlü"
+        }
+      },
+      "validation": {
+        "sessionRequired": "Oturum gerekli",
+        "channelDisconnected": "Veri kanalı kesildi · yeniden dene",
+        "roomTopologyRequired": "Oda topolojisi gerekli",
+        "customRoomRequired": "Özel topoloji adı gerekli",
+        "entryMethodRequired": "Giriş metodu gerekli",
+        "customEntryRequired": "Özel giriş metodu gerekli",
+        "breachingRequired": "Kırma tipi gerekli",
+        "customBreachingRequired": "Özel kırma tipi gerekli",
+        "doorStateRequired": "Kapı durumu gerekli",
+        "teamSizeRequired": "Takım boyutu gerekli",
+        "neutralizedExceedsThreat": "Etkisiz sayısı tehdidi aşamaz",
+        "neutralizedAutoCapped": "Etkisiz sayısı tehdidi aşamaz · otomatik sınırlandı",
+        "clearanceTimeRequired": "Clearance time (sn) gerekli",
+        "accuracyRequired": "Accuracy score 0–100 gerekli",
+        "safetyRequired": "Güvenlik ihlali sayısı gerekli",
+        "decisionRequired": "Taktik karar gerekli"
+      },
+      "messages": {
+        "submitSuccess": "CQB kaydı aktarıldı · range_logs",
+        "submitFailed": "CQB kayıt başarısız · yeniden dene{{hint}}",
+        "permissionDenied": " · yetki / kurallar"
+      },
+      "history": {
+        "title": "Geçmiş CQB kayıtları · filtreleme",
+        "syncMeta": "range_logs · canlı senkron · {{filtered}}/{{total}} kayıt",
+        "filterBar": "Filtreleme barı",
+        "roomTopology": "Oda topolojisi",
+        "entryMethod": "Giriş metodu",
+        "team": "Takım",
+        "all": "Tümü",
+        "syncing": "Senkron…",
+        "empty": "CQB kaydı yok",
+        "noFilterResults": "Filtre sonucu yok",
+        "downloadFiltered": "Filtreleneni indir",
+        "downloadAll": "Tümünü indir",
+        "preparingPdf": "Hazırlanıyor…",
+        "columns": {
+          "date": "Tarih",
+          "topology": "Topoloji",
+          "entry": "Giriş",
+          "clearance": "Clearance",
+          "accuracy": "İsabet %",
+          "violations": "İhlal",
+          "decision": "Karar",
+          "success": "Başarı %",
+          "report": "Rapor"
+        },
+        "detail": {
+          "title": "CQB tactical assessment · detay",
+          "breaching": "Kırma",
+          "door": "Kapı",
+          "threatNeutralized": "Tehdit/etkisiz",
+          "team": "Takım",
+          "meteo": "Meteo-data (kayıt anı)",
+          "tacticalErrors": "Taktik hatalar · {{count}} kayıt",
+          "noTacticalErrors": "Taktik hata kaydı yok",
+          "operationNote": "Operasyon notu",
+          "noOperationNote": "Operasyon notu kayıtlı değil."
+        },
+        "filterSummary": {
+          "topology": "Topoloji: {{value}}",
+          "entry": "Giriş: {{value}}",
+          "team": "Takım: {{value}}"
+        },
+        "meteo": {
+          "temperature": "Sıcaklık",
+          "wind": "Rüzgar",
+          "humidity": "Nem",
+          "location": "Konum",
+          "noRecord": "Kayıt yok"
+        }
+      }
     },
     "fof": {
       "title": "FOF",

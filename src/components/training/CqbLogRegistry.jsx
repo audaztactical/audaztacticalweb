@@ -1,5 +1,6 @@
 import { Fragment, useMemo, useState } from 'react'
 import { ChevronDown, FileDown } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import TacticalPanel from '../ui/TacticalPanel'
 import { useAuth } from '../../context/AuthContext'
 import { generateCqbTacticalReportPdf } from '../../lib/cqbTacticalReportPdf'
@@ -9,25 +10,25 @@ import {
   extractCqbTopologyOptions,
   filterCqbLogs,
   formatCqbClearanceTime,
-  formatCqbDateCell,
-  formatCqbFilterSummary,
   getCqbAccuracyScore,
-  getCqbBreachingType,
-  getCqbDoorState,
-  getCqbEntryMethod,
-  getCqbOperationNote,
-  getCqbRoomTopology,
-  countCqbTacticalErrors,
-  getCqbSafetyViolations,
-  getCqbTacticalDecision,
-  getCqbTacticalErrorsGrouped,
-  getCqbTeamSize,
   getCqbThreatNeutralized,
+  getCqbSafetyViolations,
   isCqbFilterActive,
   selectCqbLogs,
+  countCqbTacticalErrors,
 } from '../../lib/cqbLogRegistry'
-import { formatMeteoOverviewRows, getLogMeteoData } from '../../lib/meteoDataCapture'
+import { getLogMeteoData } from '../../lib/meteoDataCapture'
 import { formatSuccessPercentCell } from '../../lib/trainingSuccessScore'
+import {
+  formatCqbDateCellDisplay,
+  formatCqbFilterSummaryDisplay,
+  formatCqbMeteoRowsDisplay,
+  formatCqbOperationNoteDisplay,
+  formatCqbSelectFieldDisplay,
+  formatCqbTacticalDecisionDisplay,
+  formatCqbTacticalErrorsGroupedDisplay,
+  trainingLocale,
+} from '../../lib/trainingDisplayText'
 
 const filterSelectClass =
   'dossier-blood-select min-w-[8.5rem] flex-1 rounded border border-accent/35 bg-app-bg py-1.5 pl-2 pr-7 font-mono-technical text-[9px] uppercase text-app-text outline-none focus:border-accent/60'
@@ -42,6 +43,7 @@ const FILTER_INITIAL = {
  * @param {{ rangeLogs: Record<string, unknown>[]; loading?: boolean }} props
  */
 export default function CqbLogRegistry({ rangeLogs, loading = false }) {
+  const { t } = useTranslation('training')
   const { userData } = useAuth()
   const [filters, setFilters] = useState(FILTER_INITIAL)
   const [expandedId, setExpandedId] = useState(/** @type {string | null} */ (null))
@@ -63,7 +65,7 @@ export default function CqbLogRegistry({ rangeLogs, loading = false }) {
         entryMethodKey: filters.entryMethodKey,
         teamSize: filters.teamSize,
       }),
-    [cqbLogs, filters]
+    [cqbLogs, filters],
   )
 
   const patchFilter = (/** @type {Partial<typeof FILTER_INITIAL>} */ next) => {
@@ -92,7 +94,7 @@ export default function CqbLogRegistry({ rangeLogs, loading = false }) {
         logs: filtered,
         operator: userData,
         filterActive,
-        filterLabel: formatCqbFilterSummary(filters),
+        filterLabel: formatCqbFilterSummaryDisplay(filters),
       })
     } finally {
       setBulkPdfBusy(false)
@@ -100,10 +102,10 @@ export default function CqbLogRegistry({ rangeLogs, loading = false }) {
   }
 
   const bulkButtonLabel = bulkPdfBusy
-    ? 'HAZIRLANIYOR…'
+    ? t('sectors.cqb.history.preparingPdf')
     : filterActive
-      ? 'FİLTRELENENİ İNDİR'
-      : 'TÜMÜNÜ İNDİR'
+      ? t('sectors.cqb.history.downloadFiltered')
+      : t('sectors.cqb.history.downloadAll')
 
   return (
     <TacticalPanel className="relative border-accent/20 bg-app-bg/95 p-0">
@@ -116,10 +118,10 @@ export default function CqbLogRegistry({ rangeLogs, loading = false }) {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-accent/90">
-              GEÇMİŞ CQB KAYITLARI · FİLTRELEME
+              {t('sectors.cqb.history.title')}
             </p>
             <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-app-text/45">
-              range_logs · canlı senkron · {filtered.length}/{cqbLogs.length} KAYIT
+              {t('sectors.cqb.history.syncMeta', { filtered: filtered.length, total: cqbLogs.length })}
             </p>
           </div>
           {filtered.length > 0 ? (
@@ -138,17 +140,19 @@ export default function CqbLogRegistry({ rangeLogs, loading = false }) {
 
       <div className="border-b border-accent/12 bg-app-bg px-3 py-3">
         <p className="mb-2 font-mono-technical text-[7px] font-bold uppercase tracking-[0.24em] text-app-text/55">
-          FİLTRELEME BARİ
+          {t('sectors.cqb.history.filterBar')}
         </p>
         <div className="flex flex-wrap gap-2">
           <label className="flex min-w-[10rem] flex-1 flex-col gap-0.5">
-            <span className="font-mono-technical text-[7px] uppercase text-app-text/45">ODA TOPOLOJİSİ</span>
+            <span className="font-mono-technical text-[7px] uppercase text-app-text/45">
+              {t('sectors.cqb.history.roomTopology')}
+            </span>
             <select
               className={filterSelectClass}
               value={filters.roomTopologyKey}
               onChange={(e) => patchFilter({ roomTopologyKey: e.target.value })}
             >
-              <option value="ALL">TÜMÜ</option>
+              <option value="ALL">{t('sectors.cqb.history.all')}</option>
               {topologyOptions.map((o) => (
                 <option key={o.key} value={o.key}>
                   {o.label}
@@ -157,13 +161,15 @@ export default function CqbLogRegistry({ rangeLogs, loading = false }) {
             </select>
           </label>
           <label className="flex min-w-[10rem] flex-1 flex-col gap-0.5">
-            <span className="font-mono-technical text-[7px] uppercase text-app-text/45">GİRİŞ METODU</span>
+            <span className="font-mono-technical text-[7px] uppercase text-app-text/45">
+              {t('sectors.cqb.history.entryMethod')}
+            </span>
             <select
               className={filterSelectClass}
               value={filters.entryMethodKey}
               onChange={(e) => patchFilter({ entryMethodKey: e.target.value })}
             >
-              <option value="ALL">TÜMÜ</option>
+              <option value="ALL">{t('sectors.cqb.history.all')}</option>
               {entryOptions.map((o) => (
                 <option key={o.key} value={o.key}>
                   {o.label}
@@ -172,16 +178,18 @@ export default function CqbLogRegistry({ rangeLogs, loading = false }) {
             </select>
           </label>
           <label className="flex min-w-[10rem] flex-1 flex-col gap-0.5">
-            <span className="font-mono-technical text-[7px] uppercase text-app-text/45">TAKIM</span>
+            <span className="font-mono-technical text-[7px] uppercase text-app-text/45">
+              {t('sectors.cqb.history.team')}
+            </span>
             <select
               className={filterSelectClass}
               value={filters.teamSize}
               onChange={(e) => patchFilter({ teamSize: e.target.value })}
             >
-              <option value="ALL">TÜMÜ</option>
-              {teamOptions.map((t) => (
-                <option key={t} value={t}>
-                  {t}
+              <option value="ALL">{t('sectors.cqb.history.all')}</option>
+              {teamOptions.map((team) => (
+                <option key={team} value={team}>
+                  {team}
                 </option>
               ))}
             </select>
@@ -191,25 +199,27 @@ export default function CqbLogRegistry({ rangeLogs, loading = false }) {
 
       <div className="ilws-green-scroll max-h-[min(58vh,560px)] overflow-auto">
         {loading ? (
-          <p className="p-8 text-center font-mono-technical text-[10px] uppercase text-app-text/55">SENKRON…</p>
+          <p className="p-8 text-center font-mono-technical text-[10px] uppercase text-app-text/55">
+            {t('sectors.cqb.history.syncing')}
+          </p>
         ) : filtered.length === 0 ? (
           <p className="p-8 text-center font-mono-technical text-[10px] uppercase text-app-text/45">
-            {cqbLogs.length === 0 ? 'CQB_KAYDI_YOK' : 'FİLTRE_SONUCU_YOK'}
+            {cqbLogs.length === 0 ? t('sectors.cqb.history.empty') : t('sectors.cqb.history.noFilterResults')}
           </p>
         ) : (
           <table className="w-full min-w-[900px] border-collapse text-left">
             <thead className="sticky top-0 z-[2] bg-app-bg">
               <tr className="border-b border-accent/25 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-accent/80">
                 <th className="w-8 px-2 py-2" aria-hidden />
-                <th className="px-3 py-2">TARİH</th>
-                <th className="px-3 py-2">TOPOLOJİ</th>
-                <th className="px-3 py-2">GİRİŞ</th>
-                <th className="px-3 py-2">CLEARANCE</th>
-                <th className="px-3 py-2">İSABET %</th>
-                <th className="px-3 py-2">İHLAL</th>
-                <th className="px-3 py-2">KARAR</th>
-                <th className="px-3 py-2">BAŞARI %</th>
-                <th className="px-3 py-2 text-right">RAPOR</th>
+                <th className="px-3 py-2">{t('sectors.cqb.history.columns.date')}</th>
+                <th className="px-3 py-2">{t('sectors.cqb.history.columns.topology')}</th>
+                <th className="px-3 py-2">{t('sectors.cqb.history.columns.entry')}</th>
+                <th className="px-3 py-2">{t('sectors.cqb.history.columns.clearance')}</th>
+                <th className="px-3 py-2">{t('sectors.cqb.history.columns.accuracy')}</th>
+                <th className="px-3 py-2">{t('sectors.cqb.history.columns.violations')}</th>
+                <th className="px-3 py-2">{t('sectors.cqb.history.columns.decision')}</th>
+                <th className="px-3 py-2">{t('sectors.cqb.history.columns.success')}</th>
+                <th className="px-3 py-2 text-right">{t('sectors.cqb.history.columns.report')}</th>
               </tr>
             </thead>
             <tbody>
@@ -217,9 +227,11 @@ export default function CqbLogRegistry({ rangeLogs, loading = false }) {
                 const id = String(row.id)
                 const open = expandedId === id
                 const { threats, neutralized } = getCqbThreatNeutralized(row)
-                const errorGroups = getCqbTacticalErrorsGrouped(row)
+                const errorGroups = formatCqbTacticalErrorsGroupedDisplay(row)
                 const errorCount = countCqbTacticalErrors(row)
                 const safetyViolations = getCqbSafetyViolations(row)
+                const topologyLabel = formatCqbSelectFieldDisplay(row, 'roomTopology')
+                const entryLabel = formatCqbSelectFieldDisplay(row, 'entryMethod')
 
                 return (
                   <Fragment key={id}>
@@ -244,17 +256,17 @@ export default function CqbLogRegistry({ rangeLogs, loading = false }) {
                         />
                       </td>
                       <td className="whitespace-nowrap px-3 py-2 tabular-nums text-app-text/70">
-                        {formatCqbDateCell(row)}
+                        {formatCqbDateCellDisplay(row)}
                       </td>
-                      <td className="max-w-[110px] truncate px-3 py-2 text-app-text" title={getCqbRoomTopology(row)}>
-                        {getCqbRoomTopology(row)}
+                      <td className="max-w-[110px] truncate px-3 py-2 text-app-text" title={topologyLabel}>
+                        {topologyLabel}
                       </td>
-                      <td className="max-w-[110px] truncate px-3 py-2 text-app-text/90" title={getCqbEntryMethod(row)}>
-                        {getCqbEntryMethod(row)}
+                      <td className="max-w-[110px] truncate px-3 py-2 text-app-text/90" title={entryLabel}>
+                        {entryLabel}
                       </td>
                       <td className="px-3 py-2 tabular-nums text-[#5ec8ff]">{formatCqbClearanceTime(row)}</td>
                       <td className="px-3 py-2 tabular-nums text-accent">
-                        %{getCqbAccuracyScore(row).toLocaleString('tr-TR')}
+                        %{getCqbAccuracyScore(row).toLocaleString(trainingLocale())}
                       </td>
                       <td
                         className={`px-3 py-2 tabular-nums ${
@@ -263,7 +275,7 @@ export default function CqbLogRegistry({ rangeLogs, loading = false }) {
                       >
                         {safetyViolations}
                       </td>
-                      <td className="px-3 py-2 text-app-text/90">{getCqbTacticalDecision(row)}</td>
+                      <td className="px-3 py-2 text-app-text/90">{formatCqbTacticalDecisionDisplay(row)}</td>
                       <td className="whitespace-nowrap px-3 py-2 text-sm font-bold tabular-nums text-accent">
                         {formatSuccessPercentCell(row)}
                       </td>
@@ -292,35 +304,49 @@ export default function CqbLogRegistry({ rangeLogs, loading = false }) {
                           <div className="min-h-0 overflow-hidden">
                             <div className="mx-3 mb-3 mt-1 rounded border border-accent/20 bg-black/50 p-3 font-mono-technical text-[8px] uppercase">
                               <p className="mb-2 font-bold tracking-wider text-accent/85">
-                                CQB TACTICAL ASSESSMENT · DETAY
+                                {t('sectors.cqb.history.detail.title')}
                               </p>
                               <div className="mb-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                                 <p className="rounded border border-[#00b4ff]/25 bg-[#00b4ff]/5 px-2 py-1.5">
-                                  <span className="text-app-text/55">KIRMA · </span>
-                                  <span className="text-[#5ec8ff]">{getCqbBreachingType(row)}</span>
+                                  <span className="text-app-text/55">
+                                    {t('sectors.cqb.history.detail.breaching')} ·{' '}
+                                  </span>
+                                  <span className="text-[#5ec8ff]">
+                                    {formatCqbSelectFieldDisplay(row, 'breachingType')}
+                                  </span>
                                 </p>
                                 <p className="rounded border border-[#00b4ff]/25 bg-[#00b4ff]/5 px-2 py-1.5">
-                                  <span className="text-app-text/55">KAPI · </span>
-                                  <span className="text-[#5ec8ff]">{getCqbDoorState(row)}</span>
+                                  <span className="text-app-text/55">
+                                    {t('sectors.cqb.history.detail.door')} ·{' '}
+                                  </span>
+                                  <span className="text-[#5ec8ff]">
+                                    {formatCqbSelectFieldDisplay(row, 'doorState')}
+                                  </span>
                                 </p>
                                 <p className="rounded border border-accent/25 bg-accent/5 px-2 py-1.5">
-                                  <span className="text-app-text/55">TEHDİT/ETKİSİZ · </span>
+                                  <span className="text-app-text/55">
+                                    {t('sectors.cqb.history.detail.threatNeutralized')} ·{' '}
+                                  </span>
                                   <span className="text-accent">
                                     {threats} / {neutralized}
                                   </span>
                                 </p>
                                 <p className="rounded border border-accent/25 bg-accent/5 px-2 py-1.5">
-                                  <span className="text-app-text/55">TAKIM · </span>
-                                  <span className="text-accent">{getCqbTeamSize(row)}</span>
+                                  <span className="text-app-text/55">
+                                    {t('sectors.cqb.history.detail.team')} ·{' '}
+                                  </span>
+                                  <span className="text-accent">{String(row.teamSize ?? '—')}</span>
                                 </p>
                               </div>
                               {(() => {
                                 const meteo = getLogMeteoData(row)
                                 if (!meteo) return null
-                                const rows = formatMeteoOverviewRows(meteo)
+                                const rows = formatCqbMeteoRowsDisplay(meteo)
                                 return (
                                   <div className="mb-3 rounded border border-sky-500/25 bg-sky-500/5 px-2 py-2">
-                                    <p className="mb-1 text-[7px] font-bold text-sky-400/85">METEO-DATA (KAYIT ANI)</p>
+                                    <p className="mb-1 text-[7px] font-bold text-sky-400/85">
+                                      {t('sectors.cqb.history.detail.meteo')}
+                                    </p>
                                     <ul className="space-y-0.5 text-app-text/90">
                                       {rows.map(([label, value]) => (
                                         <li key={label}>
@@ -335,7 +361,7 @@ export default function CqbLogRegistry({ rangeLogs, loading = false }) {
                               {errorCount > 0 ? (
                                 <div className="mb-3 rounded border border-amber-500/30 bg-amber-950/20 px-2 py-2">
                                   <p className="mb-2 text-[7px] font-bold text-amber-400/90">
-                                    TAKTİK HATALAR · {errorCount} KAYIT
+                                    {t('sectors.cqb.history.detail.tacticalErrors', { count: errorCount })}
                                   </p>
                                   <div className="space-y-2">
                                     {errorGroups.map((group) => (
@@ -355,11 +381,17 @@ export default function CqbLogRegistry({ rangeLogs, loading = false }) {
                                   </div>
                                 </div>
                               ) : (
-                                <p className="mb-3 text-app-text/45">TAKTİK_HATA_KAYDI_YOK</p>
+                                <p className="mb-3 text-app-text/45">
+                                  {t('sectors.cqb.history.detail.noTacticalErrors')}
+                                </p>
                               )}
                               <div className="rounded border border-white/10 bg-app-bg px-2 py-2">
-                                <p className="mb-1 text-[7px] text-app-text/45">OPERASYON NOTU</p>
-                                <p className="normal-case leading-relaxed text-app-text/90">{getCqbOperationNote(row)}</p>
+                                <p className="mb-1 text-[7px] text-app-text/45">
+                                  {t('sectors.cqb.history.detail.operationNote')}
+                                </p>
+                                <p className="normal-case leading-relaxed text-app-text/90">
+                                  {formatCqbOperationNoteDisplay(row)}
+                                </p>
                               </div>
                             </div>
                           </div>

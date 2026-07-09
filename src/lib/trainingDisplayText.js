@@ -9,6 +9,19 @@ import {
   getAtisTimingDetails,
   isAtisTimed,
 } from './atisLogRegistry'
+import {
+  CQB_CUSTOM,
+  TACTICAL_ERROR_GROUPS,
+  decodeCustomTacticalError,
+  isCustomTacticalError,
+  labelTacticalError,
+} from './cqbOptions'
+import {
+  getCqbLogTimestampMs,
+  getCqbOperationNote,
+  getCqbTacticalErrorIds,
+  getCqbTacticalErrors,
+} from './cqbLogRegistry'
 import { formatMeteoOverviewRows } from './meteoDataCapture'
 
 /** @typedef {import('../components/training/trainingCategories').TrainingCategory} TrainingCategory */
@@ -268,3 +281,235 @@ export function formatAtisTimingDetailLevel(row) {
 }
 
 export { getAtisTimingDetails, isAtisTimed }
+
+/** @param {'roomTopology' | 'entryMethod' | 'breachingType' | 'doorState' | 'teamSize' | 'tacticalDecision'} optionType */
+function cqbOptionKey(optionType, optionId) {
+  const id = String(optionId ?? '').trim()
+  if (id === CQB_CUSTOM) return `sectors.cqb.options.${optionType}.custom`
+  return `sectors.cqb.options.${optionType}.${id}`
+}
+
+/**
+ * @param {'roomTopology' | 'entryMethod' | 'breachingType' | 'doorState' | 'teamSize' | 'tacticalDecision'} optionType
+ * @param {string} optionId
+ * @param {string} [fallback]
+ */
+export function formatCqbOptionLabel(optionType, optionId, fallback = '') {
+  const id = String(optionId ?? '').trim()
+  if (!id) return fallback || '—'
+  return i18n.t(cqbOptionKey(optionType, id), {
+    ns: 'training',
+    defaultValue: fallback || id,
+  })
+}
+
+/** @param {string} groupId */
+export function formatCqbTacticalErrorGroupTitle(groupId) {
+  const id = String(groupId ?? '').trim()
+  if (!id) return ''
+  if (id === 'ÖZEL HATA') {
+    return i18n.t('sectors.cqb.errors.customPhase', { ns: 'training' })
+  }
+  if (id === 'DİĞER') {
+    return i18n.t('sectors.cqb.errors.other', { ns: 'training' })
+  }
+  if (id === 'TAKTİK HATALAR') {
+    return i18n.t('sectors.cqb.errors.fallbackGroup', { ns: 'training' })
+  }
+  const match = TACTICAL_ERROR_GROUPS.find((g) => g.id === id || g.title === id)
+  if (match) {
+    return i18n.t(`sectors.cqb.errors.groups.${match.id}.title`, { ns: 'training' })
+  }
+  return id
+}
+
+/** @param {string} errorId */
+export function formatCqbTacticalErrorLabel(errorId) {
+  const id = String(errorId ?? '').trim()
+  if (!id) return '—'
+  if (isCustomTacticalError(id)) {
+    return decodeCustomTacticalError(id) || i18n.t('sectors.cqb.errors.customPhase', { ns: 'training' })
+  }
+  for (const group of TACTICAL_ERROR_GROUPS) {
+    if (group.items.some((item) => item.id === id)) {
+      return i18n.t(`sectors.cqb.errors.groups.${group.id}.${id}`, {
+        ns: 'training',
+        defaultValue: labelTacticalError(id),
+      })
+    }
+  }
+  return i18n.t(`sectors.cqb.errors.legacy.${id}`, {
+    ns: 'training',
+    defaultValue: labelTacticalError(id),
+  })
+}
+
+/**
+ * @param {{ key: string, params?: Record<string, unknown> } | null | undefined} reason
+ */
+export function formatCqbSubmitBlockedReason(reason) {
+  if (!reason?.key) return null
+  return i18n.t(`sectors.cqb.validation.${reason.key}`, {
+    ns: 'training',
+    ...(reason.params ?? {}),
+  })
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ */
+export function formatCqbDateCellDisplay(row) {
+  const ms = getCqbLogTimestampMs(row)
+  if (!ms) return '—'
+  return new Date(ms).toLocaleString(trainingLocale(), {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  })
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ */
+export function formatCqbTacticalDecisionDisplay(row) {
+  const label = String(row.tacticalDecisionLabel ?? '').trim()
+  if (label) return label
+  const key = String(row.tacticalDecision ?? '').trim()
+  if (!key) return '—'
+  return formatCqbOptionLabel('tacticalDecision', key, key)
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ */
+export function formatCqbOperationNoteDisplay(row) {
+  const note = getCqbOperationNote(row)
+  if (note === 'Operasyon notu kayıtlı değil.') {
+    return i18n.t('sectors.cqb.history.detail.noOperationNote', { ns: 'training' })
+  }
+  return note
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ * @returns {{ phaseTitle: string; labels: string[] }[]}
+ */
+export function formatCqbTacticalErrorsGroupedDisplay(row) {
+  const ids = getCqbTacticalErrorIds(row)
+  if (ids.length) {
+    /** @type {Map<string, { title: string; labels: string[] }>} */
+    const buckets = new Map()
+    for (const id of ids) {
+      const group = TACTICAL_ERROR_GROUPS.find((g) => g.items.some((item) => item.id === id))
+      const bucketKey = isCustomTacticalError(id) ? 'custom' : group?.id ?? 'other'
+      const title = formatCqbTacticalErrorGroupTitle(
+        group?.id ?? (isCustomTacticalError(id) ? 'ÖZEL HATA' : 'DİĞER'),
+      )
+      const entry = buckets.get(bucketKey) ?? { title, labels: [] }
+      entry.labels.push(formatCqbTacticalErrorLabel(id))
+      buckets.set(bucketKey, entry)
+    }
+    const order = [...TACTICAL_ERROR_GROUPS.map((g) => g.id), 'custom', 'other']
+    return order
+      .filter((k) => buckets.has(k))
+      .map((k) => {
+        const bucket = buckets.get(k)
+        return { phaseTitle: bucket.title, labels: bucket.labels }
+      })
+  }
+  const flat = getCqbTacticalErrors(row)
+  if (!flat.length) return []
+  return [
+    {
+      phaseTitle: i18n.t('sectors.cqb.errors.fallbackGroup', { ns: 'training' }),
+      labels: flat,
+    },
+  ]
+}
+
+/**
+ * @param {{ roomTopologyKey?: string, entryMethodKey?: string, teamSize?: string }} filters
+ */
+export function formatCqbFilterSummaryDisplay(filters) {
+  const parts = []
+  if (filters.roomTopologyKey && filters.roomTopologyKey !== 'ALL') {
+    parts.push(
+      i18n.t('sectors.cqb.history.filterSummary.topology', {
+        ns: 'training',
+        value: filters.roomTopologyKey,
+      }),
+    )
+  }
+  if (filters.entryMethodKey && filters.entryMethodKey !== 'ALL') {
+    parts.push(
+      i18n.t('sectors.cqb.history.filterSummary.entry', {
+        ns: 'training',
+        value: filters.entryMethodKey,
+      }),
+    )
+  }
+  if (filters.teamSize && filters.teamSize !== 'ALL') {
+    parts.push(
+      i18n.t('sectors.cqb.history.filterSummary.team', {
+        ns: 'training',
+        value: filters.teamSize,
+      }),
+    )
+  }
+  return parts.join(' · ')
+}
+
+/** @type {Record<string, string>} */
+const CQB_METEO_LABEL_KEYS = {
+  Sıcaklık: 'temperature',
+  Rüzgar: 'wind',
+  Nem: 'humidity',
+  Konum: 'location',
+}
+
+/**
+ * @param {import('./meteoDataCapture').MeteoSnapshot | null | undefined} meteo
+ */
+export function formatCqbMeteoRowsDisplay(meteo) {
+  const noRecord = i18n.t('sectors.cqb.history.meteo.noRecord', { ns: 'training' })
+  return formatMeteoOverviewRows(meteo).map(([label, value]) => {
+    const key = CQB_METEO_LABEL_KEYS[label]
+    const displayLabel = key
+      ? i18n.t(`sectors.cqb.history.meteo.${key}`, { ns: 'training' })
+      : label
+    const displayValue = value === 'Kayıt yok' ? noRecord : value
+    return [displayLabel, displayValue]
+  })
+}
+
+/** @type {Record<string, string>} */
+const CQB_CUSTOM_FIELD_MAP = {
+  roomTopology: 'customRoomTopology',
+  entryMethod: 'customEntryMethod',
+  breachingType: 'customBreachingType',
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ * @param {'roomTopology' | 'entryMethod' | 'breachingType' | 'doorState'} field
+ */
+export function formatCqbSelectFieldDisplay(row, field) {
+  const storedLabel = String(row[field] ?? '').trim()
+  if (storedLabel && storedLabel !== 'Özel' && storedLabel !== '—') return storedLabel
+  const keyField = `${field}Key`
+  const key = String(row[keyField] ?? row[field] ?? '').trim()
+  const customField = CQB_CUSTOM_FIELD_MAP[field]
+  const custom = customField ? String(row[customField] ?? '').trim() : ''
+  if (key === CQB_CUSTOM) {
+    return custom || i18n.t('sectors.cqb.errors.customPhase', { ns: 'training' })
+  }
+  if (!key) return '—'
+  const optionType =
+    field === 'roomTopology'
+      ? 'roomTopology'
+      : field === 'entryMethod'
+        ? 'entryMethod'
+        : field === 'breachingType'
+          ? 'breachingType'
+          : 'doorState'
+  return formatCqbOptionLabel(optionType, key, key)
+}
