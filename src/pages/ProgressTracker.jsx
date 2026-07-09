@@ -275,7 +275,7 @@ function ActivityFeedPanel({ feed, selectedLogId = null, onSelectLog }) {
   }
 
   return (
-    <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
+    <div className="max-h-72 space-y-2 overflow-x-hidden overflow-y-auto overscroll-contain pr-1">
       {feed.map((item) => {
         const tagClass = TAG_COLORS[/** @type {keyof typeof TAG_COLORS} */ (item.tag)] ?? TAG_COLORS.OTHER
         const when = item.timestampMs
@@ -295,7 +295,7 @@ function ActivityFeedPanel({ feed, selectedLogId = null, onSelectLog }) {
             type="button"
             onClick={() => onSelectLog?.(item.id)}
             className={[
-              'flex w-full cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors',
+              'flex w-full min-w-0 cursor-pointer flex-col gap-1.5 rounded-lg border px-3 py-2.5 text-left transition-colors sm:flex-row sm:items-start sm:gap-3',
               item.unverified ? 'opacity-60' : '',
               selected
                 ? 'border-amber-500/55 bg-amber-950/25 shadow-[0_0_16px_rgba(245,158,11,0.12)]'
@@ -303,14 +303,26 @@ function ActivityFeedPanel({ feed, selectedLogId = null, onSelectLog }) {
             ].join(' ')}
             aria-pressed={selected}
           >
-            <span className={`shrink-0 rounded border px-1.5 py-0.5 font-mono text-[8px] font-bold ${tagClass}`}>
-              [{formatProgressDisciplineTag(item.tag)}]
-            </span>
+            <div className="flex w-full min-w-0 items-center justify-between gap-2 sm:w-auto sm:shrink-0 sm:justify-start">
+              <span className={`shrink-0 rounded border px-1.5 py-0.5 font-mono text-[8px] font-bold ${tagClass}`}>
+                [{formatProgressDisciplineTag(item.tag)}]
+              </span>
+              {item.success != null ? (
+                <span
+                  className={[
+                    'shrink-0 font-mono text-xs font-black tabular-nums sm:hidden',
+                    selected ? 'text-amber-300' : 'text-emerald-400',
+                  ].join(' ')}
+                >
+                  {item.success}%
+                </span>
+              ) : null}
+            </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate font-mono text-[11px] font-bold uppercase text-app-text">
+              <p className="break-words font-mono text-[11px] font-bold uppercase leading-snug text-app-text [overflow-wrap:anywhere]">
                 {humanizeProgressFeedTitle(item.title)}
               </p>
-              <p className="mt-0.5 font-mono text-[9px] text-app-text/55">{when}</p>
+              <p className="mt-0.5 shrink-0 font-mono text-[9px] tabular-nums text-app-text/55">{when}</p>
               {item.unverified ? (
                 <p className="mt-1 font-mono text-[8px] font-bold uppercase tracking-wider text-amber-500/85">
                   {t('activityFeed.unverified')}
@@ -320,7 +332,7 @@ function ActivityFeedPanel({ feed, selectedLogId = null, onSelectLog }) {
             {item.success != null ? (
               <span
                 className={[
-                  'shrink-0 font-mono text-xs font-black tabular-nums',
+                  'hidden shrink-0 font-mono text-xs font-black tabular-nums sm:inline',
                   selected ? 'text-amber-300' : 'text-emerald-400',
                 ].join(' ')}
               >
@@ -585,13 +597,13 @@ export default function ProgressTracker({ onBack }) {
       : [{ id: 'all', label: t('filters.allTasks') }]
 
   return (
-    <div className="px-4 sm:px-6 md:px-8">
+    <div className="px-4 sm:px-6 md:px-8 min-w-0 max-w-full overflow-x-hidden">
     <PageShell
       title={t('page.title')}
       subtitle={t('page.subtitle')}
       headerAction={<BarChart2 className="size-6 text-emerald-500/80" strokeWidth={1.5} aria-hidden />}
     >
-      <div className="space-y-5 font-mono text-slate-100">
+      <div className="min-w-0 max-w-full space-y-5 overflow-x-hidden font-mono text-slate-100">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <button
             type="button"
@@ -809,28 +821,28 @@ export default function ProgressTracker({ onBack }) {
               </div>
             ) : null}
 
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <div
-                className="flex min-w-0 flex-col"
+                className="flex min-w-0 max-w-full flex-col"
                 aria-hidden={hudOverlayActive ? true : undefined}
                 {...(hudOverlayActive ? { inert: true } : {})}
               >
-                <div className="rounded-xl border border-slate-800 bg-slate-950 p-3 sm:p-4">
-                  <div className="mb-4 flex items-center justify-between gap-2">
-                    <div className="flex min-w-0 items-center gap-2">
+                <div className="min-w-0 max-w-full overflow-x-hidden rounded-xl border border-slate-800 bg-slate-950 p-3 sm:p-4">
+                  <div className="mb-3 flex flex-wrap items-start justify-between gap-x-2 gap-y-2 sm:mb-4 sm:items-center">
+                    <div className="flex min-w-0 max-w-full items-center gap-2">
                       <TrendingUp className="size-4 shrink-0 text-emerald-500" strokeWidth={1.5} aria-hidden />
-                      <h2 className="text-[10px] font-bold uppercase tracking-[0.18em] text-app-text sm:text-[11px] sm:tracking-[0.2em]">
+                      <h2 className="min-w-0 text-[10px] font-bold uppercase leading-tight tracking-[0.14em] text-app-text sm:text-[11px] sm:tracking-[0.2em]">
                         {t('trend.title')}
                       </h2>
                     </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                      <span className="font-mono text-[8px] uppercase text-app-text/45 sm:text-[9px]">
+                    <div className="flex min-w-0 max-w-full flex-wrap items-center justify-end gap-2">
+                      <span className="max-w-[11rem] break-words text-right font-mono text-[8px] uppercase leading-tight text-app-text/45 sm:max-w-none sm:text-[9px]">
                         {t('trend.lastSessions', { count: trendSeries.length })}
                       </span>
                       <button
                         type="button"
                         onClick={handleTrendExpand}
-                        className="rounded border border-slate-700 bg-slate-900/80 p-1.5 text-app-text/70 transition-colors hover:border-emerald-600/50 hover:text-emerald-400"
+                        className="shrink-0 rounded border border-slate-700 bg-slate-900/80 p-1.5 text-app-text/70 transition-colors hover:border-emerald-600/50 hover:text-emerald-400"
                         aria-label={t('trend.expandAria')}
                       >
                         <Maximize2 className="size-4" strokeWidth={1.75} aria-hidden />
@@ -841,15 +853,15 @@ export default function ProgressTracker({ onBack }) {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-slate-800 bg-slate-950 p-4">
-                <div className="mb-4 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <Activity className="size-4 text-sky-400" strokeWidth={1.5} aria-hidden />
-                    <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-app-text">
+              <div className="min-w-0 max-w-full overflow-x-hidden rounded-xl border border-slate-800 bg-slate-950 p-3 sm:p-4">
+                <div className="mb-3 flex items-center justify-between gap-2 sm:mb-4">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Activity className="size-4 shrink-0 text-sky-400" strokeWidth={1.5} aria-hidden />
+                    <h2 className="min-w-0 text-[10px] font-bold uppercase tracking-[0.16em] text-app-text sm:text-[11px] sm:tracking-[0.2em]">
                       {t('activityFeed.title')}
                     </h2>
                   </div>
-                  <Clock className="size-4 text-app-text/45" strokeWidth={1.5} aria-hidden />
+                  <Clock className="size-4 shrink-0 text-app-text/45" strokeWidth={1.5} aria-hidden />
                 </div>
                 <ActivityFeedPanel
                   feed={activityFeed}

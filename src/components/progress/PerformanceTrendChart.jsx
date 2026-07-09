@@ -48,7 +48,9 @@ export default function PerformanceTrendChart({ series, barsAnimate = true, vari
     [series, barsAnimate],
   )
 
-  const chartHeight = expanded ? 'min-h-[min(48vh,380px)] h-full' : 'h-48 min-h-[12rem] sm:h-52 sm:min-h-[13rem]'
+  const chartHeight = expanded
+    ? 'min-h-[min(48vh,380px)] h-full'
+    : 'h-40 min-h-[10rem] sm:h-52 sm:min-h-[13rem]'
 
   /** @param {import('recharts').TooltipProps<number, string>} props */
   const TacticalBarTooltip = useCallback((props) => {
@@ -83,34 +85,46 @@ export default function PerformanceTrendChart({ series, barsAnimate = true, vari
   }
 
   return (
-    <div className={`relative w-full min-w-0 ${chartHeight}`}>
+    <div className={`relative w-full min-w-0 max-w-full overflow-x-hidden ${chartHeight}`}>
       <div ref={chartRef} className="absolute inset-0 h-full w-full min-h-0 min-w-0">
         <ResponsiveContainer
           width="100%"
           height="100%"
           minWidth={0}
-          minHeight={expanded ? 260 : 192}
+          minHeight={expanded ? 260 : 160}
           debounce={50}
         >
           <BarChart
             data={chartData}
-            margin={{ top: 12, right: expanded ? 20 : 12, bottom: 4, left: -8 }}
+            margin={{
+              top: 8,
+              right: expanded ? 20 : 4,
+              bottom: 2,
+              left: 0,
+            }}
           >
             <CartesianGrid stroke="rgba(52,211,153,0.08)" vertical={false} />
             <XAxis
               dataKey="label"
-              tick={{ fill: '#64748b', fontSize: expanded ? 10 : 8, fontFamily: 'JetBrains Mono, monospace' }}
+              interval={0}
+              tick={{
+                fill: '#64748b',
+                fontSize: expanded ? 10 : 7,
+                fontFamily: 'JetBrains Mono, monospace',
+              }}
               stroke="rgba(52,211,153,0.15)"
               tickLine={false}
+              height={expanded ? 28 : 22}
             />
             <YAxis
               domain={[0, 100]}
-              width={28}
-              tick={{ fill: '#475569', fontSize: 9, fontFamily: 'JetBrains Mono, monospace' }}
+              width={expanded ? 32 : 26}
+              tick={{ fill: '#475569', fontSize: expanded ? 9 : 8, fontFamily: 'JetBrains Mono, monospace' }}
               stroke="rgba(255,255,255,0.06)"
               tickLine={false}
               axisLine={false}
               tickFormatter={(v) => `${v}%`}
+              tickCount={5}
             />
             <Tooltip
               cursor={{ fill: 'rgba(52,211,153,0.08)' }}
