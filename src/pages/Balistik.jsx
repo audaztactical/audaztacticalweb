@@ -409,6 +409,9 @@ export default function Balistik() {
               <BallisticQuickReferencePanel
                 results={output.results}
                 activeDistance={activeDistance}
+                onActiveDistanceChange={setActiveDistance}
+                rangeMin={output.results[0]?.distance ?? rangeMin}
+                rangeMax={output.results[output.results.length - 1]?.distance ?? rangeMax}
                 clickUnitSystem={clickUnitSystem}
                 clickValueMoa={form.optic?.clickValueMoa}
                 clickValueMrad={form.optic?.clickValueMrad}

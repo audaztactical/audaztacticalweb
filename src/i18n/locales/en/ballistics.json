@@ -176,7 +176,10 @@
     "clearReferenceAria": "Clear reference lock and return to zero-based totals",
     "refBadge": "REF: {{distance}}m",
     "deltaBadge": "DELTA",
-    "deltaModeHint": "Values are deltas from the locked reference"
+    "deltaModeHint": "Values are deltas from the locked reference",
+    "activeSlider": "Active distance",
+    "activeSliderAria": "Active distance — independent of reference lock",
+    "pickRowAria": "Go to {{distance}} meters"
   },
   "table": {
     "columns": {

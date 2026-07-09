@@ -126,6 +126,9 @@ function ModePill({ active, children, onClick, label }) {
  * @param {{
  *   results: import('../../lib/ballisticsEngine.js').BallisticsPointResult[]
  *   activeDistance: number
+ *   onActiveDistanceChange?: (d: number) => void
+ *   rangeMin?: number
+ *   rangeMax?: number
  *   clickUnitSystem?: unknown
  *   clickValueMoa?: unknown
  *   clickValueMrad?: unknown
@@ -135,6 +138,9 @@ function ModePill({ active, children, onClick, label }) {
 export default function BallisticQuickReferencePanel({
   results,
   activeDistance,
+  onActiveDistanceChange,
+  rangeMin,
+  rangeMax,
   clickUnitSystem = null,
   clickValueMoa,
   clickValueMrad,
@@ -142,7 +148,7 @@ export default function BallisticQuickReferencePanel({
 }) {
   const { t } = useTranslation('ballistics')
   const [mode, setMode] = useState(/** @type {QuickRefMode} */ ('tik'))
-  /** Session-only; always starts unlocked (null). Never persisted. */
+  /** Session-only; always starts unlocked (null). Never writes activeDistance. */
   const [lockedRefDistance, setLockedRefDistance] = useState(/** @type {number | null} */ (null))
 
   useEffect(() => {
@@ -152,6 +158,27 @@ export default function BallisticQuickReferencePanel({
   useEffect(() => {
     if (!results?.length) setLockedRefDistance(null)
   }, [results])
+
+  const sliderBounds = useMemo(() => {
+    const fromResultsMin = results?.[0]?.distance
+    const fromResultsMax = results?.[results.length - 1]?.distance
+    const min = Number.isFinite(Number(rangeMin))
+      ? Number(rangeMin)
+      : Number.isFinite(fromResultsMin)
+        ? fromResultsMin
+        : 100
+    const max = Number.isFinite(Number(rangeMax))
+      ? Number(rangeMax)
+      : Number.isFinite(fromResultsMax)
+        ? fromResultsMax
+        : 1500
+    return { min, max: Math.max(min, max) }
+  }, [rangeMin, rangeMax, results])
+
+  const sliderStep = useMemo(
+    () => Math.max(1, Math.round((sliderBounds.max - sliderBounds.min) / 100)),
+    [sliderBounds],
+  )
 
   const activeResult = useMemo(
     () => pickNearestResult(results, activeDistance),
@@ -174,6 +201,7 @@ export default function BallisticQuickReferencePanel({
   if (!activeResult) return null
 
   // Locked only when user explicitly set a distance AND that row exists in results.
+  // lockedRefDistance and activeDistance are independent — locking never freezes the slider.
   const isLocked = lockedRefDistance !== null && referenceResult != null
   const display = resolveDisplayValues(
     activeResult,
@@ -187,15 +215,28 @@ export default function BallisticQuickReferencePanel({
   const dropHint = bodySizeHint(display.dropCm, t)
   const windHint = bodySizeHint(display.windageCm, t)
   const unitLabel = display.hasClickValue ? t('quickRef.tikLabel') : display.angleUnit
+  const canControlDistance = typeof onActiveDistanceChange === 'function'
+  const sliderValue = Math.min(
+    sliderBounds.max,
+    Math.max(sliderBounds.min, Number(activeDistance) || sliderBounds.min),
+  )
 
   const lockReference = () => {
     const d = Math.round(Number(activeDistance))
     if (!Number.isFinite(d)) return
+    // Only stores reference — does NOT touch activeDistance / parent slider state.
     setLockedRefDistance(d)
   }
 
   const clearReference = () => {
     setLockedRefDistance(null)
+  }
+
+  const setActiveDistance = (next) => {
+    if (!canControlDistance) return
+    const n = Number(next)
+    if (!Number.isFinite(n)) return
+    onActiveDistanceChange(n)
   }
 
   return (
@@ -272,6 +313,36 @@ export default function BallisticQuickReferencePanel({
           </>
         )}
       </div>
+
+      {canControlDistance ? (
+        <div className="border-b border-amber-500/10 px-3 py-2">
+          <div className="mb-1.5 flex items-center justify-between gap-2">
+            <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-amber-500/70">
+              {t('quickRef.activeSlider')}
+            </span>
+            <span className="font-mono-technical text-xs font-bold tabular-nums text-amber-200">
+              {Math.round(sliderValue)} m
+              {isLocked ? (
+                <span className="ml-1.5 text-[8px] font-bold uppercase tracking-wider text-amber-400/65">
+                  {t('quickRef.refBadge', { distance: Math.round(lockedRefDistance) })}
+                </span>
+              ) : null}
+            </span>
+          </div>
+          <input
+            type="range"
+            min={sliderBounds.min}
+            max={sliderBounds.max}
+            step={sliderStep}
+            value={sliderValue}
+            disabled={false}
+            readOnly={false}
+            onChange={(e) => setActiveDistance(e.target.value)}
+            className="h-2 w-full cursor-pointer accent-amber-400"
+            aria-label={t('quickRef.activeSliderAria')}
+          />
+        </div>
+      ) : null}
 
       <div className="grid gap-2 px-3 py-2.5 sm:grid-cols-[minmax(0,7rem)_1fr] sm:items-center sm:gap-3">
         <div className="rounded-md border border-amber-500/20 bg-black/40 px-2.5 py-2 text-center sm:py-2.5">
@@ -380,61 +451,68 @@ export default function BallisticQuickReferencePanel({
               : rowDisplay.angleUnit.slice(0, 1)
 
             return (
-              <li
-                key={target}
-                className={[
-                  'group flex items-center gap-2 rounded-md border px-2 py-1.5 font-mono-technical text-[10px] transition sm:text-[11px]',
-                  isActive
-                    ? 'border-amber-500/35 bg-amber-500/12 text-amber-50'
-                    : isRefRow
-                      ? 'border-amber-400/25 bg-amber-500/[0.06] text-amber-100/90'
-                      : index % 2 === 0
-                        ? 'border-white/5 bg-white/[0.02] text-slate-300/90 hover:border-amber-500/20 hover:bg-amber-500/5'
-                        : 'border-transparent bg-black/20 text-slate-300/80 hover:border-amber-500/20 hover:bg-amber-500/5',
-                ].join(' ')}
-              >
-                <span
-                  className={`flex size-5 shrink-0 items-center justify-center rounded border text-[8px] font-bold tabular-nums ${
+              <li key={target}>
+                <button
+                  type="button"
+                  disabled={!canControlDistance}
+                  aria-label={t('quickRef.pickRowAria', { distance: target })}
+                  aria-current={isActive ? 'true' : undefined}
+                  onClick={() => setActiveDistance(target)}
+                  className={[
+                    'group flex w-full items-center gap-2 rounded-md border px-2 py-1.5 text-left font-mono-technical text-[10px] transition sm:text-[11px]',
+                    canControlDistance ? 'cursor-pointer' : 'cursor-default',
                     isActive
-                      ? 'border-amber-400/50 bg-amber-500/20 text-amber-200'
-                      : 'border-white/10 bg-black/40 text-app-text/45 group-hover:border-amber-500/25'
-                  }`}
+                      ? 'border-amber-500/35 bg-amber-500/12 text-amber-50'
+                      : isRefRow
+                        ? 'border-amber-400/25 bg-amber-500/[0.06] text-amber-100/90'
+                        : index % 2 === 0
+                          ? 'border-white/5 bg-white/[0.02] text-slate-300/90 hover:border-amber-500/20 hover:bg-amber-500/5'
+                          : 'border-transparent bg-black/20 text-slate-300/80 hover:border-amber-500/20 hover:bg-amber-500/5',
+                  ].join(' ')}
                 >
+                  <span
+                    className={`flex size-5 shrink-0 items-center justify-center rounded border text-[8px] font-bold tabular-nums ${
+                      isActive
+                        ? 'border-amber-400/50 bg-amber-500/20 text-amber-200'
+                        : 'border-white/10 bg-black/40 text-app-text/45 group-hover:border-amber-500/25'
+                    }`}
+                  >
+                    {mode === 'tik' ? (
+                      <Target className="size-2.5 opacity-70" aria-hidden />
+                    ) : (
+                      <Crosshair className="size-2.5 opacity-70" aria-hidden />
+                    )}
+                  </span>
+                  <span className="w-10 shrink-0 font-bold tabular-nums text-amber-400/90">{target}m</span>
+                  {isLocked ? (
+                    <span className="shrink-0 rounded border border-amber-400/25 px-1 py-px text-[7px] font-bold uppercase tracking-wider text-amber-400/70">
+                      {t('quickRef.deltaBadge')}
+                    </span>
+                  ) : null}
                   {mode === 'tik' ? (
-                    <Target className="size-2.5 opacity-70" aria-hidden />
+                    <>
+                      <span className="min-w-0 flex-1 truncate tabular-nums">
+                        <span className="text-amber-300/90">{rowElev.arrow}</span>
+                        {formatClickCount(rowDisplay.elevationValue)}
+                        {unitShort} {rowElev.abbrev}
+                      </span>
+                      <span className="shrink-0 tabular-nums text-slate-400/80">
+                        <span className="text-amber-300/90">{rowWind.arrow}</span>
+                        {formatClickCount(rowDisplay.windValue)}
+                        {unitShort}{' '}
+                        {!rowWind.none ? rowWind.abbrev : '—'}
+                      </span>
+                    </>
                   ) : (
-                    <Crosshair className="size-2.5 opacity-70" aria-hidden />
-                  )}
-                </span>
-                <span className="w-10 shrink-0 font-bold tabular-nums text-amber-400/90">{target}m</span>
-                {isLocked ? (
-                  <span className="shrink-0 rounded border border-amber-400/25 px-1 py-px text-[7px] font-bold uppercase tracking-wider text-amber-400/70">
-                    {t('quickRef.deltaBadge')}
-                  </span>
-                ) : null}
-                {mode === 'tik' ? (
-                  <>
                     <span className="min-w-0 flex-1 truncate tabular-nums">
-                      <span className="text-amber-300/90">{rowElev.arrow}</span>
-                      {formatClickCount(rowDisplay.elevationValue)}
-                      {unitShort} {rowElev.abbrev}
+                      {Math.abs(rowDisplay.dropCm).toFixed(0)}cm {rowElev.abbrev}
+                      <span className="mx-1 text-white/15">·</span>
+                      {!rowWind.none
+                        ? `${Math.abs(rowDisplay.windageCm).toFixed(0)}cm ${rowWind.abbrev}`
+                        : '—'}
                     </span>
-                    <span className="shrink-0 tabular-nums text-slate-400/80">
-                      <span className="text-amber-300/90">{rowWind.arrow}</span>
-                      {formatClickCount(rowDisplay.windValue)}
-                      {unitShort}{' '}
-                      {!rowWind.none ? rowWind.abbrev : '—'}
-                    </span>
-                  </>
-                ) : (
-                  <span className="min-w-0 flex-1 truncate tabular-nums">
-                    {Math.abs(rowDisplay.dropCm).toFixed(0)}cm {rowElev.abbrev}
-                    <span className="mx-1 text-white/15">·</span>
-                    {!rowWind.none
-                      ? `${Math.abs(rowDisplay.windageCm).toFixed(0)}cm ${rowWind.abbrev}`
-                      : '—'}
-                  </span>
-                )}
+                  )}
+                </button>
               </li>
             )
           })}

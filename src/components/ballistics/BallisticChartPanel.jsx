@@ -234,9 +234,13 @@ export default function BallisticChartPanel({
   const onActiveDistanceChangeRef = useRef(onActiveDistanceChange)
   onActiveDistanceChangeRef.current = onActiveDistanceChange
 
+  /** While the range input is being dragged, ignore chart hover so distance does not snap back. */
+  const sliderDraggingRef = useRef(false)
+
   const debouncedHoverDistance = useMemo(
     () =>
       debounce((distance) => {
+        if (sliderDraggingRef.current) return
         onActiveDistanceChangeRef.current(distance)
       }, 65),
     [],
@@ -261,6 +265,7 @@ export default function BallisticChartPanel({
 
   const handleChartMouseMove = useCallback(
     (state) => {
+      if (sliderDraggingRef.current) return
       const label = state?.activeLabel
       if (label != null && label !== '') {
         debouncedHoverDistance(Number(label))
@@ -269,8 +274,13 @@ export default function BallisticChartPanel({
     [debouncedHoverDistance],
   )
 
+  const endSliderDrag = useCallback(() => {
+    sliderDraggingRef.current = false
+  }, [])
+
   const handleSliderChange = useCallback(
     (e) => {
+      sliderDraggingRef.current = true
       debouncedHoverDistance.cancel()
       onActiveDistanceChange(Number(e.target.value))
     },
@@ -440,6 +450,14 @@ export default function BallisticChartPanel({
           step={sliderStep}
           value={Math.min(rangeMax, Math.max(rangeMin, activeDistance))}
           onChange={handleSliderChange}
+          onPointerDown={() => {
+            sliderDraggingRef.current = true
+            debouncedHoverDistance.cancel()
+          }}
+          onPointerUp={endSliderDrag}
+          onPointerCancel={endSliderDrag}
+          onMouseUp={endSliderDrag}
+          onTouchEnd={endSliderDrag}
           className="h-2 w-full cursor-pointer accent-emerald-500"
           aria-label={t('chart.activeDistanceAria')}
         />
