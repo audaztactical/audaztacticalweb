@@ -12,14 +12,15 @@ export const TCCC_CATEGORY_TABS = [
   { id: 'medical_history', label: 'YARALI ARŞİVİ', short: 'ARŞİV' },
 ]
 
+/** IDs only — display labels from healthDisplayText / health.json `ifak.categories` */
 /** @type {{ id: IfakItemCategory; label: string }[]} */
 export const IFAK_ITEM_CATEGORIES = [
-  { id: 'TQ', label: 'Turnike (TQ)' },
-  { id: 'Celox', label: 'Celox / Hemostatik' },
-  { id: 'Chest Seal', label: 'Göğüs Mührü' },
-  { id: 'Needle', label: 'İğne Dekompresyon' },
-  { id: 'Drug', label: 'İlaç / TXA' },
-  { id: 'Other', label: 'Diğer' },
+  { id: 'TQ', label: 'TQ' },
+  { id: 'Celox', label: 'Celox' },
+  { id: 'Chest Seal', label: 'Chest Seal' },
+  { id: 'Needle', label: 'Needle' },
+  { id: 'Drug', label: 'Drug' },
+  { id: 'Other', label: 'Other' },
 ]
 
 export const IFAK_INITIAL_ITEM_FORM = {

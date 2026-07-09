@@ -1,0 +1,664 @@
+{
+  "page": {
+    "title": "TCCC",
+    "subtitle": "Taktik Sağlık Paketi"
+  },
+  "shell": {
+    "enter": "GİRİŞ",
+    "backToMenu": "TAKTİK MENÜYE DÖN",
+    "sessionChannel": "OTURUM / VERİ KANALI",
+    "channelDown": "Veri kanalı kesildi",
+    "bloodUnspecified": "BELİRTİLMEDİ",
+    "militaryIdStatus": "Askeri Kimlik · Durum",
+    "callsign": "Çağrı adı",
+    "bloodType": "Kan Grubu",
+    "criticalStockAlert": "⚠️ Kritik stok uyarısı · {{count}} kalem ≤30 gün / SKT geçmiş",
+    "marchPreview": "MARCH · DD-1380 yaralı kartı · 9-line tahliye · PDF şablonları",
+    "ifakPreview": "IFAK malzeme listesi · son kullanma takibi"
+  },
+  "menu": {
+    "personalHealth": {
+      "title": "Kişisel Sağlık Durumu",
+      "description": "Medikal profil, alerji ve aşı kayıtları."
+    },
+    "marchDocuments": {
+      "title": "Taktik Medikal Kılavuz",
+      "description": "Yaralı kartları, tahliye protokolleri ve basılabilir saha şablonları."
+    },
+    "ifakLogistics": {
+      "title": "IFAK & Malzeme Takibi",
+      "description": "IFAK malzeme listesi ve son kullanma tarihi takibi."
+    }
+  },
+  "personalHealth": {
+    "ariaLabel": "Kişisel sağlık künyesi",
+    "ariaLoading": "Kişisel sağlık künyesi yükleniyor",
+    "title": "Kişisel Sağlık Durumu",
+    "subtitle": "TCCC · operatör profili",
+    "loading": "YÜKLENİYOR…",
+    "loadingHint": "SAĞLIK_KÜNYESİ · VERİ_KANALI",
+    "edit": "DÜZENLE",
+    "cancel": "İPTAL",
+    "save": "KAYDET",
+    "saving": "KAYDEDİLİYOR…",
+    "bloodTypeSource": "KAN GRUBU · PROFİL KAYNAĞI",
+    "bloodTypeReadonly": "SALT OKUNUR · PROFİLİM / users · bloodType · health_records/{uid}",
+    "fields": {
+      "medicalRole": "TIBBİ ROL",
+      "lastTetanus": "SON TETANOZ AŞISI",
+      "heightWeight": "BOY / KİLO",
+      "allergies": "ALERJİLER",
+      "chronicDisease": "KRONİK HASTALIK",
+      "regularMeds": "DÜZENLİ İLAÇLAR"
+    },
+    "placeholders": {
+      "select": "— SEÇİM YAPIN —",
+      "heightWeight": "180 cm / 82 kg",
+      "allergies": "İlaç, gıda, antibiyotik…",
+      "chronicDisease": "Bilinen kronik durumlar…",
+      "regularMeds": "Günlük / sürekli kullanılan ilaçlar…"
+    },
+    "roles": {
+      "operator": "Operatör (Kişisel İlk Yardım Düzeyi)",
+      "team_medic": "Tim Sıhhiyesi (CLS / Combat Medic)"
+    },
+    "saveOk": "KİŞİSEL_SAĞLIK_KÜNYESİ_KAYDEDİLDİ",
+    "saveErr": "KAYIT_BAŞARISIZ · YENİDEN_DENE"
+  },
+  "ifak": {
+    "ariaLabel": "IFAK envanter",
+    "title": "IFAK & Malzeme Takibi",
+    "addItem": "KALEM EKLE",
+    "empty": "ENVANTER BOŞ",
+    "skt": "SKT",
+    "close": "Kapat",
+    "edit": "Düzenle",
+    "delete": "Sil",
+    "modal": {
+      "createTitle": "+ YENİ_IFAK_KALEMİ",
+      "editTitle": "KALEM_GÜNCELLE",
+      "subtitle": "IFAK · KATEGORİ · STOK · SKT",
+      "itemName": "KALEM_ADI",
+      "itemNamePlaceholder": "Turnike, gazlı bez…",
+      "category": "KATEGORİ",
+      "quantity": "MİKTAR",
+      "expiration": "SON_KULLANMA (SKT)",
+      "cancel": "İPTAL",
+      "save": "KAYDET"
+    },
+    "categories": {
+      "TQ": "Turnike (TQ)",
+      "Celox": "Celox / Hemostatik",
+      "Chest Seal": "Göğüs Mührü",
+      "Needle": "İğne Dekompresyon",
+      "Drug": "İlaç / TXA",
+      "Other": "Diğer"
+    },
+    "status": {
+      "OK": "OK",
+      "WARNING": "UYARI",
+      "CRITICAL_EXPIRED": "KRİTİK / SKT"
+    }
+  },
+  "expiryBanner": {
+    "title": "IFAK SON KULLANIM UYARISI · CRITICAL_EXPIRED",
+    "body": "{{count}} kalem ≤30 gün veya geçmiş SKT. IFAK sekmesinden envanteri yenileyin; tahliye öncesi mühimmat tıbbi kontrolü zorunlu."
+  },
+  "docs": {
+    "title": "Taktik Medikal Kılavuz",
+    "subtitle": "MARCH · DD-1380 yaralı kartı · 9-line tahliye · PDF şablonları",
+    "tablistAria": "Belge iş akışı",
+    "tabs": {
+      "march_dd1380": "MARCH - DD-1380 YARALI KARTI",
+      "medevac_9line": "((•)) 9-LINE TAHLİYE TALEBİ SİMÜLASYONU",
+      "simulation_history": "((•)) SİMÜLASYON GEÇMİŞ KAYITLARI",
+      "casualty_archive": "YARALI ARŞİVİ",
+      "field_templates": "PDF ŞABLONLARI"
+    },
+    "saveCardError": "KART_KAYIT_BAŞARISIZ",
+    "templates": {
+      "heading": "BOŞ PDF ŞABLON İNDİRME MERKEZİ",
+      "preparing": "HAZIRLANIYOR…",
+      "download": "İNDİR",
+      "downloadTitle": "PDF şablonu indir",
+      "items": {
+        "dd1380": {
+          "title": "DD FORM 1380",
+          "subtitle": "YARALI KARTI · BOŞ ŞABLON",
+          "button": "📄 DD FORM 1380 İNDİR"
+        },
+        "nine_line": {
+          "title": "9-LINE TAHLİYE",
+          "subtitle": "TELSİZ PROTOKOLÜ · BOŞ ŞABLON",
+          "button": "📄 9-LINE TAHLİYE"
+        },
+        "casevac_mist": {
+          "title": "CASEVAC MIST",
+          "subtitle": "SICAK BÖLGE · BOŞ ŞABLON",
+          "button": "📄 CASEVAC MIST ŞABLONU"
+        },
+        "tccc_card": {
+          "title": "TCCC SAHA KARTI",
+          "subtitle": "CEP REFERANSI · BOŞ ŞABLON",
+          "button": "📄 TCCC SAHA KARTI İNDİR"
+        }
+      }
+    }
+  },
+  "archive": {
+    "title": "Yaralı Arşivi",
+    "empty": "KAYITLI YARALI KARTI YOK",
+    "bloodType": "Kan grubu",
+    "moi": "MOI",
+    "medicalNotes": "Tıbbi Notlar",
+    "evacPriority": "Tahliye önceliği",
+    "downloadPdf": "PDF İNDİR",
+    "undefinedCasualty": "YARALI — TANIMSIZ",
+    "loading": "ARŞİV YÜKLENİYOR…",
+    "allergies": "Alerjiler",
+    "marchInterventions": "MARCH · Müdahaleler",
+    "noMarchInterventions": "Kayıtlı MARCH müdahalesi yok",
+    "appliedTreatments": "Uygulanan tedaviler",
+    "operationNote": "Operasyon notu",
+    "interventionCount": "{{count}} müdahale",
+    "downloadPdfTitle": "Bu kayıt için PDF indir",
+    "downloadPdfAria": "PDF indir"
+  },
+  "march": {
+    "saveCard": "KARTI KAYDET",
+    "saving": "KAYDEDİLİYOR…",
+    "saveOk": "YARALI_KARTI_KAYDEDİLDİ · FIRESTORE",
+    "bloodUnknown": "Bilinmiyor",
+    "cardTitle": "M.A.R.C.H. · DD-1380 YARALI KARTI",
+    "ariaMarch": "M.A.R.C.H. DD-1380",
+    "ariaIdentity": "Yaralı kimlik",
+    "ariaBloodType": "Yaralı kan grubu",
+    "ariaEvacPriority": "Tahliye önceliği",
+    "identityHeading": "YARALI KİMLİK",
+    "injuryHeading": "DD-1380 · YARALANMA & MÜDAHALE",
+    "selectPlaceholder": "— SEÇİN —",
+    "selectPlaceholderShort": "— Seçin —",
+    "protocolCard": "PROTOKOL KARTI",
+    "protocolClose": "Kapat",
+    "stepHeading": "{{key}} · {{title}} ({{subtitle}})",
+    "fields": {
+      "bloodType": "KAN GRUBU (YARALI)",
+      "patientName": "YARALI ÇAĞRI KODU / İSİM",
+      "patientNamePlaceholder": "TELSİZ KODU / AD SOYAD",
+      "allergies": "ALERJİLER (YARALI)",
+      "moi": "YARALANMA MEKANİZMASI (MOI)",
+      "moiPlaceholder": "Ateşli silah, patlama, IED, düşme…",
+      "treatments": "UYGULANAN MÜDAHALELER (ÖZET)",
+      "treatmentsPlaceholder": "Turnike sağ kol 14:32, NPA, göğüs mührü…",
+      "operationNote": "OPERASYON NOTU / TAHLİYE ÖNCELİĞİ",
+      "operationNotePlaceholder": "Tahliye koordinasyonu, müdahale özeti, iletişim frekansı…",
+      "evacPriority": "TAHLİYE ÖNCELİĞİ",
+      "tqTime": "TURNİKE UYGULAMA SAATİ",
+      "tqLocation": "TURNİKE BÖLGESİ",
+      "tqCustom": "ÖZEL BÖLGE",
+      "ndcGauge": "NDC İĞNE KALINLIĞI",
+      "respiratoryRate": "SOLUNUM HIZI (RR)",
+      "respiratoryRatePlaceholder": "ör. 18",
+      "fluid": "SIVI TEDAVİSİ",
+      "radialPulse": "RADYAL NABIZ",
+      "avpu": "AVPU BİLİNÇ DÜZEYİ",
+      "pupil": "PUPİL DURUMU"
+    },
+    "checks": {
+      "tourniquet": "TURNİKE UYGULANDI",
+      "woundPacking": "YARA PAKETLEME / HEMOSTATİK GAZLI BEZ",
+      "pressureBandage": "BASINÇLI BANDAJ",
+      "npa": "NPA (NAZOFARENGEAL HAVA YOLU) UYGULANDI",
+      "intubatedCric": "ENTÜBASYON / CRİKOTİROTOMİ",
+      "recoveryPosition": "KURTARMA POZİSYONU",
+      "ventedChestSeal": "VENTİLLİ GÖĞÜS MÜHRÜ",
+      "needleDecompression": "İĞNE DEKOMPRESYONU (NDC)",
+      "ivIo": "IV / IO ERİŞİM KURULDU",
+      "txa": "TXA (TRANEXAMİK ASİT) UYGULANDI",
+      "hypothermiaWrap": "HİPOTERMİ ÖRTÜSÜ / BATTANİYE",
+      "activeHeating": "AKTİF ISI KAYNAĞI KULLANILDI"
+    },
+    "steps": {
+      "M": {
+        "title": "MASSIVE BLEEDING",
+        "subtitle": "Yoğun Kanama",
+        "doctrine": "// DOCTRINE: Çatışma altındaki önlenebilir ölüm nedenlerinin %90'ı uzuv kanamalarıdır. Ateş altında (CUF) ilk 60 saniyede yüksek ve sıkı (High & Tight) turnike uygulayın. TFC safhasında turnike zamanını karta işleyin."
+      },
+      "A": {
+        "title": "AIRWAY",
+        "subtitle": "Hava Yolu",
+        "doctrine": "// DOCTRINE: Bilinci kapalı yaralıda dil geriye kaçarak hava yolunu tıkayabilir. Yaralı soluk alıyorsa sağ veya sol burun deliğinden NPA uygulayın. Hava yolu açılmazsa cerrahi müdahale (Cric) planlayın."
+      },
+      "R": {
+        "title": "RESPIRATION",
+        "subtitle": "Solunum",
+        "doctrine": "// DOCTRINE: Göğüsteki açık yaralara hava sızdırmaz ventilli göğüs mührü yapıştırın. İlerleyen süreçte solunum güçlüğü, tek taraflı göğüs kalkışı ve tansiyon düşüklüğü varsa 2. veya 5. interkostal aralıktan İğne Dekompresyonu (NDC) uygulayın."
+      },
+      "C": {
+        "title": "CIRCULATION",
+        "subtitle": "Dolaşım",
+        "doctrine": "// DOCTRINE: İç kanama veya şok şüphesinde pıhtılaşmayı hızlandırmak için ilk 3 saat içinde Traneksamik Asit (TXA) uygulayın. Nabız takibini radial arter üzerinden yapın."
+      },
+      "H": {
+        "title": "HYPOTHERMIA & HEAD",
+        "subtitle": "Hipotermi ve Baş",
+        "doctrine": "// DOCTRINE: Kan kaybı vücut sıcaklığının düşmesine (Hipotermi) yol açar, bu da pıhtılaşma mekanizmasını bozar (Ölüm Üçgeni). Yaralıyı doğrudan zeminden kesin ve termal battaniye ile sarın."
+      }
+    },
+    "protocol": {
+      "M": {
+        "definition": "Massive Bleeding (Yoğun Kanama) — önlenebilir ölümün birincil nedeni. CUF altında ilk 60 sn içinde kanamayı durdur.",
+        "protocols": [
+          "High & Tight turnike: yaralı üzerinde en yüksek uygulanabilir nokta, sıkı (2–3 inç üstü).",
+          "TQ zamanını DD-1380 üzerine işle; re-evaluate her 2 saatte bir.",
+          "Junctional / gövde kanaması: hemostatik gauze + basınç bandajı; TQ mümkün değilse.",
+          "Ateş hattından çıkış önceliği: tek müdahale = kanama kontrolü."
+        ]
+      },
+      "A": {
+        "definition": "Airway (Hava Yolu) — bilinç bozukluğunda dil/obstrüksiyon riski. Soluyorsa NPA; solmuyorsa ileri hava yolu.",
+        "protocols": [
+          "Bilinci açık + solunum var → pozisyon, aspirasyon kontrolü.",
+          "Bilinci kapalı + solunum var → NPA (sağ/sol burun deliği).",
+          "Tam obstrüksiyon / solunum yok → chin-lift, Cric planı (TFC).",
+          "Recovery position: stabil lateral, aspirasyon önleme."
+        ]
+      },
+      "R": {
+        "definition": "Respiration (Solunum) — penetrant göğüs yarası ve tansiyon pnömotoraks yönetimi.",
+        "protocols": [
+          "Vented chest seal: açık göğüs yarasına hava sızdırmaz mühür.",
+          "NDC: 2. veya 5. interkostal, mid-clavicular — 10G/14G.",
+          "Solunum sayısı, SpO2 (varsa), tek taraflı solunum sesi kaydı.",
+          "Bilateral dekomprese gerekirse her iki tarafı değerlendir."
+        ]
+      },
+      "C": {
+        "definition": "Circulation (Dolaşım) — şok, iç kanama, TXA ve sıvı protokolleri.",
+        "protocols": [
+          "TXA: ilk 3 saat içinde 1g IV/IO (CoTCCC).",
+          "IV/IO erişim; whole blood tercih (mümkünse).",
+          "Radial nabız: present/absent — perfüzyon göstergesi.",
+          "Reassess kanama adımına dönüş (M tekrar)."
+        ]
+      },
+      "H": {
+        "definition": "Hypothermia & Head Injury (Hipotermi / Kafa travması) — ölüm üçgeni ve nöro koruma.",
+        "protocols": [
+          "Hipotermi önleme: termal wrap, izolasyon zeminden.",
+          "AVPU ve pupil kaydı — TBI şüphesi.",
+          "Baş yaralanması: yüksek tahliye önceliği, C-spine dikkat.",
+          "Aktif ısıtma mümkünse; ıslak giysi çıkar."
+        ]
+      }
+    },
+    "options": {
+      "bloodType": {
+        "A RH+": "A Rh+",
+        "A RH-": "A Rh-",
+        "B RH+": "B Rh+",
+        "B RH-": "B Rh-",
+        "AB RH+": "AB Rh+",
+        "AB RH-": "AB Rh-",
+        "0 RH+": "0 Rh+",
+        "0 RH-": "0 Rh-",
+        "unknown": "Bilinmiyor"
+      },
+      "tqLocation": {
+        "right_arm": "Sağ Kol",
+        "left_arm": "Sol Kol",
+        "right_leg": "Sağ Bacak",
+        "left_leg": "Sol Bacak",
+        "custom": "Özel Bölge"
+      },
+      "fluid": {
+        "whole_blood": "Tam Kan",
+        "plasma": "Plazma",
+        "saline": "Serum Fizyolojik"
+      },
+      "radialPulse": {
+        "present": "Alınabiliyor",
+        "absent": "Alınamıyor"
+      },
+      "avpu": {
+        "alert": "Uyanık (A)",
+        "verbal": "Sözlü Uyarı (V)",
+        "pain": "Ağrı Uyarısı (P)",
+        "unresponsive": "Yanıtsız (U)"
+      },
+      "pupil": {
+        "normal": "Normal",
+        "blown": "Midriyazis / Geniş"
+      },
+      "ndcGauge": {
+        "10": "10 Gauge",
+        "14": "14 Gauge"
+      },
+      "evacPriority": {
+        "URGENT": "ACİL",
+        "PRIORITY": "ÖNCELİKLİ",
+        "ROUTINE": "RUTİN"
+      }
+    }
+  },
+  "common": {
+    "emDash": "—"
+  },
+  "sim": {
+    "modeAria": "Simülasyon modu",
+    "modeMedevac": "MEDEVAC · 9-LINE",
+    "modeCasevac": "CASEVAC · MIST",
+    "ariaMedevac": "9-Hat MEDEVAC telsiz simülatörü",
+    "ariaCasevac": "CASEVAC MIST telsiz simülatörü",
+    "radioTitle": "AN/PRC-117F İNTERAKTİF TELSİZ SİMÜLATÖRÜ",
+    "radioSubtitleMedevac": "NATO STANDARDI · ŞİFRELİ HAZIR · STRES PENCERESİ {{sec}} SN",
+    "radioSubtitleCasevac": "CASEVAC MIST · SICAK BÖLGE · STRES PENCERESİ {{sec}} SN",
+    "remainingLabel": "KALAN SÜRE:",
+    "secondsAbbrev": "SN",
+    "overtimeWarning": "⚠️ [SİNYAL DEŞİFRE OLUYOR / PUSU TEHDİDİ]",
+    "failureTitleMedevac": "⚠️ TELSİZ RAPOR HATASI / HELİKOPTER KALKIŞI REDDEDİLDİ",
+    "failureTitleCasevac": "⚠️ TELSİZ RAPOR HATASI / CASEVAC TAHLİYESİ REDDEDİLDİ",
+    "debriefHeading": "[ TAHLİYE REDDEDİLME GEREKÇELERİ / DEBRIEFING LOG ]",
+    "generalErrorMedevac": "• [GENEL HATA]: 9-HAT raporu taktik eşik altında — ayrıntılı satır denetimi tamamlanamadı.",
+    "generalErrorCasevac": "• [GENEL HATA]: MIST raporu taktik eşik altında — ayrıntılı satır denetimi tamamlanamadı.",
+    "orsEffect": "• [ORS ETKİSİ / TCCC EŞİK ALTINDA] Başarı yüzdesi %40 altında kaydedildi — Operasyonel Hazırlık Skoru (ORS) −{{penalty}} puan (orsEngine · HATA_KODU: TCCC EŞİK ALTINDA · <40% OTURUM)",
+    "successMedevac": "⚡ RAPOR BAŞARILI / MEDEVAC TAHLİYE KUŞU YOLDA",
+    "successCasevac": "⚡ MIST RAPORU BAŞARILI / CASEVAC TAHLİYE ARACI YOLDA",
+    "liveAudit": "[ CANLI HAT DENETİMİ / GÖNDERİM ÖNCESİ ]",
+    "moreErrors": "+{{count}} EK HATA SATIRI",
+    "reset": "YENİ OTURUM / SIFIRLA",
+    "transmitMedevac": "9-HAT GÖNDER / TRANSMİT",
+    "transmitCasevac": "MIST GÖNDER / TRANSMİT",
+    "formReady": "FORM HAZIR · 0 SN ÖNCESİ GÖNDER",
+    "fillAllLines": "TÜM HATLARI DOLDUR",
+    "fillAllMist": "TÜM MIST ALANLARINI DOLDUR",
+    "briefing": {
+      "medevacTitle": "[ 📑 GÖREV ÖNCESİ DOKTRİN BRİFİNGİ: MEDEVAC PROSEDÜRÜ ]",
+      "casevacTitle": "[ 📑 GÖREV ÖNCESİ DOKTRİN BRİFİNGİ: CASEVAC · MIST PROTOKOLÜ ]",
+      "medevacStart": "[ BRİFİNGİ ALDIM, ODAKLAN VE BAŞLA ]",
+      "casevacStart": "[ BRİFİNGİ ALDIM, SICAK BÖLGEYE GİR ]",
+      "medevacWhy45": "• NEDEN 45 SANİYE? Taktik sahada telsiz başında harcanan her fazladan saniye, kan kaybından ölen yaralının eceline yaklaşması ve timin yerinin deşifre olması demektir.",
+      "medevacGolden": "• 1. ALTIN SAAT (GOLDEN HOUR) KURALI: Ağır yaralanmalarda ilk 90 saniyede MEDEVAC çağrısının hatasız geçilmesi gerekir. Bu sürenin son 45 saniyesi, telsizden NATO standardında 9-LINE raporunun tamamlanması için ayrılmıştır.",
+      "medevacEw": "• 2. ELEKTRONİK HARP VE SİNYAL TAKİBİ: Modern muharebe sahalarında kesintisiz konuşma süresi 45 saniyeyi geçtiği an, düşman sinyal takip unsurları (Direction Finding) yerinizi üçgenleme yöntemiyle tespit eder ve koordinatınıza topçu mühimmatı indirir.",
+      "medevacStress": "• 3. STRES ALTINDA KİLİTLENME ANALİZİ: Patlamalar ve mermiler altında soğukkanlılığı koruyup MGRS koordinatlarını ve yaralı sayılarını hatasız girmek gerçek bir operatör refleksidir. Süre bittiğinde telsiz hatası (COLD HIT) alınır ve ORS puanınız -14 ceza yer.",
+      "hat1Title": "HAT 1 (KOORDİNAT)",
+      "hat1Body": "• HAT 1 (KOORDİNAT ESNEKLİĞİ): Format hatası yaşamamanız için sistem akıllı tarama moduna geçirildi. İster düz MGRS (36S TH 1234 5678), ister enlem/boylam (39.7761, 30.5211) yazın. Sistem noktayı, virgülü ve boşlukları arka planda otomatik olarak tolere eder.",
+      "hat3Title": "HAT 3 (ACİLİYET DERECESİ)",
+      "hat3Intro": "Yaralının durumuna göre triyaj yapın:",
+      "hat3A": "• A - URGENT (ACİL): İlk 2 saatte tahliye edilmezse ölecek vakalar (Masif kanama, hava yolu tıkanması).",
+      "hat3B": "• B - URGENT-SURGE (ÖNCELİKLİ ACİL): Hayati riski olan ama turnikeyle geçici stabilize edilmiş vakalar.",
+      "hat3C": "• C - PRIORITY (ÖNCELİKLİ): Uzuv/hayat kaybı riski ilk aşamada düşük olan açık kırıklar veya yaralanmalar.",
+      "hat3D": "• D - ROUTINE (RUTIN): 24 saate kadar bekleyebilecek hafif yaralılar.",
+      "hat45Title": "HAT 4 & 5 (EKİPMAN VE TİP)",
+      "hat45Body": "Ekipmanlar çoklu seçilebilir! Aynı anda hem VİNÇ (Hoist) hem SEDYE (Litter) gerekebilir. Hat 5'teki Toplam Sedye (Litter) ve Ayakta (Ambulatory) hasta sayısı, Hat 3'teki toplam yaralı sayısıyla tam uyuşmalıdır!",
+      "casevacWhy30": "• NEDEN 30 SANİYE? CASEVAC sıcak bölgede (hot zone) yapılır; telsiz süresi 9-Line MEDEVAC'a göre daha kısadır. Her fazladan saniye araç ve tim için pusuya düşme riskidir.",
+      "casevacMist": "• MIST RAPORU: M (Metric/yaralanma tipi), I (Injury/anatomi), S (Signs/vital), T (Treatment/müdahale) — dört harf tek nefeste iletilir.",
+      "casevacTq": "• TURNİKE + ŞOK UYUMU: Turnike uygulandıysa «Şok Belirtisi Yok» seçimi klinik çelişkidir; rapor reddedilir."
+    },
+    "lines": {
+      "casevacCountTitle": "TOPLAM YARALI SAYISI",
+      "casevacCountLabel": "YARALI ADEDİ",
+      "mistM": "M — METRIC / YARALANMA TİPİ",
+      "mistI": "I — INJURY / YARANIN YERİ VE ANATOMİSİ",
+      "mistS": "S — SIGNS / VİTAL BULGULAR",
+      "mistT": "T — TREATMENT / YAPILAN MÜDAHALE",
+      "mistCallsign": "SICAK BÖLGE ÇAĞRI / FREKANS",
+      "mistCallsignPlaceholder": "168.000 · ÇAĞRI-1 · EK ALPHA",
+      "mistTqWarning": "[ MIST UYARI ] TURNİKE + ŞOK YOK ÇELİŞKİSİ — RAPOR RED RİSKİ",
+      "hat1": "HAT 1: TAHLİYE BÖLGESİ KOORDİNATI (MGRS / GPS)",
+      "hat1Placeholder": "Örn: 38 40 25.92 26 45 29.44",
+      "hat1ZeroSpecial": "⚠ SIFIR ÖZEL KARAKTER KURALI: Derece (°), dakika (') veya saniye (\") SEMBOLLERİ KULLANMAYIN. SADECE SAYILARI BOŞLUKLA AYIRARAK YAZIN — ÖRN: 38 40 25.92 26 45 29.44 — SİSTEM OTOMATİK DÖNÜŞTÜRÜR.",
+      "hat1GpsConverted": "[ GPS FORMATI ALGILANDI -> MGRS SİMÜLE EDİLDİ ]",
+      "hat1BlocError": "BİTİŞİK SAYI BLOĞU — BOŞLUKLA AYIRIN: 38 40 25.92 26 45 29.44",
+      "hat1Invalid": "GEÇERSİZ KOORDİNAT — ÖRN: '38 40 25.92 26 45 29.44' (6 SAYI, BOŞLUKLA) VEYA MGRS",
+      "hat2": "HAT 2: TELSİZ FREKANSI / ÇAĞRI ADI",
+      "hat2Placeholder": "168.000 · ÇAĞRI-1 · EK ALPHA",
+      "hat3": "HAT 3: YARALI ACİLİYET DERECESİ",
+      "hat3Total": "TOPLAM ACİLİYET: {{precedence}} · HAT 5 TOPLAM: {{type}}",
+      "hat3Mismatch": " · UYUŞMAZLIK",
+      "hat4": "HAT 4: ÖZEL EKİPMAN İHTİYACI (ÇOKLU SEÇİM)",
+      "hat4Hint": "BİRDEN FAZLA EKİPMAN İŞARETLEYİN · ÖRN. VİNÇ + KURTARMA",
+      "hat5": "HAT 5: YARALI TAŞIMA TİPİ",
+      "hat5Litter": "L · SEDYE",
+      "hat5Ambulatory": "A · AYAKTA",
+      "hat6": "HAT 6: TAHLİYE BÖLGESİ GÜVENLİK DURUMU",
+      "hat7": "HAT 7: BÖLGE İŞARETLEME YÖNTEMİ",
+      "hat8": "HAT 8: YARALI UYRUGU VE STATÜSÜ",
+      "hat9": "HAT 9: KBRN TEHDİDİ / ARAZİ ŞARTLARI",
+      "hat9Cbrn": "KBRN TEHDİDİ",
+      "hat9Terrain": "ARAZİ ŞARTLARI"
+    },
+    "options": {
+      "line3": {
+        "line3_urgent": "A · ACİL",
+        "line3_urgent_surge": "B · ÖNCELİKLİ ACİL",
+        "line3_priority": "C · ÖNCELİKLİ",
+        "line3_routine": "D · RUTİN",
+        "line3_convenience": "E · KOLAYLIK"
+      },
+      "line4": {
+        "hoist": "VİNÇ / HOIST",
+        "litter": "SEDYE / LITTER",
+        "extraction": "KURTARMA EKİPMANI",
+        "ventilator": "SOLUNUM CİHAZI"
+      },
+      "line6": {
+        "no_enemy": "N · DÜŞMAN YOK",
+        "possible_enemy": "P · MUHTEMEL DÜŞMAN",
+        "enemy_area": "E · BÖLGEDE DÜŞMAN VAR",
+        "armed_escort": "X · SİLAHLI ESKORT GEREKLİ"
+      },
+      "line7": {
+        "panels": "A · PANEL",
+        "pyrotechnic": "B · FİŞEK",
+        "smoke": "C · SİS BOMBASI",
+        "none": "D · YOK"
+      },
+      "line8": {
+        "us_nato": "A · DOST ASKER",
+        "non_nato": "B · YABANCI ASKER",
+        "civilian": "C · SİVİL",
+        "epw": "D · SAVAŞ ESİRİ"
+      },
+      "line9Cbrn": {
+        "none": "TEHDİT YOK",
+        "chemical": "C · KİMYASAL",
+        "biological": "B · BİYOLOJİK",
+        "radiological": "R · RADYOLOJİK",
+        "nuclear": "N · NÜKLEER"
+      },
+      "line9Terrain": {
+        "obstacles": "ARAZİ ENGELİ",
+        "flat": "AÇIK ALAN",
+        "urban": "KENTSEL / YAPI"
+      },
+      "mistMetric": {
+        "bullet": "KURŞUN YARASI",
+        "shrapnel": "ŞARAPNEL",
+        "amputation": "AMPÜTASYON",
+        "burn": "YANIK"
+      },
+      "mistInjury": {
+        "head_neck": "BAŞ / BOYUN",
+        "chest": "GÖĞÜS",
+        "abdomen": "BATIN",
+        "extremity": "UZUVLAR"
+      },
+      "mistVitals": {
+        "conscious_open": "BİLİNÇ AÇIK",
+        "unconscious": "BİLİNÇ KAPALI",
+        "shock_yes": "ŞOK BELİRTİSİ VAR",
+        "shock_no": "ŞOK BELİRTİSİ YOK"
+      },
+      "mistTreatment": {
+        "tourniquet": "TURNİKE UYGULANDI",
+        "chest_seal": "GÖĞÜS MÜHRÜ",
+        "airway": "HAVA YOLU AÇILDI",
+        "morphine": "MORFİN"
+      }
+    },
+    "conflicts": {
+      "LINE3_ZERO_PATIENTS": "HAT3 · YARALI SAYISI SIFIR",
+      "LINE5_ZERO_PATIENTS": "HAT5 · TAŞIMA TİPİ SIFIR",
+      "PATIENT_COUNT_MISMATCH": "HAT3/HAT5 · YARALI SAYISI UYUŞMUYOR",
+      "UNMARKED_SECURE_LZ": "GÜVENLİ LZ · İŞARET YOK",
+      "CBRN_UNMARKED_LZ": "KBRN · İŞARETSİZ LZ",
+      "HOT_LZ_NO_EXTRACTION": "SICAK LZ · EKİPMAN YOK",
+      "URGENT_NO_EQUIP_TERRAIN": "ACİL · EKİPMAN/ARAZİ UYUMSUZ"
+    },
+    "reject": {
+      "timeoutMedevac": "• [HATA_KODU: SİNYAL_DEŞİFRE] Konuşma süresi 45 saniyeyi geçti! Düşman sinyal takip unsurları (Direction Finding) yerinizi tespit etti, koordinatınıza topçu mühimmatı yönlendirildi.",
+      "timeoutCasevac": "• [HATA_KODU: TAHLİYE_BASKINI] Telsiz süresi 30 saniyeyi geçti! Sıcak bölgede CASEVAC aracı pusuya düşürüldü, tahliye başarısız!",
+      "hat1Empty": "• [🚨 KRİTİK HATA - ROTASIZ UÇUŞ]: HAT 1 (TAHLİYE BÖLGESİ KOORDİNATI) BOŞ BIRAKILDI! PİLOTLAR NET BİR COĞRAFİ HEDEF (MGRS/GPS) OLMADAN ROTASIZ PERVANE DÖNDÜREMEZ, HELİKOPTER HANGARDA KALDI.",
+      "hat1Invalid": "• [HAT 1 HATASI]: TAHLİYE BÖLGESİ KOORDİNATI GEÇERSİZ FORMAT! MGRS (ÖRN. 36S TH 1234 5678) VEYA GPS (ENLEM, BOYLAM) GİRİLMELİ — HELİKOPTER ROTASIZ KALKIŞ YAPAMAZ.",
+      "hat1Guide": "• [HAT 1 REHBERİ]: Görseldeki koordinatları girmek için özel işaretleri kaldırıp sadece sayıları ve boşlukları kullanın. Örn: '38 40 25.92 26 45 29.44' şeklinde yazın, sistem otomatik dönüştürecektir.",
+      "hat1Bloc": "• [🚨 KOORDİNAT KÖR NOKTASI]: SAYILARI BİTİŞİK GİRDİNİZ! Dünya üzerindeki derece, dakika ve saniye basamakları (tek veya çift hane) coğrafyaya göre değiştiği için sistemin enlem ve boylam sınırını hatasız tahmin etmesi imkansızdır. Lütfen sayıların arasına boşluk bırakarak giriniz. Örn: '38 40 25.92 26 45 29.44'",
+      "hat3Zero": "• [HAT 3 HATASI]: Yaralı aciliyet derecesi (A/B/C/D) sayıları girilmedi veya toplam sıfır — triyaj verisi eksik.",
+      "hat5Zero": "• [HAT 5 HATASI]: Sedye (Litter) veya ayakta (Ambulatory) taşıma tipi sayıları girilmedi — lojistik kapasite bildirilemedi.",
+      "hat3Hat5Missing": "• [🚨 REAKSİYON HATASI - EKSİK LİSTELERİ]: HAT 3 TOPLAM {{hat3}} ≠ HAT 5 TOPLAM {{hat5}} · {{missing}} YARALI İÇİN TAŞIMA TİPİ (SEDYE/AYAKTA) EKSİK — PİLOT KALKIŞI REDDETTİ!",
+      "hat3Hat5Excess": "• [🚨 REAKSİYON HATASI - HAYALET YOLCU]: HAT 3 TOPLAM {{hat3}} ≠ HAT 5 TOPLAM {{hat5}} · {{excess}} FAZLA YOLCU — SEDYE/AYAKTA UYUŞMAZLIĞI, KALKIŞ REDDİ!",
+      "hat2Empty": "• [HAT 2 HATASI]: Telsiz frekansı / çağrı adı boş — MEDEVAC unsuru sizi telsizde arayamaz.",
+      "hat4Empty": "• [HAT 4 HATASI]: Özel ekipman seçilmedi — en az bir ekipman (VİNÇ, SEDYE, KURTARMA vb.) işaretlenmeli.",
+      "hat6Empty": "• [HAT 6 HATASI]: Tahliye bölgesi güvenlik durumu (N/P/E/X) seçilmedi — pilot risk profili oluşturamaz.",
+      "hat7Empty": "• [HAT 7 HATASI]: LZ işaretleme yöntemi seçilmedi — kurtarma ekibi bölgeyi görsel olarak teyit edemez.",
+      "hat8Empty": "• [HAT 8 HATASI]: Yaralı uyruğu ve statüsü seçilmedi — hukuki tahliye protokolü başlatılamaz.",
+      "hat9Empty": "• [HAT 9 HATASI]: KBRN tehdidi veya arazi şartları bildirilmedi — helikopter iniş profili belirlenemez.",
+      "conflictUnmarked": "• [HAT 6 & HAT 7 ÇAKIŞMASI]: {{label}} — güvenli LZ'de işaretleme zorunlu.",
+      "conflictCbrn": "• [HAT 7 & HAT 9 ÇAKIŞMASI]: {{label}} — KBRN tehdidinde işaretleme şart.",
+      "conflictHotLz": "• [HAT 4 & HAT 6 ÇAKIŞMASI]: {{label}} — sıcak LZ için kurtarma/vinç ekipmanı gerekli.",
+      "conflictUrgent": "• [HAT 3, HAT 4 & HAT 9 ÇAKIŞMASI]: {{label}} — acil vaka + arazi engeli için ekipman şart.",
+      "conflictGeneric": "• [TAKTİK ÇAKIŞMA · {{code}}]: {{label}}",
+      "casevacCount": "• [MIST HATASI · YARALI SAYISI]: Toplam yaralı sayısı girilmedi — CASEVAC kapasitesi hesaplanamaz.",
+      "casevacMetric": "• [M — METRIC HATASI]: Yaralanma tipi (Kurşun/Şarapnel/Amputasyon/Yanık) seçilmedi.",
+      "casevacInjury": "• [I — INJURY HATASI]: Yarının yeri ve anatomisi (Baş/Göğüs/Batın/Uzuv) bildirilmedi.",
+      "casevacSigns": "• [S — SIGNS HATASI]: Vital bulgular (bilinç/şok) seçilmedi.",
+      "casevacTreatment": "• [T — TREATMENT HATASI]: Yapılan müdahale (turnike, mühür, hava yolu vb.) işaretlenmedi.",
+      "casevacCallsign": "• [CASEVAC ÇAĞRI HATASI]: Sıcak bölge çağrı işareti / frekans boş — araç yönlendirilemez.",
+      "casevacTqShock": "• [MIST TAKTİK UYARI · T+S]: Turnike uygulandı ancak «ŞOK BELİRTİSİ YOK» seçildi — klinik tablo çelişkili, rapor reddedildi.",
+      "casevacMorphine": "• [MIST TAKTİK UYARI · T+S]: Şok belirtisi varken morfin bildirimi — protokol ihlali riski.",
+      "overtime": "• [CRITICAL_DELAY / 🚨 KRİTİK GECİKME]: TELSİZ PROTOKOLÜ SINIRINI +{{sec}} SANİYE AŞTINIZ! DÜŞMAN UNSURLARI BU GECİKME SAYESİNDE SİNYAL ÜÇGENLEMESİNİ (DIRECTION FINDING) TAMAMLADI VE TAHLİYE ARACINI PUSUYA DÜŞÜRDÜ.",
+      "failureTimeoutMedevac": "TIMEOUT · YAYIN SÜRESİ AŞILDI · 45 SN · +{{sec}} SN GECİKME",
+      "failureTimeoutCasevac": "TIMEOUT · YAYIN SÜRESİ AŞILDI · 30 SN · +{{sec}} SN GECİKME"
+    },
+    "history": {
+      "loading": "SİMÜLASYON ARŞİVİ YÜKLENİYOR…",
+      "empty": "SİMÜLASYON GEÇMİŞ KAYDI YOK",
+      "emptyHint": "MEDEVAC 9-LINE VEYA CASEVAC MIST OTURUMU TAMAMLAYIN",
+      "aria": "Simülasyon geçmiş kayıtları",
+      "title": "Simülasyon Geçmişi · {{count}} kayıt",
+      "colMode": "MOD",
+      "colDate": "TARİH / SAAT",
+      "colStatus": "DURUM",
+      "colReaction": "REAKSİYON PERFORMANSI",
+      "colDetails": "DETAYLAR",
+      "open": "AÇ",
+      "close": "KAPAT",
+      "statusOk": "Başarılı",
+      "statusFail": "Başarısız",
+      "speed": "{{pct}}% HIZ",
+      "orsPenalty": "-{{penalty}} ORS",
+      "hat10": "HAT 10 - OPERASYON SÜRESİ:",
+      "timingOk": "{{elapsed}} SN / KALAN SÜRE: {{remaining}} SN",
+      "timingOvertime": "{{elapsed}} SN / [🚨 GECİKME: -{{overtime}} SANİYE]",
+      "successDebrief": "⚡ [ PROTOKOL DOĞRULANDI ]: TELSİZ RAPORU VE LOJİSTİK VERİLER EKSİKSİZ UYGULANDI. TAHLİYE TEMİZ BAŞARILDI.",
+      "failDebriefHeading": "[ ⚠️ SİSTEM TAHLİYE REDDİ GEREKÇELERİ / MISSION CRITICAL ERRORS ]",
+      "failDebriefAria": "Sistem tahliye reddi gerekçeleri",
+      "allDetails": "[ TÜM DETAYLAR / GÖNDERİLEN YÜK ]",
+      "nineLineTitle": "9-LINE RAPOR (FIRESTORE)",
+      "mistTitle": "CASEVAC MIST RAPORU",
+      "noNineLine": "Kayıtlı 9-Line yükü yok.",
+      "noMist": "Kayıtlı MIST yükü yok.",
+      "operationNote": "OPERASYON NOTU: ",
+      "failureFallback": "TRANSMISSION FAILURE · AYRINTI ARŞİVLENMEDİ",
+      "generalErrorPrefix": "• [GENEL HATA]: {{reason}}",
+      "noData": "VERİ YOK",
+      "none": "YOK",
+      "hat1": "HAT 1 · MGRS:",
+      "hat2": "HAT 2 · FREKANS/ÇAĞRI:",
+      "hat3": "HAT 3 · ACİLİYET:",
+      "hat4": "HAT 4 · EKİPMAN:",
+      "hat5": "HAT 5 · TAŞIMA:",
+      "hat6": "HAT 6 · GÜVENLİK:",
+      "hat7": "HAT 7 · İŞARET:",
+      "hat8": "HAT 8 · UYRUK:",
+      "hat9": "HAT 9 · KBRN/ARAZİ:",
+      "mistCount": "YARALI SAYISI:",
+      "mistM": "M · METRIC:",
+      "mistI": "I · INJURY:",
+      "mistS": "S · SIGNS:",
+      "mistT": "T · TREATMENT:",
+      "mistCall": "ÇAĞRI / FREKANS:",
+      "precedence": {
+        "urgent": "ACİL (URGENT)",
+        "urgentSurge": "ÖNCELİKLİ ACİL (URGENT-SURGE)",
+        "priority": "ÖNCELİKLİ (PRIORITY)",
+        "routine": "RUTİN (ROUTINE)",
+        "convenience": "KOLAYLIK (CONVENIENCE)"
+      },
+      "equipment": {
+        "hoist": "VİNÇ",
+        "ventilator": "SOLUNUM CİHAZI",
+        "oxygen": "KURTARMA EKİPMANI",
+        "extraction": "KURTARMA EKİPMANI",
+        "litter": "SEDYE"
+      },
+      "transport": {
+        "litter": "SEDYE (LITTER)",
+        "ambulatory": "AYAKTA (AMBULATORY)"
+      },
+      "marking": {
+        "panels": "PANEL",
+        "pyrotechnic": "FİŞEK",
+        "strobe": "FİŞEK",
+        "smoke": "SİS BOMBASI",
+        "smokeWithColor": "SİS BOMBASI ({{color}})"
+      },
+      "smokeColor": {
+        "green": "YEŞİL",
+        "red": "KIRMIZI",
+        "yellow": "SARI",
+        "purple": "MOR",
+        "violet": "MOR"
+      },
+      "security": {
+        "no_enemy": "N · DÜŞMAN YOK",
+        "no_troops": "N · DÜŞMAN YOK",
+        "possible_enemy": "P · MUHTEMEL DÜŞMAN",
+        "no_threat": "P · MUHTEMEL DÜŞMAN",
+        "enemy_area": "E · BÖLGEDE DÜŞMAN VAR",
+        "armed_escort": "X · SİLAHLI ESKORT GEREKLİ",
+        "hot_lz": "X · SICAK LZ / SİLAHLI ESKORT"
+      },
+      "nationality": {
+        "us_nato": "A · DOST ASKER (NATO)",
+        "friendly": "A · DOST ASKER",
+        "non_nato": "B · YABANCI ASKER",
+        "allied": "B · MÜTEFFİK ASKER",
+        "civilian": "C · SİVİL",
+        "epw": "D · SAVAŞ ESİRİ",
+        "pow": "D · SAVAŞ ESİRİ",
+        "military": "A · ASKERİ PERSONEL",
+        "non_combatant": "C · SİVİL / SAVAŞ DIŞI"
+      },
+      "cbrn": {
+        "none": "KBRN TEHDİDİ YOK",
+        "chemical": "KİMYASAL TEHDİT (C)",
+        "biological": "BİYOLOJİK TEHDİT (B)",
+        "radiological": "RADYOLOJİK TEHDİT (R)",
+        "nuclear": "NÜKLEER TEHDİT (N)",
+        "unknown": "KBRN BİLGİSİ YOK"
+      },
+      "terrain": {
+        "flat": "DÜZ ARAZİ (FLAT)",
+        "obstacles": "ARAZİ ENGELLİ",
+        "urban": "KENTSEL / YAPI İÇİ ALAN",
+        "unknown": "ARAZİ BİLGİSİ YOK"
+      },
+      "hat9NoneFlat": "KBRN TEHDİDİ YOK / DÜZ ARAZİ (FLAT)",
+      "countX": "{{count}} X {{label}}",
+      "timeDisplayNeg": "-{{sec}} SANİYE",
+      "scoreOrs": "%{{pct}} / −{{penalty}} ORS",
+      "scorePlain": "%{{pct}} / —"
+    }
+  }
+}

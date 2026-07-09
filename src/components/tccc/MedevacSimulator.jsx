@@ -1,22 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { AlertTriangle, Mic, Radio, Send } from 'lucide-react'
-import {
-  MEDEVAC_CONFLICT_LABELS,
-  MEDEVAC_LINE3_PRECEDENCE,
-  MEDEVAC_LINE4_OPTIONS,
-  MEDEVAC_LINE6_OPTIONS,
-  MEDEVAC_LINE7_OPTIONS,
-  MEDEVAC_LINE8_OPTIONS,
-  MEDEVAC_LINE9_CBRN_OPTIONS,
-  MEDEVAC_LINE9_TERRAIN_OPTIONS,
-  MEDEVAC_SIM_INITIAL,
-} from '../../lib/medevacSimulatorConstants'
+import { MEDEVAC_SIM_INITIAL } from '../../lib/medevacSimulatorConstants'
 import { submitMedevacSimulatorSession } from '../../lib/medevacSimulatorSubmit'
 import {
-  CASEVAC_MIST_INJURY_OPTIONS,
-  CASEVAC_MIST_METRIC_OPTIONS,
-  CASEVAC_MIST_TREATMENT_OPTIONS,
-  CASEVAC_MIST_VITALS_OPTIONS,
   CASEVAC_SIM_INITIAL,
   CASEVAC_TRANSMISSION_DEADLINE_SEC,
 } from '../../lib/casevacSimulatorConstants'
@@ -28,12 +15,11 @@ import {
 import { submitCasevacSimulatorSession } from '../../lib/casevacSimulatorSubmit'
 import {
   MEDEVAC_TRANSMISSION_DEADLINE_SEC,
+  buildMedevacRejectionReasons,
   detectNineLineConflicts,
   getPatientTypeTotal,
   getPrecedenceTotal,
   isNineLineFormComplete,
-  HAT1_COORDINATE_GUIDE_LINE,
-  HAT1_UNSEPARATED_BLOC_LINE,
   hasUnseparatedDigitBloc,
   isValidMgrsPickup,
   normalizeMgrsPickup,
@@ -41,7 +27,24 @@ import {
 } from '../../lib/medevacSimulatorValidation'
 import { invStr } from '../../lib/inventoryIlws'
 import { PENALTY_TCCC_BELOW_40 } from '../../lib/orsEngine'
-import { formatOvertimeDebriefLine } from '../../lib/simulationHistoryHelpers'
+import {
+  formatOvertimeDebriefLine,
+  isOvertimeDebriefLine,
+} from '../../lib/simulationHistoryHelpers'
+import {
+  casevacMistInjuryOptions,
+  casevacMistMetricOptions,
+  casevacMistTreatmentOptions,
+  casevacMistVitalsOptions,
+  healthT,
+  medevacLine3Options,
+  medevacLine4Options,
+  medevacLine6Options,
+  medevacLine7Options,
+  medevacLine8Options,
+  medevacLine9CbrnOptions,
+  medevacLine9TerrainOptions,
+} from '../../lib/healthDisplayText'
 /** @typedef {'medevac' | 'casevac'} EvacSimMode */
 
 const fieldClass =
@@ -102,147 +105,6 @@ function parseLine1CoordinateInput(raw) {
   return { value: invStr(raw), gpsConverted: false }
 }
 
-/**
- * @param {typeof MEDEVAC_SIM_INITIAL} form
- * @param {{ timedOut?: boolean }} opts
- * @returns {string[]}
- */
-function buildMedevacRejectionReasons(form, { timedOut = false } = {}) {
-  /** @type {string[]} */
-  const reasons = []
-
-  if (timedOut) {
-    reasons.push(
-      '• [HATA_KODU: SİNYAL_DEŞİFRE] Konuşma süresi 45 saniyeyi geçti! Düşman sinyal takip unsurları (Direction Finding) yerinizi tespit etti, koordinatınıza topçu mühimmatı yönlendirildi.'
-    )
-  }
-
-  const line1 = invStr(form.line1_mgrs).trim()
-  if (!line1 || line1.trim() === '') {
-    reasons.push(
-      "• [🚨 KRİTİK HATA - ROTASIZ UÇUŞ]: HAT 1 (TAHLİYE BÖLGESİ KOORDİNATI) BOŞ BIRAKILDI! PİLOTLAR NET BİR COĞRAFİ HEDEF (MGRS/GPS) OLMADAN ROTASIZ PERVANE DÖNDÜREMEZ, HELİKOPTER HANGARDA KALDI."
-    )
-  } else if (hasUnseparatedDigitBloc(form.line1_mgrs)) {
-    reasons.push(HAT1_UNSEPARATED_BLOC_LINE)
-  } else if (!isValidMgrsPickup(form.line1_mgrs)) {
-    reasons.push(
-      '• [HAT 1 HATASI]: TAHLİYE BÖLGESİ KOORDİNATI GEÇERSİZ FORMAT! MGRS (ÖRN. 36S TH 1234 5678) VEYA GPS (ENLEM, BOYLAM) GİRİLMELİ — HELİKOPTER ROTASIZ KALKIŞ YAPAMAZ.'
-    )
-    reasons.push(HAT1_COORDINATE_GUIDE_LINE)
-  }
-
-  const urgent = form.line3_urgent
-  const urgentSurge = form.line3_urgent_surge
-  const priority = form.line3_priority
-  const routine = form.line3_routine
-  const litter = form.line5_litter
-  const ambulatory = form.line5_ambulatory
-
-  const hat3Total =
-    Number(urgent || 0) +
-    Number(urgentSurge || 0) +
-    Number(priority || 0) +
-    Number(routine || 0) +
-    Number(form.line3_convenience || 0)
-  const hat5Total = Number(litter || 0) + Number(ambulatory || 0)
-
-  if (hat3Total === 0) {
-    reasons.push(
-      '• [HAT 3 HATASI]: Yaralı aciliyet derecesi (A/B/C/D) sayıları girilmedi veya toplam sıfır — triyaj verisi eksik.'
-    )
-  }
-
-  if (hat5Total === 0) {
-    reasons.push(
-      '• [HAT 5 HATASI]: Sedye (Litter) veya ayakta (Ambulatory) taşıma tipi sayıları girilmedi — lojistik kapasite bildirilemedi.'
-    )
-  }
-
-  if (hat3Total > 0 && hat5Total > 0 && hat3Total !== hat5Total) {
-    if (hat3Total > hat5Total) {
-      const missing = hat3Total - hat5Total
-      reasons.push(
-        `• [🚨 REAKSİYON HATASI - EKSİK LİSTELERİ]: HAT 3 TOPLAM ${hat3Total} ≠ HAT 5 TOPLAM ${hat5Total} · ${missing} YARALI İÇİN TAŞIMA TİPİ (SEDYE/AYAKTA) EKSİK — PİLOT KALKIŞI REDDETTİ!`
-      )
-    } else {
-      const excess = hat5Total - hat3Total
-      reasons.push(
-        `• [🚨 REAKSİYON HATASI - HAYALET YOLCU]: HAT 3 TOPLAM ${hat3Total} ≠ HAT 5 TOPLAM ${hat5Total} · ${excess} FAZLA YOLCU — SEDYE/AYAKTA UYUŞMAZLIĞI, KALKIŞ REDDİ!`
-      )
-    }
-  }
-
-  if (!invStr(form.line2_freq_callsign).trim()) {
-    reasons.push(
-      '• [HAT 2 HATASI]: Telsiz frekansı / çağrı adı boş — MEDEVAC unsuru sizi telsizde arayamaz.'
-    )
-  }
-
-  const line4 = Array.isArray(form.line4_equipment) ? form.line4_equipment : []
-  if (line4.length === 0) {
-    reasons.push(
-      '• [HAT 4 HATASI]: Özel ekipman seçilmedi — en az bir ekipman (VİNÇ, SEDYE, KURTARMA vb.) işaretlenmeli.'
-    )
-  }
-
-  if (!form.line6_security) {
-    reasons.push(
-      '• [HAT 6 HATASI]: Tahliye bölgesi güvenlik durumu (N/P/E/X) seçilmedi — pilot risk profili oluşturamaz.'
-    )
-  }
-
-  if (!form.line7_marking) {
-    reasons.push(
-      '• [HAT 7 HATASI]: LZ işaretleme yöntemi seçilmedi — kurtarma ekibi bölgeyi görsel olarak teyit edemez.'
-    )
-  }
-
-  if (!form.line8_nationality) {
-    reasons.push(
-      '• [HAT 8 HATASI]: Yaralı uyruğu ve statüsü seçilmedi — hukuki tahliye protokolü başlatılamaz.'
-    )
-  }
-
-  if (!form.line9_cbrn && !form.line9_terrain) {
-    reasons.push(
-      '• [HAT 9 HATASI]: KBRN tehdidi veya arazi şartları bildirilmedi — helikopter iniş profili belirlenemez.'
-    )
-  }
-
-  const conflicts = detectNineLineConflicts(form)
-  for (const code of conflicts) {
-    if (code === 'PATIENT_COUNT_MISMATCH' || code === 'LINE3_ZERO_PATIENTS' || code === 'LINE5_ZERO_PATIENTS') {
-      continue
-    }
-    const label =
-      MEDEVAC_CONFLICT_LABELS[/** @type {keyof typeof MEDEVAC_CONFLICT_LABELS} */ (code)] ?? code
-    if (code === 'UNMARKED_SECURE_LZ') {
-      reasons.push(
-        `• [HAT 6 & HAT 7 ÇAKIŞMASI]: ${label} — güvenli LZ'de işaretleme zorunlu.`
-      )
-    } else if (code === 'CBRN_UNMARKED_LZ') {
-      reasons.push(`• [HAT 7 & HAT 9 ÇAKIŞMASI]: ${label} — KBRN tehdidinde işaretleme şart.`)
-    } else if (code === 'HOT_LZ_NO_EXTRACTION') {
-      reasons.push(`• [HAT 4 & HAT 6 ÇAKIŞMASI]: ${label} — sıcak LZ için kurtarma/vinç ekipmanı gerekli.`)
-    } else if (code === 'URGENT_NO_EQUIP_TERRAIN') {
-      reasons.push(`• [HAT 3, HAT 4 & HAT 9 ÇAKIŞMASI]: ${label} — acil vaka + arazi engeli için ekipman şart.`)
-    } else {
-      reasons.push(`• [TAKTİK ÇAKIŞMA · ${code}]: ${label}`)
-    }
-  }
-
-  return reasons
-}
-
-/**
- * @param {{
- *   options: { id: string; label: string }[]
- *   selected: string[]
- *   onChange: (ids: string[]) => void
- *   name: string
- *   disabled?: boolean
- * }} props
- */
 function Line4EquipmentChecklist({ options, selected, onChange, name, disabled = false }) {
   const toggle = (/** @type {string} */ id) => {
     if (disabled) return
@@ -283,6 +145,7 @@ function Line4EquipmentChecklist({ options, selected, onChange, name, disabled =
  * @param {{ onBegin: () => void; disabled?: boolean }} props
  */
 function MedevacMissionBriefing({ onBegin, disabled = false }) {
+  const { t } = useTranslation('health')
   return (
     <div
       className="medevac-simulator-root relative z-30 flex h-auto min-h-0 w-full max-h-[min(72vh,720px)] flex-col sm:min-h-[300px]"
@@ -296,68 +159,54 @@ function MedevacMissionBriefing({ onBegin, disabled = false }) {
           id="medevac-briefing-title"
           className="medevac-radio-display border-b border-amber-500/30 pb-3 font-mono text-xs font-bold uppercase leading-normal sm:text-sm"
         >
-          [ 📑 GÖREV ÖNCESİ DOKTRİN BRİFİNGİ: MEDEVAC PROSEDÜRÜ ]
+          {t('sim.briefing.medevacTitle')}
         </h2>
 
         <div className="space-y-4">
           <p className={briefingBodyClass}>
-            • NEDEN 45 SANİYE? Taktik sahada telsiz başında harcanan her fazladan saniye, kan kaybından
-            ölen yaralının eceline yaklaşması ve timin yerinin deşifre olması demektir.
+            {t('sim.briefing.medevacWhy45')}
           </p>
           <p className={briefingBodyClass}>
-            • 1. ALTIN SAAT (GOLDEN HOUR) KURALI: Ağır yaralanmalarda ilk 90 saniyede MEDEVAC çağrısının
-            hatasız geçilmesi gerekir. Bu sürenin son 45 saniyesi, telsizden NATO standardında 9-LINE
-            raporunun tamamlanması için ayrılmıştır.
+            {t('sim.briefing.medevacGolden')}
           </p>
           <p className={briefingBodyClass}>
-            • 2. ELEKTRONİK HARP VE SİNYAL TAKİBİ: Modern muharebe sahalarında kesintisiz konuşma süresi
-            45 saniyeyi geçtiği an, düşman sinyal takip unsurları (Direction Finding) yerinizi üçgenleme
-            yöntemiyle tespit eder ve koordinatınıza topçu mühimmatı indirir.
+            {t('sim.briefing.medevacEw')}
           </p>
           <p className={briefingBodyClass}>
-            • 3. STRES ALTINDA KİLİTLENME ANALİZİ: Patlamalar ve mermiler altında soğukkanlılığı koruyup
-            MGRS koordinatlarını ve yaralı sayılarını hatasız girmek gerçek bir operatör refleksidir. Süre
-            bittiğinde telsiz hatası (COLD HIT) alınır ve ORS puanınız -14 ceza yer.
+            {t('sim.briefing.medevacStress')}
           </p>
         </div>
 
           <section className="space-y-2 rounded border border-amber-600/20 bg-black/30 p-4">
-            <p className={briefingSectionTitleClass}>HAT 1 (KOORDİNAT)</p>
+            <p className={briefingSectionTitleClass}>{t('sim.briefing.hat1Title')}</p>
             <p className={briefingBodyClass}>
-              • HAT 1 (KOORDİNAT ESNEKLİĞİ): Format hatası yaşamamanız için sistem akıllı tarama moduna
-              geçirildi. İster düz MGRS (36S TH 1234 5678), ister enlem/boylam (39.7761, 30.5211) yazın.
-              Sistem noktayı, virgülü ve boşlukları arka planda otomatik olarak tolere eder.
+              {t('sim.briefing.hat1Body')}
             </p>
           </section>
 
           <section className="space-y-2 rounded border border-amber-600/20 bg-black/30 p-4">
-            <p className={briefingSectionTitleClass}>HAT 3 (ACİLİYET DERECESİ)</p>
-            <p className={briefingBodyClass}>Yaralının durumuna göre triyaj yapın:</p>
+            <p className={briefingSectionTitleClass}>{t('sim.briefing.hat3Title')}</p>
+            <p className={briefingBodyClass}>{t('sim.briefing.hat3Intro')}</p>
             <ul className="list-none space-y-2 pl-0">
               <li className={briefingBodyClass}>
-                • A - URGENT (ACİL): İlk 2 saatte tahliye edilmezse ölecek vakalar (Masif kanama, hava yolu
-                tıkanması).
+                {t('sim.briefing.hat3A')}
               </li>
               <li className={briefingBodyClass}>
-                • B - URGENT-SURGE (ÖNCELİKLİ ACİL): Hayati riski olan ama turnikeyle geçici stabilize edilmiş
-                vakalar.
+                {t('sim.briefing.hat3B')}
               </li>
               <li className={briefingBodyClass}>
-                • C - PRIORITY (ÖNCELİKLİ): Uzuv/hayat kaybı riski ilk aşamada düşük olan açık kırıklar veya
-                yaralanmalar.
+                {t('sim.briefing.hat3C')}
               </li>
               <li className={briefingBodyClass}>
-                • D - ROUTINE (RUTIN): 24 saate kadar bekleyebilecek hafif yaralılar.
+                {t('sim.briefing.hat3D')}
               </li>
             </ul>
           </section>
 
           <section className="space-y-2 rounded border border-amber-600/20 bg-black/30 p-4">
-            <p className={briefingSectionTitleClass}>HAT 4 &amp; 5 (EKİPMAN VE TİP)</p>
+            <p className={briefingSectionTitleClass}>{t('sim.briefing.hat45Title')}</p>
             <p className={briefingBodyClass}>
-              Ekipmanlar çoklu seçilebilir! Aynı anda hem VİNÇ (Hoist) hem SEDYE (Litter) gerekebilir. Hat
-              5&apos;teki Toplam Sedye (Litter) ve Ayakta (Ambulatory) hasta sayısı, Hat 3&apos;teki toplam yaralı
-              sayısıyla tam uyuşmalıdır!
+              {t('sim.briefing.hat45Body')}
             </p>
           </section>
         </div>
@@ -369,7 +218,7 @@ function MedevacMissionBriefing({ onBegin, disabled = false }) {
             onClick={onBegin}
             className="w-full rounded border border-amber-500 bg-amber-500/20 py-3 font-mono font-bold uppercase tracking-wider text-amber-400 transition-all duration-200 hover:bg-amber-500/40 disabled:opacity-40"
           >
-            [ BRİFİNGİ ALDIM, ODAKLAN VE BAŞLA ]
+            {t('sim.briefing.medevacStart')}
           </button>
         </div>
       </div>
@@ -381,6 +230,7 @@ function MedevacMissionBriefing({ onBegin, disabled = false }) {
  * @param {{ onBegin: () => void; disabled?: boolean }} props
  */
 function CasevacMissionBriefing({ onBegin, disabled = false }) {
+  const { t } = useTranslation('health')
   return (
     <div
       className="medevac-simulator-root relative z-30 flex h-auto min-h-0 w-full max-h-[min(72vh,720px)] flex-col sm:min-h-[300px]"
@@ -394,20 +244,17 @@ function CasevacMissionBriefing({ onBegin, disabled = false }) {
             id="casevac-briefing-title"
             className="medevac-radio-display border-b border-red-500/30 pb-3 font-mono text-xs font-bold uppercase leading-normal sm:text-sm"
           >
-            [ 📑 GÖREV ÖNCESİ DOKTRİN BRİFİNGİ: CASEVAC · MIST PROTOKOLÜ ]
+            {t('sim.briefing.casevacTitle')}
           </h2>
           <div className="space-y-4">
             <p className={briefingBodyClass}>
-              • NEDEN 30 SANİYE? CASEVAC sıcak bölgede (hot zone) yapılır; telsiz süresi 9-Line MEDEVAC&apos;a
-              göre daha kısadır. Her fazladan saniye araç ve tim için pusuya düşme riskidir.
+              {t('sim.briefing.casevacWhy30')}
             </p>
             <p className={briefingBodyClass}>
-              • MIST RAPORU: M (Metric/yaralanma tipi), I (Injury/anatomi), S (Signs/vital), T (Treatment/müdahale)
-              — dört harf tek nefeste iletilir.
+              {t('sim.briefing.casevacMist')}
             </p>
             <p className={briefingBodyClass}>
-              • TURNİKE + ŞOK UYUMU: Turnike uygulandıysa «Şok Belirtisi Yok» seçimi klinik çelişkidir; rapor
-              reddedilir.
+              {t('sim.briefing.casevacTq')}
             </p>
           </div>
         </div>
@@ -418,7 +265,7 @@ function CasevacMissionBriefing({ onBegin, disabled = false }) {
             onClick={onBegin}
             className="w-full rounded border border-red-500 bg-red-500/20 py-3 font-mono font-bold uppercase tracking-wider text-red-300 transition-all duration-200 hover:bg-red-500/40 disabled:opacity-40"
           >
-            [ BRİFİNGİ ALDIM, SICAK BÖLGEYE GİR ]
+            {t('sim.briefing.casevacStart')}
           </button>
         </div>
       </div>
@@ -442,8 +289,9 @@ const modeToggleBtnClass = (on) =>
  * }} props
  */
 function EvacSimModeToggle({ mode, onChange, disabled = false }) {
+  const { t } = useTranslation('health')
   return (
-    <div className="relative z-40 flex flex-wrap gap-2" role="group" aria-label="Simülasyon modu">
+    <div className="relative z-40 flex flex-wrap gap-2" role="group" aria-label={t('sim.modeAria')}>
       <button
         type="button"
         disabled={disabled}
@@ -451,7 +299,7 @@ function EvacSimModeToggle({ mode, onChange, disabled = false }) {
         className={modeToggleBtnClass(mode === 'medevac')}
         aria-pressed={mode === 'medevac'}
       >
-        [ SIMÜLASYON MODU: MEDEVAC (9-LINE) ]
+        {t('sim.modeMedevac')}
       </button>
       <button
         type="button"
@@ -460,7 +308,7 @@ function EvacSimModeToggle({ mode, onChange, disabled = false }) {
         className={modeToggleBtnClass(mode === 'casevac')}
         aria-pressed={mode === 'casevac'}
       >
-        [ SIMÜLASYON MODU: CASEVAC (MIST) ]
+        {t('sim.modeCasevac')}
       </button>
     </div>
   )
@@ -576,6 +424,7 @@ function CounterField({ label, value, onChange, disabled = false, min = 0 }) {
       <input
         type="number"
         min={min}
+        step={1}
         className={fieldClass}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -599,6 +448,7 @@ export default function MedevacSimulator({
   addRangeLog,
   addMedevacLog,
 }) {
+  const { t } = useTranslation('health')
   const [simMode, setSimMode] = useState(/** @type {EvacSimMode} */ ('medevac'))
   const [medevacForm, setMedevacForm] = useState({ ...MEDEVAC_SIM_INITIAL })
   const [casevacForm, setCasevacForm] = useState({ ...CASEVAC_SIM_INITIAL })
@@ -733,7 +583,7 @@ export default function MedevacSimulator({
 
       if (overtimeSec > 0) {
         const overtimeLine = formatOvertimeDebriefLine(overtimeSec)
-        if (!debriefReasons.some((r) => r.includes('KRİTİK GECİKME'))) {
+        if (!debriefReasons.some((r) => isOvertimeDebriefLine(r))) {
           debriefReasons = [...debriefReasons, overtimeLine]
         }
       }
@@ -743,8 +593,8 @@ export default function MedevacSimulator({
       if (isOvertimeSubmit) {
         failureReason =
           mode === 'casevac'
-            ? `YAYIN SÜRESİ AŞILDI · 30 SN · +${overtimeSec} SN GECİKME`
-            : `YAYIN SÜRESİ AŞILDI · 45 SN · +${overtimeSec} SN GECİKME`
+            ? healthT('sim.reject.failureTimeoutCasevac', { sec: overtimeSec })
+            : healthT('sim.reject.failureTimeoutMedevac', { sec: overtimeSec })
       } else if (debriefReasons.length > 0) {
         failureReason = debriefReasons.map((r) => r.replace(/^•\s*/, '')).join(' | ')
       }
@@ -858,7 +708,7 @@ export default function MedevacSimulator({
 
   return (
     <section
-      aria-label={simMode === 'casevac' ? 'CASEVAC MIST telsiz simülatörü' : '9-Hat MEDEVAC telsiz simülatörü'}
+      aria-label={simMode === 'casevac' ? t('sim.ariaCasevac') : t('sim.ariaMedevac')}
       className="space-y-2"
     >
       <EvacSimModeToggle mode={simMode} onChange={handleSimModeChange} disabled={modeSwitchLocked} />
@@ -887,18 +737,18 @@ export default function MedevacSimulator({
               <Radio className="mt-0.5 size-6 text-amber-400" strokeWidth={1.5} aria-hidden />
               <div>
                 <p className="medevac-radio-display font-mono text-sm font-bold uppercase tracking-[0.22em]">
-                  AN/PRC-117F İNTERAKTİF TELSİZ SİMÜLATÖRÜ
+                  {t('sim.radioTitle')}
                 </p>
                 <p className="mt-1 font-mono text-[9px] uppercase tracking-wider text-amber-700/90">
                   {simMode === 'casevac'
-                    ? `CASEVAC MIST · SICAK BÖLGE · STRES PENCERESİ ${CASEVAC_TRANSMISSION_DEADLINE_SEC} SN`
-                    : `NATO STANDARDI · ŞİFRELİ HAZIR · STRES PENCERESİ ${MEDEVAC_TRANSMISSION_DEADLINE_SEC} SN`}
+                    ? t('sim.radioSubtitleCasevac', { sec: CASEVAC_TRANSMISSION_DEADLINE_SEC })
+                    : t('sim.radioSubtitleMedevac', { sec: MEDEVAC_TRANSMISSION_DEADLINE_SEC })}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <div className="text-right">
-                <p className={labelClass}>KALAN SÜRE:</p>
+                <p className={labelClass}>{t('sim.remainingLabel')}</p>
                 <p
                   className={[
                     'font-mono text-4xl font-black tabular-nums leading-none',
@@ -912,11 +762,11 @@ export default function MedevacSimulator({
                   aria-live="polite"
                 >
                   {timerDigits}
-                  <span className="ml-1 text-lg opacity-70">SN</span>
+                  <span className="ml-1 text-lg opacity-70">{t('sim.secondsAbbrev')}</span>
                 </p>
                 {isOvertime ? (
                   <p className="mt-1 font-mono text-[9px] font-bold uppercase tracking-wider text-red-500 animate-pulse">
-                    ⚠️ [SİNYAL DEŞİFRE OLUYOR / PUSU TEHDİDİ]
+                    {t('sim.overtimeWarning')}
                   </p>
                 ) : null}
               </div>
@@ -929,20 +779,17 @@ export default function MedevacSimulator({
                 <AlertTriangle className="size-5 shrink-0" aria-hidden />
                 <span>
                   {simMode === 'casevac'
-                    ? '⚠️ TELSİZ RAPOR HATASI / CASEVAC TAHLİYESİ REDDEDİLDİ'
-                    : '⚠️ TELSİZ RAPOR HATASI / HELİKOPTER KALKIŞI REDDEDİLDİ'}
+                    ? t('sim.failureTitleCasevac')
+                    : t('sim.failureTitleMedevac')}
                 </span>
               </div>
               <div className="space-y-2 rounded border border-red-500/50 bg-red-950/40 p-4 font-mono text-xs text-red-400">
                 <p className="font-bold uppercase tracking-wider text-red-300">
-                  [ TAHLİYE REDDEDİLME GEREKÇELERİ / DEBRIEFING LOG ]
+                  {t('sim.debriefHeading')}
                 </p>
                 {rejectionReasons.length === 0 ? (
                   <p className="normal-case leading-relaxed tracking-normal text-red-300/80">
-                    • [GENEL HATA]:{' '}
-                    {simMode === 'casevac'
-                      ? 'MIST raporu taktik eşik altında — ayrıntılı satır denetimi tamamlanamadı.'
-                      : '9-HAT raporu taktik eşik altında — ayrıntılı satır denetimi tamamlanamadı.'}
+                    {simMode === 'casevac' ? t('sim.generalErrorCasevac') : t('sim.generalErrorMedevac')}
                   </p>
                 ) : null}
                 {rejectionReasons.map((reason, idx) => (
@@ -954,11 +801,7 @@ export default function MedevacSimulator({
                   </p>
                 ))}
                 <p className="border-t border-red-500/30 pt-2 normal-case leading-relaxed tracking-normal text-red-300/90">
-                  • [ORS ETKİSİ / TCCC EŞİK ALTINDA] Başarı yüzdesi %40 altında kaydedildi —{' '}
-                  <span className="font-bold text-red-200">
-                    Operasyonel Hazırlık Skoru (ORS) −{PENALTY_TCCC_BELOW_40} puan
-                  </span>{' '}
-                  (orsEngine · HATA_KODU: TCCC EŞİK ALTINDA · &lt;40% OTURUM)
+                  {t('sim.orsEffect', { penalty: PENALTY_TCCC_BELOW_40 })}
                 </p>
               </div>
             </div>
@@ -967,8 +810,8 @@ export default function MedevacSimulator({
           {phase === 'success' ? (
             <p className="rounded-lg border border-emerald-500/55 bg-emerald-950/35 px-4 py-3 font-mono text-xs font-bold uppercase tracking-wider text-emerald-300 shadow-[0_0_24px_rgb(52,211,153,0.25)]">
               {simMode === 'casevac'
-                ? '⚡ MIST RAPORU BAŞARILI / CASEVAC TAHLİYE ARACI YOLDA'
-                : '⚡ RAPOR BAŞARILI / MEDEVAC TAHLİYE KUŞU YOLDA'}
+                ? t('sim.successCasevac')
+                : t('sim.successMedevac')}
             </p>
           ) : null}
 
@@ -978,7 +821,7 @@ export default function MedevacSimulator({
               aria-live="polite"
             >
               <p className="font-mono text-[9px] font-bold uppercase tracking-wider text-amber-500">
-                [ CANLI HAT DENETİMİ / GÖNDERİM ÖNCESİ ]
+                {t('sim.liveAudit')}
               </p>
               {liveValidationHints.slice(0, 4).map((hint, idx) => (
                 <p
@@ -990,7 +833,7 @@ export default function MedevacSimulator({
               ))}
               {liveValidationHints.length > 4 ? (
                 <p className="font-mono text-[8px] uppercase text-amber-600">
-                  +{liveValidationHints.length - 4} EK HATA SATIRI
+                  {t('sim.moreErrors', { count: liveValidationHints.length - 4 })}
                 </p>
               ) : null}
             </div>
@@ -1000,9 +843,9 @@ export default function MedevacSimulator({
             {simMode === 'casevac' ? (
               <>
                 <section className={sectionClass}>
-                  <p className={lineTitleClass}>TOPLAM YARALI SAYISI</p>
+                  <p className={lineTitleClass}>{t('sim.lines.casevacCountTitle')}</p>
                   <CounterField
-                    label="YARALI ADEDİ"
+                    label={t('sim.lines.casevacCountLabel')}
                     value={casevacForm.casualty_count}
                     onChange={(v) => patchCasevac({ casualty_count: v })}
                     disabled={formLocked}
@@ -1010,11 +853,11 @@ export default function MedevacSimulator({
                   />
                 </section>
                 <section className={sectionClass}>
-                  <p className={lineTitleClass}>M — METRIC / YARALANMA TİPİ</p>
+                  <p className={lineTitleClass}>{t('sim.lines.mistM')}</p>
                   <div className="mt-2">
                     <Line4EquipmentChecklist
                       name="mist_metric"
-                      options={CASEVAC_MIST_METRIC_OPTIONS}
+                      options={casevacMistMetricOptions()}
                       selected={
                         Array.isArray(casevacForm.mist_metric) ? casevacForm.mist_metric : []
                       }
@@ -1024,11 +867,11 @@ export default function MedevacSimulator({
                   </div>
                 </section>
                 <section className={sectionClass}>
-                  <p className={lineTitleClass}>I — INJURY / YARANIN YERİ VE ANATOMİSİ</p>
+                  <p className={lineTitleClass}>{t('sim.lines.mistI')}</p>
                   <div className="mt-2">
                     <TokenRow
                       name="mist_injury"
-                      options={CASEVAC_MIST_INJURY_OPTIONS}
+                      options={casevacMistInjuryOptions()}
                       value={casevacForm.mist_injury_site}
                       onSelect={(id) => patchCasevac({ mist_injury_site: id })}
                       disabled={formLocked}
@@ -1036,11 +879,11 @@ export default function MedevacSimulator({
                   </div>
                 </section>
                 <section className={sectionClass}>
-                  <p className={lineTitleClass}>S — SIGNS / VİTAL BULGULAR</p>
+                  <p className={lineTitleClass}>{t('sim.lines.mistS')}</p>
                   <div className="mt-2">
                     <TokenRow
                       name="mist_vitals"
-                      options={CASEVAC_MIST_VITALS_OPTIONS}
+                      options={casevacMistVitalsOptions()}
                       value={casevacForm.mist_vitals}
                       onSelect={(id) => patchCasevac({ mist_vitals: id })}
                       disabled={formLocked}
@@ -1050,16 +893,16 @@ export default function MedevacSimulator({
                   casevacForm.mist_treatment.includes('tourniquet') &&
                   casevacForm.mist_vitals === 'shock_no' ? (
                     <p className="mt-2 font-mono text-[9px] uppercase text-red-400">
-                      [ MIST UYARI ] TURNİKE + ŞOK YOK ÇELİŞKİSİ — RAPOR RED RİSKİ
+                      {t('sim.lines.mistTqWarning')}
                     </p>
                   ) : null}
                 </section>
                 <section className={sectionClass}>
-                  <p className={lineTitleClass}>T — TREATMENT / YAPILAN MÜDAHALE</p>
+                  <p className={lineTitleClass}>{t('sim.lines.mistT')}</p>
                   <div className="mt-2">
                     <Line4EquipmentChecklist
                       name="mist_treatment"
-                      options={CASEVAC_MIST_TREATMENT_OPTIONS}
+                      options={casevacMistTreatmentOptions()}
                       selected={
                         Array.isArray(casevacForm.mist_treatment) ? casevacForm.mist_treatment : []
                       }
@@ -1069,10 +912,10 @@ export default function MedevacSimulator({
                   </div>
                 </section>
                 <section className={sectionClass}>
-                  <p className={lineTitleClass}>SICAK BÖLGE ÇAĞRI / FREKANS</p>
+                  <p className={lineTitleClass}>{t('sim.lines.mistCallsign')}</p>
                   <input
                     className={`${fieldClass} mt-2`}
-                    placeholder="168.000 · ÇAĞRI-1 · EK ALPHA"
+                    placeholder={t('sim.lines.hat2Placeholder')}
                     value={casevacForm.pickup_callsign}
                     onChange={(e) =>
                       patchCasevac({ pickup_callsign: e.target.value.toUpperCase() })
@@ -1084,10 +927,10 @@ export default function MedevacSimulator({
             ) : (
               <>
             <section className={sectionClass}>
-              <p className={lineTitleClass}>HAT 1: TAHLİYE BÖLGESİ KOORDİNATI (MGRS / GPS)</p>
+              <p className={lineTitleClass}>{t('sim.lines.hat1')}</p>
               <input
                 className={`${fieldClass} mt-2`}
-                placeholder="Örn: 38 40 25.92 26 45 29.44"
+                placeholder={t('sim.lines.hat1Placeholder')}
                 value={medevacForm.line1_mgrs}
                 onChange={(e) => handleLine1Change(e.target.value)}
                 onBlur={handleLine1Blur}
@@ -1099,29 +942,27 @@ export default function MedevacSimulator({
                 disabled={formLocked}
               />
               <p className="mt-2 font-mono text-[10px] font-bold uppercase leading-relaxed text-amber-400">
-                ⚠ SIFIR ÖZEL KARAKTER KURALI: Derece (°), dakika (&apos;) veya saniye (&quot;) SEMBOLLERİ
-                KULLANMAYIN. SADECE SAYILARI BOŞLUKLA AYIRARAK YAZIN — ÖRN: 38 40 25.92 26 45 29.44 — SİSTEM
-                OTOMATİK DÖNÜŞTÜRÜR.
+                {t('sim.lines.hat1ZeroSpecial')}
               </p>
               {line1GpsConverted ? (
                 <p className="mt-2 rounded border border-emerald-500/40 bg-emerald-950/30 px-3 py-2 font-mono text-[9px] font-bold uppercase tracking-wide text-emerald-300">
-                  [ GPS FORMATI ALGILANDI -&gt; MGRS SİMÜLE EDİLDİ ]
+                  {t('sim.lines.hat1GpsConverted')}
                 </p>
               ) : null}
               {invStr(medevacForm.line1_mgrs).trim() && !mgrsValid ? (
                 <p className="mt-1 font-mono text-[9px] uppercase leading-relaxed text-red-400">
                   {line1UnseparatedBloc
-                    ? 'BİTİŞİK SAYI BLOĞU — BOŞLUKLA AYIRIN: 38 40 25.92 26 45 29.44'
-                    : "GEÇERSİZ KOORDİNAT — ÖRN: '38 40 25.92 26 45 29.44' (6 SAYI, BOŞLUKLA) VEYA MGRS"}
+                    ? t('sim.lines.hat1BlocError')
+                    : t('sim.lines.hat1Invalid')}
                 </p>
               ) : null}
             </section>
 
             <section className={sectionClass}>
-              <p className={lineTitleClass}>HAT 2: TELSİZ FREKANSI / ÇAĞRI ADI</p>
+              <p className={lineTitleClass}>{t('sim.lines.hat2')}</p>
               <input
                 className={`${fieldClass} mt-2`}
-                placeholder="168.000 · ÇAĞRI-1 · EK ALPHA"
+                placeholder={t('sim.lines.hat2Placeholder')}
                 value={medevacForm.line2_freq_callsign}
                 onChange={(e) => patchMedevac({ line2_freq_callsign: e.target.value.toUpperCase() })}
                 disabled={formLocked}
@@ -1129,9 +970,9 @@ export default function MedevacSimulator({
             </section>
 
             <section className={sectionClass}>
-              <p className={lineTitleClass}>HAT 3: YARALI ACİLİYET DERECESİ</p>
+              <p className={lineTitleClass}>{t('sim.lines.hat3')}</p>
               <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                {MEDEVAC_LINE3_PRECEDENCE.map((row) => (
+                {medevacLine3Options().map((row) => (
                   <CounterField
                     key={row.id}
                     label={row.label}
@@ -1142,22 +983,22 @@ export default function MedevacSimulator({
                 ))}
               </div>
               <p className="mt-2 font-mono text-[9px] uppercase text-amber-700">
-                TOPLAM ACİLİYET: {precedenceTotal} · HAT 5 TOPLAM: {typeTotal}
+                {t('sim.lines.hat3Total', { precedence: precedenceTotal, type: typeTotal })}
                 {precedenceTotal > 0 && typeTotal > 0 && precedenceTotal !== typeTotal
-                  ? ' · UYUŞMAZLIK'
+                  ? t('sim.lines.hat3Mismatch')
                   : ''}
               </p>
             </section>
 
             <section className={sectionClass}>
-              <p className={lineTitleClass}>HAT 4: ÖZEL EKİPMAN İHTİYACI (ÇOKLU SEÇİM)</p>
+              <p className={lineTitleClass}>{t('sim.lines.hat4')}</p>
               <p className="mt-1 font-mono text-[9px] uppercase text-amber-700">
-                BİRDEN FAZLA EKİPMAN İŞARETLEYİN · ÖRN. VİNÇ + KURTARMA
+                {t('sim.lines.hat4Hint')}
               </p>
               <div className="mt-2">
                 <Line4EquipmentChecklist
                   name="line4"
-                  options={MEDEVAC_LINE4_OPTIONS}
+                  options={medevacLine4Options()}
                   selected={
                     Array.isArray(medevacForm.line4_equipment) ? medevacForm.line4_equipment : []
                   }
@@ -1168,16 +1009,16 @@ export default function MedevacSimulator({
             </section>
 
             <section className={sectionClass}>
-              <p className={lineTitleClass}>HAT 5: YARALI TAŞIMA TİPİ</p>
+              <p className={lineTitleClass}>{t('sim.lines.hat5')}</p>
               <div className="mt-3 grid grid-cols-2 gap-3">
                 <CounterField
-                  label="L · SEDYE"
+                  label={t('sim.lines.hat5Litter')}
                   value={medevacForm.line5_litter}
                   onChange={(v) => patchMedevac({ line5_litter: v })}
                   disabled={formLocked}
                 />
                 <CounterField
-                  label="A · AYAKTA"
+                  label={t('sim.lines.hat5Ambulatory')}
                   value={medevacForm.line5_ambulatory}
                   onChange={(v) => patchMedevac({ line5_ambulatory: v })}
                   disabled={formLocked}
@@ -1186,11 +1027,11 @@ export default function MedevacSimulator({
             </section>
 
             <section className={sectionClass}>
-              <p className={lineTitleClass}>HAT 6: TAHLİYE BÖLGESİ GÜVENLİK DURUMU</p>
+              <p className={lineTitleClass}>{t('sim.lines.hat6')}</p>
               <div className="mt-2">
                 <TokenRow
                   name="line6"
-                  options={MEDEVAC_LINE6_OPTIONS}
+                  options={medevacLine6Options()}
                   value={medevacForm.line6_security}
                   onSelect={(id) => patchMedevac({ line6_security: id })}
                   disabled={formLocked}
@@ -1199,11 +1040,11 @@ export default function MedevacSimulator({
             </section>
 
             <section className={sectionClass}>
-              <p className={lineTitleClass}>HAT 7: BÖLGE İŞARETLEME YÖNTEMİ</p>
+              <p className={lineTitleClass}>{t('sim.lines.hat7')}</p>
               <div className="mt-2">
                 <TokenRow
                   name="line7"
-                  options={MEDEVAC_LINE7_OPTIONS}
+                  options={medevacLine7Options()}
                   value={medevacForm.line7_marking}
                   onSelect={(id) => patchMedevac({ line7_marking: id })}
                   disabled={formLocked}
@@ -1212,11 +1053,11 @@ export default function MedevacSimulator({
             </section>
 
             <section className={sectionClass}>
-              <p className={lineTitleClass}>HAT 8: YARALI UYRUGU VE STATÜSÜ</p>
+              <p className={lineTitleClass}>{t('sim.lines.hat8')}</p>
               <div className="mt-2">
                 <TokenRow
                   name="line8"
-                  options={MEDEVAC_LINE8_OPTIONS}
+                  options={medevacLine8Options()}
                   value={medevacForm.line8_nationality}
                   onSelect={(id) => patchMedevac({ line8_nationality: id })}
                   disabled={formLocked}
@@ -1225,14 +1066,14 @@ export default function MedevacSimulator({
             </section>
 
             <section className={sectionClass}>
-              <p className={lineTitleClass}>HAT 9: KBRN TEHDİDİ / ARAZİ ŞARTLARI</p>
+              <p className={lineTitleClass}>{t('sim.lines.hat9')}</p>
               <div className="mt-3 space-y-3">
                 <div>
-                  <span className={labelClass}>KBRN TEHDİDİ</span>
+                  <span className={labelClass}>{t('sim.lines.hat9Cbrn')}</span>
                   <div className="mt-1.5">
                     <TokenRow
                       name="line9cbrn"
-                      options={MEDEVAC_LINE9_CBRN_OPTIONS}
+                      options={medevacLine9CbrnOptions()}
                       value={medevacForm.line9_cbrn}
                       onSelect={(id) => patchMedevac({ line9_cbrn: id })}
                       disabled={formLocked}
@@ -1240,11 +1081,11 @@ export default function MedevacSimulator({
                   </div>
                 </div>
                 <div>
-                  <span className={labelClass}>ARAZİ ŞARTLARI</span>
+                  <span className={labelClass}>{t('sim.lines.hat9Terrain')}</span>
                   <div className="mt-1.5">
                     <TokenRow
                       name="line9terrain"
-                      options={MEDEVAC_LINE9_TERRAIN_OPTIONS}
+                      options={medevacLine9TerrainOptions()}
                       value={medevacForm.line9_terrain}
                       onSelect={(id) => patchMedevac({ line9_terrain: id })}
                       disabled={formLocked}
@@ -1267,7 +1108,7 @@ export default function MedevacSimulator({
                 className="medevac-ptt-key inline-flex items-center gap-2 rounded-lg border border-amber-500/70 bg-amber-600/25 px-5 py-3 font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-amber-100 transition hover:bg-amber-500/30 disabled:opacity-40"
               >
                 <Mic className="size-4" aria-hidden />
-                YENİ OTURUM / SIFIRLA
+                {t('sim.reset')}
               </button>
             ) : null}
 
@@ -1280,14 +1121,14 @@ export default function MedevacSimulator({
                   className="medevac-ptt-key inline-flex items-center gap-2 rounded-lg border border-emerald-500/60 bg-emerald-600/20 px-5 py-3 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-200 shadow-[0_0_20px_rgb(52,211,153,0.25)] transition hover:bg-emerald-500/25 disabled:opacity-40"
                 >
                   <Send className="size-4" aria-hidden />
-                  {simMode === 'casevac' ? 'MIST GÖNDER / TRANSMİT' : '9-HAT GÖNDER / TRANSMİT'}
+                  {simMode === 'casevac' ? t('sim.transmitCasevac') : t('sim.transmitMedevac')}
                 </button>
                 <p className="font-mono text-[9px] uppercase text-amber-700">
                   {formComplete
-                    ? 'FORM HAZIR · 0 SN ÖNCESİ GÖNDER'
+                    ? t('sim.formReady')
                     : simMode === 'casevac'
-                      ? 'TÜM MIST ALANLARINI DOLDUR'
-                      : 'TÜM HATLARI DOLDUR'}
+                      ? t('sim.fillAllMist')
+                      : t('sim.fillAllLines')}
                 </p>
               </>
             ) : null}

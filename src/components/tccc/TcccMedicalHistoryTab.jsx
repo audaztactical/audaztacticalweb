@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Archive, ChevronDown, ChevronUp, FileDown, Stethoscope } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import {
@@ -19,6 +20,8 @@ import {
   sortCasualtyCardsDesc,
 } from '../../lib/casualtyCardRegistry'
 import { generateCasualtyCardReportPdf } from '../../lib/casualtyCardReportPdf'
+import { healthPdfT } from '../../lib/pdfReportText'
+import { healthT } from '../../lib/healthDisplayText'
 
 const EVAC_BADGE = {
   urgent: 'border-red-500/50 bg-red-950/50 text-red-400 shadow-[0_0_12px_-4px_rgba(239,68,68,0.5)]',
@@ -38,6 +41,7 @@ const MARCH_STEP_BADGE = {
  * @param {{ cards: Record<string, unknown>[]; loading: boolean }} props
  */
 export default function TcccMedicalHistoryTab({ cards, loading }) {
+  const { t } = useTranslation('health')
   const { user, userData } = useAuth()
   const [expandedId, setExpandedId] = useState(/** @type {string | null} */ (null))
   const [pdfBusyId, setPdfBusyId] = useState(/** @type {string | null} */ (null))
@@ -46,7 +50,7 @@ export default function TcccMedicalHistoryTab({ cards, loading }) {
 
   const operator = useMemo(
     () => ({
-      callsign: (userData?.callsign || user?.displayName || 'Operatör').trim(),
+      callsign: (userData?.callsign || user?.displayName || healthPdfT('common.defaultOperator')).trim(),
       username: userData?.username,
       email: user?.email ?? undefined,
       bloodType: userData?.bloodType,
@@ -68,7 +72,7 @@ export default function TcccMedicalHistoryTab({ cards, loading }) {
   if (loading && sorted.length === 0) {
     return (
       <p className="py-12 text-center font-mono-technical text-[10px] uppercase text-app-text/45">
-        ARŞİV YÜKLENİYOR…
+        {t('archive.loading')}
       </p>
     )
   }
@@ -78,18 +82,20 @@ export default function TcccMedicalHistoryTab({ cards, loading }) {
       <div className="flex min-h-[200px] flex-col items-center justify-center rounded-xl border border-dashed border-accent/25 bg-black/40">
         <Archive className="size-12 text-accent/30" aria-hidden />
         <p className="mt-3 font-mono-technical text-[10px] uppercase text-app-text/45">
-          KAYITLI YARALI KARTI YOK
+          {t('archive.empty')}
         </p>
       </div>
     )
   }
+
+  const emDash = healthT('common.emDash')
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-3 border-b border-accent/12 pb-2">
         <div>
           <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-accent/90">
-            Yaralı Arşivi
+            {t('archive.title')}
           </p>
         </div>
       </div>
@@ -106,7 +112,7 @@ export default function TcccMedicalHistoryTab({ cards, loading }) {
           const sections = getCasualtyMarchSections(row)
           const treatments = getCasualtyAppliedTreatmentsNote(row)
           const opNote = getCasualtyOperationNote(row)
-          const hasNotes = treatments !== '—' || opNote !== '—'
+          const hasNotes = treatments !== emDash || opNote !== emDash
           const pdfBusy = pdfBusyId === id
 
           return (
@@ -125,7 +131,7 @@ export default function TcccMedicalHistoryTab({ cards, loading }) {
                       {formatCasualtyCardDate(row).split(' ')[0]}
                     </span>
                     <span className="font-mono-technical text-[10px] font-bold tabular-nums text-app-text/90">
-                      {formatCasualtyCardDate(row).split(' ').slice(1).join(' ') || '—'}
+                      {formatCasualtyCardDate(row).split(' ').slice(1).join(' ') || emDash}
                     </span>
                   </div>
 
@@ -143,7 +149,7 @@ export default function TcccMedicalHistoryTab({ cards, loading }) {
                       </span>
                       {marchCount.done > 0 ? (
                         <span className="text-[8px] uppercase text-app-text/45">
-                          {marchCount.done} müdahale
+                          {t('archive.interventionCount', { count: marchCount.done })}
                         </span>
                       ) : null}
                     </div>
@@ -169,8 +175,8 @@ export default function TcccMedicalHistoryTab({ cards, loading }) {
                     e.stopPropagation()
                     void handleDownloadPdf(row)
                   }}
-                  title="Bu kayıt için PDF indir"
-                  aria-label="PDF indir"
+                  title={t('archive.downloadPdfTitle')}
+                  aria-label={t('archive.downloadPdfAria')}
                   className="inline-flex w-11 shrink-0 items-center justify-center border-l border-accent/12 text-accent/60 transition hover:bg-accent/8 hover:text-accent disabled:opacity-40"
                 >
                   <FileDown className={`size-4 ${pdfBusy ? 'animate-pulse' : ''}`} strokeWidth={2} aria-hidden />
@@ -180,15 +186,15 @@ export default function TcccMedicalHistoryTab({ cards, loading }) {
               {open ? (
                 <div className="border-t border-white/8 px-4 py-4">
                   <div className="grid gap-3 sm:grid-cols-3">
-                    <MetaCell label="Kan grubu" value={getCasualtyBloodTypeLabel(row)} />
-                    <MetaCell label="Alerjiler" value={getCasualtyAllergies(row)} />
-                    <MetaCell label="MOI" value={getCasualtyMechanismOfInjury(row)} />
+                    <MetaCell label={t('archive.bloodType')} value={getCasualtyBloodTypeLabel(row)} />
+                    <MetaCell label={t('archive.allergies')} value={getCasualtyAllergies(row)} />
+                    <MetaCell label={t('archive.moi')} value={getCasualtyMechanismOfInjury(row)} />
                   </div>
 
                   {sections.length > 0 ? (
                     <div className="mt-4">
                       <p className="mb-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.2em] text-accent/70">
-                        MARCH · Müdahaleler
+                        {t('archive.marchInterventions')}
                       </p>
                       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                         {sections.map((section) => (
@@ -212,7 +218,7 @@ export default function TcccMedicalHistoryTab({ cards, loading }) {
                     </div>
                   ) : (
                     <p className="mt-4 font-mono-technical text-[9px] uppercase text-app-text/45">
-                      Kayıtlı MARCH müdahalesi yok
+                      {t('archive.noMarchInterventions')}
                     </p>
                   )}
 
@@ -221,15 +227,15 @@ export default function TcccMedicalHistoryTab({ cards, loading }) {
                       <header className="mb-3 flex items-center gap-2 border-b border-white/6 pb-2">
                         <Stethoscope className="size-3.5 text-accent/70" strokeWidth={1.5} aria-hidden />
                         <h4 className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.22em] text-app-text/70">
-                          Tıbbi Notlar
+                          {t('archive.medicalNotes')}
                         </h4>
                       </header>
                       <div className="space-y-3">
-                        {treatments !== '—' ? (
-                          <NoteBlock label="Uygulanan tedaviler" body={treatments} />
+                        {treatments !== emDash ? (
+                          <NoteBlock label={t('archive.appliedTreatments')} body={treatments} />
                         ) : null}
-                        {opNote !== '—' ? (
-                          <NoteBlock label="Operasyon notu" body={opNote} />
+                        {opNote !== emDash ? (
+                          <NoteBlock label={t('archive.operationNote')} body={opNote} />
                         ) : null}
                       </div>
                     </div>

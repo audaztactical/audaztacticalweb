@@ -2,6 +2,7 @@ import { invNum, invStr } from './inventoryIlws'
 import { CASEVAC_TRANSMISSION_DEADLINE_SEC } from './casevacSimulatorConstants'
 import { MEDEVAC_TRANSMISSION_DEADLINE_SEC } from './medevacSimulatorValidation'
 import { PENALTY_TCCC_BELOW_40 } from './orsEngine'
+import { healthLocale, healthT } from './healthDisplayText'
 
 /** @typedef {'medevac' | 'casevac'} SimMode */
 
@@ -32,8 +33,9 @@ export function getSimulationMode(row) {
  * @param {unknown} ts
  */
 export function formatSimulationTimestamp(ts) {
+  const locale = healthLocale()
   if (ts && typeof ts === 'object' && ts !== null && 'toDate' in ts && typeof ts.toDate === 'function') {
-    return ts.toDate().toLocaleString('tr-TR', {
+    return ts.toDate().toLocaleString(locale, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -43,9 +45,9 @@ export function formatSimulationTimestamp(ts) {
     })
   }
   const s = invStr(ts)
-  if (!s) return '—'
+  if (!s) return healthT('common.emDash')
   const d = new Date(s)
-  return Number.isNaN(d.getTime()) ? s : d.toLocaleString('tr-TR')
+  return Number.isNaN(d.getTime()) ? s : d.toLocaleString(locale)
 }
 
 /**
@@ -121,7 +123,13 @@ export function getSimulationOvertimeSec(row) {
 export function isSimulationTimeoutFailure(row) {
   if (row.simTimedOut === true) return true
   const failure = invStr(row.medevacFailureReason).toUpperCase()
-  if (failure.includes('YAYIN SÜRESİ AŞILDI') || failure.includes('TIMEOUT')) return true
+  if (
+    failure.includes('YAYIN SÜRESİ AŞILDI') ||
+    failure.includes('TIMEOUT') ||
+    failure.includes('TRANSMISSION TIME EXCEEDED')
+  ) {
+    return true
+  }
   if (getSimulationOvertimeSec(row) > 0 && !getSimulationSuccess(row)) return true
   return false
 }
@@ -131,7 +139,13 @@ export function isSimulationTimeoutFailure(row) {
  */
 export function formatOvertimeDebriefLine(overtimeSec) {
   const ot = formatSimulationTimingSec(overtimeSec)
-  return `• [🚨 KRİTİK GECİKME]: TELSİZ PROTOKOLÜ SINIRINI +${ot} SANİYE AŞTINIZ! DÜŞMAN UNSURLARI BU GECİKME SAYESİNDE SİNYAL ÜÇGENLEMESİNİ (DIRECTION FINDING) TAMAMLADI VE TAHLİYE ARACINI PUSUYA DÜŞÜRDÜ.`
+  return healthT('sim.reject.overtime', { sec: ot })
+}
+
+/** Stable marker shared by TR/EN overtime debrief lines */
+export function isOvertimeDebriefLine(text) {
+  const s = invStr(text).toUpperCase()
+  return s.includes('CRITICAL_DELAY') || s.includes('KRİTİK GECİKME') || s.includes('CRITICAL DELAY')
 }
 
 /**
@@ -149,7 +163,7 @@ export function buildSimulationTimingFields(mode, elapsedSec, timedOut = false, 
     return {
       elapsedTime,
       overtime,
-      timeDisplayString: `-${overtime} SANİYE`,
+      timeDisplayString: healthT('sim.history.timeDisplayNeg', { sec: overtime }),
       medevacTransmissionSec: elapsedTime,
       simTimedOut: true,
     }
@@ -160,7 +174,8 @@ export function buildSimulationTimingFields(mode, elapsedSec, timedOut = false, 
   return {
     elapsedTime,
     overtime,
-    timeDisplayString: overtime > 0 ? `-${overtime} SANİYE` : null,
+    timeDisplayString:
+      overtime > 0 ? healthT('sim.history.timeDisplayNeg', { sec: overtime }) : null,
     medevacTransmissionSec: elapsedTime,
     simTimedOut: timedOut || overtime > 0,
   }
@@ -184,8 +199,10 @@ export function reactionEfficiencyPercent(mode, elapsedSec) {
 export function formatScoreOrsEffect(row) {
   const sp = Math.round(invNum(row.successPercent))
   const display = Number.isFinite(sp) ? sp : 0
-  if (display < 40) return `%${display} / −${PENALTY_TCCC_BELOW_40} ORS`
-  return `%${display} / —`
+  if (display < 40) {
+    return healthT('sim.history.scoreOrs', { pct: display, penalty: PENALTY_TCCC_BELOW_40 })
+  }
+  return healthT('sim.history.scorePlain', { pct: display })
 }
 
 /**

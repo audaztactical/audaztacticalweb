@@ -1,4 +1,5 @@
 import { invNum, invStr } from './inventoryIlws'
+import { healthT, labelMedevacConflict } from './healthDisplayText'
 
 export const MEDEVAC_TRANSMISSION_DEADLINE_SEC = 45
 
@@ -11,12 +12,21 @@ const NUMERIC_TOKEN_RE = /^-?\d+(?:\.\d+)?$/
 const DMS_SIX_GROUP_RE =
   /^\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*$/
 
-export const HAT1_COORDINATE_GUIDE_LINE =
-  "• [HAT 1 REHBERİ]: Görseldeki koordinatları girmek için özel işaretleri kaldırıp sadece sayıları ve boşlukları kullanın. Örn: '38 40 25.92 26 45 29.44' şeklinde yazın, sistem otomatik dönüştürecektir."
+/** @deprecated Prefer healthT('sim.reject.hat1Guide') */
+export function getHat1CoordinateGuideLine() {
+  return healthT('sim.reject.hat1Guide')
+}
 
-export const HAT1_UNSEPARATED_BLOC_LINE =
-  "• [🚨 KOORDİNAT KÖR NOKTASI]: SAYILARI BİTİŞİK GİRDİNİZ! Dünya üzerindeki derece, dakika ve saniye basamakları (tek veya çift hane) coğrafyaya göre değiştiği için sistemin enlem ve boylam sınırını hatasız tahmin etmesi imkansızdır. Lütfen sayıların arasına boşluk bırakarak giriniz. Örn: '38 40 25.92 26 45 29.44'"
+/** @deprecated Prefer healthT('sim.reject.hat1Bloc') */
+export function getHat1UnseparatedBlocLine() {
+  return healthT('sim.reject.hat1Bloc')
+}
 
+/** @deprecated Use getHat1CoordinateGuideLine() */
+export const HAT1_COORDINATE_GUIDE_LINE = ''
+
+/** @deprecated Use getHat1UnseparatedBlocLine() */
+export const HAT1_UNSEPARATED_BLOC_LINE = ''
 /** @param {string} token */
 function isAmbiguousDigitBlocToken(token) {
   return /^\d{7,}$/.test(token)
@@ -280,6 +290,106 @@ export function isNineLineFormComplete(form) {
   if (!form.line8_nationality) return false
   if (!form.line9_cbrn && !form.line9_terrain) return false
   return getPrecedenceTotal(form) > 0 && getPatientTypeTotal(form) > 0
+}
+
+/**
+ * @param {MedevacSimForm} form
+ * @param {{ timedOut?: boolean }} [opts]
+ * @returns {string[]}
+ */
+export function buildMedevacRejectionReasons(form, { timedOut = false } = {}) {
+  /** @type {string[]} */
+  const reasons = []
+
+  if (timedOut) {
+    reasons.push(healthT('sim.reject.timeoutMedevac'))
+  }
+
+  const line1 = invStr(form.line1_mgrs).trim()
+  if (!line1) {
+    reasons.push(healthT('sim.reject.hat1Empty'))
+  } else if (hasUnseparatedDigitBloc(form.line1_mgrs)) {
+    reasons.push(healthT('sim.reject.hat1Bloc'))
+  } else if (!isValidMgrsPickup(form.line1_mgrs)) {
+    reasons.push(healthT('sim.reject.hat1Invalid'))
+    reasons.push(healthT('sim.reject.hat1Guide'))
+  }
+
+  const hat3Total = getPrecedenceTotal(form)
+  const hat5Total = getPatientTypeTotal(form)
+
+  if (hat3Total === 0) {
+    reasons.push(healthT('sim.reject.hat3Zero'))
+  }
+
+  if (hat5Total === 0) {
+    reasons.push(healthT('sim.reject.hat5Zero'))
+  }
+
+  if (hat3Total > 0 && hat5Total > 0 && hat3Total !== hat5Total) {
+    if (hat3Total > hat5Total) {
+      reasons.push(
+        healthT('sim.reject.hat3Hat5Missing', {
+          hat3: hat3Total,
+          hat5: hat5Total,
+          missing: hat3Total - hat5Total,
+        }),
+      )
+    } else {
+      reasons.push(
+        healthT('sim.reject.hat3Hat5Excess', {
+          hat3: hat3Total,
+          hat5: hat5Total,
+          excess: hat5Total - hat3Total,
+        }),
+      )
+    }
+  }
+
+  if (!invStr(form.line2_freq_callsign).trim()) {
+    reasons.push(healthT('sim.reject.hat2Empty'))
+  }
+
+  const line4 = Array.isArray(form.line4_equipment) ? form.line4_equipment : []
+  if (line4.length === 0) {
+    reasons.push(healthT('sim.reject.hat4Empty'))
+  }
+
+  if (!form.line6_security) {
+    reasons.push(healthT('sim.reject.hat6Empty'))
+  }
+
+  if (!form.line7_marking) {
+    reasons.push(healthT('sim.reject.hat7Empty'))
+  }
+
+  if (!form.line8_nationality) {
+    reasons.push(healthT('sim.reject.hat8Empty'))
+  }
+
+  if (!form.line9_cbrn && !form.line9_terrain) {
+    reasons.push(healthT('sim.reject.hat9Empty'))
+  }
+
+  for (const code of detectNineLineConflicts(form)) {
+    if (code === 'PATIENT_COUNT_MISMATCH' || code === 'LINE3_ZERO_PATIENTS' || code === 'LINE5_ZERO_PATIENTS') {
+      continue
+    }
+    const label = labelMedevacConflict(code)
+    if (code === 'UNMARKED_SECURE_LZ') {
+      reasons.push(healthT('sim.reject.conflictUnmarked', { label }))
+    } else if (code === 'CBRN_UNMARKED_LZ') {
+      reasons.push(healthT('sim.reject.conflictCbrn', { label }))
+    } else if (code === 'HOT_LZ_NO_EXTRACTION') {
+      reasons.push(healthT('sim.reject.conflictHotLz', { label }))
+    } else if (code === 'URGENT_NO_EQUIP_TERRAIN') {
+      reasons.push(healthT('sim.reject.conflictUrgent', { label }))
+    } else {
+      reasons.push(healthT('sim.reject.conflictGeneric', { code, label }))
+    }
+  }
+
+  return reasons
 }
 
 /**

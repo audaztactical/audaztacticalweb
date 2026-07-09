@@ -3,6 +3,7 @@
 /** @typedef {'URGENT' | 'PRIORITY' | 'ROUTINE'} EvacPriority */
 
 /**
+ * Visual/meta only — titles/subtitles/doctrine come from health i18n via healthDisplayText.
  * @typedef {Object} MarchStepMeta
  * @property {MarchStepKey} key
  * @property {string} title
@@ -18,107 +19,57 @@ export const MARCH_DD1380_STEPS = [
   {
     key: 'M',
     title: 'MASSIVE BLEEDING',
-    subtitle: 'Yoğun Kanama',
+    subtitle: 'Massive Bleeding',
     accent: 'text-red-400',
     panelBorder: 'border-red-500/45',
     panelBg: 'bg-gradient-to-br from-red-950/40 to-black/70',
-    doctrine:
-      "// DOCTRINE: Çatışma altındaki önlenebilir ölüm nedenlerinin %90'ı uzuv kanamalarıdır. Ateş altında (CUF) ilk 60 saniyede yüksek ve sıkı (High & Tight) turnike uygulayın. TFC safhasında turnike zamanını karta işleyin.",
+    doctrine: '',
   },
   {
     key: 'A',
     title: 'AIRWAY',
-    subtitle: 'Hava Yolu',
+    subtitle: 'Airway',
     accent: 'text-amber-400',
     panelBorder: 'border-amber-500/40',
     panelBg: 'bg-gradient-to-br from-amber-950/35 to-black/70',
-    doctrine:
-      '// DOCTRINE: Bilinci kapalı yaralıda dil geriye kaçarak hava yolunu tıkayabilir. Yaralı soluk alıyorsa sağ veya sol burun deliğinden NPA uygulayın. Hava yolu açılmazsa cerrahi müdahale (Cric) planlayın.',
+    doctrine: '',
   },
   {
     key: 'R',
     title: 'RESPIRATION',
-    subtitle: 'Solunum',
+    subtitle: 'Respiration',
     accent: 'text-sky-400',
     panelBorder: 'border-sky-500/40',
     panelBg: 'bg-gradient-to-br from-sky-950/40 to-black/70',
-    doctrine:
-      '// DOCTRINE: Göğüsteki açık yaralara hava sızdırmaz ventilli göğüs mührü yapıştırın. İlerleyen süreçte solunum güçlüğü, tek taraflı göğüs kalkışı ve tansiyon düşüklüğü varsa 2. veya 5. interkostal aralıktan İğne Dekompresyonu (NDC) uygulayın.',
+    doctrine: '',
   },
   {
     key: 'C',
     title: 'CIRCULATION',
-    subtitle: 'Dolaşım',
+    subtitle: 'Circulation',
     accent: 'text-emerald-400',
     panelBorder: 'border-emerald-500/40',
     panelBg: 'bg-gradient-to-br from-emerald-950/35 to-black/70',
-    doctrine:
-      '// DOCTRINE: İç kanama veya şok şüphesinde pıhtılaşmayı hızlandırmak için ilk 3 saat içinde Traneksamik Asit (TXA) uygulayın. Nabız takibini radial arter üzerinden yapın.',
+    doctrine: '',
   },
   {
     key: 'H',
     title: 'HYPOTHERMIA & HEAD',
-    subtitle: 'Hipotermi ve Baş',
+    subtitle: 'Hypothermia & Head',
     accent: 'text-cyan-300',
     panelBorder: 'border-cyan-500/40',
     panelBg: 'bg-gradient-to-br from-cyan-950/30 to-black/70',
-    doctrine:
-      '// DOCTRINE: Kan kaybı vücut sıcaklığının düşmesine (Hipotermi) yol açar, bu da pıhtılaşma mekanizmasını bozar (Ölüm Üçgeni). Yaralıyı doğrudan zeminden kesin ve termal battaniye ile sarın.',
+    doctrine: '',
   },
 ]
 
-/** Extended tactical protocol bullets for MARCH detail panel */
+/** @deprecated Prefer marchProtocolDetail() from healthDisplayText */
 export const MARCH_PROTOCOL_DETAILS = {
-  M: {
-    definition:
-      'Massive Bleeding (Yoğun Kanama) — önlenebilir ölümün birincil nedeni. CUF altında ilk 60 sn içinde kanamayı durdur.',
-    protocols: [
-      'High & Tight turnike: yaralı üzerinde en yüksek uygulanabilir nokta, sıkı (2–3 inç üstü).',
-      'TQ zamanını DD-1380 üzerine işle; re-evaluate her 2 saatte bir.',
-      'Junctional / gövde kanaması: hemostatik gauze + basınç bandajı; TQ mümkün değilse.',
-      'Ateş hattından çıkış önceliği: tek müdahale = kanama kontrolü.',
-    ],
-  },
-  A: {
-    definition:
-      'Airway (Hava Yolu) — bilinç bozukluğunda dil/obstrüksiyon riski. Soluyorsa NPA; solmuyorsa ileri hava yolu.',
-    protocols: [
-      'Bilinci açık + solunum var → pozisyon, aspirasyon kontrolü.',
-      'Bilinci kapalı + solunum var → NPA (sağ/sol burun deliği).',
-      'Tam obstrüksiyon / solunum yok → chin-lift, Cric planı (TFC).',
-      'Recovery position: stabil lateral, aspirasyon önleme.',
-    ],
-  },
-  R: {
-    definition:
-      'Respiration (Solunum) — penetrant göğüs yarası ve tansiyon pnömotoraks yönetimi.',
-    protocols: [
-      'Vented chest seal: açık göğüs yarasına hava sızdırmaz mühür.',
-      'NDC: 2. veya 5. interkostal, mid-clavicular — 10G/14G.',
-      'Solunum sayısı, SpO2 (varsa), tek taraflı solunum sesi kaydı.',
-      'Bilateral dekomprese gerekirse her iki tarafı değerlendir.',
-    ],
-  },
-  C: {
-    definition:
-      'Circulation (Dolaşım) — şok, iç kanama, TXA ve sıvı protokolleri.',
-    protocols: [
-      'TXA: ilk 3 saat içinde 1g IV/IO (CoTCCC).',
-      'IV/IO erişim; whole blood tercih (mümkünse).',
-      'Radial nabız: present/absent — perfüzyon göstergesi.',
-      'Reassess kanama adımına dönüş (M tekrar).',
-    ],
-  },
-  H: {
-    definition:
-      'Hypothermia & Head Injury (Hipotermi / Kafa travması) — ölüm üçgeni ve nöro koruma.',
-    protocols: [
-      'Hipotermi önleme: termal wrap, izolasyon zeminden.',
-      'AVPU ve pupil kaydı — TBI şüphesi.',
-      'Baş yaralanması: yüksek tahliye önceliği, C-spine dikkat.',
-      'Aktif ısıtma mümkünse; ıslak giysi çıkar.',
-    ],
-  },
+  M: { definition: '', protocols: [] },
+  A: { definition: '', protocols: [] },
+  R: { definition: '', protocols: [] },
+  C: { definition: '', protocols: [] },
+  H: { definition: '', protocols: [] },
 }
 
 export const MARCH_DD1380_BUTTON_STYLES = {
@@ -129,7 +80,7 @@ export const MARCH_DD1380_BUTTON_STYLES = {
   H: 'border-cyan-500/35 bg-gradient-to-br from-cyan-950/35 to-black/60 shadow-[0_0_36px_-8px_rgba(34,211,238,0.35)] ring-1 ring-cyan-500/20',
 }
 
-/** Yaralı kan grubu — operatör profilinden bağımsız, DD-1380 formu */
+/** IDs only — labels from healthDisplayText / health.json */
 export const CASUALTY_BLOOD_TYPE_OPTIONS = [
   { id: 'A RH+', label: 'A Rh+' },
   { id: 'A RH-', label: 'A Rh-' },
@@ -139,38 +90,38 @@ export const CASUALTY_BLOOD_TYPE_OPTIONS = [
   { id: 'AB RH-', label: 'AB Rh-' },
   { id: '0 RH+', label: '0 Rh+' },
   { id: '0 RH-', label: '0 Rh-' },
-  { id: 'unknown', label: 'Bilinmiyor' },
+  { id: 'unknown', label: 'Unknown' },
 ]
 
 export const TQ_LOCATION_DD_OPTIONS = [
-  { id: 'right_arm', label: 'Sağ Kol' },
-  { id: 'left_arm', label: 'Sol Kol' },
-  { id: 'right_leg', label: 'Sağ Bacak' },
-  { id: 'left_leg', label: 'Sol Bacak' },
-  { id: 'custom', label: 'Özel Bölge' },
+  { id: 'right_arm', label: 'Right Arm' },
+  { id: 'left_arm', label: 'Left Arm' },
+  { id: 'right_leg', label: 'Right Leg' },
+  { id: 'left_leg', label: 'Left Leg' },
+  { id: 'custom', label: 'Custom Location' },
 ]
 
 export const FLUID_DD_OPTIONS = [
-  { id: 'whole_blood', label: 'Tam Kan' },
-  { id: 'plasma', label: 'Plazma' },
-  { id: 'saline', label: 'Serum Fizyolojik' },
+  { id: 'whole_blood', label: 'Whole Blood' },
+  { id: 'plasma', label: 'Plasma' },
+  { id: 'saline', label: 'Normal Saline' },
 ]
 
 export const RADIAL_PULSE_OPTIONS = [
-  { id: 'present', label: 'Alınabiliyor' },
-  { id: 'absent', label: 'Alınamıyor' },
+  { id: 'present', label: 'Present' },
+  { id: 'absent', label: 'Absent' },
 ]
 
 export const AVPU_OPTIONS = [
-  { id: 'alert', label: 'Uyanık (A)' },
-  { id: 'verbal', label: 'Sözlü Uyarı (V)' },
-  { id: 'pain', label: 'Ağrı Uyarısı (P)' },
-  { id: 'unresponsive', label: 'Yanıtsız (U)' },
+  { id: 'alert', label: 'Alert (A)' },
+  { id: 'verbal', label: 'Verbal (V)' },
+  { id: 'pain', label: 'Pain (P)' },
+  { id: 'unresponsive', label: 'Unresponsive (U)' },
 ]
 
 export const PUPIL_OPTIONS = [
   { id: 'normal', label: 'Normal' },
-  { id: 'blown', label: 'Midriyazis / Geniş' },
+  { id: 'blown', label: 'Blown / Dilated' },
 ]
 
 export const NDC_GAUGE_OPTIONS = [
@@ -180,7 +131,7 @@ export const NDC_GAUGE_OPTIONS = [
 
 /** @type {{ id: EvacPriority; label: string }[]} */
 export const EVAC_PRIORITY_OPTIONS = [
-  { id: 'URGENT', label: 'ACİL' },
-  { id: 'PRIORITY', label: 'ÖNCELİKLİ' },
-  { id: 'ROUTINE', label: 'RUTİN' },
+  { id: 'URGENT', label: 'URGENT' },
+  { id: 'PRIORITY', label: 'PRIORITY' },
+  { id: 'ROUTINE', label: 'ROUTINE' },
 ]

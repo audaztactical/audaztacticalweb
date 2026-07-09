@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Activity,
   Droplets,
@@ -8,18 +9,19 @@ import {
   Wind,
 } from 'lucide-react'
 import { CASUALTY_DD1380_INITIAL } from '../../lib/casualtyCardPayload'
+import { MARCH_DD1380_BUTTON_STYLES } from '../../lib/marchDd1380Config'
 import {
-  AVPU_OPTIONS,
-  CASUALTY_BLOOD_TYPE_OPTIONS,
-  EVAC_PRIORITY_OPTIONS,
-  FLUID_DD_OPTIONS,
-  MARCH_DD1380_BUTTON_STYLES,
-  MARCH_DD1380_STEPS,
-  NDC_GAUGE_OPTIONS,
-  PUPIL_OPTIONS,
-  RADIAL_PULSE_OPTIONS,
-  TQ_LOCATION_DD_OPTIONS,
-} from '../../lib/marchDd1380Config'
+  avpuOptions,
+  casualtyBloodTypeOptions,
+  evacPriorityOptions,
+  fluidOptions,
+  marchStepDisplay,
+  marchStepsDisplay,
+  ndcGaugeOptions,
+  pupilOptions,
+  radialPulseOptions,
+  tqLocationOptions,
+} from '../../lib/healthDisplayText'
 
 const STEP_ICONS = {
   M: Droplets,
@@ -59,7 +61,9 @@ export default function Dd1380MarchWorkspace({
   onMarchLetterClick,
   protocolInline = null,
 }) {
-  const activeStep = MARCH_DD1380_STEPS.find((s) => s.key === form.activeMarchStep) ?? MARCH_DD1380_STEPS[0]
+  const { t } = useTranslation('health')
+  const steps = marchStepsDisplay()
+  const activeStep = marchStepDisplay(form.activeMarchStep)
   const detailPanelRef = useRef(/** @type {HTMLDivElement | null} */ (null))
 
   useEffect(() => {
@@ -71,16 +75,16 @@ export default function Dd1380MarchWorkspace({
 
   return (
     <div className="h-auto min-h-0 space-y-4">
-      <section aria-label="M.A.R.C.H. DD-1380">
+      <section aria-label={t('march.ariaMarch')}>
         <div className="mb-3 flex items-center gap-2">
           <Shield className="size-5 text-accent" strokeWidth={1.5} aria-hidden />
           <span className="font-mono-technical text-xs font-bold tracking-[0.35em] text-accent">
-            M.A.R.C.H. · DD-1380 YARALI KARTI
+            {t('march.cardTitle')}
           </span>
         </div>
 
         <div className="flex gap-2 overflow-x-auto pb-2 sm:grid sm:grid-cols-5 sm:overflow-visible">
-          {MARCH_DD1380_STEPS.map((step) => {
+          {steps.map((step) => {
             const Icon = STEP_ICONS[step.key]
             const active = form.activeMarchStep === step.key
             return (
@@ -126,7 +130,11 @@ export default function Dd1380MarchWorkspace({
           <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
             <div>
               <p className={`font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] ${activeStep.accent}`}>
-                {activeStep.key} · {activeStep.title} ({activeStep.subtitle.toUpperCase()})
+                {t('march.stepHeading', {
+                  key: activeStep.key,
+                  title: activeStep.title,
+                  subtitle: activeStep.subtitle.toUpperCase(),
+                })}
               </p>
             </div>
           </div>
@@ -140,14 +148,14 @@ export default function Dd1380MarchWorkspace({
       </section>
 
       <section
-        aria-label="Yaralı kimlik"
+        aria-label={t('march.ariaIdentity')}
         className="rounded-xl border border-accent/20 bg-gradient-to-b from-black/80 to-red-950/[0.12] p-4 sm:p-5"
       >
-        <p className="mb-4 font-mono-technical text-xs tracking-[0.25em] text-accent">YARALI KİMLİK</p>
+        <p className="mb-4 font-mono-technical text-xs tracking-[0.25em] text-accent">{t('march.identityHeading')}</p>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
           <label className="block shrink-0 space-y-2 lg:min-w-[10rem]">
             <span className="font-mono-technical text-[9px] font-bold uppercase tracking-wider text-red-400/90">
-              KAN GRUBU (YARALI)
+              {t('march.fields.bloodType')}
             </span>
             <div className="rounded-lg border border-accent/35 bg-black/50 px-3 py-3 shadow-[0_0_48px_-12px_rgba(255,180,0,0.35)]">
               <select
@@ -155,10 +163,10 @@ export default function Dd1380MarchWorkspace({
                 onChange={(e) => onPatch({ bloodType: e.target.value })}
                 disabled={disabled}
                 className={`${selectClass} text-center text-lg font-black text-accent`}
-                aria-label="Yaralı kan grubu"
+                aria-label={t('march.ariaBloodType')}
               >
-                <option value="">— SEÇİN —</option>
-                {CASUALTY_BLOOD_TYPE_OPTIONS.map((o) => (
+                <option value="">{t('march.selectPlaceholder')}</option>
+                {casualtyBloodTypeOptions().map((o) => (
                   <option key={o.id} value={o.id}>
                     {o.label}
                   </option>
@@ -169,7 +177,7 @@ export default function Dd1380MarchWorkspace({
           <div className="min-w-0 flex-1 space-y-3">
             <label className="block space-y-1">
               <span className="font-mono-technical text-[9px] font-bold uppercase tracking-wider text-app-text/55">
-                YARALI ÇAĞRI KODU / İSİM
+                {t('march.fields.patientName')}
               </span>
               <input
                 type="text"
@@ -177,13 +185,13 @@ export default function Dd1380MarchWorkspace({
                 onChange={(e) => onPatch({ patientName: e.target.value })}
                 disabled={disabled}
                 className={fieldClass}
-                placeholder="TELSİZ KODU / AD SOYAD"
+                placeholder={t('march.fields.patientNamePlaceholder')}
                 maxLength={80}
               />
             </label>
             <label className="block space-y-1">
               <span className="font-mono-technical text-[9px] font-bold uppercase tracking-wider text-app-text/55">
-                ALERJİLER (YARALI)
+                {t('march.fields.allergies')}
               </span>
               <textarea
                 rows={2}
@@ -200,11 +208,11 @@ export default function Dd1380MarchWorkspace({
 
       <section className="rounded-xl border border-accent/20 bg-black/50 p-4 sm:p-5">
         <p className="mb-3 font-mono-technical text-[10px] font-bold uppercase tracking-[0.22em] text-accent">
-          DD-1380 · YARALANMA & MÜDAHALE
+          {t('march.injuryHeading')}
         </p>
         <label className="mb-3 block space-y-1">
           <span className="font-mono-technical text-[9px] font-bold uppercase tracking-wider text-app-text/55">
-            YARALANMA MEKANİZMASI (MOI)
+            {t('march.fields.moi')}
           </span>
           <input
             type="text"
@@ -212,13 +220,13 @@ export default function Dd1380MarchWorkspace({
             onChange={(e) => onPatch({ mechanismOfInjury: e.target.value })}
             disabled={disabled}
             className={fieldClass}
-            placeholder="Ateşli silah, patlama, IED, düşme…"
+            placeholder={t('march.fields.moiPlaceholder')}
             maxLength={200}
           />
         </label>
         <label className="mb-3 block space-y-1">
           <span className="font-mono-technical text-[9px] font-bold uppercase tracking-wider text-app-text/55">
-            UYGULANAN MÜDAHALELER (ÖZET)
+            {t('march.fields.treatments')}
           </span>
           <textarea
             rows={2}
@@ -226,13 +234,13 @@ export default function Dd1380MarchWorkspace({
             onChange={(e) => onPatch({ appliedTreatmentsNote: e.target.value })}
             disabled={disabled}
             className={`${fieldClass} resize-y`}
-            placeholder="Turnike sağ kol 14:32, NPA, göğüs mührü…"
+            placeholder={t('march.fields.treatmentsPlaceholder')}
             maxLength={800}
           />
         </label>
         <label className="mb-3 block space-y-1">
           <span className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.22em] text-accent">
-            OPERASYON NOTU / TAHLİYE ÖNCELİĞİ
+            {t('march.fields.operationNote')}
           </span>
           <textarea
             rows={4}
@@ -240,7 +248,7 @@ export default function Dd1380MarchWorkspace({
             onChange={(e) => onPatch({ operationNote: e.target.value })}
             disabled={disabled}
             className={`${fieldClass} min-h-[5.5rem] resize-y text-sm leading-relaxed`}
-            placeholder="Tahliye koordinasyonu, müdahale özeti, iletişim frekansı…"
+            placeholder={t('march.fields.operationNotePlaceholder')}
             maxLength={2000}
           />
         </label>
@@ -248,17 +256,17 @@ export default function Dd1380MarchWorkspace({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-1">
             <span className="font-mono-technical text-[9px] font-bold uppercase tracking-wider text-app-text/55">
-              TAHLİYE ÖNCELİĞİ
+              {t('march.fields.evacPriority')}
             </span>
-            <div className="flex flex-wrap gap-2" role="group" aria-label="Tahliye önceliği">
-              {EVAC_PRIORITY_OPTIONS.map((opt) => {
+            <div className="flex flex-wrap gap-2" role="group" aria-label={t('march.ariaEvacPriority')}>
+              {evacPriorityOptions().map((opt) => {
                 const on = form.evacPriority === opt.id
                 return (
                   <button
                     key={opt.id}
                     type="button"
                     disabled={disabled}
-                    onClick={() => onPatch({ evacPriority: opt.id })}
+                    onClick={() => onPatch({ evacPriority: /** @type {import('../../lib/marchDd1380Config').EvacPriority} */ (opt.id) })}
                     className={[
                       'rounded border px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider transition',
                       on
@@ -283,13 +291,13 @@ export default function Dd1380MarchWorkspace({
             <span className="text-xl leading-none" aria-hidden>
               ✓
             </span>
-            {saving ? 'KAYDEDİLİYOR…' : 'KARTI KAYDET'}
+            {saving ? t('march.saving') : t('march.saveCard')}
           </button>
         </div>
 
         {saveOk ? (
           <p className="mt-3 text-center font-mono-technical text-[10px] font-bold uppercase text-accent">
-            YARALI_KARTI_KAYDEDİLDİ · FIRESTORE
+            {t('march.saveOk')}
           </p>
         ) : null}
         {saveError ? (
@@ -311,6 +319,8 @@ export default function Dd1380MarchWorkspace({
  * }} props
  */
 function MarchStepFields({ stepKey, form, onPatch, disabled }) {
+  const { t } = useTranslation('health')
+
   if (stepKey === 'M') {
     const tqActive = Boolean(form.tourniquetApplied)
     const tqFieldDisabled = disabled || !tqActive
@@ -318,14 +328,14 @@ function MarchStepFields({ stepKey, form, onPatch, disabled }) {
     return (
       <div className="grid gap-3 sm:grid-cols-2">
         <CheckRow
-          label="TURNİKE UYGULANDI"
+          label={t('march.checks.tourniquet')}
           checked={form.tourniquetApplied}
           onChange={(v) => onPatch({ tourniquetApplied: v })}
           disabled={disabled}
           className="sm:col-span-2"
         />
         <label className={`block space-y-1 sm:col-span-2 ${tqFieldDisabled ? 'opacity-45' : ''}`}>
-          <LabelMuted>TURNİKE UYGULAMA SAATİ</LabelMuted>
+          <LabelMuted>{t('march.fields.tqTime')}</LabelMuted>
           <input
             type="time"
             value={form.tqInsertionTime}
@@ -335,14 +345,14 @@ function MarchStepFields({ stepKey, form, onPatch, disabled }) {
           />
         </label>
         <label className={`block space-y-1 ${tqFieldDisabled ? 'opacity-45' : ''}`}>
-          <LabelMuted>TURNİKE BÖLGESİ</LabelMuted>
+          <LabelMuted>{t('march.fields.tqLocation')}</LabelMuted>
           <select
             value={form.tqLocation}
             onChange={(e) => onPatch({ tqLocation: e.target.value })}
             disabled={tqFieldDisabled}
             className={selectClass}
           >
-            {TQ_LOCATION_DD_OPTIONS.map((o) => (
+            {tqLocationOptions().map((o) => (
               <option key={o.id} value={o.id}>
                 {o.label}
               </option>
@@ -351,7 +361,7 @@ function MarchStepFields({ stepKey, form, onPatch, disabled }) {
         </label>
         {form.tqLocation === 'custom' ? (
           <label className={`block space-y-1 ${tqFieldDisabled ? 'opacity-45' : ''}`}>
-            <LabelMuted>ÖZEL BÖLGE</LabelMuted>
+            <LabelMuted>{t('march.fields.tqCustom')}</LabelMuted>
             <input
               type="text"
               value={form.tqLocationCustom}
@@ -364,13 +374,13 @@ function MarchStepFields({ stepKey, form, onPatch, disabled }) {
           <div className="hidden sm:block" />
         )}
         <CheckRow
-          label="YARA PAKETLEME / HEMOSTATİK GAZLI BEZ"
+          label={t('march.checks.woundPacking')}
           checked={form.woundPackingHemostatic}
           onChange={(v) => onPatch({ woundPackingHemostatic: v })}
           disabled={disabled}
         />
         <CheckRow
-          label="BASINÇLI BANDAJ"
+          label={t('march.checks.pressureBandage')}
           checked={form.pressureBandage}
           onChange={(v) => onPatch({ pressureBandage: v })}
           disabled={disabled}
@@ -383,19 +393,19 @@ function MarchStepFields({ stepKey, form, onPatch, disabled }) {
     return (
       <div className="grid gap-3 sm:grid-cols-2">
         <CheckRow
-          label="NPA (NAZOFARENGEAL HAVA YOLU) UYGULANDI"
+          label={t('march.checks.npa')}
           checked={form.npaInserted}
           onChange={(v) => onPatch({ npaInserted: v })}
           disabled={disabled}
         />
         <CheckRow
-          label="ENTÜBASYON / CRİKOTİROTOMİ"
+          label={t('march.checks.intubatedCric')}
           checked={form.intubatedCric}
           onChange={(v) => onPatch({ intubatedCric: v })}
           disabled={disabled}
         />
         <CheckRow
-          label="KURTARMA POZİSYONU"
+          label={t('march.checks.recoveryPosition')}
           checked={form.recoveryPosition}
           onChange={(v) => onPatch({ recoveryPosition: v })}
           disabled={disabled}
@@ -409,26 +419,26 @@ function MarchStepFields({ stepKey, form, onPatch, disabled }) {
     return (
       <div className="grid gap-3 sm:grid-cols-2">
         <CheckRow
-          label="VENTİLLİ GÖĞÜS MÜHRÜ"
+          label={t('march.checks.ventedChestSeal')}
           checked={form.ventedChestSeal}
           onChange={(v) => onPatch({ ventedChestSeal: v })}
           disabled={disabled}
         />
         <CheckRow
-          label="İĞNE DEKOMPRESYONU (NDC)"
+          label={t('march.checks.needleDecompression')}
           checked={form.needleDecompression}
           onChange={(v) => onPatch({ needleDecompression: v })}
           disabled={disabled}
         />
         <label className="block space-y-1">
-          <LabelMuted>NDC İĞNE KALINLIĞI</LabelMuted>
+          <LabelMuted>{t('march.fields.ndcGauge')}</LabelMuted>
           <select
             value={form.ndcGauge}
             onChange={(e) => onPatch({ ndcGauge: e.target.value })}
             disabled={disabled || !form.needleDecompression}
             className={selectClass}
           >
-            {NDC_GAUGE_OPTIONS.map((o) => (
+            {ndcGaugeOptions().map((o) => (
               <option key={o.id} value={o.id}>
                 {o.label}
               </option>
@@ -436,16 +446,17 @@ function MarchStepFields({ stepKey, form, onPatch, disabled }) {
           </select>
         </label>
         <label className="block space-y-1">
-          <LabelMuted>SOLUNUM HIZI (RR)</LabelMuted>
+          <LabelMuted>{t('march.fields.respiratoryRate')}</LabelMuted>
           <input
             type="number"
             min={0}
             max={80}
+            step={1}
             value={form.respiratoryRate}
             onChange={(e) => onPatch({ respiratoryRate: e.target.value })}
             disabled={disabled}
             className={fieldClass}
-            placeholder="ör. 18"
+            placeholder={t('march.fields.respiratoryRatePlaceholder')}
           />
         </label>
       </div>
@@ -456,27 +467,27 @@ function MarchStepFields({ stepKey, form, onPatch, disabled }) {
     return (
       <div className="grid gap-3 sm:grid-cols-2">
         <CheckRow
-          label="IV / IO ERİŞİM KURULDU"
+          label={t('march.checks.ivIo')}
           checked={form.ivIoAccess}
           onChange={(v) => onPatch({ ivIoAccess: v })}
           disabled={disabled}
         />
         <CheckRow
-          label="TXA (TRANEXAMİK ASİT) UYGULANDI"
+          label={t('march.checks.txa')}
           checked={form.txaAdministered}
           onChange={(v) => onPatch({ txaAdministered: v })}
           disabled={disabled}
         />
         <label className="block space-y-1">
-          <LabelMuted>SIVI TEDAVİSİ</LabelMuted>
+          <LabelMuted>{t('march.fields.fluid')}</LabelMuted>
           <select
             value={form.fluidAdministered}
             onChange={(e) => onPatch({ fluidAdministered: e.target.value })}
             disabled={disabled || !form.ivIoAccess}
             className={selectClass}
           >
-            <option value="">— Seçin —</option>
-            {FLUID_DD_OPTIONS.map((o) => (
+            <option value="">{t('march.selectPlaceholderShort')}</option>
+            {fluidOptions().map((o) => (
               <option key={o.id} value={o.id}>
                 {o.label}
               </option>
@@ -484,15 +495,15 @@ function MarchStepFields({ stepKey, form, onPatch, disabled }) {
           </select>
         </label>
         <label className="block space-y-1">
-          <LabelMuted>RADYAL NABIZ</LabelMuted>
+          <LabelMuted>{t('march.fields.radialPulse')}</LabelMuted>
           <select
             value={form.radialPulse}
             onChange={(e) => onPatch({ radialPulse: e.target.value })}
             disabled={disabled}
             className={selectClass}
           >
-            <option value="">— Seçin —</option>
-            {RADIAL_PULSE_OPTIONS.map((o) => (
+            <option value="">{t('march.selectPlaceholderShort')}</option>
+            {radialPulseOptions().map((o) => (
               <option key={o.id} value={o.id}>
                 {o.label}
               </option>
@@ -506,27 +517,27 @@ function MarchStepFields({ stepKey, form, onPatch, disabled }) {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       <CheckRow
-        label="HİPOTERMİ ÖRTÜSÜ / BATTANİYE"
+        label={t('march.checks.hypothermiaWrap')}
         checked={form.hypothermiaWrap}
         onChange={(v) => onPatch({ hypothermiaWrap: v })}
         disabled={disabled}
       />
       <CheckRow
-        label="AKTİF ISI KAYNAĞI KULLANILDI"
+        label={t('march.checks.activeHeating')}
         checked={form.activeHeating}
         onChange={(v) => onPatch({ activeHeating: v })}
         disabled={disabled}
       />
       <label className="block space-y-1">
-        <LabelMuted>AVPU BİLİNÇ DÜZEYİ</LabelMuted>
+        <LabelMuted>{t('march.fields.avpu')}</LabelMuted>
         <select
           value={form.avpuLevel}
           onChange={(e) => onPatch({ avpuLevel: e.target.value })}
           disabled={disabled}
           className={selectClass}
         >
-          <option value="">— Seçin —</option>
-          {AVPU_OPTIONS.map((o) => (
+          <option value="">{t('march.selectPlaceholderShort')}</option>
+          {avpuOptions().map((o) => (
             <option key={o.id} value={o.id}>
               {o.label}
             </option>
@@ -534,15 +545,15 @@ function MarchStepFields({ stepKey, form, onPatch, disabled }) {
         </select>
       </label>
       <label className="block space-y-1">
-        <LabelMuted>PUPİL DURUMU</LabelMuted>
+        <LabelMuted>{t('march.fields.pupil')}</LabelMuted>
         <select
           value={form.pupilStatus}
           onChange={(e) => onPatch({ pupilStatus: e.target.value })}
           disabled={disabled}
           className={selectClass}
         >
-          <option value="">— Seçin —</option>
-          {PUPIL_OPTIONS.map((o) => (
+          <option value="">{t('march.selectPlaceholderShort')}</option>
+          {pupilOptions().map((o) => (
             <option key={o.id} value={o.id}>
               {o.label}
             </option>
@@ -586,4 +597,3 @@ function LabelMuted({ children }) {
     </span>
   )
 }
-

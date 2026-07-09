@@ -12,34 +12,35 @@ export const CASEVAC_SIM_INITIAL = {
   pickup_callsign: '',
 }
 
+/** IDs only — labels from health.json `sim.options` via healthDisplayText */
 /** @type {{ id: string; label: string }[]} */
 export const CASEVAC_MIST_METRIC_OPTIONS = [
-  { id: 'bullet', label: 'KURŞUN YARASI' },
-  { id: 'shrapnel', label: 'ŞARAPNEL' },
-  { id: 'amputation', label: 'AMPÜTASYON' },
-  { id: 'burn', label: 'YANIK' },
+  { id: 'bullet', label: 'GSW' },
+  { id: 'shrapnel', label: 'SHRAPNEL' },
+  { id: 'amputation', label: 'AMPUTATION' },
+  { id: 'burn', label: 'BURN' },
 ]
 
 /** @type {{ id: string; label: string }[]} */
 export const CASEVAC_MIST_INJURY_OPTIONS = [
-  { id: 'head_neck', label: 'BAŞ / BOYUN' },
-  { id: 'chest', label: 'GÖĞÜS' },
-  { id: 'abdomen', label: 'BATIN' },
-  { id: 'extremity', label: 'UZUVLAR' },
+  { id: 'head_neck', label: 'HEAD_NECK' },
+  { id: 'chest', label: 'CHEST' },
+  { id: 'abdomen', label: 'ABDOMEN' },
+  { id: 'extremity', label: 'EXTREMITY' },
 ]
 
 /** @type {{ id: string; label: string }[]} */
 export const CASEVAC_MIST_VITALS_OPTIONS = [
-  { id: 'conscious_open', label: 'BİLİNÇ AÇIK' },
-  { id: 'unconscious', label: 'BİLİNÇ KAPALI' },
-  { id: 'shock_yes', label: 'ŞOK BELİRTİSİ VAR' },
-  { id: 'shock_no', label: 'ŞOK BELİRTİSİ YOK' },
+  { id: 'conscious_open', label: 'CONSCIOUS' },
+  { id: 'unconscious', label: 'UNCONSCIOUS' },
+  { id: 'shock_yes', label: 'SHOCK_YES' },
+  { id: 'shock_no', label: 'SHOCK_NO' },
 ]
 
 /** @type {{ id: string; label: string }[]} */
 export const CASEVAC_MIST_TREATMENT_OPTIONS = [
-  { id: 'tourniquet', label: 'TURNİKE UYGULANDI' },
-  { id: 'chest_seal', label: 'GÖĞÜS MÜHRÜ' },
-  { id: 'airway', label: 'HAVA YOLU AÇILDI' },
-  { id: 'morphine', label: 'MORFİN' },
+  { id: 'tourniquet', label: 'TOURNIQUET' },
+  { id: 'chest_seal', label: 'CHEST_SEAL' },
+  { id: 'airway', label: 'AIRWAY' },
+  { id: 'morphine', label: 'MORPHINE' },
 ]

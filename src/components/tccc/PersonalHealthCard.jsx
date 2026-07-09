@@ -1,17 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { HeartPulse, Pencil, Shield, X } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { isFirebaseConfigured } from '../../lib/firebase'
+import { medicalRoleOptions } from '../../lib/healthDisplayText'
 import {
   loadHealthOperatorProfile,
   mapHealthProfileFields,
   saveHealthOperatorProfile,
 } from '../../lib/personalHealthRecord'
-
-const TIBBI_ROL_OPTIONS = [
-  { value: 'operator', label: 'Operatör (Kişisel İlk Yardım Düzeyi)' },
-  { value: 'team_medic', label: 'Tim Sıhhiyesi (CLS / Combat Medic)' },
-]
 
 /** @typedef {'tıbbiRol' | 'alerjiler' | 'kronikHastalik' | 'duzenliIlaclar' | 'sonTetanozAşısı' | 'boyKilo'} HealthProfileField */
 
@@ -55,6 +52,7 @@ function FieldRow({ id, label, children }) {
 }
 
 export default function PersonalHealthCard() {
+  const { t } = useTranslation('health')
   const { user, userData, loading, profileLoading } = useAuth()
 
   const [form, setForm] = useState({ ...EMPTY_FORM })
@@ -64,9 +62,10 @@ export default function PersonalHealthCard() {
   const [saving, setSaving] = useState(false)
   const [saveMsg, setSaveMsg] = useState(/** @type {{ type: 'ok' | 'err'; text: string } | null} */ (null))
 
-  const bloodType = (userData?.bloodType || '').trim() || 'BELİRTİLMEDİ'
+  const bloodType = (userData?.bloodType || '').trim() || t('shell.bloodUnspecified')
   const authBusy = loading || profileLoading
   const waitingUser = authBusy || !user
+  const roleOptions = medicalRoleOptions()
 
   const patch = useCallback((/** @type {Partial<typeof EMPTY_FORM>} */ patch) => {
     setForm((f) => ({ ...f, ...patch }))
@@ -133,9 +132,9 @@ export default function PersonalHealthCard() {
       setSavedForm(next)
       setForm(next)
       setIsEditing(false)
-      setSaveMsg({ type: 'ok', text: 'KİŞİSEL_SAĞLIK_KÜNYESİ_KAYDEDİLDİ' })
+      setSaveMsg({ type: 'ok', text: t('personalHealth.saveOk') })
     } catch {
-      setSaveMsg({ type: 'err', text: 'KAYIT_BAŞARISIZ · YENİDEN_DENE' })
+      setSaveMsg({ type: 'err', text: t('personalHealth.saveErr') })
     } finally {
       setSaving(false)
     }
@@ -144,7 +143,7 @@ export default function PersonalHealthCard() {
   if (waitingUser || docLoading) {
     return (
       <section
-        aria-label="Kişisel sağlık künyesi yükleniyor"
+        aria-label={t('personalHealth.ariaLoading')}
         className="flex min-h-[280px] flex-col items-center justify-center rounded-xl border border-slate-800 bg-slate-950 px-6 py-16"
       >
         <div className="relative flex size-14 items-center justify-center">
@@ -152,10 +151,10 @@ export default function PersonalHealthCard() {
           <span className="size-10 animate-spin rounded-full border-2 border-red-500/70 border-t-transparent" aria-hidden />
         </div>
         <p className="mt-6 font-mono text-xs font-bold uppercase tracking-[0.35em] text-red-500/90 animate-pulse">
-          YÜKLENİYOR…
+          {t('personalHealth.loading')}
         </p>
         <p className="mt-2 font-mono text-[10px] uppercase tracking-wider text-app-text/55">
-          SAĞLIK_KÜNYESİ · VERİ_KANALI
+          {t('personalHealth.loadingHint')}
         </p>
       </section>
     )
@@ -165,7 +164,7 @@ export default function PersonalHealthCard() {
 
   return (
     <section
-      aria-label="Kişisel sağlık künyesi"
+      aria-label={t('personalHealth.ariaLabel')}
       className="rounded-xl border border-slate-800 bg-slate-950 shadow-[inset_0_1px_0_0_rgba(248,113,113,0.06)]"
     >
       <header className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-800 bg-red-950/20 px-5 py-4">
@@ -173,10 +172,10 @@ export default function PersonalHealthCard() {
           <Shield className="mt-0.5 size-5 shrink-0 text-red-500" strokeWidth={1.75} aria-hidden />
           <div>
             <h2 className="font-mono text-xs font-bold uppercase tracking-[0.28em] text-red-500">
-              Kişisel Sağlık Durumu
+              {t('personalHealth.title')}
             </h2>
             <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-app-text/55">
-              TCCC · operatör profili
+              {t('personalHealth.subtitle')}
             </p>
           </div>
         </div>
@@ -189,7 +188,7 @@ export default function PersonalHealthCard() {
               className="inline-flex items-center gap-2 rounded border border-red-800 bg-red-950/50 px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-wider text-red-400 transition hover:border-red-600 hover:bg-red-950 hover:text-red-300"
             >
               <Pencil className="size-3.5" aria-hidden />
-              DÜZENLE
+              {t('personalHealth.edit')}
             </button>
           ) : (
             <>
@@ -200,7 +199,7 @@ export default function PersonalHealthCard() {
                 className="inline-flex items-center gap-2 rounded border border-slate-700 bg-slate-900 px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-wider text-app-text/70 transition hover:border-slate-600 hover:text-app-text disabled:opacity-50"
               >
                 <X className="size-3.5" aria-hidden />
-                İPTAL
+                {t('personalHealth.cancel')}
               </button>
               <button
                 type="button"
@@ -209,7 +208,7 @@ export default function PersonalHealthCard() {
                 className="inline-flex items-center gap-2 rounded border border-red-700 bg-red-600/20 px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-wider text-red-400 transition hover:bg-red-600/30 disabled:opacity-50"
               >
                 <HeartPulse className="size-3.5" aria-hidden />
-                {saving ? 'KAYDEDİLİYOR…' : 'KAYDET'}
+                {saving ? t('personalHealth.saving') : t('personalHealth.save')}
               </button>
             </>
           )}
@@ -218,7 +217,7 @@ export default function PersonalHealthCard() {
 
       <div className="space-y-6 p-5">
         <div className="rounded-lg border border-red-800/60 bg-red-950/30 px-5 py-4">
-          <p className={labelClass}>KAN GRUBU · PROFİL KAYNAĞI</p>
+          <p className={labelClass}>{t('personalHealth.bloodTypeSource')}</p>
           <p
             className="mt-2 font-mono text-3xl font-black uppercase tracking-[0.12em] text-red-500 sm:text-4xl"
             aria-readonly="true"
@@ -226,12 +225,12 @@ export default function PersonalHealthCard() {
             {bloodType}
           </p>
           <p className="mt-2 font-mono text-[9px] uppercase tracking-wider text-app-text/55">
-            SALT OKUNUR · PROFİLİM / users · bloodType · health_records/{'{uid}'}
+            {t('personalHealth.bloodTypeReadonly')}
           </p>
         </div>
 
         <div className="grid gap-5 sm:grid-cols-2">
-          <FieldRow id="phc-tibbi-rol" label="TIBBİ ROL">
+          <FieldRow id="phc-tibbi-rol" label={t('personalHealth.fields.medicalRole')}>
             <select
               id="phc-tibbi-rol"
               value={form.tıbbiRol}
@@ -239,8 +238,8 @@ export default function PersonalHealthCard() {
               onChange={(e) => patch({ tıbbiRol: e.target.value })}
               className={`${inputClass} cursor-pointer`}
             >
-              <option value="">— SEÇİM YAPIN —</option>
-              {TIBBI_ROL_OPTIONS.map((opt) => (
+              <option value="">{t('personalHealth.placeholders.select')}</option>
+              {roleOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>
                   {opt.label}
                 </option>
@@ -248,7 +247,7 @@ export default function PersonalHealthCard() {
             </select>
           </FieldRow>
 
-          <FieldRow id="phc-tetanoz" label="SON TETANOZ AŞISI">
+          <FieldRow id="phc-tetanoz" label={t('personalHealth.fields.lastTetanus')}>
             <input
               id="phc-tetanoz"
               type="date"
@@ -259,51 +258,51 @@ export default function PersonalHealthCard() {
             />
           </FieldRow>
 
-          <FieldRow id="phc-boy-kilo" label="BOY / KİLO">
+          <FieldRow id="phc-boy-kilo" label={t('personalHealth.fields.heightWeight')}>
             <input
               id="phc-boy-kilo"
               type="text"
               value={form.boyKilo}
               disabled={locked}
               onChange={(e) => patch({ boyKilo: e.target.value })}
-              placeholder="180 cm / 82 kg"
+              placeholder={t('personalHealth.placeholders.heightWeight')}
               className={inputClass}
             />
           </FieldRow>
         </div>
 
-        <FieldRow id="phc-alerjiler" label="ALERJİLER">
+        <FieldRow id="phc-alerjiler" label={t('personalHealth.fields.allergies')}>
           <input
             id="phc-alerjiler"
             type="text"
             value={form.alerjiler}
             disabled={locked}
             onChange={(e) => patch({ alerjiler: e.target.value })}
-            placeholder="İlaç, gıda, antibiyotik…"
+            placeholder={t('personalHealth.placeholders.allergies')}
             className={inputClass}
           />
         </FieldRow>
 
-        <FieldRow id="phc-kronik" label="KRONİK HASTALIK">
+        <FieldRow id="phc-kronik" label={t('personalHealth.fields.chronicDisease')}>
           <textarea
             id="phc-kronik"
             rows={2}
             value={form.kronikHastalik}
             disabled={locked}
             onChange={(e) => patch({ kronikHastalik: e.target.value })}
-            placeholder="Bilinen kronik durumlar…"
+            placeholder={t('personalHealth.placeholders.chronicDisease')}
             className={`${inputClass} resize-y min-h-[4rem]`}
           />
         </FieldRow>
 
-        <FieldRow id="phc-ilac" label="DÜZENLİ İLAÇLAR">
+        <FieldRow id="phc-ilac" label={t('personalHealth.fields.regularMeds')}>
           <textarea
             id="phc-ilac"
             rows={2}
             value={form.duzenliIlaclar}
             disabled={locked}
             onChange={(e) => patch({ duzenliIlaclar: e.target.value })}
-            placeholder="Günlük / sürekli kullanılan ilaçlar…"
+            placeholder={t('personalHealth.placeholders.regularMeds')}
             className={`${inputClass} resize-y min-h-[4rem]`}
           />
         </FieldRow>

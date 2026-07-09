@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { AlertTriangle } from 'lucide-react'
 import { useTcccAlerts } from '../../context/TcccAlertContext'
 
@@ -5,6 +6,7 @@ import { useTcccAlerts } from '../../context/TcccAlertContext'
  * @param {{ className?: string }} props
  */
 export default function TcccExpiryAlertBanner({ className = '' }) {
+  const { t } = useTranslation('health')
   const { hasCriticalExpiry, criticalCount } = useTcccAlerts()
 
   if (!hasCriticalExpiry) return null
@@ -20,11 +22,10 @@ export default function TcccExpiryAlertBanner({ className = '' }) {
       <AlertTriangle className="mt-0.5 size-5 shrink-0 text-amber-400" strokeWidth={2} aria-hidden />
       <div className="min-w-0">
         <p className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] text-amber-300">
-          IFAK SON KULLANIM UYARISI · CRITICAL_EXPIRED
+          {t('expiryBanner.title')}
         </p>
         <p className="mt-1 font-mono-technical text-[11px] leading-relaxed text-amber-100/90">
-          {criticalCount} kalem ≤30 gün veya geçmiş SKT. IFAK sekmesinden envanteri yenileyin; tahliye öncesi
-          mühimmat tıbbi kontrolü zorunlu.
+          {t('expiryBanner.body', { count: criticalCount })}
         </p>
       </div>
     </div>

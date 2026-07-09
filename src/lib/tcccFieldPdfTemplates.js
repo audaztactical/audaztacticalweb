@@ -12,6 +12,7 @@ import {
   paintPdfPage,
   stampPdfFooters,
 } from './pdfDesignTokens'
+import { healthPdfT, pdfFilenameSegment } from './pdfReportText'
 
 /**
  * @param {import('jspdf').jsPDF} doc
@@ -73,9 +74,11 @@ function drawLabeledField(doc, x, y, label, lineW) {
  * @param {import('jspdf').jsPDF} doc
  * @param {number} margin
  * @param {number} pageW
+ * @param {number} pageH
  * @param {string} formId
  * @param {string} logoDataUrl
  * @param {{ widthMm: number, heightMm: number }} logoDims
+ * @param {string} reportTitle
  * @returns {number}
  */
 function initBlankFormPage(doc, margin, pageW, pageH, formId, logoDataUrl, logoDims, reportTitle) {
@@ -85,7 +88,7 @@ function initBlankFormPage(doc, margin, pageW, pageH, formId, logoDataUrl, logoD
   setPdfFont(doc, 'normal')
   doc.setFontSize(PDF_FONT_SIZE.small)
   doc.setTextColor(...PDF_COLORS.muted)
-  doc.text(`Form ID: ${formId} · Boş şablon · Kalemle doldurun`, margin, y)
+  doc.text(healthPdfT('common.blankTemplateHint', { id: formId }), margin, y)
   return y + 8
 }
 
@@ -101,7 +104,7 @@ function drawHatNote(doc, margin, right, y, note) {
   setPdfFont(doc, 'normal')
   doc.setFontSize(6.5)
   doc.setTextColor(...PDF_COLORS.muted)
-  const noteText = `Not: ${note}`
+  const noteText = healthPdfT('common.notePrefix', { note })
   const lines = doc.splitTextToSize(noteText, right - margin - 12)
   doc.text(lines, margin + 12, y)
   return y + lines.length * 3.1 + 2
@@ -121,7 +124,7 @@ function drawAbbreviationsSection(doc, margin, pageW, right, y, items) {
   doc.setLineWidth(0.2)
   doc.line(margin, y, right, y)
   y += 5
-  y = drawSectionTitle(doc, margin, pageW, 'Kısaltmalar ve Protokol Notları', y)
+  y = drawSectionTitle(doc, margin, pageW, healthPdfT('common.abbreviationsTitle'), y)
   setPdfFont(doc, 'normal')
   doc.setFontSize(6.5)
   doc.setTextColor(...PDF_COLORS.muted)
@@ -142,13 +145,8 @@ function drawAbbreviationsSection(doc, margin, pageW, right, y, items) {
  * @returns {number}
  */
 function draw9LineAbbreviationsSection(doc, margin, pageW, right, y) {
-  return drawAbbreviationsSection(doc, margin, pageW, right, y, [
-    'MGRS: Military Grid Reference System (Askeri Izgara Referans Sistemi)',
-    'MEDEVAC: Medical Evacuation (Tıbbi Tahliye)',
-    'EPW: Enemy Prisoner of War (Düşman Savaş Esiri)',
-    'Tahliye öncelikleri: A=Acil (<1 saat) · B=Öncelikli (<4 saat) · C=Rutin (<24 saat)',
-    'Bu form doldurulduktan sonra telsizle okunur, kopyası taşınan personelde kalır',
-  ])
+  const items = /** @type {string[]} */ (healthPdfT('nineLine.abbreviations', { returnObjects: true }))
+  return drawAbbreviationsSection(doc, margin, pageW, right, y, Array.isArray(items) ? items : [])
 }
 
 /**
@@ -187,7 +185,7 @@ function drawHatLine(doc, margin, right, y, num, label, options = {}) {
   setPdfFont(doc, 'bold')
   doc.setFontSize(PDF_FONT_SIZE.body)
   doc.setTextColor(...PDF_COLORS.text)
-  doc.text(`Hat ${num}`, margin, y)
+  doc.text(healthPdfT('common.line', { num }), margin, y)
   setPdfFont(doc, 'normal')
   doc.setFontSize(PDF_FONT_SIZE.small)
   doc.setTextColor(...PDF_COLORS.muted)
@@ -204,6 +202,13 @@ function drawHatLine(doc, margin, right, y, num, label, options = {}) {
     y += 7
   }
   return y + 1
+}
+
+/** @param {string} slugKey */
+function healthPdfFilename(slugKey, formId) {
+  const brand = pdfFilenameSegment(healthPdfT('fileNaming.brand'))
+  const slug = pdfFilenameSegment(healthPdfT(`fileNaming.${slugKey}`))
+  return `${brand}-${slug}-${formId}.pdf`
 }
 
 /** NATO 9-LINE MEDEVAC boş şablon — jsPDF */
@@ -224,45 +229,39 @@ export async function generate9LineMedevacTemplate() {
     formId,
     logoDataUrl,
     logoDims,
-    '9-LINE TAHLİYE TALEBİ · MEDEVAC',
+    healthPdfT('titles.nineLine'),
   )
 
-  y = drawSectionTitle(doc, margin, pageW, '9-Line Tahliye Protokolü', y)
+  y = drawSectionTitle(doc, margin, pageW, healthPdfT('nineLine.sectionTitle'), y)
 
-  y = drawHatLine(doc, margin, right, y, 1, 'Koordinatlar (MGRS/GPS)', {
-    note: 'Tahliye noktasının tam koordinatını girin. MGRS formatı tercih edilir. Örn: 37S NA 12345 67890',
-  })
-  y = drawHatLine(doc, margin, right, y, 2, 'Radyo frekansı ve çağrı işareti', {
-    note: 'Tahliye aracıyla iletişim kurulacak frekans (MHz) ve çağrı işareti. Örn: 40.50 MHz · BRAVO-1',
-  })
-  y = drawHatLine(doc, margin, right, y, 3, 'Hasta sayısı ve taşıma önceliği', {
-    note: 'A=Acil (hayati tehlike), B=Öncelikli (1 saat içinde), C=Rutin (4 saat içinde). Örn: 2A 1B',
-  })
-  y = drawHatLine(doc, margin, right, y, 4, 'Gerekli ekipman', {
-    note: 'A=Vinç yok, B=Vinç gerekli, C=Paket vinç, D=Dalış ekipmanı, E=Diğer',
-  })
-  y = drawHatLine(doc, margin, right, y, 5, 'Hasta sayısı (oturur / yatar)', {
-    note: 'L=Sedyede yatar, A=Oturabilir. Örn: 1L 2A',
-  })
-  y = drawHatLine(doc, margin, right, y, 6, 'Güvenlik', {
-    note: 'N=Sıcak bölge (düşman ateşi), P=Olası tehdit, E=Soğuk bölge (güvenli), X=Silahlı eskort gerekli',
-    renderBody: (d, m, r, cy) => drawCheckboxRow(d, m + 12, cy, ['N', 'P', 'E', 'X'], r),
-  })
-  y = drawHatLine(doc, margin, right, y, 7, 'Bölge işareti yöntemi', {
-    note: 'A=Panel/bayrak, B=Piroteknik, C=Duman, D=El/kol işareti, E=Diğer. Rengi de belirtin.',
-  })
-  y = drawHatLine(doc, margin, right, y, 8, 'Hasta milliyeti', {
-    note: 'Sivil=Sivil kişi, Askeri=Dost kuvvet, EPW=Düşman savaş esiri',
-    renderBody: (d, m, r, cy) => drawCheckboxRow(d, m + 12, cy, ['Sivil', 'Askeri', 'EPW'], r),
-  })
-  y = drawHatLine(doc, margin, right, y, 9, 'Arazi özellikleri / engeller', {
-    note: 'İniş alanındaki engeller: ağaç, tel, eğim, irtifa vb. Rüzgar yönünü de ekleyin.',
-  })
+  for (const num of [1, 2, 3, 4, 5, 6, 7, 8, 9]) {
+    const lineKey = `nineLine.lines.${num}`
+    /** @type {{ note?: string, renderBody?: (doc: import('jspdf').jsPDF, margin: number, right: number, y: number) => number }} */
+    const opts = { note: healthPdfT(`${lineKey}.note`) }
+    if (num === 6) {
+      opts.renderBody = (d, m, r, cy) => drawCheckboxRow(d, m + 12, cy, ['N', 'P', 'E', 'X'], r)
+    }
+    if (num === 8) {
+      opts.renderBody = (d, m, r, cy) =>
+        drawCheckboxRow(
+          d,
+          m + 12,
+          cy,
+          [
+            healthPdfT('nineLine.lines.8.options.civilian'),
+            healthPdfT('nineLine.lines.8.options.military'),
+            healthPdfT('nineLine.lines.8.options.epw'),
+          ],
+          r,
+        )
+    }
+    y = drawHatLine(doc, margin, right, y, num, healthPdfT(`${lineKey}.label`), opts)
+  }
 
   y = draw9LineAbbreviationsSection(doc, margin, pageW, right, y + 2)
 
   stampPdfFooters(doc, formId)
-  doc.save(`AUDAZ-9Line-Medevac-${formId}.pdf`)
+  doc.save(healthPdfFilename('nineLine', formId))
   return formId
 }
 
@@ -276,37 +275,57 @@ export async function generateCasevacMistTemplate() {
   const right = pageW - margin
 
   const { logoDataUrl, logoDims } = await preparePdfAssets(doc)
-  let y = initBlankFormPage(doc, margin, pageW, pageH, formId, logoDataUrl, logoDims, 'CASEVAC MIST RAPORU')
+  let y = initBlankFormPage(
+    doc,
+    margin,
+    pageW,
+    pageH,
+    formId,
+    logoDataUrl,
+    logoDims,
+    healthPdfT('titles.casevacMist'),
+  )
 
-  y = drawSectionTitle(doc, margin, pageW, 'Hasta Bilgileri', y)
-  y = drawLabeledField(doc, margin, y, 'Hasta adı / callsign', right - margin)
+  y = drawSectionTitle(doc, margin, pageW, healthPdfT('casevacMist.patientInfo'), y)
+  y = drawLabeledField(doc, margin, y, healthPdfT('casevacMist.patientName'), right - margin)
 
   setPdfFont(doc, 'normal')
   doc.setFontSize(PDF_FONT_SIZE.body)
   doc.setTextColor(...PDF_COLORS.muted)
-  doc.text('Zaman', margin, y)
+  doc.text(healthPdfT('casevacMist.time'), margin, y)
   y += 4
-  y = drawHatNote(doc, margin, right, y, '24 saat formatında yazın. Örn: 14:35')
+  y = drawHatNote(doc, margin, right, y, healthPdfT('casevacMist.timeNote'))
   drawFormFieldLine(doc, margin, y, right - margin)
   y += 7
 
-  doc.text('Koordinat (MGRS/GPS)', margin, y)
+  doc.text(healthPdfT('casevacMist.coord'), margin, y)
   y += 4
-  y = drawHatNote(doc, margin, right, y, 'MGRS veya GPS koordinatı. Örn: 37S NA 12345 67890')
+  y = drawHatNote(doc, margin, right, y, healthPdfT('casevacMist.coordNote'))
   drawFormFieldLine(doc, margin, y, right - margin)
   y += 9
 
-  y = drawSectionTitle(doc, margin, pageW, 'MIST Protokolü', y)
+  y = drawSectionTitle(doc, margin, pageW, healthPdfT('casevacMist.mistTitle'), y)
 
   y = drawMistSection(
     doc,
     margin,
     right,
     y,
-    'M — Mekanizma (Mechanism of Injury)',
-    'Yaralanmanın nasıl oluştuğunu belirtin. Birden fazla seçenek işaretlenebilir. Patlama için mesafeyi ekleyin.',
+    healthPdfT('casevacMist.m.title'),
+    healthPdfT('casevacMist.m.note'),
     (d, m, r, cy) => {
-      let ny = drawCheckboxRow(d, m + 2, cy, ['Ateşli', 'Patlama', 'Düşme', 'Diğer'], r)
+      let ny = drawCheckboxRow(
+        d,
+        m + 2,
+        cy,
+        [
+          healthPdfT('casevacMist.m.options.gsw'),
+          healthPdfT('casevacMist.m.options.blast'),
+          healthPdfT('casevacMist.m.options.fall'),
+          healthPdfT('casevacMist.m.options.other'),
+        ],
+        r,
+      )
       drawFormFieldLine(d, m + 72, ny - 4, r - m - 72)
       return ny + 4
     },
@@ -317,8 +336,8 @@ export async function generateCasevacMistTemplate() {
     margin,
     right,
     y,
-    'I — Yaralanma (Injuries)',
-    'Görülen veya şüphelenilen tüm yaralanmaları vücut bölgesiyle birlikte yazın. Örn: Sol bacak açık kırık, göğüs sol taraf penetran.',
+    healthPdfT('casevacMist.i.title'),
+    healthPdfT('casevacMist.i.note'),
     (d, m, r, cy) => {
       drawFormFieldLine(d, m, cy + 2, r - m)
       return cy + 10
@@ -330,12 +349,12 @@ export async function generateCasevacMistTemplate() {
     margin,
     right,
     y,
-    'S — Semptomlar ve Bulgular (Signs & Symptoms)',
-    'Nabız: dakikadaki atım sayısı. SpO2: %95 üzeri normal. Bilinç AVPU: A=Uyanık, V=Sese yanıt, P=Ağrıya yanıt, U=Yanıtsız',
+    healthPdfT('casevacMist.s.title'),
+    healthPdfT('casevacMist.s.note'),
     (d, m, r, cy) => {
-      let ny = drawLabeledField(d, m, cy, 'Nabız', 35)
-      ny = drawLabeledField(d, m + 42, ny - 6, 'SpO2', 30)
-      ny = drawLabeledField(d, m + 80, ny - 6, 'Bilinç', r - m - 80)
+      let ny = drawLabeledField(d, m, cy, healthPdfT('casevacMist.s.pulse'), 35)
+      ny = drawLabeledField(d, m + 42, ny - 6, healthPdfT('casevacMist.s.spo2'), 30)
+      ny = drawLabeledField(d, m + 80, ny - 6, healthPdfT('casevacMist.s.consciousness'), r - m - 80)
       return ny + 2
     },
   )
@@ -345,28 +364,33 @@ export async function generateCasevacMistTemplate() {
     margin,
     right,
     y,
-    'T — Yapılan Tedavi (Treatment)',
-    'Sahada uygulanan tüm müdahaleleri işaretleyin. Turnike uygulandıysa uygulama saatini mutlaka yazın.',
-    (d, m, r, cy) => drawCheckboxRow(d, m + 2, cy, ['Turnike', 'Hava yolu', 'IV'], r) + 4,
+    healthPdfT('casevacMist.t.title'),
+    healthPdfT('casevacMist.t.note'),
+    (d, m, r, cy) =>
+      drawCheckboxRow(
+        d,
+        m + 2,
+        cy,
+        [
+          healthPdfT('casevacMist.t.options.tourniquet'),
+          healthPdfT('casevacMist.t.options.airway'),
+          healthPdfT('casevacMist.t.options.iv'),
+        ],
+        r,
+      ) + 4,
   )
 
-  y = drawSectionTitle(doc, margin, pageW, 'Ek Notlar', y)
+  y = drawSectionTitle(doc, margin, pageW, healthPdfT('casevacMist.extraNotes'), y)
   for (let i = 0; i < 3; i++) {
     drawFormFieldLine(doc, margin, y + 4, right - margin)
     y += 8
   }
 
-  y = drawAbbreviationsSection(doc, margin, pageW, right, y + 2, [
-    'MIST: Mechanism · Injuries · Signs & Symptoms · Treatment',
-    'CASEVAC: Casualty Evacuation (Yaralı Tahliyesi)',
-    'AVPU: Alert · Voice · Pain · Unresponsive (Bilinç Değerlendirme Skalası)',
-    'SpO2: Oksijen saturasyonu (%95 üzeri normal)',
-    'Turnike uygulandıysa: Uygulama saatini hastanın alnına yaz ve formda belirt',
-    'Bu form tahliye aracına teslim edilir, kopyası taktik sağlık personelinde kalır',
-  ])
+  const mistAbbr = /** @type {string[]} */ (healthPdfT('casevacMist.abbreviations', { returnObjects: true }))
+  y = drawAbbreviationsSection(doc, margin, pageW, right, y + 2, Array.isArray(mistAbbr) ? mistAbbr : [])
 
   stampPdfFooters(doc, formId)
-  doc.save(`AUDAZ-CASEVAC-MIST-${formId}.pdf`)
+  doc.save(healthPdfFilename('casevacMist', formId))
   return formId
 }
 
@@ -388,61 +412,61 @@ export async function generateDD1380BlankTemplate() {
     formId,
     logoDataUrl,
     logoDims,
-    'DD FORM 1380 · TAKTİK SAHA KARTI',
+    healthPdfT('titles.dd1380Blank'),
   )
 
-  y = drawSectionTitle(doc, margin, pageW, 'Hasta Bilgileri', y)
-  y = drawLabeledField(doc, margin, y, 'Ad Soyad', 85)
-  y = drawLabeledField(doc, margin + 92, y - 6, 'Rütbe', right - margin - 92)
-  y = drawLabeledField(doc, margin, y, 'Kan Grubu', 40)
-  y = drawLabeledField(doc, margin + 48, y - 6, 'Tarih / Saat', right - margin - 48)
+  y = drawSectionTitle(doc, margin, pageW, healthPdfT('dd1380Blank.patientInfo'), y)
+  y = drawLabeledField(doc, margin, y, healthPdfT('dd1380Blank.fullName'), 85)
+  y = drawLabeledField(doc, margin + 92, y - 6, healthPdfT('dd1380Blank.rank'), right - margin - 92)
+  y = drawLabeledField(doc, margin, y, healthPdfT('dd1380Blank.bloodType'), 40)
+  y = drawLabeledField(doc, margin + 48, y - 6, healthPdfT('dd1380Blank.dateTime'), right - margin - 48)
   y += 2
 
-  y = drawSectionTitle(doc, margin, pageW, 'Yaralanma Mekanizması', y)
+  y = drawSectionTitle(doc, margin, pageW, healthPdfT('dd1380Blank.moi'), y)
   y = drawCheckboxRow(
     doc,
     margin,
     y,
-    ['Ateşli silah', 'Patlama', 'Künt travma', 'Yanık', 'Diğer'],
+    [
+      healthPdfT('dd1380Blank.moiOptions.gsw'),
+      healthPdfT('dd1380Blank.moiOptions.blast'),
+      healthPdfT('dd1380Blank.moiOptions.blunt'),
+      healthPdfT('dd1380Blank.moiOptions.burn'),
+      healthPdfT('dd1380Blank.moiOptions.other'),
+    ],
     right,
   )
   y += 2
 
-  y = drawSectionTitle(doc, margin, pageW, 'MARCH Değerlendirmesi', y)
-  const marchLines = [
-    ['M (Masif Kanama):', ['Turnike', 'Yara bandajı', 'Hemostatik ajan']],
-    ['A (Hava Yolu):', ['Açık', 'NPA', 'Çene itiş', 'Krikotirotomi']],
-    ['R (Solunum):', ['Normal', 'Gergin pnömotoraks', 'Göğüs mühürü']],
-    ['C (Dolaşım):', ['IV/IO erişim', 'Sıvı', 'Kan ürünü']],
-    ['H (Hipotermi):', ['Battaniye', 'Isıtıcı']],
-  ]
-  for (const [phase, opts] of marchLines) {
+  y = drawSectionTitle(doc, margin, pageW, healthPdfT('dd1380Blank.marchAssessment'), y)
+  for (const key of ['M', 'A', 'R', 'C', 'H']) {
+    const opts = /** @type {string[]} */ (healthPdfT(`dd1380Blank.march.${key}.opts`, { returnObjects: true }))
     setPdfFont(doc, 'bold')
     doc.setFontSize(PDF_FONT_SIZE.small)
     doc.setTextColor(...PDF_COLORS.text)
-    doc.text(phase, margin, y)
-    y = drawCheckboxRow(doc, margin + 2, y + 4, opts, right)
+    doc.text(healthPdfT(`dd1380Blank.march.${key}.label`), margin, y)
+    y = drawCheckboxRow(doc, margin + 2, y + 4, Array.isArray(opts) ? opts : [], right)
   }
   y += 2
 
-  y = drawSectionTitle(doc, margin, pageW, 'Hayati Bulgular', y)
-  y = drawLabeledField(doc, margin, y, 'Nabız', 35)
-  y = drawLabeledField(doc, margin + 42, y - 6, 'SpO2', 30)
+  y = drawSectionTitle(doc, margin, pageW, healthPdfT('dd1380Blank.vitals'), y)
+  y = drawLabeledField(doc, margin, y, healthPdfT('dd1380Blank.pulse'), 35)
+  y = drawLabeledField(doc, margin + 42, y - 6, healthPdfT('dd1380Blank.spo2'), 30)
   setPdfFont(doc, 'normal')
   doc.setFontSize(PDF_FONT_SIZE.body)
   doc.setTextColor(...PDF_COLORS.muted)
-  doc.text('Bilinç (AVPU):', margin + 80, y - 5.5)
+  doc.text(healthPdfT('dd1380Blank.avpu'), margin + 80, y - 5.5)
   y = drawCheckboxRow(doc, margin + 108, y - 1, ['A', 'V', 'P', 'U'], right)
   y += 2
 
-  y = drawSectionTitle(doc, margin, pageW, 'Yapılan İşlemler', y)
+  y = drawSectionTitle(doc, margin, pageW, healthPdfT('dd1380Blank.procedures'), y)
   setPdfFont(doc, 'bold')
   doc.setFontSize(PDF_FONT_SIZE.small)
   doc.setTextColor(...PDF_COLORS.tableHeadText)
   doc.setFillColor(...PDF_COLORS.tableHeadBg)
   doc.rect(margin, y, right - margin, 6, 'F')
-  doc.text('İşlem', margin + 2, y + 4)
-  doc.text('Tarih / Saat', margin + 95, y + 4)
+  doc.text(healthPdfT('dd1380Blank.procedureCol'), margin + 2, y + 4)
+  doc.text(healthPdfT('dd1380Blank.dateTimeCol'), margin + 95, y + 4)
   y += 8
   setPdfFont(doc, 'normal')
   doc.setTextColor(...PDF_COLORS.text)
@@ -455,19 +479,19 @@ export async function generateDD1380BlankTemplate() {
   }
   y += 2
 
-  y = drawSectionTitle(doc, margin, pageW, 'Taşıma Öncesi Notlar', y)
+  y = drawSectionTitle(doc, margin, pageW, healthPdfT('dd1380Blank.preTransport'), y)
   for (let i = 0; i < 3; i++) {
     drawFormFieldLine(doc, margin, y + 4, right - margin)
     y += 8
   }
   y += 2
 
-  y = drawSectionTitle(doc, margin, pageW, 'Gözlemci İmzası', y)
-  drawLabeledField(doc, margin, y, 'İmza', 70)
-  drawLabeledField(doc, margin + 78, y, 'Tarih', 40)
+  y = drawSectionTitle(doc, margin, pageW, healthPdfT('dd1380Blank.observerSig'), y)
+  drawLabeledField(doc, margin, y, healthPdfT('dd1380Blank.signature'), 70)
+  drawLabeledField(doc, margin + 78, y, healthPdfT('dd1380Blank.date'), 40)
 
   stampPdfFooters(doc, formId)
-  doc.save(`AUDAZ-DD1380-Sablon-${formId}.pdf`)
+  doc.save(healthPdfFilename('dd1380Blank', formId))
   return formId
 }
 
@@ -501,24 +525,18 @@ function drawFieldCardFrame(doc, x, y, w, h, title) {
  * @returns {number}
  */
 function drawCompactMarchBlock(doc, x, y, w) {
-  const phases = [
-    { key: 'M', label: 'Masif kanama', opts: ['Turnike', 'Bandaj', 'Hemostatik'] },
-    { key: 'A', label: 'Hava yolu', opts: ['NPA', 'Çene', 'Cric'] },
-    { key: 'R', label: 'Solunum', opts: ['Normal', 'Mühür', 'İğne dek.'] },
-    { key: 'C', label: 'Dolaşım', opts: ['IV/IO', 'Sıvı', 'TXA'] },
-    { key: 'H', label: 'Hipotermi', opts: ['Battaniye', 'Isıtıcı'] },
-  ]
   let cy = y
-  for (const phase of phases) {
+  for (const key of ['M', 'A', 'R', 'C', 'H']) {
+    const opts = /** @type {string[]} */ (healthPdfT(`tcccFieldCard.march.${key}.opts`, { returnObjects: true }))
     setPdfFont(doc, 'bold')
     doc.setFontSize(6)
     doc.setTextColor(...PDF_COLORS.text)
-    doc.text(`${phase.key} · ${phase.label}`, x + 1, cy)
+    doc.text(`${key} · ${healthPdfT(`tcccFieldCard.march.${key}.label`)}`, x + 1, cy)
     cy += 3.5
     let ox = x + 1
     setPdfFont(doc, 'normal')
     doc.setFontSize(5.5)
-    for (const opt of phase.opts) {
+    for (const opt of Array.isArray(opts) ? opts : []) {
       const tw = doc.getTextWidth(opt) + 6
       if (ox + tw > x + w - 1) {
         ox = x + 1
@@ -542,13 +560,13 @@ export async function generateTcccFieldCardTemplate() {
 
   const { logoDataUrl, logoDims } = await preparePdfAssets(doc)
   paintPdfPage(doc, pageW, pageH)
-  drawPdfHeader(doc, pageW, logoDataUrl, logoDims, 'TCCC SAHA KARTI · MARCH PROTOKOLÜ')
+  drawPdfHeader(doc, pageW, logoDataUrl, logoDims, healthPdfT('titles.tcccFieldCard'))
 
   let y = PDF_LAYOUT.headerHeight + 4
   setPdfFont(doc, 'normal')
   doc.setFontSize(PDF_FONT_SIZE.small)
   doc.setTextColor(...PDF_COLORS.muted)
-  doc.text(`Form ID: ${formId} · Cep referansı · Kes — katla — taşı`, margin, y)
+  doc.text(healthPdfT('common.fieldCardHint', { id: formId }), margin, y)
   y += 10
 
   const cardW = (pageW - margin * 2 - 6) / 2
@@ -557,7 +575,7 @@ export async function generateTcccFieldCardTemplate() {
 
   for (let i = 0; i < 2; i++) {
     const cx = margin + i * (cardW + 6)
-    drawFieldCardFrame(doc, cx, cardY, cardW, cardH, 'TCCC SAHA KARTI · MARCH')
+    drawFieldCardFrame(doc, cx, cardY, cardW, cardH, healthPdfT('tcccFieldCard.cardTitle'))
     let innerY = cardY + 11
 
     innerY = drawCompactMarchBlock(doc, cx + 2, innerY, cardW - 4)
@@ -565,17 +583,13 @@ export async function generateTcccFieldCardTemplate() {
     setPdfFont(doc, 'bold')
     doc.setFontSize(5.5)
     doc.setTextColor(...PDF_COLORS.text)
-    doc.text('KRİTİK İLAÇ DOZLARI', cx + 2, innerY)
+    doc.text(healthPdfT('tcccFieldCard.criticalDoses'), cx + 2, innerY)
     innerY += 4
     setPdfFont(doc, 'normal')
     doc.setFontSize(5.5)
     doc.setTextColor(...PDF_COLORS.muted)
-    const drugs = [
-      'Morfin: ___ mg IV',
-      'Ketamin: ___ mg IV/IO',
-      'TXA: 1g IV (10 dk)',
-    ]
-    for (const line of drugs) {
+    const drugs = /** @type {string[]} */ (healthPdfT('tcccFieldCard.drugs', { returnObjects: true }))
+    for (const line of Array.isArray(drugs) ? drugs : []) {
       doc.text(line, cx + 2, innerY)
       innerY += 3.5
     }
@@ -584,12 +598,17 @@ export async function generateTcccFieldCardTemplate() {
     setPdfFont(doc, 'bold')
     doc.setFontSize(5.5)
     doc.setTextColor(...PDF_COLORS.text)
-    doc.text('9-LINE ÖZET', cx + 2, innerY)
+    doc.text(healthPdfT('tcccFieldCard.nineLineSummary'), cx + 2, innerY)
     innerY += 4
     setPdfFont(doc, 'normal')
     doc.setFontSize(5.5)
     doc.setTextColor(...PDF_COLORS.muted)
-    const nineLines = ['Koordinat:', 'Frekans:', 'Aciliyet:', 'LZ:']
+    const nineLines = [
+      healthPdfT('tcccFieldCard.nineLineFields.coord'),
+      healthPdfT('tcccFieldCard.nineLineFields.freq'),
+      healthPdfT('tcccFieldCard.nineLineFields.urgency'),
+      healthPdfT('tcccFieldCard.nineLineFields.lz'),
+    ]
     for (const nl of nineLines) {
       doc.text(nl, cx + 2, innerY)
       drawFormFieldLine(doc, cx + 18, innerY + 0.3, cardW - 22)
@@ -599,11 +618,11 @@ export async function generateTcccFieldCardTemplate() {
     setPdfFont(doc, 'normal')
     doc.setFontSize(5)
     doc.setTextColor(...PDF_COLORS.footerText)
-    doc.text('Gözlemci: ___________', cx + 2, cardY + cardH - 3)
-    doc.text('Saat: __:__', cx + cardW - 22, cardY + cardH - 3)
+    doc.text(healthPdfT('tcccFieldCard.observer'), cx + 2, cardY + cardH - 3)
+    doc.text(healthPdfT('tcccFieldCard.time'), cx + cardW - 22, cardY + cardH - 3)
   }
 
   stampPdfFooters(doc, formId)
-  doc.save(`AUDAZ-TCCC-Saha-Karti-${formId}.pdf`)
+  doc.save(healthPdfFilename('tcccFieldCard', formId))
   return formId
 }

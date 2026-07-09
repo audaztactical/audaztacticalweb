@@ -1,0 +1,664 @@
+{
+  "page": {
+    "title": "TCCC",
+    "subtitle": "Tactical Medical Suite"
+  },
+  "shell": {
+    "enter": "ENTER",
+    "backToMenu": "BACK TO TACTICAL MENU",
+    "sessionChannel": "SESSION / DATA CHANNEL",
+    "channelDown": "Data channel down",
+    "bloodUnspecified": "UNSPECIFIED",
+    "militaryIdStatus": "Military ID · Status",
+    "callsign": "Callsign",
+    "bloodType": "Blood Type",
+    "criticalStockAlert": "⚠️ Critical stock alert · {{count}} item(s) ≤30 days / expired",
+    "marchPreview": "MARCH · DD-1380 casualty card · 9-line evacuation · PDF templates",
+    "ifakPreview": "IFAK inventory · expiration tracking"
+  },
+  "menu": {
+    "personalHealth": {
+      "title": "Personal Health Status",
+      "description": "Medical profile, allergies, and vaccination records."
+    },
+    "marchDocuments": {
+      "title": "Tactical Medical Guide",
+      "description": "Casualty cards, evacuation protocols, and printable field templates."
+    },
+    "ifakLogistics": {
+      "title": "IFAK & Supply Tracking",
+      "description": "IFAK item list and expiration date tracking."
+    }
+  },
+  "personalHealth": {
+    "ariaLabel": "Personal health record",
+    "ariaLoading": "Loading personal health record",
+    "title": "Personal Health Status",
+    "subtitle": "TCCC · operator profile",
+    "loading": "LOADING…",
+    "loadingHint": "HEALTH_RECORD · DATA_CHANNEL",
+    "edit": "EDIT",
+    "cancel": "CANCEL",
+    "save": "SAVE",
+    "saving": "SAVING…",
+    "bloodTypeSource": "BLOOD TYPE · PROFILE SOURCE",
+    "bloodTypeReadonly": "READ-ONLY · PROFILE / users · bloodType · health_records/{uid}",
+    "fields": {
+      "medicalRole": "MEDICAL ROLE",
+      "lastTetanus": "LAST TETANUS VACCINATION",
+      "heightWeight": "HEIGHT / WEIGHT",
+      "allergies": "ALLERGIES",
+      "chronicDisease": "CHRONIC CONDITIONS",
+      "regularMeds": "REGULAR MEDICATIONS"
+    },
+    "placeholders": {
+      "select": "— SELECT —",
+      "heightWeight": "180 cm / 82 kg",
+      "allergies": "Drug, food, antibiotic…",
+      "chronicDisease": "Known chronic conditions…",
+      "regularMeds": "Daily / ongoing medications…"
+    },
+    "roles": {
+      "operator": "Operator (Personal First Aid Level)",
+      "team_medic": "Team Medic (CLS / Combat Medic)"
+    },
+    "saveOk": "PERSONAL_HEALTH_RECORD_SAVED",
+    "saveErr": "SAVE_FAILED · RETRY"
+  },
+  "ifak": {
+    "ariaLabel": "IFAK inventory",
+    "title": "IFAK & Supply Tracking",
+    "addItem": "ADD ITEM",
+    "empty": "INVENTORY EMPTY",
+    "skt": "EXP",
+    "close": "Close",
+    "edit": "Edit",
+    "delete": "Delete",
+    "modal": {
+      "createTitle": "+ NEW_IFAK_ITEM",
+      "editTitle": "UPDATE_ITEM",
+      "subtitle": "IFAK · CATEGORY · STOCK · EXP",
+      "itemName": "ITEM_NAME",
+      "itemNamePlaceholder": "Tourniquet, gauze…",
+      "category": "CATEGORY",
+      "quantity": "QUANTITY",
+      "expiration": "EXPIRATION (EXP)",
+      "cancel": "CANCEL",
+      "save": "SAVE"
+    },
+    "categories": {
+      "TQ": "Tourniquet (TQ)",
+      "Celox": "Celox / Hemostatic",
+      "Chest Seal": "Chest Seal",
+      "Needle": "Needle Decompression",
+      "Drug": "Drug / TXA",
+      "Other": "Other"
+    },
+    "status": {
+      "OK": "OK",
+      "WARNING": "WARNING",
+      "CRITICAL_EXPIRED": "CRITICAL / EXP"
+    }
+  },
+  "expiryBanner": {
+    "title": "IFAK EXPIRATION ALERT · CRITICAL_EXPIRED",
+    "body": "{{count}} item(s) ≤30 days or past expiration. Refresh inventory from the IFAK tab; pre-evacuation medical supply check is mandatory."
+  },
+  "docs": {
+    "title": "Tactical Medical Guide",
+    "subtitle": "MARCH · DD-1380 casualty card · 9-line evacuation · PDF templates",
+    "tablistAria": "Document workflow",
+    "tabs": {
+      "march_dd1380": "MARCH - DD-1380 CASUALTY CARD",
+      "medevac_9line": "((•)) 9-LINE EVACUATION REQUEST SIMULATION",
+      "simulation_history": "((•)) SIMULATION HISTORY",
+      "casualty_archive": "CASUALTY ARCHIVE",
+      "field_templates": "PDF TEMPLATES"
+    },
+    "saveCardError": "CARD_SAVE_FAILED",
+    "templates": {
+      "heading": "BLANK PDF TEMPLATE DOWNLOAD CENTER",
+      "preparing": "PREPARING…",
+      "download": "DOWNLOAD",
+      "downloadTitle": "Download PDF template",
+      "items": {
+        "dd1380": {
+          "title": "DD FORM 1380",
+          "subtitle": "CASUALTY CARD · BLANK TEMPLATE",
+          "button": "📄 DOWNLOAD DD FORM 1380"
+        },
+        "nine_line": {
+          "title": "9-LINE EVACUATION",
+          "subtitle": "RADIO PROTOCOL · BLANK TEMPLATE",
+          "button": "📄 9-LINE EVACUATION"
+        },
+        "casevac_mist": {
+          "title": "CASEVAC MIST",
+          "subtitle": "HOT ZONE · BLANK TEMPLATE",
+          "button": "📄 CASEVAC MIST TEMPLATE"
+        },
+        "tccc_card": {
+          "title": "TCCC FIELD CARD",
+          "subtitle": "POCKET REFERENCE · BLANK TEMPLATE",
+          "button": "📄 DOWNLOAD TCCC FIELD CARD"
+        }
+      }
+    }
+  },
+  "archive": {
+    "title": "Casualty Archive",
+    "empty": "NO CASUALTY CARDS ON FILE",
+    "bloodType": "Blood type",
+    "moi": "MOI",
+    "medicalNotes": "Medical Notes",
+    "evacPriority": "Evacuation priority",
+    "downloadPdf": "DOWNLOAD PDF",
+    "undefinedCasualty": "CASUALTY — UNDEFINED",
+    "loading": "LOADING ARCHIVE…",
+    "allergies": "Allergies",
+    "marchInterventions": "MARCH · Interventions",
+    "noMarchInterventions": "No MARCH interventions on file",
+    "appliedTreatments": "Treatments applied",
+    "operationNote": "Operation note",
+    "interventionCount": "{{count}} intervention(s)",
+    "downloadPdfTitle": "Download PDF for this record",
+    "downloadPdfAria": "Download PDF"
+  },
+  "march": {
+    "saveCard": "SAVE CARD",
+    "saving": "SAVING…",
+    "saveOk": "CASUALTY_CARD_SAVED · FIRESTORE",
+    "bloodUnknown": "Unknown",
+    "cardTitle": "M.A.R.C.H. · DD-1380 CASUALTY CARD",
+    "ariaMarch": "M.A.R.C.H. DD-1380",
+    "ariaIdentity": "Casualty identity",
+    "ariaBloodType": "Casualty blood type",
+    "ariaEvacPriority": "Evacuation priority",
+    "identityHeading": "CASUALTY IDENTITY",
+    "injuryHeading": "DD-1380 · INJURY & INTERVENTION",
+    "selectPlaceholder": "— SELECT —",
+    "selectPlaceholderShort": "— Select —",
+    "protocolCard": "PROTOCOL CARD",
+    "protocolClose": "Close",
+    "stepHeading": "{{key}} · {{title}} ({{subtitle}})",
+    "fields": {
+      "bloodType": "BLOOD TYPE (CASUALTY)",
+      "patientName": "CASUALTY CALLSIGN / NAME",
+      "patientNamePlaceholder": "RADIO CALLSIGN / FULL NAME",
+      "allergies": "ALLERGIES (CASUALTY)",
+      "moi": "MECHANISM OF INJURY (MOI)",
+      "moiPlaceholder": "GSW, blast, IED, fall…",
+      "treatments": "INTERVENTIONS APPLIED (SUMMARY)",
+      "treatmentsPlaceholder": "TQ right arm 14:32, NPA, chest seal…",
+      "operationNote": "OPERATION NOTE / EVAC PRIORITY",
+      "operationNotePlaceholder": "Evac coordination, intervention summary, radio frequency…",
+      "evacPriority": "EVACUATION PRIORITY",
+      "tqTime": "TOURNIQUET APPLICATION TIME",
+      "tqLocation": "TOURNIQUET LOCATION",
+      "tqCustom": "CUSTOM LOCATION",
+      "ndcGauge": "NDC NEEDLE GAUGE",
+      "respiratoryRate": "RESPIRATORY RATE (RR)",
+      "respiratoryRatePlaceholder": "e.g. 18",
+      "fluid": "FLUID THERAPY",
+      "radialPulse": "RADIAL PULSE",
+      "avpu": "AVPU CONSCIOUSNESS",
+      "pupil": "PUPIL STATUS"
+    },
+    "checks": {
+      "tourniquet": "TOURNIQUET APPLIED",
+      "woundPacking": "WOUND PACKING / HEMOSTATIC GAUZE",
+      "pressureBandage": "PRESSURE BANDAGE",
+      "npa": "NPA (NASOPHARYNGEAL AIRWAY) INSERTED",
+      "intubatedCric": "INTUBATION / CRICOTHYROTOMY",
+      "recoveryPosition": "RECOVERY POSITION",
+      "ventedChestSeal": "VENTED CHEST SEAL",
+      "needleDecompression": "NEEDLE DECOMPRESSION (NDC)",
+      "ivIo": "IV / IO ACCESS ESTABLISHED",
+      "txa": "TXA (TRANEXAMIC ACID) ADMINISTERED",
+      "hypothermiaWrap": "HYPOTHERMIA WRAP / BLANKET",
+      "activeHeating": "ACTIVE HEATING USED"
+    },
+    "steps": {
+      "M": {
+        "title": "MASSIVE BLEEDING",
+        "subtitle": "Massive Bleeding",
+        "doctrine": "// DOCTRINE: ~90% of preventable combat deaths are extremity hemorrhage. Under fire (CUF), apply a high-and-tight tourniquet in the first 60 seconds. Record TQ time on the card in TFC."
+      },
+      "A": {
+        "title": "AIRWAY",
+        "subtitle": "Airway",
+        "doctrine": "// DOCTRINE: In an unconscious casualty the tongue can obstruct the airway. If breathing, insert an NPA via the right or left naris. If the airway cannot be opened, plan surgical airway (Cric)."
+      },
+      "R": {
+        "title": "RESPIRATION",
+        "subtitle": "Respiration",
+        "doctrine": "// DOCTRINE: Apply a vented occlusive chest seal to open chest wounds. If progressive respiratory distress, unilateral chest rise, and hypotension develop, perform needle decompression (NDC) at the 2nd or 5th intercostal space."
+      },
+      "C": {
+        "title": "CIRCULATION",
+        "subtitle": "Circulation",
+        "doctrine": "// DOCTRINE: With suspected internal bleeding or shock, administer tranexamic acid (TXA) within the first 3 hours to support clotting. Monitor pulse via the radial artery."
+      },
+      "H": {
+        "title": "HYPOTHERMIA & HEAD",
+        "subtitle": "Hypothermia & Head",
+        "doctrine": "// DOCTRINE: Blood loss drives hypothermia, which impairs clotting (lethal triad). Insulate the casualty from the ground and wrap with a thermal blanket."
+      }
+    },
+    "protocol": {
+      "M": {
+        "definition": "Massive Bleeding — primary cause of preventable death. Stop hemorrhage within the first 60 seconds under CUF.",
+        "protocols": [
+          "High & Tight TQ: highest practicable point on the limb, tight (2–3 inches above the wound).",
+          "Record TQ time on DD-1380; re-evaluate every 2 hours.",
+          "Junctional / truncal bleeding: hemostatic gauze + pressure bandage when TQ is not feasible.",
+          "Priority off the X: single intervention = hemorrhage control."
+        ]
+      },
+      "A": {
+        "definition": "Airway — tongue/obstruction risk with altered consciousness. If breathing → NPA; if not → advanced airway.",
+        "protocols": [
+          "Conscious + breathing → position, aspiration check.",
+          "Unconscious + breathing → NPA (right/left naris).",
+          "Complete obstruction / no breathing → chin-lift, Cric plan (TFC).",
+          "Recovery position: stable lateral, prevent aspiration."
+        ]
+      },
+      "R": {
+        "definition": "Respiration — penetrating chest wound and tension pneumothorax management.",
+        "protocols": [
+          "Vented chest seal: occlusive seal on open chest wound.",
+          "NDC: 2nd or 5th intercostal, mid-clavicular — 10G/14G.",
+          "Record respiratory rate, SpO2 (if available), unilateral breath sounds.",
+          "If bilateral decompression needed, assess both sides."
+        ]
+      },
+      "C": {
+        "definition": "Circulation — shock, internal bleeding, TXA and fluid protocols.",
+        "protocols": [
+          "TXA: 1g IV/IO within first 3 hours (CoTCCC).",
+          "IV/IO access; prefer whole blood when available.",
+          "Radial pulse: present/absent — perfusion indicator.",
+          "Reassess and return to bleeding step (M again) as needed."
+        ]
+      },
+      "H": {
+        "definition": "Hypothermia & Head Injury — lethal triad and neuro protection.",
+        "protocols": [
+          "Hypothermia prevention: thermal wrap, insulate from ground.",
+          "Record AVPU and pupils — TBI suspicion.",
+          "Head injury: higher evac priority; mind C-spine.",
+          "Active warming if available; remove wet clothing."
+        ]
+      }
+    },
+    "options": {
+      "bloodType": {
+        "A RH+": "A Rh+",
+        "A RH-": "A Rh-",
+        "B RH+": "B Rh+",
+        "B RH-": "B Rh-",
+        "AB RH+": "AB Rh+",
+        "AB RH-": "AB Rh-",
+        "0 RH+": "0 Rh+",
+        "0 RH-": "0 Rh-",
+        "unknown": "Unknown"
+      },
+      "tqLocation": {
+        "right_arm": "Right Arm",
+        "left_arm": "Left Arm",
+        "right_leg": "Right Leg",
+        "left_leg": "Left Leg",
+        "custom": "Custom Location"
+      },
+      "fluid": {
+        "whole_blood": "Whole Blood",
+        "plasma": "Plasma",
+        "saline": "Normal Saline"
+      },
+      "radialPulse": {
+        "present": "Present",
+        "absent": "Absent"
+      },
+      "avpu": {
+        "alert": "Alert (A)",
+        "verbal": "Verbal (V)",
+        "pain": "Pain (P)",
+        "unresponsive": "Unresponsive (U)"
+      },
+      "pupil": {
+        "normal": "Normal",
+        "blown": "Blown / Dilated"
+      },
+      "ndcGauge": {
+        "10": "10 Gauge",
+        "14": "14 Gauge"
+      },
+      "evacPriority": {
+        "URGENT": "URGENT",
+        "PRIORITY": "PRIORITY",
+        "ROUTINE": "ROUTINE"
+      }
+    }
+  },
+  "common": {
+    "emDash": "—"
+  },
+  "sim": {
+    "modeAria": "Simulation mode",
+    "modeMedevac": "MEDEVAC · 9-LINE",
+    "modeCasevac": "CASEVAC · MIST",
+    "ariaMedevac": "9-Line MEDEVAC radio simulator",
+    "ariaCasevac": "CASEVAC MIST radio simulator",
+    "radioTitle": "AN/PRC-117F INTERACTIVE RADIO SIMULATOR",
+    "radioSubtitleMedevac": "NATO STANDARD · ENCRYPT READY · STRESS WINDOW {{sec}} SEC",
+    "radioSubtitleCasevac": "CASEVAC MIST · HOT ZONE · STRESS WINDOW {{sec}} SEC",
+    "remainingLabel": "TIME REMAINING:",
+    "secondsAbbrev": "SEC",
+    "overtimeWarning": "⚠️ [SIGNAL COMPROMISED / AMBUSH THREAT]",
+    "failureTitleMedevac": "⚠️ RADIO REPORT ERROR / HELICOPTER LAUNCH DENIED",
+    "failureTitleCasevac": "⚠️ RADIO REPORT ERROR / CASEVAC EVACUATION DENIED",
+    "debriefHeading": "[ EVACUATION DENIAL REASONS / DEBRIEFING LOG ]",
+    "generalErrorMedevac": "• [GENERAL ERROR]: 9-LINE report below tactical threshold — detailed line audit incomplete.",
+    "generalErrorCasevac": "• [GENERAL ERROR]: MIST report below tactical threshold — detailed line audit incomplete.",
+    "orsEffect": "• [ORS EFFECT / TCCC BELOW THRESHOLD] Success percent recorded below 40% — Operational Readiness Score (ORS) −{{penalty}} points (orsEngine · ERROR_CODE: TCCC BELOW THRESHOLD · <40% SESSION)",
+    "successMedevac": "⚡ REPORT SUCCESS / MEDEVAC BIRD INBOUND",
+    "successCasevac": "⚡ MIST REPORT SUCCESS / CASEVAC ASSET INBOUND",
+    "liveAudit": "[ LIVE LINE AUDIT / PRE-TRANSMIT ]",
+    "moreErrors": "+{{count}} MORE ERROR LINE(S)",
+    "reset": "NEW SESSION / RESET",
+    "transmitMedevac": "SEND 9-LINE / TRANSMIT",
+    "transmitCasevac": "SEND MIST / TRANSMIT",
+    "formReady": "FORM READY · TRANSMIT BEFORE 0 SEC",
+    "fillAllLines": "COMPLETE ALL LINES",
+    "fillAllMist": "COMPLETE ALL MIST FIELDS",
+    "briefing": {
+      "medevacTitle": "[ 📑 PRE-MISSION DOCTRINE BRIEFING: MEDEVAC PROCEDURE ]",
+      "casevacTitle": "[ 📑 PRE-MISSION DOCTRINE BRIEFING: CASEVAC · MIST PROTOCOL ]",
+      "medevacStart": "[ BRIEFING ACKNOWLEDGED — FOCUS AND BEGIN ]",
+      "casevacStart": "[ BRIEFING ACKNOWLEDGED — ENTER HOT ZONE ]",
+      "medevacWhy45": "• WHY 45 SECONDS? Every extra second on the radio means a bleeding casualty closer to death and a higher chance of team location compromise.",
+      "medevacGolden": "• 1. GOLDEN HOUR RULE: For severe trauma, the MEDEVAC call must clear cleanly in the first 90 seconds. The final 45 seconds are reserved to complete a NATO-standard 9-LINE over the radio.",
+      "medevacEw": "• 2. ELECTRONIC WARFARE & DF: When continuous talk exceeds 45 seconds, enemy Direction Finding can triangulate your position and put artillery on your grid.",
+      "medevacStress": "• 3. STRESS LOCK ANALYSIS: Keeping composure under fire while entering MGRS and casualty counts is a true operator reflex. When time expires you take a radio COLD HIT and ORS is penalized −14.",
+      "hat1Title": "LINE 1 (COORDINATE)",
+      "hat1Body": "• LINE 1 (COORDINATE FLEXIBILITY): Smart parse mode is enabled. Enter plain MGRS (36S TH 1234 5678) or lat/lon (39.7761, 30.5211). Dots, commas, and spaces are tolerated.",
+      "hat3Title": "LINE 3 (PRECEDENCE)",
+      "hat3Intro": "Triage by casualty condition:",
+      "hat3A": "• A - URGENT: Will die if not evacuated within ~2 hours (massive hemorrhage, airway obstruction).",
+      "hat3B": "• B - URGENT-SURGE: Life-threatening but temporarily stabilized (e.g. TQ).",
+      "hat3C": "• C - PRIORITY: Open fractures / injuries with lower immediate life/limb risk.",
+      "hat3D": "• D - ROUTINE: Minor casualties who can wait up to 24 hours.",
+      "hat45Title": "LINES 4 & 5 (EQUIPMENT & TYPE)",
+      "hat45Body": "Equipment is multi-select! You may need both HOIST and LITTER. Total Litter + Ambulatory on Line 5 must exactly match total casualties on Line 3!",
+      "casevacWhy30": "• WHY 30 SECONDS? CASEVAC is hot-zone work; radio time is shorter than 9-Line MEDEVAC. Every extra second raises ambush risk for vehicle and team.",
+      "casevacMist": "• MIST REPORT: M (Metric/injury type), I (Injury/anatomy), S (Signs/vitals), T (Treatment) — four letters in one breath.",
+      "casevacTq": "• TQ + SHOCK CONSISTENCY: If a tourniquet was applied, selecting «No Shock Signs» is a clinical contradiction; the report is rejected."
+    },
+    "lines": {
+      "casevacCountTitle": "TOTAL CASUALTY COUNT",
+      "casevacCountLabel": "CASUALTY COUNT",
+      "mistM": "M — METRIC / INJURY TYPE",
+      "mistI": "I — INJURY / SITE & ANATOMY",
+      "mistS": "S — SIGNS / VITALS",
+      "mistT": "T — TREATMENT / INTERVENTIONS",
+      "mistCallsign": "HOT ZONE CALLSIGN / FREQUENCY",
+      "mistCallsignPlaceholder": "168.000 · CALL-1 · ELEMENT ALPHA",
+      "mistTqWarning": "[ MIST WARNING ] TQ + NO-SHOCK CONFLICT — REJECTION RISK",
+      "hat1": "LINE 1: PICKUP ZONE COORDINATE (MGRS / GPS)",
+      "hat1Placeholder": "e.g. 38 40 25.92 26 45 29.44",
+      "hat1ZeroSpecial": "⚠ ZERO SPECIAL CHARACTERS: Do not use degree (°), minute ('), or second (\") symbols. Enter numbers separated by spaces only — e.g. 38 40 25.92 26 45 29.44 — the system converts automatically.",
+      "hat1GpsConverted": "[ GPS FORMAT DETECTED -> MGRS SIMULATED ]",
+      "hat1BlocError": "UNSEPARATED DIGIT BLOC — SEPARATE WITH SPACES: 38 40 25.92 26 45 29.44",
+      "hat1Invalid": "INVALID COORDINATE — e.g. '38 40 25.92 26 45 29.44' (6 NUMBERS, SPACED) OR MGRS",
+      "hat2": "LINE 2: RADIO FREQUENCY / CALLSIGN",
+      "hat2Placeholder": "168.000 · CALL-1 · ELEMENT ALPHA",
+      "hat3": "LINE 3: CASUALTY PRECEDENCE",
+      "hat3Total": "PRECEDENCE TOTAL: {{precedence}} · LINE 5 TOTAL: {{type}}",
+      "hat3Mismatch": " · MISMATCH",
+      "hat4": "LINE 4: SPECIAL EQUIPMENT (MULTI-SELECT)",
+      "hat4Hint": "SELECT MULTIPLE ITEMS · e.g. HOIST + EXTRACTION",
+      "hat5": "LINE 5: PATIENT TRANSPORT TYPE",
+      "hat5Litter": "L · LITTER",
+      "hat5Ambulatory": "A · AMBULATORY",
+      "hat6": "LINE 6: PICKUP ZONE SECURITY",
+      "hat7": "LINE 7: LZ MARKING METHOD",
+      "hat8": "LINE 8: PATIENT NATIONALITY / STATUS",
+      "hat9": "LINE 9: CBRN THREAT / TERRAIN",
+      "hat9Cbrn": "CBRN THREAT",
+      "hat9Terrain": "TERRAIN"
+    },
+    "options": {
+      "line3": {
+        "line3_urgent": "A · URGENT",
+        "line3_urgent_surge": "B · URGENT-SURGE",
+        "line3_priority": "C · PRIORITY",
+        "line3_routine": "D · ROUTINE",
+        "line3_convenience": "E · CONVENIENCE"
+      },
+      "line4": {
+        "hoist": "HOIST",
+        "litter": "LITTER",
+        "extraction": "EXTRACTION GEAR",
+        "ventilator": "VENTILATOR"
+      },
+      "line6": {
+        "no_enemy": "N · NO ENEMY",
+        "possible_enemy": "P · POSSIBLE ENEMY",
+        "enemy_area": "E · ENEMY IN AREA",
+        "armed_escort": "X · ARMED ESCORT REQUIRED"
+      },
+      "line7": {
+        "panels": "A · PANELS",
+        "pyrotechnic": "B · PYROTECHNIC",
+        "smoke": "C · SMOKE",
+        "none": "D · NONE"
+      },
+      "line8": {
+        "us_nato": "A · FRIENDLY MILITARY",
+        "non_nato": "B · NON-NATO MILITARY",
+        "civilian": "C · CIVILIAN",
+        "epw": "D · EPW"
+      },
+      "line9Cbrn": {
+        "none": "NO THREAT",
+        "chemical": "C · CHEMICAL",
+        "biological": "B · BIOLOGICAL",
+        "radiological": "R · RADIOLOGICAL",
+        "nuclear": "N · NUCLEAR"
+      },
+      "line9Terrain": {
+        "obstacles": "TERRAIN OBSTACLES",
+        "flat": "OPEN AREA",
+        "urban": "URBAN / STRUCTURE"
+      },
+      "mistMetric": {
+        "bullet": "GUNSHOT WOUND",
+        "shrapnel": "SHRAPNEL",
+        "amputation": "AMPUTATION",
+        "burn": "BURN"
+      },
+      "mistInjury": {
+        "head_neck": "HEAD / NECK",
+        "chest": "CHEST",
+        "abdomen": "ABDOMEN",
+        "extremity": "EXTREMITIES"
+      },
+      "mistVitals": {
+        "conscious_open": "CONSCIOUS",
+        "unconscious": "UNCONSCIOUS",
+        "shock_yes": "SHOCK SIGNS PRESENT",
+        "shock_no": "NO SHOCK SIGNS"
+      },
+      "mistTreatment": {
+        "tourniquet": "TOURNIQUET APPLIED",
+        "chest_seal": "CHEST SEAL",
+        "airway": "AIRWAY OPENED",
+        "morphine": "MORPHINE"
+      }
+    },
+    "conflicts": {
+      "LINE3_ZERO_PATIENTS": "LINE3 · ZERO CASUALTIES",
+      "LINE5_ZERO_PATIENTS": "LINE5 · ZERO TRANSPORT TYPE",
+      "PATIENT_COUNT_MISMATCH": "LINE3/LINE5 · CASUALTY COUNT MISMATCH",
+      "UNMARKED_SECURE_LZ": "SECURE LZ · NO MARKING",
+      "CBRN_UNMARKED_LZ": "CBRN · UNMARKED LZ",
+      "HOT_LZ_NO_EXTRACTION": "HOT LZ · NO EXTRACTION GEAR",
+      "URGENT_NO_EQUIP_TERRAIN": "URGENT · EQUIPMENT/TERRAIN MISMATCH"
+    },
+    "reject": {
+      "timeoutMedevac": "• [ERROR_CODE: SIGNAL_COMPROMISE] Talk time exceeded 45 seconds! Enemy Direction Finding fixed your position; artillery is inbound on your grid.",
+      "timeoutCasevac": "• [ERROR_CODE: EVAC_AMBUSH] Radio time exceeded 30 seconds! CASEVAC asset was ambushed in the hot zone — evacuation failed!",
+      "hat1Empty": "• [🚨 CRITICAL ERROR - NO ROUTE]: LINE 1 (PICKUP COORDINATE) LEFT EMPTY! Pilots cannot spin rotors without a clear geographic target (MGRS/GPS) — helicopter stays in the hangar.",
+      "hat1Invalid": "• [LINE 1 ERROR]: PICKUP COORDINATE INVALID FORMAT! Enter MGRS (e.g. 36S TH 1234 5678) or GPS (lat, lon) — helicopter cannot launch without a route.",
+      "hat1Guide": "• [LINE 1 GUIDE]: Strip special symbols and enter numbers with spaces only. Example: '38 40 25.92 26 45 29.44' — the system converts automatically.",
+      "hat1Bloc": "• [🚨 COORDINATE BLIND SPOT]: YOU ENTERED DIGITS WITHOUT SPACES! Degree/minute/second digit lengths vary by geography, so the system cannot safely split lat/lon. Separate numbers with spaces. Example: '38 40 25.92 26 45 29.44'",
+      "hat3Zero": "• [LINE 3 ERROR]: Precedence counts (A/B/C/D) missing or total zero — triage data incomplete.",
+      "hat5Zero": "• [LINE 5 ERROR]: Litter or Ambulatory counts missing — logistics capacity not reported.",
+      "hat3Hat5Missing": "• [🚨 REACTION ERROR - MISSING MANIFEST]: LINE 3 TOTAL {{hat3}} ≠ LINE 5 TOTAL {{hat5}} · {{missing}} CASUALTY TRANSPORT TYPE(S) MISSING — PILOT DENIED LAUNCH!",
+      "hat3Hat5Excess": "• [🚨 REACTION ERROR - GHOST PASSENGER]: LINE 3 TOTAL {{hat3}} ≠ LINE 5 TOTAL {{hat5}} · {{excess}} EXTRA PASSENGER(S) — LITTER/AMBULATORY MISMATCH, LAUNCH DENIED!",
+      "hat2Empty": "• [LINE 2 ERROR]: Radio frequency / callsign empty — MEDEVAC element cannot raise you on net.",
+      "hat4Empty": "• [LINE 4 ERROR]: No special equipment selected — mark at least one item (HOIST, LITTER, EXTRACTION, etc.).",
+      "hat6Empty": "• [LINE 6 ERROR]: Pickup security status (N/P/E/X) not selected — pilot cannot build a risk profile.",
+      "hat7Empty": "• [LINE 7 ERROR]: LZ marking method not selected — recovery team cannot visually confirm the zone.",
+      "hat8Empty": "• [LINE 8 ERROR]: Patient nationality/status not selected — legal evacuation protocol cannot start.",
+      "hat9Empty": "• [LINE 9 ERROR]: CBRN threat or terrain not reported — helicopter landing profile cannot be set.",
+      "conflictUnmarked": "• [LINE 6 & LINE 7 CONFLICT]: {{label}} — marking is mandatory on a secure LZ.",
+      "conflictCbrn": "• [LINE 7 & LINE 9 CONFLICT]: {{label}} — marking required under CBRN threat.",
+      "conflictHotLz": "• [LINE 4 & LINE 6 CONFLICT]: {{label}} — hot LZ requires extraction/hoist gear.",
+      "conflictUrgent": "• [LINE 3, LINE 4 & LINE 9 CONFLICT]: {{label}} — urgent case + terrain obstacles require equipment.",
+      "conflictGeneric": "• [TACTICAL CONFLICT · {{code}}]: {{label}}",
+      "casevacCount": "• [MIST ERROR · CASUALTY COUNT]: Total casualty count missing — CASEVAC capacity cannot be calculated.",
+      "casevacMetric": "• [M — METRIC ERROR]: Injury type (GSW/Shrapnel/Amputation/Burn) not selected.",
+      "casevacInjury": "• [I — INJURY ERROR]: Injury site/anatomy (Head/Chest/Abdomen/Extremity) not reported.",
+      "casevacSigns": "• [S — SIGNS ERROR]: Vitals (consciousness/shock) not selected.",
+      "casevacTreatment": "• [T — TREATMENT ERROR]: Intervention (tourniquet, seal, airway, etc.) not marked.",
+      "casevacCallsign": "• [CASEVAC CALLSIGN ERROR]: Hot-zone callsign / frequency empty — asset cannot be directed.",
+      "casevacTqShock": "• [MIST TACTICAL WARNING · T+S]: Tourniquet applied but «NO SHOCK SIGNS» selected — clinical contradiction; report rejected.",
+      "casevacMorphine": "• [MIST TACTICAL WARNING · T+S]: Morphine reported with shock signs present — protocol violation risk.",
+      "overtime": "• [CRITICAL_DELAY / 🚨 CRITICAL DELAY]: YOU EXCEEDED THE RADIO PROTOCOL LIMIT BY +{{sec}} SECONDS! ENEMY ELEMENTS COMPLETED DIRECTION FINDING AND AMBUSHED THE EVACUATION ASSET.",
+      "failureTimeoutMedevac": "TIMEOUT · TRANSMISSION TIME EXCEEDED · 45 SEC · +{{sec}} SEC DELAY",
+      "failureTimeoutCasevac": "TIMEOUT · TRANSMISSION TIME EXCEEDED · 30 SEC · +{{sec}} SEC DELAY"
+    },
+    "history": {
+      "loading": "LOADING SIMULATION ARCHIVE…",
+      "empty": "NO SIMULATION HISTORY",
+      "emptyHint": "COMPLETE A MEDEVAC 9-LINE OR CASEVAC MIST SESSION",
+      "aria": "Simulation history records",
+      "title": "Simulation History · {{count}} record(s)",
+      "colMode": "MODE",
+      "colDate": "DATE / TIME",
+      "colStatus": "STATUS",
+      "colReaction": "REACTION PERFORMANCE",
+      "colDetails": "DETAILS",
+      "open": "OPEN",
+      "close": "CLOSE",
+      "statusOk": "Success",
+      "statusFail": "Failed",
+      "speed": "{{pct}}% SPEED",
+      "orsPenalty": "-{{penalty}} ORS",
+      "hat10": "LINE 10 - OPERATION TIME:",
+      "timingOk": "{{elapsed}} SEC / REMAINING: {{remaining}} SEC",
+      "timingOvertime": "{{elapsed}} SEC / [🚨 DELAY: -{{overtime}} SECONDS]",
+      "successDebrief": "⚡ [ PROTOCOL VALIDATED ]: RADIO REPORT AND LOGISTICS DATA COMPLETE. CLEAN EVACUATION SUCCESS.",
+      "failDebriefHeading": "[ ⚠️ SYSTEM EVACUATION DENIAL REASONS / MISSION CRITICAL ERRORS ]",
+      "failDebriefAria": "System evacuation denial reasons",
+      "allDetails": "[ FULL DETAILS / TRANSMITTED PAYLOAD ]",
+      "nineLineTitle": "9-LINE REPORT (FIRESTORE)",
+      "mistTitle": "CASEVAC MIST REPORT",
+      "noNineLine": "No stored 9-Line payload.",
+      "noMist": "No stored MIST payload.",
+      "operationNote": "OPERATION NOTE: ",
+      "failureFallback": "TRANSMISSION FAILURE · DETAIL NOT ARCHIVED",
+      "generalErrorPrefix": "• [GENERAL ERROR]: {{reason}}",
+      "noData": "NO DATA",
+      "none": "NONE",
+      "hat1": "LINE 1 · MGRS:",
+      "hat2": "LINE 2 · FREQ/CALLSIGN:",
+      "hat3": "LINE 3 · PRECEDENCE:",
+      "hat4": "LINE 4 · EQUIPMENT:",
+      "hat5": "LINE 5 · TRANSPORT:",
+      "hat6": "LINE 6 · SECURITY:",
+      "hat7": "LINE 7 · MARKING:",
+      "hat8": "LINE 8 · NATIONALITY:",
+      "hat9": "LINE 9 · CBRN/TERRAIN:",
+      "mistCount": "CASUALTY COUNT:",
+      "mistM": "M · METRIC:",
+      "mistI": "I · INJURY:",
+      "mistS": "S · SIGNS:",
+      "mistT": "T · TREATMENT:",
+      "mistCall": "CALLSIGN / FREQ:",
+      "precedence": {
+        "urgent": "URGENT",
+        "urgentSurge": "URGENT-SURGE",
+        "priority": "PRIORITY",
+        "routine": "ROUTINE",
+        "convenience": "CONVENIENCE"
+      },
+      "equipment": {
+        "hoist": "HOIST",
+        "ventilator": "VENTILATOR",
+        "oxygen": "EXTRACTION GEAR",
+        "extraction": "EXTRACTION GEAR",
+        "litter": "LITTER"
+      },
+      "transport": {
+        "litter": "LITTER",
+        "ambulatory": "AMBULATORY"
+      },
+      "marking": {
+        "panels": "PANELS",
+        "pyrotechnic": "PYROTECHNIC",
+        "strobe": "STROBE",
+        "smoke": "SMOKE",
+        "smokeWithColor": "SMOKE ({{color}})"
+      },
+      "smokeColor": {
+        "green": "GREEN",
+        "red": "RED",
+        "yellow": "YELLOW",
+        "purple": "PURPLE",
+        "violet": "PURPLE"
+      },
+      "security": {
+        "no_enemy": "N · NO ENEMY",
+        "no_troops": "N · NO ENEMY",
+        "possible_enemy": "P · POSSIBLE ENEMY",
+        "no_threat": "P · POSSIBLE ENEMY",
+        "enemy_area": "E · ENEMY IN AREA",
+        "armed_escort": "X · ARMED ESCORT REQUIRED",
+        "hot_lz": "X · HOT LZ / ARMED ESCORT"
+      },
+      "nationality": {
+        "us_nato": "A · FRIENDLY MILITARY (NATO)",
+        "friendly": "A · FRIENDLY MILITARY",
+        "non_nato": "B · NON-NATO MILITARY",
+        "allied": "B · ALLIED MILITARY",
+        "civilian": "C · CIVILIAN",
+        "epw": "D · EPW",
+        "pow": "D · EPW",
+        "military": "A · MILITARY PERSONNEL",
+        "non_combatant": "C · CIVILIAN / NON-COMBATANT"
+      },
+      "cbrn": {
+        "none": "NO CBRN THREAT",
+        "chemical": "CHEMICAL THREAT (C)",
+        "biological": "BIOLOGICAL THREAT (B)",
+        "radiological": "RADIOLOGICAL THREAT (R)",
+        "nuclear": "NUCLEAR THREAT (N)",
+        "unknown": "CBRN UNKNOWN"
+      },
+      "terrain": {
+        "flat": "FLAT TERRAIN",
+        "obstacles": "TERRAIN OBSTACLES",
+        "urban": "URBAN / STRUCTURE",
+        "unknown": "TERRAIN UNKNOWN"
+      },
+      "hat9NoneFlat": "NO CBRN THREAT / FLAT TERRAIN",
+      "countX": "{{count}} X {{label}}",
+      "timeDisplayNeg": "-{{sec}} SEC",
+      "scoreOrs": "{{pct}}% / −{{penalty}} ORS",
+      "scorePlain": "{{pct}}% / —"
+    }
+  }
+}

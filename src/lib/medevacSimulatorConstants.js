@@ -17,69 +17,70 @@ export const MEDEVAC_SIM_INITIAL = {
   line9_terrain: '',
 }
 
+/** IDs/codes only — labels from health.json `sim.options` via healthDisplayText */
 /** @type {{ id: string; label: string; code: string }[]} */
 export const MEDEVAC_LINE3_PRECEDENCE = [
-  { id: 'line3_urgent', label: 'A · ACİL', code: 'A' },
-  { id: 'line3_urgent_surge', label: 'B · ÖNCELİKLİ ACİL', code: 'B' },
-  { id: 'line3_priority', label: 'C · ÖNCELİKLİ', code: 'C' },
-  { id: 'line3_routine', label: 'D · RUTİN', code: 'D' },
-  { id: 'line3_convenience', label: 'E · KOLAYLIK', code: 'E' },
+  { id: 'line3_urgent', label: 'A · URGENT', code: 'A' },
+  { id: 'line3_urgent_surge', label: 'B · URGENT-SURGE', code: 'B' },
+  { id: 'line3_priority', label: 'C · PRIORITY', code: 'C' },
+  { id: 'line3_routine', label: 'D · ROUTINE', code: 'D' },
+  { id: 'line3_convenience', label: 'E · CONVENIENCE', code: 'E' },
 ]
 
 /** @type {{ id: string; label: string }[]} */
 export const MEDEVAC_LINE4_OPTIONS = [
-  { id: 'hoist', label: 'VİNÇ / HOIST' },
-  { id: 'litter', label: 'SEDYE / LITTER' },
-  { id: 'extraction', label: 'KURTARMA EKİPMANI' },
-  { id: 'ventilator', label: 'SOLUNUM CİHAZI' },
+  { id: 'hoist', label: 'HOIST' },
+  { id: 'litter', label: 'LITTER' },
+  { id: 'extraction', label: 'EXTRACTION' },
+  { id: 'ventilator', label: 'VENTILATOR' },
 ]
 
-/** HAT 6 — N / P / E / X */
+/** LINE 6 — N / P / E / X */
 export const MEDEVAC_LINE6_OPTIONS = [
-  { id: 'no_enemy', label: 'N · DÜŞMAN YOK' },
-  { id: 'possible_enemy', label: 'P · MUHTEMEL DÜŞMAN' },
-  { id: 'enemy_area', label: 'E · BÖLGEDE DÜŞMAN VAR' },
-  { id: 'armed_escort', label: 'X · SİLAHLI ESKORT GEREKLİ' },
+  { id: 'no_enemy', label: 'N' },
+  { id: 'possible_enemy', label: 'P' },
+  { id: 'enemy_area', label: 'E' },
+  { id: 'armed_escort', label: 'X' },
 ]
 
-/** HAT 7 — A / B / C / D */
+/** LINE 7 — A / B / C / D */
 export const MEDEVAC_LINE7_OPTIONS = [
-  { id: 'panels', label: 'A · PANEL' },
-  { id: 'pyrotechnic', label: 'B · FİŞEK' },
-  { id: 'smoke', label: 'C · SİS BOMBASI' },
-  { id: 'none', label: 'D · YOK' },
+  { id: 'panels', label: 'A' },
+  { id: 'pyrotechnic', label: 'B' },
+  { id: 'smoke', label: 'C' },
+  { id: 'none', label: 'D' },
 ]
 
-/** HAT 8 — A / B / C / D */
+/** LINE 8 — A / B / C / D */
 export const MEDEVAC_LINE8_OPTIONS = [
-  { id: 'us_nato', label: 'A · DOST ASKER' },
-  { id: 'non_nato', label: 'B · YABANCI ASKER' },
-  { id: 'civilian', label: 'C · SİVİL' },
-  { id: 'epw', label: 'D · SAVAŞ ESİRİ' },
+  { id: 'us_nato', label: 'A' },
+  { id: 'non_nato', label: 'B' },
+  { id: 'civilian', label: 'C' },
+  { id: 'epw', label: 'D' },
 ]
 
-/** HAT 9 KBRN */
+/** LINE 9 CBRN */
 export const MEDEVAC_LINE9_CBRN_OPTIONS = [
-  { id: 'none', label: 'TEHDİT YOK' },
-  { id: 'chemical', label: 'C · KİMYASAL' },
-  { id: 'biological', label: 'B · BİYOLOJİK' },
-  { id: 'radiological', label: 'R · RADYOLOJİK' },
-  { id: 'nuclear', label: 'N · NÜKLEER' },
+  { id: 'none', label: 'NONE' },
+  { id: 'chemical', label: 'C' },
+  { id: 'biological', label: 'B' },
+  { id: 'radiological', label: 'R' },
+  { id: 'nuclear', label: 'N' },
 ]
 
 export const MEDEVAC_LINE9_TERRAIN_OPTIONS = [
-  { id: 'obstacles', label: 'ARAZİ ENGELİ' },
-  { id: 'flat', label: 'AÇIK ALAN' },
-  { id: 'urban', label: 'KENTSEL / YAPI' },
+  { id: 'obstacles', label: 'OBSTACLES' },
+  { id: 'flat', label: 'FLAT' },
+  { id: 'urban', label: 'URBAN' },
 ]
 
-/** Taktik çakışma kodları → Türkçe HUD metni */
+/** @deprecated Prefer labelMedevacConflict() from healthDisplayText */
 export const MEDEVAC_CONFLICT_LABELS = {
-  LINE3_ZERO_PATIENTS: 'HAT3 · YARALI SAYISI SIFIR',
-  LINE5_ZERO_PATIENTS: 'HAT5 · TAŞIMA TİPİ SIFIR',
-  PATIENT_COUNT_MISMATCH: 'HAT3/HAT5 · YARALI SAYISI UYUŞMUYOR',
-  UNMARKED_SECURE_LZ: 'GÜVENLİ LZ · İŞARET YOK',
-  CBRN_UNMARKED_LZ: 'KBRN · İŞARETSİZ LZ',
-  HOT_LZ_NO_EXTRACTION: 'SICAK LZ · EKİPMAN YOK',
-  URGENT_NO_EQUIP_TERRAIN: 'ACİL · EKİPMAN/ARAZİ UYUMSUZ',
+  LINE3_ZERO_PATIENTS: 'LINE3_ZERO_PATIENTS',
+  LINE5_ZERO_PATIENTS: 'LINE5_ZERO_PATIENTS',
+  PATIENT_COUNT_MISMATCH: 'PATIENT_COUNT_MISMATCH',
+  UNMARKED_SECURE_LZ: 'UNMARKED_SECURE_LZ',
+  CBRN_UNMARKED_LZ: 'CBRN_UNMARKED_LZ',
+  HOT_LZ_NO_EXTRACTION: 'HOT_LZ_NO_EXTRACTION',
+  URGENT_NO_EQUIP_TERRAIN: 'URGENT_NO_EQUIP_TERRAIN',
 }

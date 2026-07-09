@@ -24,6 +24,12 @@ import {
   setupReportFirstPage,
   stampPdfFooters,
 } from './pdfDesignTokens'
+import {
+  healthPdfT,
+  pdfFilenameSegment,
+  pdfRecordLabel,
+  pdfSafeCallsign,
+} from './pdfReportText'
 
 /** @typedef {{ callsign?: string, username?: string, email?: string, bloodType?: string }} OperatorInfo */
 
@@ -38,20 +44,26 @@ function drawCasualtyDetail(doc, margin, pageW, card, startY) {
   const marchMeta = getCasualtyMarchStepMeta(card)
   const marchCount = countCasualtyMarchInterventions(card)
 
-  let cursorY = drawSectionTitle(doc, margin, pageW, 'Yaralı Bilgileri', startY)
+  let cursorY = drawSectionTitle(doc, margin, pageW, healthPdfT('casualtyReport.casualtyInfo'), startY)
 
   autoTable(doc, {
     startY: cursorY,
-    head: [['Parametre', 'Değer']],
+    head: [[healthPdfT('common.parameter'), healthPdfT('common.value')]],
     body: [
-      ['Tarih', formatCasualtyCardDate(card)],
-      ['Yaralı', getCasualtyPatientName(card)],
-      ['Tahliye önceliği', getCasualtyEvacPriorityLabel(card)],
-      ['Aktif MARCH adımı', `${marchMeta.key} · ${marchMeta.subtitle}`],
-      ['Kan grubu', getCasualtyBloodTypeLabel(card)],
-      ['Alerjiler', getCasualtyAllergies(card)],
-      ['MOI (Yaralanma mekanizması)', getCasualtyMechanismOfInjury(card)],
-      ['MARCH müdahaleleri', `${marchCount.done} kayıtlı`],
+      [healthPdfT('casualtyReport.fields.date'), formatCasualtyCardDate(card)],
+      [healthPdfT('casualtyReport.fields.casualty'), getCasualtyPatientName(card)],
+      [healthPdfT('casualtyReport.fields.evacPriority'), getCasualtyEvacPriorityLabel(card)],
+      [
+        healthPdfT('casualtyReport.fields.activeMarch'),
+        `${marchMeta.key} · ${marchMeta.subtitle}`,
+      ],
+      [healthPdfT('casualtyReport.fields.bloodType'), getCasualtyBloodTypeLabel(card)],
+      [healthPdfT('casualtyReport.fields.allergies'), getCasualtyAllergies(card)],
+      [healthPdfT('casualtyReport.fields.moi'), getCasualtyMechanismOfInjury(card)],
+      [
+        healthPdfT('casualtyReport.fields.marchInterventions'),
+        healthPdfT('casualtyReport.marchCount', { count: marchCount.done }),
+      ],
     ],
     ...getAutoTableOptions(margin),
   })
@@ -61,11 +73,11 @@ function drawCasualtyDetail(doc, margin, pageW, card, startY) {
 
   const sections = getCasualtyMarchSections(card)
   if (sections.length > 0) {
-    cursorY = drawSectionTitle(doc, margin, pageW, 'MARCH Müdahale Özeti', cursorY)
+    cursorY = drawSectionTitle(doc, margin, pageW, healthPdfT('casualtyReport.marchSummary'), cursorY)
 
     autoTable(doc, {
       startY: cursorY,
-      head: [['Faz', 'Uygulanan müdahaleler']],
+      head: [[healthPdfT('casualtyReport.phaseCol'), healthPdfT('casualtyReport.interventionsCol')]],
       body: sections.map((s) => [s.step, s.items.join(' · ')]),
       ...getAutoTableOptions(margin, { styles: { fontSize: PDF_FONT_SIZE.table - 1 } }),
     })
@@ -75,15 +87,16 @@ function drawCasualtyDetail(doc, margin, pageW, card, startY) {
 
   const treatments = getCasualtyAppliedTreatmentsNote(card)
   const note = getCasualtyOperationNote(card)
+  const emDash = '—'
 
-  cursorY = drawSectionTitle(doc, margin, pageW, 'Tıbbi Notlar', cursorY)
+  cursorY = drawSectionTitle(doc, margin, pageW, healthPdfT('casualtyReport.medicalNotes'), cursorY)
   setPdfFont(doc, 'normal')
   doc.setFontSize(PDF_FONT_SIZE.body)
   doc.setTextColor(...PDF_COLORS.text)
 
-  if (treatments !== '—') {
+  if (treatments !== emDash) {
     doc.setTextColor(...PDF_COLORS.muted)
-    doc.text('Uygulanan tedaviler:', margin, cursorY)
+    doc.text(healthPdfT('casualtyReport.appliedTreatments'), margin, cursorY)
     cursorY += 5
     doc.setTextColor(...PDF_COLORS.text)
     const tLines = doc.splitTextToSize(treatments, pageW - margin * 2)
@@ -92,7 +105,7 @@ function drawCasualtyDetail(doc, margin, pageW, card, startY) {
   } else if (sections.length > 0) {
     const fallback = sections.map((s) => s.items.join(' · ')).join(' · ')
     doc.setTextColor(...PDF_COLORS.muted)
-    doc.text('Uygulanan tedaviler:', margin, cursorY)
+    doc.text(healthPdfT('casualtyReport.appliedTreatments'), margin, cursorY)
     cursorY += 5
     doc.setTextColor(...PDF_COLORS.text)
     const tLines = doc.splitTextToSize(fallback, pageW - margin * 2)
@@ -100,9 +113,9 @@ function drawCasualtyDetail(doc, margin, pageW, card, startY) {
     cursorY += tLines.length * 5 + 4
   }
 
-  if (note !== '—') {
+  if (note !== emDash) {
     doc.setTextColor(...PDF_COLORS.muted)
-    doc.text('Operasyon notu:', margin, cursorY)
+    doc.text(healthPdfT('casualtyReport.operationNote'), margin, cursorY)
     cursorY += 5
     doc.setTextColor(...PDF_COLORS.text)
     const nLines = doc.splitTextToSize(note, pageW - margin * 2)
@@ -110,10 +123,18 @@ function drawCasualtyDetail(doc, margin, pageW, card, startY) {
   }
 }
 
+/**
+ * @param {Record<string, unknown>} card
+ * @param {string} callsign
+ */
 function buildPdfFilename(card, callsign) {
-  const safeCallsign = callsign.replace(/[^\w-]+/g, '_').slice(0, 24)
-  const stamp = formatCasualtyCardDate(card).replace(/[^\d]/g, '').slice(0, 12) || 'rapor'
-  return `AUDAZ-DD1380-${safeCallsign}-${stamp}.pdf`
+  const brand = pdfFilenameSegment(healthPdfT('fileNaming.brand'))
+  const slug = pdfFilenameSegment(healthPdfT('fileNaming.dd1380Report'))
+  const safeCallsign = pdfSafeCallsign(callsign)
+  const stamp =
+    formatCasualtyCardDate(card).replace(/[^\d]/g, '').slice(0, 12) ||
+    pdfFilenameSegment(healthPdfT('common.reportFallback'))
+  return `${brand}-${slug}-${safeCallsign}-${stamp}.pdf`
 }
 
 /**
@@ -153,7 +174,7 @@ export async function generateCasualtyCardReportPdf({ cards, operator }) {
         logoDataUrl,
         logoDims,
         reportTitle,
-        `Kayıt ${index + 1} / ${rows.length}`,
+        pdfRecordLabel(index, rows.length),
       )
     }
     drawCasualtyDetail(doc, margin, pageW, card, startY)

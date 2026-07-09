@@ -1,0 +1,312 @@
+{
+  "titles": {
+    "dd1380": "DD-1380 CASUALTY OPERATION RECORD",
+    "nineLine": "9-LINE EVACUATION REQUEST · MEDEVAC",
+    "casevacMist": "CASEVAC MIST REPORT",
+    "dd1380Blank": "DD FORM 1380 · TACTICAL FIELD CARD",
+    "tcccFieldCard": "TCCC FIELD CARD · MARCH PROTOCOL"
+  },
+  "common": {
+    "blankTemplateHint": "Form ID: {{id}} · Blank template · Fill by hand",
+    "fieldCardHint": "Form ID: {{id}} · Pocket reference · Cut — fold — carry",
+    "notePrefix": "Note: {{note}}",
+    "parameter": "Parameter",
+    "value": "Value",
+    "line": "Line {{num}}",
+    "abbreviationsTitle": "Abbreviations and Protocol Notes",
+    "defaultOperator": "Operator",
+    "reportFallback": "report"
+  },
+  "fileNaming": {
+    "brand": "AUDAZ",
+    "nineLine": "9Line-Medevac",
+    "casevacMist": "CASEVAC-MIST",
+    "dd1380Blank": "DD1380-Template",
+    "tcccFieldCard": "TCCC-Field-Card",
+    "dd1380Report": "DD1380"
+  },
+  "nineLine": {
+    "sectionTitle": "9-Line Evacuation Protocol",
+    "lines": {
+      "1": {
+        "label": "Location (MGRS/GPS)",
+        "note": "Enter the exact pickup-point coordinates. MGRS format preferred. E.g.: 37S NA 12345 67890"
+      },
+      "2": {
+        "label": "Radio frequency and callsign",
+        "note": "Frequency (MHz) and callsign for contact with the evacuation platform. E.g.: 40.50 MHz · BRAVO-1"
+      },
+      "3": {
+        "label": "Number of patients by precedence",
+        "note": "A=Urgent (life-threatening), B=Priority (within 1 hour), C=Routine (within 4 hours). E.g.: 2A 1B"
+      },
+      "4": {
+        "label": "Special equipment required",
+        "note": "A=None, B=Hoist, C=Extraction equipment, D=Ventilator, E=Other"
+      },
+      "5": {
+        "label": "Number of patients (litter / ambulatory)",
+        "note": "L=Litter, A=Ambulatory. E.g.: 1L 2A"
+      },
+      "6": {
+        "label": "Security at pickup site",
+        "note": "N=No enemy troops in area, P=Possible enemy troops, E=Enemy troops in area, X=Armed escort required"
+      },
+      "7": {
+        "label": "Method of marking pickup site",
+        "note": "A=Panels, B=Pyrotechnic, C=Smoke, D=None, E=Other. Specify color when applicable."
+      },
+      "8": {
+        "label": "Patient nationality / status",
+        "note": "Civilian=Civilian, Military=Friendly force, EPW=Enemy Prisoner of War",
+        "options": {
+          "civilian": "Civilian",
+          "military": "Military",
+          "epw": "EPW"
+        }
+      },
+      "9": {
+        "label": "NBC contamination / terrain",
+        "note": "Obstacles at the LZ: trees, wires, slope, elevation, etc. Include wind direction."
+      }
+    },
+    "abbreviations": [
+      "MGRS: Military Grid Reference System",
+      "MEDEVAC: Medical Evacuation",
+      "EPW: Enemy Prisoner of War",
+      "Precedence: A=Urgent (<1 hr) · B=Priority (<4 hr) · C=Routine (<24 hr)",
+      "After completion this form is read over the radio; a copy stays with the carried patient"
+    ]
+  },
+  "casevacMist": {
+    "patientInfo": "Patient Information",
+    "patientName": "Patient name / callsign",
+    "time": "Time",
+    "timeNote": "Use 24-hour format. E.g.: 14:35",
+    "coord": "Coordinates (MGRS/GPS)",
+    "coordNote": "MGRS or GPS coordinates. E.g.: 37S NA 12345 67890",
+    "mistTitle": "MIST Protocol",
+    "m": {
+      "title": "M — Mechanism of Injury",
+      "note": "Describe how the injury occurred. Multiple options may be marked. For blast, include distance.",
+      "options": {
+        "gsw": "GSW",
+        "blast": "Blast",
+        "fall": "Fall",
+        "other": "Other"
+      }
+    },
+    "i": {
+      "title": "I — Injuries",
+      "note": "List all observed or suspected injuries with body region. E.g.: Open fracture left leg, penetrating left chest."
+    },
+    "s": {
+      "title": "S — Signs & Symptoms",
+      "note": "Pulse: beats per minute. SpO2: above 95% normal. Consciousness AVPU: A=Alert, V=Voice, P=Pain, U=Unresponsive",
+      "pulse": "Pulse",
+      "spo2": "SpO2",
+      "consciousness": "AVPU"
+    },
+    "t": {
+      "title": "T — Treatment",
+      "note": "Mark all interventions performed in the field. If a tourniquet was applied, record the time.",
+      "options": {
+        "tourniquet": "Tourniquet",
+        "airway": "Airway",
+        "iv": "IV"
+      }
+    },
+    "extraNotes": "Additional Notes",
+    "abbreviations": [
+      "MIST: Mechanism · Injuries · Signs & Symptoms · Treatment",
+      "CASEVAC: Casualty Evacuation",
+      "AVPU: Alert · Voice · Pain · Unresponsive",
+      "SpO2: Oxygen saturation (above 95% normal)",
+      "If tourniquet applied: write application time on the patient's forehead and on the form",
+      "This form is handed to the evacuation platform; a copy stays with tactical medical personnel"
+    ]
+  },
+  "dd1380Blank": {
+    "patientInfo": "Patient Information",
+    "fullName": "Full Name",
+    "rank": "Rank",
+    "bloodType": "Blood Type",
+    "dateTime": "Date / Time",
+    "moi": "Mechanism of Injury",
+    "moiOptions": {
+      "gsw": "GSW",
+      "blast": "Blast",
+      "blunt": "Blunt trauma",
+      "burn": "Burn",
+      "other": "Other"
+    },
+    "marchAssessment": "MARCH Assessment",
+    "march": {
+      "M": {
+        "label": "M (Massive Hemorrhage):",
+        "opts": [
+          "Tourniquet",
+          "Wound dressing",
+          "Hemostatic agent"
+        ]
+      },
+      "A": {
+        "label": "A (Airway):",
+        "opts": [
+          "Patent",
+          "NPA",
+          "Jaw thrust",
+          "Cricothyrotomy"
+        ]
+      },
+      "R": {
+        "label": "R (Respiration):",
+        "opts": [
+          "Normal",
+          "Tension pneumothorax",
+          "Chest seal"
+        ]
+      },
+      "C": {
+        "label": "C (Circulation):",
+        "opts": [
+          "IV/IO access",
+          "Fluid",
+          "Blood product"
+        ]
+      },
+      "H": {
+        "label": "H (Hypothermia):",
+        "opts": [
+          "Blanket",
+          "Heater"
+        ]
+      }
+    },
+    "vitals": "Vital Signs",
+    "pulse": "Pulse",
+    "spo2": "SpO2",
+    "avpu": "AVPU:",
+    "procedures": "Procedures Performed",
+    "procedureCol": "Procedure",
+    "dateTimeCol": "Date / Time",
+    "preTransport": "Pre-Transport Notes",
+    "observerSig": "Observer Signature",
+    "signature": "Signature",
+    "date": "Date"
+  },
+  "tcccFieldCard": {
+    "cardTitle": "TCCC FIELD CARD · MARCH",
+    "criticalDoses": "CRITICAL DRUG DOSES",
+    "drugs": [
+      "Morphine: ___ mg IV",
+      "Ketamine: ___ mg IV/IO",
+      "TXA: 1g IV (10 min)"
+    ],
+    "nineLineSummary": "9-LINE SUMMARY",
+    "nineLineFields": {
+      "coord": "Location:",
+      "freq": "Frequency:",
+      "urgency": "Precedence:",
+      "lz": "LZ:"
+    },
+    "observer": "Observer: ___________",
+    "time": "Time: __:__",
+    "march": {
+      "M": {
+        "label": "Massive hemorrhage",
+        "opts": [
+          "Tourniquet",
+          "Dressing",
+          "Hemostatic"
+        ]
+      },
+      "A": {
+        "label": "Airway",
+        "opts": [
+          "NPA",
+          "Jaw",
+          "Cric"
+        ]
+      },
+      "R": {
+        "label": "Respiration",
+        "opts": [
+          "Normal",
+          "Seal",
+          "Needle dec."
+        ]
+      },
+      "C": {
+        "label": "Circulation",
+        "opts": [
+          "IV/IO",
+          "Fluid",
+          "TXA"
+        ]
+      },
+      "H": {
+        "label": "Hypothermia",
+        "opts": [
+          "Blanket",
+          "Heater"
+        ]
+      }
+    }
+  },
+  "casualtyReport": {
+    "casualtyInfo": "Casualty Information",
+    "fields": {
+      "date": "Date",
+      "casualty": "Casualty",
+      "evacPriority": "Evacuation priority",
+      "activeMarch": "Active MARCH step",
+      "bloodType": "Blood type",
+      "allergies": "Allergies",
+      "moi": "MOI (Mechanism of injury)",
+      "marchInterventions": "MARCH interventions"
+    },
+    "marchCount": "{{count}} recorded",
+    "marchSummary": "MARCH Intervention Summary",
+    "phaseCol": "Phase",
+    "interventionsCol": "Interventions applied",
+    "medicalNotes": "Medical Notes",
+    "appliedTreatments": "Treatments applied:",
+    "operationNote": "Operation note:"
+  },
+  "interventions": {
+    "tourniquet": "Tourniquet",
+    "hemostaticPacking": "Hemostatic packing",
+    "pressureBandage": "Pressure bandage",
+    "npa": "NPA",
+    "intubatedCric": "Intubation / Cric",
+    "recoveryPosition": "Recovery position",
+    "ventedChestSeal": "Vented chest seal",
+    "ndc": "NDC",
+    "respiratoryRate": "Respiratory rate · {{rate}}/min",
+    "ivIo": "IV / IO access",
+    "fluid": "Fluid",
+    "txa": "TXA",
+    "hypothermiaBlanket": "Hypothermia blanket",
+    "heater": "Heater",
+    "tourniquetWithMeta": "Tourniquet{{loc}}{{time}}",
+    "locSep": " · {{loc}}",
+    "timeSep": " · {{time}}",
+    "ndcWithGauge": "NDC{{gauge}}",
+    "gaugeSep": " · {{gauge}}",
+    "fluidWithValue": "Fluid · {{fluid}}",
+    "radialPulseWithValue": "Radial pulse · {{pulse}}",
+    "avpuWithValue": "AVPU · {{avpu}}",
+    "pupilWithValue": "Pupil · {{pupil}}",
+    "thermalWrap": "Thermal wrap",
+    "activeHeating": "Active heating"
+  },
+  "autoSummary": {
+    "evacPriority": "Evacuation priority: {{priority}}",
+    "moi": "MOI: {{moi}}",
+    "activeMarch": "Active MARCH: {{key}} · {{subtitle}}",
+    "storedNote": "(Stored note: {{note}})",
+    "titleCasualty": "Casualty",
+    "titleTemplate": "DD1380 · {{name}} · {{evac}}"
+  }
+}

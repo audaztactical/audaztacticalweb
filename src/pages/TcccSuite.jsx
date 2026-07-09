@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useLocation } from 'react-router-dom'
 import {
   AlertTriangle,
@@ -17,25 +18,25 @@ import { useAudazData } from '../hooks/useAudazData'
 
 /** @typedef {'menu' | 'personal_health' | 'march_documents' | 'ifak_logistics'} ActiveSection */
 
-const MENU_CARDS = [
+const MENU_CARD_META = [
   {
     id: /** @type {ActiveSection} */ ('personal_health'),
-    title: 'Kişisel Sağlık Durumu',
-    description: 'Medikal profil, alerji ve aşı kayıtları.',
+    titleKey: 'menu.personalHealth.title',
+    descriptionKey: 'menu.personalHealth.description',
     Icon: Shield,
     accent: 'red',
   },
   {
-    id: 'march_documents',
-    title: 'Taktik Medikal Kılavuz',
-    description: 'Yaralı kartları, tahliye protokolleri ve basılabilir saha şablonları.',
+    id: /** @type {ActiveSection} */ ('march_documents'),
+    titleKey: 'menu.marchDocuments.title',
+    descriptionKey: 'menu.marchDocuments.description',
     Icon: ClipboardList,
     accent: 'slate',
   },
   {
-    id: 'ifak_logistics',
-    title: 'IFAK & Malzeme Takibi',
-    description: 'IFAK malzeme listesi ve son kullanma tarihi takibi.',
+    id: /** @type {ActiveSection} */ ('ifak_logistics'),
+    titleKey: 'menu.ifakLogistics.title',
+    descriptionKey: 'menu.ifakLogistics.description',
     Icon: Package,
     accent: 'amber',
   },
@@ -49,11 +50,12 @@ const MENU_CARDS = [
  *   alert?: import('react').ReactNode
  *   accent: string
  *   icon: import('lucide-react').LucideIcon
+ *   enterLabel: string
  *   onClick: () => void
  *   disabled?: boolean
  * }} props
  */
-function CategoryCard({ title, description, preview, alert, accent, icon, onClick, disabled = false }) {
+function CategoryCard({ title, description, preview, alert, accent, icon, enterLabel, onClick, disabled = false }) {
   const CardIcon = icon
   const hoverBorder =
     accent === 'red'
@@ -81,7 +83,7 @@ function CategoryCard({ title, description, preview, alert, accent, icon, onClic
           aria-hidden
         />
         <span className="rounded border border-slate-800 bg-slate-900 px-2 py-0.5 font-mono text-[8px] font-bold uppercase tracking-widest text-app-text/55 group-hover:border-slate-700 group-hover:text-app-text/90">
-          GİRİŞ
+          {enterLabel}
         </span>
       </div>
       <h3 className="font-mono text-sm font-bold uppercase leading-snug tracking-wide text-slate-100">{title}</h3>
@@ -92,6 +94,7 @@ function CategoryCard({ title, description, preview, alert, accent, icon, onClic
 }
 
 export default function TcccSuite() {
+  const { t } = useTranslation('health')
   const location = useLocation()
   const { user, userData, isConfigured } = useAuth()
   const { hasCriticalExpiry, criticalCount } = useTcccAlerts()
@@ -139,7 +142,7 @@ export default function TcccSuite() {
     return () => window.removeEventListener('audaz:route-reenter', onReenter)
   }, [])
 
-  const bloodType = (userData?.bloodType || '').trim() || 'BELİRTİLMEDİ'
+  const bloodType = (userData?.bloodType || '').trim() || t('shell.bloodUnspecified')
   const callsign = (userData?.callsign || user?.displayName || '').trim() || '—'
 
   const readyData =
@@ -147,11 +150,11 @@ export default function TcccSuite() {
 
   const statusBanner =
     !isConfigured || !readyData ? (
-      <p className="font-mono text-[10px] uppercase text-app-text/55">OTURUM / VERİ KANALI</p>
+      <p className="font-mono text-[10px] uppercase text-app-text/55">{t('shell.sessionChannel')}</p>
     ) : ifakListenError ? (
       <div className="flex rounded-lg border border-red-500/30 bg-red-950/30 px-3 py-2 text-red-300">
         <AlertTriangle className="size-5" aria-hidden />
-        <span className="ml-2 font-mono text-[10px] uppercase">Veri kanalı kesildi</span>
+        <span className="ml-2 font-mono text-[10px] uppercase">{t('shell.channelDown')}</span>
       </div>
     ) : null
 
@@ -161,15 +164,16 @@ export default function TcccSuite() {
         accent="red"
         icon={Shield}
         disabled={!readyData}
-        title={MENU_CARDS[0].title}
-        description={MENU_CARDS[0].description}
+        enterLabel={t('shell.enter')}
+        title={t(MENU_CARD_META[0].titleKey)}
+        description={t(MENU_CARD_META[0].descriptionKey)}
         onClick={() => setActiveSection('personal_health')}
         preview={
           <div className="rounded-lg border border-red-800/50 bg-red-950/25 px-4 py-3">
-            <p className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-red-500/80">Askeri Kimlik · Durum</p>
-            <p className="mt-2 font-mono text-[10px] uppercase text-app-text/55">Çağrı adı</p>
+            <p className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-red-500/80">{t('shell.militaryIdStatus')}</p>
+            <p className="mt-2 font-mono text-[10px] uppercase text-app-text/55">{t('shell.callsign')}</p>
             <p className="font-mono text-sm font-bold uppercase tracking-wider text-app-text">{callsign}</p>
-            <p className="mt-3 font-mono text-[10px] uppercase text-app-text/55">Kan Grubu</p>
+            <p className="mt-3 font-mono text-[10px] uppercase text-app-text/55">{t('shell.bloodType')}</p>
             <p className="font-mono text-2xl font-black uppercase tracking-[0.1em] text-red-500">{bloodType}</p>
           </div>
         }
@@ -179,12 +183,13 @@ export default function TcccSuite() {
         accent="slate"
         icon={ClipboardList}
         disabled={!readyData}
-        title={MENU_CARDS[1].title}
-        description={MENU_CARDS[1].description}
+        enterLabel={t('shell.enter')}
+        title={t(MENU_CARD_META[1].titleKey)}
+        description={t(MENU_CARD_META[1].descriptionKey)}
         onClick={() => setActiveSection('march_documents')}
         preview={
           <p className="font-mono text-[10px] font-bold uppercase leading-relaxed tracking-wide text-app-text/70">
-            MARCH · DD-1380 yaralı kartı · 9-line tahliye · PDF şablonları
+            {t('shell.marchPreview')}
           </p>
         }
       />
@@ -193,8 +198,9 @@ export default function TcccSuite() {
         accent="amber"
         icon={Package}
         disabled={!readyData}
-        title={MENU_CARDS[2].title}
-        description={MENU_CARDS[2].description}
+        enterLabel={t('shell.enter')}
+        title={t(MENU_CARD_META[2].titleKey)}
+        description={t(MENU_CARD_META[2].descriptionKey)}
         onClick={() => setActiveSection('ifak_logistics')}
         alert={
           hasCriticalExpiry ? (
@@ -202,13 +208,13 @@ export default function TcccSuite() {
               role="alert"
               className="mb-4 animate-pulse rounded-lg border border-amber-500/60 bg-gradient-to-r from-amber-950/60 via-red-950/50 to-amber-950/60 px-3 py-2 font-mono text-[9px] font-bold uppercase tracking-wider text-amber-300"
             >
-              ⚠️ Kritik stok uyarısı · {criticalCount} kalem ≤30 gün / SKT geçmiş
+              {t('shell.criticalStockAlert', { count: criticalCount })}
             </div>
           ) : null
         }
         preview={
           <p className="font-mono text-[10px] font-bold uppercase leading-relaxed tracking-wide text-app-text/70">
-            IFAK malzeme listesi · son kullanma takibi
+            {t('shell.ifakPreview')}
           </p>
         }
       />
@@ -223,7 +229,7 @@ export default function TcccSuite() {
         className="mb-4 inline-flex items-center gap-2 rounded-sm border border-slate-800 bg-slate-900/50 px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider text-app-text/70 transition-colors hover:border-red-900/50 hover:text-red-500"
       >
         <span aria-hidden>⬅</span>
-        TAKTİK MENÜYE DÖN
+        {t('shell.backToMenu')}
       </button>
     ) : null
 
@@ -270,7 +276,7 @@ export default function TcccSuite() {
 
   return (
     <div className="px-4 sm:px-6 md:px-8">
-    <PageShell title="TCCC" subtitle="Taktik Sağlık Paketi">
+    <PageShell title={t('page.title')} subtitle={t('page.subtitle')}>
       <div className="tccc-march-shell h-auto min-h-0 space-y-5 text-app-text">
         {statusBanner}
 

@@ -1,5 +1,15 @@
 import { invStr } from './inventoryIlws'
-import { EVAC_PRIORITY_OPTIONS, MARCH_DD1380_STEPS } from './marchDd1380Config'
+import { EVAC_PRIORITY_OPTIONS } from './marchDd1380Config'
+import {
+  buildMarchInterventionSections,
+  healthLocale,
+  healthT,
+  labelCasualtyBloodType,
+  labelEvacPriority,
+  marchStepDisplay,
+  marchStepSubtitle,
+} from './healthDisplayText'
+import { healthPdfT } from './pdfReportText'
 
 /** @param {Record<string, unknown>} row */
 export function getCasualtyCardTimestampMs(row) {
@@ -15,8 +25,8 @@ export function getCasualtyCardTimestampMs(row) {
 /** @param {Record<string, unknown>} row */
 export function formatCasualtyCardDate(row) {
   const ms = getCasualtyCardTimestampMs(row)
-  if (!ms) return '—'
-  return new Date(ms).toLocaleString('tr-TR', {
+  if (!ms) return healthT('common.emDash')
+  return new Date(ms).toLocaleString(healthLocale(), {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -29,7 +39,7 @@ export function formatCasualtyCardDate(row) {
 export function getCasualtyPatientName(row) {
   const patient = row.patient && typeof row.patient === 'object' ? row.patient : null
   const fromPatient = patient ? invStr(/** @type {Record<string, unknown>} */ (patient).patientName).trim() : ''
-  return invStr(row.patientName || row.title).trim() || fromPatient || 'YARALI — TANIMSIZ'
+  return invStr(row.patientName || row.title).trim() || fromPatient || healthT('archive.undefinedCasualty')
 }
 
 /** @param {Record<string, unknown>} row */
@@ -42,7 +52,7 @@ export function getCasualtyEvacPriority(row) {
 /** @param {Record<string, unknown>} row */
 export function getCasualtyEvacPriorityLabel(row) {
   const id = getCasualtyEvacPriority(row)
-  return EVAC_PRIORITY_OPTIONS.find((o) => o.id === id)?.label ?? id
+  return labelEvacPriority(id)
 }
 
 /** @param {string} priority */
@@ -61,7 +71,7 @@ export function getCasualtyMarchStep(row) {
 /** @param {Record<string, unknown>} row */
 export function getCasualtyMarchStepMeta(row) {
   const key = getCasualtyMarchStep(row)
-  return MARCH_DD1380_STEPS.find((s) => s.key === key) ?? MARCH_DD1380_STEPS[0]
+  return marchStepDisplay(key)
 }
 
 /** @param {Record<string, unknown>} row */
@@ -70,12 +80,16 @@ export function getCasualtyBloodTypeLabel(row) {
   const fromPatient = patient
     ? invStr(/** @type {Record<string, unknown>} */ (patient).bloodTypeLabel).trim()
     : ''
-  return invStr(row.bloodTypeLabel).trim() || fromPatient || '—'
+  const bloodId =
+    invStr(row.bloodType).trim() ||
+    (patient ? invStr(/** @type {Record<string, unknown>} */ (patient).bloodType).trim() : '')
+  if (bloodId) return labelCasualtyBloodType(bloodId)
+  return invStr(row.bloodTypeLabel).trim() || fromPatient || healthT('common.emDash')
 }
 
 /** @param {Record<string, unknown>} row */
 export function getCasualtyMechanismOfInjury(row) {
-  return invStr(row.mechanismOfInjury).trim() || '—'
+  return invStr(row.mechanismOfInjury).trim() || healthT('common.emDash')
 }
 
 /**
@@ -108,7 +122,7 @@ export function getCasualtyAppliedTreatmentsNote(row) {
   if (summary) return summary
   const manual = invStr(row.appliedTreatmentsNote).trim()
   const merged = mergeCasualtyTreatmentNotes(manual, flattenCasualtyMarchItems(row))
-  return merged || '—'
+  return merged || healthT('common.emDash')
 }
 
 /** @param {string} text */
@@ -125,11 +139,16 @@ export function buildCasualtyAutoOperationSummary(row) {
   /** @type {string[]} */
   const parts = []
   const evac = getCasualtyEvacPriorityLabel(row)
-  if (evac) parts.push(`Tahliye önceliği: ${evac}`)
+  if (evac) parts.push(healthPdfT('autoSummary.evacPriority', { priority: evac }))
   const moi = invStr(row.mechanismOfInjury).trim()
-  if (moi) parts.push(`MOI: ${moi}`)
-  const step = getCasualtyMarchStepMeta(row)
-  parts.push(`Aktif MARCH: ${step.key} · ${step.subtitle}`)
+  if (moi) parts.push(healthPdfT('autoSummary.moi', { moi }))
+  const step = getCasualtyMarchStep(row)
+  parts.push(
+    healthPdfT('autoSummary.activeMarch', {
+      key: step,
+      subtitle: marchStepSubtitle(step),
+    }),
+  )
   return parts.join(' · ')
 }
 
@@ -144,80 +163,26 @@ export function getCasualtyOperationNote(row) {
     return manual
   }
   if (manual && isLikelyAccidentalNumericNote(manual) && auto) {
-    return `${auto} · (Kayıtlı not: ${manual})`
+    return `${auto} · ${healthPdfT('autoSummary.storedNote', { note: manual })}`
   }
-  return auto || manual || '—'
+  return auto || manual || healthT('common.emDash')
 }
 
 /** @param {Record<string, unknown>} row */
 export function getCasualtyAllergies(row) {
   const patient = row.patient && typeof row.patient === 'object' ? row.patient : null
   const fromPatient = patient ? invStr(/** @type {Record<string, unknown>} */ (patient).allergies).trim() : ''
-  return invStr(row.allergies).trim() || fromPatient || '—'
+  return invStr(row.allergies).trim() || fromPatient || healthT('common.emDash')
 }
 
 /**
- * @param {Record<string, unknown>} row
+ * @param {Record<string, unknown>} march
  * @returns {{ step: string, title: string, items: string[] }[]}
  */
 export function getCasualtyMarchSectionsFromMarch(march) {
-  const m =
-    march && typeof march === 'object'
-      ? /** @type {Record<string, Record<string, unknown>>} */ (march)
-      : {}
-
-  /** @type {{ step: string, title: string, items: string[] }[]} */
-  const sections = []
-
-  for (const meta of MARCH_DD1380_STEPS) {
-    const block = m[meta.key]
-    if (!block || typeof block !== 'object') continue
-    const b = /** @type {Record<string, unknown>} */ (block)
-    /** @type {string[]} */
-    const items = []
-
-    if (meta.key === 'M') {
-      if (b.tourniquetApplied) {
-        const loc = invStr(b.tqLocationLabel || b.tqLocation).trim()
-        const t = invStr(b.tqInsertionTime).trim()
-        items.push(`Turnike${loc ? ` · ${loc}` : ''}${t ? ` · ${t}` : ''}`)
-      }
-      if (b.woundPackingHemostatic) items.push('Hemostatik tampon')
-      if (b.pressureBandage) items.push('Basınç bandajı')
-    } else if (meta.key === 'A') {
-      if (b.npaInserted) items.push('NPA')
-      if (b.intubatedCric) items.push('Entübasyon / Cric')
-      if (b.recoveryPosition) items.push('Kurtarma pozisyonu')
-    } else if (meta.key === 'R') {
-      if (b.ventedChestSeal) items.push('Ventilli göğüs mührü')
-      if (b.needleDecompression) {
-        const gauge = invStr(b.ndcGaugeLabel || b.ndcGauge).trim()
-        items.push(`NDC${gauge ? ` · ${gauge}` : ''}`)
-      }
-      const rr = invStr(b.respiratoryRate).trim()
-      if (rr) items.push(`Solunum hızı · ${rr}/dk`)
-    } else if (meta.key === 'C') {
-      if (b.ivIoAccess) items.push('IV / IO erişim')
-      const fluid = invStr(b.fluidLabel || b.fluidAdministered).trim()
-      if (fluid) items.push(`Sıvı · ${fluid}`)
-      if (b.txaAdministered) items.push('TXA')
-      const pulse = invStr(b.radialPulseLabel || b.radialPulse).trim()
-      if (pulse) items.push(`Radial nabız · ${pulse}`)
-    } else if (meta.key === 'H') {
-      if (b.hypothermiaWrap) items.push('Termal wrap')
-      if (b.activeHeating) items.push('Aktif ısıtma')
-      const avpu = invStr(b.avpuLabel || b.avpuLevel).trim()
-      if (avpu) items.push(`AVPU · ${avpu}`)
-      const pupil = invStr(b.pupilLabel || b.pupilStatus).trim()
-      if (pupil) items.push(`Pupil · ${pupil}`)
-    }
-
-    if (items.length > 0) {
-      sections.push({ step: meta.key, title: meta.subtitle, items })
-    }
-  }
-
-  return sections
+  return buildMarchInterventionSections(
+    /** @type {Record<string, Record<string, unknown>>} */ (march && typeof march === 'object' ? march : {}),
+  )
 }
 
 /** @param {Record<string, unknown>} row */

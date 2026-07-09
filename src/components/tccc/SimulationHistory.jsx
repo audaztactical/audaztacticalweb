@@ -1,6 +1,8 @@
 import { Fragment, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ChevronDown, ChevronUp, History } from 'lucide-react'
 import { PENALTY_TCCC_BELOW_40 } from '../../lib/orsEngine'
+import { healthT } from '../../lib/healthDisplayText'
 import {
   filterSimulationLogs,
   formatSimulationTimestamp,
@@ -12,6 +14,7 @@ import {
   getSimulationRemainingSec,
   getSimulationSuccess,
   getStoredRejectionReasons,
+  isOvertimeDebriefLine,
   isSimulationTimeoutFailure,
   reactionEfficiencyPercent,
   sortSimulationLogsNewestFirst,
@@ -64,7 +67,7 @@ function buildHistoryRow(row) {
     timestampLabel: formatSimulationTimestamp(row.timestamp ?? row.updatedAt),
     rejectionReasons: getStoredRejectionReasons(row),
     failureFallback:
-      toStr(row.medevacFailureReason).trim() || 'TRANSMISSION FAILURE · AYRINTI ARŞİVLENMEDİ',
+      toStr(row.medevacFailureReason).trim() || healthT('sim.history.failureFallback'),
   }
 }
 
@@ -91,16 +94,17 @@ function ModBadge({ mode }) {
  * @param {{ status: SimStatusLabel }} props
  */
 function StatusBadge({ status }) {
+  const { t } = useTranslation('health')
   if (status === 'BAŞARILI') {
     return (
       <span className="rounded border border-emerald-500/40 bg-emerald-500/10 px-2 py-1 font-mono text-xs text-emerald-400">
-        Başarılı
+        {t('sim.history.statusOk')}
       </span>
     )
   }
   return (
     <span className="sim-history-cold-hit rounded border border-red-500/40 bg-red-500/10 px-2 py-1 font-mono text-xs text-red-400">
-      Başarısız
+      {t('sim.history.statusFail')}
     </span>
   )
 }
@@ -109,16 +113,17 @@ function StatusBadge({ status }) {
  * @param {{ status: SimStatusLabel; efficiency: number }} props
  */
 function ReactionPerformanceCell({ status, efficiency }) {
+  const { t } = useTranslation('health')
   if (status === 'BAŞARILI') {
     return (
       <span className="font-mono text-xs font-bold tabular-nums tracking-wide text-emerald-400">
-        {efficiency}% HIZ
+        {t('sim.history.speed', { pct: efficiency })}
       </span>
     )
   }
   return (
     <span className="font-mono text-xs font-bold tabular-nums tracking-wide text-red-500">
-      -{PENALTY_TCCC_BELOW_40} ORS
+      {t('sim.history.orsPenalty', { penalty: PENALTY_TCCC_BELOW_40 })}
     </span>
   )
 }
@@ -134,22 +139,23 @@ function ReactionPerformanceCell({ status, efficiency }) {
  * }} props
  */
 function OperationTimingLine({ status, elapsedTime, remainingTime, overtime, timedOut, overtimeSec }) {
+  const { t } = useTranslation('health')
   const isTimeoutFailure = status === 'BAŞARISIZ' && (timedOut || overtimeSec > 0)
 
   return (
     <p className="font-mono text-xs uppercase text-app-text/70">
-      <span className="text-amber-600/90">HAT 10 - OPERASYON SÜRESİ:</span>
+      <span className="text-amber-600/90">{t('sim.history.hat10')}</span>
       {status === 'BAŞARILI' ? (
         <span className="ml-2 font-mono text-xs text-emerald-400">
-          {elapsedTime} SN / KALAN SÜRE: {remainingTime} SN
+          {t('sim.history.timingOk', { elapsed: elapsedTime, remaining: remainingTime })}
         </span>
       ) : isTimeoutFailure ? (
         <span className="ml-2 font-mono text-xs text-red-500">
-          {elapsedTime} SN / [🚨 GECİKME: -{overtime} SANİYE]
+          {t('sim.history.timingOvertime', { elapsed: elapsedTime, overtime })}
         </span>
       ) : (
         <span className="ml-2 font-mono text-xs text-red-400">
-          {elapsedTime} SN / KALAN SÜRE: {remainingTime} SN
+          {t('sim.history.timingOk', { elapsed: elapsedTime, remaining: remainingTime })}
         </span>
       )}
     </p>
@@ -166,31 +172,33 @@ function SimulationDebriefLog({
   overtimeSec,
   timedOut: _timedOut,
 }) {
+  const { t } = useTranslation('health')
+
   if (status === 'BAŞARILI') {
     return (
       <div className="mt-4 rounded border border-emerald-500/40 bg-emerald-950/30 p-3 text-left">
         <p className="mb-2 font-mono text-xs uppercase text-emerald-300/90">
-          <span className="text-emerald-500/80">HAT 10 - OPERASYON SÜRESİ:</span>
+          <span className="text-emerald-500/80">{t('sim.history.hat10')}</span>
           <span className="ml-2 font-mono text-xs text-emerald-400">
-            {elapsedTime} SN / KALAN SÜRE: {remainingTime} SN
+            {t('sim.history.timingOk', { elapsed: elapsedTime, remaining: remainingTime })}
           </span>
         </p>
         <p className="text-xs font-mono uppercase leading-relaxed text-emerald-400">
-          ⚡ [ PROTOKOL DOĞRULANDI ]: TELSİZ RAPORU VE LOJİSTİK VERİLER EKSİKSİZ UYGULANDI. TAHLİYE TEMİZ
-          BAŞARILDI.
+          {t('sim.history.successDebrief')}
         </p>
       </div>
     )
   }
 
+  const fallbackReason = failureFallback || t('sim.history.failureFallback')
   const baseLines =
     rejectionReasons.length > 0
       ? [...rejectionReasons]
-      : [`• [GENEL HATA]: ${failureFallback || 'TRANSMISSION FAILURE'}`]
+      : [t('sim.history.generalErrorPrefix', { reason: fallbackReason })]
 
   if (overtimeSec > 0) {
     const overtimeLine = formatOvertimeDebriefLine(overtimeSec)
-    if (!baseLines.some((r) => r.includes('KRİTİK GECİKME'))) {
+    if (!baseLines.some((r) => isOvertimeDebriefLine(r))) {
       baseLines.push(overtimeLine)
     }
   }
@@ -201,10 +209,10 @@ function SimulationDebriefLog({
     <div
       className="sim-history-cold-hit mt-4 animate-pulse rounded border border-red-500/40 bg-red-950/30 p-3 text-left"
       role="region"
-      aria-label="Sistem tahliye reddi gerekçeleri"
+      aria-label={t('sim.history.failDebriefAria')}
     >
       <p className="mb-2 text-xs font-mono font-bold uppercase leading-relaxed text-red-400">
-        [ ⚠️ SİSTEM TAHLİYE REDDİ GEREKÇELERİ / MISSION CRITICAL ERRORS ]
+        {t('sim.history.failDebriefHeading')}
       </p>
       <div className="max-h-40 space-y-1.5 overflow-y-auto pr-1">
         {lines.map((reason, idx) => (
@@ -229,6 +237,7 @@ function SimulationDebriefLog({
  * }} log
  */
 function SimulationDetailPanel({ log }) {
+  const { t } = useTranslation('health')
   const row = log.raw
   const mode = getSimulationMode(row)
   const nineLine = row.medevacNineLine
@@ -245,12 +254,12 @@ function SimulationDetailPanel({ log }) {
 
   return (
     <div className="border-t border-emerald-500/20 bg-slate-950/80 px-4 py-4 font-mono text-[10px] leading-relaxed text-app-text/90">
-      <p className="mb-3 font-bold uppercase tracking-wider text-emerald-500/90">[ TÜM DETAYLAR / GÖNDERİLEN YÜK ]</p>
+      <p className="mb-3 font-bold uppercase tracking-wider text-emerald-500/90">{t('sim.history.allDetails')}</p>
 
       <div className="min-w-0 space-y-3 overflow-hidden">
       {mode === 'medevac' ? (
         <>
-          <DetailBlock title="9-LINE RAPOR (FIRESTORE)">
+          <DetailBlock title={t('sim.history.nineLineTitle')}>
             {nineLine && typeof nineLine === 'object' ? (
               <NineLineDetail
                 rawNineLine={/** @type {Record<string, unknown>} */ (nineLine)}
@@ -258,7 +267,7 @@ function SimulationDetailPanel({ log }) {
                 {...timingProps}
               />
             ) : (
-              <p className="text-app-text/55">Kayıtlı 9-Line yükü yok.</p>
+              <p className="text-app-text/55">{t('sim.history.noNineLine')}</p>
             )}
             <SimulationDebriefLog
               status={log.status}
@@ -270,11 +279,11 @@ function SimulationDetailPanel({ log }) {
         </>
       ) : (
         <>
-          <DetailBlock title="CASEVAC MIST RAPORU">
+          <DetailBlock title={t('sim.history.mistTitle')}>
             {mist && typeof mist === 'object' ? (
               <MistDetail mist={/** @type {Record<string, unknown>} */ (mist)} {...timingProps} />
             ) : (
-              <p className="text-app-text/55">Kayıtlı MIST yükü yok.</p>
+              <p className="text-app-text/55">{t('sim.history.noMist')}</p>
             )}
             <SimulationDebriefLog
               status={log.status}
@@ -288,7 +297,7 @@ function SimulationDetailPanel({ log }) {
 
       {toStr(row.operationNote) ? (
         <p className="text-app-text/55">
-          <span className="text-app-text/45">OPERASYON NOTU: </span>
+          <span className="text-app-text/45">{t('sim.history.operationNote')}</span>
           {toStr(row.operationNote)}
         </p>
       ) : null}
@@ -339,177 +348,156 @@ function normalizeNineLinePayload(raw) {
 /** @param {unknown} value */
 function formatNineLineText(value) {
   const text = toStr(value).trim()
-  return text || 'VERİ YOK'
+  return text || healthT('sim.history.noData')
+}
+
+/** @param {string} ns @param {unknown} value */
+function translateMistOption(ns, value) {
+  const key = toStr(value).trim()
+  if (!key) return ''
+  const i18nKey = `sim.options.${ns}.${key}`
+  const translated = healthT(i18nKey)
+  return translated === i18nKey ? key : translated
+}
+
+/** @param {string} ns @param {unknown} value */
+function translateMistIdList(ns, value) {
+  if (Array.isArray(value)) {
+    const parts = value.map((id) => translateMistOption(ns, id)).filter(Boolean)
+    return parts.length > 0 ? parts.join(', ') : null
+  }
+  const single = translateMistOption(ns, value)
+  return single || null
 }
 
 /** @param {unknown} obj */
 function parseHat3Precedence(obj) {
-  if (!obj || typeof obj !== 'object') return 'VERİ YOK'
+  if (!obj || typeof obj !== 'object') return healthT('sim.history.noData')
 
-  /** @type {Record<string, string>} */
-  const labels = {
-    urgent: 'ACİL (URGENT)',
-    urgentSurge: 'ÖNCELİKLİ ACİL (URGENT-SURGE)',
-    priority: 'ÖNCELİKLİ (PRIORITY)',
-    routine: 'RUTİN (ROUTINE)',
-    convenience: 'KOLAYLIK (CONVENIENCE)',
-  }
+  /** @type {string[]} */
+  const keys = ['urgent', 'urgentSurge', 'priority', 'routine', 'convenience']
 
   const o = /** @type {Record<string, unknown>} */ (obj)
   const parts = []
 
-  for (const [key, label] of Object.entries(labels)) {
+  for (const key of keys) {
     const count = parsePositiveCount(o[key])
-    if (count > 0) parts.push(`${count} X ${label}`)
+    if (count > 0) {
+      parts.push(
+        healthT('sim.history.countX', {
+          count,
+          label: healthT(`sim.history.precedence.${key}`),
+        }),
+      )
+    }
   }
 
-  return parts.length > 0 ? parts.join(', ') : 'VERİ YOK'
+  return parts.length > 0 ? parts.join(', ') : healthT('sim.history.noData')
 }
 
 /** @param {unknown} val */
 function parseHat4Equipment(val) {
-  /** @type {Record<string, string>} */
-  const boolLabels = {
-    hoist: 'VİNÇ',
-    ventilator: 'SOLUNUM CİHAZI',
-    oxygen: 'KURTARMA EKİPMANI',
-    extraction: 'KURTARMA EKİPMANI',
-    litter: 'SEDYE',
-  }
+  /** @type {string[]} */
+  const boolKeys = ['hoist', 'ventilator', 'oxygen', 'extraction', 'litter']
 
   if (Array.isArray(val)) {
     const parts = val
-      .map((item) => boolLabels[toStr(item).trim()] ?? toStr(item).trim().toUpperCase())
+      .map((item) => {
+        const k = toStr(item).trim()
+        const label = healthT(`sim.history.equipment.${k}`)
+        return label === `sim.history.equipment.${k}` ? k.toUpperCase() : label
+      })
       .filter(Boolean)
-    return parts.length > 0 ? parts.join(', ') : 'YOK'
+    return parts.length > 0 ? parts.join(', ') : healthT('sim.history.none')
   }
 
-  if (!val || typeof val !== 'object') return 'YOK'
+  if (!val || typeof val !== 'object') return healthT('sim.history.none')
 
   const o = /** @type {Record<string, unknown>} */ (val)
   const parts = []
 
-  for (const [key, label] of Object.entries(boolLabels)) {
-    if (isTruthyFlag(o[key])) parts.push(label)
+  for (const key of boolKeys) {
+    if (isTruthyFlag(o[key])) parts.push(healthT(`sim.history.equipment.${key}`))
   }
 
-  return parts.length > 0 ? [...new Set(parts)].join(', ') : 'YOK'
+  return parts.length > 0 ? [...new Set(parts)].join(', ') : healthT('sim.history.none')
 }
 
 /** @param {unknown} obj */
 function parseHat5Transport(obj) {
-  if (!obj || typeof obj !== 'object') return 'VERİ YOK'
+  if (!obj || typeof obj !== 'object') return healthT('sim.history.noData')
 
-  /** @type {Record<string, string>} */
-  const labels = {
-    litter: 'SEDYE (LITTER)',
-    ambulatory: 'AYAKTA (AMBULATORY)',
-  }
+  /** @type {string[]} */
+  const keys = ['litter', 'ambulatory']
 
   const o = /** @type {Record<string, unknown>} */ (obj)
   const parts = []
 
-  for (const [key, label] of Object.entries(labels)) {
+  for (const key of keys) {
     const count = parsePositiveCount(o[key])
-    if (count > 0) parts.push(`${count} X ${label}`)
+    if (count > 0) {
+      parts.push(
+        healthT('sim.history.countX', {
+          count,
+          label: healthT(`sim.history.transport.${key}`),
+        }),
+      )
+    }
   }
 
-  return parts.length > 0 ? parts.join(', ') : 'VERİ YOK'
+  return parts.length > 0 ? parts.join(', ') : healthT('sim.history.noData')
 }
 
 /** @param {unknown} obj */
 function parseHat7Marking(obj) {
-  if (!obj || typeof obj !== 'object') return 'YOK'
+  if (!obj || typeof obj !== 'object') return healthT('sim.history.none')
 
   const o = /** @type {Record<string, unknown>} */ (obj)
   const method = toStr(o.method).trim().toLowerCase()
 
-  if (!method || method === 'none') return 'YOK'
-
-  /** @type {Record<string, string>} */
-  const methodLabels = {
-    panels: 'PANEL',
-    pyrotechnic: 'FİŞEK',
-    strobe: 'FİŞEK',
-    smoke: 'SİS BOMBASI',
-  }
-
-  /** @type {Record<string, string>} */
-  const smokeColors = {
-    green: 'YEŞİL',
-    red: 'KIRMIZI',
-    yellow: 'SARI',
-    purple: 'MOR',
-    violet: 'MOR',
-  }
+  if (!method || method === 'none') return healthT('sim.history.none')
 
   if (method === 'smoke') {
     const colorKey = toStr(o.smokeColor).trim().toLowerCase()
-    const colorLabel = smokeColors[colorKey] || (colorKey ? colorKey.toUpperCase() : '')
-    return colorLabel ? `SİS BOMBASI (${colorLabel})` : 'SİS BOMBASI'
+    const colorLabelKey = `sim.history.smokeColor.${colorKey}`
+    const colorLabel =
+      colorKey && healthT(colorLabelKey) !== colorLabelKey
+        ? healthT(colorLabelKey)
+        : colorKey
+          ? colorKey.toUpperCase()
+          : ''
+    return colorLabel
+      ? healthT('sim.history.marking.smokeWithColor', { color: colorLabel })
+      : healthT('sim.history.marking.smoke')
   }
 
-  return methodLabels[method] || method.toUpperCase()
+  const methodLabelKey = `sim.history.marking.${method}`
+  const methodLabel = healthT(methodLabelKey)
+  return methodLabel !== methodLabelKey ? methodLabel : method.toUpperCase()
 }
 
 /** @param {unknown} value */
 function parseHat6Security(value) {
   const key = toStr(value).trim().toLowerCase()
-  if (!key) return 'VERİ YOK'
+  if (!key) return healthT('sim.history.noData')
 
-  /** @type {Record<string, string>} */
-  const labels = {
-    no_enemy: 'N · DÜŞMAN YOK',
-    no_troops: 'N · DÜŞMAN YOK',
-    possible_enemy: 'P · MUHTEMEL DÜŞMAN',
-    no_threat: 'P · MUHTEMEL DÜŞMAN',
-    enemy_area: 'E · BÖLGEDE DÜŞMAN VAR',
-    armed_escort: 'X · SİLAHLI ESKORT GEREKLİ',
-    hot_lz: 'X · SICAK LZ / SİLAHLI ESKORT',
-  }
-
-  return labels[key] || key.toUpperCase()
+  const labelKey = `sim.history.security.${key}`
+  const label = healthT(labelKey)
+  return label !== labelKey ? label : key.toUpperCase()
 }
 
 /** @param {unknown} value */
 function parseHat8Nationality(value) {
   const key = toStr(value).trim().toLowerCase()
-  if (!key) return 'VERİ YOK'
+  if (!key) return healthT('sim.history.noData')
 
-  /** @type {Record<string, string>} */
-  const labels = {
-    us_nato: 'A · DOST ASKER (NATO)',
-    friendly: 'A · DOST ASKER',
-    non_nato: 'B · YABANCI ASKER',
-    allied: 'B · MÜTEFFİK ASKER',
-    civilian: 'C · SİVİL',
-    epw: 'D · SAVAŞ ESİRİ',
-    pow: 'D · SAVAŞ ESİRİ',
-    military: 'A · ASKERİ PERSONEL',
-    non_combatant: 'C · SİVİL / SAVAŞ DIŞI',
-  }
-
-  return labels[key] || key.toUpperCase()
+  const labelKey = `sim.history.nationality.${key}`
+  const label = healthT(labelKey)
+  return label !== labelKey ? label : key.toUpperCase()
 }
 
 const HAT9_CBRN_KEYS = new Set(['none', 'chemical', 'biological', 'radiological', 'nuclear'])
 const HAT9_TERRAIN_KEYS = new Set(['flat', 'obstacles', 'urban'])
-
-/** @type {Record<string, string>} */
-const HAT9_CBRN_LABELS = {
-  none: 'KBRN TEHDİDİ YOK',
-  chemical: 'KİMYASAL TEHDİT (C)',
-  biological: 'BİYOLOJİK TEHDİT (B)',
-  radiological: 'RADYOLOJİK TEHDİT (R)',
-  nuclear: 'NÜKLEER TEHDİT (N)',
-}
-
-/** @type {Record<string, string>} */
-const HAT9_TERRAIN_LABELS = {
-  flat: 'DÜZ ARAZİ (FLAT)',
-  obstacles: 'ARAZİ ENGELLİ',
-  urban: 'KENTSEL / YAPI İÇİ ALAN',
-}
 
 /**
  * @param {unknown} cbrnTerrainRaw
@@ -527,7 +515,7 @@ function parseHat9CbrnTerrain(cbrnTerrainRaw, simForm) {
 
   if (!cbrn && !terrain) {
     const text = toStr(cbrnTerrainRaw).trim()
-    if (!text) return 'VERİ YOK'
+    if (!text) return healthT('sim.history.noData')
 
     const parts = text
       .split(/\s*[·•–—]\s*|\s+-\s+/i)
@@ -546,18 +534,27 @@ function parseHat9CbrnTerrain(cbrnTerrainRaw, simForm) {
     }
   }
 
-  if (!cbrn && !terrain) return 'VERİ YOK'
+  if (!cbrn && !terrain) return healthT('sim.history.noData')
 
   if ((cbrn === 'none' || !cbrn) && terrain === 'flat') {
-    return 'KBRN TEHDİDİ YOK / DÜZ ARAZİ (FLAT)'
+    return healthT('sim.history.hat9NoneFlat')
   }
   if (cbrn === 'none' && !terrain) {
-    return 'KBRN TEHDİDİ YOK / DÜZ ARAZİ (FLAT)'
+    return healthT('sim.history.hat9NoneFlat')
   }
 
-  const cbrnLabel = HAT9_CBRN_LABELS[cbrn] || (cbrn ? cbrn.toUpperCase() : 'KBRN BİLGİSİ YOK')
-  const terrainLabel =
-    HAT9_TERRAIN_LABELS[terrain] || (terrain ? terrain.toUpperCase() : 'ARAZİ BİLGİSİ YOK')
+  const cbrnLabelKey = cbrn ? `sim.history.cbrn.${cbrn}` : ''
+  const cbrnLabel = cbrnLabelKey
+    ? healthT(cbrnLabelKey) !== cbrnLabelKey
+      ? healthT(cbrnLabelKey)
+      : cbrn.toUpperCase()
+    : healthT('sim.history.cbrn.unknown')
+  const terrainLabelKey = terrain ? `sim.history.terrain.${terrain}` : ''
+  const terrainLabel = terrainLabelKey
+    ? healthT(terrainLabelKey) !== terrainLabelKey
+      ? healthT(terrainLabelKey)
+      : terrain.toUpperCase()
+    : healthT('sim.history.terrain.unknown')
 
   return `${cbrnLabel} / ${terrainLabel}`
 }
@@ -587,41 +584,42 @@ function NineLineReadoutRow({ label, value }) {
  * }} props
  */
 function NineLineDetail({ rawNineLine, simForm, ...timingProps }) {
+  const { t } = useTranslation('health')
   const nineLine = normalizeNineLinePayload(rawNineLine)
 
   return (
     <ul className="list-none space-y-1">
-      <NineLineReadoutRow label="HAT 1 · MGRS:" value={formatNineLineText(nineLine.line1_pickupGrid)} />
+      <NineLineReadoutRow label={t('sim.history.hat1')} value={formatNineLineText(nineLine.line1_pickupGrid)} />
       <NineLineReadoutRow
-        label="HAT 2 · FREKANS/ÇAĞRI:"
+        label={t('sim.history.hat2')}
         value={formatNineLineText(nineLine.line2_radioFreqCallsign)}
       />
       <NineLineReadoutRow
-        label="HAT 3 · ACİLİYET:"
+        label={t('sim.history.hat3')}
         value={parseHat3Precedence(nineLine.line3_patientsPrecedence)}
       />
       <NineLineReadoutRow
-        label="HAT 4 · EKİPMAN:"
+        label={t('sim.history.hat4')}
         value={parseHat4Equipment(nineLine.line4_medicalEquipment)}
       />
       <NineLineReadoutRow
-        label="HAT 5 · TAŞIMA:"
+        label={t('sim.history.hat5')}
         value={parseHat5Transport(nineLine.line5_patientsType)}
       />
       <NineLineReadoutRow
-        label="HAT 6 · GÜVENLİK:"
+        label={t('sim.history.hat6')}
         value={parseHat6Security(nineLine.line6_pickupSecurity)}
       />
       <NineLineReadoutRow
-        label="HAT 7 · İŞARET:"
+        label={t('sim.history.hat7')}
         value={parseHat7Marking(nineLine.line7_lzMarking)}
       />
       <NineLineReadoutRow
-        label="HAT 8 · UYRUK:"
+        label={t('sim.history.hat8')}
         value={parseHat8Nationality(nineLine.line8_patientNationality)}
       />
       <NineLineReadoutRow
-        label="HAT 9 · KBRN/ARAZİ:"
+        label={t('sim.history.hat9')}
         value={parseHat9CbrnTerrain(nineLine.line9_cbrnTerrain, simForm)}
       />
       <li>
@@ -643,32 +641,48 @@ function NineLineDetail({ rawNineLine, simForm, ...timingProps }) {
  * }} props
  */
 function MistDetail({ mist, ...timingProps }) {
+  const { t } = useTranslation('health')
+  const emDash = t('common.emDash')
   const m = mist.mist && typeof mist.mist === 'object' ? mist.mist : mist
+
+  const metricDisplay =
+    (translateMistIdList('mistMetric', m && typeof m === 'object' ? m.metric : null) ??
+      toStr(m?.metric)) ||
+    emDash
+  const injuryDisplay =
+    (translateMistIdList('mistInjury', m && typeof m === 'object' ? m.injurySite : null) ??
+      toStr(m?.injurySite)) ||
+    emDash
+  const vitalsDisplay =
+    (translateMistIdList('mistVitals', m && typeof m === 'object' ? m.vitals : null) ??
+      toStr(m?.vitals)) ||
+    emDash
+  const treatmentDisplay =
+    (translateMistIdList('mistTreatment', m && typeof m === 'object' ? m.treatment : null) ??
+      toStr(m?.treatment)) ||
+    emDash
+
   return (
     <ul className="list-none space-y-1 text-app-text/70">
       <li>
-        <span className="text-red-500/90">YARALI SAYISI:</span> {toStr(mist.casualtyCount) || '—'}
+        <span className="text-red-500/90">{t('sim.history.mistCount')}</span>{' '}
+        {toStr(mist.casualtyCount) || emDash}
       </li>
       <li>
-        <span className="text-red-500/90">M · METRIC:</span>{' '}
-        {m && typeof m === 'object' && Array.isArray(m.metric)
-          ? m.metric.join(', ')
-          : toStr(m?.metric) || '—'}
+        <span className="text-red-500/90">{t('sim.history.mistM')}</span> {metricDisplay}
       </li>
       <li>
-        <span className="text-red-500/90">I · INJURY:</span> {toStr(m?.injurySite) || '—'}
+        <span className="text-red-500/90">{t('sim.history.mistI')}</span> {injuryDisplay}
       </li>
       <li>
-        <span className="text-red-500/90">S · SIGNS:</span> {toStr(m?.vitals) || '—'}
+        <span className="text-red-500/90">{t('sim.history.mistS')}</span> {vitalsDisplay}
       </li>
       <li>
-        <span className="text-red-500/90">T · TREATMENT:</span>{' '}
-        {m && typeof m === 'object' && Array.isArray(m.treatment)
-          ? m.treatment.join(', ')
-          : toStr(m?.treatment) || '—'}
+        <span className="text-red-500/90">{t('sim.history.mistT')}</span> {treatmentDisplay}
       </li>
       <li>
-        <span className="text-red-500/90">ÇAĞRI / FREKANS:</span> {toStr(mist.pickupCallsign) || '—'}
+        <span className="text-red-500/90">{t('sim.history.mistCall')}</span>{' '}
+        {toStr(mist.pickupCallsign) || emDash}
       </li>
       <li>
         <OperationTimingLine {...timingProps} />
@@ -684,6 +698,7 @@ function MistDetail({ mist, ...timingProps }) {
  * }} props
  */
 export default function SimulationHistory({ rangeLogs, loading = false }) {
+  const { t } = useTranslation('health')
   const [expandedId, setExpandedId] = useState(/** @type {string | null} */ (null))
 
   const tableRows = useMemo(() => {
@@ -694,7 +709,7 @@ export default function SimulationHistory({ rangeLogs, loading = false }) {
   if (loading && tableRows.length === 0) {
     return (
       <p className="py-12 text-center font-mono text-[10px] uppercase tracking-wider text-app-text/45">
-        SİMÜLASYON ARŞİVİ YÜKLENİYOR…
+        {t('sim.history.loading')}
       </p>
     )
   }
@@ -704,30 +719,30 @@ export default function SimulationHistory({ rangeLogs, loading = false }) {
       <div className="flex min-h-[220px] flex-col items-center justify-center rounded-xl border border-dashed border-emerald-500/25 bg-slate-950/60">
         <History className="size-10 text-emerald-500/25" aria-hidden />
         <p className="mt-3 font-mono text-[10px] uppercase tracking-wider text-app-text/45">
-          SİMÜLASYON GEÇMİŞ KAYDI YOK
+          {t('sim.history.empty')}
         </p>
         <p className="mt-1 max-w-md text-center font-mono text-[9px] uppercase text-slate-700">
-          MEDEVAC 9-LINE VEYA CASEVAC MIST OTURUMU TAMAMLAYIN
+          {t('sim.history.emptyHint')}
         </p>
       </div>
     )
   }
 
   return (
-    <section aria-label="Simülasyon geçmiş kayıtları" className="space-y-3">
+    <section aria-label={t('sim.history.aria')} className="space-y-3">
       <p className="font-mono text-[10px] uppercase tracking-wider text-app-text/55">
-        Simülasyon Geçmişi · {tableRows.length} kayıt
+        {t('sim.history.title', { count: tableRows.length })}
       </p>
 
       <div className="overflow-x-auto rounded-xl border border-emerald-500/25 bg-slate-950/80 shadow-[0_0_24px_rgb(16,185,129,0.08)]">
         <table className="w-full min-w-[640px] border-collapse font-mono text-[10px]">
           <thead>
             <tr className="border-b border-emerald-500/30 bg-slate-900/90 text-left uppercase tracking-wider text-emerald-500/80">
-              <th className="px-3 py-2.5 font-bold">MOD</th>
-              <th className="px-3 py-2.5 font-bold">TARİH / SAAT</th>
-              <th className="px-3 py-2.5 font-bold">DURUM</th>
-              <th className="px-3 py-2.5 font-bold">REAKSİYON PERFORMANSI</th>
-              <th className="px-3 py-2.5 font-bold text-center">DETAYLAR</th>
+              <th className="px-3 py-2.5 font-bold">{t('sim.history.colMode')}</th>
+              <th className="px-3 py-2.5 font-bold">{t('sim.history.colDate')}</th>
+              <th className="px-3 py-2.5 font-bold">{t('sim.history.colStatus')}</th>
+              <th className="px-3 py-2.5 font-bold">{t('sim.history.colReaction')}</th>
+              <th className="px-3 py-2.5 font-bold text-center">{t('sim.history.colDetails')}</th>
             </tr>
           </thead>
           <tbody>
@@ -760,12 +775,12 @@ export default function SimulationHistory({ rangeLogs, loading = false }) {
                         {open ? (
                           <>
                             <ChevronUp className="size-4" aria-hidden />
-                            KAPAT
+                            {t('sim.history.close')}
                           </>
                         ) : (
                           <>
                             <ChevronDown className="size-4" aria-hidden />
-                            AÇ
+                            {t('sim.history.open')}
                           </>
                         )}
                       </span>

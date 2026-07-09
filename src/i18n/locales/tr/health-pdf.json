@@ -1,0 +1,312 @@
+{
+  "titles": {
+    "dd1380": "DD-1380 YARALI OPERASYON KAYDI",
+    "nineLine": "9-LINE TAHLİYE TALEBİ · MEDEVAC",
+    "casevacMist": "CASEVAC MIST RAPORU",
+    "dd1380Blank": "DD FORM 1380 · TAKTİK SAHA KARTI",
+    "tcccFieldCard": "TCCC SAHA KARTI · MARCH PROTOKOLÜ"
+  },
+  "common": {
+    "blankTemplateHint": "Form ID: {{id}} · Boş şablon · Kalemle doldurun",
+    "fieldCardHint": "Form ID: {{id}} · Cep referansı · Kes — katla — taşı",
+    "notePrefix": "Not: {{note}}",
+    "parameter": "Parametre",
+    "value": "Değer",
+    "line": "Hat {{num}}",
+    "abbreviationsTitle": "Kısaltmalar ve Protokol Notları",
+    "defaultOperator": "Operatör",
+    "reportFallback": "rapor"
+  },
+  "fileNaming": {
+    "brand": "AUDAZ",
+    "nineLine": "9Line-Medevac",
+    "casevacMist": "CASEVAC-MIST",
+    "dd1380Blank": "DD1380-Sablon",
+    "tcccFieldCard": "TCCC-Saha-Karti",
+    "dd1380Report": "DD1380"
+  },
+  "nineLine": {
+    "sectionTitle": "9-Line Tahliye Protokolü",
+    "lines": {
+      "1": {
+        "label": "Koordinatlar (MGRS/GPS)",
+        "note": "Tahliye noktasının tam koordinatını girin. MGRS formatı tercih edilir. Örn: 37S NA 12345 67890"
+      },
+      "2": {
+        "label": "Radyo frekansı ve çağrı işareti",
+        "note": "Tahliye aracıyla iletişim kurulacak frekans (MHz) ve çağrı işareti. Örn: 40.50 MHz · BRAVO-1"
+      },
+      "3": {
+        "label": "Hasta sayısı ve taşıma önceliği",
+        "note": "A=Acil (hayati tehlike), B=Öncelikli (1 saat içinde), C=Rutin (4 saat içinde). Örn: 2A 1B"
+      },
+      "4": {
+        "label": "Gerekli ekipman",
+        "note": "A=Vinç yok, B=Vinç gerekli, C=Paket vinç, D=Dalış ekipmanı, E=Diğer"
+      },
+      "5": {
+        "label": "Hasta sayısı (oturur / yatar)",
+        "note": "L=Sedyede yatar, A=Oturabilir. Örn: 1L 2A"
+      },
+      "6": {
+        "label": "Güvenlik",
+        "note": "N=Sıcak bölge (düşman ateşi), P=Olası tehdit, E=Soğuk bölge (güvenli), X=Silahlı eskort gerekli"
+      },
+      "7": {
+        "label": "Bölge işareti yöntemi",
+        "note": "A=Panel/bayrak, B=Piroteknik, C=Duman, D=El/kol işareti, E=Diğer. Rengi de belirtin."
+      },
+      "8": {
+        "label": "Hasta milliyeti",
+        "note": "Sivil=Sivil kişi, Askeri=Dost kuvvet, EPW=Düşman savaş esiri",
+        "options": {
+          "civilian": "Sivil",
+          "military": "Askeri",
+          "epw": "EPW"
+        }
+      },
+      "9": {
+        "label": "Arazi özellikleri / engeller",
+        "note": "İniş alanındaki engeller: ağaç, tel, eğim, irtifa vb. Rüzgar yönünü de ekleyin."
+      }
+    },
+    "abbreviations": [
+      "MGRS: Military Grid Reference System (Askeri Izgara Referans Sistemi)",
+      "MEDEVAC: Medical Evacuation (Tıbbi Tahliye)",
+      "EPW: Enemy Prisoner of War (Düşman Savaş Esiri)",
+      "Tahliye öncelikleri: A=Acil (<1 saat) · B=Öncelikli (<4 saat) · C=Rutin (<24 saat)",
+      "Bu form doldurulduktan sonra telsizle okunur, kopyası taşınan personelde kalır"
+    ]
+  },
+  "casevacMist": {
+    "patientInfo": "Hasta Bilgileri",
+    "patientName": "Hasta adı / callsign",
+    "time": "Zaman",
+    "timeNote": "24 saat formatında yazın. Örn: 14:35",
+    "coord": "Koordinat (MGRS/GPS)",
+    "coordNote": "MGRS veya GPS koordinatı. Örn: 37S NA 12345 67890",
+    "mistTitle": "MIST Protokolü",
+    "m": {
+      "title": "M — Mekanizma (Mechanism of Injury)",
+      "note": "Yaralanmanın nasıl oluştuğunu belirtin. Birden fazla seçenek işaretlenebilir. Patlama için mesafeyi ekleyin.",
+      "options": {
+        "gsw": "Ateşli",
+        "blast": "Patlama",
+        "fall": "Düşme",
+        "other": "Diğer"
+      }
+    },
+    "i": {
+      "title": "I — Yaralanma (Injuries)",
+      "note": "Görülen veya şüphelenilen tüm yaralanmaları vücut bölgesiyle birlikte yazın. Örn: Sol bacak açık kırık, göğüs sol taraf penetran."
+    },
+    "s": {
+      "title": "S — Semptomlar ve Bulgular (Signs & Symptoms)",
+      "note": "Nabız: dakikadaki atım sayısı. SpO2: %95 üzeri normal. Bilinç AVPU: A=Uyanık, V=Sese yanıt, P=Ağrıya yanıt, U=Yanıtsız",
+      "pulse": "Nabız",
+      "spo2": "SpO2",
+      "consciousness": "Bilinç"
+    },
+    "t": {
+      "title": "T — Yapılan Tedavi (Treatment)",
+      "note": "Sahada uygulanan tüm müdahaleleri işaretleyin. Turnike uygulandıysa uygulama saatini mutlaka yazın.",
+      "options": {
+        "tourniquet": "Turnike",
+        "airway": "Hava yolu",
+        "iv": "IV"
+      }
+    },
+    "extraNotes": "Ek Notlar",
+    "abbreviations": [
+      "MIST: Mechanism · Injuries · Signs & Symptoms · Treatment",
+      "CASEVAC: Casualty Evacuation (Yaralı Tahliyesi)",
+      "AVPU: Alert · Voice · Pain · Unresponsive (Bilinç Değerlendirme Skalası)",
+      "SpO2: Oksijen saturasyonu (%95 üzeri normal)",
+      "Turnike uygulandıysa: Uygulama saatini hastanın alnına yaz ve formda belirt",
+      "Bu form tahliye aracına teslim edilir, kopyası taktik sağlık personelinde kalır"
+    ]
+  },
+  "dd1380Blank": {
+    "patientInfo": "Hasta Bilgileri",
+    "fullName": "Ad Soyad",
+    "rank": "Rütbe",
+    "bloodType": "Kan Grubu",
+    "dateTime": "Tarih / Saat",
+    "moi": "Yaralanma Mekanizması",
+    "moiOptions": {
+      "gsw": "Ateşli silah",
+      "blast": "Patlama",
+      "blunt": "Künt travma",
+      "burn": "Yanık",
+      "other": "Diğer"
+    },
+    "marchAssessment": "MARCH Değerlendirmesi",
+    "march": {
+      "M": {
+        "label": "M (Masif Kanama):",
+        "opts": [
+          "Turnike",
+          "Yara bandajı",
+          "Hemostatik ajan"
+        ]
+      },
+      "A": {
+        "label": "A (Hava Yolu):",
+        "opts": [
+          "Açık",
+          "NPA",
+          "Çene itiş",
+          "Krikotirotomi"
+        ]
+      },
+      "R": {
+        "label": "R (Solunum):",
+        "opts": [
+          "Normal",
+          "Gergin pnömotoraks",
+          "Göğüs mühürü"
+        ]
+      },
+      "C": {
+        "label": "C (Dolaşım):",
+        "opts": [
+          "IV/IO erişim",
+          "Sıvı",
+          "Kan ürünü"
+        ]
+      },
+      "H": {
+        "label": "H (Hipotermi):",
+        "opts": [
+          "Battaniye",
+          "Isıtıcı"
+        ]
+      }
+    },
+    "vitals": "Hayati Bulgular",
+    "pulse": "Nabız",
+    "spo2": "SpO2",
+    "avpu": "Bilinç (AVPU):",
+    "procedures": "Yapılan İşlemler",
+    "procedureCol": "İşlem",
+    "dateTimeCol": "Tarih / Saat",
+    "preTransport": "Taşıma Öncesi Notlar",
+    "observerSig": "Gözlemci İmzası",
+    "signature": "İmza",
+    "date": "Tarih"
+  },
+  "tcccFieldCard": {
+    "cardTitle": "TCCC SAHA KARTI · MARCH",
+    "criticalDoses": "KRİTİK İLAÇ DOZLARI",
+    "drugs": [
+      "Morfin: ___ mg IV",
+      "Ketamin: ___ mg IV/IO",
+      "TXA: 1g IV (10 dk)"
+    ],
+    "nineLineSummary": "9-LINE ÖZET",
+    "nineLineFields": {
+      "coord": "Koordinat:",
+      "freq": "Frekans:",
+      "urgency": "Aciliyet:",
+      "lz": "LZ:"
+    },
+    "observer": "Gözlemci: ___________",
+    "time": "Saat: __:__",
+    "march": {
+      "M": {
+        "label": "Masif kanama",
+        "opts": [
+          "Turnike",
+          "Bandaj",
+          "Hemostatik"
+        ]
+      },
+      "A": {
+        "label": "Hava yolu",
+        "opts": [
+          "NPA",
+          "Çene",
+          "Cric"
+        ]
+      },
+      "R": {
+        "label": "Solunum",
+        "opts": [
+          "Normal",
+          "Mühür",
+          "İğne dek."
+        ]
+      },
+      "C": {
+        "label": "Dolaşım",
+        "opts": [
+          "IV/IO",
+          "Sıvı",
+          "TXA"
+        ]
+      },
+      "H": {
+        "label": "Hipotermi",
+        "opts": [
+          "Battaniye",
+          "Isıtıcı"
+        ]
+      }
+    }
+  },
+  "casualtyReport": {
+    "casualtyInfo": "Yaralı Bilgileri",
+    "fields": {
+      "date": "Tarih",
+      "casualty": "Yaralı",
+      "evacPriority": "Tahliye önceliği",
+      "activeMarch": "Aktif MARCH adımı",
+      "bloodType": "Kan grubu",
+      "allergies": "Alerjiler",
+      "moi": "MOI (Yaralanma mekanizması)",
+      "marchInterventions": "MARCH müdahaleleri"
+    },
+    "marchCount": "{{count}} kayıtlı",
+    "marchSummary": "MARCH Müdahale Özeti",
+    "phaseCol": "Faz",
+    "interventionsCol": "Uygulanan müdahaleler",
+    "medicalNotes": "Tıbbi Notlar",
+    "appliedTreatments": "Uygulanan tedaviler:",
+    "operationNote": "Operasyon notu:"
+  },
+  "interventions": {
+    "tourniquet": "Turnike",
+    "hemostaticPacking": "Hemostatik tampon",
+    "pressureBandage": "Basınç bandajı",
+    "npa": "NPA",
+    "intubatedCric": "Entübasyon / Cric",
+    "recoveryPosition": "Kurtarma pozisyonu",
+    "ventedChestSeal": "Ventilli göğüs mührü",
+    "ndc": "NDC",
+    "respiratoryRate": "Solunum hızı · {{rate}}/dk",
+    "ivIo": "IV / IO erişim",
+    "fluid": "Sıvı",
+    "txa": "TXA",
+    "hypothermiaBlanket": "Hipotermi battaniyesi",
+    "heater": "Isıtıcı",
+    "tourniquetWithMeta": "Turnike{{loc}}{{time}}",
+    "locSep": " · {{loc}}",
+    "timeSep": " · {{time}}",
+    "ndcWithGauge": "NDC{{gauge}}",
+    "gaugeSep": " · {{gauge}}",
+    "fluidWithValue": "Sıvı · {{fluid}}",
+    "radialPulseWithValue": "Radial nabız · {{pulse}}",
+    "avpuWithValue": "AVPU · {{avpu}}",
+    "pupilWithValue": "Pupil · {{pupil}}",
+    "thermalWrap": "Termal wrap",
+    "activeHeating": "Aktif ısıtma"
+  },
+  "autoSummary": {
+    "evacPriority": "Tahliye önceliği: {{priority}}",
+    "moi": "MOI: {{moi}}",
+    "activeMarch": "Aktif MARCH: {{key}} · {{subtitle}}",
+    "storedNote": "(Kayıtlı not: {{note}})",
+    "titleCasualty": "Yaralı",
+    "titleTemplate": "DD1380 · {{name}} · {{evac}}"
+  }
+}

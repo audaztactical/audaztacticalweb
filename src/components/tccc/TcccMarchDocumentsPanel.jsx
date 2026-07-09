@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { FileDown, FileText, History, Radio, ScrollText } from 'lucide-react'
 import TcccMarchTab from './TcccMarchTab'
 import MedevacSimulator from './MedevacSimulator'
@@ -6,6 +7,7 @@ import SimulationHistory from './SimulationHistory'
 import TcccMedicalHistoryTab from './TcccMedicalHistoryTab'
 import { CASUALTY_DD1380_INITIAL } from '../../lib/casualtyCardPayload'
 import { submitCasualtyDd1380Card } from '../../lib/casualtyCardSubmit'
+import { fieldTemplateCopy, labelDocTab } from '../../lib/healthDisplayText'
 import {
   generate9LineMedevacTemplate,
   generateCasevacMistTemplate,
@@ -15,20 +17,15 @@ import {
 
 /** @typedef {'march_dd1380' | 'medevac_9line' | 'simulation_history' | 'casualty_archive' | 'field_templates'} DocTab */
 
-const DOC_TABS = [
-  { id: /** @type {DocTab} */ ('march_dd1380'), label: 'MARCH - DD-1380 YARALI KARTI', Icon: FileText },
-  { id: 'medevac_9line', label: '((•)) 9-LINE TAHLİYE TALEBİ SİMÜLASYONU', Icon: Radio },
-  { id: 'simulation_history', label: '((•)) SİMÜLASYON GEÇMİŞ KAYITLARI', Icon: History },
-  { id: 'casualty_archive', label: 'YARALI ARŞİVİ', Icon: ScrollText },
-  { id: 'field_templates', label: 'PDF ŞABLONLARI', Icon: FileDown },
-]
+const DOC_TAB_IDS = /** @type {const} */ ([
+  { id: /** @type {DocTab} */ ('march_dd1380'), Icon: FileText },
+  { id: /** @type {DocTab} */ ('medevac_9line'), Icon: Radio },
+  { id: /** @type {DocTab} */ ('simulation_history'), Icon: History },
+  { id: /** @type {DocTab} */ ('casualty_archive'), Icon: ScrollText },
+  { id: /** @type {DocTab} */ ('field_templates'), Icon: FileDown },
+])
 
-const FIELD_TEMPLATES = [
-  { id: 'dd1380', title: 'DD FORM 1380', subtitle: 'YARALI KARTI · BOŞ ŞABLON' },
-  { id: 'nine_line', title: '9-LINE TAHLİYE', subtitle: 'TELSİZ PROTOKOLÜ · BOŞ ŞABLON' },
-  { id: 'casevac_mist', title: 'CASEVAC MIST', subtitle: 'SICAK BÖLGE · BOŞ ŞABLON' },
-  { id: 'tccc_card', title: 'TCCC SAHA KARTI', subtitle: 'CEP REFERANSI · BOŞ ŞABLON' },
-]
+const FIELD_TEMPLATE_IDS = /** @type {const} */ (['dd1380', 'nine_line', 'casevac_mist', 'tccc_card'])
 
 /** @param {string} templateId */
 async function handleTemplateDownload(templateId) {
@@ -36,13 +33,6 @@ async function handleTemplateDownload(templateId) {
   else if (templateId === 'casevac_mist') await generateCasevacMistTemplate()
   else if (templateId === 'dd1380') await generateDD1380BlankTemplate()
   else if (templateId === 'tccc_card') await generateTcccFieldCardTemplate()
-}
-
-const TEMPLATE_BUTTON_LABELS = {
-  dd1380: '📄 DD FORM 1380 İNDİR',
-  nine_line: '📄 9-LINE TAHLİYE',
-  casevac_mist: '📄 CASEVAC MIST ŞABLONU',
-  tccc_card: '📄 TCCC SAHA KARTI İNDİR',
 }
 
 const tabBtnClass = (on) =>
@@ -77,6 +67,7 @@ export default function TcccMarchDocumentsPanel({
   rangeLogs = [],
   rangeLogsLoading = false,
 }) {
+  const { t } = useTranslation('health')
   const [activeDocTab, setActiveDocTab] = useState(/** @type {DocTab} */ ('march_dd1380'))
   const [dd1380Form, setDd1380Form] = useState({ ...CASUALTY_DD1380_INITIAL })
   const [savingCard, setSavingCard] = useState(false)
@@ -104,7 +95,7 @@ export default function TcccMarchDocumentsPanel({
       setSaveCardOk(true)
     } catch (err) {
       const code = err && typeof err === 'object' && 'code' in err ? String(err.code) : ''
-      setSaveCardError(`KART_KAYIT_BAŞARISIZ${code ? ` · ${code}` : ''}`)
+      setSaveCardError(`${t('docs.saveCardError')}${code ? ` · ${code}` : ''}`)
     } finally {
       setSavingCard(false)
     }
@@ -114,15 +105,15 @@ export default function TcccMarchDocumentsPanel({
     <div className="tccc-doc-panel h-auto min-h-0 space-y-4">
       <div className="rounded-lg border border-slate-800 bg-slate-900/50 px-4 py-3">
         <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-app-text/70">
-          Taktik Medikal Kılavuz
+          {t('docs.title')}
         </p>
         <p className="mt-1 font-mono text-xs leading-relaxed text-app-text/55">
-          MARCH · DD-1380 yaralı kartı · 9-line tahliye · PDF şablonları
+          {t('docs.subtitle')}
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Document workflow">
-        {DOC_TABS.map((tab) => {
+      <div className="flex flex-wrap gap-2" role="tablist" aria-label={t('docs.tablistAria')}>
+        {DOC_TAB_IDS.map((tab) => {
           const TabIcon = tab.Icon
           return (
             <button
@@ -136,7 +127,7 @@ export default function TcccMarchDocumentsPanel({
             >
               <span className="inline-flex items-center gap-1.5">
                 <TabIcon className="size-3.5" aria-hidden />
-                {tab.label}
+                {labelDocTab(tab.id)}
               </span>
             </button>
           )
@@ -174,16 +165,17 @@ export default function TcccMarchDocumentsPanel({
         ) : null}
 
         {activeDocTab === 'field_templates' ? (
-          <section aria-label="Field PDF templates" className="space-y-3">
+          <section aria-label={t('docs.templates.heading')} className="space-y-3">
             <p className="font-mono text-[10px] uppercase tracking-wider text-app-text/55">
-              BOŞ PDF ŞABLON İNDİRME MERKEZİ
+              {t('docs.templates.heading')}
             </p>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {FIELD_TEMPLATES.map((tpl) => {
-                const busy = templateBusy === tpl.id
+              {FIELD_TEMPLATE_IDS.map((tplId) => {
+                const tpl = fieldTemplateCopy(tplId)
+                const busy = templateBusy === tplId
                 return (
                   <div
-                    key={tpl.id}
+                    key={tplId}
                     className="flex flex-col justify-between rounded-lg border border-slate-800 bg-slate-950 p-4 transition-all duration-200 hover:border-red-800/50"
                   >
                     <div>
@@ -196,9 +188,9 @@ export default function TcccMarchDocumentsPanel({
                       type="button"
                       disabled={busy}
                       onClick={async () => {
-                        setTemplateBusy(tpl.id)
+                        setTemplateBusy(tplId)
                         try {
-                          await handleTemplateDownload(tpl.id)
+                          await handleTemplateDownload(tplId)
                         } finally {
                           setTemplateBusy(null)
                         }
@@ -209,9 +201,9 @@ export default function TcccMarchDocumentsPanel({
                           ? 'border-slate-800 bg-slate-900 text-app-text/45'
                           : 'border-red-800/60 bg-red-950/40 text-red-300 hover:border-red-600/60 hover:bg-red-950/60',
                       ].join(' ')}
-                      title="PDF şablonu indir"
+                      title={t('docs.templates.downloadTitle')}
                     >
-                      {busy ? 'HAZIRLANIYOR…' : TEMPLATE_BUTTON_LABELS[tpl.id] ?? 'İNDİR'}
+                      {busy ? t('docs.templates.preparing') : tpl.button}
                     </button>
                   </div>
                 )

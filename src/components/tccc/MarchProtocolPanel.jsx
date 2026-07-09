@@ -1,8 +1,6 @@
 import { X } from 'lucide-react'
-import {
-  MARCH_DD1380_STEPS,
-  MARCH_PROTOCOL_DETAILS,
-} from '../../lib/marchDd1380Config'
+import { useTranslation } from 'react-i18next'
+import { marchProtocolDetail, marchStepDisplay } from '../../lib/healthDisplayText'
 
 /** @typedef {import('../../lib/marchDd1380Config').MarchStepKey} MarchStepKey */
 
@@ -14,10 +12,11 @@ import {
  * }} props
  */
 export default function MarchProtocolPanel({ stepKey, onClose, variant = 'side' }) {
-  const step = MARCH_DD1380_STEPS.find((s) => s.key === stepKey) ?? MARCH_DD1380_STEPS[0]
-  const detail = MARCH_PROTOCOL_DETAILS[stepKey]
+  const { t } = useTranslation('health')
+  const step = marchStepDisplay(stepKey)
+  const detail = marchProtocolDetail(stepKey)
 
-  const panel = (
+  return (
     <div
       className={[
         'rounded-xl border p-4 sm:p-5',
@@ -30,7 +29,7 @@ export default function MarchProtocolPanel({ stepKey, onClose, variant = 'side' 
       <div className="mb-3 flex items-start justify-between gap-2">
         <div>
           <p className={`font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] ${step.accent}`}>
-            {step.key} · PROTOKOL KARTI
+            {step.key} · {t('march.protocolCard')}
           </p>
           <p className="font-mono-technical text-sm font-bold text-app-text">{step.title}</p>
           <p className="font-mono-technical text-xs text-app-text/70">{step.subtitle}</p>
@@ -39,7 +38,7 @@ export default function MarchProtocolPanel({ stepKey, onClose, variant = 'side' 
           type="button"
           onClick={onClose}
           className="rounded-lg border border-white/15 p-1.5 text-app-text/55 transition hover:text-accent"
-          aria-label="Kapat"
+          aria-label={t('march.protocolClose')}
         >
           <X className="size-4" aria-hidden />
         </button>
@@ -64,6 +63,4 @@ export default function MarchProtocolPanel({ stepKey, onClose, variant = 'side' 
       </p>
     </div>
   )
-
-  return panel
 }

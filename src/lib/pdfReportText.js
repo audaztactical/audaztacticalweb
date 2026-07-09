@@ -1,6 +1,7 @@
 import i18n from '../i18n'
 
 const NS = 'training-pdf'
+const HEALTH_NS = 'health-pdf'
 
 /** @returns {'tr-TR' | 'en-US'} */
 export function pdfLocale() {
@@ -15,8 +16,23 @@ export function pdfT(key, params = {}) {
   return i18n.t(key, { ns: NS, ...params })
 }
 
+/**
+ * TCCC / health suite PDF copy (`health-pdf` namespace).
+ * @param {string} key
+ * @param {Record<string, unknown>} [params]
+ */
+export function healthPdfT(key, params = {}) {
+  return i18n.t(key, { ns: HEALTH_NS, ...params })
+}
+
+/** @param {string} key */
+export function healthPdfReportTitle(key) {
+  return healthPdfT(`titles.${key}`)
+}
+
 /** @param {string} sector */
 export function pdfReportTitle(sector) {
+  if (sector === 'dd1380') return healthPdfReportTitle('dd1380')
   return pdfT(`titles.${sector}`)
 }
 
