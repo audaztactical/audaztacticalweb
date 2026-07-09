@@ -1421,7 +1421,123 @@
     },
     "grup-egitimi": {
       "title": "Group training",
-      "sectorLabel": "GRP-07 · Group session"
+      "sectorLabel": "GRP-07 · Group session",
+      "loading": {
+        "verifyingGroup": "Verifying group…",
+        "data": "Loading group training data…"
+      },
+      "groupRequired": {
+        "alertLabel": "[ GROUP_REQUIRED ]",
+        "body": "You must join a tactical group before participating in group training.",
+        "settingsLink": "My tactical team →"
+      },
+      "deepLink": {
+        "accessDeniedLabel": "[ SESSION_ACCESS_DENIED ]",
+        "notFound": "Session not found, expired, or not available to your group.",
+        "verifyFailed": "Could not verify session access."
+      },
+      "header": {
+        "kicker": "[ GROUP TRAINING · GRP-07 ]",
+        "title": "Group training — view and live entry",
+        "subtitle": "History is read-only · scores can only be submitted to active sessions"
+      },
+      "tabs": {
+        "live": "Live session",
+        "history": "History and records"
+      },
+      "live": {
+        "activeSessions": "Active sessions",
+        "noActive": "No active group training right now. Switch to History and records for past entries.",
+        "timed": "Timed"
+      },
+      "detail": {
+        "status": "Status",
+        "statusActive": "ACTIVE",
+        "statusCompleted": "COMPLETED",
+        "ammo": "Ammunition",
+        "passThreshold": "Pass threshold",
+        "date": "Date",
+        "yourStatus": "Your status",
+        "hitsLine": "{{hits}}/{{total}} hits",
+        "hitsLineTimed": "{{hits}}/{{total}} hits · {{time}}s",
+        "hitsLineWithTarget": "{{hits}}/{{total}} hits · {{time}}s (target {{target}}s)",
+        "timeViolationHint": "Hit threshold met but time target exceeded.",
+        "insufficientHitsHint": "Below hit threshold.",
+        "noResultActive": "No result submitted yet — enter your score from the Live session tab.",
+        "noResultInactive": "No participation record for this training.",
+        "groupResultsTitle": "[ GROUP RESULTS · READ ONLY ]",
+        "noResultsYet": "No results reported yet.",
+        "table": {
+          "operator": "Operator",
+          "hits": "Hits",
+          "time": "Time",
+          "result": "Result",
+          "date": "Date",
+          "you": "(you)"
+        }
+      },
+      "sessionStatus": {
+        "open": {
+          "label": "ACTIVE",
+          "hint": "Open for participation"
+        },
+        "closed_for_me": {
+          "label": "CLOSED",
+          "hint": "You joined this session"
+        },
+        "completed": {
+          "label": "COMPLETED",
+          "hint": "Instructor closed the session"
+        }
+      },
+      "assessment": {
+        "passed": "PASSED",
+        "timeFailed": "FAILED ON TIME",
+        "failed": "FAILED"
+      },
+      "alerts": {
+        "timePart": " · {{time}}s",
+        "sessionClosed": {
+          "label": "[ SESSION_CLOSED ]",
+          "body": "You joined this session — {{hits}}/{{total}} hits{{timePart}} · {{status}}. Session closed for you; you can only view records."
+        },
+        "recordExists": {
+          "label": "[ RECORD_EXISTS ]",
+          "body": "You submitted {{hits}}/{{total}} hits{{timePart}} for this training · {{status}} — result sent, no edits allowed."
+        }
+      },
+      "form": {
+        "scoreEntry": "Score entry",
+        "hitsLabel": "Hit count",
+        "hitsPlaceholder": "0 – {{max}}",
+        "timeLabel": "Time (seconds)",
+        "timePlaceholder": "e.g. 12.40",
+        "submit": "Submit result",
+        "submitting": "Submitting…"
+      },
+      "validation": {
+        "sessionExpired": "Session expired — cannot submit result.",
+        "alreadySubmitted": "You already submitted a result for this training.",
+        "hitsRange": "Hit count must be between 0 and {{max}}.",
+        "submitFailed": "Submission failed."
+      },
+      "messages": {
+        "submitSuccess": "Result submitted — {{status}}."
+      },
+      "history": {
+        "empty": "No group training records yet.",
+        "table": {
+          "training": "Training",
+          "status": "Status",
+          "date": "Date",
+          "yourResult": "Your result",
+          "participation": "Participation",
+          "detail": "Detail",
+          "operators": "{{count}} operators"
+        },
+        "detailTitle": "[ RECORD DETAIL · {{name}} ]",
+        "resultLine": "{{hits}}/{{total}} · {{status}}"
+      }
     },
     "egitmen-komuta": {
       "title": "Instructor command panel",

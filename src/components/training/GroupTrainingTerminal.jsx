@@ -1,5 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   ArrowLeft,
   CheckCircle2,
@@ -21,7 +22,6 @@ import { useAuth } from '../../context/AuthContext'
 import { useOperatorGroup } from '../../hooks/useOperatorGroup'
 import {
   computeGroupTrainingAssessment,
-  formatGroupTrainingStatusLabel,
   getOperatorSessionStatusStyles,
   getOperatorTrainingSessionStatus,
 } from '../../lib/groupTrainingAssessment'
@@ -34,6 +34,14 @@ import {
 import { filterOperatorVisibleTrainings, isTrainingSessionExpired } from '../../lib/groupTrainingSessionAccess'
 import { timestampToMs } from '../../lib/firestoreSnapshot'
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
+import {
+  formatGroupTrainingAlertTimePart,
+  formatGroupTrainingAssessmentLabel,
+  formatGroupTrainingDateDisplay,
+  formatGroupTrainingHitsSummary,
+  formatGroupTrainingSessionStatusDisplay,
+  formatGroupTrainingValidationMessage,
+} from '../../lib/trainingDisplayText'
 
 /** @typedef {import('../../lib/firestoreGroupTrainings').GroupTraining} GroupTraining */
 /** @typedef {import('../../lib/firestoreGroupTrainings').TrainingResult} TrainingResult */
@@ -42,19 +50,6 @@ const hudLabel =
   'font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-app-text/55'
 const hudReadonly =
   'rounded border border-accent/25 bg-app-bg px-3 py-2.5 font-mono-technical text-sm font-semibold tabular-nums text-accent'
-
-/** @param {unknown} ts */
-function formatTrainingDate(ts) {
-  const ms = timestampToMs(ts)
-  if (!ms) return '—'
-  return new Intl.DateTimeFormat('tr-TR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(ms))
-}
 
 /**
  * @param {TrainingResult} result
@@ -80,40 +75,51 @@ function resolveResultAssessment(result, training) {
  * }} props
  */
 function GroupTrainingDetailPanel({ training, results, currentUid, selfOnly = false }) {
+  const { t } = useTranslation('training')
   const trainingResults = results.filter((r) => r.trainingId === training.id)
   const myResult = trainingResults.find((r) => r.operatorId === currentUid) ?? null
   const isActive = training.status === 'active'
   const myAssessment = myResult ? resolveResultAssessment(myResult, training) : null
 
   return (
-    <div className="space-y-4">
+    <div className="w-full min-w-0 space-y-4">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <TacticalPanel className="p-3">
-          <p className={hudLabel}>Durum</p>
-          <p className={hudReadonly}>{isActive ? 'AKTİF' : 'TAMAMLANDI'}</p>
+          <p className={hudLabel}>{t('sectors.grup-egitimi.detail.status')}</p>
+          <p className={hudReadonly}>
+            {isActive
+              ? t('sectors.grup-egitimi.detail.statusActive')
+              : t('sectors.grup-egitimi.detail.statusCompleted')}
+          </p>
         </TacticalPanel>
         <TacticalPanel className="p-3">
-          <p className={hudLabel}>Mühimmat</p>
+          <p className={hudLabel}>{t('sectors.grup-egitimi.detail.ammo')}</p>
           <p className={hudReadonly}>{training.totalAmmo}</p>
         </TacticalPanel>
         <TacticalPanel className="p-3">
-          <p className={hudLabel}>Geçer baraj</p>
+          <p className={hudLabel}>{t('sectors.grup-egitimi.detail.passThreshold')}</p>
           <p className={hudReadonly}>{training.minPassScore}</p>
         </TacticalPanel>
         <TacticalPanel className="p-3">
-          <p className={hudLabel}>Tarih</p>
-          <p className="font-mono-technical text-xs text-accent">{formatTrainingDate(training.createdAt)}</p>
+          <p className={hudLabel}>{t('sectors.grup-egitimi.detail.date')}</p>
+          <p className="font-mono-technical text-xs text-accent">
+            {formatGroupTrainingDateDisplay(training.createdAt)}
+          </p>
         </TacticalPanel>
       </div>
 
       {myResult && myAssessment ? (
         <TacticalPanel className="p-4">
-          <p className={hudLabel}>Sizin durumunuz</p>
+          <p className={hudLabel}>{t('sectors.grup-egitimi.detail.yourStatus')}</p>
           <div className="mt-2 flex flex-wrap items-center gap-3">
             <span className="font-mono-technical text-sm text-app-text">
-              {myResult.hits}/{training.totalAmmo} vuruş
-              {training.isTimed && myResult.time != null ? ` · ${myResult.time}s` : ''}
-              {training.isTimed && training.targetTimeSec != null ? ` (hedef ${training.targetTimeSec}s)` : ''}
+              {formatGroupTrainingHitsSummary({
+                hits: myResult.hits,
+                total: training.totalAmmo,
+                isTimed: training.isTimed,
+                time: myResult.time,
+                targetTimeSec: training.targetTimeSec,
+              })}
             </span>
             <span
               className={[
@@ -130,21 +136,23 @@ function GroupTrainingDetailPanel({ training, results, currentUid, selfOnly = fa
               ) : (
                 <XCircle className="size-3" aria-hidden />
               )}
-              {formatGroupTrainingStatusLabel(myAssessment.statusResult, myAssessment.isPassed)}
+              {formatGroupTrainingAssessmentLabel(myAssessment.statusResult, myAssessment.isPassed)}
             </span>
           </div>
           {!myAssessment.isPassed ? (
             <p className="mt-2 font-mono-technical text-[9px] uppercase text-app-text/55">
               {myAssessment.statusResult === 'SÜRE İHLALİ'
-                ? 'Vuruş barajı geçildi ancak süre hedefi aşıldı.'
-                : 'Vuruş barajı altında kaldı.'}
+                ? t('sectors.grup-egitimi.detail.timeViolationHint')
+                : t('sectors.grup-egitimi.detail.insufficientHitsHint')}
             </p>
           ) : null}
         </TacticalPanel>
       ) : (
         <TacticalPanel className="p-4">
           <p className="font-mono-technical text-xs text-app-text/55">
-            {isActive ? 'Henüz sonuç göndermediniz — Canlı Oturum sekmesinden giriş yapabilirsiniz.' : 'Bu eğitime katılım kaydınız yok.'}
+            {isActive
+              ? t('sectors.grup-egitimi.detail.noResultActive')
+              : t('sectors.grup-egitimi.detail.noResultInactive')}
           </p>
         </TacticalPanel>
       )}
@@ -153,29 +161,39 @@ function GroupTrainingDetailPanel({ training, results, currentUid, selfOnly = fa
         <TacticalPanel className="overflow-hidden p-0">
           <div className="border-b border-accent/15 px-4 py-2.5">
             <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-accent/80">
-              [ GRUP SONUÇLARI · SALT OKUNUR ]
+              {t('sectors.grup-egitimi.detail.groupResultsTitle')}
             </p>
           </div>
           {trainingResults.length === 0 ? (
             <p className="px-4 py-6 text-center font-mono-technical text-xs text-app-text/55">
-              Henüz sonuç bildirilmedi.
+              {t('sectors.grup-egitimi.detail.noResultsYet')}
             </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[28rem] text-left font-mono-technical text-[10px]">
                 <thead className="border-b border-white/10 bg-black/40 text-app-text/55">
                   <tr>
-                    <th className="px-3 py-2 font-bold uppercase tracking-wider">Operatör</th>
-                    <th className="px-3 py-2 font-bold uppercase tracking-wider">Vuruş</th>
-                    <th className="px-3 py-2 font-bold uppercase tracking-wider">Süre</th>
-                    <th className="px-3 py-2 font-bold uppercase tracking-wider">Sonuç</th>
-                    <th className="px-3 py-2 font-bold uppercase tracking-wider">Tarih</th>
+                    <th className="px-3 py-2 font-bold uppercase tracking-wider">
+                      {t('sectors.grup-egitimi.detail.table.operator')}
+                    </th>
+                    <th className="px-3 py-2 font-bold uppercase tracking-wider">
+                      {t('sectors.grup-egitimi.detail.table.hits')}
+                    </th>
+                    <th className="px-3 py-2 font-bold uppercase tracking-wider">
+                      {t('sectors.grup-egitimi.detail.table.time')}
+                    </th>
+                    <th className="px-3 py-2 font-bold uppercase tracking-wider">
+                      {t('sectors.grup-egitimi.detail.table.result')}
+                    </th>
+                    <th className="px-3 py-2 font-bold uppercase tracking-wider">
+                      {t('sectors.grup-egitimi.detail.table.date')}
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   {trainingResults.map((row) => {
                     const rowAssessment = resolveResultAssessment(row, training)
-                    const rowLabel = formatGroupTrainingStatusLabel(
+                    const rowLabel = formatGroupTrainingAssessmentLabel(
                       rowAssessment.statusResult,
                       rowAssessment.isPassed,
                     )
@@ -187,7 +205,9 @@ function GroupTrainingDetailPanel({ training, results, currentUid, selfOnly = fa
                         <td className="px-3 py-2.5">
                           {row.operatorName}
                           {row.operatorId === currentUid ? (
-                            <span className="ml-1 text-accent/70">(siz)</span>
+                            <span className="ml-1 text-accent/70">
+                              {t('sectors.grup-egitimi.detail.table.you')}
+                            </span>
                           ) : null}
                         </td>
                         <td className="px-3 py-2.5 tabular-nums">
@@ -209,7 +229,9 @@ function GroupTrainingDetailPanel({ training, results, currentUid, selfOnly = fa
                             {rowLabel}
                           </span>
                         </td>
-                        <td className="px-3 py-2.5 text-app-text/55">{formatTrainingDate(row.submittedAt)}</td>
+                        <td className="px-3 py-2.5 text-app-text/55">
+                          {formatGroupTrainingDateDisplay(row.submittedAt)}
+                        </td>
                       </tr>
                     )
                   })}
@@ -227,6 +249,7 @@ function GroupTrainingDetailPanel({ training, results, currentUid, selfOnly = fa
  * @param {{ onBack: () => void, initialTrainingId?: string }} props
  */
 export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }) {
+  const { t } = useTranslation('training')
   const { user, userData } = useAuth()
   const { membership, isMember, loading: groupLoading } = useOperatorGroup()
 
@@ -260,25 +283,25 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
       filterOperatorVisibleTrainings(trainings, groupId, {
         includeCompleted: false,
         includeExpired: false,
-      }).filter((t) => t.status === 'active'),
+      }).filter((tr) => tr.status === 'active'),
     [trainings, groupId],
   )
 
   const openActiveTrainings = useMemo(
     () =>
       activeTrainings.filter(
-        (t) => getOperatorTrainingSessionStatus(t, results, uid).key === 'open',
+        (tr) => getOperatorTrainingSessionStatus(tr, results, uid).key === 'open',
       ),
     [activeTrainings, results, uid],
   )
 
   const historyTrainings = useMemo(
-    () => accessibleTrainings.filter((t) => t.status === 'completed'),
+    () => accessibleTrainings.filter((tr) => tr.status === 'completed'),
     [accessibleTrainings],
   )
 
   const selected = useMemo(
-    () => accessibleTrainings.find((t) => t.id === selectedId) ?? null,
+    () => accessibleTrainings.find((tr) => tr.id === selectedId) ?? null,
     [accessibleTrainings, selectedId],
   )
 
@@ -348,22 +371,22 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
 
     const applyDeepLink = async () => {
       setDeepLinkBlocked(null)
-      let training = accessibleTrainings.find((t) => t.id === preferredId) ?? null
+      let training = accessibleTrainings.find((tr) => tr.id === preferredId) ?? null
       if (!training) {
         try {
           training = await fetchGroupTrainingForOperator(preferredId, groupId)
           if (!training) {
-            setDeepLinkBlocked('Oturum bulunamadı, süresi dolmuş veya grubunuza açık değil.')
+            setDeepLinkBlocked(t('sectors.grup-egitimi.deepLink.notFound'))
             return
           }
           setTrainings((prev) => {
-            if (prev.some((t) => t.id === training.id)) return prev
+            if (prev.some((tr) => tr.id === training.id)) return prev
             return [training, ...prev].sort(
               (a, b) => timestampToMs(b.createdAt) - timestampToMs(a.createdAt),
             )
           })
         } catch {
-          setDeepLinkBlocked('Oturuma erişim doğrulanamadı.')
+          setDeepLinkBlocked(t('sectors.grup-egitimi.deepLink.verifyFailed'))
           return
         }
       }
@@ -380,7 +403,7 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
     }
 
     void applyDeepLink()
-  }, [initialTrainingId, accessibleTrainings, loading, groupId])
+  }, [initialTrainingId, accessibleTrainings, loading, groupId, t])
 
   useEffect(() => {
     setHits('')
@@ -393,17 +416,17 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
       e.preventDefault()
       if (!selected || !uid || selected.status !== 'active') return
       if (isTrainingSessionExpired(selected)) {
-        setMsg('Oturum süresi dolmuş — sonuç gönderilemez.')
+        setMsg(formatGroupTrainingValidationMessage('sessionExpired'))
         return
       }
       if (myResultForSelected) {
-        setMsg('Bu eğitime zaten sonuç gönderdiniz.')
+        setMsg(formatGroupTrainingValidationMessage('alreadySubmitted'))
         return
       }
 
       const hitsNum = Number(hits)
       if (!Number.isFinite(hitsNum) || hitsNum < 0 || hitsNum > selected.totalAmmo) {
-        setMsg(`Vuruş sayısı 0–${selected.totalAmmo} arasında olmalı.`)
+        setMsg(formatGroupTrainingValidationMessage('hitsRange', { max: selected.totalAmmo }))
         return
       }
 
@@ -426,18 +449,20 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
           time: selected.isTimed ? Number(timeSec) : null,
         })
         setMsg(
-          `Sonuç iletildi — ${formatGroupTrainingStatusLabel(assessment.statusResult, assessment.isPassed)}.`,
+          t('sectors.grup-egitimi.messages.submitSuccess', {
+            status: formatGroupTrainingAssessmentLabel(assessment.statusResult, assessment.isPassed),
+          }),
         )
         setHits('')
         setTimeSec('')
       } catch (err) {
         emitFirebaseError(err)
-        setMsg(err instanceof Error ? err.message : 'Gönderim başarısız.')
+        setMsg(err instanceof Error ? err.message : formatGroupTrainingValidationMessage('submitFailed'))
       } finally {
         setBusy(false)
       }
     },
-    [selected, uid, operatorName, hits, timeSec, myResultForSelected],
+    [selected, uid, operatorName, hits, timeSec, myResultForSelected, t],
   )
 
   const toggleHistoryDetail = useCallback((/** @type {string} */ trainingId) => {
@@ -448,26 +473,28 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
     return (
       <div className="flex min-h-[240px] items-center justify-center gap-2 text-accent">
         <Loader2 className="size-5 animate-spin" aria-hidden />
-        <span className="font-mono-technical text-xs uppercase tracking-widest">Grup doğrulanıyor…</span>
+        <span className="font-mono-technical text-xs uppercase tracking-widest">
+          {t('sectors.grup-egitimi.loading.verifyingGroup')}
+        </span>
       </div>
     )
   }
 
   if (!isMember || !groupId) {
     return (
-      <div className="space-y-4">
+      <div className="w-full min-w-0 space-y-4">
         <button
           type="button"
           onClick={onBack}
           className="inline-flex items-center gap-2 font-mono-technical text-[10px] uppercase tracking-widest text-app-text/55 hover:text-accent"
         >
           <ArrowLeft className="size-4" aria-hidden />
-          Kategorilere dön
+          {t('common.terminal.backToCategories')}
         </button>
-        <AmberAlert label="[ GRUP_GEREKLİ ]">
-          Grup eğitimine katılmak için önce bir taktik grubuna dahil olmalısınız.{' '}
+        <AmberAlert label={t('sectors.grup-egitimi.groupRequired.alertLabel')}>
+          {t('sectors.grup-egitimi.groupRequired.body')}{' '}
           <Link to="/ayarlar" className="font-bold text-accent underline-offset-2 hover:underline">
-            Taktik Timim →
+            {t('sectors.grup-egitimi.groupRequired.settingsLink')}
           </Link>
         </AmberAlert>
       </div>
@@ -475,9 +502,11 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
   }
 
   return (
-    <div className="space-y-5">
+    <div className="w-full min-w-0 space-y-5">
       {deepLinkBlocked ? (
-        <AmberAlert label="[ OTURUM_ERİŞİMİ_RED ]">{deepLinkBlocked}</AmberAlert>
+        <AmberAlert label={t('sectors.grup-egitimi.deepLink.accessDeniedLabel')}>
+          {deepLinkBlocked}
+        </AmberAlert>
       ) : null}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <button
@@ -486,7 +515,7 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
           className="inline-flex items-center gap-2 font-mono-technical text-[10px] uppercase tracking-widest text-app-text/55 transition hover:text-accent"
         >
           <ArrowLeft className="size-4" aria-hidden />
-          Kategorilere dön
+          {t('common.terminal.backToCategories')}
         </button>
         <p className="flex items-center gap-2 font-mono-technical text-[10px] uppercase tracking-widest text-accent/80">
           <Users className="size-4" aria-hidden />
@@ -496,13 +525,13 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
 
       <header className="border-b border-accent/15 pb-3">
         <p className="font-mono-technical text-[10px] font-semibold uppercase tracking-[0.32em] text-accent/85">
-          [ GRUP EĞİTİMİ · GRP-07 ]
+          {t('sectors.grup-egitimi.header.kicker')}
         </p>
         <h2 className="font-display mt-1 text-lg font-bold tracking-[0.1em] text-app-text">
-          Grup eğitimi — görüntüleme ve canlı giriş
+          {t('sectors.grup-egitimi.header.title')}
         </h2>
         <p className="mt-1 font-mono-technical text-[9px] uppercase text-app-text/55">
-          Geçmiş kayıtlar salt okunur · yalnızca aktif oturuma skor gönderilebilir
+          {t('sectors.grup-egitimi.header.subtitle')}
         </p>
       </header>
 
@@ -518,7 +547,7 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
           ].join(' ')}
         >
           <Radio className="size-3.5" aria-hidden />
-          Canlı oturum
+          {t('sectors.grup-egitimi.tabs.live')}
           {openActiveTrainings.length > 0 ? (
             <span className="rounded bg-lime-500 px-1.5 py-0.5 text-[8px] text-black">
               {openActiveTrainings.length}
@@ -536,27 +565,28 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
           ].join(' ')}
         >
           <History className="size-3.5" aria-hidden />
-          Geçmiş ve kayıtlar
+          {t('sectors.grup-egitimi.tabs.history')}
         </button>
       </div>
 
       {loading ? (
         <p className="flex items-center gap-2 font-mono-technical text-xs text-app-text/55">
           <Loader2 className="size-4 animate-spin text-accent" aria-hidden />
-          Grup eğitim verileri yükleniyor…
+          {t('sectors.grup-egitimi.loading.data')}
         </p>
       ) : tab === 'live' ? (
         <div className="space-y-4">
           <TacticalPanel className="p-4 sm:p-5">
-            <p className={hudLabel}>Aktif oturumlar</p>
+            <p className={hudLabel}>{t('sectors.grup-egitimi.live.activeSessions')}</p>
             {activeTrainings.length === 0 ? (
               <p className="mt-2 rounded border border-amber-500/30 bg-amber-950/20 px-3 py-2 font-mono-technical text-xs text-amber-200/90">
-                Şu an aktif grup eğitimi yok. Geçmiş kayıtlar için &quot;Geçmiş ve kayıtlar&quot; sekmesine geçin.
+                {t('sectors.grup-egitimi.live.noActive')}
               </p>
             ) : (
               <ul className="mt-3 space-y-2">
                 {activeTrainings.map((training) => {
                   const sessionStatus = getOperatorTrainingSessionStatus(training, results, uid)
+                  const sessionDisplay = formatGroupTrainingSessionStatusDisplay(sessionStatus.key)
                   const styles = getOperatorSessionStatusStyles(sessionStatus.key)
                   const isSelected = selectedId === training.id
                   const isClosedForMe = sessionStatus.key === 'closed_for_me'
@@ -583,11 +613,11 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
                           </span>
                           <span className="mt-0.5 block font-mono-technical text-[9px] uppercase text-app-text/55">
                             {training.level && training.level !== '—' ? `${training.level} · ` : ''}
-                            {training.isTimed ? 'Zamanlı · ' : ''}
-                            {formatTrainingDate(training.createdAt)}
+                            {training.isTimed ? `${t('sectors.grup-egitimi.live.timed')} · ` : ''}
+                            {formatGroupTrainingDateDisplay(training.createdAt)}
                           </span>
                           <span className="mt-1 block font-mono-technical text-[8px] uppercase tracking-wide text-app-text/45">
-                            {sessionStatus.hint}
+                            {sessionDisplay.hint}
                           </span>
                         </span>
                         <span
@@ -596,7 +626,7 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
                             styles.badge,
                           ].join(' ')}
                         >
-                          {sessionStatus.label}
+                          {sessionDisplay.label}
                         </span>
                       </button>
                     </li>
@@ -611,42 +641,58 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
               <GroupTrainingDetailPanel training={selected} results={results} currentUid={uid} />
 
               {selectedSessionStatus?.key === 'closed_for_me' && myResultForSelected && mySelectedAssessment ? (
-                <AmberAlert label="[ OTURUM_KAPALI ]">
-                  Bu oturuma katıldınız — {myResultForSelected.hits}/{selected.totalAmmo} vuruş
-                  {selected.isTimed && myResultForSelected.time != null
-                    ? ` · ${myResultForSelected.time}s`
-                    : ''}{' '}
-                  · {formatGroupTrainingStatusLabel(mySelectedAssessment.statusResult, mySelectedAssessment.isPassed)}.
-                  Oturum sizin için kapalı; yalnızca kayıtları görüntüleyebilirsiniz.
+                <AmberAlert label={t('sectors.grup-egitimi.alerts.sessionClosed.label')}>
+                  {t('sectors.grup-egitimi.alerts.sessionClosed.body', {
+                    hits: myResultForSelected.hits,
+                    total: selected.totalAmmo,
+                    timePart: formatGroupTrainingAlertTimePart(
+                      selected.isTimed,
+                      myResultForSelected.time,
+                    ),
+                    status: formatGroupTrainingAssessmentLabel(
+                      mySelectedAssessment.statusResult,
+                      mySelectedAssessment.isPassed,
+                    ),
+                  })}
                 </AmberAlert>
               ) : myResultForSelected && mySelectedAssessment ? (
-                <AmberAlert label="[ KAYIT_MEVCUT ]">
-                  Bu eğitime {myResultForSelected.hits}/{selected.totalAmmo} vuruş
-                  {selected.isTimed && myResultForSelected.time != null
-                    ? ` · ${myResultForSelected.time}s`
-                    : ''}{' '}
-                  ile {formatGroupTrainingStatusLabel(mySelectedAssessment.statusResult, mySelectedAssessment.isPassed)}{' '}
-                  — sonuç gönderildi, düzenleme yapılamaz.
+                <AmberAlert label={t('sectors.grup-egitimi.alerts.recordExists.label')}>
+                  {t('sectors.grup-egitimi.alerts.recordExists.body', {
+                    hits: myResultForSelected.hits,
+                    total: selected.totalAmmo,
+                    timePart: formatGroupTrainingAlertTimePart(
+                      selected.isTimed,
+                      myResultForSelected.time,
+                    ),
+                    status: formatGroupTrainingAssessmentLabel(
+                      mySelectedAssessment.statusResult,
+                      mySelectedAssessment.isPassed,
+                    ),
+                  })}
                 </AmberAlert>
               ) : selectedSessionStatus?.key === 'open' ? (
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <TacticalPanel className="p-4 sm:p-5">
                     <div className="flex items-center gap-2 text-accent">
                       <Crosshair className="size-5" strokeWidth={1.5} aria-hidden />
-                      <span className="font-display text-xs font-bold uppercase tracking-widest">Skor girişi</span>
+                      <span className="font-display text-xs font-bold uppercase tracking-widest">
+                        {t('sectors.grup-egitimi.form.scoreEntry')}
+                      </span>
                     </div>
 
                     <div className="mt-4 space-y-3">
                       <Input
                         variant="gold"
-                        label="Vuruş sayısı"
+                        label={t('sectors.grup-egitimi.form.hitsLabel')}
                         id="grp-hits"
                         type="number"
                         min={0}
                         max={selected.totalAmmo}
                         value={hits}
                         onChange={(e) => setHits(e.target.value)}
-                        placeholder={`0 – ${selected.totalAmmo}`}
+                        placeholder={t('sectors.grup-egitimi.form.hitsPlaceholder', {
+                          max: selected.totalAmmo,
+                        })}
                         required
                         disabled={busy}
                       />
@@ -656,14 +702,14 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
                           <Timer className="mt-2 size-4 shrink-0 text-accent/80" aria-hidden />
                           <Input
                             variant="gold"
-                            label="Süre (saniye)"
+                            label={t('sectors.grup-egitimi.form.timeLabel')}
                             id="grp-time"
                             type="number"
                             min={0}
                             step="0.01"
                             value={timeSec}
                             onChange={(e) => setTimeSec(e.target.value)}
-                            placeholder="örn. 12.40"
+                            placeholder={t('sectors.grup-egitimi.form.timePlaceholder')}
                             required
                             disabled={busy}
                           />
@@ -676,7 +722,9 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
                     ) : null}
 
                     <Button type="submit" variant="primary" className="mt-4 w-full" disabled={busy}>
-                      {busy ? 'Gönderiliyor…' : 'Sonucu ilet'}
+                      {busy
+                        ? t('sectors.grup-egitimi.form.submitting')
+                        : t('sectors.grup-egitimi.form.submit')}
                     </Button>
                   </TacticalPanel>
                 </form>
@@ -688,7 +736,9 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
         <div className="space-y-4">
           {historyTrainings.length === 0 ? (
             <TacticalPanel className="p-6 text-center">
-              <p className="font-mono-technical text-xs text-app-text/55">Henüz grup eğitimi kaydı yok.</p>
+              <p className="font-mono-technical text-xs text-app-text/55">
+                {t('sectors.grup-egitimi.history.empty')}
+              </p>
             </TacticalPanel>
           ) : (
             <TacticalPanel className="overflow-hidden p-0">
@@ -696,11 +746,21 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
                 <table className="w-full min-w-[32rem] text-left font-mono-technical text-[10px]">
                   <thead className="border-b border-white/10 bg-black/40 text-app-text/55">
                     <tr>
-                      <th className="px-3 py-2 font-bold uppercase tracking-wider">Eğitim</th>
-                      <th className="px-3 py-2 font-bold uppercase tracking-wider">Durum</th>
-                      <th className="px-3 py-2 font-bold uppercase tracking-wider">Tarih</th>
-                      <th className="px-3 py-2 font-bold uppercase tracking-wider">Sizin sonucunuz</th>
-                      <th className="px-3 py-2 font-bold uppercase tracking-wider">Katılım</th>
+                      <th className="px-3 py-2 font-bold uppercase tracking-wider">
+                        {t('sectors.grup-egitimi.history.table.training')}
+                      </th>
+                      <th className="px-3 py-2 font-bold uppercase tracking-wider">
+                        {t('sectors.grup-egitimi.history.table.status')}
+                      </th>
+                      <th className="px-3 py-2 font-bold uppercase tracking-wider">
+                        {t('sectors.grup-egitimi.history.table.date')}
+                      </th>
+                      <th className="px-3 py-2 font-bold uppercase tracking-wider">
+                        {t('sectors.grup-egitimi.history.table.yourResult')}
+                      </th>
+                      <th className="px-3 py-2 font-bold uppercase tracking-wider">
+                        {t('sectors.grup-egitimi.history.table.participation')}
+                      </th>
                       <th className="px-3 py-2 font-bold uppercase tracking-wider" />
                     </tr>
                   </thead>
@@ -710,6 +770,7 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
                       const mineAssessment = mine ? resolveResultAssessment(mine, training) : null
                       const count = results.filter((r) => r.trainingId === training.id).length
                       const sessionStatus = getOperatorTrainingSessionStatus(training, results, uid)
+                      const sessionDisplay = formatGroupTrainingSessionStatusDisplay(sessionStatus.key)
                       const sessionStyles = getOperatorSessionStatusStyles(sessionStatus.key)
                       const isExpanded = detailId === training.id
                       return (
@@ -741,10 +802,12 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
                                   sessionStyles.badge,
                                 ].join(' ')}
                               >
-                                {sessionStatus.label}
+                                {sessionDisplay.label}
                               </span>
                             </td>
-                            <td className="px-3 py-2.5 text-app-text/55">{formatTrainingDate(training.createdAt)}</td>
+                            <td className="px-3 py-2.5 text-app-text/55">
+                              {formatGroupTrainingDateDisplay(training.createdAt)}
+                            </td>
                             <td className="px-3 py-2.5">
                               {mine && mineAssessment ? (
                                 <span
@@ -756,17 +819,22 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
                                         : 'text-red-400'
                                   }
                                 >
-                                  {mine.hits}/{training.totalAmmo} ·{' '}
-                                  {formatGroupTrainingStatusLabel(
-                                    mineAssessment.statusResult,
-                                    mineAssessment.isPassed,
-                                  )}
+                                  {t('sectors.grup-egitimi.history.resultLine', {
+                                    hits: mine.hits,
+                                    total: training.totalAmmo,
+                                    status: formatGroupTrainingAssessmentLabel(
+                                      mineAssessment.statusResult,
+                                      mineAssessment.isPassed,
+                                    ),
+                                  })}
                                 </span>
                               ) : (
                                 <span className="text-app-text/45">—</span>
                               )}
                             </td>
-                            <td className="px-3 py-2.5 tabular-nums">{count} operatör</td>
+                            <td className="px-3 py-2.5 tabular-nums">
+                              {t('sectors.grup-egitimi.history.table.operators', { count })}
+                            </td>
                             <td className="px-3 py-2.5">
                               <button
                                 type="button"
@@ -781,7 +849,7 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
                                 ].join(' ')}
                               >
                                 <Eye className="size-3" aria-hidden />
-                                Detay
+                                {t('sectors.grup-egitimi.history.table.detail')}
                                 <ChevronDown
                                   className={[
                                     'size-3 transition-transform duration-200',
@@ -800,7 +868,9 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
                                 className="border-l-2 border-b border-amber-500/70 border-b-amber-500/20 px-4 py-4"
                               >
                                 <p className="mb-3 font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-amber-400/85">
-                                  [ KAYIT DETAYI · {training.trainingName} ]
+                                  {t('sectors.grup-egitimi.history.detailTitle', {
+                                    name: training.trainingName,
+                                  })}
                                 </p>
                                 <GroupTrainingDetailPanel
                                   training={training}

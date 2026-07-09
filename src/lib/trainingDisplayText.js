@@ -64,6 +64,7 @@ import {
   isEgitimSandboxPlan,
 } from './egitimLogRegistry'
 import { invNum } from './inventoryIlws'
+import { timestampToMs } from './firestoreSnapshot'
 
 /** @typedef {import('../components/training/trainingCategories').TrainingCategory} TrainingCategory */
 
@@ -1493,4 +1494,91 @@ export function formatEgitimSandboxStatusBar(params) {
       zoom: Math.round(zoom * 100),
     })
   )
+}
+
+/** @typedef {'open' | 'closed_for_me' | 'completed'} GroupTrainingSessionKey */
+
+/** @param {unknown} ts */
+export function formatGroupTrainingDateDisplay(ts) {
+  const ms = timestampToMs(ts)
+  if (!ms) return '—'
+  return new Intl.DateTimeFormat(trainingLocale(), {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(ms))
+}
+
+/**
+ * @param {string | undefined} statusResult
+ * @param {boolean} [isPassed]
+ */
+export function formatGroupTrainingAssessmentLabel(statusResult, isPassed = false) {
+  if (isPassed || statusResult === 'BAŞARILI') {
+    return i18n.t('sectors.grup-egitimi.assessment.passed', { ns: 'training' })
+  }
+  if (statusResult === 'SÜRE İHLALİ') {
+    return i18n.t('sectors.grup-egitimi.assessment.timeFailed', { ns: 'training' })
+  }
+  return i18n.t('sectors.grup-egitimi.assessment.failed', { ns: 'training' })
+}
+
+/** @param {GroupTrainingSessionKey} key */
+export function formatGroupTrainingSessionStatusDisplay(key) {
+  return {
+    label: i18n.t(`sectors.grup-egitimi.sessionStatus.${key}.label`, { ns: 'training' }),
+    hint: i18n.t(`sectors.grup-egitimi.sessionStatus.${key}.hint`, { ns: 'training' }),
+  }
+}
+
+/**
+ * @param {{
+ *   hits: number
+ *   total: number
+ *   isTimed?: boolean
+ *   time?: number | null
+ *   targetTimeSec?: number | null
+ * }} params
+ */
+export function formatGroupTrainingHitsSummary(params) {
+  const { hits, total, isTimed = false, time = null, targetTimeSec = null } = params
+  if (isTimed && time != null && targetTimeSec != null) {
+    return i18n.t('sectors.grup-egitimi.detail.hitsLineWithTarget', {
+      ns: 'training',
+      hits,
+      total,
+      time,
+      target: targetTimeSec,
+    })
+  }
+  if (isTimed && time != null) {
+    return i18n.t('sectors.grup-egitimi.detail.hitsLineTimed', {
+      ns: 'training',
+      hits,
+      total,
+      time,
+    })
+  }
+  return i18n.t('sectors.grup-egitimi.detail.hitsLine', { ns: 'training', hits, total })
+}
+
+/**
+ * @param {boolean} isTimed
+ * @param {number | null | undefined} time
+ */
+export function formatGroupTrainingAlertTimePart(isTimed, time) {
+  if (isTimed && time != null) {
+    return i18n.t('sectors.grup-egitimi.alerts.timePart', { ns: 'training', time })
+  }
+  return ''
+}
+
+/**
+ * @param {'sessionExpired' | 'alreadySubmitted' | 'hitsRange' | 'submitFailed'} key
+ * @param {{ max?: number }} [params]
+ */
+export function formatGroupTrainingValidationMessage(key, params = {}) {
+  return i18n.t(`sectors.grup-egitimi.validation.${key}`, { ns: 'training', ...params })
 }

@@ -1421,7 +1421,123 @@
     },
     "grup-egitimi": {
       "title": "Grup eğitimi",
-      "sectorLabel": "GRP-07 · Grup oturumu"
+      "sectorLabel": "GRP-07 · Grup oturumu",
+      "loading": {
+        "verifyingGroup": "Grup doğrulanıyor…",
+        "data": "Grup eğitim verileri yükleniyor…"
+      },
+      "groupRequired": {
+        "alertLabel": "[ GRUP_GEREKLİ ]",
+        "body": "Grup eğitimine katılmak için önce bir taktik grubuna dahil olmalısınız.",
+        "settingsLink": "Taktik Timim →"
+      },
+      "deepLink": {
+        "accessDeniedLabel": "[ OTURUM_ERİŞİMİ_RED ]",
+        "notFound": "Oturum bulunamadı, süresi dolmuş veya grubunuza açık değil.",
+        "verifyFailed": "Oturuma erişim doğrulanamadı."
+      },
+      "header": {
+        "kicker": "[ GRUP EĞİTİMİ · GRP-07 ]",
+        "title": "Grup eğitimi — görüntüleme ve canlı giriş",
+        "subtitle": "Geçmiş kayıtlar salt okunur · yalnızca aktif oturuma skor gönderilebilir"
+      },
+      "tabs": {
+        "live": "Canlı oturum",
+        "history": "Geçmiş ve kayıtlar"
+      },
+      "live": {
+        "activeSessions": "Aktif oturumlar",
+        "noActive": "Şu an aktif grup eğitimi yok. Geçmiş kayıtlar için \"Geçmiş ve kayıtlar\" sekmesine geçin.",
+        "timed": "Zamanlı"
+      },
+      "detail": {
+        "status": "Durum",
+        "statusActive": "AKTİF",
+        "statusCompleted": "TAMAMLANDI",
+        "ammo": "Mühimmat",
+        "passThreshold": "Geçer baraj",
+        "date": "Tarih",
+        "yourStatus": "Sizin durumunuz",
+        "hitsLine": "{{hits}}/{{total}} vuruş",
+        "hitsLineTimed": "{{hits}}/{{total}} vuruş · {{time}}s",
+        "hitsLineWithTarget": "{{hits}}/{{total}} vuruş · {{time}}s (hedef {{target}}s)",
+        "timeViolationHint": "Vuruş barajı geçildi ancak süre hedefi aşıldı.",
+        "insufficientHitsHint": "Vuruş barajı altında kaldı.",
+        "noResultActive": "Henüz sonuç göndermediniz — Canlı Oturum sekmesinden giriş yapabilirsiniz.",
+        "noResultInactive": "Bu eğitime katılım kaydınız yok.",
+        "groupResultsTitle": "[ GRUP SONUÇLARI · SALT OKUNUR ]",
+        "noResultsYet": "Henüz sonuç bildirilmedi.",
+        "table": {
+          "operator": "Operatör",
+          "hits": "Vuruş",
+          "time": "Süre",
+          "result": "Sonuç",
+          "date": "Tarih",
+          "you": "(siz)"
+        }
+      },
+      "sessionStatus": {
+        "open": {
+          "label": "AKTİF",
+          "hint": "Katılıma açık"
+        },
+        "closed_for_me": {
+          "label": "KAPALI",
+          "hint": "Bu oturuma katıldınız"
+        },
+        "completed": {
+          "label": "TAMAMLANDI",
+          "hint": "Eğitmen oturumu kapattı"
+        }
+      },
+      "assessment": {
+        "passed": "GEÇTİ",
+        "timeFailed": "SÜREDE KALDI",
+        "failed": "KALDI"
+      },
+      "alerts": {
+        "timePart": " · {{time}}s",
+        "sessionClosed": {
+          "label": "[ OTURUM_KAPALI ]",
+          "body": "Bu oturuma katıldınız — {{hits}}/{{total}} vuruş{{timePart}} · {{status}}. Oturum sizin için kapalı; yalnızca kayıtları görüntüleyebilirsiniz."
+        },
+        "recordExists": {
+          "label": "[ KAYIT_MEVCUT ]",
+          "body": "Bu eğitime {{hits}}/{{total}} vuruş{{timePart}} ile {{status}} — sonuç gönderildi, düzenleme yapılamaz."
+        }
+      },
+      "form": {
+        "scoreEntry": "Skor girişi",
+        "hitsLabel": "Vuruş sayısı",
+        "hitsPlaceholder": "0 – {{max}}",
+        "timeLabel": "Süre (saniye)",
+        "timePlaceholder": "örn. 12.40",
+        "submit": "Sonucu ilet",
+        "submitting": "Gönderiliyor…"
+      },
+      "validation": {
+        "sessionExpired": "Oturum süresi dolmuş — sonuç gönderilemez.",
+        "alreadySubmitted": "Bu eğitime zaten sonuç gönderdiniz.",
+        "hitsRange": "Vuruş sayısı 0–{{max}} arasında olmalı.",
+        "submitFailed": "Gönderim başarısız."
+      },
+      "messages": {
+        "submitSuccess": "Sonuç iletildi — {{status}}."
+      },
+      "history": {
+        "empty": "Henüz grup eğitimi kaydı yok.",
+        "table": {
+          "training": "Eğitim",
+          "status": "Durum",
+          "date": "Tarih",
+          "yourResult": "Sizin sonucunuz",
+          "participation": "Katılım",
+          "detail": "Detay",
+          "operators": "{{count}} operatör"
+        },
+        "detailTitle": "[ KAYIT DETAYI · {{name}} ]",
+        "resultLine": "{{hits}}/{{total}} · {{status}}"
+      }
     },
     "egitmen-komuta": {
       "title": "Eğitmen kontrol paneli",
