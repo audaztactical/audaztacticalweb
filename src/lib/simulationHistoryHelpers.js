@@ -2,7 +2,7 @@ import { invNum, invStr } from './inventoryIlws'
 import { CASEVAC_TRANSMISSION_DEADLINE_SEC } from './casevacSimulatorConstants'
 import { MEDEVAC_TRANSMISSION_DEADLINE_SEC } from './medevacSimulatorValidation'
 import { PENALTY_TCCC_BELOW_40 } from './orsEngine'
-import { healthLocale, healthT } from './healthDisplayText'
+import { healthLocale, healthT, localizeSimRejectionReasons } from './healthDisplayText'
 
 /** @typedef {'medevac' | 'casevac'} SimMode */
 
@@ -212,15 +212,17 @@ export function formatScoreOrsEffect(row) {
 export function getStoredRejectionReasons(row) {
   const arr = row.simRejectionReasons
   if (Array.isArray(arr) && arr.length > 0) {
-    return arr.map((r) => invStr(r).trim()).filter(Boolean)
+    return localizeSimRejectionReasons(arr.map((r) => invStr(r).trim()).filter(Boolean))
   }
   const legacy = invStr(row.medevacFailureReason).trim()
   if (!legacy) return []
-  return legacy
-    .split('|')
-    .map((s) => s.trim())
-    .filter(Boolean)
-    .map((s) => (s.startsWith('•') ? s : `• ${s}`))
+  return localizeSimRejectionReasons(
+    legacy
+      .split('|')
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((s) => (s.startsWith('•') ? s : `• ${s}`)),
+  )
 }
 
 /**
