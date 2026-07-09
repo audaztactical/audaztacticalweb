@@ -6,8 +6,10 @@ import { useAuth } from '../../context/AuthContext'
 import { submitCqbRecord } from '../../lib/cqbSubmit'
 import {
   BREACHING_TYPE_OPTIONS,
+  CQB_BREACHING_NA,
   CQB_CUSTOM,
-  CQB_INITIAL_FORM,
+  CQB_DOOR_OPEN,
+  createCqbInitialForm,
   DOOR_STATE_OPTIONS,
   ENTRY_METHOD_OPTIONS,
   mergeTacticalErrorsForPayload,
@@ -16,6 +18,7 @@ import {
   TACTICAL_ERROR_GROUPS,
   TEAM_SIZE_OPTIONS,
 } from '../../lib/cqbOptions'
+import { evaluateCqbSubmitBlockedReason, resolveCqbBreachingTypeForDoor } from '../../lib/cqbFormValidation'
 import { invNum, invStr } from '../../lib/inventoryIlws'
 import { trainingNumberInputProps } from '../../lib/trainingNumberInput'
 import { calculateCqbSuccessPercent } from '../../lib/trainingSuccessScore'
@@ -29,8 +32,6 @@ import CqbLogRegistry from './CqbLogRegistry'
 import OperatorInstructorRecordsEmbed from './OperatorInstructorRecordsEmbed'
 import IndividualTrainingSessionHeader from './IndividualTrainingSessionHeader'
 import TrainingTerminalLayout from './layout/TrainingTerminalLayout'
-
-const numberInputProps = trainingNumberInputProps()
 import TrainingTerminalPanel from './layout/TrainingTerminalPanel'
 import TrainingMetricGrid, { TrainingMetricField } from './layout/TrainingMetricGrid'
 import TrainingPhaseBlock from './layout/TrainingPhaseBlock'
@@ -43,6 +44,8 @@ import {
   selectClass,
   textareaClass,
 } from './layout/trainingTerminalTokens'
+
+const numberInputProps = trainingNumberInputProps()
 
 /** @typedef {'form' | 'registry'} CqbViewMode */
 
@@ -72,7 +75,7 @@ function CqbSelectField({
   return (
     <fieldset className="space-y-2">
       <legend className={labelClass}>{legend}</legend>
-      <select className={selectClass} value={value} onChange={(e) => onChange(e.target.value)} required>
+      <select className={selectClass} value={value} onChange={(e) => onChange(e.target.value)}>
         <option value="">{selectPlaceholder}</option>
         {options.map((o) => (
           <option key={o.id} value={o.id}>
@@ -86,7 +89,6 @@ function CqbSelectField({
           placeholder={customPlaceholder}
           value={customValue}
           onChange={(e) => onCustomChange(e.target.value)}
-          required
         />
       ) : null}
     </fieldset>
@@ -138,7 +140,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
   const { user } = useAuth()
   const uid = user?.uid ?? ''
 
-  const [form, setForm] = useState(CQB_INITIAL_FORM)
+  const [form, setForm] = useState(createCqbInitialForm)
   const [viewMode, setViewMode] = useState(/** @type {CqbViewMode} */ ('form'))
   const [saving, setSaving] = useState(false)
   const [submitOk, setSubmitOk] = useState(false)
@@ -148,64 +150,34 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
 
   const showCustomRoom = form.roomTopology === CQB_CUSTOM
   const showCustomEntry = form.entryMethod === CQB_CUSTOM
-  const showCustomBreach = form.breachingType === CQB_CUSTOM
+  const isDoorOpen = form.doorState === CQB_DOOR_OPEN
+  const showCustomBreach = !isDoorOpen && form.breachingType === CQB_CUSTOM
 
   const threatNum = Math.max(0, Math.floor(invNum(form.threatCount)))
   const neutralizedNum = Math.max(0, Math.floor(invNum(form.neutralizedCount)))
   const neutralizedInvalid = neutralizedNum > threatNum
 
-  const submitBlockedReasonKey = useMemo(() => {
-    if (saving) return null
-    if (!uid) return { key: 'sessionRequired' }
-    if (!form.roomTopology) return { key: 'roomTopologyRequired' }
-    if (showCustomRoom && !form.customRoomTopology.trim()) return { key: 'customRoomRequired' }
-    if (!form.entryMethod) return { key: 'entryMethodRequired' }
-    if (showCustomEntry && !form.customEntryMethod.trim()) return { key: 'customEntryRequired' }
-    if (!form.breachingType) return { key: 'breachingRequired' }
-    if (showCustomBreach && !form.customBreachingType.trim()) return { key: 'customBreachingRequired' }
-    if (!form.doorState) return { key: 'doorStateRequired' }
-    if (!form.teamSize) return { key: 'teamSizeRequired' }
-    if (neutralizedInvalid) return { key: 'neutralizedExceedsThreat' }
-    const clearanceRaw = invStr(form.clearanceTimeMs).trim().replace(',', '.')
-    const clearanceMs = clearanceRaw ? invNum(clearanceRaw) : NaN
-    if (!clearanceRaw || !Number.isFinite(clearanceMs) || clearanceMs <= 0) {
-      return { key: 'clearanceTimeRequired' }
-    }
-    const accuracyRaw = invStr(form.accuracyScore).trim().replace(',', '.')
-    const accuracy = accuracyRaw ? invNum(accuracyRaw) : NaN
-    if (!accuracyRaw || !Number.isFinite(accuracy) || accuracy < 0 || accuracy > 100) {
-      return { key: 'accuracyRequired' }
-    }
-    const safetyRaw = invStr(form.safetyViolations).trim()
-    const safety = safetyRaw === '' ? NaN : invNum(safetyRaw)
-    if (!Number.isFinite(safety) || safety < 0) return { key: 'safetyRequired' }
-    if (!form.tacticalDecision) return { key: 'decisionRequired' }
-    return null
-  }, [
-    saving,
-    uid,
-    form.roomTopology,
-    form.customRoomTopology,
-    form.entryMethod,
-    form.customEntryMethod,
-    form.breachingType,
-    form.customBreachingType,
-    form.doorState,
-    form.teamSize,
-    showCustomRoom,
-    showCustomEntry,
-    showCustomBreach,
-    neutralizedInvalid,
-    form.clearanceTimeMs,
-    form.accuracyScore,
-    form.safetyViolations,
-    form.tacticalDecision,
-  ])
+  const submitBlockedReasonKey = useMemo(
+    () =>
+      evaluateCqbSubmitBlockedReason(form, {
+        uid,
+        saving,
+        threatNum,
+        neutralizedNum,
+      }),
+    [
+      form,
+      uid,
+      saving,
+      threatNum,
+      neutralizedNum,
+    ],
+  )
 
   const submitBlockedReason = formatCqbSubmitBlockedReason(submitBlockedReasonKey)
   const canSubmit = submitBlockedReasonKey == null
 
-  const patch = useCallback((/** @type {Partial<typeof CQB_INITIAL_FORM>} */ next) => {
+  const patch = useCallback((/** @type {Partial<ReturnType<typeof createCqbInitialForm>>} */ next) => {
     setForm((f) => ({ ...f, ...next }))
     setSubmitOk(false)
     setSubmitError(null)
@@ -305,8 +277,8 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
         customRoomTopology: form.customRoomTopology,
         entryMethod: form.entryMethod,
         customEntryMethod: form.customEntryMethod,
-        breachingType: form.breachingType,
-        customBreachingType: form.customBreachingType,
+        breachingType: isDoorOpen ? CQB_BREACHING_NA : form.breachingType,
+        customBreachingType: isDoorOpen ? '' : form.customBreachingType,
         doorState: form.doorState,
         teamSize: form.teamSize,
         threatCount: threatNum,
@@ -323,7 +295,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
       })
       setSubmitOk(true)
       setCustomErrorDraft('')
-      setForm({ ...CQB_INITIAL_FORM })
+      setForm(createCqbInitialForm())
     } catch (err) {
       const code = err && typeof err === 'object' && 'code' in err ? String(err.code) : ''
       const message =
@@ -404,6 +376,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
       ) : (
         <TrainingTerminalLayout
           onSubmit={handleSubmit}
+          noValidate
           left={
             <TrainingTerminalPanel title={t('sectors.cqb.panels.setup')}>
               <CqbSelectField
@@ -435,40 +408,59 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                 selectPlaceholder={t('sectors.cqb.form.selectPlaceholder')}
               />
               <CqbSelectField
-                legend={t('sectors.cqb.form.breachingType')}
-                value={form.breachingType}
-                options={BREACHING_TYPE_OPTIONS.map((o) => ({
-                  id: o.id,
-                  label: formatCqbOptionLabel('breachingType', o.id, o.label),
-                }))}
-                onChange={(v) => patch({ breachingType: v, customBreachingType: '' })}
-                showCustom={showCustomBreach}
-                customValue={form.customBreachingType}
-                onCustomChange={(v) => patch({ customBreachingType: v })}
-                customPlaceholder={t('sectors.cqb.form.customBreachingType')}
-                selectPlaceholder={t('sectors.cqb.form.selectPlaceholder')}
-              />
-              <CqbSelectField
                 legend={t('sectors.cqb.form.doorState')}
                 value={form.doorState}
                 options={DOOR_STATE_OPTIONS.map((o) => ({
                   id: o.id,
                   label: formatCqbOptionLabel('doorState', o.id, o.label),
                 }))}
-                onChange={(v) => patch({ doorState: v })}
+                onChange={(v) =>
+                  patch({
+                    doorState: v,
+                    breachingType: resolveCqbBreachingTypeForDoor(v, form.breachingType),
+                    customBreachingType: v === CQB_DOOR_OPEN ? '' : form.customBreachingType,
+                  })
+                }
                 showCustom={false}
                 customValue=""
                 onCustomChange={() => {}}
                 customPlaceholder=""
                 selectPlaceholder={t('sectors.cqb.form.selectPlaceholder')}
               />
+              {isDoorOpen ? (
+                <fieldset className="space-y-2">
+                  <legend className={labelClass}>{t('sectors.cqb.form.breachingType')}</legend>
+                  <select className={selectClass} value={CQB_BREACHING_NA} disabled>
+                    <option value={CQB_BREACHING_NA}>
+                      {formatCqbOptionLabel('breachingType', CQB_BREACHING_NA, '—')}
+                    </option>
+                  </select>
+                  <p className="font-mono-technical text-[8px] uppercase tracking-wide text-app-text/55">
+                    {t('sectors.cqb.form.breachingOpenDoorHint')}
+                  </p>
+                </fieldset>
+              ) : (
+                <CqbSelectField
+                  legend={t('sectors.cqb.form.breachingType')}
+                  value={form.breachingType}
+                  options={BREACHING_TYPE_OPTIONS.map((o) => ({
+                    id: o.id,
+                    label: formatCqbOptionLabel('breachingType', o.id, o.label),
+                  }))}
+                  onChange={(v) => patch({ breachingType: v, customBreachingType: '' })}
+                  showCustom={showCustomBreach}
+                  customValue={form.customBreachingType}
+                  onCustomChange={(v) => patch({ customBreachingType: v })}
+                  customPlaceholder={t('sectors.cqb.form.customBreachingType')}
+                  selectPlaceholder={t('sectors.cqb.form.selectPlaceholder')}
+                />
+              )}
               <fieldset className="space-y-2">
                 <legend className={labelClass}>{t('sectors.cqb.form.teamSize')}</legend>
                 <select
                   className={selectClass}
                   value={form.teamSize}
                   onChange={(e) => patch({ teamSize: e.target.value })}
-                  required
                 >
                   <option value="">{t('sectors.cqb.form.teamPlaceholder')}</option>
                   {TEAM_SIZE_OPTIONS.map((o) => (
@@ -557,7 +549,6 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                     className={selectClass}
                     value={form.tacticalDecision}
                     onChange={(e) => patch({ tacticalDecision: e.target.value })}
-                    required
                   >
                     <option value="">{t('sectors.cqb.form.decisionPlaceholder')}</option>
                     {TACTICAL_DECISION_OPTIONS.map((o) => (

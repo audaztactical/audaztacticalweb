@@ -1,6 +1,8 @@
 /** @typedef {{ id: string; label: string }} CqbOption */
 
 export const CQB_CUSTOM = 'custom'
+export const CQB_BREACHING_NA = 'not_applicable'
+export const CQB_DOOR_OPEN = 'open'
 
 /** @type {CqbOption[]} */
 export const ROOM_TOPOLOGY_OPTIONS = [
@@ -134,6 +136,7 @@ const LABEL_INDEX = Object.fromEntries(
  */
 export function resolveCqbSelectValue(key, customText = '') {
   const k = String(key || '').trim()
+  if (k === CQB_BREACHING_NA) return '—'
   if (k === CQB_CUSTOM) {
     const custom = String(customText || '').trim()
     return custom || 'Özel'
@@ -149,6 +152,7 @@ export function resolveCqbSelectValue(key, customText = '') {
  */
 export function resolveCqbSelectKey(key, customText = '') {
   const k = String(key || '').trim()
+  if (k === CQB_BREACHING_NA) return CQB_BREACHING_NA
   if (k === CQB_CUSTOM) {
     const custom = String(customText || '').trim()
     return custom ? `custom:${custom}` : CQB_CUSTOM
@@ -289,4 +293,33 @@ export const CQB_INITIAL_FORM = {
   tacticalErrors: /** @type {string[]} */ ([]),
   customTacticalErrors: /** @type {string[]} */ ([]),
   operationNote: '',
+}
+
+/** @returns {typeof CQB_INITIAL_FORM} */
+export function createCqbInitialForm() {
+  return {
+    ...CQB_INITIAL_FORM,
+    tacticalErrors: [],
+    customTacticalErrors: [],
+  }
+}
+
+/** @type {Record<string, Set<string>>} */
+const CQB_SELECT_ID_INDEX = {
+  roomTopology: new Set(ROOM_TOPOLOGY_OPTIONS.map((o) => o.id)),
+  entryMethod: new Set(ENTRY_METHOD_OPTIONS.map((o) => o.id)),
+  breachingType: new Set([...BREACHING_TYPE_OPTIONS.map((o) => o.id), CQB_BREACHING_NA]),
+  doorState: new Set(DOOR_STATE_OPTIONS.map((o) => o.id)),
+  teamSize: new Set(TEAM_SIZE_OPTIONS.map((o) => o.id)),
+  tacticalDecision: new Set(TACTICAL_DECISION_OPTIONS.map((o) => o.id)),
+}
+
+/**
+ * @param {'roomTopology' | 'entryMethod' | 'breachingType' | 'doorState' | 'teamSize' | 'tacticalDecision'} field
+ * @param {string} value
+ */
+export function isKnownCqbSelectId(field, value) {
+  const id = String(value ?? '').trim()
+  if (!id) return false
+  return CQB_SELECT_ID_INDEX[field]?.has(id) ?? false
 }

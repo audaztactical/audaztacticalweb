@@ -6,10 +6,11 @@
  *   footer?: import('react').ReactNode
  * }} props
  */
-export default function TrainingTerminalLayout({ onSubmit, left, right, footer }) {
+export default function TrainingTerminalLayout({ onSubmit, left, right, footer, noValidate = false }) {
   return (
     <form
       onSubmit={onSubmit}
+      noValidate={noValidate}
       className="grid w-full min-w-0 max-w-none gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-stretch lg:[&>*]:min-w-0"
     >
       {left}

@@ -334,6 +334,7 @@
         "customEntryMethod": "Custom entry method…",
         "breachingType": "Breaching type",
         "customBreachingType": "Custom breaching type…",
+        "breachingOpenDoorHint": "Door is open — breaching does not apply",
         "doorState": "Door state",
         "teamSize": "Team size",
         "threatCount": "Threat count",
@@ -415,6 +416,7 @@
           "mechanical": "Mechanical",
           "ballistic": "Ballistic",
           "explosive": "Explosive",
+          "not_applicable": "N/A · not applicable",
           "custom": "[+] Custom breaching type"
         },
         "doorState": {

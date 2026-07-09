@@ -334,6 +334,7 @@
         "customEntryMethod": "Özel giriş metodu…",
         "breachingType": "Kırma tipi",
         "customBreachingType": "Özel kırma tipi…",
+        "breachingOpenDoorHint": "Kapı açık — kırma tipi uygulanmaz",
         "doorState": "Kapı durumu",
         "teamSize": "Takım boyutu",
         "threatCount": "Tehdit sayısı",
@@ -415,6 +416,7 @@
           "mechanical": "Mekanik",
           "ballistic": "Balistik",
           "explosive": "Patlayıcı",
+          "not_applicable": "Yok · uygulanamaz",
           "custom": "[+] Özel kırma tipi"
         },
         "doorState": {
