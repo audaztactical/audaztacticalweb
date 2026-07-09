@@ -133,12 +133,37 @@ export function buildCharacterMatrix(logs) {
 }
 
 const ERROR_CODES = {
-  muzzle_flagging: 'ERR_CODE_01',
-  fatal_funnel_hang: 'ERR_CODE_02',
-  slow_breach: 'ERR_CODE_03',
-  breaching_delay: 'ERR_CODE_03',
-  blue_on_blue: 'ERR_CODE_04',
-  poor_corner_piercing: 'ERR_CODE_05',
+  // Stable display codes — never truncate id to 8 chars (that produced ERR_BLIND_EN)
+  breaching_delay: 'ERR_BREACH_DELAY',
+  stack_exposure: 'ERR_STACK_EXPOSURE',
+  noise_discipline_compromised: 'ERR_NOISE_DISC',
+  poor_threshold_pieing: 'ERR_THRESHOLD_PIE',
+  fatal_funnel_hang: 'ERR_FATAL_FUNNEL',
+  over_penetration: 'ERR_OVER_PEN',
+  blind_entry: 'ERR_BLIND_ENTRY',
+  slow_breach: 'ERR_SLOW_BREACH',
+  slow_breaching: 'ERR_SLOW_BREACH',
+  poor_corner_check: 'ERR_CORNER_CHECK',
+  poor_corner_piercing: 'ERR_CORNER_PIERCE',
+  leaving_sectors_uncovered: 'ERR_SECTOR_GAP',
+  colliding_with_teammate: 'ERR_COLLISION',
+  muzzle_flagging: 'ERR_MUZZLE_FLAG',
+  tunnel_vision: 'ERR_TUNNEL_VISION',
+  poor_comm_discipline: 'ERR_COMM_DISC',
+  blue_on_blue: 'ERR_BLUE_ON_BLUE',
+}
+
+/**
+ * @param {string} errorId
+ */
+function radarErrorCode(errorId) {
+  const id = String(errorId ?? '').trim()
+  if (!id) return 'ERR_UNKNOWN'
+  if (ERROR_CODES[/** @type {keyof typeof ERROR_CODES} */ (id)]) {
+    return ERROR_CODES[/** @type {keyof typeof ERROR_CODES} */ (id)]
+  }
+  // Full id, not slice(0,8) — avoids ERR_BLIND_EN style truncations
+  return `ERR_${id.replace(/[^a-zA-Z0-9]+/g, '_').toUpperCase()}`
 }
 
 /**
@@ -157,15 +182,14 @@ export function buildChronicErrorRadar(logs) {
 
   for (const row of logs) {
     if (row.blueOnBlue) {
-      bump('blue_on_blue', progressT('radarErrors.blueOnBlueFof'), ERROR_CODES.blue_on_blue)
+      bump('blue_on_blue', progressT('radarErrors.blueOnBlueFof'), radarErrorCode('blue_on_blue'))
     }
     const errors = Array.isArray(row.tacticalErrors) ? row.tacticalErrors : []
     for (const raw of errors) {
       const id = invStr(raw).trim()
       if (!id) continue
       const label = formatProgressTacticalErrorLabel(id, getLogDisciplineTag(row)).toUpperCase()
-      const code = ERROR_CODES[/** @type {keyof typeof ERROR_CODES} */ (id)] ?? `ERR_${id.slice(0, 8).toUpperCase()}`
-      bump(id, label, code)
+      bump(id, label, radarErrorCode(id))
     }
   }
 

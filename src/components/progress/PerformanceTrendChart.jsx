@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import {
@@ -12,7 +12,11 @@ import {
   YAxis,
 } from 'recharts'
 import { buildTacticalTooltipLines } from '../../lib/progressTacticalTooltip'
-import { clampTooltipToViewport, TacticalTooltipBox } from './TacticalTooltip'
+import {
+  clampTooltipToViewport,
+  rechartsCoordinateToViewport,
+  TacticalTooltipBox,
+} from './TacticalTooltip'
 
 const TAG_FILL = {
   ATIS: '#38bdf8',
@@ -32,6 +36,7 @@ const TAG_FILL = {
  */
 export default function PerformanceTrendChart({ series, barsAnimate = true, variant = 'compact' }) {
   const { t } = useTranslation('progress')
+  const chartRef = useRef(/** @type {HTMLDivElement | null} */ (null))
   const expanded = variant === 'expanded'
 
   const chartData = useMemo(
@@ -54,15 +59,9 @@ export default function PerformanceTrendChart({ series, barsAnimate = true, vari
     const lines = buildTacticalTooltipLines(
       row && typeof row === 'object' ? /** @type {Record<string, unknown>} */ (row) : null,
     )
-    const pad = 12
-    const approxW = Math.min(352, typeof window !== 'undefined' ? window.innerWidth - pad * 2 : 352)
-    const { left, top, maxWidth } = clampTooltipToViewport(
-      coordinate.x ?? 0,
-      coordinate.y ?? 0,
-      approxW,
-      180,
-      pad,
-    )
+    const anchor = rechartsCoordinateToViewport(coordinate, chartRef.current)
+    const approxW = Math.min(352, typeof window !== 'undefined' ? window.innerWidth - 24 : 352)
+    const { left, top, maxWidth } = clampTooltipToViewport(anchor.x, anchor.y, approxW, 180)
 
     return createPortal(
       <div
@@ -85,7 +84,7 @@ export default function PerformanceTrendChart({ series, barsAnimate = true, vari
 
   return (
     <div className={`relative w-full min-w-0 ${chartHeight}`}>
-      <div className="absolute inset-0 h-full w-full min-h-0 min-w-0">
+      <div ref={chartRef} className="absolute inset-0 h-full w-full min-h-0 min-w-0">
         <ResponsiveContainer
           width="100%"
           height="100%"

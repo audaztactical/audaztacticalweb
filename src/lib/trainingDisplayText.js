@@ -17,6 +17,7 @@ import {
   DOOR_STATE_OPTIONS,
   TEAM_SIZE_OPTIONS,
   TACTICAL_ERROR_GROUPS,
+  TACTICAL_ERROR_PRESETS,
   decodeCustomTacticalError,
   isCustomTacticalError,
   labelTacticalError,
@@ -416,11 +417,48 @@ export function formatCqbTacticalErrorGroupTitle(groupId) {
 
 /** @param {string} errorId */
 export function formatCqbTacticalErrorLabel(errorId) {
-  const id = String(errorId ?? '').trim()
-  if (!id) return '—'
-  if (isCustomTacticalError(id)) {
-    return decodeCustomTacticalError(id) || i18n.t('sectors.cqb.errors.customPhase', { ns: 'training' })
+  const raw = String(errorId ?? '').trim()
+  if (!raw) return '—'
+  if (isCustomTacticalError(raw)) {
+    return decodeCustomTacticalError(raw) || i18n.t('sectors.cqb.errors.customPhase', { ns: 'training' })
   }
+
+  // Normalize display codes / legacy TR labels → canonical option id
+  let id = raw
+  if (/^ERR_/i.test(id)) {
+    const stripped = id.replace(/^ERR_/i, '').toLowerCase()
+    const byCodeHint = TACTICAL_ERROR_PRESETS.find(
+      (o) =>
+        o.id === stripped ||
+        o.id.replace(/_/g, '') === stripped.replace(/_/g, '') ||
+        stripped.startsWith(o.id.slice(0, 8).replace(/_/g, '')),
+    )
+    // Explicit map for truncated codes like ERR_BLIND_EN → blind_entry
+    const TRUNCATION_MAP = {
+      blind_en: 'blind_entry',
+      over_pen: 'over_penetration',
+      fatal_fu: 'fatal_funnel_hang',
+      muzzle_f: 'muzzle_flagging',
+      stack_ex: 'stack_exposure',
+      noise_di: 'noise_discipline_compromised',
+      poor_thr: 'poor_threshold_pieing',
+      poor_cor: 'poor_corner_check',
+      leaving_: 'leaving_sectors_uncovered',
+      collidin: 'colliding_with_teammate',
+      tunnel_v: 'tunnel_vision',
+      poor_com: 'poor_comm_discipline',
+      breachin: 'breaching_delay',
+      slow_bre: 'slow_breach',
+      blue_on_: 'blue_on_blue',
+    }
+    const hintKey = stripped.slice(0, 8)
+    id = TRUNCATION_MAP[hintKey] || byCodeHint?.id || id
+  }
+  const byLabel = TACTICAL_ERROR_PRESETS.find(
+    (o) => o.label.toLocaleLowerCase('tr-TR') === raw.toLocaleLowerCase('tr-TR'),
+  )
+  if (byLabel) id = byLabel.id
+
   for (const group of TACTICAL_ERROR_GROUPS) {
     if (group.items.some((item) => item.id === id)) {
       return i18n.t(`sectors.cqb.errors.groups.${group.id}.${id}`, {

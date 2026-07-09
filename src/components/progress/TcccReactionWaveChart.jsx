@@ -1,5 +1,6 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslation } from 'react-i18next'
 import {
   Area,
   AreaChart,
@@ -9,10 +10,13 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { useTranslation } from 'react-i18next'
 import { buildTcccReactionChartPoints } from '../../lib/tcccSimHudAnalytics'
 import { buildTacticalTooltipLines } from '../../lib/progressTacticalTooltip'
-import { clampTooltipToViewport, TacticalTooltipBox } from './TacticalTooltip'
+import {
+  clampTooltipToViewport,
+  rechartsCoordinateToViewport,
+  TacticalTooltipBox,
+} from './TacticalTooltip'
 
 /** @typedef {import('react').ComponentType<{ logRow: Record<string, unknown> | null }>} TcccTooltipContentComponent */
 
@@ -50,6 +54,7 @@ export default function TcccReactionWaveChart({
   rechartsTooltipProps = null,
 }) {
   const { t } = useTranslation('progress')
+  const chartRef = useRef(/** @type {HTMLDivElement | null} */ (null))
   const expanded = variant === 'expanded'
   const stroke = emerald ? '#34d399' : '#fbbf24'
   const strokeMuted = emerald ? 'rgba(52,211,153,0.25)' : 'rgba(251,191,36,0.25)'
@@ -75,16 +80,10 @@ export default function TcccReactionWaveChart({
           ? /** @type {Record<string, unknown>} */ (point.logRow)
           : null
       const TooltipBody = TooltipContent
-      const pad = 12
-      const approxW = Math.min(352, typeof window !== 'undefined' ? window.innerWidth - pad * 2 : 352)
+      const anchor = rechartsCoordinateToViewport(coordinate, chartRef.current)
+      const approxW = Math.min(352, typeof window !== 'undefined' ? window.innerWidth - 24 : 352)
       const approxH = stableDebriefTooltip ? 220 : 160
-      const { left, top, maxWidth } = clampTooltipToViewport(
-        coordinate.x ?? 0,
-        coordinate.y ?? 0,
-        approxW,
-        approxH,
-        pad,
-      )
+      const { left, top, maxWidth } = clampTooltipToViewport(anchor.x, anchor.y, approxW, approxH)
 
       return createPortal(
         <div
@@ -113,7 +112,7 @@ export default function TcccReactionWaveChart({
 
   return (
     <div className={`relative w-full min-w-0 ${chartHeight}`}>
-      <div className="absolute inset-0 h-full w-full min-h-0 min-w-0">
+      <div ref={chartRef} className="absolute inset-0 h-full w-full min-h-0 min-w-0">
         <ResponsiveContainer
           width="100%"
           height="100%"
@@ -164,7 +163,11 @@ export default function TcccReactionWaveChart({
           </AreaChart>
         </ResponsiveContainer>
       </div>
-      <p className={`mt-1 text-center font-mono text-[8px] uppercase tracking-wider ${emerald ? 'text-emerald-700/80' : 'text-amber-700/80'}`}>
+      <p
+        className={`mt-1 text-center font-mono text-[8px] uppercase tracking-wider ${
+          emerald ? 'text-emerald-700/80' : 'text-amber-700/80'
+        }`}
+      >
         {t('charts.tcccWaveCaption')}
       </p>
     </div>
