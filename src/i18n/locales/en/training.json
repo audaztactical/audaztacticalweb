@@ -411,7 +411,160 @@
     },
     "fof": {
       "title": "FOF",
-      "sectorLabel": "FOF-03 · Force on force"
+      "sectorLabel": "FOF-03 · Force on force",
+      "tabs": {
+        "aria": "FOF terminal view",
+        "form": "FOF log form",
+        "registry": "Past FOF logs"
+      },
+      "panels": {
+        "setup": "Operation setup · metrics",
+        "combatAnalysis": "Combat analysis · actions",
+        "combatMetrics": "Combat metrics",
+        "tacticalErrors": "Tactical error log · analytic HUD"
+      },
+      "form": {
+        "selectPlaceholder": "— Select —",
+        "engagementPlaceholder": "— Select engagement —",
+        "scenarioType": "Scenario type",
+        "customScenarioType": "Custom scenario type…",
+        "simSystem": "Simulation system",
+        "customSimSystem": "Custom simulation system…",
+        "engagementType": "Engagement type",
+        "opforCount": "OPFOR count",
+        "scenarioDuration": "Simulation duration / clearing (sec)",
+        "engagementRounds": "Round count / engagement rounds",
+        "decisionAccuracy": "Decision accuracy (%)",
+        "hitsTaken": "Hits taken",
+        "lethalHits": "Lethal hits",
+        "nonLethalHits": "Non-lethal",
+        "friendlyCasualties": "Friendly casualties",
+        "timeToFirstEngagement": "Time to first shot (sec)",
+        "coverUtilization": "Cover utilization %",
+        "hitTakenRatio": "Hit/taken ratio (auto)",
+        "hitTakenRatioPreview": "Hit/taken ratio (delivered:taken): {{ratio}}",
+        "operationNote": "Operation note",
+        "operationNotePlaceholder": "Scenario assessment, lessons learned, #tags…",
+        "debriefNotes": "Debrief notes",
+        "debriefNotesPlaceholder": "After-action analysis, ethical engagement review, team comms…",
+        "selfTcccApplied": "Tourniquet under fire / TCCC application",
+        "submit": "Confirm FOF log"
+      },
+      "preview": {
+        "imageAlt": "FOF",
+        "opfor": "OPFOR: {{count}}",
+        "hitsTaken": "Hits taken: {{count}}",
+        "lethalNonLethal": "Lethal / non-lethal: {{lethal}} / {{nonLethal}}"
+      },
+      "options": {
+        "scenarioType": {
+          "active_shooter": "Active shooter",
+          "hostage_rescue": "Hostage rescue",
+          "vip_protection": "VIP protection",
+          "hvt_raid": "HVT raid",
+          "barricaded_suspect": "Barricaded suspect",
+          "vehicle_interdiction": "Vehicle interdiction",
+          "tubular_assault": "Tubular assault",
+          "low_light_nvg": "Low light · NVG",
+          "cbrn_threat": "CBRN threat",
+          "mass_casualty_mascal": "Mass casualty (MASCAL)",
+          "custom": "[+] Custom scenario"
+        },
+        "simSystem": {
+          "simunition": "Simunition",
+          "airsoft": "Airsoft",
+          "miles": "MILES",
+          "custom": "[+] Custom simulation"
+        },
+        "engagementType": {
+          "one_on_one": "One-on-one",
+          "team": "Team",
+          "ambush": "Ambush",
+          "multi_team": "Multi-team",
+          "reactive": "Reactive engagement"
+        }
+      },
+      "errors": {
+        "blue_on_blue": "Blue on blue",
+        "muzzle_flagging": "Muzzle flagging",
+        "slow_breach": "Slow breach"
+      },
+      "validation": {
+        "sessionRequired": "Session required",
+        "channelDisconnected": "Data channel lost · retry",
+        "scenarioRequired": "Scenario type required",
+        "customScenarioRequired": "Custom scenario name required",
+        "simSystemRequired": "Simulation system required",
+        "customSimRequired": "Custom sim system required",
+        "durationRequired": "Simulation duration required · sec > 0",
+        "roundsRequired": "Round count required · engagement rounds > 0",
+        "engagementRequired": "Engagement type required",
+        "accuracyRequired": "Decision accuracy 0–100 required",
+        "debriefRequired": "Debrief notes required"
+      },
+      "messages": {
+        "submitSuccess": "FOF log transferred · range_logs",
+        "submitFailed": "FOF log failed · retry{{hint}}",
+        "permissionDenied": " · permission / rules"
+      },
+      "history": {
+        "title": "Past FOF logs · filters",
+        "syncMeta": "range_logs · live sync · {{filtered}}/{{total}} records",
+        "filterBar": "Filter bar",
+        "scenarioType": "Scenario type",
+        "simSystem": "Simulation",
+        "engagementType": "Engagement type",
+        "all": "All",
+        "syncing": "Syncing…",
+        "empty": "No FOF logs",
+        "noFilterResults": "No filter results",
+        "downloadFiltered": "Download filtered",
+        "downloadAll": "Download all",
+        "preparingPdf": "Preparing…",
+        "columns": {
+          "date": "Date",
+          "engagement": "Engagement",
+          "scenario": "Scenario",
+          "duration": "Duration",
+          "decision": "Decision %",
+          "hitTaken": "Hit/taken",
+          "success": "Success %",
+          "report": "Report"
+        },
+        "detail": {
+          "title": "FOF tactical performance report · detail",
+          "sim": "Sim",
+          "opfor": "OPFOR",
+          "hits": "Hits",
+          "hitsFormat": "{{lethal}} / {{nonLethal}} / taken {{taken}}",
+          "firstShot": "First shot",
+          "coverUtilization": "Cover utilization",
+          "friendlyCasualties": "Friendly casualties",
+          "blueOnBlue": "Blue-on-blue",
+          "selfTccc": "TCCC (under fire)",
+          "yes": "Yes",
+          "no": "No",
+          "applied": "Applied",
+          "meteo": "Meteo-data (at log time)",
+          "tacticalErrors": "Tactical errors · {{count}} records",
+          "debriefNotes": "Debrief notes",
+          "noDebriefNotes": "No debrief note recorded.",
+          "operationNote": "Operation note",
+          "noOperationNote": "No operation note recorded."
+        },
+        "filterSummary": {
+          "scenario": "Scenario: {{value}}",
+          "sim": "Sim: {{value}}",
+          "engagement": "Engagement: {{value}}"
+        },
+        "meteo": {
+          "temperature": "Temperature",
+          "wind": "Wind",
+          "humidity": "Humidity",
+          "location": "Location",
+          "noRecord": "No record"
+        }
+      }
     },
     "vbss": {
       "title": "VBSS",

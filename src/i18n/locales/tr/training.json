@@ -411,7 +411,160 @@
     },
     "fof": {
       "title": "FOF",
-      "sectorLabel": "FOF-03 · Kuvvet karşılaşması"
+      "sectorLabel": "FOF-03 · Kuvvet karşılaşması",
+      "tabs": {
+        "aria": "FOF terminal görünümü",
+        "form": "FOF kayıt formu",
+        "registry": "Geçmiş FOF kayıtları"
+      },
+      "panels": {
+        "setup": "Operasyon kurulumu · metrikler",
+        "combatAnalysis": "Muharebe analizi · eylemler",
+        "combatMetrics": "Muharebe metrikleri",
+        "tacticalErrors": "Taktik hata kaydı · analitik HUD"
+      },
+      "form": {
+        "selectPlaceholder": "— Seçin —",
+        "engagementPlaceholder": "— Angajman seçin —",
+        "scenarioType": "Senaryo tipi",
+        "customScenarioType": "Özel senaryo tipi…",
+        "simSystem": "Simülasyon sistemi",
+        "customSimSystem": "Özel simülasyon sistemi…",
+        "engagementType": "Engagement type",
+        "opforCount": "OPFOR sayısı",
+        "scenarioDuration": "Simülasyon süresi / clearing (sn)",
+        "engagementRounds": "Atış sayısı / engagement rounds",
+        "decisionAccuracy": "Decision accuracy (%)",
+        "hitsTaken": "Alınan vuruş",
+        "lethalHits": "Öldürücü vuruş",
+        "nonLethalHits": "Öldürücü olmayan",
+        "friendlyCasualties": "Dost kaybı",
+        "timeToFirstEngagement": "İlk atış süresi (sn)",
+        "coverUtilization": "Siper kullanımı %",
+        "hitTakenRatio": "Hit/taken ratio (otomatik)",
+        "hitTakenRatioPreview": "Hit/taken ratio (verilen:alınan): {{ratio}}",
+        "operationNote": "Operasyon notu",
+        "operationNotePlaceholder": "Senaryo değerlendirmesi, öğrenilen dersler, #etiketler…",
+        "debriefNotes": "Debrief notes",
+        "debriefNotesPlaceholder": "Operasyon sonrası analiz, etik angajman değerlendirmesi, takım iletişimi…",
+        "selfTcccApplied": "Ateş altında turnike / TCCC uygulama",
+        "submit": "FOF kaydını onayla"
+      },
+      "preview": {
+        "imageAlt": "FOF",
+        "opfor": "OPFOR: {{count}}",
+        "hitsTaken": "Alınan vuruş: {{count}}",
+        "lethalNonLethal": "Öldürücü / öldürücü olmayan: {{lethal}} / {{nonLethal}}"
+      },
+      "options": {
+        "scenarioType": {
+          "active_shooter": "Aktif nişancı",
+          "hostage_rescue": "Rehine kurtarma",
+          "vip_protection": "VIP koruma",
+          "hvt_raid": "HVT baskını",
+          "barricaded_suspect": "Barikatlı şüpheli",
+          "vehicle_interdiction": "Araç müdahalesi",
+          "tubular_assault": "Boru / tünel baskını",
+          "low_light_nvg": "Düşük ışık · NVG",
+          "cbrn_threat": "CBRN tehdidi",
+          "mass_casualty_mascal": "Kitlesel yaralanma (MASCAL)",
+          "custom": "[+] Özel senaryo"
+        },
+        "simSystem": {
+          "simunition": "Simunition",
+          "airsoft": "Airsoft",
+          "miles": "MILES",
+          "custom": "[+] Özel simülasyon"
+        },
+        "engagementType": {
+          "one_on_one": "Birebir",
+          "team": "Takım",
+          "ambush": "Pusu",
+          "multi_team": "Çoklu takım",
+          "reactive": "Reaktif angajman"
+        }
+      },
+      "errors": {
+        "blue_on_blue": "Mavi-mavi / blue on blue",
+        "muzzle_flagging": "Namlu ihlali / muzzle flagging",
+        "slow_breach": "Yavaş kırma / slow breach"
+      },
+      "validation": {
+        "sessionRequired": "Oturum gerekli",
+        "channelDisconnected": "Veri kanalı kesildi · yeniden dene",
+        "scenarioRequired": "Senaryo tipi gerekli",
+        "customScenarioRequired": "Özel senaryo adı gerekli",
+        "simSystemRequired": "Simülasyon sistemi gerekli",
+        "customSimRequired": "Özel sim sistemi gerekli",
+        "durationRequired": "Simülasyon süresi zorunlu · sn > 0",
+        "roundsRequired": "Atış sayısı zorunlu · engagement rounds > 0",
+        "engagementRequired": "Angajman türü gerekli",
+        "accuracyRequired": "Decision accuracy 0–100 gerekli",
+        "debriefRequired": "Debrief notes gerekli"
+      },
+      "messages": {
+        "submitSuccess": "FOF kaydı aktarıldı · range_logs",
+        "submitFailed": "FOF kayıt başarısız · yeniden dene{{hint}}",
+        "permissionDenied": " · yetki / kurallar"
+      },
+      "history": {
+        "title": "Geçmiş FOF kayıtları · filtreleme",
+        "syncMeta": "range_logs · canlı senkron · {{filtered}}/{{total}} kayıt",
+        "filterBar": "Filtreleme barı",
+        "scenarioType": "Senaryo tipi",
+        "simSystem": "Simülasyon",
+        "engagementType": "Angajman türü",
+        "all": "Tümü",
+        "syncing": "Senkron…",
+        "empty": "FOF kaydı yok",
+        "noFilterResults": "Filtre sonucu yok",
+        "downloadFiltered": "Filtreleneni indir",
+        "downloadAll": "Tümünü indir",
+        "preparingPdf": "Hazırlanıyor…",
+        "columns": {
+          "date": "Tarih",
+          "engagement": "Angajman",
+          "scenario": "Senaryo",
+          "duration": "Süre",
+          "decision": "Karar %",
+          "hitTaken": "Hit/taken",
+          "success": "Başarı %",
+          "report": "Rapor"
+        },
+        "detail": {
+          "title": "FOF tactical performance report · detay",
+          "sim": "Sim",
+          "opfor": "OPFOR",
+          "hits": "Vuruş",
+          "hitsFormat": "{{lethal}} / {{nonLethal}} / alınan {{taken}}",
+          "firstShot": "İlk atış",
+          "coverUtilization": "Siper kullanımı",
+          "friendlyCasualties": "Dost kaybı",
+          "blueOnBlue": "Blue-on-blue",
+          "selfTccc": "TCCC (ateş altında)",
+          "yes": "Evet",
+          "no": "Hayır",
+          "applied": "Uygulandı",
+          "meteo": "Meteo-data (kayıt anı)",
+          "tacticalErrors": "Taktik hatalar · {{count}} kayıt",
+          "debriefNotes": "Debrief notes",
+          "noDebriefNotes": "Debrief notu kayıtlı değil.",
+          "operationNote": "Operasyon notu",
+          "noOperationNote": "Operasyon notu kayıtlı değil."
+        },
+        "filterSummary": {
+          "scenario": "Senaryo: {{value}}",
+          "sim": "Sim: {{value}}",
+          "engagement": "Angajman: {{value}}"
+        },
+        "meteo": {
+          "temperature": "Sıcaklık",
+          "wind": "Rüzgar",
+          "humidity": "Nem",
+          "location": "Konum",
+          "noRecord": "Kayıt yok"
+        }
+      }
     },
     "vbss": {
       "title": "VBSS",

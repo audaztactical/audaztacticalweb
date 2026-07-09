@@ -1,5 +1,6 @@
 import { Fragment, useMemo, useState } from 'react'
 import { ChevronDown, FileDown } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import TacticalPanel from '../ui/TacticalPanel'
 import { useAuth } from '../../context/AuthContext'
 import { generateFofTacticalReportPdf } from '../../lib/fofTacticalReportPdf'
@@ -10,30 +11,35 @@ import {
   extractFofSimSystemOptions,
   filterFofLogs,
   formatFofCoverUtilization,
-  formatFofDateCell,
   formatFofDuration,
-  formatFofFilterSummary,
   formatFofTimeToFirstEngagement,
   getFofBlueOnBlue,
-  getFofDebriefNotes,
   getFofDecisionAccuracy,
-  getFofEngagementType,
   getFofFriendlyCasualties,
   getFofHitTakenRatioLabel,
   getFofHitsTaken,
   getFofLethalHits,
   getFofNonLethalHits,
-  getFofOperationNote,
   getFofOpforCount,
-  getFofScenarioType,
   getFofSelfTcccApplied,
-  getFofSimSystem,
-  getFofTacticalErrors,
   isFofFilterActive,
   selectFofLogs,
 } from '../../lib/fofLogRegistry'
-import { formatMeteoOverviewRows, getLogMeteoData } from '../../lib/meteoDataCapture'
+import { getLogMeteoData } from '../../lib/meteoDataCapture'
 import { formatSuccessPercentCell } from '../../lib/trainingSuccessScore'
+import {
+  formatFofDateCellDisplay,
+  formatFofEngagementTypeDisplay,
+  formatFofDebriefNotesDisplay,
+  formatFofFilterSummaryDisplay,
+  formatFofMeteoRowsDisplay,
+  formatFofOperationNoteDisplay,
+  formatFofSelectFieldDisplay,
+  formatFofSelfTcccDisplay,
+  formatFofTacticalErrorsDisplay,
+  formatFofYesNoDisplay,
+  trainingLocale,
+} from '../../lib/trainingDisplayText'
 
 const filterSelectClass =
   'dossier-blood-select min-w-[8.5rem] flex-1 rounded border border-accent/35 bg-app-bg py-1.5 pl-2 pr-7 font-mono-technical text-[9px] uppercase text-app-text outline-none focus:border-accent/60'
@@ -48,6 +54,7 @@ const FILTER_INITIAL = {
  * @param {{ rangeLogs: Record<string, unknown>[]; loading?: boolean }} props
  */
 export default function FofLogRegistry({ rangeLogs, loading = false }) {
+  const { t } = useTranslation('training')
   const { userData } = useAuth()
   const [filters, setFilters] = useState(FILTER_INITIAL)
   const [expandedId, setExpandedId] = useState(/** @type {string | null} */ (null))
@@ -69,7 +76,7 @@ export default function FofLogRegistry({ rangeLogs, loading = false }) {
         simSystemKey: filters.simSystemKey,
         engagementType: filters.engagementType,
       }),
-    [fofLogs, filters]
+    [fofLogs, filters],
   )
 
   const patchFilter = (/** @type {Partial<typeof FILTER_INITIAL>} */ next) => {
@@ -98,7 +105,7 @@ export default function FofLogRegistry({ rangeLogs, loading = false }) {
         logs: filtered,
         operator: userData,
         filterActive,
-        filterLabel: formatFofFilterSummary(filters),
+        filterLabel: formatFofFilterSummaryDisplay(filters),
       })
     } finally {
       setBulkPdfBusy(false)
@@ -106,10 +113,10 @@ export default function FofLogRegistry({ rangeLogs, loading = false }) {
   }
 
   const bulkButtonLabel = bulkPdfBusy
-    ? 'HAZIRLANIYOR…'
+    ? t('sectors.fof.history.preparingPdf')
     : filterActive
-      ? 'FİLTRELENENİ İNDİR'
-      : 'TÜMÜNÜ İNDİR'
+      ? t('sectors.fof.history.downloadFiltered')
+      : t('sectors.fof.history.downloadAll')
 
   return (
     <TacticalPanel className="relative border-accent/20 bg-app-bg/95 p-0">
@@ -122,10 +129,10 @@ export default function FofLogRegistry({ rangeLogs, loading = false }) {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-accent/90">
-              GEÇMİŞ FOF KAYITLARI · FİLTRELEME
+              {t('sectors.fof.history.title')}
             </p>
             <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-app-text/45">
-              range_logs · canlı senkron · {filtered.length}/{fofLogs.length} KAYIT
+              {t('sectors.fof.history.syncMeta', { filtered: filtered.length, total: fofLogs.length })}
             </p>
           </div>
           {filtered.length > 0 ? (
@@ -144,17 +151,19 @@ export default function FofLogRegistry({ rangeLogs, loading = false }) {
 
       <div className="border-b border-accent/12 bg-app-bg px-3 py-3">
         <p className="mb-2 font-mono-technical text-[7px] font-bold uppercase tracking-[0.24em] text-app-text/55">
-          FİLTRELEME BARİ
+          {t('sectors.fof.history.filterBar')}
         </p>
         <div className="flex flex-wrap gap-2">
           <label className="flex min-w-[10rem] flex-1 flex-col gap-0.5">
-            <span className="font-mono-technical text-[7px] uppercase text-app-text/45">SENARYO TİPİ</span>
+            <span className="font-mono-technical text-[7px] uppercase text-app-text/45">
+              {t('sectors.fof.history.scenarioType')}
+            </span>
             <select
               className={filterSelectClass}
               value={filters.scenarioTypeKey}
               onChange={(e) => patchFilter({ scenarioTypeKey: e.target.value })}
             >
-              <option value="ALL">TÜMÜ</option>
+              <option value="ALL">{t('sectors.fof.history.all')}</option>
               {scenarioOptions.map((o) => (
                 <option key={o.key} value={o.key}>
                   {o.label}
@@ -163,13 +172,15 @@ export default function FofLogRegistry({ rangeLogs, loading = false }) {
             </select>
           </label>
           <label className="flex min-w-[10rem] flex-1 flex-col gap-0.5">
-            <span className="font-mono-technical text-[7px] uppercase text-app-text/45">SİMÜLASYON</span>
+            <span className="font-mono-technical text-[7px] uppercase text-app-text/45">
+              {t('sectors.fof.history.simSystem')}
+            </span>
             <select
               className={filterSelectClass}
               value={filters.simSystemKey}
               onChange={(e) => patchFilter({ simSystemKey: e.target.value })}
             >
-              <option value="ALL">TÜMÜ</option>
+              <option value="ALL">{t('sectors.fof.history.all')}</option>
               {simOptions.map((o) => (
                 <option key={o.key} value={o.key}>
                   {o.label}
@@ -178,13 +189,15 @@ export default function FofLogRegistry({ rangeLogs, loading = false }) {
             </select>
           </label>
           <label className="flex min-w-[10rem] flex-1 flex-col gap-0.5">
-            <span className="font-mono-technical text-[7px] uppercase text-app-text/45">ANGAJMAN TÜRÜ</span>
+            <span className="font-mono-technical text-[7px] uppercase text-app-text/45">
+              {t('sectors.fof.history.engagementType')}
+            </span>
             <select
               className={filterSelectClass}
               value={filters.engagementType}
               onChange={(e) => patchFilter({ engagementType: e.target.value })}
             >
-              <option value="ALL">TÜMÜ</option>
+              <option value="ALL">{t('sectors.fof.history.all')}</option>
               {engagementOptions.map((o) => (
                 <option key={o.key} value={o.key}>
                   {o.label}
@@ -197,24 +210,26 @@ export default function FofLogRegistry({ rangeLogs, loading = false }) {
 
       <div className="ilws-green-scroll max-h-[min(58vh,560px)] overflow-auto">
         {loading ? (
-          <p className="p-8 text-center font-mono-technical text-[10px] uppercase text-app-text/55">SENKRON…</p>
+          <p className="p-8 text-center font-mono-technical text-[10px] uppercase text-app-text/55">
+            {t('sectors.fof.history.syncing')}
+          </p>
         ) : filtered.length === 0 ? (
           <p className="p-8 text-center font-mono-technical text-[10px] uppercase text-app-text/45">
-            {fofLogs.length === 0 ? 'FOF_KAYDI_YOK' : 'FİLTRE_SONUCU_YOK'}
+            {fofLogs.length === 0 ? t('sectors.fof.history.empty') : t('sectors.fof.history.noFilterResults')}
           </p>
         ) : (
           <table className="w-full min-w-[980px] border-collapse text-left">
             <thead className="sticky top-0 z-[2] bg-app-bg">
               <tr className="border-b border-accent/25 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-accent/80">
                 <th className="w-8 px-2 py-2" aria-hidden />
-                <th className="px-3 py-2">TARİH</th>
-                <th className="px-3 py-2">ANGAJMAN</th>
-                <th className="px-3 py-2">SENARYO</th>
-                <th className="px-3 py-2">SÜRE</th>
-                <th className="px-3 py-2">KARAR %</th>
-                <th className="px-3 py-2">HIT/TAKEN</th>
-                <th className="px-3 py-2">BAŞARI %</th>
-                <th className="px-3 py-2 text-right">RAPOR</th>
+                <th className="px-3 py-2">{t('sectors.fof.history.columns.date')}</th>
+                <th className="px-3 py-2">{t('sectors.fof.history.columns.engagement')}</th>
+                <th className="px-3 py-2">{t('sectors.fof.history.columns.scenario')}</th>
+                <th className="px-3 py-2">{t('sectors.fof.history.columns.duration')}</th>
+                <th className="px-3 py-2">{t('sectors.fof.history.columns.decision')}</th>
+                <th className="px-3 py-2">{t('sectors.fof.history.columns.hitTaken')}</th>
+                <th className="px-3 py-2">{t('sectors.fof.history.columns.success')}</th>
+                <th className="px-3 py-2 text-right">{t('sectors.fof.history.columns.report')}</th>
               </tr>
             </thead>
             <tbody>
@@ -222,6 +237,7 @@ export default function FofLogRegistry({ rangeLogs, loading = false }) {
                 const id = String(row.id)
                 const open = expandedId === id
                 const errorCount = countFofTacticalErrors(row)
+                const scenarioLabel = formatFofSelectFieldDisplay(row, 'scenarioType')
 
                 return (
                   <Fragment key={id}>
@@ -246,18 +262,15 @@ export default function FofLogRegistry({ rangeLogs, loading = false }) {
                         />
                       </td>
                       <td className="whitespace-nowrap px-3 py-2 tabular-nums text-app-text/70">
-                        {formatFofDateCell(row)}
+                        {formatFofDateCellDisplay(row)}
                       </td>
-                      <td className="px-3 py-2 text-app-text/90">{getFofEngagementType(row)}</td>
-                      <td
-                        className="max-w-[130px] truncate px-3 py-2 text-app-text"
-                        title={getFofScenarioType(row)}
-                      >
-                        {getFofScenarioType(row)}
+                      <td className="px-3 py-2 text-app-text/90">{formatFofEngagementTypeDisplay(row)}</td>
+                      <td className="max-w-[130px] truncate px-3 py-2 text-app-text" title={scenarioLabel}>
+                        {scenarioLabel}
                       </td>
                       <td className="px-3 py-2 tabular-nums text-[#5ec8ff]">{formatFofDuration(row)}</td>
                       <td className="px-3 py-2 tabular-nums text-accent">
-                        %{getFofDecisionAccuracy(row).toLocaleString('tr-TR')}
+                        %{getFofDecisionAccuracy(row).toLocaleString(trainingLocale())}
                       </td>
                       <td className="px-3 py-2 tabular-nums text-app-text">
                         {getFofHitTakenRatioLabel(row)}
@@ -294,58 +307,77 @@ export default function FofLogRegistry({ rangeLogs, loading = false }) {
                           <div className="min-h-0 overflow-hidden">
                             <div className="mx-3 mb-3 mt-1 rounded border border-accent/20 bg-black/50 p-3 font-mono-technical text-[8px] uppercase">
                               <p className="mb-2 font-bold tracking-wider text-accent/85">
-                                FOF TACTICAL PERFORMANCE REPORT · DETAY
+                                {t('sectors.fof.history.detail.title')}
                               </p>
                               <div className="mb-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                                 <p className="rounded border border-[#00b4ff]/25 bg-[#00b4ff]/5 px-2 py-1.5">
-                                  <span className="text-app-text/55">SİM · </span>
-                                  <span className="text-[#5ec8ff]">{getFofSimSystem(row)}</span>
+                                  <span className="text-app-text/55">
+                                    {t('sectors.fof.history.detail.sim')} ·{' '}
+                                  </span>
+                                  <span className="text-[#5ec8ff]">
+                                    {formatFofSelectFieldDisplay(row, 'simSystem')}
+                                  </span>
                                 </p>
                                 <p className="rounded border border-[#00b4ff]/25 bg-[#00b4ff]/5 px-2 py-1.5">
-                                  <span className="text-app-text/55">OPFOR · </span>
+                                  <span className="text-app-text/55">
+                                    {t('sectors.fof.history.detail.opfor')} ·{' '}
+                                  </span>
                                   <span className="text-[#5ec8ff]">{getFofOpforCount(row)}</span>
                                 </p>
                                 <p className="rounded border border-accent/25 bg-accent/5 px-2 py-1.5">
-                                  <span className="text-app-text/55">VURUŞ · </span>
+                                  <span className="text-app-text/55">
+                                    {t('sectors.fof.history.detail.hits')} ·{' '}
+                                  </span>
                                   <span className="text-accent">
-                                    {getFofLethalHits(row)} / {getFofNonLethalHits(row)} / alınan{' '}
-                                    {getFofHitsTaken(row)}
+                                    {t('sectors.fof.history.detail.hitsFormat', {
+                                      lethal: getFofLethalHits(row),
+                                      nonLethal: getFofNonLethalHits(row),
+                                      taken: getFofHitsTaken(row),
+                                    })}
                                   </span>
                                 </p>
                                 <p className="rounded border border-accent/25 bg-accent/5 px-2 py-1.5">
-                                  <span className="text-app-text/55">İLK ATIŞ · </span>
+                                  <span className="text-app-text/55">
+                                    {t('sectors.fof.history.detail.firstShot')} ·{' '}
+                                  </span>
                                   <span className="text-accent">{formatFofTimeToFirstEngagement(row)}</span>
                                 </p>
                               </div>
                               <div className="mb-3 grid gap-2 sm:grid-cols-2">
                                 <p className="text-app-text/70">
-                                  SİPER KULLANIMI:{' '}
+                                  {t('sectors.fof.history.detail.coverUtilization')}:{' '}
                                   <span className="text-app-text">{formatFofCoverUtilization(row)}</span>
                                 </p>
                                 <p className="text-app-text/70">
-                                  DOST KAYBI:{' '}
+                                  {t('sectors.fof.history.detail.friendlyCasualties')}:{' '}
                                   <span className="text-red-300">{getFofFriendlyCasualties(row)}</span>
                                 </p>
                                 <p className="text-app-text/70">
-                                  BLUE-ON-BLUE:{' '}
+                                  {t('sectors.fof.history.detail.blueOnBlue')}:{' '}
                                   <span className={getFofBlueOnBlue(row) ? 'text-red-400' : 'text-app-text/55'}>
-                                    {getFofBlueOnBlue(row) ? 'EVET' : 'HAYIR'}
+                                    {formatFofYesNoDisplay(getFofBlueOnBlue(row))}
                                   </span>
                                 </p>
                                 <p className="text-app-text/70">
-                                  TCCC (ATEŞ ALTINDA):{' '}
-                                  <span className={getFofSelfTcccApplied(row) ? 'text-green-400' : 'text-app-text/55'}>
-                                    {getFofSelfTcccApplied(row) ? 'UYGULANDI' : 'HAYIR'}
+                                  {t('sectors.fof.history.detail.selfTccc')}:{' '}
+                                  <span
+                                    className={
+                                      getFofSelfTcccApplied(row) ? 'text-green-400' : 'text-app-text/55'
+                                    }
+                                  >
+                                    {formatFofSelfTcccDisplay(getFofSelfTcccApplied(row))}
                                   </span>
                                 </p>
                               </div>
                               {(() => {
                                 const meteo = getLogMeteoData(row)
                                 if (!meteo) return null
-                                const rows = formatMeteoOverviewRows(meteo)
+                                const rows = formatFofMeteoRowsDisplay(meteo)
                                 return (
                                   <div className="mb-3 rounded border border-sky-500/25 bg-sky-500/5 px-2 py-2">
-                                    <p className="mb-1 text-[7px] font-bold text-sky-400/85">METEO-DATA (KAYIT ANI)</p>
+                                    <p className="mb-1 text-[7px] font-bold text-sky-400/85">
+                                      {t('sectors.fof.history.detail.meteo')}
+                                    </p>
                                     <ul className="space-y-0.5 text-app-text/90">
                                       {rows.map(([label, value]) => (
                                         <li key={label}>
@@ -360,10 +392,10 @@ export default function FofLogRegistry({ rangeLogs, loading = false }) {
                               {errorCount > 0 ? (
                                 <div className="mb-3 rounded border border-red-500/30 bg-red-950/20 px-2 py-2">
                                   <p className="mb-1 text-[7px] font-bold text-red-400/90">
-                                    TAKTİK HATALAR · {errorCount} KAYIT
+                                    {t('sectors.fof.history.detail.tacticalErrors', { count: errorCount })}
                                   </p>
                                   <ul className="list-inside list-disc space-y-0.5 text-red-200/90">
-                                    {getFofTacticalErrors(row).map((err) => (
+                                    {formatFofTacticalErrorsDisplay(row).map((err) => (
                                       <li key={err} className="normal-case">
                                         {err}
                                       </li>
@@ -372,12 +404,20 @@ export default function FofLogRegistry({ rangeLogs, loading = false }) {
                                 </div>
                               ) : null}
                               <div className="mb-3 rounded border border-white/10 bg-app-bg px-2 py-2">
-                                <p className="mb-1 text-[7px] text-app-text/45">DEBRIEF NOTES</p>
-                                <p className="normal-case leading-relaxed text-app-text/90">{getFofDebriefNotes(row)}</p>
+                                <p className="mb-1 text-[7px] text-app-text/45">
+                                  {t('sectors.fof.history.detail.debriefNotes')}
+                                </p>
+                                <p className="normal-case leading-relaxed text-app-text/90">
+                                  {formatFofDebriefNotesDisplay(row)}
+                                </p>
                               </div>
                               <div className="rounded border border-white/10 bg-app-bg px-2 py-2">
-                                <p className="mb-1 text-[7px] text-app-text/45">OPERASYON NOTU</p>
-                                <p className="normal-case leading-relaxed text-app-text/90">{getFofOperationNote(row)}</p>
+                                <p className="mb-1 text-[7px] text-app-text/45">
+                                  {t('sectors.fof.history.detail.operationNote')}
+                                </p>
+                                <p className="normal-case leading-relaxed text-app-text/90">
+                                  {formatFofOperationNoteDisplay(row)}
+                                </p>
                               </div>
                             </div>
                           </div>

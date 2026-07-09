@@ -22,6 +22,14 @@ import {
   getCqbTacticalErrorIds,
   getCqbTacticalErrors,
 } from './cqbLogRegistry'
+import { FOF_CUSTOM } from './fofOptions'
+import { FOF_TACTICAL_ERROR_OPTIONS } from './fofTacticalErrors'
+import {
+  getFofDebriefNotes,
+  getFofLogTimestampMs,
+  getFofOperationNote,
+  getFofTacticalErrorIds,
+} from './fofLogRegistry'
 import { formatMeteoOverviewRows } from './meteoDataCapture'
 
 /** @typedef {import('../components/training/trainingCategories').TrainingCategory} TrainingCategory */
@@ -512,4 +520,185 @@ export function formatCqbSelectFieldDisplay(row, field) {
           ? 'breachingType'
           : 'doorState'
   return formatCqbOptionLabel(optionType, key, key)
+}
+
+/** @param {'scenarioType' | 'simSystem' | 'engagementType'} optionType */
+function fofOptionKey(optionType, optionId) {
+  const id = String(optionId ?? '').trim()
+  if (id === FOF_CUSTOM) return `sectors.fof.options.${optionType}.custom`
+  return `sectors.fof.options.${optionType}.${id}`
+}
+
+/**
+ * @param {'scenarioType' | 'simSystem' | 'engagementType'} optionType
+ * @param {string} optionId
+ * @param {string} [fallback]
+ */
+export function formatFofOptionLabel(optionType, optionId, fallback = '') {
+  const id = String(optionId ?? '').trim()
+  if (!id) return fallback || '—'
+  return i18n.t(fofOptionKey(optionType, id), {
+    ns: 'training',
+    defaultValue: fallback || id,
+  })
+}
+
+/** @param {string} errorId */
+export function formatFofTacticalErrorLabel(errorId) {
+  const id = String(errorId ?? '').trim()
+  if (!id) return '—'
+  const fallback = FOF_TACTICAL_ERROR_OPTIONS.find((o) => o.id === id)?.label ?? id
+  return i18n.t(`sectors.fof.errors.${id}`, { ns: 'training', defaultValue: fallback })
+}
+
+/**
+ * @param {{ key: string, params?: Record<string, unknown> } | null | undefined} reason
+ */
+export function formatFofSubmitBlockedReason(reason) {
+  if (!reason?.key) return null
+  return i18n.t(`sectors.fof.validation.${reason.key}`, {
+    ns: 'training',
+    ...(reason.params ?? {}),
+  })
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ */
+export function formatFofDateCellDisplay(row) {
+  const ms = getFofLogTimestampMs(row)
+  if (!ms) return '—'
+  return new Date(ms).toLocaleString(trainingLocale(), {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  })
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ */
+export function formatFofEngagementTypeDisplay(row) {
+  const label = String(row.engagementTypeLabel ?? '').trim()
+  if (label) return label
+  const key = String(row.engagementType ?? '').trim()
+  if (!key) return '—'
+  return formatFofOptionLabel('engagementType', key, key)
+}
+
+/** @type {Record<string, string>} */
+const FOF_CUSTOM_FIELD_MAP = {
+  scenarioType: 'customScenarioType',
+  simSystem: 'customSimSystem',
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ * @param {'scenarioType' | 'simSystem'} field
+ */
+export function formatFofSelectFieldDisplay(row, field) {
+  const storedLabel = String(row[field] ?? '').trim()
+  if (storedLabel && storedLabel !== 'Özel' && storedLabel !== '—') return storedLabel
+  const keyField = `${field}Key`
+  const key = String(row[keyField] ?? row[field] ?? '').trim()
+  const customField = FOF_CUSTOM_FIELD_MAP[field]
+  const custom = customField ? String(row[customField] ?? '').trim() : ''
+  if (key === FOF_CUSTOM) {
+    return custom || i18n.t('sectors.fof.options.scenarioType.custom', { ns: 'training' })
+  }
+  if (!key) return '—'
+  return formatFofOptionLabel(field, key, key)
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ */
+export function formatFofOperationNoteDisplay(row) {
+  const note = getFofOperationNote(row)
+  if (note === 'Operasyon notu kayıtlı değil.') {
+    return i18n.t('sectors.fof.history.detail.noOperationNote', { ns: 'training' })
+  }
+  return note
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ */
+export function formatFofDebriefNotesDisplay(row) {
+  const note = getFofDebriefNotes(row)
+  if (note === 'Debrief notu kayıtlı değil.') {
+    return i18n.t('sectors.fof.history.detail.noDebriefNotes', { ns: 'training' })
+  }
+  return note
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ */
+export function formatFofTacticalErrorsDisplay(row) {
+  return getFofTacticalErrorIds(row).map((id) => formatFofTacticalErrorLabel(id))
+}
+
+/**
+ * @param {{ scenarioTypeKey?: string, simSystemKey?: string, engagementType?: string }} filters
+ */
+export function formatFofFilterSummaryDisplay(filters) {
+  const parts = []
+  if (filters.scenarioTypeKey && filters.scenarioTypeKey !== 'ALL') {
+    parts.push(
+      i18n.t('sectors.fof.history.filterSummary.scenario', {
+        ns: 'training',
+        value: filters.scenarioTypeKey,
+      }),
+    )
+  }
+  if (filters.simSystemKey && filters.simSystemKey !== 'ALL') {
+    parts.push(
+      i18n.t('sectors.fof.history.filterSummary.sim', {
+        ns: 'training',
+        value: filters.simSystemKey,
+      }),
+    )
+  }
+  if (filters.engagementType && filters.engagementType !== 'ALL') {
+    parts.push(
+      i18n.t('sectors.fof.history.filterSummary.engagement', {
+        ns: 'training',
+        value: filters.engagementType,
+      }),
+    )
+  }
+  return parts.join(' · ')
+}
+
+/** @type {Record<string, string>} */
+const FOF_METEO_LABEL_KEYS = {
+  Sıcaklık: 'temperature',
+  Rüzgar: 'wind',
+  Nem: 'humidity',
+  Konum: 'location',
+}
+
+/**
+ * @param {import('./meteoDataCapture').MeteoSnapshot | null | undefined} meteo
+ */
+export function formatFofMeteoRowsDisplay(meteo) {
+  const noRecord = i18n.t('sectors.fof.history.meteo.noRecord', { ns: 'training' })
+  return formatMeteoOverviewRows(meteo).map(([label, value]) => {
+    const key = FOF_METEO_LABEL_KEYS[label]
+    const displayLabel = key
+      ? i18n.t(`sectors.fof.history.meteo.${key}`, { ns: 'training' })
+      : label
+    const displayValue = value === 'Kayıt yok' ? noRecord : value
+    return [displayLabel, displayValue]
+  })
+}
+
+/** @param {boolean} value */
+export function formatFofYesNoDisplay(value) {
+  return i18n.t(`sectors.fof.history.detail.${value ? 'yes' : 'no'}`, { ns: 'training' })
+}
+
+/** @param {boolean} value */
+export function formatFofSelfTcccDisplay(value) {
+  return i18n.t(`sectors.fof.history.detail.${value ? 'applied' : 'no'}`, { ns: 'training' })
 }
