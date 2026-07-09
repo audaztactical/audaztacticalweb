@@ -902,7 +902,279 @@
     },
     "tccc": {
       "title": "TCCC",
-      "sectorLabel": "MED-05 · Tactical field care"
+      "sectorLabel": "MED-05 · Tactical field care",
+      "tabs": {
+        "aria": "TCCC terminal view",
+        "hud": "Live HUD",
+        "pdf": "PDF form",
+        "entry": "Enter record",
+        "observed": "My records"
+      },
+      "casualtyStatus": {
+        "label": "Casualty status",
+        "stable": "Stable",
+        "eksKia": "EKS / KIA",
+        "eksKiaCode": "EKS_KIA",
+        "stableCode": "STABLE"
+      },
+      "hud": {
+        "kicker": "[ TCCC · MARCH HUD ]",
+        "title": "Tactical medical evaluation — live terminal",
+        "subtitle": "Instructor MARCH scores and critical errors stream live · no operator data entry",
+        "sessionRequired": "Session required",
+        "syncDisconnected": "Synchronization lost.",
+        "logChannelNotReady": "Record channel not ready.",
+        "logChannelSyncing": "Record channel syncing…",
+        "logChannelDisconnected": "Record channel lost · {{message}}",
+        "groupModeRequired": {
+          "label": "[ GROUP MODE REQUIRED ]",
+          "body": "Select Group as the training type above for the live MARCH HUD. Instructor evaluation only flows to this screen in a group session."
+        },
+        "groupVerifying": "Verifying group…",
+        "groupMembership": {
+          "label": "[ GROUP MEMBERSHIP ]",
+          "body": "You must belong to a tactical group for live evaluation.",
+          "settingsLink": "My tactical team →"
+        },
+        "dataChannelDisconnected": "Data channel lost · {{message}}",
+        "liveIntervention": "🔴 Live intervention",
+        "syncConnecting": "Connecting sync…",
+        "marchEvalReceived": "MARCH evaluation received",
+        "evalPending": "Awaiting instructor evaluation",
+        "overallScore": "Overall score: {{score}}/10",
+        "criticalErrors": "· {{count}} critical error(s)",
+        "interventionDuration": "Intervention duration",
+        "chronoActive": "Chronometer active",
+        "targetDuration": "Target intervention duration",
+        "targetDurationHint": "Target duration set by instructor (sec)",
+        "noTimedSession": "No timed session defined",
+        "phasePending": "Awaiting evaluation…",
+        "phaseAverage": "Phase average",
+        "critical": "Critical",
+        "criticalError": "Critical error",
+        "observationNotes": {
+          "title": "Observation notes",
+          "desc": "Instructor · MARCH operationalNotes · live",
+          "empty": "No observation notes yet — they appear here when the instructor logs a record.",
+          "noNoteForPhase": "No note entered for this phase."
+        },
+        "firestoreMeta": "Firestore · tccc_evaluations · onSnapshot",
+        "firestoreSession": " · session {{id}}"
+      },
+      "pdfPanel": {
+        "kicker": "[ TCCC MARCH OBSERVATION FORM · OBS-V1 ]",
+        "description": "Download the MARCH protocol observation form. Have the observer mark M/A/R/C/H phases, critical error (KIA), and intervention chips; then create the digital record via the Enter record tab.",
+        "bulletPhases": "· 5 MARCH phases · score 1–10",
+        "bulletKia": "· KIA toggle + tactical intervention checklist",
+        "bulletSignature": "· Observer signature field",
+        "download": "Download PDF form",
+        "downloaded": "Form downloaded · {{formId}}",
+        "pdfFailed": "Could not generate PDF"
+      },
+      "observedEval": {
+        "pdfBanner": {
+          "kicker": "[ PDF OBSERVATION FORM · MARCH ]",
+          "hint": "Download the form, have the observer mark MARCH phases, then enter results here.",
+          "download": "Download PDF form"
+        },
+        "form": {
+          "metaPanel": "Observation meta · MARCH metrics",
+          "observerName": "Observer name *",
+          "observerCallsign": "Observer callsign",
+          "observedDate": "Field date *",
+          "timedIntervention": "Timed intervention",
+          "targetInterventionSec": "Target intervention duration (sec)",
+          "phaseAverages": "MARCH phase averages",
+          "overallScore": "Overall score: {{score}}",
+          "kiaPhaseCount": "KIA phases: {{count}}",
+          "casualtyStatus": "Casualty status: {{status}}",
+          "phaseScoresPanel": "MARCH phase scores · analysis",
+          "tacticalIntervention": "Tactical intervention",
+          "generalOperationNote": "General operation note",
+          "generalOperationNotePlaceholder": "Intervention notes, coordination, #tags…",
+          "submit": "Confirm TCCC record",
+          "imageAlt": "TCCC"
+        },
+        "criticalFail": {
+          "toggle": "Critical error",
+          "active": "KIA active"
+        },
+        "validation": {
+          "observerNameRequired": "Observer name is required.",
+          "observedAtRequired": "Field date is required.",
+          "targetInterventionInvalid": "Target intervention duration is invalid.",
+          "criterionScoreRequired": "Select a valid score for {{phase}} · {{criterion}} ({{min}}–{{max}})."
+        },
+        "messages": {
+          "submitSuccess": "TCCC observation record transferred.",
+          "submitFailed": "Record failed",
+          "pdfDownloaded": "PDF downloaded · {{formId}}",
+          "pdfFailed": "Could not generate PDF"
+        },
+        "registry": {
+          "syncing": "Syncing records…",
+          "empty": "No observed TCCC records yet — download the PDF form and enter a record.",
+          "observerPrefix": "MARCH observation · {{name}}",
+          "casualtyUnstable": "Casualty status: EKS / KIA",
+          "overall": "Overall: {{score}}/10",
+          "success": "Success: {{percent}}%",
+          "target": "Target: {{seconds}}s",
+          "badgeUnverified": "Observation · unverified",
+          "badgeVerified": "Observation · verified"
+        }
+      },
+      "marchActions": {
+        "m": {
+          "tourniquet_ht": "Tourniquet (high & tight)",
+          "wound_pack": "Wound packing",
+          "hemostatic": "Hemostatic agent"
+        },
+        "a": {
+          "head_chin": "Head-chin lift",
+          "npa": "NPA placement"
+        },
+        "r": {
+          "chest_seal": "Chest seal",
+          "needle_decomp": "Needle decompression"
+        },
+        "c": {
+          "pulse_check": "Pulse check",
+          "iv_io": "IV/IO access"
+        },
+        "h": {
+          "thermal_blanket": "Thermal blanket",
+          "head_trauma": "Head injury assessment"
+        }
+      },
+      "drill": {
+        "metricsPanel": "TCCC metrics · clinical and tactical",
+        "clinicalPanel": "MARCH · additional clinical data",
+        "form": {
+          "casualtyType": "Casualty type *",
+          "casualtyTypePlaceholder": "— Casualty type —",
+          "interventionTime": "Intervention time (sec) *",
+          "procedurePerformed": "Procedure performed *",
+          "outcome": "Outcome *",
+          "outcomePlaceholder": "— Outcome —",
+          "tcccPhase": "TCCC phase *",
+          "tcccPhasePlaceholder": "— Phase —",
+          "customPhasePlaceholder": "Custom phase…",
+          "injuryType": "Injury type *",
+          "injuryTypePlaceholder": "— Injury —",
+          "tourniquetLocation": "Tourniquet location *",
+          "tourniquetLocationPlaceholder": "— Location —",
+          "customLocationPlaceholder": "Custom location…",
+          "evacWaiting": "Evacuation wait (min)",
+          "systolicBp": "Systolic BP",
+          "operationNote": "Operation note",
+          "submit": "Confirm TCCC record"
+        },
+        "validation": {
+          "sessionRequired": "Session required",
+          "casualtyTypeRequired": "Casualty type required",
+          "interventionTimeRequired": "Intervention time required · sec > 0",
+          "procedureRequired": "Procedure performed required",
+          "outcomeRequired": "Outcome required",
+          "tcccPhaseRequired": "TCCC phase required",
+          "customPhaseRequired": "Custom phase required",
+          "injuryTypeRequired": "Injury type required",
+          "tourniquetLocationRequired": "Tourniquet location required",
+          "customLocationRequired": "Custom location required"
+        },
+        "messages": {
+          "submitSuccess": "TCCC record transferred · tccc_logs",
+          "submitFailed": "TCCC record failed · retry{{hint}}"
+        },
+        "toggles": {
+          "chestSealApplied": "Chest seal",
+          "needleDecompression": "Needle decompression",
+          "hypothermiaBlanket": "Hypothermia blanket"
+        }
+      },
+      "options": {
+        "tcccPhase": {
+          "care_under_fire_cuf": "Care under fire (CUF)",
+          "tactical_field_care_tfc": "Tactical field care (TFC)",
+          "tactical_evacuation_care_tevac": "Tactical evacuation care (TEVAC)",
+          "custom": "Custom / other phase"
+        },
+        "injuryType": {
+          "extremity_bleeding": "Extremity bleeding (major hemorrhage)",
+          "thoracic_trauma": "Thoracic trauma / shrapnel (respiratory crisis)",
+          "polytrauma": "Polytrauma (all interventions required)"
+        },
+        "casualtyType": {
+          "combat": "Combat",
+          "accident": "Accident"
+        },
+        "procedure": {
+          "tourniquet": "Tourniquet",
+          "bandage": "Bandage / wound packing",
+          "airway": "Airway (NPA)"
+        },
+        "outcome": {
+          "successful": "Successful",
+          "failed": "Failed"
+        },
+        "tourniquetLocation": {
+          "right_arm": "Right arm",
+          "left_arm": "Left arm",
+          "right_leg": "Right leg",
+          "left_leg": "Left leg",
+          "none": "Not applied / none",
+          "custom": "Custom / other location"
+        }
+      },
+      "history": {
+        "title": "Past TCCC records · tactical health",
+        "syncMeta": "tccc_logs · live sync · {{filtered}}/{{total}} records",
+        "filterBar": "Filter bar",
+        "tcccPhase": "TCCC phase",
+        "all": "All",
+        "syncing": "Syncing…",
+        "empty": "No TCCC records",
+        "noFilterResults": "No filter results",
+        "downloadFiltered": "Download filtered",
+        "downloadAll": "Download all",
+        "preparingPdf": "Preparing…",
+        "columns": {
+          "date": "Date",
+          "injury": "Injury",
+          "tcccPhase": "TCCC phase",
+          "tourniquetLocation": "Tourniquet location",
+          "tourniquetTime": "Tourniquet time",
+          "evacWaiting": "Evacuation wait",
+          "systolicBp": "Systolic BP",
+          "march": "MARCH",
+          "successRate": "Success rate (%)",
+          "report": "Report"
+        },
+        "detail": {
+          "title": "TCCC detail panel · MARCH interventions",
+          "successRate": "Success rate:",
+          "injuryType": "Injury type:",
+          "tcccPhase": "TCCC phase:",
+          "tourniquetLocation": "Tourniquet location:",
+          "tourniquetTime": "Tourniquet time:",
+          "evacWaiting": "Evacuation wait:",
+          "systolicBp": "Systolic blood pressure:",
+          "tourniquetApplied": "Tourniquet applied:",
+          "woundPacking": "Wound packing:",
+          "npaInserted": "NPA tube:",
+          "chestSeal": "Chest seal:",
+          "needleDecompression": "Needle decompression:",
+          "hypothermiaBlanket": "Hypothermia blanket:",
+          "operationNote": "Operation note:",
+          "noOperationNote": "No operation note on file."
+        },
+        "bool": {
+          "yes": "Yes",
+          "no": "No"
+        },
+        "filterSummary": {
+          "phase": "Phase: {{value}}"
+        }
+      }
     },
     "egitim": {
       "title": "Training",

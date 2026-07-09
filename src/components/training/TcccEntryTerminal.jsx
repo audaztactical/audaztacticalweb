@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { Download, Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import tcccImg from '../../assets/tccc.webp'
 import TacticalPanel from '../ui/TacticalPanel'
 import { useAuth } from '../../context/AuthContext'
@@ -8,6 +9,10 @@ import { TCCC_MARCH_EVALUATION_PHASES, TCCC_PHASE_SUB_CRITERIA } from '../../lib
 import { TCCC_OBSERVED_EVAL_INITIAL_FORM } from '../../lib/tcccObservedEvalPayload'
 import { submitTcccObservedEval } from '../../lib/tcccObservedEvalSubmit'
 import { computeTcccEntryPreview } from '../../lib/tcccEntryPreview'
+import {
+  formatTcccCasualtyStatusCodeDisplay,
+  formatTcccObservedEvalValidationError,
+} from '../../lib/trainingDisplayText'
 import TrainingTerminalLayout from './layout/TrainingTerminalLayout'
 import TrainingTerminalPanel from './layout/TrainingTerminalPanel'
 import TrainingMetricGrid from './layout/TrainingMetricGrid'
@@ -24,6 +29,7 @@ import { inputClass, textareaClass, labelClass } from './layout/trainingTerminal
  * }} props
  */
 export default function TcccEntryTerminal({ addLog, onSubmitted, hidePdfBanner = false }) {
+  const { t } = useTranslation('training')
   const { user, userData } = useAuth()
   const uid = user?.uid ?? ''
   const operatorName = (userData?.callsign || user?.displayName || '').trim()
@@ -36,6 +42,7 @@ export default function TcccEntryTerminal({ addLog, onSubmitted, hidePdfBanner =
 
   const preview = useMemo(() => computeTcccEntryPreview(form), [form])
   const canSubmit = !preview.validationError && Boolean(uid)
+  const submitBlockedReason = formatTcccObservedEvalValidationError(preview.validationError)
 
   const patch = useCallback((/** @type {Partial<typeof form>} */ next) => {
     setForm((f) => ({ ...f, ...next }))
@@ -84,9 +91,9 @@ export default function TcccEntryTerminal({ addLog, onSubmitted, hidePdfBanner =
         username: userData?.username,
         displayName: user?.displayName ?? undefined,
       })
-      setMsg(`PDF indirildi · ${formId}`)
+      setMsg(t('sectors.tccc.observedEval.messages.pdfDownloaded', { formId }))
     } catch (err) {
-      setMsg(err instanceof Error ? err.message : 'PDF oluşturulamadı')
+      setMsg(err instanceof Error ? err.message : t('sectors.tccc.observedEval.messages.pdfFailed'))
     } finally {
       setPdfBusy(false)
     }
@@ -101,11 +108,11 @@ export default function TcccEntryTerminal({ addLog, onSubmitted, hidePdfBanner =
     try {
       await submitTcccObservedEval({ addLog, userId: uid, operatorName, form })
       setOk(true)
-      setMsg('TCCC gözlem kaydı aktarıldı.')
+      setMsg(t('sectors.tccc.observedEval.messages.submitSuccess'))
       setForm({ ...TCCC_OBSERVED_EVAL_INITIAL_FORM })
       onSubmitted?.()
     } catch (err) {
-      setMsg(err instanceof Error ? err.message : 'Kayıt başarısız')
+      setMsg(err instanceof Error ? err.message : t('sectors.tccc.observedEval.messages.submitFailed'))
     } finally {
       setSaving(false)
     }
@@ -117,10 +124,10 @@ export default function TcccEntryTerminal({ addLog, onSubmitted, hidePdfBanner =
     <TrainingTerminalLayout
       onSubmit={handleSubmit}
       left={
-        <TrainingTerminalPanel title="GÖZLEM META · MARCH METRİKLER">
+        <TrainingTerminalPanel title={t('sectors.tccc.observedEval.form.metaPanel')}>
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block space-y-1.5">
-                <span className={labelClass}>Gözlemci adı *</span>
+                <span className={labelClass}>{t('sectors.tccc.observedEval.form.observerName')}</span>
                 <input
                   className={inputClass}
                   value={form.observerName}
@@ -129,7 +136,7 @@ export default function TcccEntryTerminal({ addLog, onSubmitted, hidePdfBanner =
                 />
               </label>
               <label className="block space-y-1.5">
-                <span className={labelClass}>Gözlemci callsign</span>
+                <span className={labelClass}>{t('sectors.tccc.observedEval.form.observerCallsign')}</span>
                 <input
                   className={inputClass}
                   value={form.observerCallsign}
@@ -137,7 +144,7 @@ export default function TcccEntryTerminal({ addLog, onSubmitted, hidePdfBanner =
                 />
               </label>
               <label className="block space-y-1.5">
-                <span className={labelClass}>Saha tarihi *</span>
+                <span className={labelClass}>{t('sectors.tccc.observedEval.form.observedDate')}</span>
                 <input
                   type="date"
                   className={inputClass}
@@ -157,11 +164,13 @@ export default function TcccEntryTerminal({ addLog, onSubmitted, hidePdfBanner =
                     })
                   }
                 />
-                <span className="font-mono-technical text-[9px] uppercase text-app-text/80">Zamanlı müdahale</span>
+                <span className="font-mono-technical text-[9px] uppercase text-app-text/80">
+                  {t('sectors.tccc.observedEval.form.timedIntervention')}
+                </span>
               </label>
               {form.isTimed ? (
                 <label className="block space-y-1.5 sm:col-span-2">
-                  <span className={labelClass}>Hedef müdahale süresi (sn)</span>
+                  <span className={labelClass}>{t('sectors.tccc.observedEval.form.targetInterventionSec')}</span>
                   <input
                     type="number"
                     min={0.01}
@@ -176,7 +185,7 @@ export default function TcccEntryTerminal({ addLog, onSubmitted, hidePdfBanner =
             </div>
 
             <TrainingMetricGrid
-              title="MARCH FAZ ORTALAMALARI"
+              title={t('sectors.tccc.observedEval.form.phaseAverages')}
               gridClassName="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5"
             >
               {TCCC_MARCH_EVALUATION_PHASES.map((meta) => (
@@ -202,22 +211,21 @@ export default function TcccEntryTerminal({ addLog, onSubmitted, hidePdfBanner =
 
             <TrainingVisualStage
               imageSrc={tcccImg}
-              imageAlt="TCCC"
+              imageAlt={t('sectors.tccc.observedEval.form.imageAlt')}
               stats={
                 <>
                   <p>
-                    GENEL SKOR:{' '}
-                    <span className="text-accent tabular-nums">{preview.overallScore.toFixed(1)}</span>
+                    {t('sectors.tccc.observedEval.form.overallScore', {
+                      score: preview.overallScore.toFixed(1),
+                    })}
                   </p>
                   <p className="mt-0.5">
-                    K.İ.A FAZ:{' '}
-                    <span className={criticalCount > 0 ? 'text-red-400' : 'text-accent'}>{criticalCount}</span>
+                    {t('sectors.tccc.observedEval.form.kiaPhaseCount', { count: criticalCount })}
                   </p>
                   <p className="mt-0.5">
-                    YARALI DURUMU:{' '}
-                    <span className={preview.criticalFail ? 'text-red-400' : 'text-accent'}>
-                      {preview.criticalFail ? 'EKS_KIA' : 'STABLE'}
-                    </span>
+                    {t('sectors.tccc.observedEval.form.casualtyStatus', {
+                      status: formatTcccCasualtyStatusCodeDisplay(preview.criticalFail),
+                    })}
                   </p>
                 </>
               }
@@ -226,7 +234,7 @@ export default function TcccEntryTerminal({ addLog, onSubmitted, hidePdfBanner =
         }
         right={
           <TrainingTerminalPanel
-            title="MARCH FAZ SKORLARI · ANALİZ"
+            title={t('sectors.tccc.observedEval.form.phaseScoresPanel')}
             titleClassName="text-app-text"
             corners="bottom"
             panelClassName="relative flex min-h-0 flex-col border-accent/25 bg-app-bg/95 p-0"
@@ -237,8 +245,6 @@ export default function TcccEntryTerminal({ addLog, onSubmitted, hidePdfBanner =
                 <TcccMarchPhaseBlock
                   key={meta.id}
                   letter={meta.letter}
-                  title={meta.title}
-                  subtitle={meta.subtitle}
                   phaseId={meta.id}
                   phase={form[meta.id]}
                   criteria={TCCC_PHASE_SUB_CRITERIA[meta.id]}
@@ -249,10 +255,10 @@ export default function TcccEntryTerminal({ addLog, onSubmitted, hidePdfBanner =
             </div>
 
             <label className="mt-auto block shrink-0 space-y-1">
-              <span className={labelClass}>GENEL OPERASYON NOTU</span>
+              <span className={labelClass}>{t('sectors.tccc.observedEval.form.generalOperationNote')}</span>
               <textarea
                 className={`${textareaClass} min-h-[4.5rem]`}
-                placeholder="Müdahale notları, koordinasyon, #etiketler…"
+                placeholder={t('sectors.tccc.observedEval.form.generalOperationNotePlaceholder')}
                 value={form.operationNote}
                 onChange={(e) => patch({ operationNote: e.target.value })}
                 rows={3}
@@ -265,10 +271,10 @@ export default function TcccEntryTerminal({ addLog, onSubmitted, hidePdfBanner =
           <TrainingStatusBar
             successPercent={preview.successPercent}
             compromised={preview.criticalFail}
-            submitBlockedReason={preview.validationError}
+            submitBlockedReason={submitBlockedReason}
             saving={saving}
             canSubmit={canSubmit}
-            submitLabel="TCCC_KAYDINI_ONAYLA"
+            submitLabel={t('sectors.tccc.observedEval.form.submit')}
             successMessage={ok ? msg : null}
             errorMessage={!ok && msg ? msg : null}
           />
@@ -286,10 +292,10 @@ export default function TcccEntryTerminal({ addLog, onSubmitted, hidePdfBanner =
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.28em] text-accent/85">
-              [ PDF GÖZLEM FORMU · MARCH ]
+              {t('sectors.tccc.observedEval.pdfBanner.kicker')}
             </p>
             <p className="mt-1 font-mono-technical text-[9px] text-app-text/55">
-              Formu indirin, gözlemci MARCH safhalarını işaretlesin, sonuçları buraya girin.
+              {t('sectors.tccc.observedEval.pdfBanner.hint')}
             </p>
           </div>
           <button
@@ -299,7 +305,7 @@ export default function TcccEntryTerminal({ addLog, onSubmitted, hidePdfBanner =
             className="inline-flex items-center justify-center gap-2 rounded border border-accent/50 bg-accent/12 px-4 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent transition hover:bg-accent/20 disabled:opacity-50"
           >
             {pdfBusy ? <Loader2 className="size-3.5 animate-spin" /> : <Download className="size-3.5" />}
-            PDF Formu İndir
+            {t('sectors.tccc.observedEval.pdfBanner.download')}
           </button>
         </div>
       </TacticalPanel>

@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import TacticalPanel from '../ui/TacticalPanel'
 import { useAuth } from '../../context/AuthContext'
 import { TCCC_INITIAL_FORM } from '../../lib/tcccLogPayload'
@@ -14,6 +15,11 @@ import {
 } from '../../lib/tcccOptions'
 import { invNum, invStr } from '../../lib/inventoryIlws'
 import { calculateTcccSuccessPercent } from '../../lib/trainingSuccessScore'
+import {
+  formatTcccDrillSubmitBlockedReason,
+  formatTcccOptionLabel,
+  formatTcccProcedureLabel,
+} from '../../lib/trainingDisplayText'
 import SuccessScorePreview from './SuccessScorePreview'
 
 const inputClass =
@@ -34,12 +40,15 @@ const toggleClass = (active) =>
       : 'border-white/10 text-zinc-300 hover:border-accent/25 hover:text-zinc-100'
   }`
 
+const CLINICAL_TOGGLE_KEYS = ['chestSealApplied', 'needleDecompression', 'hypothermiaBlanket']
+
 /**
  * @param {{
  *   addLog: (payload: Record<string, unknown>) => Promise<{ id: string }>
  * }} props
  */
 export default function TcccDrillForm({ addLog }) {
+  const { t } = useTranslation('training')
   const { user } = useAuth()
   const uid = user?.uid ?? ''
 
@@ -58,7 +67,7 @@ export default function TcccDrillForm({ addLog }) {
     return Number.isFinite(n) && n > 0 ? n : null
   }, [form.interventionTime])
 
-  const submitBlockedReason = useMemo(() => {
+  const submitBlockedReasonKey = useMemo(() => {
     if (saving) return null
     if (!uid) return 'OTURUM_GEREKLİ'
     if (!form.casualtyType) return 'CASUALTY_TYPE_GEREKLİ'
@@ -87,7 +96,8 @@ export default function TcccDrillForm({ addLog }) {
     interventionSec,
   ])
 
-  const canSubmit = submitBlockedReason == null
+  const submitBlockedReason = formatTcccDrillSubmitBlockedReason(submitBlockedReasonKey)
+  const canSubmit = submitBlockedReasonKey == null
 
   const previewSuccessPercent = useMemo(() => {
     const evacRaw = invStr(form.evacWaitingTime).trim().replace(',', '.')
@@ -162,7 +172,9 @@ export default function TcccDrillForm({ addLog }) {
       setForm({ ...TCCC_INITIAL_FORM })
     } catch (err) {
       const code = err && typeof err === 'object' && 'code' in err ? String(err.code) : ''
-      setSubmitError(`TCCC_KAYIT_BAŞARISIZ · YENİDEN_DENE${code ? ` · ${code}` : ''}`)
+      setSubmitError(
+        t('sectors.tccc.drill.messages.submitFailed', { hint: code ? ` · ${code}` : '' }),
+      )
     } finally {
       setSaving(false)
     }
@@ -172,28 +184,28 @@ export default function TcccDrillForm({ addLog }) {
     <form onSubmit={handleSubmit} className="grid gap-4 lg:grid-cols-2">
       <TacticalPanel className="relative border-accent/20 bg-app-bg/95 p-0">
         <p className="border-b border-accent/15 bg-app-bg px-4 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-accent/90">
-          TCCC METRİKLERİ · KLİNİK & TAKTİK
+          {t('sectors.tccc.drill.metricsPanel')}
         </p>
         <div className="space-y-4 p-4">
           <fieldset className="space-y-2">
-            <legend className={labelClass}>CASUALTY TYPE *</legend>
+            <legend className={labelClass}>{t('sectors.tccc.drill.form.casualtyType')}</legend>
             <select
               className={selectClass}
               value={form.casualtyType}
               onChange={(e) => patch({ casualtyType: e.target.value })}
               required
             >
-              <option value="">— YARALI TİPİ —</option>
+              <option value="">{t('sectors.tccc.drill.form.casualtyTypePlaceholder')}</option>
               {CASUALTY_TYPE_OPTIONS.map((o) => (
                 <option key={o.id} value={o.id}>
-                  {o.label}
+                  {formatTcccOptionLabel('casualtyType', o.id, o.label)}
                 </option>
               ))}
             </select>
           </fieldset>
 
           <label className="block space-y-1">
-            <span className={labelClass}>INTERVENTION TIME (SN) *</span>
+            <span className={labelClass}>{t('sectors.tccc.drill.form.interventionTime')}</span>
             <input
               type="number"
               min={0.01}
@@ -207,7 +219,7 @@ export default function TcccDrillForm({ addLog }) {
           </label>
 
           <fieldset className="space-y-2">
-            <legend className={labelClass}>PROCEDURE PERFORMED *</legend>
+            <legend className={labelClass}>{t('sectors.tccc.drill.form.procedurePerformed')}</legend>
             {PROCEDURE_PERFORMED_OPTIONS.map((opt) => (
               <label key={opt.id} className={toggleClass(form.procedures.includes(opt.id))}>
                 <input
@@ -216,23 +228,23 @@ export default function TcccDrillForm({ addLog }) {
                   checked={form.procedures.includes(opt.id)}
                   onChange={() => toggleProcedure(opt.id)}
                 />
-                <span className="font-mono-technical text-sm">{opt.label}</span>
+                <span className="font-mono-technical text-sm">{formatTcccProcedureLabel(opt.id)}</span>
               </label>
             ))}
           </fieldset>
 
           <fieldset className="space-y-2">
-            <legend className={labelClass}>OUTCOME *</legend>
+            <legend className={labelClass}>{t('sectors.tccc.drill.form.outcome')}</legend>
             <select
               className={selectClass}
               value={form.outcome}
               onChange={(e) => patch({ outcome: e.target.value })}
               required
             >
-              <option value="">— SONUÇ —</option>
+              <option value="">{t('sectors.tccc.drill.form.outcomePlaceholder')}</option>
               {OUTCOME_OPTIONS.map((o) => (
                 <option key={o.id} value={o.id}>
-                  {o.label}
+                  {formatTcccOptionLabel('outcome', o.id, o.label)}
                 </option>
               ))}
             </select>
@@ -242,28 +254,28 @@ export default function TcccDrillForm({ addLog }) {
 
       <TacticalPanel className="relative border-accent/25 bg-app-bg/95 p-0">
         <p className="border-b border-accent/15 bg-app-bg px-4 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-app-text">
-          MARCH · EK KLİNİK VERİ
+          {t('sectors.tccc.drill.clinicalPanel')}
         </p>
         <div className="space-y-4 p-4">
           <fieldset className="space-y-2">
-            <legend className={labelClass}>TCCC FAZI *</legend>
+            <legend className={labelClass}>{t('sectors.tccc.drill.form.tcccPhase')}</legend>
             <select
               className={selectClass}
               value={form.tcccPhase}
               onChange={(e) => patch({ tcccPhase: e.target.value, customTcccPhase: '' })}
               required
             >
-              <option value="">— FAZ —</option>
+              <option value="">{t('sectors.tccc.drill.form.tcccPhasePlaceholder')}</option>
               {TCCC_PHASE_OPTIONS.map((o) => (
                 <option key={o.id} value={o.id}>
-                  {o.label}
+                  {formatTcccOptionLabel('tcccPhase', o.id, o.label)}
                 </option>
               ))}
             </select>
             {showCustomPhase ? (
               <input
                 className={inputClass}
-                placeholder="Özel faz…"
+                placeholder={t('sectors.tccc.drill.form.customPhasePlaceholder')}
                 value={form.customTcccPhase}
                 onChange={(e) => patch({ customTcccPhase: e.target.value })}
                 required
@@ -272,41 +284,41 @@ export default function TcccDrillForm({ addLog }) {
           </fieldset>
 
           <fieldset className="space-y-2">
-            <legend className={labelClass}>YARALANMA TİPİ *</legend>
+            <legend className={labelClass}>{t('sectors.tccc.drill.form.injuryType')}</legend>
             <select
               className={selectClass}
               value={form.injuryType}
               onChange={(e) => patch({ injuryType: e.target.value })}
               required
             >
-              <option value="">— YARALANMA —</option>
+              <option value="">{t('sectors.tccc.drill.form.injuryTypePlaceholder')}</option>
               {INJURY_TYPE_OPTIONS.map((o) => (
                 <option key={o.id} value={o.id}>
-                  {o.label}
+                  {formatTcccOptionLabel('injuryType', o.id, o.label)}
                 </option>
               ))}
             </select>
           </fieldset>
 
           <fieldset className="space-y-2">
-            <legend className={labelClass}>TURNİKE KONUMU *</legend>
+            <legend className={labelClass}>{t('sectors.tccc.drill.form.tourniquetLocation')}</legend>
             <select
               className={selectClass}
               value={form.tourniquetLocation}
               onChange={(e) => patch({ tourniquetLocation: e.target.value, customTourniquetLocation: '' })}
               required
             >
-              <option value="">— KONUM —</option>
+              <option value="">{t('sectors.tccc.drill.form.tourniquetLocationPlaceholder')}</option>
               {TOURNIQUET_LOCATION_OPTIONS.map((o) => (
                 <option key={o.id} value={o.id}>
-                  {o.label}
+                  {formatTcccOptionLabel('tourniquetLocation', o.id, o.label)}
                 </option>
               ))}
             </select>
             {showCustomTqLoc ? (
               <input
                 className={inputClass}
-                placeholder="Özel konum…"
+                placeholder={t('sectors.tccc.drill.form.customLocationPlaceholder')}
                 value={form.customTourniquetLocation}
                 onChange={(e) => patch({ customTourniquetLocation: e.target.value })}
                 required
@@ -316,7 +328,7 @@ export default function TcccDrillForm({ addLog }) {
 
           <div className="grid grid-cols-2 gap-3">
             <label className="block space-y-1">
-              <span className={labelClass}>TAHLİYE BEKLEME (DK)</span>
+              <span className={labelClass}>{t('sectors.tccc.drill.form.evacWaiting')}</span>
               <input
                 type="number"
                 min={0}
@@ -327,7 +339,7 @@ export default function TcccDrillForm({ addLog }) {
               />
             </label>
             <label className="block space-y-1">
-              <span className={labelClass}>SİSTOLİK BP</span>
+              <span className={labelClass}>{t('sectors.tccc.drill.form.systolicBp')}</span>
               <input
                 type="number"
                 min={0}
@@ -340,11 +352,7 @@ export default function TcccDrillForm({ addLog }) {
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            {[
-              ['chestSealApplied', 'Göğüs mührü'],
-              ['needleDecompression', 'İğne dekompresyon'],
-              ['hypothermiaBlanket', 'Hipotermi battaniyesi'],
-            ].map(([key, label]) => (
+            {CLINICAL_TOGGLE_KEYS.map((key) => (
               <label key={key} className={toggleClass(form[key])}>
                 <input
                   type="checkbox"
@@ -352,13 +360,13 @@ export default function TcccDrillForm({ addLog }) {
                   checked={form[key]}
                   onChange={(e) => patch({ [key]: e.target.checked })}
                 />
-                <span className="font-mono-technical text-[10px]">{label}</span>
+                <span className="font-mono-technical text-[10px]">{t(`sectors.tccc.drill.toggles.${key}`)}</span>
               </label>
             ))}
           </div>
 
           <label className="block space-y-1">
-            <span className={labelClass}>OPERASYON NOTU</span>
+            <span className={labelClass}>{t('sectors.tccc.drill.form.operationNote')}</span>
             <textarea
               className={textareaClass}
               value={form.operationNote}
@@ -373,7 +381,7 @@ export default function TcccDrillForm({ addLog }) {
       <div className="space-y-3 lg:col-span-2">
         {submitOk ? (
           <p className="rounded border border-accent/40 bg-accent/10 px-3 py-2 text-center font-mono-technical text-[9px] font-bold uppercase text-accent">
-            TCCC_KAYDI_AKTARILDI · TCCC_LOGS
+            {t('sectors.tccc.drill.messages.submitSuccess')}
           </p>
         ) : null}
         {submitError ? (
@@ -393,7 +401,7 @@ export default function TcccDrillForm({ addLog }) {
             disabled={saving || !canSubmit}
             className="w-full rounded border border-accent/55 bg-accent/12 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent hover:bg-accent/20 disabled:opacity-40"
           >
-            {saving ? 'AKTARILIYOR…' : 'TCCC_KAYDINI_ONAYLA'}
+            {saving ? t('common.terminal.saving') : t('sectors.tccc.drill.form.submit')}
           </button>
         </div>
       </div>

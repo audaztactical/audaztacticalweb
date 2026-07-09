@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   Activity,
   AlertTriangle,
@@ -32,6 +33,12 @@ import { emitFirebaseError } from '../../lib/firebaseErrorBus'
 import { TCCC_MARCH_ACTION_CHIPS, TCCC_MARCH_EVALUATION_PHASES, TCCC_PHASE_SUB_CRITERIA } from '../../lib/tcccEvaluationPayload'
 import { readStoredPhaseScore } from '../../lib/evaluationSubScores'
 import { PhaseSubScoresDisplay } from './PhaseSubCriteriaFields'
+import {
+  formatObservedEvalPhaseTitle,
+  formatObservedEvalPhaseSubtitle,
+  formatTcccCasualtyStatusDisplay,
+  formatTcccMarchActionChipLabel,
+} from '../../lib/trainingDisplayText'
 import { useOperatorGroup } from '../../hooks/useOperatorGroup'
 import IndividualTrainingSessionHeader from './IndividualTrainingSessionHeader'
 import TcccObservedEvalForm from './TcccObservedEvalForm'
@@ -123,6 +130,7 @@ export default function TcccTerminal({
   logsListenError = null,
   addLog,
 }) {
+  const { t } = useTranslation('training')
   const { user } = useAuth()
   const uid = user?.uid ?? ''
   const { trainingType, membership, isMember, groupLoading } = useTrainingSession()
@@ -176,7 +184,7 @@ export default function TcccTerminal({
       (err) => {
         if (!active) return
         emitFirebaseError(err)
-        setSyncError(err instanceof Error ? err.message : 'Senkronizasyon kesildi.')
+        setSyncError(err instanceof Error ? err.message : t('sectors.tccc.hud.syncDisconnected'))
         setSyncLoading(false)
       },
     )
@@ -185,7 +193,7 @@ export default function TcccTerminal({
       active = false
       unsub()
     }
-  }, [syncEnabled, groupId, uid])
+  }, [syncEnabled, groupId, uid, t])
 
   useEffect(() => {
     if (!syncEnabled) {
@@ -214,7 +222,9 @@ export default function TcccTerminal({
     return (
       <div className="w-full min-w-0 max-w-none space-y-4">
         <IndividualTrainingSessionHeader />
-        <p className="font-mono-technical text-[10px] uppercase text-zinc-500">Oturum gerekli</p>
+        <p className="font-mono-technical text-[10px] uppercase text-zinc-500">
+          {t('sectors.tccc.hud.sessionRequired')}
+        </p>
       </div>
     )
   }
@@ -233,25 +243,25 @@ export default function TcccTerminal({
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <button type="button" onClick={onBack} className={ctBackBtn}>
           <ArrowLeft className="size-3.5" aria-hidden />
-          Kategorilere dön
+          {t('common.terminal.backToCategories')}
         </button>
 
         <div
           className="flex w-full flex-wrap gap-1.5 rounded border border-accent/25 bg-black/60 p-1 sm:w-auto"
           role="tablist"
-          aria-label="TCCC terminal görünümü"
+          aria-label={t('sectors.tccc.tabs.aria')}
         >
           <button type="button" role="tab" aria-selected={viewMode === 'hud'} onClick={() => setViewMode('hud')} className={tabBtnClassCompact(viewMode === 'hud')}>
-            CANLI HUD
+            {t('sectors.tccc.tabs.hud')}
           </button>
           <button type="button" role="tab" aria-selected={viewMode === 'pdf'} onClick={() => setViewMode('pdf')} className={tabBtnClassCompact(viewMode === 'pdf')}>
-            PDF FORMU
+            {t('sectors.tccc.tabs.pdf')}
           </button>
           <button type="button" role="tab" aria-selected={viewMode === 'entry'} onClick={() => setViewMode('entry')} className={tabBtnClassCompact(viewMode === 'entry')}>
-            KAYIT GİR
+            {t('sectors.tccc.tabs.entry')}
           </button>
           <button type="button" role="tab" aria-selected={viewMode === 'observed'} onClick={() => setViewMode('observed')} className={tabBtnClassCompact(viewMode === 'observed')}>
-            KAYITLARIM
+            {t('sectors.tccc.tabs.observed')}
           </button>
         </div>
 
@@ -270,50 +280,53 @@ export default function TcccTerminal({
         addLog ? (
           <TcccObservedEvalForm addLog={addLog} hidePdfBanner onSubmitted={() => setViewMode('observed')} />
         ) : (
-          <p className={ctMsgErr}>Kayıt kanalı hazır değil.</p>
+          <p className={ctMsgErr}>{t('sectors.tccc.hud.logChannelNotReady')}</p>
         )
       ) : viewMode === 'observed' ? (
         <>
           {!logsReady ? (
-            <p className="font-mono-technical text-[10px] uppercase text-app-text/55">KAYIT_KANALI_SENKRON…</p>
+            <p className="font-mono-technical text-[10px] uppercase text-app-text/55">
+              {t('sectors.tccc.hud.logChannelSyncing')}
+            </p>
           ) : logsListenError ? (
-            <p className={ctMsgErr}>Kayıt kanalı kesildi · {logsListenError.message}</p>
+            <p className={ctMsgErr}>
+              {t('sectors.tccc.hud.logChannelDisconnected', { message: logsListenError.message })}
+            </p>
           ) : null}
           <TcccLogRegistry logs={logs} loading={logsLoading} />
         </>
       ) : (
         <>
       <header className="border-b border-zinc-800 pb-3">
-        <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">[ TCCC · MARCH HUD ]</p>
+        <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">{t('sectors.tccc.hud.kicker')}</p>
         <h2 className="mt-1 text-lg font-semibold tracking-tight text-zinc-100 sm:text-xl">
-          Taktik Tıbbi Değerlendirme — Canlı Terminal
+          {t('sectors.tccc.hud.title')}
         </h2>
-        <p className="mt-1 max-w-2xl text-sm text-zinc-500">
-          Eğitmen MARCH skorları ve kritik hatalar anlık yansır · operatör veri girişi yok
-        </p>
+        <p className="mt-1 max-w-2xl text-sm text-zinc-500">{t('sectors.tccc.hud.subtitle')}</p>
       </header>
 
       {!isGroupMode ? (
-        <AmberAlert label="[ GRUP MODU GEREKLİ ]">
-          Canlı MARCH HUD için üstteki eğitim tipini <strong>Grup</strong> olarak seçin. Eğitmen değerlendirmesi
-          yalnızca grup oturumunda bu ekrana akar.
+        <AmberAlert label={t('sectors.tccc.hud.groupModeRequired.label')}>
+          {t('sectors.tccc.hud.groupModeRequired.body')}
         </AmberAlert>
       ) : groupLoading || operatorGroupLoading ? (
         <div className="flex min-h-[200px] items-center justify-center gap-2 text-zinc-400">
           <Loader2 className="size-5 animate-spin" aria-hidden />
-          <span className="text-sm">Grup doğrulanıyor…</span>
+          <span className="text-sm">{t('sectors.tccc.hud.groupVerifying')}</span>
         </div>
       ) : !isMember || !groupId ? (
-        <AmberAlert label="[ GRUP ÜYELİĞİ ]">
-          Canlı değerlendirme için bir taktik grubuna dahil olmalısınız.{' '}
+        <AmberAlert label={t('sectors.tccc.hud.groupMembership.label')}>
+          {t('sectors.tccc.hud.groupMembership.body')}{' '}
           <Link to="/ayarlar" className="font-bold text-accent underline-offset-2 hover:underline">
-            Taktik Timim →
+            {t('sectors.tccc.hud.groupMembership.settingsLink')}
           </Link>
         </AmberAlert>
       ) : (
         <>
           {combinedError ? (
-            <p className={ctMsgErr}>Veri kanalı kesildi · {combinedError}</p>
+            <p className={ctMsgErr}>
+              {t('sectors.tccc.hud.dataChannelDisconnected', { message: combinedError })}
+            </p>
           ) : null}
 
           <div
@@ -325,8 +338,8 @@ export default function TcccTerminal({
             ].join(' ')}
             aria-live="polite"
           >
-            <span>Yaralı durumu (casualty status)</span>
-            <span>{casualtyUnstable ? 'EKS / K.İ.A' : 'STABİL'}</span>
+            <span>{t('sectors.tccc.casualtyStatus.label')}</span>
+            <span>{formatTcccCasualtyStatusDisplay(casualtyUnstable)}</span>
           </div>
 
           <div className={`${ctCard} grid gap-4 border-zinc-800/90 sm:grid-cols-3`} aria-live="polite">
@@ -337,24 +350,23 @@ export default function TcccTerminal({
                   <span className="relative inline-flex size-2.5 rounded-full bg-red-500" />
                 </span>
                 <span className="text-sm font-semibold uppercase tracking-wide text-red-400">
-                  🔴 Canlı müdahale
+                  {t('sectors.tccc.hud.liveIntervention')}
                 </span>
               </div>
               <p className="text-xs text-zinc-500">
                 {syncLoading
-                  ? 'Senkron bağlanıyor…'
+                  ? t('sectors.tccc.hud.syncConnecting')
                   : hasScores
-                    ? 'MARCH değerlendirmesi alındı'
-                    : 'Eğitmen değerlendirmesi bekleniyor'}
+                    ? t('sectors.tccc.hud.marchEvalReceived')
+                    : t('sectors.tccc.hud.evalPending')}
               </p>
               {latestEvaluation ? (
                 <p className="mt-1 text-xs text-zinc-400">
-                  Genel skor:{' '}
-                  <span className="font-semibold tabular-nums text-zinc-100">
-                    {latestEvaluation.overallScore}/10
-                  </span>
+                  {t('sectors.tccc.hud.overallScore', { score: latestEvaluation.overallScore })}
                   {criticalCount > 0 ? (
-                    <span className="ml-2 text-red-400">· {criticalCount} kritik hata</span>
+                    <span className="ml-2 text-red-400">
+                      {t('sectors.tccc.hud.criticalErrors', { count: criticalCount })}
+                    </span>
                   ) : null}
                 </p>
               ) : null}
@@ -362,7 +374,7 @@ export default function TcccTerminal({
 
             <div className="flex flex-col items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950/60 px-4 py-3">
               <span className="text-xs font-medium uppercase tracking-widest text-zinc-500">
-                Müdahale süresi
+                {t('sectors.tccc.hud.interventionDuration')}
               </span>
               <p
                 className={`mt-1 font-mono text-3xl font-bold tabular-nums tracking-tight ${
@@ -373,21 +385,21 @@ export default function TcccTerminal({
               </p>
               <p className="mt-1 flex items-center gap-1 text-xs text-zinc-500">
                 <Radio className="size-3" strokeWidth={1.5} aria-hidden />
-                Kronometre aktif
+                {t('sectors.tccc.hud.chronoActive')}
               </p>
             </div>
 
             <div className="flex flex-col items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950/60 px-4 py-3">
               <span className="text-xs font-medium uppercase tracking-widest text-zinc-500">
-                Müdahale hedef süresi
+                {t('sectors.tccc.hud.targetDuration')}
               </span>
               <p className="mt-1 font-mono text-3xl font-bold tabular-nums tracking-tight text-emerald-400/90">
                 {targetLabel}
               </p>
               <p className={ctHelperText}>
                 {latestEvaluation?.isTimed
-                  ? 'Eğitmenin belirlediği hedef süre (sn)'
-                  : 'Zamanlı oturum tanımlanmadı'}
+                  ? t('sectors.tccc.hud.targetDurationHint')
+                  : t('sectors.tccc.hud.noTimedSession')}
               </p>
             </div>
           </div>
@@ -398,12 +410,14 @@ export default function TcccTerminal({
               const critical = isMarchCriticalFail(latestEvaluation, meta.id)
               const pending = score == null
               const Icon = PHASE_ICONS[meta.id]
+              const phaseTitle = formatObservedEvalPhaseTitle('tccc', meta.id, meta.title)
+              const phaseSubtitle = formatObservedEvalPhaseSubtitle('tccc', meta.id, meta.subtitle)
 
               return (
                 <BentoCard
                   key={meta.id}
-                  title={meta.title}
-                  description={meta.subtitle}
+                  title={phaseTitle}
+                  description={phaseSubtitle}
                   icon={Icon}
                   delay={index * 0.03}
                   className={
@@ -417,7 +431,7 @@ export default function TcccTerminal({
                     critical ? (
                       <span className={ctStatusFail}>
                         <AlertTriangle className="mr-1 inline size-3" aria-hidden />
-                        Kritik
+                        {t('sectors.tccc.hud.critical')}
                       </span>
                     ) : null
                   }
@@ -427,13 +441,13 @@ export default function TcccTerminal({
                   </div>
                   {pending ? (
                     <p className="py-4 text-center text-sm italic text-zinc-500">
-                      Değerlendirme bekleniyor…
+                      {t('sectors.tccc.hud.phasePending')}
                     </p>
                   ) : (
                     <div className="space-y-2">
                       <div className="flex items-end justify-between gap-2">
                         <div>
-                          <p className="text-xs font-medium text-zinc-500">Safha ortalaması</p>
+                          <p className="text-xs font-medium text-zinc-500">{t('sectors.tccc.hud.phaseAverage')}</p>
                           <p
                             className={`font-mono text-2xl font-bold tabular-nums ${
                               critical ? 'text-red-400' : 'text-zinc-100'
@@ -460,6 +474,8 @@ export default function TcccTerminal({
                         criteria={TCCC_PHASE_SUB_CRITERIA[meta.id]}
                         maxScore={10}
                         compact
+                        discipline="tccc"
+                        phaseId={meta.id}
                       />
                     </div>
                   )}
@@ -472,14 +488,14 @@ export default function TcccTerminal({
             <header className="mb-4 flex items-center gap-2 border-b border-zinc-800 pb-3">
               <ClipboardList className="size-4 shrink-0 text-zinc-400" strokeWidth={1.5} aria-hidden />
               <div>
-                <h3 className={ctCardTitle}>Gözlem notları</h3>
-                <p className={ctCardDesc}>Eğitmen · MARCH operationalNotes · canlı</p>
+                <h3 className={ctCardTitle}>{t('sectors.tccc.hud.observationNotes.title')}</h3>
+                <p className={ctCardDesc}>{t('sectors.tccc.hud.observationNotes.desc')}</p>
               </div>
             </header>
 
             {!latestEvaluation ? (
               <p className="py-4 text-center text-sm italic text-zinc-500">
-                Henüz gözlem notu yok — eğitmen kayıt yaptığında burada görünür.
+                {t('sectors.tccc.hud.observationNotes.empty')}
               </p>
             ) : (
               <ul className="space-y-3">
@@ -492,7 +508,8 @@ export default function TcccTerminal({
                     []
                   const chipLabels = TCCC_MARCH_ACTION_CHIPS[meta.id]
                     .filter((c) => chipIds.includes(c.id))
-                    .map((c) => c.label)
+                    .map((c) => formatTcccMarchActionChipLabel(meta.id, c.id, c.label))
+                  const phaseTitle = formatObservedEvalPhaseTitle('tccc', meta.id, meta.title)
                   return (
                     <li
                       key={meta.id}
@@ -502,11 +519,11 @@ export default function TcccTerminal({
                     >
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-mono text-xs font-bold text-zinc-400">{meta.letter}</span>
-                        <p className="text-xs font-medium text-zinc-500">{meta.title}</p>
+                        <p className="text-xs font-medium text-zinc-500">{phaseTitle}</p>
                         {critical ? (
                           <span className={ctStatusFail}>
                             <AlertTriangle className="mr-1 inline size-3" aria-hidden />
-                            Kritik hata
+                            {t('sectors.tccc.hud.criticalError')}
                           </span>
                         ) : null}
                       </div>
@@ -524,7 +541,9 @@ export default function TcccTerminal({
                       ) : null}
                       <p className="mt-1 text-sm leading-relaxed text-zinc-300">
                         {note || (
-                          <span className="italic text-zinc-600">Bu safha için not girilmedi.</span>
+                          <span className="italic text-zinc-600">
+                            {t('sectors.tccc.hud.observationNotes.noNoteForPhase')}
+                          </span>
                         )}
                       </p>
                     </li>
@@ -535,8 +554,10 @@ export default function TcccTerminal({
           </div>
 
           <p className="text-center text-xs text-zinc-600">
-            Firestore · tccc_evaluations · onSnapshot
-            {latestEvaluation ? ` · oturum ${latestEvaluation.id.slice(0, 8)}` : ''}
+            {t('sectors.tccc.hud.firestoreMeta')}
+            {latestEvaluation
+              ? t('sectors.tccc.hud.firestoreSession', { id: latestEvaluation.id.slice(0, 8) })
+              : ''}
           </p>
         </>
       )}

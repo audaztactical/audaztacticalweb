@@ -902,7 +902,279 @@
     },
     "tccc": {
       "title": "TCCC",
-      "sectorLabel": "MED-05 · Taktik saha bakımı"
+      "sectorLabel": "MED-05 · Taktik saha bakımı",
+      "tabs": {
+        "aria": "TCCC terminal görünümü",
+        "hud": "Canlı HUD",
+        "pdf": "PDF formu",
+        "entry": "Kayıt gir",
+        "observed": "Kayıtlarım"
+      },
+      "casualtyStatus": {
+        "label": "Yaralı durumu (casualty status)",
+        "stable": "Stabil",
+        "eksKia": "EKS / K.İ.A",
+        "eksKiaCode": "EKS_KIA",
+        "stableCode": "STABLE"
+      },
+      "hud": {
+        "kicker": "[ TCCC · MARCH HUD ]",
+        "title": "Taktik tıbbi değerlendirme — canlı terminal",
+        "subtitle": "Eğitmen MARCH skorları ve kritik hatalar anlık yansır · operatör veri girişi yok",
+        "sessionRequired": "Oturum gerekli",
+        "syncDisconnected": "Senkronizasyon kesildi.",
+        "logChannelNotReady": "Kayıt kanalı hazır değil.",
+        "logChannelSyncing": "Kayıt kanalı senkron…",
+        "logChannelDisconnected": "Kayıt kanalı kesildi · {{message}}",
+        "groupModeRequired": {
+          "label": "[ GRUP MODU GEREKLİ ]",
+          "body": "Canlı MARCH HUD için üstteki eğitim tipini Grup olarak seçin. Eğitmen değerlendirmesi yalnızca grup oturumunda bu ekrana akar."
+        },
+        "groupVerifying": "Grup doğrulanıyor…",
+        "groupMembership": {
+          "label": "[ GRUP ÜYELİĞİ ]",
+          "body": "Canlı değerlendirme için bir taktik grubuna dahil olmalısınız.",
+          "settingsLink": "Taktik Timim →"
+        },
+        "dataChannelDisconnected": "Veri kanalı kesildi · {{message}}",
+        "liveIntervention": "🔴 Canlı müdahale",
+        "syncConnecting": "Senkron bağlanıyor…",
+        "marchEvalReceived": "MARCH değerlendirmesi alındı",
+        "evalPending": "Eğitmen değerlendirmesi bekleniyor",
+        "overallScore": "Genel skor: {{score}}/10",
+        "criticalErrors": "· {{count}} kritik hata",
+        "interventionDuration": "Müdahale süresi",
+        "chronoActive": "Kronometre aktif",
+        "targetDuration": "Müdahale hedef süresi",
+        "targetDurationHint": "Eğitmenin belirlediği hedef süre (sn)",
+        "noTimedSession": "Zamanlı oturum tanımlanmadı",
+        "phasePending": "Değerlendirme bekleniyor…",
+        "phaseAverage": "Safha ortalaması",
+        "critical": "Kritik",
+        "criticalError": "Kritik hata",
+        "observationNotes": {
+          "title": "Gözlem notları",
+          "desc": "Eğitmen · MARCH operationalNotes · canlı",
+          "empty": "Henüz gözlem notu yok — eğitmen kayıt yaptığında burada görünür.",
+          "noNoteForPhase": "Bu safha için not girilmedi."
+        },
+        "firestoreMeta": "Firestore · tccc_evaluations · onSnapshot",
+        "firestoreSession": " · oturum {{id}}"
+      },
+      "pdfPanel": {
+        "kicker": "[ TCCC MARCH GÖZLEM FORMU · OBS-V1 ]",
+        "description": "MARCH protokolü gözlem formunu indirin. Gözlemci M/A/R/C/H safhalarını, kritik hata (K.İ.A) ve müdahale chip'lerini işaretledikten sonra \"Kayıt Gir\" sekmesinden dijital kaydı oluşturun.",
+        "bulletPhases": "· 5 MARCH safhası · skor 1–10",
+        "bulletKia": "· K.İ.A toggle + taktik müdahale checklist",
+        "bulletSignature": "· Gözlemci imza alanı",
+        "download": "PDF formu indir",
+        "downloaded": "Form indirildi · {{formId}}",
+        "pdfFailed": "PDF oluşturulamadı"
+      },
+      "observedEval": {
+        "pdfBanner": {
+          "kicker": "[ PDF GÖZLEM FORMU · MARCH ]",
+          "hint": "Formu indirin, gözlemci MARCH safhalarını işaretlesin, sonuçları buraya girin.",
+          "download": "PDF formu indir"
+        },
+        "form": {
+          "metaPanel": "Gözlem meta · MARCH metrikler",
+          "observerName": "Gözlemci adı *",
+          "observerCallsign": "Gözlemci callsign",
+          "observedDate": "Saha tarihi *",
+          "timedIntervention": "Zamanlı müdahale",
+          "targetInterventionSec": "Hedef müdahale süresi (sn)",
+          "phaseAverages": "MARCH faz ortalamaları",
+          "overallScore": "Genel skor: {{score}}",
+          "kiaPhaseCount": "K.İ.A faz: {{count}}",
+          "casualtyStatus": "Yaralı durumu: {{status}}",
+          "phaseScoresPanel": "MARCH faz skorları · analiz",
+          "tacticalIntervention": "Taktik müdahale",
+          "generalOperationNote": "Genel operasyon notu",
+          "generalOperationNotePlaceholder": "Müdahale notları, koordinasyon, #etiketler…",
+          "submit": "TCCC kaydını onayla",
+          "imageAlt": "TCCC"
+        },
+        "criticalFail": {
+          "toggle": "Kritik hata",
+          "active": "K.İ.A aktif"
+        },
+        "validation": {
+          "observerNameRequired": "Gözlemci adı zorunludur.",
+          "observedAtRequired": "Saha tarihi zorunludur.",
+          "targetInterventionInvalid": "Müdahale hedef süresi geçersiz.",
+          "criterionScoreRequired": "{{phase}} · {{criterion}} için geçerli skor seçin ({{min}}–{{max}})."
+        },
+        "messages": {
+          "submitSuccess": "TCCC gözlem kaydı aktarıldı.",
+          "submitFailed": "Kayıt başarısız",
+          "pdfDownloaded": "PDF indirildi · {{formId}}",
+          "pdfFailed": "PDF oluşturulamadı"
+        },
+        "registry": {
+          "syncing": "Kayıtlar senkronize ediliyor…",
+          "empty": "Henüz gözlemli TCCC kaydı yok — PDF formu indirip kayıt girin.",
+          "observerPrefix": "MARCH gözlem · {{name}}",
+          "casualtyUnstable": "Yaralı durumu: EKS / K.İ.A",
+          "overall": "Genel: {{score}}/10",
+          "success": "Başarı: %{{percent}}",
+          "target": "Hedef: {{seconds}}s",
+          "badgeUnverified": "Gözlem · doğrulanmadı",
+          "badgeVerified": "Gözlem · onaylı"
+        }
+      },
+      "marchActions": {
+        "m": {
+          "tourniquet_ht": "Turnike (High & Tight)",
+          "wound_pack": "Yara paketleme",
+          "hemostatic": "Hemostatik ajan"
+        },
+        "a": {
+          "head_chin": "Baş-çene poz.",
+          "npa": "NPA yerleşimi"
+        },
+        "r": {
+          "chest_seal": "Chest Seal",
+          "needle_decomp": "İğne dekompresyonu"
+        },
+        "c": {
+          "pulse_check": "Nabız kontrolü",
+          "iv_io": "Damar yolu (IV/IO)"
+        },
+        "h": {
+          "thermal_blanket": "Termal örtü",
+          "head_trauma": "Kafa travması kontrolü"
+        }
+      },
+      "drill": {
+        "metricsPanel": "TCCC metrikleri · klinik ve taktik",
+        "clinicalPanel": "MARCH · ek klinik veri",
+        "form": {
+          "casualtyType": "Casualty type *",
+          "casualtyTypePlaceholder": "— Yaralı tipi —",
+          "interventionTime": "Intervention time (sn) *",
+          "procedurePerformed": "Procedure performed *",
+          "outcome": "Outcome *",
+          "outcomePlaceholder": "— Sonuç —",
+          "tcccPhase": "TCCC fazı *",
+          "tcccPhasePlaceholder": "— Faz —",
+          "customPhasePlaceholder": "Özel faz…",
+          "injuryType": "Yaralanma tipi *",
+          "injuryTypePlaceholder": "— Yaralanma —",
+          "tourniquetLocation": "Turnike konumu *",
+          "tourniquetLocationPlaceholder": "— Konum —",
+          "customLocationPlaceholder": "Özel konum…",
+          "evacWaiting": "Tahliye bekleme (dk)",
+          "systolicBp": "Sistolik BP",
+          "operationNote": "Operasyon notu",
+          "submit": "TCCC kaydını onayla"
+        },
+        "validation": {
+          "sessionRequired": "Oturum gerekli",
+          "casualtyTypeRequired": "Casualty type gerekli",
+          "interventionTimeRequired": "Intervention time zorunlu · sn > 0",
+          "procedureRequired": "Procedure performed gerekli",
+          "outcomeRequired": "Outcome gerekli",
+          "tcccPhaseRequired": "TCCC fazı gerekli",
+          "customPhaseRequired": "Özel faz gerekli",
+          "injuryTypeRequired": "Yaralanma tipi gerekli",
+          "tourniquetLocationRequired": "Turnike konumu gerekli",
+          "customLocationRequired": "Özel konum gerekli"
+        },
+        "messages": {
+          "submitSuccess": "TCCC kaydı aktarıldı · tccc_logs",
+          "submitFailed": "TCCC kayıt başarısız · yeniden dene{{hint}}"
+        },
+        "toggles": {
+          "chestSealApplied": "Göğüs mührü",
+          "needleDecompression": "İğne dekompresyon",
+          "hypothermiaBlanket": "Hipotermi battaniyesi"
+        }
+      },
+      "options": {
+        "tcccPhase": {
+          "care_under_fire_cuf": "Ateş altında bakım (CUF)",
+          "tactical_field_care_tfc": "Taktik saha bakımı (TFC)",
+          "tactical_evacuation_care_tevac": "Taktik tahliye bakımı (TEVAC)",
+          "custom": "Özel / diğer faz"
+        },
+        "injuryType": {
+          "extremity_bleeding": "Uzuv kanaması (ağır kanama)",
+          "thoracic_trauma": "Göğüs travması / şarapnel (solunum krizi)",
+          "polytrauma": "Çoklu ağır travma (tüm müdahaleler gerekli)"
+        },
+        "casualtyType": {
+          "combat": "Savaş (Combat)",
+          "accident": "Kaza (Accident)"
+        },
+        "procedure": {
+          "tourniquet": "Turnike",
+          "bandage": "Bandaj / yara paketleme",
+          "airway": "Hava yolu (NPA)"
+        },
+        "outcome": {
+          "successful": "Başarılı",
+          "failed": "Başarısız"
+        },
+        "tourniquetLocation": {
+          "right_arm": "Sağ kol",
+          "left_arm": "Sol kol",
+          "right_leg": "Sağ bacak",
+          "left_leg": "Sol bacak",
+          "none": "Uygulanmadı / yok",
+          "custom": "Özel / diğer konum"
+        }
+      },
+      "history": {
+        "title": "Geçmiş TCCC kayıtları · taktik sağlık",
+        "syncMeta": "tccc_logs · canlı senkron · {{filtered}}/{{total}} kayıt",
+        "filterBar": "Filtreleme barı",
+        "tcccPhase": "TCCC fazı",
+        "all": "Tümü",
+        "syncing": "Senkron…",
+        "empty": "TCCC kaydı yok",
+        "noFilterResults": "Filtre sonucu yok",
+        "downloadFiltered": "Filtreleneni indir",
+        "downloadAll": "Tümünü indir",
+        "preparingPdf": "Hazırlanıyor…",
+        "columns": {
+          "date": "Tarih",
+          "injury": "Yaralanma",
+          "tcccPhase": "TCCC fazı",
+          "tourniquetLocation": "Turnike konumu",
+          "tourniquetTime": "Turnike süresi",
+          "evacWaiting": "Tahliye bekleme",
+          "systolicBp": "Sistolik BP",
+          "march": "MARCH",
+          "successRate": "Başarı oranı (%)",
+          "report": "Rapor"
+        },
+        "detail": {
+          "title": "TCCC detay paneli · MARCH müdahaleleri",
+          "successRate": "Başarı oranı:",
+          "injuryType": "Yaralanma tipi:",
+          "tcccPhase": "TCCC fazı:",
+          "tourniquetLocation": "Turnike konumu:",
+          "tourniquetTime": "Turnike süresi:",
+          "evacWaiting": "Tahliye bekleme:",
+          "systolicBp": "Sistolik tansiyon:",
+          "tourniquetApplied": "Turnike uygulandı:",
+          "woundPacking": "Yara paketleme:",
+          "npaInserted": "NPA tüp:",
+          "chestSeal": "Göğüs mührü:",
+          "needleDecompression": "İğne dekompresyonu:",
+          "hypothermiaBlanket": "Hipotermi battaniyesi:",
+          "operationNote": "Operasyon notu:",
+          "noOperationNote": "Operasyon notu kayıtlı değil."
+        },
+        "bool": {
+          "yes": "Evet",
+          "no": "Hayır"
+        },
+        "filterSummary": {
+          "phase": "Faz: {{value}}"
+        }
+      }
     },
     "egitim": {
       "title": "EĞİTİM",

@@ -47,6 +47,16 @@ import {
   getVbssInsertionMethod,
   getVbssVesselType,
 } from './vbssLogRegistry'
+import { TCCC_MARCH_EVALUATION_PHASES } from './evaluationPhaseDefinitions'
+import { TCCC_PHASE_SUB_CRITERIA } from './evaluationPhaseCriteria'
+import { TCCC_CUSTOM, PROCEDURE_PERFORMED_OPTIONS } from './tcccOptions'
+import {
+  getTcccLogTimestampMs,
+  getTcccOperationNote,
+  getTcccPhase,
+  getTcccInjuryType,
+  getTcccTourniquetLocation,
+} from './tcccLogRegistry'
 
 /** @typedef {import('../components/training/trainingCategories').TrainingCategory} TrainingCategory */
 
@@ -1004,4 +1014,219 @@ export function formatVbssObservedEvalTypeLabel(row) {
   return isUnverifiedObservedEval(row)
     ? i18n.t('sectors.vbss.observedEval.registry.badgeUnverified', { ns: 'training' })
     : i18n.t('sectors.vbss.observedEval.registry.badgeVerified', { ns: 'training' })
+}
+
+/** @param {'tcccPhase' | 'injuryType' | 'casualtyType' | 'outcome' | 'tourniquetLocation'} optionType */
+function tcccOptionKey(optionType, optionId) {
+  const id = String(optionId ?? '').trim()
+  if (id === TCCC_CUSTOM) return `sectors.tccc.options.${optionType}.custom`
+  return `sectors.tccc.options.${optionType}.${id}`
+}
+
+/**
+ * @param {'tcccPhase' | 'injuryType' | 'casualtyType' | 'outcome' | 'tourniquetLocation'} optionType
+ * @param {string} optionId
+ * @param {string} [fallback]
+ */
+export function formatTcccOptionLabel(optionType, optionId, fallback = '') {
+  const id = String(optionId ?? '').trim()
+  if (!id) return fallback || '—'
+  return i18n.t(tcccOptionKey(optionType, id), {
+    ns: 'training',
+    defaultValue: fallback || id,
+  })
+}
+
+/** @param {string} procedureId */
+export function formatTcccProcedureLabel(procedureId) {
+  const id = String(procedureId ?? '').trim()
+  if (!id) return '—'
+  const match = PROCEDURE_PERFORMED_OPTIONS.find((o) => o.id === id)
+  return i18n.t(`sectors.tccc.options.procedure.${id}`, {
+    ns: 'training',
+    defaultValue: match?.label ?? id,
+  })
+}
+
+/**
+ * @param {import('./tcccEvaluationPayload').TcccMarchPhaseId} phaseId
+ * @param {string} chipId
+ * @param {string} [fallback]
+ */
+export function formatTcccMarchActionChipLabel(phaseId, chipId, fallback = '') {
+  const id = String(chipId ?? '').trim()
+  if (!id || !phaseId) return fallback || id
+  return i18n.t(`sectors.tccc.marchActions.${phaseId}.${id}`, {
+    ns: 'training',
+    defaultValue: fallback || id,
+  })
+}
+
+/** @param {boolean} criticalFail */
+export function formatTcccCriticalFailLabel(criticalFail) {
+  return criticalFail
+    ? i18n.t('sectors.tccc.observedEval.criticalFail.active', { ns: 'training' })
+    : i18n.t('sectors.tccc.observedEval.criticalFail.toggle', { ns: 'training' })
+}
+
+/** @param {boolean} unstable */
+export function formatTcccCasualtyStatusDisplay(unstable) {
+  return unstable
+    ? i18n.t('sectors.tccc.casualtyStatus.eksKia', { ns: 'training' })
+    : i18n.t('sectors.tccc.casualtyStatus.stable', { ns: 'training' })
+}
+
+/** @param {boolean} unstable */
+export function formatTcccCasualtyStatusCodeDisplay(unstable) {
+  return unstable
+    ? i18n.t('sectors.tccc.casualtyStatus.eksKiaCode', { ns: 'training' })
+    : i18n.t('sectors.tccc.casualtyStatus.stableCode', { ns: 'training' })
+}
+
+/**
+ * @param {string | null | undefined} reasonKey
+ */
+export function formatTcccDrillSubmitBlockedReason(reasonKey) {
+  if (!reasonKey) return null
+  const keyMap = {
+    OTURUM_GEREKLİ: 'sessionRequired',
+    CASUALTY_TYPE_GEREKLİ: 'casualtyTypeRequired',
+    'INTERVENTION_TIME_ZORUNLU · SN > 0': 'interventionTimeRequired',
+    PROCEDURE_PERFORMED_GEREKLİ: 'procedureRequired',
+    OUTCOME_GEREKLİ: 'outcomeRequired',
+    TCCC_FAZI_GEREKLİ: 'tcccPhaseRequired',
+    ÖZEL_FAZ_GEREKLİ: 'customPhaseRequired',
+    YARALANMA_TİPİ_GEREKLİ: 'injuryTypeRequired',
+    TURNİKE_KONUMU_GEREKLİ: 'tourniquetLocationRequired',
+    ÖZEL_KONUM_GEREKLİ: 'customLocationRequired',
+  }
+  const mapped = keyMap[reasonKey] ?? reasonKey
+  return i18n.t(`sectors.tccc.drill.validation.${mapped}`, {
+    ns: 'training',
+    defaultValue: reasonKey,
+  })
+}
+
+/**
+ * @param {string | null | undefined} err
+ */
+export function formatTcccObservedEvalValidationError(err) {
+  if (!err) return null
+  const staticMap = {
+    'Gözlemci adı zorunludur.': 'observerNameRequired',
+    'Saha tarihi zorunludur.': 'observedAtRequired',
+    'Müdahale hedef süresi geçersiz.': 'targetInterventionInvalid',
+  }
+  if (staticMap[err]) {
+    return i18n.t(`sectors.tccc.observedEval.validation.${staticMap[err]}`, { ns: 'training' })
+  }
+
+  const scoreMatch = err.match(/^(.+) · (.+) için geçerli skor seçin \((\d+)–(\d+)\)\.$/)
+  if (scoreMatch) {
+    const [, phaseTitle, criterionLabel, min, max] = scoreMatch
+    for (const meta of TCCC_MARCH_EVALUATION_PHASES) {
+      if (meta.title === phaseTitle) {
+        const criteria = TCCC_PHASE_SUB_CRITERIA[meta.id] ?? []
+        for (const c of criteria) {
+          if (c.label === criterionLabel) {
+            return i18n.t('sectors.tccc.observedEval.validation.criterionScoreRequired', {
+              ns: 'training',
+              phase: formatObservedEvalPhaseTitle('tccc', meta.id, meta.title),
+              criterion: formatObservedEvalCriterionLabel('tccc', meta.id, c.id, c.label),
+              min,
+              max,
+            })
+          }
+        }
+      }
+    }
+  }
+  return err
+}
+
+/** @param {Record<string, unknown>} row */
+export function formatTcccDateCellDisplay(row) {
+  const ms = getTcccLogTimestampMs(row)
+  if (!ms) return '—'
+  return new Date(ms).toLocaleString(trainingLocale(), {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  })
+}
+
+/** @param {boolean} value */
+export function formatTcccBoolDisplay(value) {
+  return i18n.t(`sectors.tccc.history.bool.${value ? 'yes' : 'no'}`, { ns: 'training' })
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ * @param {'injuryType' | 'tcccPhase' | 'tourniquetLocation'} field
+ */
+export function formatTcccSelectFieldDisplay(row, field) {
+  const label =
+    field === 'injuryType'
+      ? getTcccInjuryType(row)
+      : field === 'tcccPhase'
+        ? getTcccPhase(row)
+        : getTcccTourniquetLocation(row)
+  if (!label || label === '—') return '—'
+  if (label.startsWith('custom:')) {
+    return label.slice(7).trim() || i18n.t('sectors.tccc.options.tcccPhase.custom', { ns: 'training' })
+  }
+  const optionType = field
+  const keyField =
+    field === 'injuryType'
+      ? 'injuryTypeKey'
+      : field === 'tcccPhase'
+        ? 'tcccPhaseKey'
+        : 'tourniquetLocationKey'
+  const key = String(row[keyField] ?? '').trim()
+  if (key && key !== TCCC_CUSTOM) {
+    return formatTcccOptionLabel(optionType, key, label)
+  }
+  return label
+}
+
+/** @param {Record<string, unknown>} row */
+export function formatTcccOperationNoteDisplay(row) {
+  const note = getTcccOperationNote(row)
+  if (note === 'Operasyon notu kayıtlı değil.') {
+    return i18n.t('sectors.tccc.history.detail.noOperationNote', { ns: 'training' })
+  }
+  return note
+}
+
+/**
+ * @param {{ tcccPhaseKey?: string }} filters
+ */
+export function formatTcccFilterSummaryDisplay(filters) {
+  if (filters.tcccPhaseKey && filters.tcccPhaseKey !== 'ALL') {
+    return i18n.t('sectors.tccc.history.filterSummary.phase', {
+      ns: 'training',
+      value: filters.tcccPhaseKey,
+    })
+  }
+  return ''
+}
+
+/** @param {Record<string, unknown>} row */
+export function formatTcccObservedEvalDateDisplay(row) {
+  const ms = observedEvalTimestampMs(row)
+  if (!ms) return '—'
+  return new Date(ms).toLocaleString(trainingLocale(), {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+/** @param {Record<string, unknown>} row */
+export function formatTcccObservedEvalTypeLabel(row) {
+  if (String(row?.type ?? '') !== OBSERVED_EVAL_TYPE) return '—'
+  return isUnverifiedObservedEval(row)
+    ? i18n.t('sectors.tccc.observedEval.registry.badgeUnverified', { ns: 'training' })
+    : i18n.t('sectors.tccc.observedEval.registry.badgeVerified', { ns: 'training' })
 }

@@ -1,8 +1,16 @@
 import { AlertTriangle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import PhaseSubCriteriaFields from './PhaseSubCriteriaFields'
 import TrainingPhaseBlock from './layout/TrainingPhaseBlock'
 import { textareaClass, labelClass } from './layout/trainingTerminalTokens'
 import { TCCC_MARCH_ACTION_CHIPS } from '../../lib/tcccEvaluationPayload'
+import {
+  formatObservedEvalObservationNoteLabel,
+  formatObservedEvalPhaseSubtitle,
+  formatObservedEvalPhaseTitle,
+  formatTcccCriticalFailLabel,
+  formatTcccMarchActionChipLabel,
+} from '../../lib/trainingDisplayText'
 
 const chipClass = (active) =>
   `rounded border px-2.5 py-1.5 font-mono-technical text-[10px] transition ${
@@ -14,8 +22,6 @@ const chipClass = (active) =>
 /**
  * @param {{
  *   letter: string
- *   title: string
- *   subtitle: string
  *   phaseId: import('../../lib/tcccEvaluationPayload').TcccMarchPhaseId
  *   phase: import('../../lib/tcccEvaluationPayload').TcccMarchPhaseFormState
  *   criteria: import('../../lib/evaluationPhaseCriteria').EvaluationSubCriterion[]
@@ -25,14 +31,16 @@ const chipClass = (active) =>
  */
 export default function TcccMarchPhaseBlock({
   letter,
-  title,
-  subtitle,
   phaseId,
   phase,
   criteria,
   onPatch,
   onToggleChip,
 }) {
+  const { t } = useTranslation('training')
+  const title = formatObservedEvalPhaseTitle('tccc', phaseId)
+  const subtitle = formatObservedEvalPhaseSubtitle('tccc', phaseId)
+
   const headerExtra = (
     <button
       type="button"
@@ -45,7 +53,7 @@ export default function TcccMarchPhaseBlock({
       ].join(' ')}
     >
       <AlertTriangle className="size-3" aria-hidden />
-      {phase.criticalFail ? 'K.İ.A AKTİF' : 'Kritik hata'}
+      {formatTcccCriticalFailLabel(phase.criticalFail)}
     </button>
   )
 
@@ -57,6 +65,8 @@ export default function TcccMarchPhaseBlock({
         onSubScoreChange={(criterionId, value) =>
           onPatch({ subScores: { [criterionId]: value } })
         }
+        discipline="tccc"
+        phaseId={phaseId}
         min={1}
         max={10}
         disabled={phase.criticalFail}
@@ -67,7 +77,7 @@ export default function TcccMarchPhaseBlock({
       />
 
       <div className="space-y-1.5">
-        <span className={labelClass}>Taktik müdahale</span>
+        <span className={labelClass}>{t('sectors.tccc.observedEval.form.tacticalIntervention')}</span>
         <div className="flex flex-wrap gap-2">
           {TCCC_MARCH_ACTION_CHIPS[phaseId].map((chip) => (
             <button
@@ -76,14 +86,14 @@ export default function TcccMarchPhaseBlock({
               onClick={() => onToggleChip(chip.id)}
               className={chipClass(Boolean(phase.actions[chip.id]))}
             >
-              {chip.label}
+              {formatTcccMarchActionChipLabel(phaseId, chip.id, chip.label)}
             </button>
           ))}
         </div>
       </div>
 
       <label className="block space-y-1.5">
-        <span className={labelClass}>Gözlem notu</span>
+        <span className={labelClass}>{formatObservedEvalObservationNoteLabel()}</span>
         <textarea
           className={`${textareaClass} min-h-[4.5rem]`}
           value={phase.observation}

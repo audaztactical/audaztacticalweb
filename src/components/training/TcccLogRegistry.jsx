@@ -1,4 +1,5 @@
 import { Fragment, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ChevronDown, FileDown } from 'lucide-react'
 import TacticalPanel from '../ui/TacticalPanel'
 import { useAuth } from '../../context/AuthContext'
@@ -7,25 +8,25 @@ import {
   countTcccScoredMarchInterventions,
   extractTcccPhaseOptions,
   filterTcccLogs,
-  formatTcccBoolTr,
-  formatTcccDateCell,
   formatTcccEvacWaitingTime,
-  formatTcccFilterSummary,
   formatTcccInterventionTime,
   formatTcccSystolicBp,
   getTcccChestSealApplied,
   getTcccHypothermiaBlanket,
-  getTcccInjuryType,
   getTcccNeedleDecompression,
   getTcccNpaInserted,
-  getTcccOperationNote,
-  getTcccPhase,
   getTcccTourniquetApplied,
-  getTcccTourniquetLocation,
   getTcccWoundPacking,
   isTcccFilterActive,
   sortTcccLogsDesc,
 } from '../../lib/tcccLogRegistry'
+import {
+  formatTcccBoolDisplay,
+  formatTcccDateCellDisplay,
+  formatTcccFilterSummaryDisplay,
+  formatTcccOperationNoteDisplay,
+  formatTcccSelectFieldDisplay,
+} from '../../lib/trainingDisplayText'
 import { formatSuccessPercentCell } from '../../lib/trainingSuccessScore'
 
 const filterSelectClass =
@@ -45,6 +46,7 @@ function cellTitle(text) {
  * @param {{ logs: Record<string, unknown>[]; loading?: boolean }} props
  */
 export default function TcccLogRegistry({ logs, loading = false }) {
+  const { t } = useTranslation('training')
   const { userData } = useAuth()
   const [filters, setFilters] = useState(FILTER_INITIAL)
   const [expandedId, setExpandedId] = useState(/** @type {string | null} */ (null))
@@ -88,7 +90,7 @@ export default function TcccLogRegistry({ logs, loading = false }) {
         logs: exportRows,
         operator: userData,
         filterActive,
-        filterLabel: formatTcccFilterSummary(filters),
+        filterLabel: formatTcccFilterSummaryDisplay(filters),
       })
     } finally {
       setBulkPdfBusy(false)
@@ -96,10 +98,10 @@ export default function TcccLogRegistry({ logs, loading = false }) {
   }
 
   const bulkButtonLabel = bulkPdfBusy
-    ? 'HAZIRLANIYOR…'
+    ? t('sectors.tccc.history.preparingPdf')
     : filterActive
-      ? 'FİLTRELENENİ İNDİR'
-      : 'TÜMÜNÜ İNDİR'
+      ? t('sectors.tccc.history.downloadFiltered')
+      : t('sectors.tccc.history.downloadAll')
 
   return (
     <TacticalPanel className="relative border-accent/20 bg-app-bg/95 p-0">
@@ -112,10 +114,10 @@ export default function TcccLogRegistry({ logs, loading = false }) {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-accent/90">
-              GEÇMİŞ TCCC KAYITLARI · TAKTİK SAĞLIK
+              {t('sectors.tccc.history.title')}
             </p>
             <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-app-text/45">
-              tccc_logs · canlı senkron · {filtered.length}/{tcccLogs.length} KAYIT
+              {t('sectors.tccc.history.syncMeta', { filtered: filtered.length, total: tcccLogs.length })}
             </p>
           </div>
           {exportRows.length > 0 ? (
@@ -134,16 +136,18 @@ export default function TcccLogRegistry({ logs, loading = false }) {
 
       <div className="border-b border-accent/12 bg-app-bg px-3 py-3">
         <p className="mb-2 font-mono-technical text-[7px] font-bold uppercase tracking-[0.24em] text-app-text/55">
-          FİLTRELEME BARİ
+          {t('sectors.tccc.history.filterBar')}
         </p>
         <label className="flex min-w-[12rem] max-w-md flex-col gap-0.5">
-          <span className="font-mono-technical text-[7px] uppercase text-app-text/45">TCCC FAZI</span>
+          <span className="font-mono-technical text-[7px] uppercase text-app-text/45">
+            {t('sectors.tccc.history.tcccPhase')}
+          </span>
           <select
             className={filterSelectClass}
             value={filters.tcccPhaseKey}
             onChange={(e) => patchFilter({ tcccPhaseKey: e.target.value })}
           >
-            <option value="ALL">TÜMÜ</option>
+            <option value="ALL">{t('sectors.tccc.history.all')}</option>
             {phaseOptions.map((o) => (
               <option key={o.key} value={o.key}>
                 {o.label}
@@ -155,35 +159,37 @@ export default function TcccLogRegistry({ logs, loading = false }) {
 
       <div className="ilws-green-scroll max-h-[min(58vh,560px)] overflow-auto">
         {loading ? (
-          <p className="p-8 text-center font-mono-technical text-[10px] uppercase text-app-text/55">SENKRON…</p>
+          <p className="p-8 text-center font-mono-technical text-[10px] uppercase text-app-text/55">
+            {t('sectors.tccc.history.syncing')}
+          </p>
         ) : filtered.length === 0 ? (
           <p className="p-8 text-center font-mono-technical text-[10px] uppercase text-app-text/45">
-            {tcccLogs.length === 0 ? 'TCCC_KAYDI_YOK' : 'FİLTRE_SONUCU_YOK'}
+            {tcccLogs.length === 0 ? t('sectors.tccc.history.empty') : t('sectors.tccc.history.noFilterResults')}
           </p>
         ) : (
           <table className="w-full min-w-[1050px] border-collapse text-left">
             <thead className="sticky top-0 z-[2] bg-app-bg">
               <tr className="border-b border-accent/25 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-accent/80">
                 <th className="w-8 px-2 py-2" aria-hidden />
-                <th className="whitespace-nowrap px-3 py-2">TARİH</th>
-                <th className="min-w-[9rem] px-3 py-2">YARALANMA</th>
-                <th className="min-w-[9rem] px-3 py-2">TCCC FAZI</th>
-                <th className="min-w-[8rem] px-3 py-2">TURNİKE KONUMU</th>
-                <th className="whitespace-nowrap px-3 py-2">TURNİKE SÜRESİ</th>
-                <th className="whitespace-nowrap px-3 py-2">TAHLİYE BEKLEME</th>
-                <th className="whitespace-nowrap px-3 py-2">SİSTOLİK BP</th>
-                <th className="whitespace-nowrap px-3 py-2">MARCH</th>
-                <th className="whitespace-nowrap px-3 py-2 text-accent">BAŞARI ORANI (%)</th>
-                <th className="px-3 py-2 text-right">RAPOR</th>
+                <th className="whitespace-nowrap px-3 py-2">{t('sectors.tccc.history.columns.date')}</th>
+                <th className="min-w-[9rem] px-3 py-2">{t('sectors.tccc.history.columns.injury')}</th>
+                <th className="min-w-[9rem] px-3 py-2">{t('sectors.tccc.history.columns.tcccPhase')}</th>
+                <th className="min-w-[8rem] px-3 py-2">{t('sectors.tccc.history.columns.tourniquetLocation')}</th>
+                <th className="whitespace-nowrap px-3 py-2">{t('sectors.tccc.history.columns.tourniquetTime')}</th>
+                <th className="whitespace-nowrap px-3 py-2">{t('sectors.tccc.history.columns.evacWaiting')}</th>
+                <th className="whitespace-nowrap px-3 py-2">{t('sectors.tccc.history.columns.systolicBp')}</th>
+                <th className="whitespace-nowrap px-3 py-2">{t('sectors.tccc.history.columns.march')}</th>
+                <th className="whitespace-nowrap px-3 py-2 text-accent">{t('sectors.tccc.history.columns.successRate')}</th>
+                <th className="px-3 py-2 text-right">{t('sectors.tccc.history.columns.report')}</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((row) => {
                 const id = String(row.id)
                 const open = expandedId === id
-                const phase = getTcccPhase(row)
-                const tqLoc = getTcccTourniquetLocation(row)
-                const injuryType = getTcccInjuryType(row)
+                const phase = formatTcccSelectFieldDisplay(row, 'tcccPhase')
+                const tqLoc = formatTcccSelectFieldDisplay(row, 'tourniquetLocation')
+                const injuryType = formatTcccSelectFieldDisplay(row, 'injuryType')
                 const marchScore = countTcccScoredMarchInterventions(row)
 
                 return (
@@ -209,7 +215,7 @@ export default function TcccLogRegistry({ logs, loading = false }) {
                         />
                       </td>
                       <td className="whitespace-nowrap px-3 py-2 tabular-nums text-app-text/70">
-                        {formatTcccDateCell(row)}
+                        {formatTcccDateCellDisplay(row)}
                       </td>
                       <td
                         className="max-w-[11rem] break-words px-3 py-2 normal-case leading-snug text-app-text"
@@ -269,10 +275,10 @@ export default function TcccLogRegistry({ logs, loading = false }) {
                           <div className="min-h-0 overflow-hidden">
                             <div className="mx-3 mb-3 mt-1 rounded border border-accent/20 bg-black/50 p-3 font-mono-technical text-[8px] uppercase">
                               <p className="mb-2 font-bold tracking-wider text-accent/85">
-                                TCCC DETAY PANELİ · MARCH MÜDAHALELERİ
+                                {t('sectors.tccc.history.detail.title')}
                               </p>
                               <p className="mb-2 text-app-text/70">
-                                BAŞARI ORANI:{' '}
+                                {t('sectors.tccc.history.detail.successRate')}{' '}
                                 <span className="text-sm font-bold text-accent">
                                   {formatSuccessPercentCell(row)}
                                 </span>
@@ -282,75 +288,82 @@ export default function TcccLogRegistry({ logs, loading = false }) {
                                   className="break-words normal-case leading-relaxed text-app-text/90"
                                   title={cellTitle(injuryType)}
                                 >
-                                  YARALANMA TİPİ: <span className="text-slate-100">{injuryType}</span>
+                                  {t('sectors.tccc.history.detail.injuryType')}{' '}
+                                  <span className="text-slate-100">{injuryType}</span>
                                 </p>
                                 <p
                                   className="break-words normal-case leading-relaxed text-app-text/90"
                                   title={cellTitle(phase)}
                                 >
-                                  TCCC FAZI: <span className="text-slate-100">{phase}</span>
+                                  {t('sectors.tccc.history.detail.tcccPhase')}{' '}
+                                  <span className="text-slate-100">{phase}</span>
                                 </p>
                                 <p
                                   className="break-words normal-case leading-relaxed text-app-text/90"
                                   title={cellTitle(tqLoc)}
                                 >
-                                  TURNİKE KONUMU: <span className="text-slate-100">{tqLoc}</span>
+                                  {t('sectors.tccc.history.detail.tourniquetLocation')}{' '}
+                                  <span className="text-slate-100">{tqLoc}</span>
                                 </p>
                                 <p className="text-app-text/70">
-                                  TURNİKE SÜRESİ:{' '}
+                                  {t('sectors.tccc.history.detail.tourniquetTime')}{' '}
                                   <span className="text-accent">{formatTcccInterventionTime(row)}</span>
                                 </p>
                                 <p className="text-app-text/70">
-                                  TAHLİYE BEKLEME:{' '}
+                                  {t('sectors.tccc.history.detail.evacWaiting')}{' '}
                                   <span className="text-[#5ec8ff]">{formatTcccEvacWaitingTime(row)}</span>
                                 </p>
                                 <p className="text-app-text/70 sm:col-span-2">
-                                  SİSTOLİK TANSİYON:{' '}
+                                  {t('sectors.tccc.history.detail.systolicBp')}{' '}
                                   <span className="text-red-300/90">{formatTcccSystolicBp(row)}</span>
                                 </p>
                               </div>
                               <div className="mb-3 grid gap-2 sm:grid-cols-2">
                                 <p className="text-app-text/70">
-                                  TURNİKE UYGULANDI:{' '}
+                                  {t('sectors.tccc.history.detail.tourniquetApplied')}{' '}
                                   <span className="text-accent">
-                                    {formatTcccBoolTr(getTcccTourniquetApplied(row))}
+                                    {formatTcccBoolDisplay(getTcccTourniquetApplied(row))}
                                   </span>
                                 </p>
                                 <p className="text-app-text/70">
-                                  YARA PAKETLEME:{' '}
+                                  {t('sectors.tccc.history.detail.woundPacking')}{' '}
                                   <span className="text-app-text">
-                                    {formatTcccBoolTr(getTcccWoundPacking(row))}
+                                    {formatTcccBoolDisplay(getTcccWoundPacking(row))}
                                   </span>
                                 </p>
                                 <p className="text-app-text/70">
-                                  NPA TÜP:{' '}
+                                  {t('sectors.tccc.history.detail.npaInserted')}{' '}
                                   <span className="text-app-text">
-                                    {formatTcccBoolTr(getTcccNpaInserted(row))}
+                                    {formatTcccBoolDisplay(getTcccNpaInserted(row))}
                                   </span>
                                 </p>
                                 <p className="text-app-text/70">
-                                  GÖĞÜS MÜHRÜ:{' '}
+                                  {t('sectors.tccc.history.detail.chestSeal')}{' '}
                                   <span className="text-app-text">
-                                    {formatTcccBoolTr(getTcccChestSealApplied(row))}
+                                    {formatTcccBoolDisplay(getTcccChestSealApplied(row))}
                                   </span>
                                 </p>
                                 <p className="text-app-text/70">
-                                  İĞNE DEKOMPRESYONU:{' '}
+                                  {t('sectors.tccc.history.detail.needleDecompression')}{' '}
                                   <span className="text-app-text">
-                                    {formatTcccBoolTr(getTcccNeedleDecompression(row))}
+                                    {formatTcccBoolDisplay(getTcccNeedleDecompression(row))}
                                   </span>
                                 </p>
                                 <p className="text-app-text/70">
-                                  HİPOTERMİ BATTANİYESİ:{' '}
+                                  {t('sectors.tccc.history.detail.hypothermiaBlanket')}{' '}
                                   <span className="text-app-text">
-                                    {formatTcccBoolTr(getTcccHypothermiaBlanket(row))}
+                                    {formatTcccBoolDisplay(getTcccHypothermiaBlanket(row))}
                                   </span>
                                 </p>
                               </div>
-                              <p className="break-words normal-case leading-relaxed text-app-text/70">
-                                OPERASYON NOTU:{' '}
-                                <span className="text-app-text">{getTcccOperationNote(row)}</span>
-                              </p>
+                              <div className="rounded border border-white/10 bg-app-bg px-2 py-2">
+                                <p className="mb-1 text-[7px] text-app-text/45">
+                                  {t('sectors.tccc.history.detail.operationNote')}
+                                </p>
+                                <p className="whitespace-pre-wrap break-words normal-case leading-relaxed text-app-text/90">
+                                  {formatTcccOperationNoteDisplay(row)}
+                                </p>
+                              </div>
                             </div>
                           </div>
                         </div>
