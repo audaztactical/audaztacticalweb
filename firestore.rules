@@ -34,8 +34,26 @@ service cloud.firestore {
         && authMuhabereRole() == 'instructor';
     }
 
+    /**
+     * Eğitmen yalnızca kendi grubundaki operatörün kişisel loglarına erişebilir.
+     * users/{op}.instructorId veya groups/{groupId}.instructorId + members[] ile doğrulanır.
+     */
+    function canInstructorAccessOperator(operatorUid) {
+      return isInstructor()
+        && exists(/databases/$(database)/documents/users/$(operatorUid))
+        && (
+          get(/databases/$(database)/documents/users/$(operatorUid)).data.get('instructorId', '') == request.auth.uid
+          || (
+            get(/databases/$(database)/documents/users/$(operatorUid)).data.get('groupId', '') is string
+            && get(/databases/$(database)/documents/users/$(operatorUid)).data.get('groupId', '').size() > 0
+            && isGroupInstructor(get(/databases/$(database)/documents/users/$(operatorUid)).data.get('groupId', ''))
+            && operatorUid in groupDoc(get(/databases/$(database)/documents/users/$(operatorUid)).data.get('groupId', '')).data.get('members', [])
+          )
+        );
+    }
+
     function canAccessOperatorData(operatorUid) {
-      return isOwnerUid(operatorUid) || isInstructor() || isContentAdmin();
+      return isOwnerUid(operatorUid) || canInstructorAccessOperator(operatorUid) || isContentAdmin();
     }
 
     /** users/{uid} — role veya legacy userRole */

@@ -1,0 +1,65 @@
+{
+  "titles": {
+    "bulk": "PERSONAL ACHIEVEMENT BULK REPORT",
+    "bulkFor": "PERSONAL ACHIEVEMENT BULK REPORT · {{callsign}}"
+  },
+  "sections": {
+    "operator": "OPERATOR PROFILE",
+    "hudSummary": "HUD SUMMARY",
+    "charts": "ANALYTIC CHARTS",
+    "matrix": "TACTICAL CHARACTER MATRIX",
+    "radar": "CHRONIC ERROR RADAR",
+    "wave": "STRESS-PERFORMANCE WAVE",
+    "tccc": "ANALYTIC TCCC REACTION WAVE",
+    "activity": "FULL ACTIVITY HISTORY",
+    "errors": "CHRONIC ERROR CODES"
+  },
+  "fields": {
+    "callsign": "Callsign",
+    "role": "Role",
+    "viewMode": "View mode",
+    "viewSelf": "Self",
+    "viewMember": "Squad member (instructor view)",
+    "orsScore": "ORS score",
+    "overallSuccess": "Overall success",
+    "totalEvents": "Total events",
+    "criticalErrors": "Critical errors",
+    "avgAccuracy": "Average accuracy",
+    "filteredLogs": "Filtered logs",
+    "discipline": "Discipline filter",
+    "timeframe": "Timeframe"
+  },
+  "table": {
+    "activity": {
+      "tag": "TAG",
+      "title": "SESSION",
+      "success": "SUCCESS %",
+      "when": "DATE / TIME"
+    },
+    "errors": {
+      "code": "ERROR CODE",
+      "label": "LABEL",
+      "count": "FREQUENCY"
+    }
+  },
+  "empty": {
+    "activity": "No activity records in this window.",
+    "errors": "No chronic error codes recorded.",
+    "chart": "Chart unavailable for this dataset."
+  },
+  "roles": {
+    "member": "Member",
+    "operator": "Operator",
+    "premium_member": "Premium member",
+    "instructor": "Instructor"
+  },
+  "fileNaming": {
+    "brand": "AUDAZ",
+    "slug": "Progress",
+    "bulk": "Bulk",
+    "records": "records"
+  },
+  "continuation": {
+    "continue": "Continued"
+  }
+}

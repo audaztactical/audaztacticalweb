@@ -3,6 +3,7 @@ import i18n from '../i18n'
 const NS = 'training-pdf'
 const HEALTH_NS = 'health-pdf'
 const BALLISTICS_PDF_NS = 'ballistics-pdf'
+const PROGRESS_PDF_NS = 'progress-pdf'
 
 /** @returns {'tr-TR' | 'en-US'} */
 export function pdfLocale() {
@@ -38,6 +39,40 @@ export function healthPdfReportTitle(key) {
  */
 export function ballisticsPdfT(key, params = {}) {
   return i18n.t(key, { ns: BALLISTICS_PDF_NS, ...params })
+}
+
+/**
+ * Progress Tracker bulk PDF copy (`progress-pdf` namespace).
+ * @param {string} key
+ * @param {Record<string, unknown>} [params]
+ */
+export function progressPdfT(key, params = {}) {
+  return i18n.t(key, { ns: PROGRESS_PDF_NS, ...params })
+}
+
+/**
+ * @param {string} [callsign]
+ */
+export function progressPdfReportTitle(callsign) {
+  const name = String(callsign ?? '').trim()
+  if (name) return progressPdfT('titles.bulkFor', { callsign: name })
+  return progressPdfT('titles.bulk')
+}
+
+/**
+ * ASCII-safe Progress bulk PDF filename (localized segments, no Turkish chars).
+ * @param {string} callsign
+ * @param {number} [logCount]
+ */
+export function progressPdfBulkFilename(callsign, logCount = 0) {
+  const brand = pdfFilenameSegment(progressPdfT('fileNaming.brand'))
+  const slug = pdfFilenameSegment(progressPdfT('fileNaming.slug'))
+  const bulk = pdfFilenameSegment(progressPdfT('fileNaming.bulk'))
+  const records = pdfFilenameSegment(progressPdfT('fileNaming.records'))
+  const safeCallsign = pdfFilenameSegment(callsign).slice(0, 24) || 'OPERATOR'
+  const dateStamp = new Date().toISOString().slice(0, 10)
+  const count = Math.max(0, Math.round(Number(logCount) || 0))
+  return `${brand}-${slug}-${bulk}-${safeCallsign}-${count}${records}-${dateStamp}.pdf`
 }
 
 /**

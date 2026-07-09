@@ -5,7 +5,15 @@
     "backToCommand": "RETURN TO COMMAND",
     "operatorLabel": "OPERATOR",
     "operatorFallback": "OPERATOR",
-    "syncing": "Syncing operator data…"
+    "syncing": "Syncing operator data…",
+    "viewingBanner": "NOW VIEWING: {{callsign}}",
+    "viewingSelf": "NOW VIEWING: YOUR DATA",
+    "selectOperator": "SELECT OPERATOR",
+    "selectOperatorSelf": "— MY DATA —",
+    "selectOperatorEmpty": "NO SQUAD MEMBERS",
+    "bulkPdf": "DOWNLOAD BULK REPORT",
+    "bulkPdfBusy": "GENERATING PDF…",
+    "bulkPdfError": "PDF EXPORT FAILED"
   },
   "orsHud": {
     "kicker": "{{abbrev}} · OPERATIONAL READINESS",

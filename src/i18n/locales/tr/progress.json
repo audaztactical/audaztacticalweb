@@ -5,7 +5,15 @@
     "backToCommand": "KOMUTA MERKEZİNE DÖN",
     "operatorLabel": "OPERATÖR",
     "operatorFallback": "OPERATÖR",
-    "syncing": "Operatör verisi senkronize ediliyor…"
+    "syncing": "Operatör verisi senkronize ediliyor…",
+    "viewingBanner": "ŞU AN GÖRÜNTÜLENEN: {{callsign}}",
+    "viewingSelf": "ŞU AN GÖRÜNTÜLENEN: KENDİ VERİN",
+    "selectOperator": "OPERATÖR SEÇ",
+    "selectOperatorSelf": "— KENDİ VERİM —",
+    "selectOperatorEmpty": "GRUP ÜYESİ YOK",
+    "bulkPdf": "TOPLU RAPOR İNDİR",
+    "bulkPdfBusy": "PDF HAZIRLANIYOR…",
+    "bulkPdfError": "PDF DIŞA AKTARIM BAŞARISIZ"
   },
   "orsHud": {
     "kicker": "{{abbrev}} · OPERASYONEL HAZIRLIK",

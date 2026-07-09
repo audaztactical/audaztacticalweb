@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { collection, onSnapshot, orderBy, query } from 'firebase/firestore'
 import { useTranslation } from 'react-i18next'
 import {
   Activity,
@@ -11,6 +10,7 @@ import {
   ChevronRight,
   Clock,
   Crosshair,
+  FileDown,
   Filter,
   Shield,
   Target,
@@ -47,6 +47,13 @@ import PerformanceTrendChart from '../components/progress/PerformanceTrendChart'
 import ProgressHudPanels, { EXPANDED_HUD_PANEL_IDS } from '../components/progress/ProgressHudPanels'
 import { resolveLogFocusId } from '../lib/progressHudAnalytics'
 import { buildLogsById } from '../lib/progressTacticalTooltip'
+import {
+  resolveProgressViewUid,
+  subscribeInstructorSquadMembers,
+  subscribeOperatorDomainEntries,
+  subscribeOperatorRangeLogEntries,
+} from '../lib/progressInstructorView'
+import { exportProgressBulkReportPdf } from '../lib/progressReportPdf'
 
 /** @typedef {import('../lib/progressAnalytics').DisciplineFilter} DisciplineFilter */
 /** @typedef {import('../lib/progressAnalytics').TimeframeFilter} TimeframeFilter */
@@ -380,12 +387,12 @@ function LogFocusBanner({ logId, onRelease }) {
 export default function ProgressTracker({ onBack }) {
   const { t, i18n } = useTranslation('progress')
   const navigate = useNavigate()
-  const { user, userData, loading, profileLoading, isConfigured } = useAuth()
+  const { user, userData, loading, profileLoading, isConfigured, isInstructor, role } = useAuth()
   const inv = useAudazData('inventory')
   const trainings = useAudazData('trainings')
   const health = useAudazData('health_records')
-  const vbssLogs = useAudazData('vbss_logs')
-  const tcccLogs = useAudazData('tccc_logs')
+  const selfVbssLogs = useAudazData('vbss_logs')
+  const selfTcccLogs = useAudazData('tccc_logs')
 
   const [discipline, setDiscipline] = useState(/** @type {DisciplineFilter} */ ('all'))
   const [subTopic, setSubTopic] = useState('all')
@@ -397,72 +404,119 @@ export default function ProgressTracker({ onBack }) {
   const [hudExpandedPanel, setHudExpandedPanel] = useState(/** @type {ExpandedHudPanelId | null} */ (null))
   const hudOverlayActive = hudExpandedPanel != null
 
+  const isInstructorUser = role === 'instructor' || isInstructor
+  const [squadMembers, setSquadMembers] = useState(
+    /** @type {import('../lib/progressInstructorView').ProgressSquadMember[]} */ ([]),
+  )
+  const [selectedOperatorUid, setSelectedOperatorUid] = useState(/** @type {string | null} */ (null))
+  const [remoteVbssLogs, setRemoteVbssLogs] = useState(/** @type {Record<string, unknown>[]} */ ([]))
+  const [remoteTcccLogs, setRemoteTcccLogs] = useState(/** @type {Record<string, unknown>[]} */ ([]))
+  const [pdfBusy, setPdfBusy] = useState(false)
+  const [pdfError, setPdfError] = useState(/** @type {string | null} */ (null))
+
   const handleTrendExpand = () => {
     setHudExpandedPanel('TREND')
   }
 
   const uid = user?.uid ?? null
+  const viewUid = resolveProgressViewUid(
+    isInstructorUser ? selectedOperatorUid : null,
+    squadMembers,
+    uid,
+  )
+  const viewingOther = Boolean(isInstructorUser && viewUid && uid && viewUid !== uid)
   const authBusy = loading || profileLoading
   const waitingUser = authBusy || !user
-  const callsign = (userData?.callsign || user?.displayName || t('page.operatorFallback')).trim()
+  const selfCallsign = (userData?.callsign || user?.displayName || t('page.operatorFallback')).trim()
+  const selectedMember = viewingOther
+    ? squadMembers.find((m) => m.uid === viewUid) ?? null
+    : null
+  const callsign = selectedMember?.callsign || selfCallsign
+  const viewRole = selectedMember?.role || role || 'member'
+
+  const vbssLogs = viewingOther ? { items: remoteVbssLogs, ready: true } : selfVbssLogs
+  const tcccLogs = viewingOther ? { items: remoteTcccLogs, ready: true } : selfTcccLogs
 
   const handleBack = onBack ?? (() => navigate('/dashboard'))
 
   const disciplineOptions = useMemo(() => getProgressDisciplineOptions(), [i18n.language])
 
   useEffect(() => {
-    if (!uid || !isFirebaseConfigured() || !db) {
+    if (!isInstructorUser || !uid) {
+      setSquadMembers([])
+      setSelectedOperatorUid(null)
+      return undefined
+    }
+    return subscribeInstructorSquadMembers(
+      uid,
+      (members) => setSquadMembers(members),
+      (err) => emitFirebaseError(err),
+    )
+  }, [isInstructorUser, uid])
+
+  useEffect(() => {
+    if (!viewingOther || !selectedOperatorUid) return
+    if (!squadMembers.some((m) => m.uid === selectedOperatorUid)) {
+      setSelectedOperatorUid(null)
+    }
+  }, [squadMembers, selectedOperatorUid, viewingOther])
+
+  useEffect(() => {
+    if (!viewUid || !isFirebaseConfigured() || !db) {
       setLogs([])
       setLogsLoading(false)
       return undefined
     }
 
     setLogsLoading(true)
-    let unsub = () => {}
+    setFocusedLogId(null)
 
-    try {
-      const entriesRef = collection(db, 'range_logs', uid, 'entries')
-      const q = query(entriesRef, orderBy('updatedAt', 'desc'))
-
-      unsub = onSnapshot(
-        q,
-        (snap) => {
-          const rows = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
-          rows.sort((a, b) => {
-            const tb =
-              typeof b.updatedAt?.toMillis === 'function'
-                ? b.updatedAt.toMillis()
-                : Date.parse(String(b.timestamp || '')) || 0
-            const ta =
-              typeof a.updatedAt?.toMillis === 'function'
-                ? a.updatedAt.toMillis()
-                : Date.parse(String(a.timestamp || '')) || 0
-            return tb - ta
-          })
-          setLogs(rows)
-          setLogsLoading(false)
-        },
-        (err) => {
-          emitFirebaseError(err)
-          setLogsLoading(false)
-        }
-      )
-    } catch (err) {
-      emitFirebaseError(err)
-      setLogsLoading(false)
-    }
+    const unsub = subscribeOperatorRangeLogEntries(
+      viewUid,
+      (rows) => {
+        setLogs(rows)
+        setLogsLoading(false)
+      },
+      (err) => {
+        emitFirebaseError(err)
+        setLogsLoading(false)
+      },
+    )
 
     return () => {
-      const off = unsub
       window.setTimeout(() => {
         try {
-          off()
+          unsub()
         } catch {
           /* teardown */
         }
       }, 0)
     }
-  }, [uid])
+  }, [viewUid])
+
+  useEffect(() => {
+    if (!viewingOther || !viewUid) {
+      setRemoteVbssLogs([])
+      setRemoteTcccLogs([])
+      return undefined
+    }
+    const unsubVbss = subscribeOperatorDomainEntries(
+      viewUid,
+      'vbss_logs',
+      setRemoteVbssLogs,
+      (err) => emitFirebaseError(err),
+    )
+    const unsubTccc = subscribeOperatorDomainEntries(
+      viewUid,
+      'tccc_logs',
+      setRemoteTcccLogs,
+      (err) => emitFirebaseError(err),
+    )
+    return () => {
+      unsubVbss()
+      unsubTccc()
+    }
+  }, [viewingOther, viewUid])
 
   useEffect(() => {
     setSubTopic('all')
@@ -555,18 +609,30 @@ export default function ProgressTracker({ onBack }) {
     [focusedLog, filteredLogs]
   )
 
-  const orsReady = inv.ready && trainings.ready && health.ready && !logsLoading && !waitingUser
+  const orsReady =
+    !logsLoading &&
+    !waitingUser &&
+    (viewingOther || (inv.ready && trainings.ready && health.ready))
   const orsResult = useMemo(() => {
     if (!orsReady) return null
+    // Member view: do not mix instructor's private health/inventory into ORS.
     return computeORS({
-      inventory: inv.items,
-      trainings: trainings.items,
-      health: health.items,
+      inventory: viewingOther ? [] : inv.items,
+      trainings: viewingOther ? [] : trainings.items,
+      health: viewingOther ? [] : health.items,
       rangeLogs: logs,
       observedEvalLogs,
       nowMs: Date.now(),
     })
-  }, [orsReady, inv.items, trainings.items, health.items, logs, observedEvalLogs])
+  }, [
+    orsReady,
+    viewingOther,
+    inv.items,
+    trainings.items,
+    health.items,
+    logs,
+    observedEvalLogs,
+  ])
 
   const tcccOrsPenaltyActive = useMemo(
     () =>
@@ -587,6 +653,36 @@ export default function ProgressTracker({ onBack }) {
   }, [filteredLogs, discipline, subTopic, timeframe, focusedLogId])
 
   const syncing = waitingUser || logsLoading
+
+  const handleBulkPdf = async () => {
+    if (pdfBusy) return
+    setPdfBusy(true)
+    setPdfError(null)
+    try {
+      await exportProgressBulkReportPdf({
+        logs,
+        filteredLogs: activitySourceLogs,
+        meta: {
+          callsign,
+          role: viewRole,
+          viewMode: viewingOther ? 'member' : 'self',
+          orsScore: orsResult?.score ?? null,
+          overallSuccess: displayOverallSuccess,
+          totalEvents: displayStats.totalEvents,
+          criticalErrors: displayStats.criticalErrors,
+          avgAccuracy: displayStats.avgAccuracy,
+          filteredLogCount: activitySourceLogs.length,
+          disciplineLabel: disciplineOptions.find((d) => d.id === discipline)?.label ?? discipline,
+          timeframeLabel: labelProgressTimeframe(timeframe),
+        },
+      })
+    } catch (err) {
+      console.error(err)
+      setPdfError(t('page.bulkPdfError'))
+    } finally {
+      setPdfBusy(false)
+    }
+  }
 
   const subTopicSelectOptions =
     subTopics.length > 0
@@ -627,6 +723,67 @@ export default function ProgressTracker({ onBack }) {
               <p className="text-sm font-bold uppercase tracking-wider text-app-text">{callsign}</p>
             </div>
           </div>
+        </div>
+
+        <div className="flex flex-col gap-3 rounded-xl border border-slate-800 bg-slate-950 p-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:p-4">
+            {isInstructorUser ? (
+              <div className="min-w-0 flex-1 space-y-2">
+                <label className="block font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-emerald-400/90">
+                  {t('page.selectOperator')}
+                </label>
+                <select
+                  className={selectClass}
+                  value={selectedOperatorUid ?? ''}
+                  onChange={(e) => {
+                    const next = e.target.value || null
+                    setSelectedOperatorUid(next)
+                    setFocusedLogId(null)
+                  }}
+                  aria-label={t('page.selectOperator')}
+                >
+                  <option value="">{t('page.selectOperatorSelf')}</option>
+                  {squadMembers.length === 0 ? (
+                    <option value="" disabled>
+                      {t('page.selectOperatorEmpty')}
+                    </option>
+                  ) : (
+                    squadMembers.map((m) => (
+                      <option key={m.uid} value={m.uid}>
+                        {m.callsign}
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+            ) : null}
+            <div className="flex flex-col items-stretch gap-2 sm:items-end">
+              <button
+                type="button"
+                onClick={handleBulkPdf}
+                disabled={pdfBusy || syncing}
+                className="inline-flex items-center justify-center gap-2 rounded-sm border border-emerald-700/50 bg-emerald-950/40 px-4 py-2.5 font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-300 transition-colors hover:border-emerald-500/60 hover:bg-emerald-950/60 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <FileDown className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />
+                {pdfBusy ? t('page.bulkPdfBusy') : t('page.bulkPdf')}
+              </button>
+              {pdfError ? (
+                <p className="font-mono text-[9px] font-bold uppercase tracking-wider text-rose-400">{pdfError}</p>
+              ) : null}
+            </div>
+          </div>
+
+        <div
+          role="status"
+          className={[
+            'rounded-lg border px-4 py-2.5 font-mono text-[10px] font-bold uppercase tracking-[0.16em]',
+            viewingOther
+              ? 'border-amber-500/45 bg-amber-950/25 text-amber-300'
+              : 'border-slate-700/80 bg-slate-900/50 text-app-text/70',
+          ].join(' ')}
+        >
+          {viewingOther
+            ? t('page.viewingBanner', { callsign })
+            : t('page.viewingSelf')}
         </div>
 
         {syncing ? (

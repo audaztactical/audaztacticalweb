@@ -1,0 +1,65 @@
+{
+  "titles": {
+    "bulk": "KISISEL BASARI TOPLU RAPORU",
+    "bulkFor": "KISISEL BASARI TOPLU RAPORU · {{callsign}}"
+  },
+  "sections": {
+    "operator": "OPERATOR PROFILI",
+    "hudSummary": "HUD OZET",
+    "charts": "ANALITIK GRAFIKLER",
+    "matrix": "TAKTIK KARAKTER MATRISI",
+    "radar": "KRONIK HATA RADARI",
+    "wave": "STRES-PERFORMANS DALGASI",
+    "tccc": "ANALITIK TCCC REAKSIYON DALGASI",
+    "activity": "TAM AKTIVITE GECMISI",
+    "errors": "KRONIK HATA KODLARI"
+  },
+  "fields": {
+    "callsign": "Cagri adi",
+    "role": "Rol",
+    "viewMode": "Gorunum",
+    "viewSelf": "Kendi verisi",
+    "viewMember": "Grup uyesi (egitmen gorunumu)",
+    "orsScore": "ORS skoru",
+    "overallSuccess": "Genel basari",
+    "totalEvents": "Toplam olay",
+    "criticalErrors": "Kritik hatalar",
+    "avgAccuracy": "Ortalama isabet",
+    "filteredLogs": "Filtrelenmis kayit",
+    "discipline": "Disiplin filtresi",
+    "timeframe": "Zaman araligi"
+  },
+  "table": {
+    "activity": {
+      "tag": "ETIKET",
+      "title": "OTURUM",
+      "success": "BASARI %",
+      "when": "TARIH / SAAT"
+    },
+    "errors": {
+      "code": "HATA KODU",
+      "label": "ETIKET",
+      "count": "SIKLIK"
+    }
+  },
+  "empty": {
+    "activity": "Bu pencerede aktivite kaydi yok.",
+    "errors": "Kronik hata kodu kaydi yok.",
+    "chart": "Bu veri seti icin grafik olusturulamadi."
+  },
+  "roles": {
+    "member": "Uye",
+    "operator": "Operator",
+    "premium_member": "Premium uye",
+    "instructor": "Egitmen"
+  },
+  "fileNaming": {
+    "brand": "AUDAZ",
+    "slug": "Basari",
+    "bulk": "Toplu",
+    "records": "kayit"
+  },
+  "continuation": {
+    "continue": "Devam"
+  }
+}
