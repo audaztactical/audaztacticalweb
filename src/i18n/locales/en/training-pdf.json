@@ -66,7 +66,7 @@
     },
     "summary": {
       "totalRoundsHits": "Total rounds / hits: {{rounds}} / {{hits}}",
-      "avgAccuracy": "Average hit ratio: {{percent}}%",
+      "avgAccuracy": "Average hit ratio: {{percent}}",
       "totalAmmoCost": "Total ammunition cost: {{cost}}"
     },
     "bulkColumns": {
@@ -99,7 +99,7 @@
       "error": "Error"
     },
     "summary": {
-      "avgAccuracy": "Average accuracy score: {{percent}}%",
+      "avgAccuracy": "Average accuracy score: {{percent}}",
       "totalViolations": "Total safety violations: {{count}}"
     },
     "bulkColumns": {
@@ -136,8 +136,8 @@
       "error": "Error"
     },
     "summary": {
-      "avgDecision": "Average decision accuracy: {{percent}}%",
-      "avgSuccess": "Average success: {{percent}}%"
+      "avgDecision": "Average decision accuracy: {{percent}}",
+      "avgSuccess": "Average success: {{percent}}"
     },
     "bulkColumns": {
       "date": "Date",
@@ -164,7 +164,7 @@
       "successRate": "Success rate"
     },
     "summary": {
-      "avgSuccess": "Average success: {{percent}}%"
+      "avgSuccess": "Average success: {{percent}}"
     },
     "bulkColumns": {
       "date": "Date",
@@ -197,7 +197,7 @@
     "appliedTreatments": "Applied treatments:",
     "operationNote": "Operation note:",
     "summary": {
-      "avgSuccess": "Average success: {{percent}}%"
+      "avgSuccess": "Average success: {{percent}}"
     },
     "bulkColumns": {
       "date": "Date",

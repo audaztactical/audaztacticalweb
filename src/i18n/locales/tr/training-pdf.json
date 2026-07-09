@@ -66,7 +66,7 @@
     },
     "summary": {
       "totalRoundsHits": "Toplam atım / isabet: {{rounds}} / {{hits}}",
-      "avgAccuracy": "Ortalama isabet: %{{percent}}",
+      "avgAccuracy": "Ortalama isabet: {{percent}}",
       "totalAmmoCost": "Toplam mühimmat maliyeti: {{cost}}"
     },
     "bulkColumns": {
@@ -99,7 +99,7 @@
       "error": "Hata"
     },
     "summary": {
-      "avgAccuracy": "Ortalama isabet skoru: %{{percent}}",
+      "avgAccuracy": "Ortalama isabet skoru: {{percent}}",
       "totalViolations": "Toplam güvenlik ihlali: {{count}}"
     },
     "bulkColumns": {
@@ -136,8 +136,8 @@
       "error": "Hata"
     },
     "summary": {
-      "avgDecision": "Ortalama karar doğruluğu: %{{percent}}",
-      "avgSuccess": "Ortalama başarı: %{{percent}}"
+      "avgDecision": "Ortalama karar doğruluğu: {{percent}}",
+      "avgSuccess": "Ortalama başarı: {{percent}}"
     },
     "bulkColumns": {
       "date": "Tarih",
@@ -164,7 +164,7 @@
       "successRate": "Başarı oranı"
     },
     "summary": {
-      "avgSuccess": "Ortalama başarı: %{{percent}}"
+      "avgSuccess": "Ortalama başarı: {{percent}}"
     },
     "bulkColumns": {
       "date": "Tarih",
@@ -197,7 +197,7 @@
     "appliedTreatments": "Uygulanan tedaviler:",
     "operationNote": "Operasyon notu:",
     "summary": {
-      "avgSuccess": "Ortalama başarı: %{{percent}}"
+      "avgSuccess": "Ortalama başarı: {{percent}}"
     },
     "bulkColumns": {
       "date": "Tarih",

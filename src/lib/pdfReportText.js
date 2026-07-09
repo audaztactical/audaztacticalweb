@@ -41,6 +41,17 @@ export function pdfFormatNumber(value) {
   return Number(value).toLocaleString(pdfLocale())
 }
 
+/**
+ * Locale-aware percent display (TR: %73 · EN: 73%).
+ * @param {number} value Whole percent (e.g. 73 for 73%)
+ */
+export function pdfFormatPercent(value) {
+  const n = Number(value)
+  if (!Number.isFinite(n)) return '—'
+  const formatted = pdfFormatNumber(n)
+  return pdfLocale().startsWith('tr') ? `%${formatted}` : `${formatted}%`
+}
+
 /** @param {boolean} value */
 export function pdfYesNo(value) {
   return value ? pdfT('common.yes') : pdfT('common.no')

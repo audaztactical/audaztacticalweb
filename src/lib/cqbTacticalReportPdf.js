@@ -9,12 +9,10 @@ import {
   getCqbBreachingType,
   getCqbDoorState,
   getCqbEntryMethod,
-  getCqbOperationNote,
   getCqbRoomTopology,
   getCqbSafetyViolations,
   getCqbSuccessPercent,
   getCqbTacticalDecision,
-  getCqbTacticalErrorsGrouped,
   getCqbTeamSize,
   getCqbThreatNeutralized,
 } from './cqbLogRegistry'
@@ -22,12 +20,16 @@ import { getLogMeteoData } from './meteoDataCapture'
 import { preparePdfAssets, setPdfFont } from './pdfFontLoader'
 import {
   pdfFilterLine,
-  pdfFormatNumber,
+  pdfFormatPercent,
   pdfMeteoRows,
   pdfParamValueHead,
   pdfRecordLabel,
   pdfT,
 } from './pdfReportText'
+import {
+  formatCqbOperationNoteDisplay,
+  formatCqbTacticalErrorsGroupedDisplay,
+} from './trainingDisplayText'
 import {
   PDF_COLORS,
   PDF_FONT_SIZE,
@@ -73,9 +75,9 @@ function drawEnvironmentalConditions(doc, startY, margin, pageW, log) {
  */
 function drawLogDetailSection(doc, margin, pageW, log, startY) {
   const { threats, neutralized } = getCqbThreatNeutralized(log)
-  const errorGroups = getCqbTacticalErrorsGrouped(log)
+  const errorGroups = formatCqbTacticalErrorsGroupedDisplay(log)
   const errorCount = countCqbTacticalErrors(log)
-  const note = getCqbOperationNote(log)
+  const note = formatCqbOperationNoteDisplay(log)
 
   const detailStart = drawSectionTitle(doc, margin, pageW, pdfT('common.trainingDetails'), startY)
   autoTable(doc, {
@@ -90,10 +92,10 @@ function drawLogDetailSection(doc, margin, pageW, log, startY) {
       [pdfT('cqb.fields.teamSize'), getCqbTeamSize(log)],
       [pdfT('cqb.fields.threatNeutralized'), `${threats} / ${neutralized}`],
       [pdfT('cqb.fields.clearanceTime'), formatCqbClearanceTime(log)],
-      [pdfT('cqb.fields.accuracyScore'), `%${pdfFormatNumber(getCqbAccuracyScore(log))}`],
+      [pdfT('cqb.fields.accuracyScore'), pdfFormatPercent(getCqbAccuracyScore(log))],
       [pdfT('cqb.fields.safetyViolations'), String(getCqbSafetyViolations(log))],
       [pdfT('cqb.fields.tacticalDecision'), getCqbTacticalDecision(log)],
-      [pdfT('cqb.fields.successRate'), `%${pdfFormatNumber(getCqbSuccessPercent(log))}`],
+      [pdfT('cqb.fields.successRate'), pdfFormatPercent(getCqbSuccessPercent(log))],
     ],
     ...getAutoTableOptions(margin),
   })
@@ -155,7 +157,7 @@ function drawBulkSummaryPage(doc, margin, pageW, startY, logs, filterActive, fil
   doc.setTextColor(...PDF_COLORS.muted)
   doc.text(pdfT('common.recordCount', { count: logs.length }), margin, y)
   y += 5
-  doc.text(pdfT('cqb.summary.avgAccuracy', { percent: pdfFormatNumber(avgAccuracy) }), margin, y)
+  doc.text(pdfT('cqb.summary.avgAccuracy', { percent: pdfFormatPercent(avgAccuracy) }), margin, y)
   y += 5
   doc.text(pdfT('cqb.summary.totalViolations', { count: totalViolations }), margin, y)
   y += 5
@@ -177,10 +179,10 @@ function drawBulkSummaryPage(doc, margin, pageW, startY, logs, filterActive, fil
       formatCqbDateCell(row),
       getCqbRoomTopology(row),
       formatCqbClearanceTime(row),
-      `%${pdfFormatNumber(getCqbAccuracyScore(row))}`,
+      pdfFormatPercent(getCqbAccuracyScore(row)),
       String(getCqbSafetyViolations(row)),
       getCqbTacticalDecision(row),
-      `%${pdfFormatNumber(getCqbSuccessPercent(row))}`,
+      pdfFormatPercent(getCqbSuccessPercent(row)),
     ]),
     ...getAutoTableOptions(margin, { styles: { fontSize: PDF_FONT_SIZE.small } }),
   })

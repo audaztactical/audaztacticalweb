@@ -2,15 +2,11 @@ import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import {
   formatAtisDateCell,
-  formatAtisDurationCell,
-  formatAtisFilterSummary,
-  formatWeaponSpecsBlock,
   getAtisAccuracyPercent,
   getAtisAmmoName,
   getAtisCaliberLabel,
   getAtisDistanceM,
   getAtisDrillName,
-  getAtisOperationNote,
   getAtisRoundsAndHits,
   getAtisShotDistribution,
   getAtisTimingDetails,
@@ -22,12 +18,17 @@ import { preparePdfAssets, setPdfFont } from './pdfFontLoader'
 import { formatAmmoCostTry, resolveLogAmmoCost } from './ammoCost'
 import {
   pdfFilterLine,
-  pdfFormatNumber,
+  pdfFormatPercent,
   pdfMeteoRows,
   pdfParamValueHead,
   pdfRecordLabel,
   pdfT,
 } from './pdfReportText'
+import {
+  formatAtisDurationCellDisplay,
+  formatAtisOperationNoteDisplay,
+  formatAtisWeaponSpecsLinesDisplay,
+} from './trainingDisplayText'
 import {
   PDF_COLORS,
   PDF_FONT_SIZE,
@@ -96,7 +97,7 @@ function drawHitRatioChart(doc, x, y, width, height, hits, misses) {
   doc.setTextColor(...PDF_COLORS.muted)
   doc.text(pdfT('common.misses', { count: misses }), x + width * 0.55, y + height + 5)
   doc.setTextColor(...PDF_COLORS.text)
-  doc.text(`%${Math.round((hits / total) * 1000) / 10}`, x + width - 18, y + height + 5)
+  doc.text(pdfFormatPercent(Math.round((hits / total) * 1000) / 10), x + width - 18, y + height + 5)
 }
 
 /**
@@ -110,9 +111,9 @@ function drawHitRatioChart(doc, x, y, width, height, hits, misses) {
 function drawLogDetailSection(doc, margin, pageW, log, startY, inventory = []) {
   const accuracy = getAtisAccuracyPercent(log)
   const dist = getAtisShotDistribution(log)
-  const duration = formatAtisDurationCell(log)
+  const duration = formatAtisDurationCellDisplay(log)
   const timing = getAtisTimingDetails(log)
-  const note = getAtisOperationNote(log)
+  const note = formatAtisOperationNoteDisplay(log)
   const ammoCost = resolveLogAmmoCost(log, inventory)
 
   /** @type {[string, string][]} */
@@ -122,7 +123,7 @@ function drawLogDetailSection(doc, margin, pageW, log, startY, inventory = []) {
     [pdfT('atis.fields.drillType'), getAtisDrillName(log)],
     [pdfT('atis.fields.distance'), `${getAtisDistanceM(log)} m`],
     [pdfT('atis.fields.roundsHits'), `${dist.total} / ${dist.hits}`],
-    [pdfT('atis.fields.accuracy'), `%${pdfFormatNumber(accuracy)}`],
+    [pdfT('atis.fields.accuracy'), pdfFormatPercent(accuracy)],
     [pdfT('atis.fields.duration'), duration.label],
     [pdfT('atis.fields.caliber'), getAtisCaliberLabel(log)],
     [pdfT('atis.fields.ammo'), getAtisAmmoName(log)],
@@ -165,7 +166,7 @@ function drawLogDetailSection(doc, margin, pageW, log, startY, inventory = []) {
     cursorY += 8
   }
 
-  const specLines = formatWeaponSpecsBlock(log)
+  const specLines = formatAtisWeaponSpecsLinesDisplay(log)
   if (specLines.length > 0) {
     cursorY = drawSectionTitle(doc, margin, pageW, pdfT('common.weaponSpecs'), cursorY)
     setPdfFont(doc, 'normal')
@@ -222,7 +223,7 @@ function drawBulkSummaryPage(doc, margin, pageW, startY, logs, filterActive, fil
     y
   )
   y += 5
-  doc.text(pdfT('atis.summary.avgAccuracy', { percent: pdfFormatNumber(avgAccuracy) }), margin, y)
+  doc.text(pdfT('atis.summary.avgAccuracy', { percent: pdfFormatPercent(avgAccuracy) }), margin, y)
   y += 5
   if (totalCost > 0) {
     doc.text(pdfT('atis.summary.totalAmmoCost', { cost: formatAmmoCostTry(totalCost) }), margin, y)
@@ -251,7 +252,7 @@ function drawBulkSummaryPage(doc, margin, pageW, startY, logs, filterActive, fil
         getAtisDrillName(row),
         `${getAtisDistanceM(row)} m`,
         `${totalRoundsFired}/${totalHits}`,
-        `%${pdfFormatNumber(getAtisAccuracyPercent(row))}`,
+        pdfFormatPercent(getAtisAccuracyPercent(row)),
         cost ? formatAmmoCostTry(cost.totalCost) : '—',
       ]
     }),

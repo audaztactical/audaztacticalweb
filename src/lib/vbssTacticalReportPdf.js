@@ -10,7 +10,6 @@ import {
   formatVbssSearchDuration,
   formatVbssVesselSpeed,
   getVbssBoardingPoint,
-  getVbssOperationNote,
   getVbssSeaState,
   getVbssSuccessPercent,
   getVbssThreatLevel,
@@ -20,12 +19,13 @@ import { getLogMeteoData } from './meteoDataCapture'
 import { preparePdfAssets, setPdfFont } from './pdfFontLoader'
 import {
   pdfFilterLine,
-  pdfFormatNumber,
+  pdfFormatPercent,
   pdfMeteoRows,
   pdfParamValueHead,
   pdfRecordLabel,
   pdfT,
 } from './pdfReportText'
+import { formatVbssOperationNoteDisplay } from './trainingDisplayText'
 import {
   PDF_COLORS,
   PDF_FONT_SIZE,
@@ -86,7 +86,7 @@ function drawVbssSummary(doc, margin, pageW, log, startY) {
       [pdfT('vbss.fields.bridgeControl'), formatVbssBridgeControlTime(log)],
       [pdfT('vbss.fields.engineRoom'), formatVbssEngineRoomControlTime(log)],
       [pdfT('vbss.fields.containment'), formatVbssContainmentTime(log)],
-      [pdfT('vbss.fields.successRate'), `%${pdfFormatNumber(getVbssSuccessPercent(log))}`],
+      [pdfT('vbss.fields.successRate'), pdfFormatPercent(getVbssSuccessPercent(log))],
     ],
     ...getAutoTableOptions(margin),
   })
@@ -99,7 +99,7 @@ function drawVbssSummary(doc, margin, pageW, log, startY) {
   doc.setFontSize(PDF_FONT_SIZE.body)
   doc.setTextColor(...PDF_COLORS.text)
 
-  const noteLines = doc.splitTextToSize(getVbssOperationNote(log), pageW - margin * 2)
+  const noteLines = doc.splitTextToSize(formatVbssOperationNoteDisplay(log), pageW - margin * 2)
   doc.text(noteLines, margin, cursorY)
 
   return cursorY + noteLines.length * 5
@@ -128,7 +128,7 @@ function drawBulkSummaryPage(doc, margin, pageW, startY, logs, filterActive, fil
   doc.setTextColor(...PDF_COLORS.muted)
   doc.text(pdfT('common.recordCount', { count: logs.length }), margin, y)
   y += 5
-  doc.text(pdfT('vbss.summary.avgSuccess', { percent: pdfFormatNumber(avgSuccess) }), margin, y)
+  doc.text(pdfT('vbss.summary.avgSuccess', { percent: pdfFormatPercent(avgSuccess) }), margin, y)
   y += 5
   doc.text(pdfFilterLine(filterActive, filterLabel), margin, y)
   y += 8
@@ -149,7 +149,7 @@ function drawBulkSummaryPage(doc, margin, pageW, startY, logs, filterActive, fil
       getVbssVesselType(row),
       formatVbssSearchDuration(row),
       getVbssThreatLevel(row),
-      `%${pdfFormatNumber(getVbssSuccessPercent(row))}`,
+      pdfFormatPercent(getVbssSuccessPercent(row)),
     ]),
     ...getAutoTableOptions(margin, { styles: { fontSize: PDF_FONT_SIZE.table } }),
   })

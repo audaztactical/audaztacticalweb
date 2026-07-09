@@ -8,7 +8,6 @@ import {
   formatFofFilterSummary,
   formatFofTimeToFirstEngagement,
   getFofBlueOnBlue,
-  getFofDebriefNotes,
   getFofDecisionAccuracy,
   getFofEngagementRounds,
   getFofEngagementType,
@@ -30,12 +29,14 @@ import { preparePdfAssets, setPdfFont } from './pdfFontLoader'
 import {
   pdfFilterLine,
   pdfFormatNumber,
+  pdfFormatPercent,
   pdfMeteoRows,
   pdfParamValueHead,
   pdfRecordLabel,
   pdfT,
   pdfYesNo,
 } from './pdfReportText'
+import { formatFofDebriefNotesDisplay } from './trainingDisplayText'
 import {
   PDF_COLORS,
   PDF_FONT_SIZE,
@@ -94,7 +95,7 @@ function drawEngagementSummary(doc, margin, pageW, log, startY) {
       [pdfT('fof.fields.simDuration'), formatFofDuration(log)],
       [pdfT('fof.fields.timeToFirstShot'), formatFofTimeToFirstEngagement(log)],
       [pdfT('fof.fields.engagementRounds'), String(getFofEngagementRounds(log))],
-      [pdfT('fof.fields.decisionAccuracy'), `%${pdfFormatNumber(getFofDecisionAccuracy(log))}`],
+      [pdfT('fof.fields.decisionAccuracy'), pdfFormatPercent(getFofDecisionAccuracy(log))],
       [
         pdfT('fof.fields.hitTakenRatio'),
         `${getFofHitTakenRatioLabel(log)} (×${pdfFormatNumber(getFofHitTakenRatio(log))})`,
@@ -111,7 +112,7 @@ function drawEngagementSummary(doc, margin, pageW, log, startY) {
         pdfT('fof.fields.tcccUnderFire'),
         getFofSelfTcccApplied(log) ? pdfT('common.applied') : pdfT('common.no'),
       ],
-      [pdfT('fof.fields.successRate'), `%${pdfFormatNumber(getFofSuccessPercent(log))}`],
+      [pdfT('fof.fields.successRate'), pdfFormatPercent(getFofSuccessPercent(log))],
     ],
     ...getAutoTableOptions(margin),
   })
@@ -139,7 +140,7 @@ function drawEngagementSummary(doc, margin, pageW, log, startY) {
   doc.setFontSize(PDF_FONT_SIZE.body)
   doc.setTextColor(...PDF_COLORS.text)
 
-  const noteLines = doc.splitTextToSize(getFofDebriefNotes(log), pageW - margin * 2)
+  const noteLines = doc.splitTextToSize(formatFofDebriefNotesDisplay(log), pageW - margin * 2)
   doc.text(noteLines, margin, cursorY)
 
   return cursorY + noteLines.length * 5
@@ -175,9 +176,9 @@ function drawBulkSummaryPage(doc, margin, pageW, startY, logs, filterActive, fil
   doc.setTextColor(...PDF_COLORS.muted)
   doc.text(pdfT('common.recordCount', { count: logs.length }), margin, y)
   y += 5
-  doc.text(pdfT('fof.summary.avgDecision', { percent: pdfFormatNumber(avgDecision) }), margin, y)
+  doc.text(pdfT('fof.summary.avgDecision', { percent: pdfFormatPercent(avgDecision) }), margin, y)
   y += 5
-  doc.text(pdfT('fof.summary.avgSuccess', { percent: pdfFormatNumber(avgSuccess) }), margin, y)
+  doc.text(pdfT('fof.summary.avgSuccess', { percent: pdfFormatPercent(avgSuccess) }), margin, y)
   y += 5
   doc.text(pdfFilterLine(filterActive, filterLabel), margin, y)
   y += 8
@@ -196,9 +197,9 @@ function drawBulkSummaryPage(doc, margin, pageW, startY, logs, filterActive, fil
       formatFofDateCell(row),
       getFofEngagementType(row),
       formatFofDuration(row),
-      `%${pdfFormatNumber(getFofDecisionAccuracy(row))}`,
+      pdfFormatPercent(getFofDecisionAccuracy(row)),
       getFofHitTakenRatioLabel(row),
-      `%${pdfFormatNumber(getFofSuccessPercent(row))}`,
+      pdfFormatPercent(getFofSuccessPercent(row)),
     ]),
     ...getAutoTableOptions(margin),
   })

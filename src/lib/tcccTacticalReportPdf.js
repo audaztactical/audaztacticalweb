@@ -10,7 +10,6 @@ import {
   getTcccCasualtyType,
   getTcccInjuryType,
   getTcccMarchSectionsForReport,
-  getTcccOperationNote,
   getTcccOutcome,
   getTcccPhase,
   getTcccProcedurePerformed,
@@ -21,12 +20,13 @@ import { getLogMeteoData } from './meteoDataCapture'
 import { preparePdfAssets, setPdfFont } from './pdfFontLoader'
 import {
   pdfFilterLine,
-  pdfFormatNumber,
+  pdfFormatPercent,
   pdfMeteoRows,
   pdfParamValueHead,
   pdfRecordLabel,
   pdfT,
 } from './pdfReportText'
+import { formatTcccOperationNoteDisplay } from './trainingDisplayText'
 import {
   PDF_COLORS,
   PDF_FONT_SIZE,
@@ -86,7 +86,7 @@ function drawClinicalSummary(doc, margin, pageW, log, startY) {
       [pdfT('tccc.fields.tourniquetLocation'), getTcccTourniquetLocation(log)],
       [pdfT('tccc.fields.evacWaiting'), formatTcccEvacWaitingTime(log)],
       [pdfT('tccc.fields.systolicBp'), formatTcccSystolicBp(log)],
-      [pdfT('tccc.fields.successRate'), `%${pdfFormatNumber(getTcccSuccessPercent(log))}`],
+      [pdfT('tccc.fields.successRate'), pdfFormatPercent(getTcccSuccessPercent(log))],
     ],
     ...getAutoTableOptions(margin),
   })
@@ -109,7 +109,7 @@ function drawClinicalSummary(doc, margin, pageW, log, startY) {
   }
 
   const treatments = getTcccAppliedTreatmentsSummary(log)
-  const note = getTcccOperationNote(log)
+  const note = formatTcccOperationNoteDisplay(log)
 
   cursorY = drawSectionTitle(doc, margin, pageW, pdfT('common.medicalNotes'), cursorY)
   setPdfFont(doc, 'normal')
@@ -160,7 +160,7 @@ function drawBulkSummaryPage(doc, margin, pageW, startY, logs, filterActive, fil
   doc.setTextColor(...PDF_COLORS.muted)
   doc.text(pdfT('common.recordCount', { count: logs.length }), margin, y)
   y += 5
-  doc.text(pdfT('tccc.summary.avgSuccess', { percent: pdfFormatNumber(avgSuccess) }), margin, y)
+  doc.text(pdfT('tccc.summary.avgSuccess', { percent: pdfFormatPercent(avgSuccess) }), margin, y)
   y += 5
   doc.text(pdfFilterLine(filterActive, filterLabel), margin, y)
   y += 8
@@ -181,7 +181,7 @@ function drawBulkSummaryPage(doc, margin, pageW, startY, logs, filterActive, fil
       formatTcccInterventionTime(row),
       getTcccProcedurePerformed(row),
       getTcccOutcome(row),
-      `%${pdfFormatNumber(getTcccSuccessPercent(row))}`,
+      pdfFormatPercent(getTcccSuccessPercent(row)),
     ]),
     ...getAutoTableOptions(margin, { styles: { fontSize: PDF_FONT_SIZE.table } }),
   })

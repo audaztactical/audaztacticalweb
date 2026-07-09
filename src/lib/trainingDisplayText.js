@@ -237,11 +237,38 @@ export function formatAtisCaliberLabelDisplay(row) {
  * @param {Record<string, unknown>} row
  */
 export function formatAtisOperationNoteDisplay(row) {
-  const note = getAtisOperationNote(row)
-  if (note === 'Operasyon notu kayıtlı değil.') {
+  const explicit = invStr(row.operationNote ?? row.notes ?? row.operation_note).trim()
+  if (explicit) return explicit
+
+  const parts = []
+  const timingNote = invStr(row.timingNote).trim()
+  if (timingNote) {
+    if (timingNote === 'Süresiz Atış') {
+      parts.push(i18n.t('sectors.atis.form.untimedNoteValue', { ns: 'training' }))
+    } else {
+      parts.push(timingNote)
+    }
+  }
+  if (row.drillLevel != null && row.drillLevel !== '') {
+    parts.push(
+      i18n.t('sectors.atis.history.detail.level', {
+        ns: 'training',
+        level: row.drillLevel,
+      }),
+    )
+  }
+  const tags = row.tags
+  if (Array.isArray(tags) && tags.length) {
+    parts.push(
+      tags
+        .map((t) => (invStr(t).startsWith('#') ? invStr(t) : `#${invStr(t)}`))
+        .join(' '),
+    )
+  }
+  if (!parts.length) {
     return i18n.t('sectors.atis.history.detail.noOperationNote', { ns: 'training' })
   }
-  return note
+  return parts.join(' · ')
 }
 
 const SPEC_PREFIX_KEYS = {
