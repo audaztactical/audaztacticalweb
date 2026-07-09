@@ -22,6 +22,11 @@
       "speedOfSound": "Speed of sound"
     }
   },
+  "disclaimer": {
+    "title": "Important Notice",
+    "body": "The calculations in this terminal are theoretical estimates based on the data entered and are not guaranteed results verified under laboratory or field conditions. Actual shooting performance may vary due to barrel tolerances, ammunition lot variance, environmental factors, and measurement precision. This data should be used as a starting point and must be verified with live-fire testing in the field.",
+    "confirmButton": "I Understand, Continue"
+  },
   "armoryModal": {
     "title": "Load from Armory",
     "empty": "You have no weapons in Armory yet. Add a weapon in Armory first.",

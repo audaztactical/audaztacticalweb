@@ -22,6 +22,11 @@
       "speedOfSound": "Ses hızı"
     }
   },
+  "disclaimer": {
+    "title": "Önemli Bilgilendirme",
+    "body": "Bu terminaldeki hesaplamalar, girilen verilere dayalı teorik tahminlerdir ve laboratuvar/saha koşullarında doğrulanmış kesin sonuçlar değildir. Gerçek atış performansı; namlu toleransları, mühimmat parti farklılıkları, çevresel değişkenler ve ölçüm hassasiyetine bağlı olarak değişebilir. Bu veriler bir başlangıç noktası olarak kullanılmalı, sahada gerçek atışla mutlaka doğrulanmalıdır.",
+    "confirmButton": "Anladım, Devam Et"
+  },
   "armoryModal": {
     "title": "Cephanelikten getir",
     "empty": "Cephanelik'te henüz kayıtlı bir silahınız yok. Önce Cephanelik'e bir silah eklemeniz gerekiyor.",

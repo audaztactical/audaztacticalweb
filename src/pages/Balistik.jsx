@@ -8,6 +8,7 @@ import BallisticFormPanel from '../components/ballistics/BallisticFormPanel'
 import BallisticChartPanel from '../components/ballistics/BallisticChartPanel'
 import BallisticQuickReferencePanel from '../components/ballistics/BallisticQuickReferencePanel'
 import BallisticTrajectoryHud from '../components/ballistics/BallisticTrajectoryHud'
+import BallisticDisclaimerModal from '../components/ballistics/BallisticDisclaimerModal'
 import InfoTooltip from '../components/shared/InfoTooltip'
 import { useAudazData } from '../hooks/useAudazData'
 import { useBallisticProfiles } from '../hooks/useBallisticProfiles'
@@ -102,6 +103,8 @@ export default function Balistik() {
   const [pdfBusy, setPdfBusy] = useState(false)
   const [resultTab, setResultTab] = useState(/** @type {'chart' | 'table'} */ ('chart'))
   const [accordionAutoExpandTrigger, setAccordionAutoExpandTrigger] = useState(0)
+  /** Fresh true on every page mount — intentionally not persisted. */
+  const [disclaimerOpen, setDisclaimerOpen] = useState(true)
 
   const bumpAccordionAutoExpand = useCallback(() => {
     setAccordionAutoExpandTrigger((n) => n + 1)
@@ -314,6 +317,12 @@ export default function Balistik() {
 
   return (
     <div className="relative mx-auto flex min-h-0 w-full max-w-[1600px] flex-col gap-4">
+      <BallisticDisclaimerModal open={disclaimerOpen} onConfirm={() => setDisclaimerOpen(false)} />
+
+      <div
+        className={disclaimerOpen ? 'pointer-events-none select-none' : undefined}
+        aria-hidden={disclaimerOpen || undefined}
+      >
       <HudFluffDecor className="pointer-events-none opacity-40" />
 
       <header className="relative z-[1] flex flex-wrap items-end justify-between gap-3 border-b border-white/10 pb-4">
@@ -601,6 +610,7 @@ export default function Balistik() {
           </TacticalPanel>
         </div>
       ) : null}
+      </div>
     </div>
   )
 }
