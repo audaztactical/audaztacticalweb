@@ -6,15 +6,7 @@ import {
   formatTcccFilterSummary,
   formatTcccInterventionTime,
   formatTcccSystolicBp,
-  getTcccAppliedTreatmentsSummary,
-  getTcccCasualtyType,
-  getTcccInjuryType,
-  getTcccMarchSectionsForReport,
-  getTcccOutcome,
-  getTcccPhase,
-  getTcccProcedurePerformed,
   getTcccSuccessPercent,
-  getTcccTourniquetLocation,
 } from './tcccLogRegistry'
 import { getLogMeteoData } from './meteoDataCapture'
 import { preparePdfAssets, setPdfFont } from './pdfFontLoader'
@@ -28,7 +20,15 @@ import {
   pdfT,
   pdfTacticalReportFilename,
 } from './pdfReportText'
-import { formatTcccOperationNoteDisplay } from './trainingDisplayText'
+import {
+  formatTcccAppliedTreatmentsDisplay,
+  formatTcccCasualtyTypeDisplay,
+  formatTcccMarchSectionsDisplay,
+  formatTcccOperationNoteDisplay,
+  formatTcccOutcomeDisplay,
+  formatTcccProcedurePerformedDisplay,
+  formatTcccSelectFieldDisplay,
+} from './trainingDisplayText'
 import {
   PDF_COLORS,
   PDF_FONT_SIZE,
@@ -79,13 +79,13 @@ function drawClinicalSummary(doc, margin, pageW, log, startY) {
     head: [pdfParamValueHead()],
     body: [
       [pdfT('tccc.fields.date'), formatTcccDateCell(log)],
-      [pdfT('tccc.fields.casualtyType'), getTcccCasualtyType(log)],
+      [pdfT('tccc.fields.casualtyType'), formatTcccCasualtyTypeDisplay(log)],
       [pdfT('tccc.fields.interventionTime'), formatTcccInterventionTime(log)],
-      [pdfT('tccc.fields.procedure'), getTcccProcedurePerformed(log)],
-      [pdfT('tccc.fields.outcome'), getTcccOutcome(log)],
-      [pdfT('tccc.fields.injuryType'), getTcccInjuryType(log)],
-      [pdfT('tccc.fields.phase'), getTcccPhase(log)],
-      [pdfT('tccc.fields.tourniquetLocation'), getTcccTourniquetLocation(log)],
+      [pdfT('tccc.fields.procedure'), formatTcccProcedurePerformedDisplay(log)],
+      [pdfT('tccc.fields.outcome'), formatTcccOutcomeDisplay(log)],
+      [pdfT('tccc.fields.injuryType'), formatTcccSelectFieldDisplay(log, 'injuryType')],
+      [pdfT('tccc.fields.phase'), formatTcccSelectFieldDisplay(log, 'tcccPhase')],
+      [pdfT('tccc.fields.tourniquetLocation'), formatTcccSelectFieldDisplay(log, 'tourniquetLocation')],
       [pdfT('tccc.fields.evacWaiting'), formatTcccEvacWaitingTime(log)],
       [pdfT('tccc.fields.systolicBp'), formatTcccSystolicBp(log)],
       [pdfT('tccc.fields.successRate'), pdfFormatPercent(getTcccSuccessPercent(log))],
@@ -96,7 +96,7 @@ function drawClinicalSummary(doc, margin, pageW, log, startY) {
   // @ts-expect-error jspdf-autotable plugin
   let cursorY = (doc.lastAutoTable?.finalY ?? summaryStart) + 8
 
-  const marchSections = getTcccMarchSectionsForReport(log)
+  const marchSections = formatTcccMarchSectionsDisplay(log)
   if (marchSections.length > 0) {
     cursorY = drawSectionTitle(doc, margin, pageW, pdfT('tccc.marchSummary'), cursorY)
 
@@ -110,7 +110,7 @@ function drawClinicalSummary(doc, margin, pageW, log, startY) {
     cursorY = (doc.lastAutoTable?.finalY ?? cursorY) + 8
   }
 
-  const treatments = getTcccAppliedTreatmentsSummary(log)
+  const treatments = formatTcccAppliedTreatmentsDisplay(log)
   const note = formatTcccOperationNoteDisplay(log)
 
   cursorY = drawSectionTitle(doc, margin, pageW, pdfT('common.medicalNotes'), cursorY)
@@ -179,10 +179,10 @@ function drawBulkSummaryPage(doc, margin, pageW, startY, logs, filterActive, fil
     ]],
     body: logs.map((row) => [
       formatTcccDateCell(row),
-      getTcccCasualtyType(row),
+      formatTcccCasualtyTypeDisplay(row),
       formatTcccInterventionTime(row),
-      getTcccProcedurePerformed(row),
-      getTcccOutcome(row),
+      formatTcccProcedurePerformedDisplay(row),
+      formatTcccOutcomeDisplay(row),
       pdfFormatPercent(getTcccSuccessPercent(row)),
     ]),
     ...getAutoTableOptions(margin, { styles: { fontSize: PDF_FONT_SIZE.table } }),

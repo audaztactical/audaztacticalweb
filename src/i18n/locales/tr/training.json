@@ -48,6 +48,15 @@
         "hint": "Kayıtlar yalnızca size aittir · canlı grup eğitimi için Grup eğitimi sektörünü açın"
       }
     },
+    "numberValidation": {
+      "required": "Lütfen bir değer girin.",
+      "badInput": "Lütfen geçerli bir sayı girin.",
+      "rangeUnderflow": "Değer en az {{min}} olmalıdır.",
+      "rangeOverflow": "Değer en fazla {{max}} olmalıdır.",
+      "stepMismatch": "Lütfen geçerli bir değer girin. En yakın iki geçerli değer şunlardır: {{low}} ve {{high}}.",
+      "stepGeneric": "Lütfen bu alan için geçerli bir değer girin.",
+      "generic": "Lütfen geçerli bir değer girin."
+    },
     "observedEval": {
       "selectPlaceholder": "— Seçin —",
       "scoreRange": "{{label}} ({{min}}–{{max}}) *",
@@ -1021,6 +1030,16 @@
           "target": "Hedef: {{seconds}}s",
           "badgeUnverified": "Gözlem · doğrulanmadı",
           "badgeVerified": "Gözlem · onaylı"
+        }
+      },
+      "report": {
+        "march": {
+          "woundPacking": "Hemostatik tampon / Bandaj",
+          "npaAirway": "NPA / Hava yolu",
+          "ventedChestSeal": "Ventilli göğüs mührü",
+          "needleDecompression": "İğne dekompresyonu (NDC)",
+          "hypothermiaBlanket": "Hipotermi battaniyesi",
+          "chestSeal": "Göğüs mührü"
         }
       },
       "marchActions": {

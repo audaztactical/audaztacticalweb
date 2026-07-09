@@ -6,7 +6,6 @@ import {
   getAtisAmmoName,
   getAtisCaliberLabel,
   getAtisDistanceM,
-  getAtisDrillName,
   getAtisRoundsAndHits,
   getAtisShotDistribution,
   getAtisTimingDetails,
@@ -28,6 +27,7 @@ import {
 } from './pdfReportText'
 import {
   formatAtisDurationCellDisplay,
+  formatAtisDrillNameDisplay,
   formatAtisOperationNoteDisplay,
   formatAtisWeaponSpecsLinesDisplay,
 } from './trainingDisplayText'
@@ -122,7 +122,7 @@ function drawLogDetailSection(doc, margin, pageW, log, startY, inventory = []) {
   const detailRows = [
     [pdfT('atis.fields.date'), formatAtisDateCell(log)],
     [pdfT('atis.fields.weapon'), getAtisWeaponLabel(log)],
-    [pdfT('atis.fields.drillType'), getAtisDrillName(log)],
+    [pdfT('atis.fields.drillType'), formatAtisDrillNameDisplay(log)],
     [pdfT('atis.fields.distance'), `${getAtisDistanceM(log)} m`],
     [pdfT('atis.fields.roundsHits'), `${dist.total} / ${dist.hits}`],
     [pdfT('atis.fields.accuracy'), pdfFormatPercent(accuracy)],
@@ -251,7 +251,7 @@ function drawBulkSummaryPage(doc, margin, pageW, startY, logs, filterActive, fil
       return [
         formatAtisDateCell(row),
         getAtisWeaponLabel(row),
-        getAtisDrillName(row),
+        formatAtisDrillNameDisplay(row),
         `${getAtisDistanceM(row)} m`,
         `${totalRoundsFired}/${totalHits}`,
         pdfFormatPercent(getAtisAccuracyPercent(row)),

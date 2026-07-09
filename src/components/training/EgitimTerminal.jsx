@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
+import { trainingNumberInputProps } from '../../lib/trainingNumberInput'
 import { ChevronLeft } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import egitimImg from '../../assets/egitim.png'
@@ -103,6 +104,8 @@ function EgitimSelectField({
  *   listenError: Error | null
  * }} props
  */
+const numberInputProps = trainingNumberInputProps()
+
 export default function EgitimTerminal({
   trainingPlans,
   onBack,
@@ -383,6 +386,7 @@ export default function EgitimTerminal({
                 <label className="block space-y-1">
                   <span className={labelClass}>{t('sectors.egitim.form.estimatedDuration')}</span>
                   <input
+                    {...numberInputProps}
                     type="number"
                     min={0}
                     step={5}

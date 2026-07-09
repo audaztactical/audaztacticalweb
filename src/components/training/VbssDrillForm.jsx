@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
+import { trainingNumberInputProps } from '../../lib/trainingNumberInput'
 import { useTranslation } from 'react-i18next'
 import TacticalPanel from '../ui/TacticalPanel'
 import { useAuth } from '../../context/AuthContext'
@@ -53,6 +54,8 @@ const TIME_FIELD_KEYS = [
  *   addLog: (payload: Record<string, unknown>) => Promise<{ id: string }>
  * }} props
  */
+const numberInputProps = trainingNumberInputProps()
+
 export default function VbssDrillForm({ addLog }) {
   const { t } = useTranslation('training')
   const { user } = useAuth()
@@ -247,6 +250,7 @@ export default function VbssDrillForm({ addLog }) {
             <label className="block space-y-1">
               <span className={labelClass}>{t('sectors.vbss.drill.form.searchDuration')}</span>
               <input
+                {...numberInputProps}
                 type="number"
                 min={0.01}
                 step={0.01}
@@ -313,6 +317,7 @@ export default function VbssDrillForm({ addLog }) {
               <label key={key} className="block space-y-1">
                 <span className={labelClass}>{t(`sectors.vbss.drill.form.${labelKey}`)}</span>
                 <input
+                  {...numberInputProps}
                   type="number"
                   min={0}
                   step={0.01}
@@ -328,6 +333,7 @@ export default function VbssDrillForm({ addLog }) {
             <label className="block space-y-1">
               <span className={labelClass}>{t('sectors.vbss.drill.form.vesselSpeed')}</span>
               <input
+                {...numberInputProps}
                 type="number"
                 min={0}
                 step={0.1}
@@ -339,6 +345,7 @@ export default function VbssDrillForm({ addLog }) {
             <label className="block space-y-1">
               <span className={labelClass}>{t('sectors.vbss.drill.form.crewCount')}</span>
               <input
+                {...numberInputProps}
                 type="number"
                 min={0}
                 step={1}

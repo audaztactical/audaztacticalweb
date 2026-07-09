@@ -10,7 +10,6 @@ import {
   getFofBlueOnBlue,
   getFofDecisionAccuracy,
   getFofEngagementRounds,
-  getFofEngagementType,
   getFofFriendlyCasualties,
   getFofHitTakenRatio,
   getFofHitTakenRatioLabel,
@@ -18,11 +17,8 @@ import {
   getFofLethalHits,
   getFofNonLethalHits,
   getFofOpforCount,
-  getFofScenarioType,
   getFofSelfTcccApplied,
-  getFofSimSystem,
   getFofSuccessPercent,
-  getFofTacticalErrors,
 } from './fofLogRegistry'
 import { getLogMeteoData } from './meteoDataCapture'
 import { preparePdfAssets, setPdfFont } from './pdfFontLoader'
@@ -38,7 +34,12 @@ import {
   pdfTacticalReportFilename,
   pdfYesNo,
 } from './pdfReportText'
-import { formatFofDebriefNotesDisplay } from './trainingDisplayText'
+import {
+  formatFofDebriefNotesDisplay,
+  formatFofEngagementTypeDisplay,
+  formatFofSelectFieldDisplay,
+  formatFofTacticalErrorsDisplay,
+} from './trainingDisplayText'
 import {
   PDF_COLORS,
   PDF_FONT_SIZE,
@@ -90,9 +91,9 @@ function drawEngagementSummary(doc, margin, pageW, log, startY) {
     head: [pdfParamValueHead()],
     body: [
       [pdfT('fof.fields.date'), formatFofDateCell(log)],
-      [pdfT('fof.fields.scenarioType'), getFofScenarioType(log)],
-      [pdfT('fof.fields.simSystem'), getFofSimSystem(log)],
-      [pdfT('fof.fields.engagementType'), getFofEngagementType(log)],
+      [pdfT('fof.fields.scenarioType'), formatFofSelectFieldDisplay(log, 'scenarioType')],
+      [pdfT('fof.fields.simSystem'), formatFofSelectFieldDisplay(log, 'simSystem')],
+      [pdfT('fof.fields.engagementType'), formatFofEngagementTypeDisplay(log)],
       [pdfT('fof.fields.opforCount'), String(getFofOpforCount(log))],
       [pdfT('fof.fields.simDuration'), formatFofDuration(log)],
       [pdfT('fof.fields.timeToFirstShot'), formatFofTimeToFirstEngagement(log)],
@@ -129,7 +130,7 @@ function drawEngagementSummary(doc, margin, pageW, log, startY) {
     autoTable(doc, {
       startY: cursorY,
       head: [[pdfT('fof.errors.error')]],
-      body: getFofTacticalErrors(log).map((label) => [label]),
+      body: formatFofTacticalErrorsDisplay(log).map((label) => [label]),
       ...getErrorTableOptions(margin),
     })
 
@@ -197,7 +198,7 @@ function drawBulkSummaryPage(doc, margin, pageW, startY, logs, filterActive, fil
     ]],
     body: logs.map((row) => [
       formatFofDateCell(row),
-      getFofEngagementType(row),
+      formatFofEngagementTypeDisplay(row),
       formatFofDuration(row),
       pdfFormatPercent(getFofDecisionAccuracy(row)),
       getFofHitTakenRatioLabel(row),

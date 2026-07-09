@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
+import { trainingNumberInputProps } from '../../lib/trainingNumberInput'
 import { Download, Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import tcccImg from '../../assets/tccc.webp'
@@ -28,6 +29,8 @@ import { inputClass, textareaClass, labelClass } from './layout/trainingTerminal
  *   hidePdfBanner?: boolean
  * }} props
  */
+const numberInputProps = trainingNumberInputProps()
+
 export default function TcccEntryTerminal({ addLog, onSubmitted, hidePdfBanner = false }) {
   const { t } = useTranslation('training')
   const { user, userData } = useAuth()
@@ -172,6 +175,7 @@ export default function TcccEntryTerminal({ addLog, onSubmitted, hidePdfBanner =
                 <label className="block space-y-1.5 sm:col-span-2">
                   <span className={labelClass}>{t('sectors.tccc.observedEval.form.targetInterventionSec')}</span>
                   <input
+                    {...numberInputProps}
                     type="number"
                     min={0.01}
                     step={1}

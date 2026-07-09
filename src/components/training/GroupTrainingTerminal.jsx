@@ -1,4 +1,5 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
+import { trainingNumberInputProps } from '../../lib/trainingNumberInput'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
@@ -248,6 +249,8 @@ function GroupTrainingDetailPanel({ training, results, currentUid, selfOnly = fa
 /**
  * @param {{ onBack: () => void, initialTrainingId?: string }} props
  */
+const numberInputProps = trainingNumberInputProps()
+
 export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }) {
   const { t } = useTranslation('training')
   const { user, userData } = useAuth()

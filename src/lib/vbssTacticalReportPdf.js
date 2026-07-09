@@ -9,11 +9,7 @@ import {
   formatVbssFilterSummary,
   formatVbssSearchDuration,
   formatVbssVesselSpeed,
-  getVbssBoardingPoint,
-  getVbssSeaState,
   getVbssSuccessPercent,
-  getVbssThreatLevel,
-  getVbssVesselType,
 } from './vbssLogRegistry'
 import { getLogMeteoData } from './meteoDataCapture'
 import { preparePdfAssets, setPdfFont } from './pdfFontLoader'
@@ -27,7 +23,12 @@ import {
   pdfT,
   pdfTacticalReportFilename,
 } from './pdfReportText'
-import { formatVbssOperationNoteDisplay } from './trainingDisplayText'
+import {
+  formatVbssBoardingPointDisplay,
+  formatVbssOperationNoteDisplay,
+  formatVbssSelectFieldDisplay,
+  formatVbssThreatLevelDisplay,
+} from './trainingDisplayText'
 import {
   PDF_COLORS,
   PDF_FONT_SIZE,
@@ -78,11 +79,11 @@ function drawVbssSummary(doc, margin, pageW, log, startY) {
     head: [pdfParamValueHead()],
     body: [
       [pdfT('vbss.fields.date'), formatVbssDateCell(log)],
-      [pdfT('vbss.fields.boardingPoint'), getVbssBoardingPoint(log)],
-      [pdfT('vbss.fields.vesselType'), getVbssVesselType(log)],
+      [pdfT('vbss.fields.boardingPoint'), formatVbssBoardingPointDisplay(log)],
+      [pdfT('vbss.fields.vesselType'), formatVbssSelectFieldDisplay(log, 'vesselType')],
       [pdfT('vbss.fields.searchDuration'), formatVbssSearchDuration(log)],
-      [pdfT('vbss.fields.threatLevel'), getVbssThreatLevel(log)],
-      [pdfT('vbss.fields.seaState'), getVbssSeaState(log)],
+      [pdfT('vbss.fields.threatLevel'), formatVbssThreatLevelDisplay(log)],
+      [pdfT('vbss.fields.seaState'), formatVbssSelectFieldDisplay(log, 'seaState')],
       [pdfT('vbss.fields.vesselSpeed'), formatVbssVesselSpeed(log)],
       [pdfT('vbss.fields.boardingTime'), formatVbssBoardingTime(log)],
       [pdfT('vbss.fields.bridgeControl'), formatVbssBridgeControlTime(log)],
@@ -147,10 +148,10 @@ function drawBulkSummaryPage(doc, margin, pageW, startY, logs, filterActive, fil
     ]],
     body: logs.map((row) => [
       formatVbssDateCell(row),
-      getVbssBoardingPoint(row),
-      getVbssVesselType(row),
+      formatVbssBoardingPointDisplay(row),
+      formatVbssSelectFieldDisplay(row, 'vesselType'),
       formatVbssSearchDuration(row),
-      getVbssThreatLevel(row),
+      formatVbssThreatLevelDisplay(row),
       pdfFormatPercent(getVbssSuccessPercent(row)),
     ]),
     ...getAutoTableOptions(margin, { styles: { fontSize: PDF_FONT_SIZE.table } }),

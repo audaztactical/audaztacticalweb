@@ -17,6 +17,7 @@ import {
   TEAM_SIZE_OPTIONS,
 } from '../../lib/cqbOptions'
 import { invNum, invStr } from '../../lib/inventoryIlws'
+import { trainingNumberInputProps } from '../../lib/trainingNumberInput'
 import { calculateCqbSuccessPercent } from '../../lib/trainingSuccessScore'
 import {
   formatCqbOptionLabel,
@@ -28,6 +29,8 @@ import CqbLogRegistry from './CqbLogRegistry'
 import OperatorInstructorRecordsEmbed from './OperatorInstructorRecordsEmbed'
 import IndividualTrainingSessionHeader from './IndividualTrainingSessionHeader'
 import TrainingTerminalLayout from './layout/TrainingTerminalLayout'
+
+const numberInputProps = trainingNumberInputProps()
 import TrainingTerminalPanel from './layout/TrainingTerminalPanel'
 import TrainingMetricGrid, { TrainingMetricField } from './layout/TrainingMetricGrid'
 import TrainingPhaseBlock from './layout/TrainingPhaseBlock'
@@ -487,6 +490,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
               >
                 <TrainingMetricField label={t('sectors.cqb.form.threatCount')}>
                   <input
+                    {...numberInputProps}
                     type="number"
                     min={0}
                     step={1}
@@ -497,6 +501,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                 </TrainingMetricField>
                 <TrainingMetricField label={t('sectors.cqb.form.neutralizedCount')}>
                   <input
+                    {...numberInputProps}
                     type="number"
                     min={0}
                     step={1}
@@ -511,6 +516,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                 </TrainingMetricField>
                 <TrainingMetricField label={t('sectors.cqb.form.clearanceTime')}>
                   <input
+                    {...numberInputProps}
                     type="number"
                     min={0.001}
                     step={0.01}
@@ -523,6 +529,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                 </TrainingMetricField>
                 <TrainingMetricField label={t('sectors.cqb.form.accuracyScore')}>
                   <input
+                    {...numberInputProps}
                     type="number"
                     min={0}
                     max={100}
@@ -536,6 +543,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                 </TrainingMetricField>
                 <TrainingMetricField label={t('sectors.cqb.form.safetyViolations')}>
                   <input
+                    {...numberInputProps}
                     type="number"
                     min={0}
                     step={1}

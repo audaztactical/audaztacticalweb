@@ -48,6 +48,15 @@
         "hint": "Records belong to you only · open the Group training sector for live group training"
       }
     },
+    "numberValidation": {
+      "required": "Please enter a value.",
+      "badInput": "Please enter a valid number.",
+      "rangeUnderflow": "Value must be at least {{min}}.",
+      "rangeOverflow": "Value must be at most {{max}}.",
+      "stepMismatch": "Enter a valid value. Nearest valid values are {{low}} and {{high}}.",
+      "stepGeneric": "Enter a valid value for this field.",
+      "generic": "Enter a valid value."
+    },
     "observedEval": {
       "selectPlaceholder": "— Select —",
       "scoreRange": "{{label}} ({{min}}–{{max}}) *",
@@ -1021,6 +1030,16 @@
           "target": "Target: {{seconds}}s",
           "badgeUnverified": "Observation · unverified",
           "badgeVerified": "Observation · verified"
+        }
+      },
+      "report": {
+        "march": {
+          "woundPacking": "Hemostatic packing / bandage",
+          "npaAirway": "NPA / airway",
+          "ventedChestSeal": "Vented chest seal",
+          "needleDecompression": "Needle decompression (NDC)",
+          "hypothermiaBlanket": "Hypothermia blanket",
+          "chestSeal": "Chest seal"
         }
       },
       "marchActions": {

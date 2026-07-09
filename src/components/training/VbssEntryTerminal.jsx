@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
+import { trainingNumberInputProps } from '../../lib/trainingNumberInput'
 import { Download, Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import vbssImg from '../../assets/vbss.webp'
@@ -28,6 +29,8 @@ import { inputClass, textareaClass, labelClass } from './layout/trainingTerminal
  *   hidePdfBanner?: boolean
  * }} props
  */
+const numberInputProps = trainingNumberInputProps()
+
 export default function VbssEntryTerminal({ addLog, onSubmitted, hidePdfBanner = false }) {
   const { t } = useTranslation('training')
   const { user, userData } = useAuth()
@@ -149,6 +152,7 @@ export default function VbssEntryTerminal({ addLog, onSubmitted, hidePdfBanner =
             {form.isTimed ? (
               <TrainingMetricField label={t('sectors.vbss.observedEval.form.targetDurationSec')}>
                 <input
+                  {...numberInputProps}
                   type="number"
                   min={0.01}
                   step={1}

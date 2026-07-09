@@ -6,13 +6,8 @@ import {
   formatCqbDateCell,
   formatCqbFilterSummary,
   getCqbAccuracyScore,
-  getCqbBreachingType,
-  getCqbDoorState,
-  getCqbEntryMethod,
-  getCqbRoomTopology,
   getCqbSafetyViolations,
   getCqbSuccessPercent,
-  getCqbTacticalDecision,
   getCqbTeamSize,
   getCqbThreatNeutralized,
 } from './cqbLogRegistry'
@@ -30,6 +25,8 @@ import {
 } from './pdfReportText'
 import {
   formatCqbOperationNoteDisplay,
+  formatCqbSelectFieldDisplay,
+  formatCqbTacticalDecisionDisplay,
   formatCqbTacticalErrorsGroupedDisplay,
 } from './trainingDisplayText'
 import {
@@ -87,16 +84,16 @@ function drawLogDetailSection(doc, margin, pageW, log, startY) {
     head: [pdfParamValueHead()],
     body: [
       [pdfT('cqb.fields.date'), formatCqbDateCell(log)],
-      [pdfT('cqb.fields.topology'), getCqbRoomTopology(log)],
-      [pdfT('cqb.fields.entryMethod'), getCqbEntryMethod(log)],
-      [pdfT('cqb.fields.breachingType'), getCqbBreachingType(log)],
-      [pdfT('cqb.fields.doorState'), getCqbDoorState(log)],
+      [pdfT('cqb.fields.topology'), formatCqbSelectFieldDisplay(log, 'roomTopology')],
+      [pdfT('cqb.fields.entryMethod'), formatCqbSelectFieldDisplay(log, 'entryMethod')],
+      [pdfT('cqb.fields.breachingType'), formatCqbSelectFieldDisplay(log, 'breachingType')],
+      [pdfT('cqb.fields.doorState'), formatCqbSelectFieldDisplay(log, 'doorState')],
       [pdfT('cqb.fields.teamSize'), getCqbTeamSize(log)],
       [pdfT('cqb.fields.threatNeutralized'), `${threats} / ${neutralized}`],
       [pdfT('cqb.fields.clearanceTime'), formatCqbClearanceTime(log)],
       [pdfT('cqb.fields.accuracyScore'), pdfFormatPercent(getCqbAccuracyScore(log))],
       [pdfT('cqb.fields.safetyViolations'), String(getCqbSafetyViolations(log))],
-      [pdfT('cqb.fields.tacticalDecision'), getCqbTacticalDecision(log)],
+      [pdfT('cqb.fields.tacticalDecision'), formatCqbTacticalDecisionDisplay(log)],
       [pdfT('cqb.fields.successRate'), pdfFormatPercent(getCqbSuccessPercent(log))],
     ],
     ...getAutoTableOptions(margin),
@@ -179,11 +176,11 @@ function drawBulkSummaryPage(doc, margin, pageW, startY, logs, filterActive, fil
     ]],
     body: logs.map((row) => [
       formatCqbDateCell(row),
-      getCqbRoomTopology(row),
+      formatCqbSelectFieldDisplay(row, 'roomTopology'),
       formatCqbClearanceTime(row),
       pdfFormatPercent(getCqbAccuracyScore(row)),
       String(getCqbSafetyViolations(row)),
-      getCqbTacticalDecision(row),
+      formatCqbTacticalDecisionDisplay(row),
       pdfFormatPercent(getCqbSuccessPercent(row)),
     ]),
     ...getAutoTableOptions(margin, { styles: { fontSize: PDF_FONT_SIZE.small } }),

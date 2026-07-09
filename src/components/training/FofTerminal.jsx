@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
+import { trainingNumberInputProps } from '../../lib/trainingNumberInput'
 import { ChevronLeft } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import fofImg from '../../assets/fof.png'
@@ -103,6 +104,8 @@ function FofSelectField({
  *   listenError: Error | null
  * }} props
  */
+const numberInputProps = trainingNumberInputProps()
+
 export default function FofTerminal({ rangeLogs, onBack, addLog, ready, logsLoading = false, listenError }) {
   const { t } = useTranslation('training')
   const { user } = useAuth()
@@ -396,6 +399,7 @@ export default function FofTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                   <label className="block space-y-1">
                     <span className={labelClass}>{t('sectors.fof.form.opforCount')}</span>
                     <input
+                      {...numberInputProps}
                       type="number"
                       min={0}
                       step={1}
@@ -407,6 +411,7 @@ export default function FofTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                   <label className="block space-y-1">
                     <span className={labelClass}>{t('sectors.fof.form.scenarioDuration')} *</span>
                     <input
+                      {...numberInputProps}
                       type="number"
                       min={0.01}
                       step={0.01}
@@ -421,6 +426,7 @@ export default function FofTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                   <label className="block space-y-1">
                     <span className={labelClass}>{t('sectors.fof.form.engagementRounds')} *</span>
                     <input
+                      {...numberInputProps}
                       type="number"
                       min={1}
                       step={1}
@@ -434,6 +440,7 @@ export default function FofTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                   <label className="block space-y-1">
                     <span className={labelClass}>{t('sectors.fof.form.decisionAccuracy')} *</span>
                     <input
+                      {...numberInputProps}
                       type="number"
                       min={0}
                       max={100}
@@ -487,6 +494,7 @@ export default function FofTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                   <label className="block space-y-1">
                     <span className={labelClass}>{t('sectors.fof.form.hitsTaken')}</span>
                     <input
+                      {...numberInputProps}
                       type="number"
                       min={0}
                       step={1}
@@ -498,6 +506,7 @@ export default function FofTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                   <label className="block space-y-1">
                     <span className={labelClass}>{t('sectors.fof.form.lethalHits')}</span>
                     <input
+                      {...numberInputProps}
                       type="number"
                       min={0}
                       step={1}
@@ -509,6 +518,7 @@ export default function FofTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                   <label className="block space-y-1">
                     <span className={labelClass}>{t('sectors.fof.form.nonLethalHits')}</span>
                     <input
+                      {...numberInputProps}
                       type="number"
                       min={0}
                       step={1}
@@ -520,6 +530,7 @@ export default function FofTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                   <label className="block space-y-1">
                     <span className={labelClass}>{t('sectors.fof.form.friendlyCasualties')}</span>
                     <input
+                      {...numberInputProps}
                       type="number"
                       min={0}
                       step={1}
@@ -531,6 +542,7 @@ export default function FofTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                   <label className="block space-y-1 sm:col-span-2">
                     <span className={labelClass}>{t('sectors.fof.form.timeToFirstEngagement')}</span>
                     <input
+                      {...numberInputProps}
                       type="number"
                       min={0}
                       step={0.01}
@@ -544,6 +556,7 @@ export default function FofTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                   <label className="block space-y-1">
                     <span className={labelClass}>{t('sectors.fof.form.coverUtilization')}</span>
                     <input
+                      {...numberInputProps}
                       type="number"
                       min={0}
                       max={100}

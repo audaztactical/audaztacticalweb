@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { trainingNumberInputProps } from '../../lib/trainingNumberInput'
 import { useTranslation } from 'react-i18next'
 import TacticalPanel from '../ui/TacticalPanel'
 import { DIFFICULTY_LEVEL_OPTIONS } from '../../lib/egitimOptions'
@@ -127,6 +128,8 @@ const ZOOM_MAX = 3
  *   readOnly?: boolean
  * }} props
  */
+const numberInputProps = trainingNumberInputProps()
+
 export default function TacticalRangeSandbox({
   userId,
   addPlan,

@@ -56,6 +56,12 @@ import {
   getTcccPhase,
   getTcccInjuryType,
   getTcccTourniquetLocation,
+  getTcccTourniquetApplied,
+  getTcccWoundPacking,
+  getTcccNpaInserted,
+  getTcccChestSealApplied,
+  getTcccNeedleDecompression,
+  getTcccHypothermiaBlanket,
 } from './tcccLogRegistry'
 import { EGITIM_CUSTOM } from './egitimOptions'
 import {
@@ -128,6 +134,16 @@ export function formatAtisDrillLabel(drillId) {
     }
   }
   return drillId
+}
+
+/** @param {Record<string, unknown>} row */
+export function formatAtisDrillNameDisplay(row) {
+  const drillId = String(row.drillId ?? '').trim()
+  if (drillId === 'custom') {
+    return String(row.drillName ?? row.shootType ?? '').trim() || '—'
+  }
+  if (drillId) return formatAtisDrillLabel(drillId)
+  return String(row.drillName ?? row.shootType ?? '').trim() || '—'
 }
 
 /**
@@ -441,8 +457,6 @@ export function formatCqbDateCellDisplay(row) {
  * @param {Record<string, unknown>} row
  */
 export function formatCqbTacticalDecisionDisplay(row) {
-  const label = String(row.tacticalDecisionLabel ?? '').trim()
-  if (label) return label
   const key = String(row.tacticalDecision ?? '').trim()
   if (!key) return '—'
   return formatCqbOptionLabel('tacticalDecision', key, key)
@@ -563,25 +577,27 @@ const CQB_CUSTOM_FIELD_MAP = {
  * @param {'roomTopology' | 'entryMethod' | 'breachingType' | 'doorState'} field
  */
 export function formatCqbSelectFieldDisplay(row, field) {
-  const storedLabel = String(row[field] ?? '').trim()
-  if (storedLabel && storedLabel !== 'Özel' && storedLabel !== '—') return storedLabel
   const keyField = `${field}Key`
-  const key = String(row[keyField] ?? row[field] ?? '').trim()
+  const key = String(row[keyField] ?? '').trim()
   const customField = CQB_CUSTOM_FIELD_MAP[field]
   const custom = customField ? String(row[customField] ?? '').trim() : ''
   if (key === CQB_CUSTOM) {
     return custom || i18n.t('sectors.cqb.errors.customPhase', { ns: 'training' })
   }
-  if (!key) return '—'
-  const optionType =
-    field === 'roomTopology'
-      ? 'roomTopology'
-      : field === 'entryMethod'
-        ? 'entryMethod'
-        : field === 'breachingType'
-          ? 'breachingType'
-          : 'doorState'
-  return formatCqbOptionLabel(optionType, key, key)
+  if (key) {
+    const optionType =
+      field === 'roomTopology'
+        ? 'roomTopology'
+        : field === 'entryMethod'
+          ? 'entryMethod'
+          : field === 'breachingType'
+            ? 'breachingType'
+            : 'doorState'
+    return formatCqbOptionLabel(optionType, key, key)
+  }
+  const storedLabel = String(row[field] ?? '').trim()
+  if (storedLabel && storedLabel !== 'Özel' && storedLabel !== '—') return storedLabel
+  return '—'
 }
 
 /** @param {'scenarioType' | 'simSystem' | 'engagementType'} optionType */
@@ -640,8 +656,6 @@ export function formatFofDateCellDisplay(row) {
  * @param {Record<string, unknown>} row
  */
 export function formatFofEngagementTypeDisplay(row) {
-  const label = String(row.engagementTypeLabel ?? '').trim()
-  if (label) return label
   const key = String(row.engagementType ?? '').trim()
   if (!key) return '—'
   return formatFofOptionLabel('engagementType', key, key)
@@ -658,17 +672,17 @@ const FOF_CUSTOM_FIELD_MAP = {
  * @param {'scenarioType' | 'simSystem'} field
  */
 export function formatFofSelectFieldDisplay(row, field) {
-  const storedLabel = String(row[field] ?? '').trim()
-  if (storedLabel && storedLabel !== 'Özel' && storedLabel !== '—') return storedLabel
   const keyField = `${field}Key`
-  const key = String(row[keyField] ?? row[field] ?? '').trim()
+  const key = String(row[keyField] ?? '').trim()
   const customField = FOF_CUSTOM_FIELD_MAP[field]
   const custom = customField ? String(row[customField] ?? '').trim() : ''
   if (key === FOF_CUSTOM) {
     return custom || i18n.t('sectors.fof.options.scenarioType.custom', { ns: 'training' })
   }
-  if (!key) return '—'
-  return formatFofOptionLabel(field, key, key)
+  if (key) return formatFofOptionLabel(field, key, key)
+  const storedLabel = String(row[field] ?? '').trim()
+  if (storedLabel && storedLabel !== 'Özel' && storedLabel !== '—') return storedLabel
+  return '—'
 }
 
 /**
@@ -953,16 +967,6 @@ export function formatVbssBoolDisplay(value) {
  * @param {'insertionMethod' | 'vesselType' | 'seaState'} field
  */
 export function formatVbssSelectFieldDisplay(row, field) {
-  const label =
-    field === 'insertionMethod'
-      ? getVbssInsertionMethod(row)
-      : field === 'vesselType'
-        ? getVbssVesselType(row)
-        : getVbssSeaState(row)
-  if (!label || label === '—') return '—'
-  if (label.startsWith('custom:')) {
-    return label.slice(7).trim() || i18n.t('sectors.vbss.options.boardingPoint.custom', { ns: 'training' })
-  }
   const optionType =
     field === 'insertionMethod'
       ? 'boardingPoint'
@@ -975,11 +979,42 @@ export function formatVbssSelectFieldDisplay(row, field) {
       : field === 'vesselType'
         ? 'vesselTypeKey'
         : 'seaStateKey'
+  const customField =
+    field === 'insertionMethod'
+      ? 'customInsertionMethod'
+      : field === 'vesselType'
+        ? 'customVesselType'
+        : 'customSeaState'
   const key = String(row[keyField] ?? '').trim()
-  if (key && key !== VBSS_CUSTOM) {
-    return formatVbssOptionLabel(optionType, key, label)
+  const custom = String(row[customField] ?? row.customBoardingPoint ?? '').trim()
+  if (key === VBSS_CUSTOM) {
+    return custom || i18n.t(`sectors.vbss.options.${optionType}.custom`, { ns: 'training' })
   }
-  return label
+  if (key) return formatVbssOptionLabel(optionType, key, key)
+  const storedLabel =
+    field === 'insertionMethod'
+      ? getVbssInsertionMethod(row)
+      : field === 'vesselType'
+        ? getVbssVesselType(row)
+        : getVbssSeaState(row)
+  if (!storedLabel || storedLabel === '—') return '—'
+  if (storedLabel.startsWith('custom:')) {
+    return storedLabel.slice(7).trim() || i18n.t(`sectors.vbss.options.${optionType}.custom`, { ns: 'training' })
+  }
+  return storedLabel
+}
+
+/** @param {Record<string, unknown>} row */
+export function formatVbssBoardingPointDisplay(row) {
+  return formatVbssSelectFieldDisplay(row, 'insertionMethod')
+}
+
+/** @param {Record<string, unknown>} row */
+export function formatVbssThreatLevelDisplay(row) {
+  const key = String(row.threatLevelKey ?? '').trim()
+  if (key) return formatVbssOptionLabel('threatLevel', key, key)
+  const stored = String(row.threatLevel ?? '').trim()
+  return stored || '—'
 }
 
 /** @param {Record<string, unknown>} row */
@@ -1200,6 +1235,25 @@ export function formatTcccBoolDisplay(value) {
  * @param {'injuryType' | 'tcccPhase' | 'tourniquetLocation'} field
  */
 export function formatTcccSelectFieldDisplay(row, field) {
+  const optionType = field
+  const keyField =
+    field === 'injuryType'
+      ? 'injuryTypeKey'
+      : field === 'tcccPhase'
+        ? 'tcccPhaseKey'
+        : 'tourniquetLocationKey'
+  const customField =
+    field === 'tcccPhase'
+      ? 'customTcccPhase'
+      : field === 'tourniquetLocation'
+        ? 'customTourniquetLocation'
+        : null
+  const key = String(row[keyField] ?? '').trim()
+  const custom = customField ? String(row[customField] ?? '').trim() : ''
+  if (key === TCCC_CUSTOM) {
+    return custom || i18n.t(`sectors.tccc.options.${optionType}.custom`, { ns: 'training' })
+  }
+  if (key) return formatTcccOptionLabel(optionType, key, key)
   const label =
     field === 'injuryType'
       ? getTcccInjuryType(row)
@@ -1208,20 +1262,121 @@ export function formatTcccSelectFieldDisplay(row, field) {
         : getTcccTourniquetLocation(row)
   if (!label || label === '—') return '—'
   if (label.startsWith('custom:')) {
-    return label.slice(7).trim() || i18n.t('sectors.tccc.options.tcccPhase.custom', { ns: 'training' })
-  }
-  const optionType = field
-  const keyField =
-    field === 'injuryType'
-      ? 'injuryTypeKey'
-      : field === 'tcccPhase'
-        ? 'tcccPhaseKey'
-        : 'tourniquetLocationKey'
-  const key = String(row[keyField] ?? '').trim()
-  if (key && key !== TCCC_CUSTOM) {
-    return formatTcccOptionLabel(optionType, key, label)
+    return label.slice(7).trim() || i18n.t(`sectors.tccc.options.${optionType}.custom`, { ns: 'training' })
   }
   return label
+}
+
+/** @param {Record<string, unknown>} row */
+export function formatTcccCasualtyTypeDisplay(row) {
+  const key = String(row.casualtyTypeKey ?? '').trim()
+  if (key) return formatTcccOptionLabel('casualtyType', key, key)
+  const stored = String(row.casualtyType ?? '').trim()
+  return stored || '—'
+}
+
+/** @param {Record<string, unknown>} row */
+export function formatTcccOutcomeDisplay(row) {
+  const key = String(row.outcomeKey ?? '').trim()
+  if (key) return formatTcccOptionLabel('outcome', key, key)
+  const stored = String(row.outcome ?? '').trim()
+  return stored || '—'
+}
+
+/** @param {Record<string, unknown>} row */
+export function formatTcccProcedurePerformedDisplay(row) {
+  const procList = Array.isArray(row.proceduresPerformed)
+    ? row.proceduresPerformed.map((id) => String(id ?? '').trim()).filter(Boolean)
+    : []
+  if (procList.length > 0) {
+    return procList.map((id) => formatTcccProcedureLabel(id)).join(' · ')
+  }
+  const parts = []
+  if (getTcccTourniquetApplied(row)) parts.push(formatTcccProcedureLabel('tourniquet'))
+  if (getTcccWoundPacking(row)) parts.push(formatTcccProcedureLabel('bandage'))
+  if (getTcccNpaInserted(row)) parts.push(formatTcccProcedureLabel('airway'))
+  if (row.chestSealApplied) parts.push(i18n.t('sectors.tccc.report.march.chestSeal', { ns: 'training' }))
+  if (row.needleDecompression) {
+    parts.push(i18n.t('sectors.tccc.report.march.needleDecompression', { ns: 'training' }))
+  }
+  if (row.hypothermiaBlanket) {
+    parts.push(i18n.t('sectors.tccc.report.march.hypothermiaBlanket', { ns: 'training' }))
+  }
+  return parts.length > 0 ? parts.join(' · ') : '—'
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ * @returns {{ step: string; items: string[] }[]}
+ */
+export function formatTcccMarchSectionsDisplay(row) {
+  const tqLoc = formatTcccSelectFieldDisplay(row, 'tourniquetLocation')
+  /** @type {{ step: string; items: string[] }[]} */
+  const sections = []
+
+  /** @type {string[]} */
+  const mItems = []
+  if (getTcccTourniquetApplied(row)) {
+    const tq = formatTcccProcedureLabel('tourniquet')
+    mItems.push(tqLoc && tqLoc !== '—' ? `${tq} · ${tqLoc}` : tq)
+  }
+  if (getTcccWoundPacking(row)) {
+    mItems.push(i18n.t('sectors.tccc.report.march.woundPacking', { ns: 'training' }))
+  }
+  if (mItems.length) sections.push({ step: 'M', items: mItems })
+
+  /** @type {string[]} */
+  const aItems = []
+  if (getTcccNpaInserted(row)) {
+    aItems.push(i18n.t('sectors.tccc.report.march.npaAirway', { ns: 'training' }))
+  }
+  if (aItems.length) sections.push({ step: 'A', items: aItems })
+
+  /** @type {string[]} */
+  const rItems = []
+  if (getTcccChestSealApplied(row)) {
+    rItems.push(i18n.t('sectors.tccc.report.march.ventedChestSeal', { ns: 'training' }))
+  }
+  if (getTcccNeedleDecompression(row)) {
+    rItems.push(i18n.t('sectors.tccc.report.march.needleDecompression', { ns: 'training' }))
+  }
+  if (rItems.length) sections.push({ step: 'R', items: rItems })
+
+  /** @type {string[]} */
+  const hItems = []
+  if (getTcccHypothermiaBlanket(row)) {
+    hItems.push(i18n.t('sectors.tccc.report.march.hypothermiaBlanket', { ns: 'training' }))
+  }
+  if (hItems.length) sections.push({ step: 'H', items: hItems })
+
+  return sections
+}
+
+/** @param {Record<string, unknown>} row */
+export function formatTcccAppliedTreatmentsDisplay(row) {
+  const summary = invStr(row.appliedTreatmentsSummary).trim()
+  if (summary) {
+    const localized = summary
+      .split(' · ')
+      .map((part) => {
+        const trimmed = part.trim()
+        const proc = PROCEDURE_PERFORMED_OPTIONS.find((o) => o.label === trimmed)
+        if (proc) return formatTcccProcedureLabel(proc.id)
+        return trimmed
+      })
+      .filter(Boolean)
+    if (localized.length > 0) return localized.join(' · ')
+  }
+
+  const marchSections = formatTcccMarchSectionsDisplay(row)
+  const marchLabels = marchSections.flatMap((section) => section.items)
+  const procedureDisplay = formatTcccProcedurePerformedDisplay(row)
+  const procedureParts =
+    procedureDisplay && procedureDisplay !== '—'
+      ? procedureDisplay.split(' · ').map((part) => part.trim()).filter(Boolean)
+      : []
+  const merged = [...new Set([...procedureParts, ...marchLabels])]
+  return merged.length > 0 ? merged.join(' · ') : '—'
 }
 
 /** @param {Record<string, unknown>} row */
@@ -1361,24 +1516,24 @@ export function formatEgitimDurationDisplay(row) {
 
 /** @param {Record<string, unknown>} row */
 export function formatEgitimTrainingFocusDisplay(row) {
-  const label = String(row.trainingFocus || row.title || '').trim()
-  if (label) return label
   const key = String(row.trainingFocusKey || row.discipline || '').trim()
   const custom = String(row.customTrainingFocus || '').trim()
   if (key === EGITIM_CUSTOM) {
     return custom || i18n.t('sectors.egitim.options.trainingFocus.customFocus', { ns: 'training' })
   }
-  if (key.startsWith('custom:')) return key.slice(7).trim() || i18n.t('sectors.egitim.options.trainingFocus.customFocus', { ns: 'training' })
+  if (key.startsWith('custom:')) {
+    return key.slice(7).trim() || i18n.t('sectors.egitim.options.trainingFocus.customFocus', { ns: 'training' })
+  }
   if (key) return formatEgitimOptionLabel('trainingFocus', key, key)
-  return '—'
+  const label = String(row.trainingFocus || row.title || '').trim()
+  return label || '—'
 }
 
 /** @param {Record<string, unknown>} row */
 export function formatEgitimDifficultyDisplay(row) {
-  const label = String(row.difficultyLevel || '').trim()
-  if (label && !String(row.difficultyLevelKey || '').trim()) return label
   const key = String(row.difficultyLevelKey || '').trim()
-  if (key) return formatEgitimOptionLabel('difficultyLevel', key, label || key)
+  if (key) return formatEgitimOptionLabel('difficultyLevel', key, key)
+  const label = String(row.difficultyLevel || '').trim()
   return label || '—'
 }
 

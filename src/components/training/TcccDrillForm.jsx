@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
+import { trainingNumberInputProps } from '../../lib/trainingNumberInput'
 import { useTranslation } from 'react-i18next'
 import TacticalPanel from '../ui/TacticalPanel'
 import { useAuth } from '../../context/AuthContext'
@@ -47,6 +48,8 @@ const CLINICAL_TOGGLE_KEYS = ['chestSealApplied', 'needleDecompression', 'hypoth
  *   addLog: (payload: Record<string, unknown>) => Promise<{ id: string }>
  * }} props
  */
+const numberInputProps = trainingNumberInputProps()
+
 export default function TcccDrillForm({ addLog }) {
   const { t } = useTranslation('training')
   const { user } = useAuth()
@@ -207,6 +210,7 @@ export default function TcccDrillForm({ addLog }) {
           <label className="block space-y-1">
             <span className={labelClass}>{t('sectors.tccc.drill.form.interventionTime')}</span>
             <input
+              {...numberInputProps}
               type="number"
               min={0.01}
               step={0.01}
@@ -330,6 +334,7 @@ export default function TcccDrillForm({ addLog }) {
             <label className="block space-y-1">
               <span className={labelClass}>{t('sectors.tccc.drill.form.evacWaiting')}</span>
               <input
+                {...numberInputProps}
                 type="number"
                 min={0}
                 step={0.1}
@@ -341,6 +346,7 @@ export default function TcccDrillForm({ addLog }) {
             <label className="block space-y-1">
               <span className={labelClass}>{t('sectors.tccc.drill.form.systolicBp')}</span>
               <input
+                {...numberInputProps}
                 type="number"
                 min={0}
                 step={1}

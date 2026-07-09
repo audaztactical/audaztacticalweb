@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { trainingNumberInputProps } from '../../lib/trainingNumberInput'
 import { AlertTriangle, ChevronLeft } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import atisImg from '../../assets/atis.png'
@@ -71,6 +72,8 @@ const INITIAL_FORM = {
  *   listenError: Error | null
  * }} props
  */
+const numberInputProps = trainingNumberInputProps()
+
 export default function AtisShootingTerminal({
   inventory,
   rangeLogs,
@@ -474,6 +477,7 @@ export default function AtisShootingTerminal({
               <label className="block space-y-1">
                 <span className={labelClass}>{t('sectors.atis.form.distance')}</span>
                 <input
+                  {...numberInputProps}
                   type="number"
                   min={0}
                   step={0.5}
@@ -522,6 +526,7 @@ export default function AtisShootingTerminal({
                     <label className="block space-y-1">
                       <span className={labelClass}>{t('sectors.atis.form.firstShot')}</span>
                       <input
+                        {...numberInputProps}
                         type="number"
                         min={0}
                         step={0.01}
@@ -535,6 +540,7 @@ export default function AtisShootingTerminal({
                     <label className="block space-y-1">
                       <span className={labelClass}>{t('sectors.atis.form.split')}</span>
                       <input
+                        {...numberInputProps}
                         type="number"
                         min={0}
                         step={0.01}
@@ -548,6 +554,7 @@ export default function AtisShootingTerminal({
                     <label className="block space-y-1">
                       <span className={labelClass}>{t('sectors.atis.form.totalTime')}</span>
                       <input
+                        {...numberInputProps}
                         type="number"
                         min={0}
                         step={0.01}
@@ -603,6 +610,7 @@ export default function AtisShootingTerminal({
                 <label className="block space-y-1">
                   <span className={labelClass}>{t('sectors.atis.form.roundsFired')}</span>
                   <input
+                    {...numberInputProps}
                     type="number"
                     min={1}
                     step={1}
@@ -615,6 +623,7 @@ export default function AtisShootingTerminal({
                 <label className="block space-y-1">
                   <span className={labelClass}>{t('sectors.atis.form.hits')}</span>
                   <input
+                    {...numberInputProps}
                     type="number"
                     min={0}
                     step={1}

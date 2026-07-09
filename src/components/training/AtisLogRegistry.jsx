@@ -11,7 +11,6 @@ import {
   getAtisAccuracyPercent,
   getAtisAmmoName,
   getAtisDistanceM,
-  getAtisDrillName,
   getAtisRoundsAndHits,
   getAtisTimingDetails,
   getAtisWeaponLabel,
@@ -30,6 +29,7 @@ import {
   formatAtisAccessoriesLinesDisplay,
   formatAtisCaliberLabelDisplay,
   formatAtisDateCellDisplay,
+  formatAtisDrillNameDisplay,
   formatAtisDurationCellDisplay,
   formatAtisFilterSummaryDisplay,
   formatAtisMeteoRowsDisplay,
@@ -278,7 +278,7 @@ export default function AtisLogRegistry({ rangeLogs, inventory = [], loading = f
                       <td className="max-w-[140px] truncate px-3 py-2 text-app-text" title={getAtisWeaponLabel(row)}>
                         {getAtisWeaponLabel(row)}
                       </td>
-                      <td className="max-w-[120px] truncate px-3 py-2 text-app-text/90">{getAtisDrillName(row)}</td>
+                      <td className="max-w-[120px] truncate px-3 py-2 text-app-text/90">{formatAtisDrillNameDisplay(row)}</td>
                       <td className="px-3 py-2 tabular-nums text-app-text/70">{getAtisDistanceM(row)} m</td>
                       <td className="px-3 py-2 tabular-nums text-accent">
                         {totalRoundsFired} / {totalHits}
