@@ -518,7 +518,7 @@ export default function CqbTerminal({ rangeLogs, onBack, addLog, ready, logsLoad
                   <input
                     {...numberInputProps}
                     type="number"
-                    min={0.001}
+                    min={0.01}
                     step={0.01}
                     inputMode="decimal"
                     className={`${inputClass} tabular-nums`}

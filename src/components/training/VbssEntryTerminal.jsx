@@ -154,7 +154,7 @@ export default function VbssEntryTerminal({ addLog, onSubmitted, hidePdfBanner =
                 <input
                   {...numberInputProps}
                   type="number"
-                  min={0.01}
+                  min={1}
                   step={1}
                   className={`${inputClass} tabular-nums`}
                   value={form.targetOperationSec}
