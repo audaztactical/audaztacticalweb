@@ -11,6 +11,7 @@ import {
 import { getAudazFunctions } from './cloudFunctions'
 import { httpsCallable } from 'firebase/functions'
 import { getAudazApp, db, firebaseConfig, isFirebaseConfigured } from './firebase'
+import i18n from '../i18n'
 
 export const EARLY_WARNINGS_STORAGE_KEY = 'audaz_early_warnings_active'
 export const GLOBAL_INTEL_STORAGE_KEY = 'audaz_global_intel_active'
@@ -298,30 +299,20 @@ export function isPushVapidConfigured() {
  * @returns {string}
  */
 export function getPushRegistrationErrorMessage(reason) {
-  switch (reason) {
-    case 'vapid_missing':
-      return 'VAPID anahtarı tanımlı değil. Proje kökündeki .env.local dosyasına VITE_FIREBASE_VAPID_KEY ekleyin (Firebase Console → Project Settings → Cloud Messaging → Web Push certificates → Key pair). Ardından npm run dev yeniden başlatın.'
-    case 'vapid_invalid':
-      return 'VAPID anahtarı geçersiz. Firebase Console’daki Web Push sertifika anahtarını kontrol edin.'
-    case 'denied':
-      return 'Tarayıcı bildirim izni reddedildi. Adres çubuğundaki site izinlerinden bildirimleri açabilirsiniz.'
-    case 'dismissed':
-      return 'Bildirim izni verilmedi. Push bildirimleri için izin gerekli.'
-    case 'not_supported':
-      return 'Bu tarayıcı push bildirimlerini desteklemiyor.'
-    case 'installations_denied':
-      return 'FCM kurulum hatası (Installations). Sayfayı yenileyip tekrar deneyin; sorun sürerse tarayıcı önbelleğini temizleyin.'
-    case 'not_configured':
-      return 'Firebase yapılandırması eksik.'
-    case 'config_invalid':
-      return 'FCM yapılandırması hatalı. .env.local ile firebase-messaging-sw.js eşleşmesini kontrol edin (npm run dev veya npm run build).'
-    case 'save_failed':
-      return 'FCM token Firestore’a kaydedilemedi. Oturumunuzun açık olduğundan emin olun.'
-    case 'no_token':
-      return 'FCM cihaz token’ı alınamadı. Sayfayı yenileyip tekrar deneyin.'
-    default:
-      return 'Push bildirimleri etkinleştirilemedi. Lütfen tekrar deneyin.'
+  const keyByReason = {
+    vapid_missing: 'push.errors.vapid_missing',
+    vapid_invalid: 'push.errors.vapid_invalid',
+    denied: 'push.errors.denied',
+    dismissed: 'push.errors.dismissed',
+    not_supported: 'push.errors.not_supported',
+    installations_denied: 'push.errors.installations_denied',
+    not_configured: 'push.errors.not_configured',
+    config_invalid: 'push.errors.config_invalid',
+    save_failed: 'push.errors.save_failed',
+    no_token: 'push.errors.no_token',
   }
+  const key = keyByReason[String(reason ?? '')] || 'push.errors.error'
+  return i18n.t(key, { ns: 'common' })
 }
 
 /**

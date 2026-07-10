@@ -28,5 +28,25 @@
   "legal": {
     "authRequired": "Sign-in required to record acceptance.",
     "saveFailed": "Could not save acceptance — try again."
+  },
+  "push": {
+    "label": "Push notifications",
+    "hint": "Browser notifications when the site is closed (permission required)",
+    "hintRegistering": "Requesting browser permission and FCM token…",
+    "registering": "Enabling push…",
+    "syncFailed": "Sync failed — try the change again or check your network connection.",
+    "errors": {
+      "vapid_missing": "VAPID key is not set. Add VITE_FIREBASE_VAPID_KEY to .env.local in the project root (Firebase Console → Project Settings → Cloud Messaging → Web Push certificates → Key pair). Then restart npm run dev.",
+      "vapid_invalid": "VAPID key is invalid. Check the Web Push certificate key in Firebase Console.",
+      "denied": "Browser notification permission was denied. You can enable notifications in the site permissions from the address bar.",
+      "dismissed": "Notification permission was not granted. Permission is required for push notifications.",
+      "not_supported": "This browser does not support push notifications.",
+      "installations_denied": "FCM setup error (Installations). Refresh the page and try again; if it persists, clear the browser cache.",
+      "not_configured": "Firebase configuration is missing.",
+      "config_invalid": "FCM configuration is invalid. Check that .env.local matches firebase-messaging-sw.js (npm run dev or npm run build).",
+      "save_failed": "Could not save the FCM token to Firestore. Make sure you are signed in.",
+      "no_token": "Could not get an FCM device token. Refresh the page and try again.",
+      "error": "Could not enable push notifications. Please try again."
+    }
   }
 }

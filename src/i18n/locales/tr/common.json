@@ -28,5 +28,25 @@
   "legal": {
     "authRequired": "Onay kaydı için oturum gerekli.",
     "saveFailed": "Onay kaydedilemedi — tekrar deneyin."
+  },
+  "push": {
+    "label": "Push bildirimleri",
+    "hint": "Site kapalıyken tarayıcı bildirimi (izin gerekir)",
+    "hintRegistering": "Tarayıcı izni ve FCM token alınıyor…",
+    "registering": "Push etkinleştiriliyor…",
+    "syncFailed": "Senkronizasyon başarısız — değişikliği tekrar deneyin veya ağ bağlantınızı kontrol edin.",
+    "errors": {
+      "vapid_missing": "VAPID anahtarı tanımlı değil. Proje kökündeki .env.local dosyasına VITE_FIREBASE_VAPID_KEY ekleyin (Firebase Console → Project Settings → Cloud Messaging → Web Push certificates → Key pair). Ardından npm run dev yeniden başlatın.",
+      "vapid_invalid": "VAPID anahtarı geçersiz. Firebase Console’daki Web Push sertifika anahtarını kontrol edin.",
+      "denied": "Tarayıcı bildirim izni reddedildi. Adres çubuğundaki site izinlerinden bildirimleri açabilirsiniz.",
+      "dismissed": "Bildirim izni verilmedi. Push bildirimleri için izin gerekli.",
+      "not_supported": "Bu tarayıcı push bildirimlerini desteklemiyor.",
+      "installations_denied": "FCM kurulum hatası (Installations). Sayfayı yenileyip tekrar deneyin; sorun sürerse tarayıcı önbelleğini temizleyin.",
+      "not_configured": "Firebase yapılandırması eksik.",
+      "config_invalid": "FCM yapılandırması hatalı. .env.local ile firebase-messaging-sw.js eşleşmesini kontrol edin (npm run dev veya npm run build).",
+      "save_failed": "FCM token Firestore’a kaydedilemedi. Oturumunuzun açık olduğundan emin olun.",
+      "no_token": "FCM cihaz token’ı alınamadı. Sayfayı yenileyip tekrar deneyin.",
+      "error": "Push bildirimleri etkinleştirilemedi. Lütfen tekrar deneyin."
+    }
   }
 }

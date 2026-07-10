@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Bell, Loader2, Moon, Palette, Settings2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
@@ -155,6 +156,7 @@ function AutoSaveStatusIndicator({ status }) {
  * }} [props]
  */
 export default function SettingsPanel({ className = '', bare = false, sections = ['theme', 'notifications'] }) {
+  const { t } = useTranslation('common')
   const { user } = useAuth()
   const { settings, loading, saving, ready, updateSettings, setTheme } = useTheme()
   const [draft, setDraft] = useState(settings)
@@ -400,11 +402,11 @@ export default function SettingsPanel({ className = '', bare = false, sections =
             />
           ))}
           <HudToggle
-            label="Push bildirimleri"
+            label={t('push.label')}
             hint={
               pushRegistering
-                ? 'Tarayıcı izni ve FCM token alınıyor…'
-                : 'Site kapalıyken tarayıcı bildirimi (izin gerekir)'
+                ? t('push.hintRegistering')
+                : t('push.hint')
             }
             enabled={draft.notifications.push}
             disabled={controlsDisabled}
@@ -415,7 +417,7 @@ export default function SettingsPanel({ className = '', bare = false, sections =
           {pushRegistering ? (
             <p className="flex items-center gap-2 font-mono-technical text-[9px] uppercase tracking-wide text-amber-400/80">
               <Loader2 className="size-3 animate-spin" aria-hidden />
-              Push etkinleştiriliyor…
+              {t('push.registering')}
             </p>
           ) : null}
           {pushError ? (
@@ -433,7 +435,7 @@ export default function SettingsPanel({ className = '', bare = false, sections =
 
       {saveStatus === 'error' ? (
         <p className="font-mono-technical text-[9px] uppercase leading-relaxed text-red-400/90">
-          Senkronizasyon başarısız — değişikliği tekrar deneyin veya ağ bağlantınızı kontrol edin.
+          {t('push.syncFailed')}
         </p>
       ) : null}
     </div>
