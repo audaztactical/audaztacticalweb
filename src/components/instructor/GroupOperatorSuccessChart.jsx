@@ -1,7 +1,10 @@
 import { useMemo } from 'react'
 import { Users } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { buildLiveGroupLeaderboard } from '../../lib/instructorGroupAnalytics'
+import { instructorT } from '../../lib/instructorDisplayText'
+import { pdfFormatPercent } from '../../lib/pdfReportText'
 
 /** @typedef {import('../../lib/firestoreGroupTraining').GroupActivityLog} GroupActivityLog */
 /** @typedef {import('../../lib/firestoreGroups').TacticalGroup} TacticalGroup */
@@ -17,6 +20,8 @@ const BAR_COLORS = ['#34d399', '#22d3ee', '#a78bfa', '#fbbf24', '#f472b6', '#94a
  * }} props
  */
 export default function GroupOperatorSuccessChart({ group, operators, logs }) {
+  const { t } = useTranslation('instructor')
+
   const chartData = useMemo(() => {
     if (!group) return []
     const rows = buildLiveGroupLeaderboard(group, operators, logs)
@@ -33,13 +38,15 @@ export default function GroupOperatorSuccessChart({ group, operators, logs }) {
   if (!group) return null
 
   return (
-    <section className="rounded-xl border border-emerald-900/35 bg-slate-950/90 p-4">
+    <section className="min-w-0 max-w-full overflow-x-hidden rounded-xl border border-emerald-900/35 bg-slate-950/90 p-3 sm:p-4">
       <p className="mb-3 flex items-center gap-2 font-mono text-[10px] font-bold uppercase text-emerald-400">
-        <Users className="size-4" aria-hidden />
-        Operatör Başarı Karşılaştırması · Canlı
+        <Users className="size-4 shrink-0" aria-hidden />
+        <span className="min-w-0 break-words">{t('analytics.comparisonTitle')}</span>
       </p>
       {chartData.length === 0 ? (
-        <p className="py-12 text-center font-mono text-[10px] uppercase text-app-text/45">KAYIT YOK</p>
+        <p className="py-12 text-center font-mono text-[10px] uppercase text-app-text/45">
+          {t('analytics.comparisonEmpty')}
+        </p>
       ) : (
         <div className="relative h-[240px] min-h-[240px] w-full min-w-0">
           <ResponsiveContainer
@@ -52,12 +59,7 @@ export default function GroupOperatorSuccessChart({ group, operators, logs }) {
             <BarChart data={chartData} layout="vertical" margin={{ left: 4, right: 12 }}>
               <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" horizontal={false} />
               <XAxis type="number" domain={[0, 100]} tick={{ fill: '#64748b', fontSize: 10 }} />
-              <YAxis
-                type="category"
-                dataKey="name"
-                width={72}
-                tick={{ fill: '#94a3b8', fontSize: 9 }}
-              />
+              <YAxis type="category" dataKey="name" width={72} tick={{ fill: '#94a3b8', fontSize: 9 }} />
               <Tooltip
                 contentStyle={{
                   background: '#0f172a',
@@ -66,7 +68,10 @@ export default function GroupOperatorSuccessChart({ group, operators, logs }) {
                   fontSize: 10,
                 }}
                 formatter={(value, _name, item) => [
-                  `%${value} · ${item.payload.drills} drill`,
+                  instructorT('analytics.comparisonTooltip', {
+                    score: pdfFormatPercent(Number(value)),
+                    drills: item.payload.drills,
+                  }),
                   item.payload.fullName,
                 ]}
               />

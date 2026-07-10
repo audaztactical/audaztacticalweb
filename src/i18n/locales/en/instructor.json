@@ -1,0 +1,154 @@
+{
+  "common": {
+    "emDash": "—",
+    "live": "LIVE",
+    "loading": "Syncing…",
+    "empty": "NO RECORDS",
+    "group": "Group",
+    "operator": "Operator",
+    "sec": "sec"
+  },
+  "dashboard": {
+    "eyebrow": "Instructor command center",
+    "title": "Instructor Control Panel",
+    "subtitle": "Single entry point — group management, live training, operator reporting and analytics · {{name}}",
+    "navAria": "Instructor panel tabs",
+    "fallbackInstructor": "Instructor",
+    "tabs": {
+      "gruplar": "Groups",
+      "operatorler": "Operator Reporting",
+      "egitim": "Training",
+      "basari": "Analytics"
+    }
+  },
+  "disciplines": {
+    "atis": "MARKSMANSHIP",
+    "cqb": "CQB",
+    "fof": "FOF",
+    "vbss": "VBSS",
+    "tccc": "TCCC",
+    "egitim": "TRAINING"
+  },
+  "sources": {
+    "operator": "OPERATOR",
+    "instructor": "INSTRUCTOR",
+    "trainings": "TRAININGS",
+    "range_logs": "RANGE_LOGS",
+    "grp07": "GRP-07",
+    "range": "RANGE"
+  },
+  "status": {
+    "passed": "Passed",
+    "failed": "Failed",
+    "timeFailed": "Time failed"
+  },
+  "operators": {
+    "header": "Operator Reporting",
+    "subheader": "Instructor notes · success levels · group activity feed — one hub",
+    "searchPlaceholder": "CALLSIGN / NAME / GROUP",
+    "loadingRoster": "Loading roster…",
+    "emptyRoster": "NO OPERATORS IN GROUPS",
+    "emptyFilter": "NO MATCHING OPERATORS",
+    "cols": {
+      "callsign": "Callsign",
+      "user": "User",
+      "groups": "Groups",
+      "sessions": "Sessions",
+      "success": "Success"
+    },
+    "detail": {
+      "sessions": "Sessions",
+      "success": "Success",
+      "groups": "Groups",
+      "close": "Close"
+    }
+  },
+  "feed": {
+    "title": "Group Training Activity Feed · GROUP · Live",
+    "loading": "Syncing feed…",
+    "empty": "No group training records yet · Operators can log via Training → Group Training",
+    "cols": {
+      "time": "Time",
+      "operator": "Operator",
+      "discipline": "Discipline",
+      "record": "Record",
+      "score": "Score",
+      "source": "Source"
+    },
+    "pdfButton": "DOWNLOAD FEED PDF",
+    "pdfBusy": "GENERATING PDF…"
+  },
+  "analytics": {
+    "focusGroup": "GROUP FOCUS",
+    "focusOperator": "OPERATOR FOCUS",
+    "groupLabel": "Group",
+    "operatorLabel": "Operator",
+    "curveTitle": "Group Performance Curve",
+    "curveLoading": "Data stream…",
+    "curveEmpty": "NO RECORDS",
+    "comparisonTitle": "Operator Success Comparison · Live",
+    "comparisonEmpty": "NO RECORDS",
+    "kpi": {
+      "overall": "OVERALL",
+      "atis": "MARKSMANSHIP",
+      "cqb": "CQB",
+      "fof": "FoF"
+    },
+    "hudLoading": "HUD sync…",
+    "hudEmpty": "NO ACADEMIC RECORDS",
+    "pdfButton": "DOWNLOAD ANALYTICS PDF",
+    "pdfBusy": "GENERATING PDF…",
+    "tooltip": {
+      "date": "Date: {{date}}",
+      "operator": "Operator: {{callsign}}",
+      "score": "Score: {{score}}",
+      "discipline": "Discipline: {{discipline}}",
+      "drill": "Drill: {{drill}}",
+      "session": "Session #{{index}}"
+    },
+    "comparisonTooltip": "{{score}} · {{drills}} drills"
+  },
+  "leaderboard": {
+    "title": "[ INTRA-GROUP RANKING · ACADEMIC LOG ]",
+    "liveBadge": "LIVE",
+    "selectGroup": "Select group",
+    "noGroups": "NO GROUPS",
+    "memberCount": "{{name}} · {{count}} MEMBERS",
+    "loading": "COMPUTING RANKING…",
+    "emptyMetrics": "MEMBER METRICS UNAVAILABLE OR NO RECORDS",
+    "emptyMembers": "NO OPERATORS IN THIS GROUP YET",
+    "cols": {
+      "rank": "#",
+      "callsign": "Callsign",
+      "totalDrills": "Total drills",
+      "atisAvg": "Marksmanship avg.",
+      "cqbSpeed": "CQB speed (sec)",
+      "overall": "Overall success"
+    }
+  },
+  "shooterRecords": {
+    "title": "[ ALL SHOOTER RECORDS · LIVE ]",
+    "filterLabel": "Operator filter",
+    "allShooters": "ALL SHOOTERS",
+    "loading": "Syncing record stream…",
+    "empty": "No shooter records in this group yet",
+    "showing": "Showing last {{shown}} · Total {{total}}",
+    "cols": {
+      "time": "Time",
+      "callsign": "Callsign",
+      "record": "Record",
+      "discipline": "Discipline",
+      "hits": "Hits",
+      "success": "Success",
+      "duration": "Duration",
+      "status": "Status",
+      "source": "Source"
+    }
+  },
+  "groups": {
+    "stubNote": "Group management UI — labels localized in this pass; full sector copy continues in Training tab."
+  },
+  "training": {
+    "stubNote": "Live training sectors — shared discipline labels applied; deep sector forms use training namespace where already wired."
+  }
+}

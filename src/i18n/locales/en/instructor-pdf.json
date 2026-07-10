@@ -1,0 +1,54 @@
+{
+  "titles": {
+    "feed": "INSTRUCTOR ACTIVITY FEED REPORT",
+    "feedFor": "INSTRUCTOR ACTIVITY FEED · {{group}}",
+    "analytics": "INSTRUCTOR ANALYTICS REPORT",
+    "analyticsFor": "INSTRUCTOR ANALYTICS · {{group}}"
+  },
+  "sections": {
+    "meta": "REPORT CONTEXT",
+    "feedTable": "ACTIVITY FEED",
+    "curve": "GROUP PERFORMANCE CURVE",
+    "leaderboard": "INTRA-GROUP RANKING",
+    "comparison": "OPERATOR SUCCESS COMPARISON"
+  },
+  "fields": {
+    "group": "Group",
+    "generated": "Generated",
+    "logCount": "Records",
+    "instructor": "Instructor"
+  },
+  "table": {
+    "feed": {
+      "time": "TIME",
+      "operator": "OPERATOR",
+      "discipline": "DISCIPLINE",
+      "record": "RECORD",
+      "score": "SCORE",
+      "source": "SOURCE"
+    },
+    "leaderboard": {
+      "rank": "#",
+      "callsign": "CALLSIGN",
+      "drills": "DRILLS",
+      "atis": "MARKSMANSHIP AVG",
+      "cqb": "CQB SPEED",
+      "overall": "OVERALL %"
+    }
+  },
+  "empty": {
+    "feed": "No activity records.",
+    "leaderboard": "No ranking rows.",
+    "chart": "Chart unavailable."
+  },
+  "fileNaming": {
+    "brand": "AUDAZ",
+    "feedSlug": "InstructorFeed",
+    "analyticsSlug": "InstructorAnalytics",
+    "bulk": "Bulk",
+    "records": "records"
+  },
+  "continuation": {
+    "continue": "Continued"
+  }
+}

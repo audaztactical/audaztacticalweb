@@ -224,19 +224,40 @@ export function countGroupDrillsForOperator(logs, operatorId) {
 
 /**
  * @param {GroupActivityLog[]} logs
+ * @param {number} [maxBars]
+ * @param {{ resolveCallsign?: (operatorId: string) => string }} [options]
  */
-export function buildGroupAggregateTrend(logs, maxBars = 12) {
+export function buildGroupAggregateTrend(logs, maxBars = 12, options = {}) {
+  const resolveCallsign = options.resolveCallsign
   const sorted = [...logs].sort((a, b) => {
     const ta = resolveLogMs(a.timestamp)
     const tb = resolveLogMs(b.timestamp)
     return ta - tb
   })
-  return sorted.slice(-maxBars).map((log, index) => ({
-    id: log.logId,
-    label: `#${index + 1}`,
-    value: computeGroupLogHitPercent(log),
-    tag: log.discipline === 'atis' ? 'ATIS' : log.discipline === 'cqb' ? 'CQB' : 'FOF',
-  }))
+  return sorted.slice(-maxBars).map((log, index) => {
+    const ms = resolveLogMs(log.timestamp)
+    const disc = String(log.discipline ?? '')
+    return {
+      id: log.logId,
+      label: `#${index + 1}`,
+      value: computeGroupLogHitPercent(log),
+      tag:
+        disc === 'atis'
+          ? 'ATIS'
+          : disc === 'cqb'
+            ? 'CQB'
+            : disc === 'vbss'
+              ? 'VBSS'
+              : disc === 'tccc'
+                ? 'TCCC'
+                : 'FOF',
+      discipline: disc,
+      drillName: log.drillName || '',
+      operatorId: log.operatorId || '',
+      callsign: resolveCallsign?.(log.operatorId) || log.operatorId?.slice(0, 8) || '',
+      timestampMs: ms,
+    }
+  })
 }
 
 /**

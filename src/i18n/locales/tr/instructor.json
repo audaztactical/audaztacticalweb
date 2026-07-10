@@ -1,0 +1,154 @@
+{
+  "common": {
+    "emDash": "—",
+    "live": "CANLI",
+    "loading": "Senkronize ediliyor…",
+    "empty": "KAYIT YOK",
+    "group": "Grup",
+    "operator": "Operatör",
+    "sec": "sn"
+  },
+  "dashboard": {
+    "eyebrow": "Eğitmen komuta merkezi",
+    "title": "Eğitmen Kontrol Paneli",
+    "subtitle": "Tek giriş noktası — grup yönetimi, canlı eğitim, operatör raporlama ve analitik · {{name}}",
+    "navAria": "Eğitmen panel sekmeleri",
+    "fallbackInstructor": "Eğitmen",
+    "tabs": {
+      "gruplar": "Gruplar",
+      "operatorler": "Operatör Raporlama",
+      "egitim": "Eğitim",
+      "basari": "Analitik"
+    }
+  },
+  "disciplines": {
+    "atis": "ATIŞ",
+    "cqb": "CQB",
+    "fof": "FOF",
+    "vbss": "VBSS",
+    "tccc": "TCCC",
+    "egitim": "EĞİTİM"
+  },
+  "sources": {
+    "operator": "OPERATÖR",
+    "instructor": "EĞİTMEN",
+    "trainings": "TRAININGS",
+    "range_logs": "RANGE_LOGS",
+    "grp07": "GRP-07",
+    "range": "RANGE"
+  },
+  "status": {
+    "passed": "Geçti",
+    "failed": "Kaldı",
+    "timeFailed": "Sürede kaldı"
+  },
+  "operators": {
+    "header": "Operatör Raporlama",
+    "subheader": "Eğitmen notları · başarı seviyeleri · grup aktivite feed — tek merkez",
+    "searchPlaceholder": "CALLSIGN / İSİM / GRUP ADI",
+    "loadingRoster": "Kadro yükleniyor…",
+    "emptyRoster": "GRUPLARA KATILMIŞ OPERATÖR YOK",
+    "emptyFilter": "EŞLEŞEN OPERATÖR YOK",
+    "cols": {
+      "callsign": "Callsign",
+      "user": "Kullanıcı",
+      "groups": "Gruplar",
+      "sessions": "Oturum",
+      "success": "Başarı"
+    },
+    "detail": {
+      "sessions": "Oturum",
+      "success": "Başarı",
+      "groups": "Gruplar",
+      "close": "Kapat"
+    }
+  },
+  "feed": {
+    "title": "Grup Eğitimi Aktivite Feed · GROUP · Canlı",
+    "loading": "Feed senkronize ediliyor…",
+    "empty": "Henüz grup eğitimi kaydı yok · Operatörler antrenman modülünden \"Grup Eğitimi\" seçerek loglayabilir",
+    "cols": {
+      "time": "Zaman",
+      "operator": "Operatör",
+      "discipline": "Disiplin",
+      "record": "Kayıt",
+      "score": "Skor",
+      "source": "Kaynak"
+    },
+    "pdfButton": "FEED PDF İNDİR",
+    "pdfBusy": "PDF HAZIRLANIYOR…"
+  },
+  "analytics": {
+    "focusGroup": "GRUP ODAĞI",
+    "focusOperator": "OPERATÖR ODAĞI",
+    "groupLabel": "Grup",
+    "operatorLabel": "Operatör",
+    "curveTitle": "Grup Performans Eğrisi",
+    "curveLoading": "Veri akışı…",
+    "curveEmpty": "KAYIT YOK",
+    "comparisonTitle": "Operatör Başarı Karşılaştırması · Canlı",
+    "comparisonEmpty": "KAYIT YOK",
+    "kpi": {
+      "overall": "GENEL",
+      "atis": "ATIŞ",
+      "cqb": "CQB",
+      "fof": "FoF"
+    },
+    "hudLoading": "HUD senkron…",
+    "hudEmpty": "AKADEMİK KAYIT YOK",
+    "pdfButton": "ANALİTİK PDF İNDİR",
+    "pdfBusy": "PDF HAZIRLANIYOR…",
+    "tooltip": {
+      "date": "Tarih: {{date}}",
+      "operator": "Operatör: {{callsign}}",
+      "score": "Skor: {{score}}",
+      "discipline": "Disiplin: {{discipline}}",
+      "drill": "Drill: {{drill}}",
+      "session": "Oturum #{{index}}"
+    },
+    "comparisonTooltip": "{{score}} · {{drills}} drill"
+  },
+  "leaderboard": {
+    "title": "[ GRUP İÇİ SIRALAMA · AKADEMİK LOG ]",
+    "liveBadge": "CANLI",
+    "selectGroup": "Grup Seç",
+    "noGroups": "GRUP YOK",
+    "memberCount": "{{name}} · {{count}} ÜYE",
+    "loading": "SIRALAMA HESAPLANIYOR…",
+    "emptyMetrics": "ÜYE METRİKLERİ YÜKLENEMEDİ VEYA KAYIT YOK",
+    "emptyMembers": "BU GRUPTA HENÜZ OPERATÖR YOK",
+    "cols": {
+      "rank": "#",
+      "callsign": "Callsign",
+      "totalDrills": "Toplam Drill",
+      "atisAvg": "Atış Ort.",
+      "cqbSpeed": "CQB Hızı (SN)",
+      "overall": "Genel Başarı"
+    }
+  },
+  "shooterRecords": {
+    "title": "[ TÜM ATICI KAYITLARI · CANLI ]",
+    "filterLabel": "Operatör Filtre",
+    "allShooters": "TÜM ATICILAR",
+    "loading": "Kayıt akışı senkronize ediliyor…",
+    "empty": "Bu grupta henüz atıcı kaydı yok",
+    "showing": "Son {{shown}} kayıt gösteriliyor · Toplam {{total}}",
+    "cols": {
+      "time": "Zaman",
+      "callsign": "Callsign",
+      "record": "Kayıt",
+      "discipline": "Disiplin",
+      "hits": "İsabet",
+      "success": "Başarı",
+      "duration": "Süre",
+      "status": "Durum",
+      "source": "Kaynak"
+    }
+  },
+  "groups": {
+    "stubNote": "Grup yönetimi arayüzü — bu turda etiketler yerelleştirildi; sektör metinleri Eğitim sekmesinde devam eder."
+  },
+  "training": {
+    "stubNote": "Canlı eğitim sektörleri — ortak disiplin etiketleri uygulandı; derin formlar mevcut training namespace'ini kullanır."
+  }
+}

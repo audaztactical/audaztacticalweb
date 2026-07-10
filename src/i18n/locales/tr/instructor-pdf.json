@@ -1,0 +1,54 @@
+{
+  "titles": {
+    "feed": "EGITMEN AKTIVITE FEED RAPORU",
+    "feedFor": "EGITMEN AKTIVITE FEED · {{group}}",
+    "analytics": "EGITMEN ANALITIK RAPORU",
+    "analyticsFor": "EGITMEN ANALITIK · {{group}}"
+  },
+  "sections": {
+    "meta": "RAPOR BAGLAMI",
+    "feedTable": "AKTIVITE FEED",
+    "curve": "GRUP PERFORMANS EGRISI",
+    "leaderboard": "GRUP ICI SIRALAMA",
+    "comparison": "OPERATOR BASARI KARSILASTIRMASI"
+  },
+  "fields": {
+    "group": "Grup",
+    "generated": "Olusturulma",
+    "logCount": "Kayit",
+    "instructor": "Egitmen"
+  },
+  "table": {
+    "feed": {
+      "time": "ZAMAN",
+      "operator": "OPERATOR",
+      "discipline": "DISIPLIN",
+      "record": "KAYIT",
+      "score": "SKOR",
+      "source": "KAYNAK"
+    },
+    "leaderboard": {
+      "rank": "#",
+      "callsign": "CALLSIGN",
+      "drills": "DRILL",
+      "atis": "ATIS ORT",
+      "cqb": "CQB HIZI",
+      "overall": "GENEL %"
+    }
+  },
+  "empty": {
+    "feed": "Aktivite kaydi yok.",
+    "leaderboard": "Siralama satiri yok.",
+    "chart": "Grafik olusturulamadi."
+  },
+  "fileNaming": {
+    "brand": "AUDAZ",
+    "feedSlug": "EgitmenFeed",
+    "analyticsSlug": "EgitmenAnalitik",
+    "bulk": "Toplu",
+    "records": "kayit"
+  },
+  "continuation": {
+    "continue": "Devam"
+  }
+}

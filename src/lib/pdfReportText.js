@@ -4,6 +4,7 @@ const NS = 'training-pdf'
 const HEALTH_NS = 'health-pdf'
 const BALLISTICS_PDF_NS = 'ballistics-pdf'
 const PROGRESS_PDF_NS = 'progress-pdf'
+const INSTRUCTOR_PDF_NS = 'instructor-pdf'
 
 /** @returns {'tr-TR' | 'en-US'} */
 export function pdfLocale() {
@@ -73,6 +74,32 @@ export function progressPdfBulkFilename(callsign, logCount = 0) {
   const dateStamp = new Date().toISOString().slice(0, 10)
   const count = Math.max(0, Math.round(Number(logCount) || 0))
   return `${brand}-${slug}-${bulk}-${safeCallsign}-${count}${records}-${dateStamp}.pdf`
+}
+
+/**
+ * @param {string} key
+ * @param {Record<string, unknown>} [params]
+ */
+export function instructorPdfT(key, params = {}) {
+  return i18n.t(key, { ns: INSTRUCTOR_PDF_NS, ...params })
+}
+
+/**
+ * @param {'feed' | 'analytics'} kind
+ * @param {string} groupName
+ * @param {number} [logCount]
+ */
+export function instructorPdfFilename(kind, groupName, logCount = 0) {
+  const brand = pdfFilenameSegment(instructorPdfT('fileNaming.brand'))
+  const slug = pdfFilenameSegment(
+    instructorPdfT(kind === 'feed' ? 'fileNaming.feedSlug' : 'fileNaming.analyticsSlug'),
+  )
+  const bulk = pdfFilenameSegment(instructorPdfT('fileNaming.bulk'))
+  const records = pdfFilenameSegment(instructorPdfT('fileNaming.records'))
+  const safeGroup = pdfFilenameSegment(groupName).slice(0, 24) || 'GROUP'
+  const dateStamp = new Date().toISOString().slice(0, 10)
+  const count = Math.max(0, Math.round(Number(logCount) || 0))
+  return `${brand}-${slug}-${bulk}-${safeGroup}-${count}${records}-${dateStamp}.pdf`
 }
 
 /**

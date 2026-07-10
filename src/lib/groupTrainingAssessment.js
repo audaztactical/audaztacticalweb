@@ -61,15 +61,17 @@ export function formatGroupTrainingStatusLabel(statusResult, isPassed = false) {
   return 'KALDI'
 }
 
+import { instructorT } from './instructorDisplayText'
+
 /**
  * @param {GroupTrainingStatusResult | string | undefined} statusResult
  * @param {boolean} [isPassed]
  * @returns {string}
  */
 export function formatGroupTrainingStatusLabelInstructor(statusResult, isPassed = false) {
-  if (isPassed || statusResult === 'BAŞARILI') return 'Geçti'
-  if (statusResult === 'SÜRE İHLALİ') return 'Sürede kaldı'
-  return 'Kaldı'
+  if (isPassed || statusResult === 'BAŞARILI') return instructorT('status.passed')
+  if (statusResult === 'SÜRE İHLALİ') return instructorT('status.timeFailed')
+  return instructorT('status.failed')
 }
 
 /**

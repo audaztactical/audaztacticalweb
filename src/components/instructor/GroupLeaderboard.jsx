@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Loader2, Trophy } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { buildGroupLeaderboard } from '../../lib/firestoreGroups'
 import { buildLiveGroupLeaderboard } from '../../lib/instructorGroupAnalytics'
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
@@ -24,6 +25,7 @@ const RANK_STYLES = [
  * }} props
  */
 export default function GroupLeaderboard({ groups, operators, logs, hideGroupSelect = false }) {
+  const { t } = useTranslation('instructor')
   const [selectedGroupId, setSelectedGroupId] = useState('')
   const [rows, setRows] = useState(/** @type {GroupLeaderboardRow[]} */ ([]))
   const [loading, setLoading] = useState(false)
@@ -77,20 +79,22 @@ export default function GroupLeaderboard({ groups, operators, logs, hideGroupSel
   }, [selectedGroup, operators, liveRows])
 
   return (
-    <section className="rounded-xl border border-emerald-900/35 bg-slate-950/90 p-4">
-      <p className="mb-3 flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-400">
+    <section className="min-w-0 max-w-full overflow-x-hidden rounded-xl border border-emerald-900/35 bg-slate-950/90 p-3 sm:p-4">
+      <p className="mb-3 flex flex-wrap items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-400">
         <Trophy className="size-4 shrink-0" strokeWidth={1.5} aria-hidden />
-        [ GRUP İÇİ SIRALAMA · AKADEMİK LOG ]
+        <span className="min-w-0 break-words">{t('leaderboard.title')}</span>
         {logs ? (
           <span className="ml-auto rounded border border-emerald-800/50 px-1.5 py-0.5 text-[8px] text-emerald-500">
-            CANLI
+            {t('leaderboard.liveBadge')}
           </span>
         ) : null}
       </p>
 
       {!hideGroupSelect ? (
         <label className="mb-4 block space-y-1.5">
-          <span className="font-mono text-[9px] font-bold uppercase text-app-text/55">Grup Seç</span>
+          <span className="font-mono text-[9px] font-bold uppercase text-app-text/55">
+            {t('leaderboard.selectGroup')}
+          </span>
           <select
             value={selectedGroupId}
             onChange={(e) => setSelectedGroupId(e.target.value)}
@@ -98,11 +102,11 @@ export default function GroupLeaderboard({ groups, operators, logs, hideGroupSel
             className="w-full rounded-sm border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-app-text outline-none focus:border-emerald-500/60"
           >
             {groups.length === 0 ? (
-              <option value="">GRUP YOK</option>
+              <option value="">{t('leaderboard.noGroups')}</option>
             ) : (
               groups.map((g) => (
                 <option key={g.groupId} value={g.groupId}>
-                  {g.groupName} · {g.members.length} ÜYE
+                  {t('leaderboard.memberCount', { name: g.groupName, count: g.members.length })}
                 </option>
               ))
             )}
@@ -113,25 +117,23 @@ export default function GroupLeaderboard({ groups, operators, logs, hideGroupSel
       {loading ? (
         <p className="flex items-center justify-center gap-2 py-10 font-mono text-[10px] uppercase text-app-text/55">
           <Loader2 className="size-4 animate-spin text-emerald-400" aria-hidden />
-          SIRALAMA HESAPLANIYOR…
+          {t('leaderboard.loading')}
         </p>
       ) : rows.length === 0 ? (
         <p className="py-8 text-center font-mono text-[10px] uppercase text-app-text/45">
-          {selectedGroup?.members.length
-            ? 'ÜYE METRİKLERİ YÜKLENEMEDİ VEYA KAYIT YOK'
-            : 'BU GRUPTA HENÜZ OPERATÖR YOK'}
+          {selectedGroup?.members.length ? t('leaderboard.emptyMetrics') : t('leaderboard.emptyMembers')}
         </p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] border-collapse font-mono text-[10px] uppercase">
             <thead>
               <tr className="border-b border-slate-800 text-left text-app-text/55">
-                <th className="px-2 py-2">#</th>
-                <th className="px-2 py-2">Callsign</th>
-                <th className="px-2 py-2">Toplam Drill</th>
-                <th className="px-2 py-2">Atış Ort.</th>
-                <th className="px-2 py-2">CQB Hızı (SN)</th>
-                <th className="px-2 py-2">Genel Başarı</th>
+                <th className="px-2 py-2">{t('leaderboard.cols.rank')}</th>
+                <th className="px-2 py-2">{t('leaderboard.cols.callsign')}</th>
+                <th className="px-2 py-2">{t('leaderboard.cols.totalDrills')}</th>
+                <th className="px-2 py-2">{t('leaderboard.cols.atisAvg')}</th>
+                <th className="px-2 py-2">{t('leaderboard.cols.cqbSpeed')}</th>
+                <th className="px-2 py-2">{t('leaderboard.cols.overall')}</th>
               </tr>
             </thead>
             <tbody>

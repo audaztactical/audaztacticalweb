@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Loader2, Search, User, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { buildInstructorSquadRoster } from '../../../lib/instructorRoster'
 import InstructorGroupTrainingFeed from '../InstructorGroupTrainingFeed'
 
@@ -17,9 +18,17 @@ const inputClass =
  *   operators: OperatorProfile[]
  *   activityLogs: GroupActivityLog[]
  *   loading?: boolean
+ *   instructorName?: string
  * }} props
  */
-export default function InstructorOperatorsTab({ groups, operators, activityLogs, loading = false }) {
+export default function InstructorOperatorsTab({
+  groups,
+  operators,
+  activityLogs,
+  loading = false,
+  instructorName = '',
+}) {
+  const { t } = useTranslation('instructor')
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState(/** @type {SquadRosterRow | null} */ (null))
 
@@ -37,18 +46,25 @@ export default function InstructorOperatorsTab({ groups, operators, activityLogs
     })
   }, [roster, query])
 
+  const feedGroupName =
+    groups.length === 1 ? groups[0].groupName : groups.map((g) => g.groupName).join('+') || 'ALL'
+
   return (
-    <div className="space-y-4">
+    <div className="min-w-0 max-w-full space-y-4 overflow-x-hidden">
       <header className="rounded-xl border border-amber-900/25 bg-amber-950/10 px-4 py-3">
         <p className="font-mono text-[9px] font-bold uppercase tracking-[0.24em] text-amber-500">
-          Operatör Raporlama
+          {t('operators.header')}
         </p>
-        <p className="mt-1 font-mono text-[10px] uppercase text-app-text/55">
-          Eğitmen notları · başarı seviyeleri · grup aktivite feed — tek merkez
-        </p>
+        <p className="mt-1 font-mono text-[10px] uppercase text-app-text/55">{t('operators.subheader')}</p>
       </header>
 
-      <InstructorGroupTrainingFeed logs={activityLogs} operators={operators} loading={loading} />
+      <InstructorGroupTrainingFeed
+        logs={activityLogs}
+        operators={operators}
+        loading={loading}
+        groupName={feedGroupName}
+        instructorName={instructorName}
+      />
 
       <div className="relative max-w-md">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-amber-500/70" aria-hidden />
@@ -56,7 +72,7 @@ export default function InstructorOperatorsTab({ groups, operators, activityLogs
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="CALLSIGN / İSİM / GRUP ADI"
+          placeholder={t('operators.searchPlaceholder')}
           className={`${inputClass} pl-10`}
         />
       </div>
@@ -64,22 +80,22 @@ export default function InstructorOperatorsTab({ groups, operators, activityLogs
       {loading ? (
         <p className="flex items-center gap-2 py-12 font-mono text-[10px] uppercase text-app-text/55">
           <Loader2 className="size-4 animate-spin text-amber-400" aria-hidden />
-          Kadro yükleniyor…
+          {t('operators.loadingRoster')}
         </p>
       ) : filtered.length === 0 ? (
         <p className="py-12 text-center font-mono text-[10px] uppercase text-app-text/45">
-          {roster.length === 0 ? 'GRUPLARA KATILMIŞ OPERATÖR YOK' : 'EŞLEŞEN OPERATÖR YOK'}
+          {roster.length === 0 ? t('operators.emptyRoster') : t('operators.emptyFilter')}
         </p>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-amber-900/25">
           <table className="w-full min-w-[640px] border-collapse font-mono text-[10px] uppercase">
             <thead>
               <tr className="border-b border-slate-800 bg-black/40 text-left text-app-text/55">
-                <th className="px-3 py-2">Callsign</th>
-                <th className="px-3 py-2">Kullanıcı</th>
-                <th className="px-3 py-2">Gruplar</th>
-                <th className="px-3 py-2">Oturum</th>
-                <th className="px-3 py-2">Başarı</th>
+                <th className="px-3 py-2">{t('operators.cols.callsign')}</th>
+                <th className="px-3 py-2">{t('operators.cols.user')}</th>
+                <th className="px-3 py-2">{t('operators.cols.groups')}</th>
+                <th className="px-3 py-2">{t('operators.cols.sessions')}</th>
+                <th className="px-3 py-2">{t('operators.cols.success')}</th>
               </tr>
             </thead>
             <tbody>
@@ -91,7 +107,9 @@ export default function InstructorOperatorsTab({ groups, operators, activityLogs
                 >
                   <td className="px-3 py-2.5 font-bold text-amber-200">{row.callsign}</td>
                   <td className="px-3 py-2.5 text-app-text/70">@{row.username || row.uid.slice(0, 8)}</td>
-                  <td className="max-w-[200px] truncate px-3 py-2.5 text-app-text/55">{row.groupNames.join(' · ')}</td>
+                  <td className="max-w-[200px] truncate px-3 py-2.5 text-app-text/55">
+                    {row.groupNames.join(' · ')}
+                  </td>
                   <td className="px-3 py-2.5 tabular-nums text-sky-400">{row.totalSessions}</td>
                   <td className="px-3 py-2.5 font-bold tabular-nums text-emerald-400">%{row.overallSuccess}</td>
                 </tr>
@@ -114,7 +132,6 @@ export default function InstructorOperatorsTab({ groups, operators, activityLogs
           >
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
-                <p className="font-mono text-[9px] uppercase tracking-wider text-amber-500">TAKTİK PROFİL</p>
                 <h3 className="mt-1 font-mono text-lg font-bold uppercase text-app-text">{selected.callsign}</h3>
                 <p className="font-mono text-[10px] text-app-text/55">@{selected.username}</p>
               </div>
@@ -122,7 +139,7 @@ export default function InstructorOperatorsTab({ groups, operators, activityLogs
                 type="button"
                 onClick={() => setSelected(null)}
                 className="rounded border border-slate-700 p-1 text-app-text/70 hover:text-app-text"
-                aria-label="Kapat"
+                aria-label={t('operators.detail.close')}
               >
                 <X className="size-4" aria-hidden />
               </button>
@@ -130,11 +147,11 @@ export default function InstructorOperatorsTab({ groups, operators, activityLogs
 
             <div className="grid grid-cols-2 gap-2">
               <div className="rounded border border-slate-800 bg-black/40 p-3">
-                <p className="font-mono text-[8px] uppercase text-app-text/55">Toplam Oturum</p>
+                <p className="font-mono text-[8px] uppercase text-app-text/55">{t('operators.detail.sessions')}</p>
                 <p className="mt-1 font-mono text-xl font-black text-sky-400">{selected.totalSessions}</p>
               </div>
               <div className="rounded border border-slate-800 bg-black/40 p-3">
-                <p className="font-mono text-[8px] uppercase text-app-text/55">Genel Başarı</p>
+                <p className="font-mono text-[8px] uppercase text-app-text/55">{t('operators.detail.success')}</p>
                 <p className="mt-1 font-mono text-xl font-black text-emerald-400">%{selected.overallSuccess}</p>
               </div>
             </div>
@@ -142,7 +159,7 @@ export default function InstructorOperatorsTab({ groups, operators, activityLogs
             <div className="mt-4 rounded border border-amber-900/30 bg-amber-950/20 p-3">
               <p className="mb-2 flex items-center gap-1.5 font-mono text-[9px] font-bold uppercase text-amber-400">
                 <User className="size-3.5" aria-hidden />
-                Aktif Gruplar
+                {t('operators.detail.groups')}
               </p>
               <ul className="space-y-1 font-mono text-[10px] uppercase text-app-text/90">
                 {selected.groupNames.map((name) => (
@@ -150,9 +167,6 @@ export default function InstructorOperatorsTab({ groups, operators, activityLogs
                 ))}
               </ul>
             </div>
-            <p className="mt-3 font-mono text-[8px] uppercase text-app-text/45">
-              Metrikler group_activity_logs ve grup eğitimi training_results kayıtlarından birleştirilir.
-            </p>
           </div>
         </div>
       ) : null}

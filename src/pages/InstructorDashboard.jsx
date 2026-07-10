@@ -6,6 +6,7 @@ import {
   Users,
   UserCircle,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import { fetchOperatorProfiles } from '../lib/firestoreInstructor'
 import { subscribeInstructorGroups } from '../lib/firestoreGroups'
@@ -39,14 +40,17 @@ import {
 
 /** @typedef {'gruplar' | 'operatorler' | 'egitim' | 'basari'} InstructorTabId */
 
-const NAV_ITEMS = [
-  { id: /** @type {InstructorTabId} */ ('gruplar'), label: 'Gruplar', icon: Users },
-  { id: 'operatorler', label: 'Operatör Raporlama', icon: UserCircle },
-  { id: 'egitim', label: 'Eğitim', icon: Target },
-  { id: 'basari', label: 'Analitik', icon: BarChart2 },
-]
+const NAV_IDS = /** @type {const} */ (['gruplar', 'operatorler', 'egitim', 'basari'])
+
+const NAV_ICONS = {
+  gruplar: Users,
+  operatorler: UserCircle,
+  egitim: Target,
+  basari: BarChart2,
+}
 
 export default function InstructorDashboard() {
+  const { t } = useTranslation('instructor')
   const { user, userData } = useAuth()
   const [activeTab, setActiveTab] = useState(/** @type {InstructorTabId} */ ('operatorler'))
   const [selectedCategory, setSelectedCategory] = useState(/** @type {string | null} */ (null))
@@ -65,7 +69,9 @@ export default function InstructorDashboard() {
     [activityLogs, trainingResults, groupTrainings],
   )
 
-  const instructorName = (userData?.callsign || user?.displayName || 'Eğitmen').trim()
+  const instructorName = (
+    userData?.callsign || user?.displayName || t('dashboard.fallbackInstructor')
+  ).trim()
   const instructorId = user?.uid ?? ''
 
   useEffect(() => {
@@ -184,6 +190,7 @@ export default function InstructorDashboard() {
             operators={operators}
             activityLogs={mergedActivityLogs}
             loading={groupsLoading || operatorsLoading || logsLoading}
+            instructorName={instructorName}
           />
         )
       case 'egitim':
@@ -197,7 +204,13 @@ export default function InstructorDashboard() {
           />
         )
       case 'basari':
-        return <InstructorAnalyticsTab groups={groups} operators={operators} />
+        return (
+          <InstructorAnalyticsTab
+            groups={groups}
+            operators={operators}
+            instructorName={instructorName}
+          />
+        )
       default:
         return null
     }
@@ -211,33 +224,32 @@ export default function InstructorDashboard() {
     logsLoading,
     instructorId,
     selectedCategory,
+    instructorName,
   ])
 
   return (
     <div className={`${icPage} min-w-0 overflow-x-hidden`}>
       <CleanFade>
         <header className="mb-8 border-b border-accent/15 pb-6">
-          <p className={icHeaderEyebrow}>Eğitmen komuta merkezi</p>
+          <p className={icHeaderEyebrow}>{t('dashboard.eyebrow')}</p>
           <h1 className={`${icHeaderTitle} mt-2 flex items-center gap-3`}>
             <GraduationCap className="size-7 text-accent/80" strokeWidth={1.5} aria-hidden />
-            Eğitmen Kontrol Paneli
+            {t('dashboard.title')}
           </h1>
-          <p className={icHeaderSubtitle}>
-            Tek giriş noktası — grup yönetimi, canlı eğitim, operatör raporlama ve analitik · {instructorName}
-          </p>
+          <p className={icHeaderSubtitle}>{t('dashboard.subtitle', { name: instructorName })}</p>
         </header>
       </CleanFade>
 
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-        <nav className={icNav} aria-label="Eğitmen panel sekmeleri">
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon
-            const active = activeTab === item.id
+        <nav className={icNav} aria-label={t('dashboard.navAria')}>
+          {NAV_IDS.map((id) => {
+            const Icon = NAV_ICONS[id]
+            const active = activeTab === id
             return (
               <button
-                key={item.id}
+                key={id}
                 type="button"
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => setActiveTab(id)}
                 className={icNavBtn(active)}
                 aria-current={active ? 'page' : undefined}
               >
@@ -246,13 +258,13 @@ export default function InstructorDashboard() {
                   strokeWidth={1.5}
                   aria-hidden
                 />
-                {item.label}
+                {t(`dashboard.tabs.${id}`)}
               </button>
             )
           })}
         </nav>
 
-        <main className={icMainPanel}>
+        <main className={`${icMainPanel} min-w-0 max-w-full overflow-x-hidden`}>
           <CleanFade key={activeTab + (selectedCategory ?? '')}>{tabPanel}</CleanFade>
         </main>
       </div>
