@@ -211,21 +211,6 @@ export const GUIDE_SECTIONS = {
     ],
   },
 
-  missions: {
-    title: 'Görevlerim ve değerlendirme raporu',
-    opsCode: 'OPS-01',
-    access: 'Giriş yapmış tüm operatörler.',
-    purpose: 'Operasyon planlama, yürütme kaydı ve görev sonrası değerlendirme raporu.',
-    steps: [
-      'Yeni görev ekleyin; tür, bölge, tarih ve açıklama girin.',
-      'Listeden görevi açıp düzenleyin veya değerlendirmeyi tamamlayın.',
-      'Sonuç: Başarılı, Kısmi, Başarısız veya Planlama; debrief notlarını yazın.',
-      'Görevi oluşturan operatör kaydı silebilir.',
-    ],
-    infoNote:
-      'Şu an görev kayıt sayısında ücretsiz planda sınır uygulanmıyor. İleride ücretsiz hesaplarda sınırlı, premium hesaplarda sınırsız kayıt olabilir.',
-  },
-
   'training-hub': {
     title: 'Antrenman ve Operasyon',
     opsCode: 'TRN-00',
@@ -380,12 +365,44 @@ export const GUIDE_SECTIONS = {
     purpose: 'Silah, aksesuar ve mühimmat envanteri; bakım ve namlu ömrü takibi.',
     steps: [
       'Silahlar, Aksesuarlar veya Mühimmat bölümünü seçin.',
-      'Yeni kayıt ekleyip teknik bilgileri doldurun.',
+      'Yeni kayıt ekleyip teknik bilgileri doldurun. Silah tipinde Keskin Nişancı Tüfeği (KNT) kategorisi de seçilebilir.',
+      'Silah, optik ve mühimmat formlarında "Balistik Bilgileri (Opsiyonel)" akordionunu açın; namlu uzunluğu, twist rate, namlu hızı, sight height gibi alanları doldurun — Balistik Terminal "Cephanelikten Getir" ile bunları otomatik çeker.',
       'Listeden düzenleyin; filtrelerle daraltın.',
       'ATIŞ sektörü silah ve mühimmatı buradan alır.',
       'Bakım eşiği aşılınca Ana Sayfada uyarı çıkabilir.',
     ],
     infoNote: 'Şu an tam envanter erişimi herkese açık. İleride premium planda denetim kaydı eklenebilir.',
+    notes: [
+      'Balistik Terminal, Cephanelik envanterindeki silah/optik/mühimmat ve opsiyonel balistik alanlarını "Cephanelikten Getir" ile kullanır.',
+    ],
+  },
+
+  'balistik-terminal': {
+    title: 'Balistik Terminal',
+    opsCode: 'BLST-01',
+    pageLink: { to: '/balistik', label: 'Balistik Terminal sayfasına git' },
+    access: 'Giriş yapmış tüm operatörler.',
+    purpose:
+      'Mermi/silah/optik verilerine dayalı dış balistik hesaplama (drop, rüzgar sapması, uçuş süresi, MOA/MRAD click değerleri); Cephanelik’ten otomatik veri çekme, kayıtlı profil yönetimi ve PDF raporlama.',
+    prerequisites: [
+      'Cephanelikten Getir kullanacaksanız en az bir silah (ve mümkünse uyumlu optik/mühimmat) kaydı',
+    ],
+    steps: [
+      'Cephanelikten Getir ile envanterinizdeki bir silahı seçin; silah, optik ve mühimmat bilgileri otomatik doldurulur (bu alanlar salt-okunur gelir, gerekirse Kilidi Aç ile düzenleyebilirsiniz).',
+      'Cephanelik’te olmayan balistik-özel alanları (namlu hızı, BC, sight height, zero mesafesi gibi) elle girin.',
+      'Optik biriminizi (MOA veya MRAD) seçin; sadece seçtiğiniz birim gösterilir.',
+      'Çevre koşullarını (sıcaklık, basınç, nem, rakım, rüzgar) girin; her hesaplamada ayrı girilir, profile kaydedilmez.',
+      'Hedef mesafe aralığını belirleyip Hesapla’ya basın.',
+      'Hızlı Referans panelinde TİK (dürbün çevirme) veya NİŞAN (doğrudan nişan noktası) modunu seçin.',
+      'Referans Kilitle ile mevcut mesafeyi referans alıp, başka bir mesafeye geçtiğinizde aradaki FARKI (toplam yerine) görebilirsiniz.',
+      'Grafik, Tam Tablo sekmeleri arasında geçiş yapın; PDF olarak raporu indirin.',
+      'Profili isim vererek kaydedin; istediğinizde silebilirsiniz.',
+    ],
+    infoNote:
+      'Bu terminaldeki hesaplamalar teorik tahminlerdir, gerçek atışla mutlaka doğrulanmalıdır (sayfaya her girişte bir bilgilendirme modalı bu konuda uyarır). Şu an herkese açık.',
+    notes: [
+      'Cephanelik’ten gelen veriler (silah/optik/mühimmat adı) salt-okunur gelir; bu veriler ayrı olarak Cephanelik’te düzenlenir.',
+    ],
   },
 
   'progress-tracker': {
@@ -395,11 +412,13 @@ export const GUIDE_SECTIONS = {
     access: 'Giriş yapmış tüm operatörler.',
     purpose:
       'ORS (Operasyonel Hazırlık Skoru), disiplin filtreleri, trend grafikleri ve aktivite özeti.',
-    prerequisites: ['Anlamlı sonuç için antrenman veya görev kayıtları'],
+    prerequisites: ['Anlamlı sonuç için antrenman kayıtları'],
     steps: [
       'Son yedi gün, otuz gün veya tüm zamanlar aralığını seçin.',
       'ATIŞ, CQB, FOF, VBSS veya TCCC disiplinine göre filtreleyin.',
       'Özet panelleri genişletin; kayıt detayına odaklanın.',
+      'Toplu Rapor İndir ile HUD, tüm analitik grafikler, geçmiş kayıtlar ve hata kodlarını tek PDF’te indirin.',
+      'Eğitmen hesapları: Operatör Seç menüsünden kendi grubunuzdaki bir üyeyi seçin; sayfanın üstünde "Şu An Görüntülenen: {isim}" göstergesiyle kimin verisini izlediğiniz netleşir.',
     ],
     infoNote:
       'Tüm analitik paneller şu an herkese açık. İleride premium planda gelişmiş ORS (Operasyonel Hazırlık Skoru) grafikleri eklenebilir.',
@@ -408,12 +427,12 @@ export const GUIDE_SECTIONS = {
   'group-join': {
     title: 'Gruba katılım',
     opsCode: 'GRP-JOIN',
-    pageLink: { to: '/ayarlar', label: 'Taktik Timim sayfasına git' },
+    pageLink: { to: '/ayarlar', label: 'Ayarlar · TAKTİK TİM bölümüne git' },
     access: 'Henüz gruba dahil olmayan operatörler.',
     purpose: 'Eğitmenin verdiği grup şifresiyle takıma katılmak.',
     steps: [
-      'Taktik Timim sayfasında Grup Şifresi bölümünü bulun.',
-      'En az dört karakterlik şifreyi girip Katıl deyin.',
+      'Ayarlar sayfasında TAKTİK TİM bölümünü açın.',
+      'Grup Şifresi alanına en az dört karakterlik şifreyi girip Katıl deyin.',
       'Başarılı olunca Grup Eğitimi kartı antrenman sayfasında görünür.',
     ],
   },
@@ -427,11 +446,21 @@ export const GUIDE_SECTIONS = {
     instructorOnly: true,
     steps: [
       'Gruplar sekmesinde grup oluşturun, şifre verin, üyeleri görün.',
-      'Operatör Raporlama sekmesinde platform operatörlerini inceleyin.',
+      'Operatör Raporlama sekmesinde platform operatörlerini inceleyin; Toplu Rapor İndir (PDF) ile aktivite feed’i ve ilgili özetleri dışa aktarın.',
       'Eğitim sekmesinde oturum başlatın; operatörler Grup Eğitiminden katılır.',
-      'Analitik sekmesinde grup aktivitelerini takip edin.',
+      'Analitik sekmesinde grup aktivitelerini takip edin; Toplu Rapor İndir (PDF) ile aktivite feed’i ve grup performans grafiklerini tek dosyada indirin.',
     ],
     notes: ['Sol menüde Komuta ve Analitik bölümüne eğitmenler için eklenir.'],
+  },
+
+  'language-switcher': {
+    title: 'Dil seçici',
+    opsCode: 'LNG-01',
+    access: 'Herkese açık.',
+    purpose: 'Üst bar’daki TR/EN dil seçici ile arayüz dilini değiştirmek.',
+    steps: [
+      'Üst bar’daki TR veya EN butonuna tıklayın; tüm arayüz anında seçilen dile geçer, tercihiniz hesabınıza kaydedilir.',
+    ],
   },
 
   settings: {
@@ -495,9 +524,9 @@ export const GUIDE_SECTIONS = {
     access: 'Referans.',
     purpose: 'Sık kullanılan kısaltmalar.',
     steps: [
-      'ORS (Operasyonel Hazırlık Skoru) — antrenman ve görev verilerinden hesaplanan genel hazırlık göstergesi.',
-      'AAR — görev sonrası değerlendirme raporu.',
+      'ORS (Operasyonel Hazırlık Skoru) — antrenman verilerinden hesaplanan genel hazırlık göstergesi.',
       'ILWS — cephanelik envanter sistemi.',
+      'BLST — Balistik Terminal (dış balistik hesaplama).',
       'MARCH — kanama, hava yolu, solunum, dolaşım ve hipotermi aşamaları.',
       'FOF — karşılıklı güç antrenmanı.',
       'VBSS — gemi biniş, arama ve ele geçirme operasyonu.',

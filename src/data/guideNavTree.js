@@ -37,7 +37,6 @@ export const GUIDE_NAV_TREE = [
     id: 'operasyon-lojistik',
     label: 'Operasyon & Lojistik',
     children: [
-      { id: 'missions', label: 'Görevlerim / AAR' },
       { id: 'training-hub', label: 'Antrenman hub' },
       { id: 'sector-atis', label: 'ATIŞ sektörü' },
       { id: 'sector-cqb', label: 'CQB sektörü' },
@@ -48,6 +47,7 @@ export const GUIDE_NAV_TREE = [
       { id: 'group-training', label: 'Grup eğitimi' },
       { id: 'tccc-suite', label: 'TCCC & Sağlık' },
       { id: 'cephanelik', label: 'Cephanelik' },
+      { id: 'balistik-terminal', label: 'Balistik Terminal' },
     ],
   },
   {
@@ -63,6 +63,7 @@ export const GUIDE_NAV_TREE = [
     id: 'sistem',
     label: 'Sistem',
     children: [
+      { id: 'language-switcher', label: 'Dil seçici' },
       { id: 'settings', label: 'Ayarlar' },
       { id: 'access-codes', label: 'Erişim kodları' },
       { id: 'troubleshooting', label: 'Sorun giderme' },
