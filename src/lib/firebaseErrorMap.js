@@ -2,6 +2,12 @@
  * Firebase / Firestore hata kodlarını operatör arayüzünde gösterilecek sabit kodlara çevirir.
  */
 
+import {
+  STORAGE_ERROR_CODES,
+  formatStorageErrorDisplay,
+  resolveStorageErrorCode,
+} from '../services/storageService'
+
 const MAP = {
   'permission-denied': '[ ERR_FIRESTORE_DENIED ]',
   'unauthenticated': '[ ERR_AUTH_REQUIRED ]',
@@ -43,6 +49,14 @@ const MAP = {
  */
 export function mapFirebaseError(error) {
   const audaz = error && typeof error === 'object' && '__audazCode' in error ? String(error.__audazCode) : null
+  if (audaz && STORAGE_ERROR_CODES.has(audaz)) {
+    return {
+      code: `[ ${audaz} ]`,
+      technical: `[ ${audaz} ]`,
+      message: formatStorageErrorDisplay(error),
+    }
+  }
+
   if (audaz) {
     return {
       code: audaz.startsWith('[') ? audaz : `[ ${audaz} ]`,
@@ -52,6 +66,15 @@ export function mapFirebaseError(error) {
   }
 
   const rawCode = typeof error?.code === 'string' ? error.code : ''
+  if (rawCode.startsWith('storage/') || rawCode === 'upload-busy') {
+    const storageCode = resolveStorageErrorCode(error)
+    return {
+      code: rawCode || storageCode,
+      technical: `[ ${storageCode} ]`,
+      message: formatStorageErrorDisplay(error),
+    }
+  }
+
   const technical = MAP[rawCode] || '[ ERR_FIREBASE_UNKNOWN ]'
   const message = typeof error?.message === 'string' ? error.message : String(error ?? '')
 

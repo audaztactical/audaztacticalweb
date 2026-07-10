@@ -48,5 +48,45 @@
       "no_token": "Could not get an FCM device token. Refresh the page and try again.",
       "error": "Could not enable push notifications. Please try again."
     }
+  },
+  "storage": {
+    "errors": {
+      "codes": {
+        "FIREBASE_STORAGE_NOT_CONFIGURED": "STORAGE OFFLINE · CONFIG_MISSING",
+        "INVALID_STORAGE_PATH": "INVALID PARAMETER · PATH_FAULT",
+        "USER_ID_REQUIRED": "User ID is required.",
+        "INVALID_FORUM_STORAGE_PATH": "Invalid forum storage path.",
+        "FILE_REQUIRED": "A valid file is required.",
+        "FILE_TOO_LARGE": "File exceeds the {{maxMb}}MB limit.",
+        "UPLOAD_BUSY": "PARALLEL UPLOAD · WAIT",
+        "INVALID_THREAD": "Invalid chat channel.",
+        "IMAGES_ONLY": "Only image files are supported.",
+        "SESSION_REQUIRED": "Sign-in required",
+        "UNAUTHORIZED": "PERMISSION DENIED · STORAGE_WRITE_DENIED",
+        "UNAUTHENTICATED": "AUTH REQUIRED · STORAGE_AUTH",
+        "CANCELED": "UPLOAD CANCELED · OPERATOR_ABORT",
+        "RETRY_LIMIT": "NETWORK TIMEOUT · RETRY",
+        "INVALID_ARGUMENT": "INVALID FILE · PARAMETER_ERROR",
+        "OBJECT_NOT_FOUND": "FILE NOT FOUND · NODE_NULL",
+        "INVALID_URL": "INVALID URL · EXTERNAL_SOURCE",
+        "QUOTA_EXCEEDED": "QUOTA EXCEEDED · STORAGE_QUOTA",
+        "BUCKET_NOT_FOUND": "BUCKET MISSING · STORAGE_BUCKET_NULL",
+        "PROJECT_NOT_FOUND": "PROJECT MISSING · STORAGE_PROJECT_NULL",
+        "UNKNOWN": "UNKNOWN ERROR · STORAGE_UNKNOWN",
+        "SERVER_FILE_WRONG_SIZE": "FILE SIZE MISMATCH · RETRY",
+        "INVALID_CHECKSUM": "FILE INTEGRITY ERROR · RETRY",
+        "CANNOT_SLICE_BLOB": "FILE UNREADABLE · BLOB_FAULT",
+        "NO_DEFAULT_BUCKET": "BUCKET NOT SET · CONFIG",
+        "INVALID_FORMAT": "INVALID FORMAT · FILE_TYPE",
+        "INVALID_EVENT_NAME": "INVALID EVENT · STORAGE_EVENT",
+        "INVALID_ROOT_OPERATION": "ROOT OP DENIED · STORAGE_ROOT",
+        "APP_DELETED": "APP DELETED · STORAGE_APP",
+        "FAULT": "STORAGE_FAULT · UPLOAD_FAILED"
+      }
+    },
+    "progress": {
+      "syncHint": "SIGNAL LINK · STORAGE_SYNC",
+      "defaultLabel": "UPLOAD"
+    }
   }
 }

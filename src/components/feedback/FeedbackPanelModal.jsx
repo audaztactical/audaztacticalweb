@@ -6,6 +6,10 @@ import { useFeedbackPanelOptional } from '../../context/FeedbackPanelContext'
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
 import { MAX_FEEDBACK_IMAGES, uploadFeedbackImage } from '../../lib/feedbackMedia'
 import {
+  STORAGE_ERROR_CODES,
+  formatStorageErrorDisplay,
+} from '../../services/storageService'
+import {
   OPERATOR_FEEDBACK_TYPE_LABELS,
   OPERATOR_FEEDBACK_TYPES,
   submitOperatorFeedback,
@@ -129,7 +133,21 @@ export default function FeedbackPanelModal() {
       ctx.closePanel()
     } catch (err) {
       emitFirebaseError(err)
-      setError(err instanceof Error ? err.message : t('feedback.submitFailed'))
+      const audaz =
+        err && typeof err === 'object' && '__audazCode' in err
+          ? String(/** @type {{ __audazCode?: string }} */ (err).__audazCode ?? '')
+          : ''
+      const code =
+        err && typeof err === 'object' && 'code' in err
+          ? String(/** @type {{ code?: string }} */ (err).code ?? '')
+          : ''
+      const message = err instanceof Error ? String(err.message ?? '').trim() : ''
+      const isStorage =
+        STORAGE_ERROR_CODES.has(audaz) ||
+        STORAGE_ERROR_CODES.has(message) ||
+        code.startsWith('storage/') ||
+        code === 'upload-busy'
+      setError(isStorage ? formatStorageErrorDisplay(err) : t('feedback.submitFailed'))
     } finally {
       setBusy(false)
       setUploadProgress(null)

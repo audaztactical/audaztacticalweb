@@ -1,4 +1,4 @@
-import { uploadFile } from '../services/storageService'
+import { throwStorageError, uploadFile } from '../services/storageService'
 
 /**
  * @param {string} threadId chatId veya channelId
@@ -9,15 +9,11 @@ import { uploadFile } from '../services/storageService'
 export async function uploadMuhabereChatImage(threadId, file, onProgress) {
   const tid = String(threadId ?? '').trim()
   if (!tid) {
-    const err = new Error('Sohbet kanalı geçersiz.')
-    err.code = 'invalid-argument'
-    throw err
+    throwStorageError('INVALID_THREAD', 'invalid-argument')
   }
 
   if (!file.type.startsWith('image/')) {
-    const err = new Error('Yalnızca görsel dosyaları desteklenir.')
-    err.code = 'invalid-argument'
-    throw err
+    throwStorageError('IMAGES_ONLY', 'invalid-argument')
   }
 
   const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'

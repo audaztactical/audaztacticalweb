@@ -48,5 +48,45 @@
       "no_token": "FCM cihaz token’ı alınamadı. Sayfayı yenileyip tekrar deneyin.",
       "error": "Push bildirimleri etkinleştirilemedi. Lütfen tekrar deneyin."
     }
+  },
+  "storage": {
+    "errors": {
+      "codes": {
+        "FIREBASE_STORAGE_NOT_CONFIGURED": "STORAGE OFFLINE · YAPILANDIRMA_EKSİK",
+        "INVALID_STORAGE_PATH": "GEÇERSİZ PARAMETRE · PATH_FAULT",
+        "USER_ID_REQUIRED": "Kullanıcı kimliği gerekli.",
+        "INVALID_FORUM_STORAGE_PATH": "Geçersiz forum depolama yolu.",
+        "FILE_REQUIRED": "Geçerli bir dosya gerekli.",
+        "FILE_TOO_LARGE": "Dosya {{maxMb}}MB sınırını aşıyor.",
+        "UPLOAD_BUSY": "PARALEL YÜKLEME · BEKLEYİN",
+        "INVALID_THREAD": "Sohbet kanalı geçersiz.",
+        "IMAGES_ONLY": "Yalnızca görsel dosyaları desteklenir.",
+        "SESSION_REQUIRED": "Oturum gerekli",
+        "UNAUTHORIZED": "İZİN RED · STORAGE_WRITE_DENIED",
+        "UNAUTHENTICATED": "OTURUM GEREKLİ · STORAGE_AUTH",
+        "CANCELED": "YÜKLEME İPTAL · OPERATÖR_ABORT",
+        "RETRY_LIMIT": "AĞ ZAMAN AŞIMI · TEKRAR DENE",
+        "INVALID_ARGUMENT": "GEÇERSİZ DOSYA · PARAMETRE_HATASI",
+        "OBJECT_NOT_FOUND": "DOSYA BULUNAMADI · NODE_NULL",
+        "INVALID_URL": "GEÇERSİZ URL · HARİCİ_KAYNAK",
+        "QUOTA_EXCEEDED": "KOTA AŞIMI · STORAGE_QUOTA",
+        "BUCKET_NOT_FOUND": "BUCKET YOK · STORAGE_BUCKET_NULL",
+        "PROJECT_NOT_FOUND": "PROJE YOK · STORAGE_PROJECT_NULL",
+        "UNKNOWN": "BİLİNMEYEN HATA · STORAGE_UNKNOWN",
+        "SERVER_FILE_WRONG_SIZE": "DOSYA BOYUTU UYUŞMUYOR · TEKRAR DENE",
+        "INVALID_CHECKSUM": "DOSYA BÜTÜNLÜĞÜ HATASI · TEKRAR DENE",
+        "CANNOT_SLICE_BLOB": "DOSYA OKUNAMADI · BLOB_FAULT",
+        "NO_DEFAULT_BUCKET": "BUCKET TANIMLI DEĞİL · YAPILANDIRMA",
+        "INVALID_FORMAT": "GEÇERSİZ FORMAT · DOSYA_TİPİ",
+        "INVALID_EVENT_NAME": "GEÇERSİZ OLAY · STORAGE_EVENT",
+        "INVALID_ROOT_OPERATION": "KÖK İŞLEM RED · STORAGE_ROOT",
+        "APP_DELETED": "UYGULAMA SİLİNDİ · STORAGE_APP",
+        "FAULT": "STORAGE_FAULT · YÜKLEME_BAŞARISIZ"
+      }
+    },
+    "progress": {
+      "syncHint": "SİNYAL İLETİMİ · STORAGE_SYNC",
+      "defaultLabel": "YÜKLEME"
+    }
   }
 }

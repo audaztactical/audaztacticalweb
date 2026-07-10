@@ -6,6 +6,7 @@ import {
   uploadBytes,
   uploadBytesResumable,
 } from 'firebase/storage'
+import i18n from '../i18n'
 import { isFirebaseConfigured, storage } from '../lib/firebase'
 
 const COMPRESS_THRESHOLD_BYTES = 500 * 1024
@@ -13,26 +14,134 @@ const MAX_IMAGE_DIMENSION = 1024
 const COMPRESS_QUALITY = 0.8
 const MAX_UPLOAD_BYTES = 6 * 1024 * 1024
 
+/** @type {ReadonlySet<string>} */
+export const STORAGE_ERROR_CODES = new Set([
+  'FIREBASE_STORAGE_NOT_CONFIGURED',
+  'INVALID_STORAGE_PATH',
+  'USER_ID_REQUIRED',
+  'INVALID_FORUM_STORAGE_PATH',
+  'FILE_REQUIRED',
+  'FILE_TOO_LARGE',
+  'UPLOAD_BUSY',
+  'INVALID_THREAD',
+  'IMAGES_ONLY',
+  'SESSION_REQUIRED',
+  'UNAUTHORIZED',
+  'UNAUTHENTICATED',
+  'CANCELED',
+  'RETRY_LIMIT',
+  'INVALID_ARGUMENT',
+  'OBJECT_NOT_FOUND',
+  'INVALID_URL',
+  'QUOTA_EXCEEDED',
+  'BUCKET_NOT_FOUND',
+  'PROJECT_NOT_FOUND',
+  'UNKNOWN',
+  'SERVER_FILE_WRONG_SIZE',
+  'INVALID_CHECKSUM',
+  'CANNOT_SLICE_BLOB',
+  'NO_DEFAULT_BUCKET',
+  'INVALID_FORMAT',
+  'INVALID_EVENT_NAME',
+  'INVALID_ROOT_OPERATION',
+  'APP_DELETED',
+  'FAULT',
+])
+
+/** @type {Record<string, string>} */
+const FIREBASE_STORAGE_CODE_MAP = {
+  'storage/unauthorized': 'UNAUTHORIZED',
+  'storage/unauthenticated': 'UNAUTHENTICATED',
+  'storage/canceled': 'CANCELED',
+  'storage/retry-limit-exceeded': 'RETRY_LIMIT',
+  'storage/invalid-argument': 'INVALID_ARGUMENT',
+  'storage/object-not-found': 'OBJECT_NOT_FOUND',
+  'storage/invalid-url': 'INVALID_URL',
+  'storage/quota-exceeded': 'QUOTA_EXCEEDED',
+  'storage/bucket-not-found': 'BUCKET_NOT_FOUND',
+  'storage/project-not-found': 'PROJECT_NOT_FOUND',
+  'storage/unknown': 'UNKNOWN',
+  'storage/server-file-wrong-size': 'SERVER_FILE_WRONG_SIZE',
+  'storage/invalid-checksum': 'INVALID_CHECKSUM',
+  'storage/cannot-slice-blob': 'CANNOT_SLICE_BLOB',
+  'storage/no-default-bucket': 'NO_DEFAULT_BUCKET',
+  'storage/invalid-format': 'INVALID_FORMAT',
+  'storage/invalid-event-name': 'INVALID_EVENT_NAME',
+  'storage/invalid-root-operation': 'INVALID_ROOT_OPERATION',
+  'storage/app-deleted': 'APP_DELETED',
+  'failed-precondition': 'FIREBASE_STORAGE_NOT_CONFIGURED',
+  'invalid-argument': 'INVALID_ARGUMENT',
+  'unauthenticated': 'SESSION_REQUIRED',
+  'upload-busy': 'UPLOAD_BUSY',
+}
+
+/**
+ * @param {string} audazCode
+ * @param {string} [firebaseCode]
+ * @param {Record<string, unknown>} [params]
+ * @returns {never}
+ */
+export function throwStorageError(audazCode, firebaseCode = 'failed-precondition', params) {
+  const e = new Error(audazCode)
+  e.code = firebaseCode
+  e.__audazCode = audazCode
+  if (params && typeof params === 'object') {
+    e.__audazParams = params
+  }
+  throw e
+}
+
+/**
+ * @param {unknown} err
+ * @returns {string}
+ */
+export function resolveStorageErrorCode(err) {
+  const audaz =
+    err && typeof err === 'object' && '__audazCode' in err
+      ? String(/** @type {{ __audazCode?: string }} */ (err).__audazCode ?? '').trim()
+      : ''
+  if (STORAGE_ERROR_CODES.has(audaz)) return audaz
+
+  const message = err instanceof Error ? String(err.message ?? '').trim() : ''
+  if (STORAGE_ERROR_CODES.has(message)) return message
+
+  const code =
+    err && typeof err === 'object' && 'code' in err
+      ? String(/** @type {{ code?: string }} */ (err).code ?? '')
+      : ''
+
+  if (FIREBASE_STORAGE_CODE_MAP[code]) return FIREBASE_STORAGE_CODE_MAP[code]
+  if (code.startsWith('storage/')) return 'FAULT'
+
+  return 'FAULT'
+}
+
+/**
+ * Storage hatalarını kullanıcı dilinde gösterir (Batch F).
+ * @param {unknown} err
+ * @returns {string}
+ */
+export function formatStorageErrorDisplay(err) {
+  const audazCode = resolveStorageErrorCode(err)
+  const params =
+    err && typeof err === 'object' && '__audazParams' in err
+      ? /** @type {{ __audazParams?: Record<string, unknown> }} */ (err).__audazParams ?? {}
+      : {}
+
+  return i18n.t(`storage.errors.codes.${audazCode}`, {
+    ns: 'common',
+    defaultValue: i18n.t('storage.errors.codes.FAULT', { ns: 'common' }),
+    ...params,
+  })
+}
+
 /**
  * OPERASYONEL NOT — Depolama katmanı hatalarını HUD uyumlu operatör mesajına çevirir.
  * @param {unknown} err
  * @returns {string}
  */
 export function mapStorageError(err) {
-  const code = /** @type {{ code?: string }} */ (err)?.code
-
-  if (code === 'storage/unauthorized') return 'İZİN RED · STORAGE_WRITE_DENIED'
-  if (code === 'storage/canceled') return 'YÜKLEME İPTAL · OPERATÖR_ABORT'
-  if (code === 'storage/retry-limit-exceeded') return 'AĞ ZAMAN AŞIMI · TEKRAR DENE'
-  if (code === 'storage/invalid-argument') return 'GEÇERSİZ DOSYA · PARAMETRE_HATASI'
-  if (code === 'storage/object-not-found') return 'DOSYA BULUNAMADI · NODE_NULL'
-  if (code === 'storage/invalid-url') return 'GEÇERSİZ URL · HARİCİ_KAYNAK'
-  if (code === 'failed-precondition') return 'STORAGE OFFLINE · YAPILANDIRMA_EKSİK'
-  if (code === 'invalid-argument') return 'GEÇERSİZ PARAMETRE · PATH_FAULT'
-  if (code === 'upload-busy') return 'PARALEL YÜKLEME · BEKLEYİN'
-
-  if (err instanceof Error && err.message.trim()) return err.message.trim()
-  return 'STORAGE_FAULT · YÜKLEME_BAŞARISIZ'
+  return formatStorageErrorDisplay(err)
 }
 
 /**
@@ -40,9 +149,22 @@ export function mapStorageError(err) {
  * @returns {Error}
  */
 function toStorageError(err) {
-  const wrapped = new Error(mapStorageError(err))
+  if (err && typeof err === 'object' && '__audazCode' in err) {
+    return /** @type {Error} */ (err)
+  }
+
+  const audazCode = resolveStorageErrorCode(err)
+  const wrapped = new Error(audazCode)
+  wrapped.__audazCode = audazCode
   const code = /** @type {{ code?: string }} */ (err)?.code
   if (code) wrapped.code = code
+  else if (audazCode === 'FIREBASE_STORAGE_NOT_CONFIGURED') wrapped.code = 'failed-precondition'
+  else if (audazCode === 'UPLOAD_BUSY') wrapped.code = 'upload-busy'
+  else wrapped.code = 'storage/unknown'
+
+  const params = /** @type {{ __audazParams?: Record<string, unknown> }} */ (err)?.__audazParams
+  if (params) wrapped.__audazParams = params
+
   return wrapped
 }
 
@@ -51,9 +173,7 @@ function toStorageError(err) {
  */
 function requireStorage() {
   if (!isFirebaseConfigured() || !storage) {
-    const err = new Error('Firebase Storage yapılandırılmadı.')
-    err.code = 'failed-precondition'
-    throw err
+    throwStorageError('FIREBASE_STORAGE_NOT_CONFIGURED', 'failed-precondition')
   }
   return storage
 }
@@ -68,14 +188,10 @@ export function buildStorageFullPath(path, fileName) {
   const dir = String(path ?? '').trim().replace(/^\/+|\/+$/g, '')
   const name = String(fileName ?? '').trim().replace(/^\/+/, '')
   if (!dir || !name) {
-    const err = new Error('Geçersiz depolama yolu.')
-    err.code = 'invalid-argument'
-    throw err
+    throwStorageError('INVALID_STORAGE_PATH', 'invalid-argument')
   }
   if (dir.includes('..') || name.includes('..') || name.includes('/')) {
-    const err = new Error('Geçersiz depolama yolu.')
-    err.code = 'invalid-argument'
-    throw err
+    throwStorageError('INVALID_STORAGE_PATH', 'invalid-argument')
   }
   return `${dir}/${name}`
 }
@@ -88,9 +204,7 @@ export function buildStorageFullPath(path, fileName) {
 export function userStoragePath(uid) {
   const id = String(uid ?? '').trim()
   if (!id) {
-    const err = new Error('Kullanıcı kimliği gerekli.')
-    err.code = 'invalid-argument'
-    throw err
+    throwStorageError('USER_ID_REQUIRED', 'invalid-argument')
   }
   return `users/${id}`
 }
@@ -103,9 +217,7 @@ export function userStoragePath(uid) {
 export function forumStoragePath(segment) {
   const seg = String(segment ?? '').trim().replace(/^\/+|\/+$/g, '')
   if (!seg || seg.includes('..') || seg.includes('/')) {
-    const err = new Error('Geçersiz forum depolama yolu.')
-    err.code = 'invalid-argument'
-    throw err
+    throwStorageError('INVALID_FORUM_STORAGE_PATH', 'invalid-argument')
   }
   return `forum/${seg}`
 }
@@ -224,9 +336,7 @@ export async function deleteFile(url) {
  */
 export async function uploadFile(file, path, fileName, options = {}) {
   if (!file || !(file instanceof File)) {
-    const err = new Error('Geçerli bir dosya gerekli.')
-    err.code = 'invalid-argument'
-    throw err
+    throwStorageError('FILE_REQUIRED', 'invalid-argument')
   }
 
   try {
@@ -234,9 +344,7 @@ export async function uploadFile(file, path, fileName, options = {}) {
     const prepared = file.type.startsWith('image/') ? await compressImageIfNeeded(file) : file
 
     if (prepared.size > MAX_UPLOAD_BYTES) {
-      const err = new Error('Dosya 6MB sınırını aşıyor.')
-      err.code = 'invalid-argument'
-      throw err
+      throwStorageError('FILE_TOO_LARGE', 'invalid-argument', { maxMb: 6 })
     }
 
     const fullPath = buildStorageFullPath(path, fileName)

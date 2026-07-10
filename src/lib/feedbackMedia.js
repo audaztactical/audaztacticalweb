@@ -1,4 +1,4 @@
-import { uploadFile } from '../services/storageService'
+import { throwStorageError, uploadFile } from '../services/storageService'
 
 const MAX_FEEDBACK_IMAGES = 5
 
@@ -12,9 +12,7 @@ const MAX_FEEDBACK_IMAGES = 5
 export async function uploadFeedbackImage(file, uid, onProgress) {
   const owner = String(uid ?? '').trim()
   if (!owner) {
-    const err = new Error('Oturum gerekli')
-    err.code = 'unauthenticated'
-    throw err
+    throwStorageError('SESSION_REQUIRED', 'unauthenticated')
   }
   const safeName = String(file.name ?? 'screenshot.jpg')
     .replace(/[^\w.-]+/g, '_')

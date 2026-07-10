@@ -1,5 +1,10 @@
 import { useCallback, useRef, useState } from 'react'
-import { mapStorageError, uploadAndReplace, uploadFile } from '../services/storageService'
+import {
+  formatStorageErrorDisplay,
+  throwStorageError,
+  uploadAndReplace,
+  uploadFile,
+} from '../services/storageService'
 
 /**
  * Firebase Storage yükleme durumu — loading, progress, error (HUD mesajları).
@@ -19,9 +24,7 @@ export function useStorage() {
 
   const beginUpload = useCallback(() => {
     if (activeRef.current) {
-      const err = new Error('Başka bir yükleme devam ediyor.')
-      err.code = 'upload-busy'
-      throw err
+      throwStorageError('UPLOAD_BUSY', 'upload-busy')
     }
     activeRef.current = true
     setLoading(true)
@@ -35,7 +38,7 @@ export function useStorage() {
   }, [])
 
   const captureError = useCallback((err) => {
-    const message = mapStorageError(err)
+    const message = formatStorageErrorDisplay(err)
     setError(message)
     return message
   }, [])
