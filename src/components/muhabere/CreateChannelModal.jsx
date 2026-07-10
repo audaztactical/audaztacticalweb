@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Loader2, Radio, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { createMuhabereChannel } from '../../lib/firestoreTaktikMuhabere'
+import { formatMuhabereErrorDisplay } from '../../lib/messagesDisplayText'
 
 /** @typedef {import('../../lib/firestoreTaktikMuhabere').MuhabereContact} MuhabereContact */
 
@@ -85,7 +86,7 @@ export default function CreateChannelModal({ open, uid, contacts, onClose, onCre
       onClose()
     } catch (err) {
       const code = /** @type {{ code?: string }} */ (err)?.code ?? ''
-      const msg = err instanceof Error ? err.message : t('errors.channelCreateFailed')
+      const msg = formatMuhabereErrorDisplay(err, 'errors.channelCreateFailed')
       console.error('[CreateChannelModal] Kanal oluşturma hatası:', { code, err, payload })
       setError(msg)
       if (import.meta.env.DEV) {

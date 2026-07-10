@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Loader2, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { updateMuhabereChannelName } from '../../lib/firestoreTaktikMuhabere'
+import { formatMuhabereErrorDisplay } from '../../lib/messagesDisplayText'
 
 /**
  * @param {{
@@ -41,7 +42,7 @@ export default function EditChannelModal({ open, channelId, channelName, uid, on
       onUpdated(label)
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('errors.channelUpdateFailed'))
+      setError(formatMuhabereErrorDisplay(err, 'errors.channelUpdateFailed'))
     } finally {
       setBusy(false)
     }

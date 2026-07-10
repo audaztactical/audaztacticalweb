@@ -64,6 +64,7 @@ import {
   sortMuhabereContactsByRecency,
 } from '../lib/muhabereConversation'
 import {
+  formatMuhabereErrorDisplay,
   formatMuhabereMessagePreviewDisplay,
   isMuhabereContentViolationMessage,
   messagesRoleLabel,
@@ -1032,13 +1033,14 @@ export default function TaktikMuhabere() {
       if (conversationMode === 'dm' && chatId) stopTyping()
       sentOk = true
     } catch (err) {
-      const message = err instanceof Error ? err.message : t('errors.sendFailed')
-      if (isMuhabereContentViolationMessage(message)) {
+      const message = formatMuhabereErrorDisplay(err, 'errors.sendFailed')
+      if (isMuhabereContentViolationMessage(err instanceof Error ? err.message : message)) {
         pushSystemToast(muhabereContentViolationMessage())
+        setSendError(muhabereContentViolationMessage())
       } else {
         emitFirebaseError(err)
+        setSendError(message)
       }
-      setSendError(isMuhabereContentViolationMessage(message) ? muhabereContentViolationMessage() : message)
     } finally {
       setSending(false)
       if (sentOk) focusMessageInput()

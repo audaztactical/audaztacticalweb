@@ -35,6 +35,7 @@ import {
 import { buildConversationId, mapConversationSummaryDoc } from './muhabereConversation'
 import { db, isFirebaseConfigured } from './firebase'
 import { safeOnSnapshot, timestampToMs } from './firestoreSnapshot'
+import { formatMuhabereErrorDisplay } from './messagesDisplayText'
 
 export const MUHABERE_MESSAGE_PAGE_SIZE = 20
 
@@ -145,11 +146,23 @@ const ROSTER_ROLES = ['member', 'operator', 'premium_member', 'instructor']
 const SEARCH_RESULT_LIMIT = 24
 const CONTACTS_IN_CHUNK = 30
 
+/**
+ * Throw a muhabere error with stable `__audazCode` for i18n display.
+ * `Error.message` is the code (not a localized string).
+ * @param {string} audazCode
+ * @param {string} [firebaseCode]
+ * @returns {never}
+ */
+function throwMuhabereError(audazCode, firebaseCode = 'failed-precondition') {
+  const e = new Error(audazCode)
+  e.code = firebaseCode
+  e.__audazCode = audazCode
+  throw e
+}
+
 function assertDb() {
   if (!isFirebaseConfigured() || !db) {
-    const e = new Error('Firebase yapılandırılmadı')
-    e.code = 'failed-precondition'
-    throw e
+    throwMuhabereError('FIREBASE_NOT_CONFIGURED', 'failed-precondition')
   }
 }
 
@@ -314,17 +327,13 @@ async function mutualAddContactsInTransaction(tx, uidA, uidB) {
   const [aSnap, bSnap] = await Promise.all([tx.get(aRef), tx.get(bRef)])
 
   if (!aSnap.exists() || !bSnap.exists()) {
-    const e = new Error('Profil bulunamadı.')
-    e.code = 'not-found'
-    throw e
+    throwMuhabereError('PROFILE_NOT_FOUND', 'not-found')
   }
 
   const bRole = typeof bSnap.data().role === 'string' ? bSnap.data().role : ''
   const aRole = typeof aSnap.data().role === 'string' ? aSnap.data().role : ''
   if (!ROSTER_ROLES.includes(bRole) || !ROSTER_ROLES.includes(aRole)) {
-    const e = new Error('Kullanıcı muhabere ağına dahil değil.')
-    e.code = 'permission-denied'
-    throw e
+    throwMuhabereError('NOT_IN_MUHABERE_NETWORK', 'permission-denied')
   }
 
   const aContacts = normalizeContactUids(aSnap.data().contacts)
@@ -349,9 +358,7 @@ async function mutualRemoveContactsInTransaction(tx, uidA, uidB) {
   const [aSnap, bSnap] = await Promise.all([tx.get(aRef), tx.get(bRef)])
 
   if (!aSnap.exists() || !bSnap.exists()) {
-    const e = new Error('Profil bulunamadı.')
-    e.code = 'not-found'
-    throw e
+    throwMuhabereError('PROFILE_NOT_FOUND', 'not-found')
   }
 
   const aContacts = normalizeContactUids(aSnap.data().contacts)
@@ -370,9 +377,7 @@ export async function removeMuhabereContact(currentUid, peerUid) {
   const me = String(currentUid ?? '').trim()
   const peer = String(peerUid ?? '').trim()
   if (!me || !peer || me === peer) {
-    const e = new Error('Bağlantı hedefi geçersiz.')
-    e.code = 'invalid-argument'
-    throw e
+    throwMuhabereError('INVALID_CONNECTION_TARGET', 'invalid-argument')
   }
 
   await runTransaction(db, async (tx) => {
@@ -406,16 +411,12 @@ export async function sendMuhabereContactRequest(currentUid, peerUid) {
   const me = String(currentUid ?? '').trim()
   const peer = String(peerUid ?? '').trim()
   if (!me || !peer || me === peer) {
-    const e = new Error('İstek hedefi geçersiz.')
-    e.code = 'invalid-argument'
-    throw e
+    throwMuhabereError('INVALID_REQUEST_TARGET', 'invalid-argument')
   }
 
   const myContacts = await fetchUserContactUids(me)
   if (myContacts.includes(peer)) {
-    const e = new Error('Bu operatör zaten tim rehberinizde.')
-    e.code = 'already-exists'
-    throw e
+    throwMuhabereError('ALREADY_IN_ROSTER', 'already-exists')
   }
 
   const requestId = buildContactRequestId(me, peer)
@@ -424,9 +425,7 @@ export async function sendMuhabereContactRequest(currentUid, peerUid) {
   if (existing.exists()) {
     const data = existing.data()
     if (String(data?.senderId ?? '') === me && String(data?.status ?? '') === 'pending') {
-      const e = new Error('İstek zaten iletildi.')
-      e.code = 'already-exists'
-      throw e
+      throwMuhabereError('REQUEST_ALREADY_SENT', 'already-exists')
     }
     if (String(data?.senderId ?? '') === me) {
       await deleteDoc(requestRef)
@@ -436,9 +435,7 @@ export async function sendMuhabereContactRequest(currentUid, peerUid) {
   const reverseId = buildContactRequestId(peer, me)
   const reverse = await getDoc(doc(db, 'contact_requests', reverseId))
   if (reverse.exists() && reverse.data()?.status === 'pending') {
-    const e = new Error('Bu operatörden zaten katılım isteği var — Ağ Katılım İstekleri bölümünden onaylayın.')
-    e.code = 'failed-precondition'
-    throw e
+    throwMuhabereError('PENDING_INBOUND_REQUEST', 'failed-precondition')
   }
 
   try {
@@ -454,11 +451,7 @@ export async function sendMuhabereContactRequest(currentUid, peerUid) {
         ? String(/** @type {{ code?: string }} */ (err).code)
         : ''
     if (code === 'permission-denied') {
-      const e = new Error(
-        'İstek gönderilemedi. Firestore kuralları güncel olmayabilir — npm run deploy-backend çalıştırın.',
-      )
-      e.code = 'permission-denied'
-      throw e
+      throwMuhabereError('REQUEST_SEND_DENIED', 'permission-denied')
     }
     throw err
   }
@@ -560,9 +553,7 @@ export async function acceptMuhabereContactRequest(currentUid, requestId) {
   const me = String(currentUid ?? '').trim()
   const rid = String(requestId ?? '').trim()
   if (!me || !rid) {
-    const e = new Error('İstek geçersiz.')
-    e.code = 'invalid-argument'
-    throw e
+    throwMuhabereError('INVALID_REQUEST', 'invalid-argument')
   }
 
   const reqRef = doc(db, 'contact_requests', rid)
@@ -571,27 +562,19 @@ export async function acceptMuhabereContactRequest(currentUid, requestId) {
   await runTransaction(db, async (tx) => {
     const reqSnap = await tx.get(reqRef)
     if (!reqSnap.exists()) {
-      const e = new Error('İstek bulunamadı.')
-      e.code = 'not-found'
-      throw e
+      throwMuhabereError('REQUEST_NOT_FOUND', 'not-found')
     }
     const data = reqSnap.data()
     if (String(data.receiverId ?? '') !== me) {
-      const e = new Error('Bu isteği onaylama yetkiniz yok.')
-      e.code = 'permission-denied'
-      throw e
+      throwMuhabereError('REQUEST_ACCEPT_DENIED', 'permission-denied')
     }
     if (String(data.status ?? '') !== 'pending') {
-      const e = new Error('İstek artık beklemede değil.')
-      e.code = 'failed-precondition'
-      throw e
+      throwMuhabereError('REQUEST_NOT_PENDING', 'failed-precondition')
     }
 
     senderId = String(data.senderId ?? '').trim()
     if (!senderId) {
-      const e = new Error('Gönderen bilinmiyor.')
-      e.code = 'invalid-argument'
-      throw e
+      throwMuhabereError('SENDER_UNKNOWN', 'invalid-argument')
     }
 
     await mutualAddContactsInTransaction(tx, me, senderId)
@@ -602,9 +585,7 @@ export async function acceptMuhabereContactRequest(currentUid, requestId) {
   const contact = profiles.find((p) => p.uid === senderId)
   const accepter = profiles.find((p) => p.uid === me)
   if (!contact) {
-    const e = new Error('Onay sonrası profil okunamadı.')
-    e.code = 'not-found'
-    throw e
+    throwMuhabereError('PROFILE_READ_AFTER_ACCEPT_FAILED', 'not-found')
   }
 
   await sendNotificationSafe({
@@ -629,33 +610,22 @@ export async function rejectMuhabereContactRequest(currentUid, requestId) {
   const me = String(currentUid ?? '').trim()
   const rid = String(requestId ?? '').trim()
   if (!me || !rid) {
-    const e = new Error('İstek geçersiz.')
-    e.code = 'invalid-argument'
-    throw e
+    throwMuhabereError('INVALID_REQUEST', 'invalid-argument')
   }
 
   const reqRef = doc(db, 'contact_requests', rid)
   const snap = await getDoc(reqRef)
   if (!snap.exists()) return
   if (String(snap.data().receiverId ?? '') !== me) {
-    const e = new Error('Bu isteği reddetme yetkiniz yok.')
-    e.code = 'permission-denied'
-    throw e
+    throwMuhabereError('REQUEST_REJECT_DENIED', 'permission-denied')
   }
   await deleteDoc(reqRef)
 }
 
 /** @param {unknown} err */
 export function muhabereRequestErrorMessage(err) {
-  const code =
-    err && typeof err === 'object' && 'code' in err ? String(/** @type {{ code?: string }} */ (err).code) : ''
-  if (code === 'permission-denied') {
-    return 'İşlem reddedildi. Firestore kuralları güncel değil — npm run deploy-backend çalıştırın.'
-  }
-  if (code === 'already-exists') {
-    return err instanceof Error ? err.message : 'İstek zaten mevcut.'
-  }
-  return err instanceof Error ? err.message : 'İstek işlenemedi.'
+  // Prefer localized display; kept for callers that still import from this module.
+  return formatMuhabereErrorDisplay(err)
 }
 
 /**
@@ -929,22 +899,16 @@ export async function updateMuhabereChannelName(channelId, userId, name) {
   const me = String(userId ?? '').trim()
   const label = String(name ?? '').trim()
   if (!cid || !me || !label) {
-    const e = new Error('Kanal adı geçersiz.')
-    e.code = 'invalid-argument'
-    throw e
+    throwMuhabereError('INVALID_CHANNEL_NAME', 'invalid-argument')
   }
 
   const ref = doc(db, 'channels', cid)
   const snap = await getDoc(ref)
   if (!snap.exists()) {
-    const e = new Error('Kanal bulunamadı.')
-    e.code = 'not-found'
-    throw e
+    throwMuhabereError('CHANNEL_NOT_FOUND', 'not-found')
   }
   if (String(snap.data()?.createdBy ?? '') !== me) {
-    const e = new Error('Yalnızca kanal kurucusu düzenleyebilir.')
-    e.code = 'permission-denied'
-    throw e
+    throwMuhabereError('CHANNEL_EDIT_OWNER_ONLY', 'permission-denied')
   }
 
   await updateDoc(ref, { name: label.slice(0, 48) })
@@ -965,9 +929,7 @@ export async function deleteMuhabereChannel(channelId, userId) {
   const snap = await getDoc(ref)
   if (!snap.exists()) return
   if (String(snap.data()?.createdBy ?? '') !== me) {
-    const e = new Error('Yalnızca kanal kurucusu silebilir.')
-    e.code = 'permission-denied'
-    throw e
+    throwMuhabereError('CHANNEL_DELETE_OWNER_ONLY', 'permission-denied')
   }
 
   await deleteDoc(ref)
@@ -1212,27 +1174,19 @@ export async function sendChatMessage({
   let body = String(text ?? '').trim()
 
   if (!cid || !from || !to) {
-    const e = new Error('Mesaj veya alıcı geçersiz.')
-    e.code = 'invalid-argument'
-    throw e
+    throwMuhabereError('INVALID_MESSAGE_OR_RECIPIENT', 'invalid-argument')
   }
 
   if (msgType === 'text' && !body) {
-    const e = new Error('Mesaj metni boş olamaz.')
-    e.code = 'invalid-argument'
-    throw e
+    throwMuhabereError('EMPTY_MESSAGE', 'invalid-argument')
   }
 
   if (msgType === 'image' && !imageUrl) {
-    const e = new Error('Görsel URL eksik.')
-    e.code = 'invalid-argument'
-    throw e
+    throwMuhabereError('MISSING_IMAGE_URL', 'invalid-argument')
   }
 
   if (msgType === 'location' && (typeof lat !== 'number' || typeof lng !== 'number')) {
-    const e = new Error('Koordinat geçersiz.')
-    e.code = 'invalid-argument'
-    throw e
+    throwMuhabereError('INVALID_COORDINATES', 'invalid-argument')
   }
 
   if (msgType === 'image') body = body || MUHABERE_PREVIEW_IMAGE
@@ -1293,10 +1247,8 @@ export async function createMuhabereChannel({ name, createdBy, memberUids }) {
   console.log('[createMuhabereChannel] Kanal oluşturuluyor:', payload)
 
   if (!creator || !label) {
-    const e = new Error('Kanal adı veya oluşturucu geçersiz.')
-    e.code = 'invalid-argument'
-    console.error('[createMuhabereChannel] Validasyon hatası:', e.message, payload)
-    throw e
+    console.error('[createMuhabereChannel] Validasyon hatası:', 'INVALID_CHANNEL_OR_CREATOR', payload)
+    throwMuhabereError('INVALID_CHANNEL_OR_CREATOR', 'invalid-argument')
   }
 
   try {
@@ -1327,16 +1279,10 @@ export async function createMuhabereChannel({ name, createdBy, memberUids }) {
     return ref.id
   } catch (err) {
     const code = /** @type {{ code?: string }} */ (err)?.code ?? 'unknown'
-    const message =
-      code === 'permission-denied'
-        ? 'Kanal oluşturma izni reddedildi. Rolünüzün operator/instructor olduğundan ve Firestore kurallarının güncel olduğundan emin olun.'
-        : err instanceof Error
-          ? err.message
-          : 'Kanal oluşturulamadı.'
-    console.error('[createMuhabereChannel] Firebase hatası:', { code, message, err, payload })
-    const wrapped = new Error(message)
-    wrapped.code = code
-    throw wrapped
+    if (err && typeof err === 'object' && '__audazCode' in err) throw err
+    const audazCode = code === 'permission-denied' ? 'CHANNEL_CREATE_DENIED' : 'CHANNEL_CREATE_FAILED'
+    console.error('[createMuhabereChannel] Firebase hatası:', { code, audazCode, err, payload })
+    throwMuhabereError(audazCode, code)
   }
 }
 
@@ -1497,27 +1443,19 @@ export async function sendChannelMessage({
   let body = String(text ?? '').trim()
 
   if (!cid || !from) {
-    const e = new Error('Kanal veya gönderici geçersiz.')
-    e.code = 'invalid-argument'
-    throw e
+    throwMuhabereError('INVALID_CHANNEL_OR_SENDER', 'invalid-argument')
   }
 
   if (msgType === 'text' && !body) {
-    const e = new Error('Mesaj metni boş olamaz.')
-    e.code = 'invalid-argument'
-    throw e
+    throwMuhabereError('EMPTY_MESSAGE', 'invalid-argument')
   }
 
   if (msgType === 'image' && !imageUrl) {
-    const e = new Error('Görsel URL eksik.')
-    e.code = 'invalid-argument'
-    throw e
+    throwMuhabereError('MISSING_IMAGE_URL', 'invalid-argument')
   }
 
   if (msgType === 'location' && (typeof lat !== 'number' || typeof lng !== 'number')) {
-    const e = new Error('Koordinat geçersiz.')
-    e.code = 'invalid-argument'
-    throw e
+    throwMuhabereError('INVALID_COORDINATES', 'invalid-argument')
   }
 
   if (msgType === 'image') body = body || MUHABERE_PREVIEW_IMAGE
