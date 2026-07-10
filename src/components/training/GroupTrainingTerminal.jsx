@@ -43,6 +43,7 @@ import {
   formatGroupTrainingSessionStatusDisplay,
   formatGroupTrainingValidationMessage,
 } from '../../lib/trainingDisplayText'
+import { formatGroupErrorDisplay } from '../../lib/progressDisplayText'
 
 /** @typedef {import('../../lib/firestoreGroupTrainings').GroupTraining} GroupTraining */
 /** @typedef {import('../../lib/firestoreGroupTrainings').TrainingResult} TrainingResult */
@@ -460,7 +461,7 @@ export default function GroupTrainingTerminal({ onBack, initialTrainingId = '' }
         setTimeSec('')
       } catch (err) {
         emitFirebaseError(err)
-        setMsg(err instanceof Error ? err.message : formatGroupTrainingValidationMessage('submitFailed'))
+        setMsg(formatGroupErrorDisplay(err, 'groupLib.errors.generic') || formatGroupTrainingValidationMessage('submitFailed'))
       } finally {
         setBusy(false)
       }

@@ -1,3 +1,6 @@
+import i18n from '../i18n'
+import { instructorT } from './instructorDisplayText'
+
 /** @typedef {'BAŞARILI' | 'YETERSİZ İSABET' | 'SÜRE İHLALİ'} GroupTrainingStatusResult */
 
 /**
@@ -51,17 +54,30 @@ export function computeGroupTrainingAssessment(input) {
 }
 
 /**
- * @param {GroupTrainingStatusResult | string | undefined} statusResult
- * @param {boolean} [isPassed]
- * @returns {string}
+ * @param {string} [lng]
+ * @returns {'tr' | 'en'}
  */
-export function formatGroupTrainingStatusLabel(statusResult, isPassed = false) {
-  if (isPassed || statusResult === 'BAŞARILI') return 'GEÇTİ'
-  if (statusResult === 'SÜRE İHLALİ') return 'SÜREDE KALDI'
-  return 'KALDI'
+function resolveLng(lng) {
+  if (lng === 'en' || lng === 'tr') return lng
+  return i18n.language?.startsWith('en') ? 'en' : 'tr'
 }
 
-import { instructorT } from './instructorDisplayText'
+/**
+ * @param {GroupTrainingStatusResult | string | undefined} statusResult
+ * @param {boolean} [isPassed]
+ * @param {string} [lng]
+ * @returns {string}
+ */
+export function formatGroupTrainingStatusLabel(statusResult, isPassed = false, lng) {
+  const language = resolveLng(lng)
+  if (isPassed || statusResult === 'BAŞARILI') {
+    return i18n.t('sectors.grup-egitimi.assessment.passed', { ns: 'training', lng: language })
+  }
+  if (statusResult === 'SÜRE İHLALİ') {
+    return i18n.t('sectors.grup-egitimi.assessment.timeFailed', { ns: 'training', lng: language })
+  }
+  return i18n.t('sectors.grup-egitimi.assessment.failed', { ns: 'training', lng: language })
+}
 
 /**
  * @param {GroupTrainingStatusResult | string | undefined} statusResult
@@ -74,22 +90,11 @@ export function formatGroupTrainingStatusLabelInstructor(statusResult, isPassed 
   return instructorT('status.failed')
 }
 
-/**
- * @param {{
- *   trainingName: string
- *   hits: number
- *   totalAmmo: number
- *   time?: number | null
- *   isTimed?: boolean
- *   statusResult?: string
- *   isPassed?: boolean
- * }} input
- * @returns {string}
- */
 /** @typedef {'open' | 'closed_for_me' | 'completed'} OperatorTrainingSessionKey */
 
 /**
  * Operatörün oturum görünüm durumu (global tamamlanma + bireysel katılım).
+ * Display labels: use formatGroupTrainingSessionStatusDisplay(key) in UI.
  * @param {{ status?: string, id: string }} training
  * @param {{ trainingId: string, operatorId: string }[]} results
  * @param {string} operatorId
@@ -100,26 +105,14 @@ export function getOperatorTrainingSessionStatus(training, results, operatorId) 
   )
 
   if (training.status === 'completed') {
-    return {
-      key: /** @type {OperatorTrainingSessionKey} */ ('completed'),
-      label: 'TAMAMLANDI',
-      hint: 'Eğitmen oturumu kapattı',
-    }
+    return { key: /** @type {OperatorTrainingSessionKey} */ ('completed') }
   }
 
   if (participated) {
-    return {
-      key: /** @type {OperatorTrainingSessionKey} */ ('closed_for_me'),
-      label: 'KAPALI',
-      hint: 'Bu oturuma katıldınız',
-    }
+    return { key: /** @type {OperatorTrainingSessionKey} */ ('closed_for_me') }
   }
 
-  return {
-    key: /** @type {OperatorTrainingSessionKey} */ ('open'),
-    label: 'AKTİF',
-    hint: 'Katılıma açık',
-  }
+  return { key: /** @type {OperatorTrainingSessionKey} */ ('open') }
 }
 
 /**
@@ -152,17 +145,48 @@ export function getOperatorSessionStatusStyles(key) {
   }
 }
 
-export function buildGroupTrainingResultMessage(input) {
-  const label = formatGroupTrainingStatusLabel(input.statusResult, input.isPassed)
-  const hitsPart = `${input.hits}/${input.totalAmmo} vuruş`
+/**
+ * Push / in-app notification body for a group training result.
+ * Uses recipient language when `lng` is provided (default: current i18n / TR).
+ * @param {{
+ *   trainingName: string
+ *   hits: number
+ *   totalAmmo: number
+ *   time?: number | null
+ *   isTimed?: boolean
+ *   statusResult?: string
+ *   isPassed?: boolean
+ * }} input
+ * @param {string} [lng]
+ * @returns {string}
+ */
+export function buildGroupTrainingResultMessage(input, lng) {
+  const language = resolveLng(lng)
+  const label = formatGroupTrainingStatusLabel(input.statusResult, input.isPassed, language)
   const timePart =
-    input.isTimed && input.time != null ? ` · ${input.time}s` : ''
+    input.isTimed && input.time != null
+      ? i18n.t('sectors.grup-egitimi.push.timePart', {
+          ns: 'training',
+          lng: language,
+          time: input.time,
+        })
+      : ''
   const reasonPart =
     input.statusResult === 'SÜRE İHLALİ'
-      ? ' (süre hedefinin üzerinde)'
+      ? i18n.t('sectors.grup-egitimi.push.reasonOverTime', { ns: 'training', lng: language })
       : input.statusResult === 'YETERSİZ İSABET'
-        ? ' (baraj altında)'
+        ? i18n.t('sectors.grup-egitimi.push.reasonUnderHits', { ns: 'training', lng: language })
         : ''
 
-  return `"${input.trainingName}" — ${hitsPart}${timePart} · ${label}${reasonPart}`
+  return i18n.t('sectors.grup-egitimi.push.resultBody', {
+    ns: 'training',
+    lng: language,
+    trainingName: input.trainingName,
+    hits: input.hits,
+    totalAmmo: input.totalAmmo,
+    hitsUnit: i18n.t('sectors.grup-egitimi.push.hitsUnit', { ns: 'training', lng: language }),
+    timePart,
+    label,
+    reasonPart,
+  })
 }

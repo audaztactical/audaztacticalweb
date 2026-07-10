@@ -5,6 +5,7 @@ import { callJoinGroupByPassword, callLeaveGroup } from './cloudFunctions'
 import { fetchGroupActivityLogsByGroup } from './firestoreGroupTraining'
 import { buildGroupLeaderboardRowFromActivity, sortGroupLeaderboardRows } from './groupLeaderboard'
 import { syncUserGroupFields } from './operatorGroupMembership'
+import { throwGroupError } from './groupErrors'
 
 /**
  * @typedef {{
@@ -19,9 +20,7 @@ import { syncUserGroupFields } from './operatorGroupMembership'
 
 function assertDb() {
   if (!isFirebaseConfigured() || !db) {
-    const e = new Error('Firebase yapılandırılmadı')
-    e.code = 'failed-precondition'
-    throw e
+    throwGroupError('FIREBASE_NOT_CONFIGURED', 'failed-precondition')
   }
 }
 
@@ -58,12 +57,12 @@ function mapGroupDoc(snap) {
  */
 export async function createTacticalGroup(instructorId, groupName, groupPassword) {
   assertDb()
-  if (!instructorId) throw new Error('Eğitmen oturumu gerekli')
+  if (!instructorId) throwGroupError('INSTRUCTOR_SESSION_REQUIRED', 'unauthenticated')
 
   const name = String(groupName ?? '').trim()
   const password = normalizeGroupPassword(groupPassword)
-  if (!name) throw new Error('Grup adı zorunlu')
-  if (password.length < 4) throw new Error('Grup şifresi en az 4 karakter olmalı')
+  if (!name) throwGroupError('GROUP_NAME_REQUIRED', 'invalid-argument')
+  if (password.length < 4) throwGroupError('GROUP_PASSWORD_TOO_SHORT', 'invalid-argument')
 
   const groupRef = doc(collection(db, 'groups'))
   await setDoc(groupRef, {
@@ -104,7 +103,7 @@ export function subscribeInstructorGroups(instructorId, onGroups, onError) {
  */
 export async function joinGroupByPassword(operatorUid, password) {
   assertDb()
-  if (!operatorUid) throw new Error('Oturum gerekli')
+  if (!operatorUid) throwGroupError('SESSION_REQUIRED', 'unauthenticated')
 
   try {
     const result = await callJoinGroupByPassword(password)
@@ -122,11 +121,16 @@ export async function joinGroupByPassword(operatorUid, password) {
 
     return { group, alreadyMember: result.alreadyMember === true }
   } catch (err) {
+    if (err && typeof err === 'object' && '__audazCode' in err) throw err
     const code = String(/** @type {{ code?: string }} */ (err)?.code ?? '')
     if (code.includes('not-found')) {
-      const e = new Error('Grup bulunamadı')
-      e.code = 'group-not-found'
-      throw e
+      throwGroupError('GROUP_NOT_FOUND', 'group-not-found')
+    }
+    if (code.includes('unauthenticated')) {
+      throwGroupError('SESSION_REQUIRED', 'unauthenticated')
+    }
+    if (code.includes('invalid-argument')) {
+      throwGroupError('GROUP_PASSWORD_TOO_SHORT', 'invalid-argument')
     }
     throw err
   }
@@ -137,9 +141,18 @@ export async function joinGroupByPassword(operatorUid, password) {
  */
 export async function leaveTacticalGroup(operatorUid) {
   assertDb()
-  if (!operatorUid) throw new Error('Oturum gerekli')
+  if (!operatorUid) throwGroupError('SESSION_REQUIRED', 'unauthenticated')
 
-  await callLeaveGroup()
+  try {
+    await callLeaveGroup()
+  } catch (err) {
+    if (err && typeof err === 'object' && '__audazCode' in err) throw err
+    const code = String(/** @type {{ code?: string }} */ (err)?.code ?? '')
+    if (code.includes('unauthenticated')) {
+      throwGroupError('SESSION_REQUIRED', 'unauthenticated')
+    }
+    throw err
+  }
 }
 
 /**
@@ -172,17 +185,17 @@ export async function fetchGroupById(groupId) {
  */
 export async function updateTacticalGroup(groupId, patch) {
   assertDb()
-  if (!groupId) throw new Error('Grup kimliği gerekli')
+  if (!groupId) throwGroupError('GROUP_ID_REQUIRED', 'invalid-argument')
 
   const updates = /** @type {Record<string, unknown>} */ ({})
   if (patch.groupName != null) {
     const name = String(patch.groupName).trim()
-    if (!name) throw new Error('Grup adı zorunlu')
+    if (!name) throwGroupError('GROUP_NAME_REQUIRED', 'invalid-argument')
     updates.groupName = name
   }
   if (patch.groupPassword != null) {
     const password = normalizeGroupPassword(patch.groupPassword)
-    if (password.length < 4) throw new Error('Grup şifresi en az 4 karakter olmalı')
+    if (password.length < 4) throwGroupError('GROUP_PASSWORD_TOO_SHORT', 'invalid-argument')
     updates.groupPassword = password
   }
   if (Object.keys(updates).length === 0) return
@@ -195,6 +208,6 @@ export async function updateTacticalGroup(groupId, patch) {
  */
 export async function deleteTacticalGroup(groupId) {
   assertDb()
-  if (!groupId) throw new Error('Grup kimliği gerekli')
+  if (!groupId) throwGroupError('GROUP_ID_REQUIRED', 'invalid-argument')
   await deleteDoc(doc(db, 'groups', groupId))
 }

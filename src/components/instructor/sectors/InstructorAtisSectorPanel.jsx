@@ -21,6 +21,7 @@ import {
   subscribeTrainingResults,
 } from '../../../lib/firestoreGroupTrainings'
 import { emitFirebaseError } from '../../../lib/firebaseErrorBus'
+import { formatGroupErrorDisplay } from '../../../lib/progressDisplayText'
 import InstructorCommandPanel from '../layout/InstructorCommandPanel'
 import DrillQuickSelector from '../cleanTactical/DrillQuickSelector'
 import InstructorGroupSelect from '../cleanTactical/InstructorGroupSelect'
@@ -401,7 +402,7 @@ export default function InstructorAtisSectorPanel({
       setLibraryMsgOk(true)
     } catch (err) {
       emitFirebaseError(err)
-      setLibraryMsg(err instanceof Error ? err.message : t('education.shared.saveFailed'))
+      setLibraryMsg(formatGroupErrorDisplay(err, 'groupLib.errors.generic') || t('education.shared.saveFailed'))
       setLibraryMsgOk(false)
     } finally {
       setLibrarySaving(false)
@@ -466,7 +467,7 @@ export default function InstructorAtisSectorPanel({
       setStartMsgOk(true)
     } catch (err) {
       emitFirebaseError(err)
-      setStartMsg(err instanceof Error ? err.message : t('education.atis.messages.startFailed'))
+      setStartMsg(formatGroupErrorDisplay(err, 'groupLib.errors.generic') || t('education.atis.messages.startFailed'))
       setStartMsgOk(false)
     } finally {
       setStartSaving(false)

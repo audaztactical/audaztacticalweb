@@ -11,6 +11,7 @@ import {
 } from 'firebase/firestore'
 import { db, isFirebaseConfigured } from './firebase'
 import { safeOnSnapshot } from './firestoreSnapshot'
+import { throwGroupError } from './groupErrors'
 
 /** @typedef {'atis' | 'cqb' | 'fof' | 'vbss' | 'tccc' | 'egitim'} GroupTrainingDiscipline */
 
@@ -106,9 +107,7 @@ export function normalizeCqbCriticalMetrics(raw) {
 
 function assertDb() {
   if (!isFirebaseConfigured() || !db) {
-    const e = new Error('Firebase yapılandırılmadı')
-    e.code = 'failed-precondition'
-    throw e
+    throwGroupError('FIREBASE_NOT_CONFIGURED', 'failed-precondition')
   }
 }
 
@@ -226,10 +225,10 @@ function mapActivityDoc(snap) {
 export async function createGroupTrainingTemplate(input) {
   assertDb()
   const { instructorId, groupId } = input
-  if (!instructorId || !groupId) throw new Error('Grup ve eğitmen kimliği gerekli')
+  if (!instructorId || !groupId) throwGroupError('GROUP_AND_INSTRUCTOR_REQUIRED', 'invalid-argument')
 
   const name = String(input.drillName ?? '').trim()
-  if (!name) throw new Error('Drill adı zorunlu')
+  if (!name) throwGroupError('DRILL_NAME_REQUIRED', 'invalid-argument')
 
   const drillLevel = Math.min(3, Math.max(1, Number(input.drillLevel) || 1))
   const discipline = normalizeGroupDiscipline(input.discipline)
@@ -248,9 +247,9 @@ export async function createGroupTrainingTemplate(input) {
     const totalAmmo = Math.max(1, Number(input.totalAmmo ?? input.totalRounds) || 1)
     const requiredHits = Number(input.requiredHits) || 0
     if (requiredHits > totalAmmo) {
-      throw new Error('Geçer vuruş sayısı mühimmat sayısından fazla olamaz')
+      throwGroupError('PASS_HITS_EXCEED_AMMO', 'invalid-argument')
     }
-    if (requiredHits < 1) throw new Error('Geçer vuruş sayısı en az 1 olmalı')
+    if (requiredHits < 1) throwGroupError('PASS_HITS_MIN', 'invalid-argument')
     criticalMetrics = normalizeCriticalMetrics({
       targetType: String(input.targetType ?? 'IPSC / Silüet').trim(),
       maxSeconds: isTimed === false ? 0 : Math.max(0, Number(input.maxSeconds) || 0),
@@ -318,13 +317,13 @@ export async function submitGroupActivityLog(input) {
   assertDb()
   const { groupId, operatorId, templateId, instructorId, template } = input
   if (!groupId || !operatorId || !templateId || !instructorId) {
-    throw new Error('Grup, operatör ve şablon gerekli')
+    throwGroupError('GROUP_OPERATOR_TEMPLATE_REQUIRED', 'invalid-argument')
   }
 
   const score = Math.max(0, Number(input.score) || 0)
   const duration = Math.max(0, Number(input.duration) || 0)
   const rounds = template.criticalMetrics.totalRounds || 1
-  if (score > rounds) throw new Error(`Vuruş sayısı en fazla ${rounds} olabilir`)
+  if (score > rounds) throwGroupError('HITS_MAX', 'invalid-argument', { max: rounds })
 
   const ref = doc(collection(db, 'group_activity_logs'))
   const payload = {
@@ -373,7 +372,7 @@ export async function submitGroupAtisActivityLog(input) {
   assertDb()
   const { groupId, operatorId, instructorId, templateId } = input
   if (!groupId || !operatorId || !instructorId || !templateId) {
-    throw new Error('Grup, operatör ve drill seçimi gerekli')
+    throwGroupError('GROUP_OPERATOR_DRILL_REQUIRED', 'invalid-argument')
   }
 
   const totalAmmo = Math.max(1, Number(input.totalAmmo) || 1)
@@ -381,7 +380,7 @@ export async function submitGroupAtisActivityLog(input) {
   const isTimed = input.isTimed !== false
   const duration = isTimed ? Math.max(0, Number(input.duration) || 0) : null
   if (isTimed && (duration == null || !Number.isFinite(duration))) {
-    throw new Error('Süreli drill için geçen süre zorunlu')
+    throwGroupError('TIMED_DURATION_REQUIRED', 'invalid-argument')
   }
 
   const ref = doc(collection(db, 'group_activity_logs'))
@@ -449,7 +448,7 @@ export async function submitGroupCqbActivityLog(input) {
   assertDb()
   const { groupId, operatorId, instructorId } = input
   if (!groupId || !operatorId || !instructorId) {
-    throw new Error('Grup ve operatör seçimi gerekli')
+    throwGroupError('GROUP_OPERATOR_REQUIRED', 'invalid-argument')
   }
 
   const totalThreats = Math.max(1, Number(input.totalThreats) || 1)
@@ -457,7 +456,7 @@ export async function submitGroupCqbActivityLog(input) {
   const isTimed = input.isTimed !== false
   const duration = isTimed ? Math.max(0, Number(input.duration) || 0) : null
   if (isTimed && (duration == null || !Number.isFinite(duration))) {
-    throw new Error('Süreli CQB drill için temizlik süresi zorunlu')
+    throwGroupError('TIMED_CQB_DURATION_REQUIRED', 'invalid-argument')
   }
 
   const instructorInfractions = Array.isArray(input.instructorInfractions)
@@ -539,16 +538,16 @@ export async function submitGroupActivityLogDirect(input) {
   assertDb()
   const { groupId, operatorId, instructorId } = input
   if (!groupId || !operatorId || !instructorId) {
-    throw new Error('Grup, operatör ve eğitmen gerekli')
+    throwGroupError('GROUP_OPERATOR_INSTRUCTOR_REQUIRED', 'invalid-argument')
   }
 
   const drillName = String(input.drillName ?? '').trim()
-  if (!drillName) throw new Error('Drill adı zorunlu')
+  if (!drillName) throwGroupError('DRILL_NAME_REQUIRED', 'invalid-argument')
 
   const score = Math.max(0, Number(input.score) || 0)
   const duration = Math.max(0, Number(input.duration) || 0)
   const totalRounds = Math.max(1, Number(input.totalRounds) || 10)
-  if (score > totalRounds) throw new Error(`Vuruş sayısı en fazla ${totalRounds} olabilir`)
+  if (score > totalRounds) throwGroupError('HITS_MAX', 'invalid-argument', { max: totalRounds })
 
   const infractions = Array.isArray(input.infractions)
     ? input.infractions.filter((x) => typeof x === 'string' && x.trim())
@@ -603,7 +602,7 @@ export async function submitGroupFofActivityLog(input) {
   assertDb()
   const { groupId, operatorId, instructorId } = input
   if (!groupId || !operatorId || !instructorId) {
-    throw new Error('Grup ve operatör seçimi gerekli')
+    throwGroupError('GROUP_OPERATOR_REQUIRED', 'invalid-argument')
   }
 
   const finalScore = Math.max(0, Math.min(100, Math.round(Number(input.finalScore) || 0)))

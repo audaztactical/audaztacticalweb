@@ -13,6 +13,7 @@ import { groupLogsToProgressRows } from '../../lib/groupActivityHud'
 import { computeProgressStats, buildTrendSeries } from '../../lib/progressAnalytics'
 import { buildLogsById } from '../../lib/progressTacticalTooltip'
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
+import { formatGroupErrorDisplay } from '../../lib/progressDisplayText'
 
 /** @typedef {import('../../lib/firestoreGroups').TacticalGroup} TacticalGroup */
 /** @typedef {import('../../lib/firestoreInstructor').OperatorProfile} OperatorProfile */
@@ -176,7 +177,7 @@ export default function GroupTrainingCommand({ groups, operators, instructorId }
       setTplDrillName('')
     } catch (err) {
       emitFirebaseError(err)
-      setTplMsg(err instanceof Error ? err.message : 'ŞABLON KAYDI BAŞARISIZ')
+      setTplMsg(formatGroupErrorDisplay(err, 'groupLib.errors.generic'))
     } finally {
       setTplSaving(false)
     }
@@ -216,7 +217,7 @@ export default function GroupTrainingCommand({ groups, operators, instructorId }
       setLogNotes('')
     } catch (err) {
       emitFirebaseError(err)
-      setLogMsg(err instanceof Error ? err.message : 'KAYIT BAŞARISIZ')
+      setLogMsg(formatGroupErrorDisplay(err, 'groupLib.errors.generic'))
     } finally {
       setLogSaving(false)
     }

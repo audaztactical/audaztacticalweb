@@ -1516,6 +1516,19 @@
         "timeFailed": "SÜREDE KALDI",
         "failed": "KALDI"
       },
+      "push": {
+        "newTrainingTitle": "Yeni grup eğitimi",
+        "newTrainingBody": "\"{{name}}\" eğitimi aktif — antrenman modülünden katılın.",
+        "yourResultTitle": "Grup eğitimi sonucunuz",
+        "instructorResultTitle": "Yeni grup eğitimi sonucu",
+        "instructorResultMessage": "{{operatorName}}: {{resultMessage}}",
+        "operatorFallback": "Operatör",
+        "resultBody": "\"{{trainingName}}\" — {{hits}}/{{totalAmmo}} {{hitsUnit}}{{timePart}} · {{label}}{{reasonPart}}",
+        "hitsUnit": "vuruş",
+        "timePart": " · {{time}}s",
+        "reasonOverTime": " (süre hedefinin üzerinde)",
+        "reasonUnderHits": " (baraj altında)"
+      },
       "alerts": {
         "timePart": " · {{time}}s",
         "sessionClosed": {

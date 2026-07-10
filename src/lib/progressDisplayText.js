@@ -11,6 +11,7 @@ import {
 } from './trainingDisplayText.js'
 import { humanizeOrsPenaltyCode } from './dashboardDisplayText.js'
 import { invStr } from './inventoryIlws.js'
+import { GROUP_ERROR_CODES } from './groupErrors.js'
 
 const NS = 'progress'
 
@@ -193,4 +194,51 @@ export function formatProgressTacticalErrorLabel(errorId, disciplineTag = '') {
   const tag = String(disciplineTag ?? '').toUpperCase()
   if (tag === 'FOF') return formatFofTacticalErrorLabel(id)
   return formatCqbTacticalErrorLabel(id)
+}
+
+/**
+ * Group / group-training lib errors → localized display (Batch E).
+ * @param {unknown} err
+ * @param {string} [fallbackKey]
+ */
+export function formatGroupErrorDisplay(err, fallbackKey = 'groupLib.errors.generic') {
+  const audaz =
+    err && typeof err === 'object' && '__audazCode' in err
+      ? String(/** @type {{ __audazCode?: string }} */ (err).__audazCode ?? '').trim()
+      : ''
+  const message = err instanceof Error ? String(err.message ?? '').trim() : ''
+  const code =
+    err && typeof err === 'object' && 'code' in err
+      ? String(/** @type {{ code?: string }} */ (err).code ?? '')
+      : ''
+  const params =
+    err && typeof err === 'object' && '__audazParams' in err
+      ? /** @type {{ __audazParams?: Record<string, unknown> }} */ (err).__audazParams ?? {}
+      : {}
+
+  const audazCode = GROUP_ERROR_CODES.has(audaz)
+    ? audaz
+    : GROUP_ERROR_CODES.has(message)
+      ? message
+      : ''
+
+  if (audazCode) {
+    return progressT(`groupLib.errors.codes.${audazCode}`, params)
+  }
+
+  if (code.includes('unauthenticated') || code.includes('auth')) {
+    return progressT('groupLib.errors.codes.SESSION_REQUIRED')
+  }
+  if (code.includes('not-found')) {
+    return progressT('groupLib.errors.codes.GROUP_NOT_FOUND')
+  }
+  if (code.includes('invalid-argument')) {
+    return progressT('groupLib.errors.codes.GROUP_PASSWORD_TOO_SHORT')
+  }
+
+  if (message && !GROUP_ERROR_CODES.has(message) && !/^[A-Z][A-Z0-9_]+$/.test(message)) {
+    return message
+  }
+
+  return progressT(fallbackKey)
 }

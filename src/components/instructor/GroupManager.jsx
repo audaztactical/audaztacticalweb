@@ -4,6 +4,7 @@ import InstructorCreatedGroupsList from './InstructorCreatedGroupsList'
 import { useAuth } from '../../context/AuthContext'
 import { createTacticalGroup, subscribeInstructorGroups } from '../../lib/firestoreGroups'
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
+import { formatGroupErrorDisplay } from '../../lib/progressDisplayText'
 
 const inputClass =
   'w-full rounded-sm border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-app-text outline-none transition-colors focus:border-amber-500/60 focus:ring-1 focus:ring-amber-500/25'
@@ -60,7 +61,7 @@ export default function GroupManager({ onGroupsChange }) {
       setGroupPassword('')
     } catch (err) {
       emitFirebaseError(err)
-      setFormMsg(err instanceof Error ? err.message : 'Grup oluşturulamadı')
+      setFormMsg(formatGroupErrorDisplay(err, 'groupLib.errors.generic'))
     } finally {
       setSubmitting(false)
     }

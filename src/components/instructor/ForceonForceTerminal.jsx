@@ -26,6 +26,7 @@ import {
   formatInstructorFofPenaltyField,
   formatInstructorFofScenarioLabel,
 } from '../../lib/instructorDisplayText'
+import { formatGroupErrorDisplay } from '../../lib/progressDisplayText'
 
 /** @typedef {import('../../lib/instructorFofAssessment').FofEvaluationInput} FofEvaluationInput */
 
@@ -163,7 +164,7 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
       setForm(createInitialForm())
     } catch (err) {
       setSaveOk(false)
-      setSaveMsg(err instanceof Error ? err.message : t('education.shared.saveFailed'))
+      setSaveMsg(formatGroupErrorDisplay(err, 'groupLib.errors.generic') || t('education.shared.saveFailed'))
     }
   }
 

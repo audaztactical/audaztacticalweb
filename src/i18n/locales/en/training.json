@@ -1516,6 +1516,19 @@
         "timeFailed": "FAILED ON TIME",
         "failed": "FAILED"
       },
+      "push": {
+        "newTrainingTitle": "New group training",
+        "newTrainingBody": "\"{{name}}\" training is active — join from the training module.",
+        "yourResultTitle": "Your group training result",
+        "instructorResultTitle": "New group training result",
+        "instructorResultMessage": "{{operatorName}}: {{resultMessage}}",
+        "operatorFallback": "Operator",
+        "resultBody": "\"{{trainingName}}\" — {{hits}}/{{totalAmmo}} {{hitsUnit}}{{timePart}} · {{label}}{{reasonPart}}",
+        "hitsUnit": "hits",
+        "timePart": " · {{time}}s",
+        "reasonOverTime": " (over time target)",
+        "reasonUnderHits": " (below pass threshold)"
+      },
       "alerts": {
         "timePart": " · {{time}}s",
         "sessionClosed": {

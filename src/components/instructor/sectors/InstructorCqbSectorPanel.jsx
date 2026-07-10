@@ -20,6 +20,7 @@ import {
 } from '../../../lib/instructorDisplayText'
 import { submitGroupCqbActivityLog } from '../../../lib/firestoreGroupTraining'
 import { emitFirebaseError } from '../../../lib/firebaseErrorBus'
+import { formatGroupErrorDisplay } from '../../../lib/progressDisplayText'
 
 /** @typedef {import('../../../lib/firestoreGroups').TacticalGroup} TacticalGroup */
 /** @typedef {import('../../../lib/firestoreInstructor').OperatorProfile} OperatorProfile */
@@ -268,7 +269,7 @@ export default function InstructorCqbSectorPanel({
     } catch (err) {
       emitFirebaseError(err)
       setMsgOk(false)
-      setLogMsg(err instanceof Error ? err.message : t('education.shared.saveFailed'))
+      setLogMsg(formatGroupErrorDisplay(err, 'groupLib.errors.generic') || t('education.shared.saveFailed'))
     } finally {
       setLogSaving(false)
     }

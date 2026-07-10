@@ -7,6 +7,7 @@ import {
   updateTacticalGroup,
 } from '../../../lib/firestoreGroups'
 import { emitFirebaseError } from '../../../lib/firebaseErrorBus'
+import { formatGroupErrorDisplay } from '../../../lib/progressDisplayText'
 
 /** @typedef {import('../../../lib/firestoreGroups').TacticalGroup} TacticalGroup */
 
@@ -56,7 +57,7 @@ export default function InstructorGroupsTab({ groups, loading, instructorId }) {
       setGroupPassword('')
     } catch (err) {
       emitFirebaseError(err)
-      setFormMsg(err instanceof Error ? err.message : t('groups.createFailed'))
+      setFormMsg(formatGroupErrorDisplay(err, 'groupLib.errors.generic') || t('groups.createFailed'))
       setFormMsgOk(false)
     } finally {
       setCreating(false)

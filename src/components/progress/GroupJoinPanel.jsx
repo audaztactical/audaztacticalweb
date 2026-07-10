@@ -4,6 +4,7 @@ import { Loader2, Users } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { joinGroupByPassword, normalizeGroupPassword } from '../../lib/firestoreGroups'
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
+import { formatGroupErrorDisplay } from '../../lib/progressDisplayText'
 
 const inputClass =
   'w-full rounded-sm border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-app-text outline-none transition-colors focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/25'
@@ -49,11 +50,15 @@ export default function GroupJoinPanel({ onJoined, bare = false }) {
       onJoined?.()
     } catch (err) {
       emitFirebaseError(err)
+      const audaz =
+        err && typeof err === 'object' && '__audazCode' in err
+          ? String(/** @type {{ __audazCode?: string }} */ (err).__audazCode ?? '')
+          : ''
       const errCode = err?.code ?? ''
-      if (errCode === 'group-not-found') {
+      if (errCode === 'group-not-found' || audaz === 'GROUP_NOT_FOUND') {
         setMessage(t('groupJoin.errors.invalidPassword'))
       } else {
-        setMessage(err instanceof Error ? err.message : t('groupJoin.errors.joinFailed'))
+        setMessage(formatGroupErrorDisplay(err, 'groupJoin.errors.joinFailed'))
       }
     } finally {
       setBusy(false)

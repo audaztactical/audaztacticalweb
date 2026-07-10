@@ -7,6 +7,7 @@ import { useOperatorGroup } from '../../hooks/useOperatorGroup'
 import { fetchGroupById, leaveTacticalGroup } from '../../lib/firestoreGroups'
 import { fetchUserProfile } from '../../lib/firestoreUsers'
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
+import { formatGroupErrorDisplay } from '../../lib/progressDisplayText'
 
 /**
  * Ayarlar · [ TAKTİK TİM ] — gruba katılım veya aktif tim özeti.
@@ -79,7 +80,7 @@ export default function SettingsGroupSection() {
       await refresh()
     } catch (err) {
       emitFirebaseError(err)
-      setLeaveMsg(err instanceof Error ? err.message : t('groupLeave.failed'))
+      setLeaveMsg(formatGroupErrorDisplay(err, 'groupLeave.failed'))
     } finally {
       setLeaveBusy(false)
     }

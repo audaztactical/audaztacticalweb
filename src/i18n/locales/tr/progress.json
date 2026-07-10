@@ -280,5 +280,35 @@
     "confirm": "Taktik timinden ayrılmak istediğinize emin misiniz?",
     "success": "• [BAŞARILI]: Timden ayrıldınız.",
     "failed": "Timden ayrılma başarısız."
+  },
+  "groupLib": {
+    "errors": {
+      "generic": "İşlem başarısız.",
+      "codes": {
+        "FIREBASE_NOT_CONFIGURED": "Firebase yapılandırılmadı",
+        "INSTRUCTOR_SESSION_REQUIRED": "Eğitmen oturumu gerekli",
+        "GROUP_NAME_REQUIRED": "Grup adı zorunlu",
+        "GROUP_PASSWORD_TOO_SHORT": "Grup şifresi en az 4 karakter olmalı",
+        "SESSION_REQUIRED": "Oturum gerekli",
+        "GROUP_NOT_FOUND": "Grup bulunamadı",
+        "GROUP_ID_REQUIRED": "Grup kimliği gerekli",
+        "GROUP_AND_INSTRUCTOR_REQUIRED": "Grup ve eğitmen kimliği gerekli",
+        "DRILL_NAME_REQUIRED": "Drill adı zorunlu",
+        "PASS_HITS_EXCEED_AMMO": "Geçer vuruş sayısı mühimmat sayısından fazla olamaz",
+        "PASS_HITS_MIN": "Geçer vuruş sayısı en az 1 olmalı",
+        "GROUP_OPERATOR_TEMPLATE_REQUIRED": "Grup, operatör ve şablon gerekli",
+        "HITS_MAX": "Vuruş sayısı en fazla {{max}} olabilir",
+        "GROUP_OPERATOR_DRILL_REQUIRED": "Grup, operatör ve drill seçimi gerekli",
+        "TIMED_DURATION_REQUIRED": "Süreli drill için geçen süre zorunlu",
+        "GROUP_OPERATOR_REQUIRED": "Grup ve operatör seçimi gerekli",
+        "TIMED_CQB_DURATION_REQUIRED": "Süreli CQB drill için temizlik süresi zorunlu",
+        "GROUP_OPERATOR_INSTRUCTOR_REQUIRED": "Grup, operatör ve eğitmen gerekli",
+        "GROUP_INSTRUCTOR_NAME_REQUIRED": "Grup, eğitmen ve eğitim adı zorunludur.",
+        "TRAINING_OPERATOR_REQUIRED": "Eğitim ve operatör kimliği gerekli.",
+        "SESSION_NOT_ACTIVE": "Bu oturum artık aktif değil.",
+        "SESSION_EXPIRED": "Oturum süresi dolmuş — sonuç gönderilemez.",
+        "TIMED_TIME_REQUIRED": "Zamanlı eğitimde süre (saniye) zorunludur."
+      }
+    }
   }
 }

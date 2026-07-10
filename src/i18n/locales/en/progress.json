@@ -280,5 +280,35 @@
     "confirm": "Are you sure you want to leave the tactical team?",
     "success": "• [SUCCESS]: You have left the team.",
     "failed": "Failed to leave the team."
+  },
+  "groupLib": {
+    "errors": {
+      "generic": "Operation failed.",
+      "codes": {
+        "FIREBASE_NOT_CONFIGURED": "Firebase is not configured",
+        "INSTRUCTOR_SESSION_REQUIRED": "Instructor session required",
+        "GROUP_NAME_REQUIRED": "Group name is required",
+        "GROUP_PASSWORD_TOO_SHORT": "Group password must be at least 4 characters",
+        "SESSION_REQUIRED": "Sign-in required",
+        "GROUP_NOT_FOUND": "Group not found",
+        "GROUP_ID_REQUIRED": "Group ID is required",
+        "GROUP_AND_INSTRUCTOR_REQUIRED": "Group and instructor IDs are required",
+        "DRILL_NAME_REQUIRED": "Drill name is required",
+        "PASS_HITS_EXCEED_AMMO": "Pass hits cannot exceed ammunition count",
+        "PASS_HITS_MIN": "Pass hits must be at least 1",
+        "GROUP_OPERATOR_TEMPLATE_REQUIRED": "Group, operator, and template are required",
+        "HITS_MAX": "Hit count cannot exceed {{max}}",
+        "GROUP_OPERATOR_DRILL_REQUIRED": "Group, operator, and drill selection are required",
+        "TIMED_DURATION_REQUIRED": "Elapsed time is required for timed drills",
+        "GROUP_OPERATOR_REQUIRED": "Group and operator selection are required",
+        "TIMED_CQB_DURATION_REQUIRED": "Clearance time is required for timed CQB drills",
+        "GROUP_OPERATOR_INSTRUCTOR_REQUIRED": "Group, operator, and instructor are required",
+        "GROUP_INSTRUCTOR_NAME_REQUIRED": "Group, instructor, and training name are required.",
+        "TRAINING_OPERATOR_REQUIRED": "Training and operator IDs are required.",
+        "SESSION_NOT_ACTIVE": "This session is no longer active.",
+        "SESSION_EXPIRED": "Session expired — cannot submit result.",
+        "TIMED_TIME_REQUIRED": "Time (seconds) is required for timed training."
+      }
+    }
   }
 }

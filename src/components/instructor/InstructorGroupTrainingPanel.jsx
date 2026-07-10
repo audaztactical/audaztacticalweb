@@ -7,6 +7,7 @@ import {
   subscribeTrainingResults,
 } from '../../lib/firestoreGroupTrainings'
 import { emitFirebaseError } from '../../lib/firebaseErrorBus'
+import { formatGroupErrorDisplay } from '../../lib/progressDisplayText'
 import BentoCard from './cleanTactical/BentoCard'
 import InstructorGroupSelect from './cleanTactical/InstructorGroupSelect'
 import LiveOperatorsTable from './cleanTactical/LiveOperatorsTable'
@@ -208,7 +209,7 @@ export default function InstructorGroupTrainingPanel({ groups, instructorId, loa
         setFormMsg('Oturum açıldı — canlı takip aktif.')
       } catch (err) {
         emitFirebaseError(err)
-        setFormMsg(err instanceof Error ? err.message : 'Eğitim oluşturulamadı.')
+        setFormMsg(formatGroupErrorDisplay(err, 'groupLib.errors.generic'))
       } finally {
         setCreating(false)
       }

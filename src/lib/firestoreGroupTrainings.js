@@ -26,6 +26,8 @@ import { fetchGroupById } from './firestoreGroups'
 import { trainingResultToSyntheticLog } from './instructorGroupAnalytics'
 import { auth, db, isFirebaseConfigured } from './firebase'
 import { safeOnSnapshot, timestampToMs } from './firestoreSnapshot'
+import { throwGroupError } from './groupErrors'
+import i18n from '../i18n'
 
 /** @typedef {'active' | 'completed'} GroupTrainingStatus */
 
@@ -69,10 +71,34 @@ import { safeOnSnapshot, timestampToMs } from './firestoreSnapshot'
 
 function assertDb() {
   if (!isFirebaseConfigured() || !db) {
-    const e = new Error('Firebase yapılandırılmadı')
-    e.code = 'failed-precondition'
-    throw e
+    throwGroupError('FIREBASE_NOT_CONFIGURED', 'failed-precondition')
   }
+}
+
+/**
+ * Recipient UI language from users/{uid}.preferredLanguage — default TR, never throws.
+ * @param {string} uid
+ * @returns {Promise<'tr' | 'en'>}
+ */
+async function fetchPreferredLanguage(uid) {
+  const id = String(uid ?? '').trim()
+  if (!id || !db) return 'tr'
+  try {
+    const snap = await getDoc(doc(db, 'users', id))
+    const pref = snap.data()?.preferredLanguage
+    return pref === 'en' ? 'en' : 'tr'
+  } catch {
+    return 'tr'
+  }
+}
+
+/**
+ * @param {string} key
+ * @param {'tr' | 'en'} lng
+ * @param {Record<string, unknown>} [params]
+ */
+function groupTrainingPushT(key, lng, params) {
+  return i18n.t(`sectors.grup-egitimi.push.${key}`, { ns: 'training', lng, ...(params ?? {}) })
 }
 
 /**
@@ -192,9 +218,7 @@ export async function createGroupTraining(input) {
   const templateId =
     typeof input.templateId === 'string' && input.templateId.trim() ? input.templateId.trim() : null
   if (!groupId || !instructorId || !trainingName) {
-    const e = new Error('Grup, eğitmen ve eğitim adı zorunludur.')
-    e.code = 'failed-precondition'
-    throw e
+    throwGroupError('GROUP_INSTRUCTOR_NAME_REQUIRED', 'failed-precondition')
   }
 
   const allowedGroups = normalizeAllowedGroups(input.allowedGroups)
@@ -231,20 +255,22 @@ export async function createGroupTraining(input) {
 
   const group = await fetchGroupById(groupId)
   const members = Array.isArray(group?.members) ? group.members : []
+  const recipients = members.filter(
+    (memberUid) => typeof memberUid === 'string' && memberUid !== instructorId,
+  )
   await Promise.all(
-    members
-      .filter((memberUid) => typeof memberUid === 'string' && memberUid !== instructorId)
-      .map((memberUid) =>
-        sendNotificationSafe({
-          recipientId: memberUid,
-          senderId: instructorId,
-          type: 'TRAINING',
-          title: 'Yeni grup eğitimi',
-          message: `"${trainingName}" eğitimi aktif — antrenman modülünden katılın.`,
-          link: buildGroupTrainingLink(ref.id),
-          targetId: ref.id,
-        }),
-      ),
+    recipients.map(async (memberUid) => {
+      const lng = await fetchPreferredLanguage(memberUid)
+      return sendNotificationSafe({
+        recipientId: memberUid,
+        senderId: instructorId,
+        type: 'TRAINING',
+        title: groupTrainingPushT('newTrainingTitle', lng),
+        message: groupTrainingPushT('newTrainingBody', lng, { name: trainingName }),
+        link: buildGroupTrainingLink(ref.id),
+        targetId: ref.id,
+      })
+    }),
   )
 
   return { ...payload, createdAt: null, expiresAt }
@@ -563,20 +589,14 @@ export async function submitTrainingResult(input) {
   const training = input.training
   const operatorId = String(input.operatorId ?? '').trim()
   if (!training?.id || !operatorId) {
-    const e = new Error('Eğitim ve operatör kimliği gerekli.')
-    e.code = 'failed-precondition'
-    throw e
+    throwGroupError('TRAINING_OPERATOR_REQUIRED', 'failed-precondition')
   }
 
   if (training.status !== 'active') {
-    const e = new Error('Bu oturum artık aktif değil.')
-    e.code = 'failed-precondition'
-    throw e
+    throwGroupError('SESSION_NOT_ACTIVE', 'failed-precondition')
   }
   if (isTrainingSessionExpired(training)) {
-    const e = new Error('Oturum süresi dolmuş — sonuç gönderilemez.')
-    e.code = 'failed-precondition'
-    throw e
+    throwGroupError('SESSION_EXPIRED', 'failed-precondition')
   }
 
   const totalAmmo = training.totalAmmo
@@ -587,9 +607,7 @@ export async function submitTrainingResult(input) {
   if (training.isTimed) {
     const t = Number(input.time)
     if (!Number.isFinite(t) || t < 0) {
-      const e = new Error('Zamanlı eğitimde süre (saniye) zorunludur.')
-      e.code = 'failed-precondition'
-      throw e
+      throwGroupError('TIMED_TIME_REQUIRED', 'failed-precondition')
     }
     time = t
   }
@@ -626,7 +644,7 @@ export async function submitTrainingResult(input) {
   }
   await setDoc(ref, payload)
 
-  const resultMessage = buildGroupTrainingResultMessage({
+  const resultInput = {
     trainingName: training.trainingName,
     hits,
     totalAmmo,
@@ -634,25 +652,41 @@ export async function submitTrainingResult(input) {
     isTimed: training.isTimed,
     statusResult: assessment.statusResult,
     isPassed: assessment.isPassed,
-  })
+  }
+
+  const instructorId = String(training.instructorId ?? '').trim()
+  const [operatorLng, instructorLng] = await Promise.all([
+    fetchPreferredLanguage(operatorId),
+    instructorId && instructorId !== operatorId
+      ? fetchPreferredLanguage(instructorId)
+      : Promise.resolve(/** @type {'tr' | 'en'} */ ('tr')),
+  ])
+
+  const operatorResultMessage = buildGroupTrainingResultMessage(resultInput, operatorLng)
+  const instructorResultMessage = buildGroupTrainingResultMessage(resultInput, instructorLng)
 
   await Promise.all([
     sendNotificationSafe({
       recipientId: operatorId,
-      senderId: training.instructorId,
+      senderId: instructorId,
       type: 'SYSTEM',
-      title: 'Grup eğitimi sonucunuz',
-      message: resultMessage,
+      title: groupTrainingPushT('yourResultTitle', operatorLng),
+      message: operatorResultMessage,
       link: buildGroupTrainingLink(training.id),
       targetId: training.id,
     }),
-    training.instructorId && training.instructorId !== operatorId
+    instructorId && instructorId !== operatorId
       ? sendNotificationSafe({
-          recipientId: training.instructorId,
+          recipientId: instructorId,
           senderId: operatorId,
           type: 'SYSTEM',
-          title: 'Yeni grup eğitimi sonucu',
-          message: `${operatorName}: ${resultMessage}`,
+          title: groupTrainingPushT('instructorResultTitle', instructorLng),
+          message: groupTrainingPushT('instructorResultMessage', instructorLng, {
+            operatorName:
+              String(input.operatorName ?? '').trim() ||
+              groupTrainingPushT('operatorFallback', instructorLng),
+            resultMessage: instructorResultMessage,
+          }),
           link: buildGroupTrainingLink(training.id),
           targetId: training.id,
         })
