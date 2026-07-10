@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Activity,
   ClipboardCheck,
@@ -21,6 +22,13 @@ import {
   resolveMarchPhaseScore,
   validateTcccEvaluationForm,
 } from '../../../lib/tcccEvaluationPayload'
+import {
+  formatObservedEvalObservationNoteLabel,
+  formatObservedEvalPhaseSubtitle,
+  formatObservedEvalPhaseTitle,
+  formatTcccCasualtyStatusDisplay,
+  formatTcccMarchActionChipLabel,
+} from '../../../lib/instructorDisplayText'
 import PhaseSubCriteriaFields from '../../training/PhaseSubCriteriaFields'
 import InstructorGroupSelect from '../cleanTactical/InstructorGroupSelect'
 import CleanFade from '../cleanTactical/CleanFade'
@@ -56,11 +64,12 @@ const hudSelect =
  * }} props
  */
 function SegmentedScoreBar({ value, onChange, disabled = false }) {
+  const { t } = useTranslation('instructor')
   const selected = disabled ? 0 : Number(value) || 0
 
   return (
-    <div className="space-y-1.5" role="group" aria-label="Skor 1–10">
-      <p className={hudLabel}>Performans skoru</p>
+    <div className="space-y-1.5" role="group" aria-label={t('education.tccc.scoreGroupAria')}>
+      <p className={hudLabel}>{t('education.tccc.performanceScore')}</p>
       <div className="flex gap-1">
         {SEGMENT_VALUES.map((n) => {
           const filled = selected >= n
@@ -70,7 +79,7 @@ function SegmentedScoreBar({ value, onChange, disabled = false }) {
               type="button"
               disabled={disabled}
               aria-pressed={selected === n}
-              aria-label={`Skor ${n}`}
+              aria-label={t('education.tccc.scoreAria', { n })}
               onClick={() => onChange(String(n))}
               className={[
                 'h-8 min-w-0 flex-1 rounded-sm border font-mono text-[11px] font-bold tabular-nums transition',
@@ -97,11 +106,12 @@ function SegmentedScoreBar({ value, onChange, disabled = false }) {
  * }} props
  */
 function MarchActionChips({ phaseId, actions, onToggle }) {
+  const { t } = useTranslation('instructor')
   const chips = TCCC_MARCH_ACTION_CHIPS[phaseId]
 
   return (
     <div className="space-y-1.5">
-      <p className={hudLabel}>Taktik müdahale</p>
+      <p className={hudLabel}>{t('education.tccc.tacticalIntervention')}</p>
       <div className="flex flex-wrap gap-2">
         {chips.map((chip) => {
           const active = Boolean(actions[chip.id])
@@ -118,7 +128,7 @@ function MarchActionChips({ phaseId, actions, onToggle }) {
                   : 'border-zinc-700 bg-zinc-900 text-zinc-400 hover:border-zinc-600',
               ].join(' ')}
             >
-              {chip.label}
+              {formatTcccMarchActionChipLabel(phaseId, chip.id, chip.label)}
             </button>
           )
         })}
@@ -134,12 +144,13 @@ function MarchActionChips({ phaseId, actions, onToggle }) {
  * }} props
  */
 function KillSwitch({ active, onChange }) {
+  const { t } = useTranslation('instructor')
   return (
     <button
       type="button"
       role="switch"
       aria-checked={active}
-      aria-label="Kritik hata K.İ.A"
+      aria-label={t('education.tccc.criticalFailAria')}
       onClick={() => onChange(!active)}
       className={[
         'shrink-0 rounded border px-2.5 py-1.5 font-mono text-[9px] font-bold uppercase tracking-wider transition',
@@ -148,7 +159,7 @@ function KillSwitch({ active, onChange }) {
           : 'border-zinc-700 bg-zinc-900 text-zinc-500 hover:border-zinc-600 hover:text-zinc-400',
       ].join(' ')}
     >
-      {active ? '■ K.İ.A AKTİF' : '○ KRİTİK HATA (K.İ.A)'}
+      {active ? t('education.tccc.criticalFailActive') : t('education.tccc.criticalFailIdle')}
     </button>
   )
 }
@@ -157,6 +168,7 @@ function KillSwitch({ active, onChange }) {
  * @param {{ unstable: boolean }} props
  */
 function CasualtyStatusBar({ unstable }) {
+  const { t } = useTranslation('instructor')
   return (
     <div
       className={[
@@ -167,8 +179,8 @@ function CasualtyStatusBar({ unstable }) {
       ].join(' ')}
       aria-live="polite"
     >
-      <span>Yaralı durumu (casualty status)</span>
-      <span className="tabular-nums">{unstable ? 'EKS / K.İ.A' : 'STABİL'}</span>
+      <span>{t('education.tccc.casualtyLabel')}</span>
+      <span className="tabular-nums">{formatTcccCasualtyStatusDisplay(unstable)}</span>
     </div>
   )
 }
@@ -197,6 +209,7 @@ function TcccMarchHudCard({
   onCriticalFailChange,
   onActionToggle,
 }) {
+  const { t } = useTranslation('instructor')
   const Icon = PHASE_ICONS[phaseId]
   const { criticalFail, subScores, observation, actions } = phase
   const effectiveScore = resolveMarchPhaseScore(phase, phaseId)
@@ -241,6 +254,8 @@ function TcccMarchHudCard({
         criteria={criteria}
         subScores={subScores}
         onSubScoreChange={onSubScoreChange}
+        discipline="tccc"
+        phaseId={phaseId}
         min={1}
         max={10}
         disabled={criticalFail}
@@ -249,7 +264,7 @@ function TcccMarchHudCard({
       />
 
       <p className="font-mono text-[10px] text-zinc-600">
-        Etkin skor:{' '}
+        {t('education.tccc.effectiveScore')}{' '}
         <span className={criticalFail ? 'font-bold text-red-400' : 'font-bold text-lime-400/90'}>
           {effectiveScore}
         </span>
@@ -259,13 +274,13 @@ function TcccMarchHudCard({
       <MarchActionChips phaseId={phaseId} actions={actions} onToggle={onActionToggle} />
 
       <label className="block space-y-1.5" htmlFor={`tccc-note-${phaseId}`}>
-        <span className={hudLabel}>Gözlem notu</span>
+        <span className={hudLabel}>{formatObservedEvalObservationNoteLabel()}</span>
         <textarea
           id={`tccc-note-${phaseId}`}
           className={`${hudInput} min-h-[4.25rem] resize-y`}
           value={observation}
           onChange={(e) => onObservationChange(e.target.value)}
-          placeholder="// MARCH müdahale gözlemi…"
+          placeholder={t('education.tccc.observationPlaceholder')}
         />
       </label>
     </article>
@@ -288,9 +303,11 @@ export default function InstructorTcccSectorPanel({
   activeGroupId,
   onActiveGroupIdChange,
 }) {
+  const { t } = useTranslation('instructor')
   const [form, setForm] = useState(TCCC_EVALUATION_INITIAL_FORM)
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState('')
+  const [msgOk, setMsgOk] = useState(false)
 
   const activeGroup = useMemo(
     () => groups.find((g) => g.groupId === activeGroupId) ?? null,
@@ -371,6 +388,7 @@ export default function InstructorTcccSectorPanel({
   const handleSubmit = async (e) => {
     e.preventDefault()
     setMsg('')
+    setMsgOk(false)
     if (!activeGroupId || !instructorId) return
 
     const validation = validateTcccEvaluationForm(form)
@@ -388,30 +406,34 @@ export default function InstructorTcccSectorPanel({
         operatorName: operatorLabel,
       })
       await createTcccEvaluation(payload)
-      setMsg('TCCC MARCH telemetrisi kaydedildi.')
+      setMsg(t('education.tccc.saved'))
+      setMsgOk(true)
       setForm({ ...TCCC_EVALUATION_INITIAL_FORM, operatorId: form.operatorId })
     } catch (err) {
       emitFirebaseError(err)
-      setMsg(err instanceof Error ? err.message : 'Kayıt başarısız.')
+      setMsgOk(false)
+      setMsg(err instanceof Error ? err.message : t('education.shared.saveFailed'))
     } finally {
       setSaving(false)
     }
   }
 
   if (!activeGroup) {
-    return <p className="py-12 text-center font-mono text-sm text-zinc-500">Aktif grup seçin</p>
+    return (
+      <p className="py-12 text-center font-mono text-sm text-zinc-500">
+        {t('education.shared.selectActiveGroup')}
+      </p>
+    )
   }
-
-  const msgOk = msg.includes('kaydedildi')
 
   return (
     <CleanFade className="space-y-5 font-mono">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800/80 pb-3">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-lime-500/80">
-            [ DİJİTAL TCCC KARTI · TELEMETRİ ]
+            {t('education.tccc.cardBanner')}
           </p>
-          <p className="mt-1 text-xs text-zinc-500">Eğitmen MARCH değerlendirme · HUD giriş</p>
+          <p className="mt-1 text-xs text-zinc-500">{t('education.tccc.cardSubtitle')}</p>
         </div>
         <InstructorGroupSelect
           groups={groups}
@@ -420,6 +442,7 @@ export default function InstructorTcccSectorPanel({
             onActiveGroupIdChange(id)
             setForm(TCCC_EVALUATION_INITIAL_FORM)
             setMsg('')
+            setMsgOk(false)
           }}
           className="max-w-xs"
         />
@@ -433,15 +456,15 @@ export default function InstructorTcccSectorPanel({
             <Stethoscope className="size-4 text-lime-500/70" strokeWidth={1.5} aria-hidden />
             <div>
               <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-200">
-                Müdahale telemetrisi
+                {t('education.tccc.telemetryTitle')}
               </h2>
-              <p className="text-[10px] text-zinc-500">Operatör · zamanlı müdahale · canlı durum</p>
+              <p className="text-[10px] text-zinc-500">{t('education.tccc.telemetrySubtitle')}</p>
             </div>
           </header>
 
           <div className="grid gap-4 lg:grid-cols-2">
             <label className="block space-y-1.5" htmlFor="tccc-operator">
-              <span className={hudLabel}>Değerlendirilecek operatör</span>
+              <span className={hudLabel}>{t('education.shared.evaluateOperator')}</span>
               <select
                 id="tccc-operator"
                 className={hudSelect}
@@ -451,7 +474,7 @@ export default function InstructorTcccSectorPanel({
                 disabled={groupMembers.length === 0}
               >
                 {groupMembers.length === 0 ? (
-                  <option value="">Grupta üye yok</option>
+                  <option value="">{t('education.shared.noGroupMembers')}</option>
                 ) : (
                   groupMembers.map((op) => (
                     <option key={op.uid} value={op.uid}>
@@ -470,11 +493,13 @@ export default function InstructorTcccSectorPanel({
                   checked={form.isTimed}
                   onChange={(e) => handleTimedChange(e.target.checked)}
                 />
-                <span className="text-[11px] uppercase tracking-wide text-zinc-400">Zamanlı oturum</span>
+                <span className="text-[11px] uppercase tracking-wide text-zinc-400">
+                  {t('education.shared.timedSession')}
+                </span>
               </label>
               {form.isTimed ? (
                 <label className="block space-y-1.5" htmlFor="tccc-target-intervention-sec">
-                  <span className={hudLabel}>Müdahale hedef süresi (sn)</span>
+                  <span className={hudLabel}>{t('education.tccc.targetIntervention')}</span>
                   <input
                     id="tccc-target-intervention-sec"
                     type="number"
@@ -494,7 +519,7 @@ export default function InstructorTcccSectorPanel({
           {form.operatorId ? (
             <div className="mt-4 space-y-2">
               <p className={hudLabel}>
-                Hedef · <span className="text-zinc-300">{operatorLabel}</span>
+                {t('education.tccc.targetOperator', { operator: operatorLabel })}
               </p>
               <CasualtyStatusBar unstable={casualtyUnstable} />
             </div>
@@ -507,8 +532,8 @@ export default function InstructorTcccSectorPanel({
               key={meta.id}
               phaseId={meta.id}
               letter={meta.letter}
-              title={meta.title}
-              subtitle={meta.subtitle}
+              title={formatObservedEvalPhaseTitle('tccc', meta.id, meta.title)}
+              subtitle={formatObservedEvalPhaseSubtitle('tccc', meta.id, meta.subtitle)}
               phase={form[meta.id]}
               onSubScoreChange={(criterionId, value) =>
                 patchPhase(meta.id, { subScores: { [criterionId]: value } })
@@ -532,9 +557,9 @@ export default function InstructorTcccSectorPanel({
             ) : (
               <ClipboardCheck className="size-4" aria-hidden />
             )}
-            Telemetriyi kaydet · tccc_evaluations
+            {t('education.tccc.save')}
           </button>
-          <p className={ctHelperText}>MARCH skorları · action chips · K.İ.A · casualtyStatus</p>
+          <p className={ctHelperText}>{t('education.tccc.saveHint')}</p>
         </footer>
       </form>
     </CleanFade>

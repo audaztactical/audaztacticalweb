@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Loader2, Swords } from 'lucide-react'
 import { submitGroupFofActivityLog } from '../../../lib/firestoreGroupTraining'
 import { emitFirebaseError } from '../../../lib/firebaseErrorBus'
@@ -26,6 +27,7 @@ export default function InstructorFofSectorPanel({
   activeGroupId,
   onActiveGroupIdChange,
 }) {
+  const { t } = useTranslation('instructor')
   const [logOperatorId, setLogOperatorId] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -53,7 +55,7 @@ export default function InstructorFofSectorPanel({
 
   const handleSaveEvaluation = async (payload) => {
     if (!activeGroupId || !instructorId) {
-      throw new Error('Grup seçimi gerekli')
+      throw new Error(t('education.fof.groupRequired'))
     }
     setSaving(true)
     try {
@@ -93,7 +95,7 @@ export default function InstructorFofSectorPanel({
           }}
         />
         <label className="block space-y-1.5">
-          <span className={ctLabel}>Operatör</span>
+          <span className={ctLabel}>{t('education.shared.operator')}</span>
           <select
             value={logOperatorId}
             onChange={(e) => setLogOperatorId(e.target.value)}
@@ -101,7 +103,7 @@ export default function InstructorFofSectorPanel({
             disabled={groupMembers.length === 0}
           >
             {groupMembers.length === 0 ? (
-              <option value="">Grupta üye yok</option>
+              <option value="">{t('education.shared.noGroupMembers')}</option>
             ) : (
               groupMembers.map((op) => (
                 <option key={op.uid} value={op.uid}>
@@ -116,13 +118,13 @@ export default function InstructorFofSectorPanel({
       {saving ? (
         <p className="flex items-center gap-2 text-xs text-zinc-500">
           <Loader2 className="size-3.5 animate-spin" aria-hidden />
-          Kayıt aktarılıyor…
+          {t('education.shared.saving')}
         </p>
       ) : null}
 
       <BentoCard
-        title="FoF değerlendirme"
-        description="Senaryo, OODA ve taktik metrikler"
+        title={t('education.fof.panelTitle')}
+        description={t('education.fof.panelSubtitle')}
         icon={Swords}
       >
         <ForceonForceTerminal

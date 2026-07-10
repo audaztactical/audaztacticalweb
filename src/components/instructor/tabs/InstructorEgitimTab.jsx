@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ArrowLeft } from 'lucide-react'
 import { TRAINING_CATEGORIES } from '../../training/trainingCategories'
 import InstructorAtisSectorPanel from '../sectors/InstructorAtisSectorPanel'
@@ -9,24 +10,13 @@ import InstructorTcccSectorPanel from '../sectors/InstructorTcccSectorPanel'
 import InstructorCategoryBento from '../cleanTactical/InstructorCategoryBento'
 import CleanFade from '../cleanTactical/CleanFade'
 import { ctBackBtn, ctHeaderSubtitle, ctHeaderTitle } from '../cleanTactical/tokens'
+import {
+  formatInstructorEducationSectorTitle,
+  formatInstructorEducationSectorSubtitle,
+} from '../../../lib/instructorDisplayText'
 
 /** @typedef {import('../../../lib/firestoreGroups').TacticalGroup} TacticalGroup */
 /** @typedef {import('../../../lib/firestoreInstructor').OperatorProfile} OperatorProfile */
-
-/** @type {Record<string, { title: string; subtitle: string }>} */
-const CATEGORY_HEADERS = {
-  atis: { title: 'Atış', subtitle: 'Drill kütüphanesi ve canlı oturum takibi' },
-  cqb: { title: 'CQB', subtitle: 'Oda topolojisi, giriş ve taktik değerlendirme' },
-  fof: { title: 'Force-on-Force', subtitle: 'Senaryo ve muharebe metrikleri' },
-  vbss: {
-    title: 'VBSS · Gemi operasyonu',
-    subtitle: 'Gemi operasyonu değerlendirme formu — safha bazlı skor ve gözlem',
-  },
-  tccc: {
-    title: 'TCCC · MARCH',
-    subtitle: 'Taktik tıbbi değerlendirme — MARCH safha skoru, kritik hata ve gözlem',
-  },
-}
 
 /**
  * @param {{
@@ -44,6 +34,7 @@ export default function InstructorEgitimTab({
   selectedCategory,
   onSelectedCategoryChange,
 }) {
+  const { t } = useTranslation('instructor')
   const [activeGroupId, setActiveGroupId] = useState('')
 
   const categoryMeta = useMemo(
@@ -59,8 +50,6 @@ export default function InstructorEgitimTab({
     if (selectedCategory === 'egitim') onSelectedCategoryChange(null)
   }, [selectedCategory, onSelectedCategoryChange])
 
-  const header = selectedCategory ? CATEGORY_HEADERS[selectedCategory] : null
-
   const resetGroupContext = (/** @type {string} */ id) => {
     setActiveGroupId(id)
   }
@@ -69,8 +58,8 @@ export default function InstructorEgitimTab({
     return (
       <CleanFade className="space-y-6">
         <header>
-          <h2 className={ctHeaderTitle}>Eğitim sektörleri</h2>
-          <p className={ctHeaderSubtitle}>Kategori seçin — modül ve canlı takip açılır</p>
+          <h2 className={ctHeaderTitle}>{t('education.hub.title')}</h2>
+          <p className={ctHeaderSubtitle}>{t('education.hub.subtitle')}</p>
         </header>
         <InstructorCategoryBento onSelect={onSelectedCategoryChange} />
       </CleanFade>
@@ -81,15 +70,19 @@ export default function InstructorEgitimTab({
     <CleanFade className="space-y-5">
       <button type="button" onClick={() => onSelectedCategoryChange(null)} className={ctBackBtn}>
         <ArrowLeft className="size-3.5" aria-hidden />
-        Sektörlere dön
+        {t('education.hub.backToSectors')}
       </button>
 
       <header className="border-b border-zinc-800 pb-5">
         <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">
           {categoryMeta?.opsCode}
         </p>
-        <h2 className="mt-1 text-xl font-semibold text-zinc-100">{header?.title ?? 'Sektör'}</h2>
-        <p className="mt-1 text-sm text-zinc-500">{header?.subtitle}</p>
+        <h2 className="mt-1 text-xl font-semibold text-zinc-100">
+          {formatInstructorEducationSectorTitle(selectedCategory) || t('education.hub.sectorFallback')}
+        </h2>
+        <p className="mt-1 text-sm text-zinc-500">
+          {formatInstructorEducationSectorSubtitle(selectedCategory)}
+        </p>
       </header>
 
       {selectedCategory === 'atis' ? (
@@ -133,7 +126,7 @@ export default function InstructorEgitimTab({
           onActiveGroupIdChange={setActiveGroupId}
         />
       ) : (
-        <p className="py-12 text-center text-sm text-zinc-500">Sektör modülü bulunamadı.</p>
+        <p className="py-12 text-center text-sm text-zinc-500">{t('education.hub.moduleNotFound')}</p>
       )}
     </CleanFade>
   )

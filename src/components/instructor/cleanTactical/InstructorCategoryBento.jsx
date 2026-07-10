@@ -1,15 +1,9 @@
 import { ChevronRight, Lock } from 'lucide-react'
 import { TRAINING_CATEGORIES } from '../../training/trainingCategories'
-
-/** @type {Record<string, string>} */
-const SECTOR_LABELS = {
-  atis: 'Atış',
-  cqb: 'CQB',
-  fof: 'FoF',
-  vbss: 'Gemi operasyonu',
-  tccc: 'MARCH değerlendirme',
-  'grup-egitimi': 'Grup',
-}
+import {
+  formatInstructorEducationSectorTitle,
+  formatInstructorEducationModuleLabel,
+} from '../../../lib/instructorDisplayText'
 
 const INSTRUCTOR_EXCLUDED_SECTOR_IDS = new Set(['grup-egitimi', 'egitim'])
 
@@ -52,10 +46,10 @@ export default function InstructorCategoryBento({ onSelect, lockedIds = new Set(
               )}
             </div>
             <h3 className="mt-2 break-words text-base font-semibold leading-snug text-zinc-100">
-              {cat.title}
+              {formatInstructorEducationSectorTitle(cat.id)}
             </h3>
             <p className="mt-1 break-words text-xs leading-snug text-zinc-500">
-              {SECTOR_LABELS[cat.id] ?? 'Sektör'} modülü
+              {formatInstructorEducationModuleLabel(cat.id)}
             </p>
           </button>
         )

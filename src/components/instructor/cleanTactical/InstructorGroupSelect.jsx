@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Users } from 'lucide-react'
 import { ctInput, ctLabel } from './tokens'
 
@@ -17,11 +18,13 @@ export default function InstructorGroupSelect({
   id = 'instructor-group-select',
   className = '',
 }) {
+  const { t } = useTranslation('instructor')
+
   return (
     <label className={`block space-y-1.5 ${className}`} htmlFor={id}>
       <span className={`${ctLabel} inline-flex items-center gap-1.5`}>
         <Users className="size-3.5 text-zinc-500" aria-hidden />
-        Aktif grup
+        {t('education.groupSelect.label')}
       </span>
       <select
         id={id}
@@ -31,11 +34,14 @@ export default function InstructorGroupSelect({
         disabled={groups.length === 0}
       >
         {groups.length === 0 ? (
-          <option value="">Önce grup oluşturun</option>
+          <option value="">{t('education.groupSelect.empty')}</option>
         ) : (
           groups.map((g) => (
             <option key={g.groupId} value={g.groupId}>
-              {g.groupName} · {g.members?.length ?? 0} operatör
+              {t('education.groupSelect.option', {
+                name: g.groupName,
+                count: g.members?.length ?? 0,
+              })}
             </option>
           ))
         )}

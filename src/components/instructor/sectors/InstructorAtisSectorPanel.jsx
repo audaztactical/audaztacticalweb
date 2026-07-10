@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Library, Radio } from 'lucide-react'
 import {
   DRILL_SELECT_NEW_DRILL,
@@ -66,12 +67,17 @@ function formatSessionStart(ts) {
   }).format(new Date(ms))
 }
 
-function validateAmmoThresholds(totalAmmo, minPassScore) {
+/**
+ * @param {unknown} totalAmmo
+ * @param {unknown} minPassScore
+ * @param {(key: string) => string} t
+ */
+function validateAmmoThresholds(totalAmmo, minPassScore, t) {
   const ammo = Number(totalAmmo)
   const hits = Number(minPassScore)
-  if (!Number.isFinite(ammo) || ammo < 1) return 'Mühimmat sayısı en az 1 olmalı'
-  if (!Number.isFinite(hits) || hits < 0) return 'Geçer baraj skoru geçersiz'
-  if (hits > ammo) return 'Baraj skoru mühimmat sayısından fazla olamaz'
+  if (!Number.isFinite(ammo) || ammo < 1) return t('education.atis.validation.ammoMin')
+  if (!Number.isFinite(hits) || hits < 0) return t('education.atis.validation.thresholdInvalid')
+  if (hits > ammo) return t('education.atis.validation.thresholdExceedsAmmo')
   return null
 }
 
@@ -91,6 +97,7 @@ export default function InstructorAtisSectorPanel({
   activeGroupId,
   onActiveGroupIdChange,
 }) {
+  const { t } = useTranslation('instructor')
   const [drillTemplates, setDrillTemplates] = useState(/** @type {DrillTemplate[]} */ ([]))
   const [templatesLoading, setTemplatesLoading] = useState(false)
 
@@ -107,6 +114,7 @@ export default function InstructorAtisSectorPanel({
   const [newDrillTimed, setNewDrillTimed] = useState(true)
   const [librarySaving, setLibrarySaving] = useState(false)
   const [libraryMsg, setLibraryMsg] = useState('')
+  const [libraryMsgOk, setLibraryMsgOk] = useState(false)
 
   const [totalAmmo, setTotalAmmo] = useState('10')
   const [minPassScore, setMinPassScore] = useState('6')
@@ -114,6 +122,7 @@ export default function InstructorAtisSectorPanel({
   const [targetTimeSec, setTargetTimeSec] = useState('12')
   const [startSaving, setStartSaving] = useState(false)
   const [startMsg, setStartMsg] = useState('')
+  const [startMsgOk, setStartMsgOk] = useState(false)
 
   const [activeTrainings, setActiveTrainings] = useState(/** @type {GroupTraining[]} */ ([]))
   const [activeTrainingsLoading, setActiveTrainingsLoading] = useState(false)
@@ -126,13 +135,13 @@ export default function InstructorAtisSectorPanel({
   const [sectorTab, setSectorTab] = useState(/** @type {'active' | 'history'} */ ('active'))
 
   const thresholdError = useMemo(
-    () => validateAmmoThresholds(totalAmmo, minPassScore),
-    [totalAmmo, minPassScore],
+    () => validateAmmoThresholds(totalAmmo, minPassScore, t),
+    [totalAmmo, minPassScore, t],
   )
 
   const newDrillThresholdError = useMemo(
-    () => validateAmmoThresholds(newDrillAmmo, newDrillBaraj),
-    [newDrillAmmo, newDrillBaraj],
+    () => validateAmmoThresholds(newDrillAmmo, newDrillBaraj, t),
+    [newDrillAmmo, newDrillBaraj, t],
   )
 
   const activeGroup = useMemo(
@@ -171,17 +180,18 @@ export default function InstructorAtisSectorPanel({
   }, [drillTemplates, resolvedLevel])
 
   const selectedDrill = useMemo(
-    () => drillsForLevel.find((t) => t.id === drillSelect) ?? null,
+    () => drillsForLevel.find((d) => d.id === drillSelect) ?? null,
     [drillsForLevel, drillSelect],
   )
 
+  const freeSuffix = t('education.atis.freeSuffix')
   const drillOptions = useMemo(
     () =>
-      drillsForLevel.map((t) => ({
-        id: t.id,
-        label: `${t.name}${t.isTimedDefault ? '' : ' · serbest'}`,
+      drillsForLevel.map((d) => ({
+        id: d.id,
+        label: `${d.name}${d.isTimedDefault ? '' : freeSuffix}`,
       })),
-    [drillsForLevel],
+    [drillsForLevel, freeSuffix],
   )
 
   useEffect(() => {
@@ -267,7 +277,7 @@ export default function InstructorAtisSectorPanel({
 
   useEffect(() => {
     if (!trackedTrainingId) return
-    if (!activeTrainings.some((t) => t.id === trackedTrainingId)) {
+    if (!activeTrainings.some((tr) => tr.id === trackedTrainingId)) {
       setTrackedTrainingId('')
     }
   }, [activeTrainings, trackedTrainingId])
@@ -362,12 +372,15 @@ export default function InstructorAtisSectorPanel({
 
   const handleSaveToLibrary = async () => {
     setLibraryMsg('')
+    setLibraryMsgOk(false)
     if (!instructorId || !resolvedLevel) {
-      setLibraryMsg('Önce hedef seviye seçin veya oluşturun.')
+      setLibraryMsg(t('education.atis.validation.selectLevel'))
+      setLibraryMsgOk(false)
       return
     }
     if (newDrillThresholdError) {
       setLibraryMsg(newDrillThresholdError)
+      setLibraryMsgOk(false)
       return
     }
 
@@ -384,10 +397,12 @@ export default function InstructorAtisSectorPanel({
       setDrillSelect(created.id)
       setShowNewDrillForm(false)
       setNewDrillName('')
-      setLibraryMsg('Şablon kütüphaneye kaydedildi')
+      setLibraryMsg(t('education.atis.messages.templateSaved'))
+      setLibraryMsgOk(true)
     } catch (err) {
       emitFirebaseError(err)
-      setLibraryMsg(err instanceof Error ? err.message : 'Kayıt başarısız')
+      setLibraryMsg(err instanceof Error ? err.message : t('education.shared.saveFailed'))
+      setLibraryMsgOk(false)
     } finally {
       setLibrarySaving(false)
     }
@@ -395,17 +410,21 @@ export default function InstructorAtisSectorPanel({
 
   const handleStartTraining = async () => {
     setStartMsg('')
+    setStartMsgOk(false)
     if (!activeGroupId || !instructorId) return
     if (!resolvedLevel) {
-      setStartMsg('Hedef seviye seçin.')
+      setStartMsg(t('education.atis.validation.levelRequired'))
+      setStartMsgOk(false)
       return
     }
     if (!selectedDrill && drillSelect !== DRILL_SELECT_NEW_DRILL) {
-      setStartMsg('Drill seçin veya yeni drill ekleyin.')
+      setStartMsg(t('education.atis.validation.drillRequired'))
+      setStartMsgOk(false)
       return
     }
     if (thresholdError) {
       setStartMsg(thresholdError)
+      setStartMsgOk(false)
       return
     }
 
@@ -413,14 +432,16 @@ export default function InstructorAtisSectorPanel({
     if (isTimed) {
       parsedTargetTime = Number(targetTimeSec)
       if (!Number.isFinite(parsedTargetTime) || parsedTargetTime <= 0) {
-        setStartMsg('Hedef süre geçersiz.')
+        setStartMsg(t('education.atis.validation.targetTimeInvalid'))
+        setStartMsgOk(false)
         return
       }
     }
 
     const trainingName = selectedDrill?.name ?? newDrillName.trim()
     if (!trainingName) {
-      setStartMsg('Eğitim / drill adı gerekli.')
+      setStartMsg(t('education.atis.validation.drillNameRequired'))
+      setStartMsgOk(false)
       return
     }
 
@@ -441,10 +462,12 @@ export default function InstructorAtisSectorPanel({
         sessionDurationMinutes: 0,
       })
       setTrackedTrainingId(created.id)
-      setStartMsg('Oturum aktif — canlı takip başladı')
+      setStartMsg(t('education.atis.messages.sessionStarted'))
+      setStartMsgOk(true)
     } catch (err) {
       emitFirebaseError(err)
-      setStartMsg(err instanceof Error ? err.message : 'Başlatma başarısız')
+      setStartMsg(err instanceof Error ? err.message : t('education.atis.messages.startFailed'))
+      setStartMsgOk(false)
     } finally {
       setStartSaving(false)
     }
@@ -457,7 +480,8 @@ export default function InstructorAtisSectorPanel({
     setClosingTrainingId(id)
     try {
       await completeGroupTraining(id)
-      setStartMsg('Oturum tamamlandı')
+      setStartMsg(t('education.atis.messages.sessionClosed'))
+      setStartMsgOk(true)
       if (trackedTrainingId === id) {
         setTrackedTrainingId('')
         setResults([])
@@ -467,41 +491,45 @@ export default function InstructorAtisSectorPanel({
     } finally {
       setClosingTrainingId('')
     }
-  }, [trackedTrainingId])
+  }, [trackedTrainingId, t])
 
   const livePanelTitle = trackedTraining
     ? `${trackedTraining.trainingName} · ${formatSessionStart(trackedTraining.createdAt)}`
-    : 'Canlı oturum'
+    : t('education.atis.liveSession')
 
   const livePanelDescription = trackedTraining
-    ? `${trackedTraining.level} · baraj ${trackedTraining.minPassScore}${
-        trackedTraining.isTimed && trackedTraining.targetTimeSec != null
-          ? ` · hedef ${trackedTraining.targetTimeSec}s`
-          : ''
-      } · ${participantCounts[trackedTraining.id] ?? 0} katılımcı`
-    : 'Takip etmek için aktif oturumlardan birini seçin'
+    ? t('education.atis.liveMeta', {
+        level: trackedTraining.level,
+        minPassScore: trackedTraining.minPassScore,
+        sec:
+          trackedTraining.isTimed && trackedTraining.targetTimeSec != null
+            ? trackedTraining.targetTimeSec
+            : '—',
+        count: participantCounts[trackedTraining.id] ?? 0,
+      })
+    : t('education.atis.pickSessionHint')
 
   const newDrillForm = showNewDrillForm ? (
     <div className="space-y-3 rounded border border-amber-500/20 bg-black/35 p-3">
       <p className="font-mono-technical text-[10px] uppercase text-amber-400/90">
-        Yeni drill — {resolvedLevel || '—'}
+        {t('education.atis.newDrillTitle', { level: resolvedLevel || '—' })}
       </p>
       <div className="space-y-1.5">
         <label className="block space-y-1.5" htmlFor="instructor-new-drill">
-          <span className={labelClass}>Drill adı</span>
+          <span className={labelClass}>{t('education.atis.drillName')}</span>
           <input
             id="instructor-new-drill"
             className={inputClass}
             value={newDrillName}
             onChange={(e) => setNewDrillName(e.target.value)}
-            placeholder="Örn: VTAC Barricade Drill"
+            placeholder={t('education.atis.drillNamePlaceholder')}
           />
         </label>
-        <p className={icHelperText}>Standart formatta ve açık bir drill adı giriniz.</p>
+        <p className={icHelperText}>{t('education.atis.drillNameHint')}</p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="block space-y-1.5">
-          <span className={labelClass}>Mühimmat</span>
+          <span className={labelClass}>{t('education.atis.ammo')}</span>
           <input
             type="number"
             min={1}
@@ -511,7 +539,7 @@ export default function InstructorAtisSectorPanel({
           />
         </label>
         <label className="block space-y-1.5">
-          <span className={labelClass}>Baraj</span>
+          <span className={labelClass}>{t('education.atis.threshold')}</span>
           <input
             type="number"
             min={0}
@@ -528,7 +556,7 @@ export default function InstructorAtisSectorPanel({
           checked={newDrillTimed}
           onChange={(e) => setNewDrillTimed(e.target.checked)}
         />
-        Zamanlı
+        {t('education.atis.timed')}
       </label>
       {newDrillThresholdError ? <p className={icMsgErr}>{newDrillThresholdError}</p> : null}
       <button
@@ -537,17 +565,17 @@ export default function InstructorAtisSectorPanel({
         onClick={handleSaveToLibrary}
         className={ctBtnSecondary}
       >
-        Kütüphaneye kaydet
+        {t('education.atis.saveToLibrary')}
       </button>
       {libraryMsg ? (
-        <p className={libraryMsg.includes('kaydedildi') ? icMsgOk : icMsgErr}>{libraryMsg}</p>
+        <p className={libraryMsgOk ? icMsgOk : icMsgErr}>{libraryMsg}</p>
       ) : null}
     </div>
   ) : null
 
   if (!activeGroup) {
     return (
-      <p className="py-12 text-center text-sm text-zinc-500">Aktif grup seçin</p>
+      <p className="py-12 text-center text-sm text-zinc-500">{t('education.shared.selectActiveGroup')}</p>
     )
   }
 
@@ -577,10 +605,10 @@ export default function InstructorAtisSectorPanel({
       <div
         className="flex w-full gap-2 rounded border border-amber-900/25 bg-black/40 p-1"
         role="tablist"
-        aria-label="Atış sektörü görünümü"
+        aria-label={t('education.atis.tabsAria')}
       >
-        {renderSectorTab('active', 'Aktif oturumlar')}
-        {renderSectorTab('history', 'Oturum geçmişi')}
+        {renderSectorTab('active', t('education.atis.tabActive'))}
+        {renderSectorTab('history', t('education.atis.tabHistory'))}
       </div>
 
       {sectorTab === 'active' ? (
@@ -609,8 +637,8 @@ export default function InstructorAtisSectorPanel({
           <div className={ctBentoGrid}>
         <div className={ctBentoSpan7}>
           <InstructorCommandPanel
-            title="Drill kütüphanesi"
-            description="Seviye ve drill seçin, ardından oturumu başlatın"
+            title={t('education.atis.libraryTitle')}
+            description={t('education.atis.libraryHint')}
             icon={Library}
             sector="atis"
             corners="top"
@@ -648,6 +676,7 @@ export default function InstructorAtisSectorPanel({
               onStart={handleStartTraining}
               starting={startSaving}
               message={startMsg}
+              messageOk={startMsgOk}
               selectedDrillName={selectedDrill?.name}
               levelLabel={resolvedLevel}
               showNewDrillSlot={newDrillForm}
@@ -670,7 +699,7 @@ export default function InstructorAtisSectorPanel({
                   disabled={closingTrainingId === trackedTrainingId}
                   className={icBtnGhost}
                 >
-                  Oturumu kapat
+                  {t('education.atis.closeSession')}
                 </button>
               ) : null
             }
@@ -686,7 +715,7 @@ export default function InstructorAtisSectorPanel({
               minPassScore={trackedTraining?.minPassScore ?? 0}
               isTimed={Boolean(trackedTraining?.isTimed)}
               targetTimeSec={trackedTraining?.targetTimeSec ?? null}
-              idleHint="Aktif oturumlardan Takip et ile canlı akışa geçin"
+              idleHint={t('education.atis.idleHint')}
             />
           </InstructorCommandPanel>
         </div>

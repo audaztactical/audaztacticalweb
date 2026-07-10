@@ -1,5 +1,6 @@
 import { Loader2, Radio } from 'lucide-react'
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import CleanFade from './CleanFade'
 import {
   computeGroupTrainingAssessment,
@@ -67,16 +68,20 @@ export default function LiveOperatorsTable({
   loading = false,
   idle = false,
   live = false,
-  idleMessage = 'Canlı oturum başlatıldığında sonuçlar burada görünür.',
-  idleHint = 'Drill seçin ve oturumu başlatın',
+  idleMessage,
+  idleHint,
   totalAmmo = 0,
   minPassScore = 0,
   isTimed = false,
   targetTimeSec = null,
-  hitsLabel = 'Vuruş',
+  hitsLabel,
   chronological = false,
 }) {
+  const { t } = useTranslation('instructor')
   const isLive = live || (!idle && !loading)
+  const resolvedIdleMessage = idleMessage ?? t('education.atis.live.idleBody')
+  const resolvedIdleHint = idleHint ?? t('education.atis.live.idleHint')
+  const resolvedHitsLabel = hitsLabel ?? t('education.shared.hits')
 
   const displayRows = useMemo(() => {
     if (!chronological) return rows
@@ -106,7 +111,7 @@ export default function LiveOperatorsTable({
       {isLive ? (
         <div className={icLiveStrip} role="status" aria-live="polite">
           <span className={icLiveDot} aria-hidden />
-          Canlı oturum · operatör sonuçları akıyor
+          {t('education.atis.live.streaming')}
         </div>
       ) : null}
 
@@ -114,10 +119,10 @@ export default function LiveOperatorsTable({
         <table className={icTable}>
           <thead>
             <tr>
-              <th className={icTh}>Operatör</th>
-              <th className={icTh}>{hitsLabel}</th>
-              <th className={icTh}>Süre</th>
-              <th className={icTh}>Durum</th>
+              <th className={icTh}>{t('education.shared.operator')}</th>
+              <th className={icTh}>{resolvedHitsLabel}</th>
+              <th className={icTh}>{t('education.shared.duration')}</th>
+              <th className={icTh}>{t('education.shared.status')}</th>
             </tr>
           </thead>
           <tbody>
@@ -126,23 +131,23 @@ export default function LiveOperatorsTable({
                 <td colSpan={4} className={`${icTd} p-0`}>
                   <div className={icEmptyCell}>
                     <Loader2 className="mx-auto size-5 animate-spin text-accent" aria-hidden />
-                    <p className={`${icEmptyTitle} mt-3`}>Sonuçlar senkronize ediliyor</p>
-                    <p className={icEmptyDesc}>Canlı feed bağlanıyor…</p>
+                    <p className={`${icEmptyTitle} mt-3`}>{t('education.atis.live.syncing')}</p>
+                    <p className={icEmptyDesc}>{t('education.atis.live.connecting')}</p>
                   </div>
                 </td>
               </tr>
             ) : idle ? (
               <tr>
                 <td colSpan={4} className={`${icTd} p-0`}>
-                  <EmptyStateMessage title={idleMessage} description={idleHint} />
+                  <EmptyStateMessage title={resolvedIdleMessage} description={resolvedIdleHint} />
                 </td>
               </tr>
             ) : displayRows.length === 0 ? (
               <tr>
                 <td colSpan={4} className={`${icTd} p-0`}>
                   <EmptyStateMessage
-                    title="Operatör girişi bekleniyor"
-                    description="Grup üyeleri antrenman modülünden sonuç aktarabilir"
+                    title={t('education.atis.live.waiting')}
+                    description={t('education.atis.live.waitingHint')}
                   />
                 </td>
               </tr>
@@ -175,7 +180,7 @@ export default function LiveOperatorsTable({
                       {row.time != null ? `${row.time}s` : '—'}
                       {isTimed && targetTimeSec != null && targetTimeSec > 0 ? (
                         <span className="block text-[9px] uppercase text-app-text/40">
-                          hedef {targetTimeSec}s
+                          {t('education.atis.live.targetSec', { sec: targetTimeSec })}
                         </span>
                       ) : null}
                     </td>

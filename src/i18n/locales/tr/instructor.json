@@ -146,9 +146,400 @@
     }
   },
   "groups": {
-    "stubNote": "Grup yönetimi arayüzü — bu turda etiketler yerelleştirildi; sektör metinleri Eğitim sekmesinde devam eder."
+    "createTitle": "YENİ GRUP OLUŞTUR",
+    "nameLabel": "Grup Adı",
+    "namePlaceholder": "ÖRN: MESKÛN MAHAL A TİMİ",
+    "passwordLabel": "Katılım Şifresi",
+    "passwordPlaceholder": "ÖRN: ALPHA99",
+    "createButton": "OLUŞTUR",
+    "creating": "…",
+    "createdSuccess": "\"{{name}}\" oluşturuldu",
+    "createFailed": "Oluşturulamadı",
+    "listTitle": "GRUP LİSTESİ · {{count}} KAYIT",
+    "loading": "Yükleniyor…",
+    "empty": "HENÜZ GRUP YOK",
+    "memberCount": "{{count}} ÜYE",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "edit": "Düzenle",
+    "delete": "Sil",
+    "passwordVisibilityAria": "Şifre görünürlüğü",
+    "editAria": "Düzenle",
+    "deleteAria": "Sil",
+    "deleteConfirm": "\"{{name}}\" grubunu silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
   },
-  "training": {
-    "stubNote": "Canlı eğitim sektörleri — ortak disiplin etiketleri uygulandı; derin formlar mevcut training namespace'ini kullanır."
+  "education": {
+    "hub": {
+      "title": "Eğitim sektörleri",
+      "subtitle": "Kategori seçin — modül ve canlı takip açılır",
+      "backToSectors": "Sektörlere dön",
+      "sectorFallback": "Sektör",
+      "moduleNotFound": "Sektör modülü bulunamadı.",
+      "moduleSuffix": "{{label}} modülü"
+    },
+    "sectors": {
+      "atis": {
+        "title": "ATIŞ",
+        "subtitle": "Drill kütüphanesi ve canlı oturum takibi"
+      },
+      "cqb": {
+        "title": "CQB",
+        "subtitle": "Oda topolojisi, giriş ve taktik değerlendirme"
+      },
+      "fof": {
+        "title": "FOF",
+        "subtitle": "Senaryo ve muharebe metrikleri"
+      },
+      "vbss": {
+        "title": "VBSS",
+        "subtitle": "Gemi operasyonu değerlendirme formu — safha bazlı skor ve gözlem"
+      },
+      "tccc": {
+        "title": "TCCC",
+        "subtitle": "Taktik tıbbi değerlendirme — MARCH safha skoru, kritik hata ve gözlem"
+      }
+    },
+    "groupSelect": {
+      "label": "Aktif grup",
+      "empty": "Önce grup oluşturun",
+      "option": "{{name}} · {{count}} operatör"
+    },
+    "shared": {
+      "selectActiveGroup": "Aktif grup seçin",
+      "noGroupMembers": "Grupta üye yok",
+      "noGroupMembersUpper": "GRUPTA ÜYE YOK",
+      "evaluateOperator": "Değerlendirilecek operatör",
+      "operator": "Operatör",
+      "instructor": "Eğitmen",
+      "timedSession": "Zamanlı oturum",
+      "observationNote": "Gözlem notu",
+      "observationPlaceholder": "Kısa taktik gözlem…",
+      "saveFailed": "Kayıt başarısız",
+      "saving": "Aktarılıyor…",
+      "hits": "Vuruş",
+      "duration": "Süre",
+      "status": "Durum",
+      "drill": "Drill",
+      "level": "Seviye",
+      "participant": "Katılımcı",
+      "exampleShort": "örn. {{value}}",
+      "free": "SERBEST"
+    },
+    "atis": {
+      "tabsAria": "Atış sektörü görünümü",
+      "tabActive": "Aktif oturumlar",
+      "tabHistory": "Oturum geçmişi",
+      "libraryTitle": "Drill kütüphanesi",
+      "libraryHint": "Seviye ve drill seçin, ardından oturumu başlatın",
+      "liveSession": "Canlı oturum",
+      "liveMeta": "{{level}} · baraj {{minPassScore}} · hedef {{sec}}s · {{count}} katılımcı",
+      "pickSessionHint": "Takip etmek için aktif oturumlardan birini seçin",
+      "closeSession": "Oturumu kapat",
+      "idleHint": "Aktif oturumlardan Takip et ile canlı akışa geçin",
+      "newDrillTitle": "Yeni drill — {{level}}",
+      "drillName": "Drill adı",
+      "drillNamePlaceholder": "Örn: VTAC Barricade Drill",
+      "drillNameHint": "Standart formatta ve açık bir drill adı giriniz.",
+      "ammo": "Mühimmat",
+      "threshold": "Baraj",
+      "timed": "Zamanlı",
+      "saveToLibrary": "Kütüphaneye kaydet",
+      "freeSuffix": " · serbest",
+      "validation": {
+        "ammoMin": "Mühimmat sayısı en az 1 olmalı",
+        "thresholdInvalid": "Geçer baraj skoru geçersiz",
+        "thresholdExceedsAmmo": "Baraj skoru mühimmat sayısından fazla olamaz",
+        "selectLevel": "Önce hedef seviye seçin veya oluşturun.",
+        "levelRequired": "Hedef seviye seçin.",
+        "drillRequired": "Drill seçin veya yeni drill ekleyin.",
+        "targetTimeInvalid": "Hedef süre geçersiz.",
+        "drillNameRequired": "Eğitim / drill adı gerekli."
+      },
+      "messages": {
+        "templateSaved": "Şablon kütüphaneye kaydedildi",
+        "sessionStarted": "Oturum aktif — canlı takip başladı",
+        "startFailed": "Başlatma başarısız",
+        "sessionClosed": "Oturum tamamlandı"
+      },
+      "quick": {
+        "level": "Seviye",
+        "selectLevel": "Seviye seçin",
+        "newLevel": "+ Yeni seviye",
+        "newLevelName": "Yeni seviye adı",
+        "newLevelPlaceholder": "Örn: Seviye 4 (İleri Operasyonlar)",
+        "newLevelHint": "Liste düzeninin bozulmaması için lütfen 'Seviye X (Açıklama)' formatında giriniz.",
+        "drill": "Drill",
+        "selectDrill": "Drill seçin",
+        "newDrill": "+ Yeni drill",
+        "libraryLoading": "Kütüphane yükleniyor…",
+        "ammo": "Mühimmat",
+        "passThreshold": "Geçer baraj",
+        "timedSession": "Zamanlı oturum",
+        "targetDuration": "Hedef Süre (sn)",
+        "targetPlaceholder": "örn. 12",
+        "startSession": "Oturumu başlat",
+        "twoStepHint": "Drill seç → Başlat (2 adım)"
+      },
+      "sessions": {
+        "title": "Aktif oturumlar",
+        "liveCount": "{{count}} CANLI",
+        "syncing": "Oturumlar senkronize ediliyor",
+        "empty": "Aktif oturum yok",
+        "emptyHint": "Drill seçip yeni oturum başlattığınızda burada listelenir",
+        "colDrill": "Drill",
+        "colLevel": "Seviye",
+        "colStart": "Başlangıç",
+        "colParticipant": "Katılımcı",
+        "colCommand": "Komut",
+        "followBadge": "TAKİP",
+        "follow": "Takip et",
+        "close": "Kapat"
+      },
+      "history": {
+        "title": "Oturum geçmişi",
+        "closedCount": "{{count}} KAPALI",
+        "drillName": "Drill adı",
+        "filterPlaceholder": "Filtrele…",
+        "startDate": "Başlangıç tarihi",
+        "endDate": "Bitiş tarihi",
+        "clearFilter": "Filtreyi temizle",
+        "loading": "Geçmiş oturumlar yükleniyor",
+        "emptyFiltered": "Filtreye uyan oturum yok",
+        "empty": "Tamamlanmış oturum yok",
+        "emptyFilteredHint": "Farklı drill veya tarih aralığı deneyin",
+        "emptyHint": "Kapatılan RNG-01 oturumları burada arşivlenir",
+        "opened": "Açılış",
+        "closed": "Kapanış",
+        "participant": "Katılımcı",
+        "avgSuccess": "Başarı ort.",
+        "instructor": "Eğitmen",
+        "ammoThreshold": "Mühimmat / baraj",
+        "targetSec": "Hedef {{sec}}s",
+        "freeDuration": "Serbest süre",
+        "scoreRange": "Skor aralığı",
+        "avgPercent": "Ort. %{{percent}}",
+        "groupInstructor": "Grup · eğitmen",
+        "noResults": "Bu oturumda kayıtlı katılımcı sonucu yok",
+        "zeroSessions": "0 oturum",
+        "rangeSessions": "{{total}} oturumdan {{start}}–{{end}}",
+        "page": "Sayfa {{page}}/{{totalPages}}",
+        "prev": "Önceki",
+        "next": "Sonraki",
+        "colOperator": "Operatör",
+        "colHits": "Vuruş",
+        "colDuration": "Süre",
+        "colStatus": "Durum"
+      },
+      "live": {
+        "idleBody": "Canlı oturum başlatıldığında sonuçlar burada görünür.",
+        "idleHint": "Drill seçin ve oturumu başlatın",
+        "streaming": "Canlı oturum · operatör sonuçları akıyor",
+        "syncing": "Sonuçlar senkronize ediliyor",
+        "connecting": "Canlı feed bağlanıyor…",
+        "waiting": "Operatör girişi bekleniyor",
+        "waitingHint": "Grup üyeleri antrenman modülünden sonuç aktarabilir",
+        "targetSec": "hedef {{sec}}s"
+      }
+    },
+    "cqb": {
+      "setupTitle": "Operasyon kurulumu",
+      "infractionsTitle": "Taktik hatalar · analiz",
+      "roomTopology": "Oda topolojisi",
+      "entryMethod": "Giriş metodu",
+      "breachingType": "Kırma tipi",
+      "doorState": "Kapı durumu",
+      "operatorSelect": "Takım / Operatör Seçimi",
+      "timedActive": "[ SÜRELİ DEĞERLENDİRME AKTİF ]",
+      "threatCount": "Tehdit sayısı",
+      "neutralizedCount": "Etkisiz alınan",
+      "clearanceTime": "Temizlik süresi (sn)",
+      "maxAllowed": "Maksimum izin süresi (sn)",
+      "instructorNote": "Eğitmen notu (opsiyonel) — etiketler, gözlem, #KılıftanÇekiş vb.",
+      "notePlaceholder": "Operasyon gözlemi, etiket notları…",
+      "submit": "Kaydı işle",
+      "selectPlaceholder": "Seçin",
+      "livePass": "[ ✓ {{status}} · {{elim}}/{{threat}} TEHDİT ]",
+      "liveFail": "[ ✕ {{status}} · {{elim}}/{{threat}} TEHDİT{{infractions}} ]",
+      "liveInfractions": " · {{count}} İHLAL",
+      "saved": "{{status}} · CQB KAYDI İŞLENDİ",
+      "validation": {
+        "groupOperator": "GRUP VE OPERATÖR SEÇİMİ GEREKLİ",
+        "configRequired": "TÜM OPERASYON KONFİGÜRASYON ALANLARI ZORUNLU",
+        "threatInvalid": "TEHDİT SAYISI GEÇERSİZ",
+        "neutralizedRange": "ETKİSİZ ALINAN 0–{{threats}} ARALIĞINDA OLMALI",
+        "clearanceInvalid": "TEMİZLİK SÜRESİ GEÇERSİZ",
+        "maxInvalid": "MAKSİMUM SÜRE SINIRI GEÇERSİZ"
+      },
+      "options": {
+        "roomTopology": {
+          "single_room": "Single Room",
+          "l_room": "L-Room",
+          "t_room": "T-Room",
+          "corridor": "Koridor"
+        },
+        "entryMethod": {
+          "cross_entry": "Cross Entry",
+          "hook_entry": "Hook Entry",
+          "high_low": "High-Low Technique",
+          "dynamic_entry": "Dynamic Entry"
+        },
+        "breachingType": {
+          "mechanical": "Mekanik",
+          "ballistic": "Balistik",
+          "explosive": "Patlayıcı",
+          "stealth": "Stealth/Silent"
+        },
+        "doorState": {
+          "open": "Açık",
+          "locked": "Kapalı/Kilitli",
+          "barricaded": "Barikatlı"
+        }
+      },
+      "phases": {
+        "pre_breach": {
+          "title": "GİRİŞ ÖNCESİ",
+          "subtitle": "Pre-Breach Discipline"
+        },
+        "entry_phase": {
+          "title": "GİRİŞ FAZI / FATAL FUNNEL",
+          "subtitle": "Entry Phase"
+        },
+        "room_geometry": {
+          "title": "ODA GEOMETRİSİ",
+          "subtitle": "Room Geometry"
+        },
+        "weapon_comm": {
+          "title": "SİLAH VE İLETİŞİM",
+          "subtitle": "Weapon & Communication"
+        }
+      },
+      "infractions": {
+        "breachingGecikmesi": "Breaching gecikmesi",
+        "koldaAcikVerme": "Kolda açık verme",
+        "sesDisipliniIhlali": "Ses disiplini ihlali",
+        "yetersizDilimleme": "Yetersiz dilimleme",
+        "olumHunisindeCakilma": "Ölüm hunisinde çakılma",
+        "derineFazlaKacma": "Derine fazla kaçma",
+        "korlemesineGiris": "Körlemesine giriş",
+        "yavasKirma": "Yavaş kırma / slow breach",
+        "gevsekKoseKontrolu": "Gevşek köşe kontrolü",
+        "sektorBoslugu": "Sektör boşluğu",
+        "tehditOnceligiHatasi": "Tehdit önceliği hatası",
+        "operatorCakismasi": "Operatör çakışması",
+        "namluIhlali": "Namlu ihlali / dosta doğrultma",
+        "tunelVizyonu": "Tünel vizyonu",
+        "zayifIletisim": "Zayıf telsiz / sözlü iletişim",
+        "taktikSarjorHatasi": "Taktik şarjör değişim hatası"
+      }
+    },
+    "fof": {
+      "panelTitle": "FoF değerlendirme",
+      "panelSubtitle": "Senaryo, OODA ve taktik metrikler",
+      "groupRequired": "Grup seçimi gerekli",
+      "emptyTitle": "Lütfen operatör seçiniz",
+      "emptyHint": "FoF değerlendirmesi için grup üyesi seçilmelidir",
+      "liveBanner": "[ FORCE-ON-FORCE · CANLI DEĞERLENDİRME ]",
+      "uidPrefix": "UID · {{uid}}…",
+      "hudScore": "HUD SKOR",
+      "toneOperational": "OPERASYONEL",
+      "toneDevelop": "GELİŞTİRİLEBİLİR",
+      "toneFail": "FAIL / KRİTİK",
+      "instantFail": "ANINDA FAIL · {{reason}}",
+      "scenarioType": "Senaryo tipi",
+      "metricsLegend": "Performans metrikleri · 1–5 puan",
+      "hitStatusLegend": "Vuruluş / isabet alımı",
+      "penaltiesLegend": "Kritik cezalar",
+      "instantFailSuffix": "· INSTANT FAIL",
+      "aarLabel": "AAR · After Action Review notu",
+      "aarPlaceholder": "Saha gözlemleri, öğrenilen dersler, iyileştirme noktaları…",
+      "orsHint": "ORS · 100 baz · metrik ağırlıklı · kritik ihlal = 0",
+      "reset": "Sıfırla",
+      "logButton": "Değerlendirmeyi logla",
+      "logging": "AKTARILIYOR…",
+      "logged": "DEĞERLENDİRME LOGLANDI",
+      "metrics": {
+        "oodaCycle": {
+          "label": "OODA döngüsü / karar mekanizması",
+          "hint": "Tehdidi algılama ve aksiyon hızı"
+        },
+        "tacticalCommunication": {
+          "label": "Taktik iletişim / ekip entegrasyonu",
+          "hint": "Baskı altında telsiz / sesli koordinasyon"
+        },
+        "coverManagement": {
+          "label": "Siper ve hat yönetimi",
+          "hint": "Hareket ve şarjör değişiminde maruziyet"
+        }
+      },
+      "scenarios": {
+        "CQB Sızma": "CQB sızma",
+        "Rehine Kurtarma": "Rehine kurtarma",
+        "Milsim Temas": "Milsim temas"
+      },
+      "hitStatus": {
+        "TEMİZ": {
+          "label": "TEMİZ",
+          "hint": "Hiç vurulmadı"
+        },
+        "YARALI": {
+          "label": "YARALI",
+          "hint": "Ekstremite isabeti — TCCC gerekir"
+        },
+        "KRİTİK": {
+          "label": "KRİTİK",
+          "hint": "Gövde / kafa isabeti — görev dışı"
+        }
+      },
+      "penalties": {
+        "muzzleAwarenessViolation": {
+          "label": "Muzzle Awareness Violation",
+          "sublabel": "Namlu disiplini / silahı dost unsura doğrultma"
+        },
+        "collateralDamage": {
+          "label": "Collateral Damage",
+          "sublabel": "Sivil / rehine zayiatı"
+        },
+        "panicFreeze": {
+          "label": "Panic / Freeze",
+          "sublabel": "Stres altında kilitlenme"
+        }
+      },
+      "failReasons": {
+        "collateral": "COLLATERAL_DAMAGE · SİVİL/REHİNE ZAYİATI",
+        "criticalHit": "KRİTİK_VURULUŞ · GÖREV_DIŞI"
+      }
+    },
+    "vbss": {
+      "metricsTitle": "Operasyonel metrikler",
+      "metricsSubtitle": "Gemi operasyonu değerlendirme — operatör ve süre",
+      "targetDuration": "Hedef operasyon süresi",
+      "targetDurationHint": "Saniye cinsinden hedef tamamlama süresi.",
+      "save": "Değerlendirmeyi kaydet",
+      "saveHint": "Kayıt hedefi: Firestore · vbss_evaluations · operasyonel puanlar ve notlar",
+      "saved": "VBSS değerlendirmesi kaydedildi."
+    },
+    "tccc": {
+      "cardBanner": "[ DİJİTAL TCCC KARTI · TELEMETRİ ]",
+      "cardSubtitle": "Eğitmen MARCH değerlendirme · HUD giriş",
+      "telemetryTitle": "Müdahale telemetrisi",
+      "telemetrySubtitle": "Operatör · zamanlı müdahale · canlı durum",
+      "targetIntervention": "Müdahale hedef süresi (sn)",
+      "targetOperator": "Hedef · {{operator}}",
+      "save": "Telemetriyi kaydet · tccc_evaluations",
+      "saveHint": "MARCH skorları · action chips · K.İ.A · casualtyStatus",
+      "saved": "TCCC MARCH telemetrisi kaydedildi.",
+      "performanceScore": "Performans skoru",
+      "scoreAria": "Skor {{n}}",
+      "scoreGroupAria": "Skor 1–10",
+      "tacticalIntervention": "Taktik müdahale",
+      "criticalFailAria": "Kritik hata K.İ.A",
+      "criticalFailActive": "■ K.İ.A AKTİF",
+      "criticalFailIdle": "○ KRİTİK HATA (K.İ.A)",
+      "casualtyLabel": "Yaralı durumu (casualty status)",
+      "casualtyUnstable": "EKS / K.İ.A",
+      "casualtyStable": "STABİL",
+      "effectiveScore": "Etkin skor:",
+      "observationPlaceholder": "// MARCH müdahale gözlemi…"
+    }
   }
 }

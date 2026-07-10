@@ -1,4 +1,5 @@
 import { Loader2, Radio } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import CleanFade from './CleanFade'
 import {
   icEmptyCell,
@@ -52,6 +53,7 @@ export default function ActiveAtisSessionsList({
   closingId = '',
   loading = false,
 }) {
+  const { t } = useTranslation('instructor')
   const accent = resolveSectorAccent('atis')
 
   return (
@@ -60,33 +62,33 @@ export default function ActiveAtisSessionsList({
         <div className="flex items-center gap-2 border-b border-amber-500/20 bg-amber-950/20 px-3 py-2">
           <Radio className={`size-3.5 ${accent.icon}`} strokeWidth={1.5} aria-hidden />
           <p className={`font-mono-technical text-[9px] font-bold uppercase tracking-[0.22em] ${accent.title}`}>
-            Aktif oturumlar
+            {t('education.atis.sessions.title')}
           </p>
           <span className="ml-auto font-mono-technical text-[9px] tabular-nums text-app-text/45">
-            {sessions.length} CANLI
+            {t('education.atis.sessions.liveCount', { count: sessions.length })}
           </span>
         </div>
 
         {loading && sessions.length === 0 ? (
           <div className={icEmptyCell}>
             <Loader2 className="mx-auto size-5 animate-spin text-amber-400" aria-hidden />
-            <p className={`${icEmptyTitle} mt-3`}>Oturumlar senkronize ediliyor</p>
+            <p className={`${icEmptyTitle} mt-3`}>{t('education.atis.sessions.syncing')}</p>
           </div>
         ) : sessions.length === 0 ? (
           <div className={icEmptyCell}>
-            <p className={icEmptyTitle}>Aktif oturum yok</p>
-            <p className={icEmptyDesc}>Drill seçip yeni oturum başlattığınızda burada listelenir</p>
+            <p className={icEmptyTitle}>{t('education.atis.sessions.empty')}</p>
+            <p className={icEmptyDesc}>{t('education.atis.sessions.emptyHint')}</p>
           </div>
         ) : (
           <div className={icTableWrap}>
             <table className={icTable}>
               <thead>
                 <tr>
-                  <th className={icTh}>Drill</th>
-                  <th className={icTh}>Seviye</th>
-                  <th className={icTh}>Başlangıç</th>
-                  <th className={icTh}>Katılımcı</th>
-                  <th className={`${icTh} text-right`}>Komut</th>
+                  <th className={icTh}>{t('education.atis.sessions.colDrill')}</th>
+                  <th className={icTh}>{t('education.atis.sessions.colLevel')}</th>
+                  <th className={icTh}>{t('education.atis.sessions.colStart')}</th>
+                  <th className={icTh}>{t('education.atis.sessions.colParticipant')}</th>
+                  <th className={`${icTh} text-right`}>{t('education.atis.sessions.colCommand')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -109,7 +111,7 @@ export default function ActiveAtisSessionsList({
                         {session.trainingName}
                         {isSelected ? (
                           <span className="ml-2 rounded border border-amber-500/40 bg-amber-950/40 px-1.5 py-0.5 text-[8px] font-bold text-amber-300">
-                            TAKİP
+                            {t('education.atis.sessions.followBadge')}
                           </span>
                         ) : null}
                       </td>
@@ -134,7 +136,7 @@ export default function ActiveAtisSessionsList({
                               isSelected ? 'opacity-40' : '',
                             ].join(' ')}
                           >
-                            Takip et
+                            {t('education.atis.sessions.follow')}
                           </button>
                           <button
                             type="button"
@@ -142,7 +144,7 @@ export default function ActiveAtisSessionsList({
                             onClick={() => onClose(session.id)}
                             className="rounded border border-red-500/35 bg-red-950/25 px-2 py-1 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-red-300 transition hover:bg-red-950/45 disabled:opacity-50"
                           >
-                            {isClosing ? '…' : 'Kapat'}
+                            {isClosing ? '…' : t('education.atis.sessions.close')}
                           </button>
                         </div>
                       </td>

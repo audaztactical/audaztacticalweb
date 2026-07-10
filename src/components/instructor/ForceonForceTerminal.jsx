@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { AnimatePresence, motion as Motion } from 'framer-motion'
 import {
   AlertTriangle,
@@ -18,6 +19,13 @@ import {
   computeFofInstructorScore,
   fofScoreHudTone,
 } from '../../lib/instructorFofAssessment'
+import {
+  formatInstructorFofFailReason,
+  formatInstructorFofHitStatusField,
+  formatInstructorFofHudToneLabel,
+  formatInstructorFofPenaltyField,
+  formatInstructorFofScenarioLabel,
+} from '../../lib/instructorDisplayText'
 
 /** @typedef {import('../../lib/instructorFofAssessment').FofEvaluationInput} FofEvaluationInput */
 
@@ -55,28 +63,10 @@ function createInitialForm() {
   }
 }
 
-const METRIC_FIELDS = [
-  {
-    key: 'oodaCycle',
-    label: 'OODA Döngüsü / Karar Mekanizması',
-    hint: 'Tehdidi algılama ve aksiyon hızı',
-    Icon: Target,
-    weight: '×10',
-  },
-  {
-    key: 'tacticalCommunication',
-    label: 'Taktik İletişim / Ekip Entegrasyonu',
-    hint: 'Baskı altında telsiz / sesli koordinasyon',
-    Icon: Radio,
-    weight: '×8',
-  },
-  {
-    key: 'coverManagement',
-    label: 'Siper ve Hat Yönetimi',
-    hint: 'Hareket ve şarjör değişiminde maruziyet',
-    Icon: Shield,
-    weight: '×8',
-  },
+const METRIC_FIELD_DEFS = [
+  { key: 'oodaCycle', Icon: Target, weight: '×10' },
+  { key: 'tacticalCommunication', Icon: Radio, weight: '×8' },
+  { key: 'coverManagement', Icon: Shield, weight: '×8' },
 ]
 
 const HUD_TONE_STYLES = {
@@ -84,19 +74,16 @@ const HUD_TONE_STYLES = {
     ring: 'border-accent/55 shadow-[0_0_24px_-8px_color-mix(in_srgb,var(--accent-color)_35%,transparent)]]',
     text: 'text-accent',
     bar: 'bg-accent',
-    label: 'OPERASYONEL',
   },
   amber: {
     ring: 'border-accent/55 shadow-[0_0_32px_-8px_rgba(255,180,0,0.4)]',
     text: 'text-accent',
     bar: 'bg-accent',
-    label: 'GELİŞTİRİLEBİLİR',
   },
   red: {
     ring: 'border-red-500/55 shadow-[0_0_32px_-8px_rgba(239,68,68,0.45)]',
     text: 'text-red-400',
     bar: 'bg-red-500',
-    label: 'FAIL / KRİTİK',
   },
 }
 
@@ -108,8 +95,20 @@ const HUD_TONE_STYLES = {
  * }} props
  */
 export default function ForceonForceTerminal({ selectedOperator = null, onSaveEvaluation, saving = false }) {
+  const { t } = useTranslation('instructor')
   const [form, setForm] = useState(createInitialForm)
   const [saveMsg, setSaveMsg] = useState('')
+  const [saveOk, setSaveOk] = useState(false)
+
+  const metricFields = useMemo(
+    () =>
+      METRIC_FIELD_DEFS.map((field) => ({
+        ...field,
+        label: t(`education.fof.metrics.${field.key}.label`),
+        hint: t(`education.fof.metrics.${field.key}.hint`),
+      })),
+    [t],
+  )
 
   const operatorLabel = useMemo(() => {
     if (!selectedOperator) return null
@@ -128,6 +127,7 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
   const patch = useCallback((/** @type {Partial<FofEvaluationInput>} */ next) => {
     setForm((prev) => ({ ...prev, ...next }))
     setSaveMsg('')
+    setSaveOk(false)
   }, [])
 
   const patchPenalty = useCallback((/** @type {keyof FofEvaluationInput['penalties']} */ key, value) => {
@@ -136,16 +136,19 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
       penalties: { ...prev.penalties, [key]: value },
     }))
     setSaveMsg('')
+    setSaveOk(false)
   }, [])
 
   const handleReset = () => {
     setForm(createInitialForm())
     setSaveMsg('')
+    setSaveOk(false)
   }
 
   const handleSave = async () => {
     if (!selectedOperator?.uid) return
     setSaveMsg('')
+    setSaveOk(false)
     try {
       await onSaveEvaluation({
         ...form,
@@ -155,10 +158,12 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
         failReason: assessment.failReason,
         operatorId: selectedOperator.uid,
       })
-      setSaveMsg('DEĞERLENDİRME LOGLANDI')
+      setSaveMsg(t('education.fof.logged'))
+      setSaveOk(true)
       setForm(createInitialForm())
     } catch (err) {
-      setSaveMsg(err instanceof Error ? err.message : 'KAYIT BAŞARISIZ')
+      setSaveOk(false)
+      setSaveMsg(err instanceof Error ? err.message : t('education.shared.saveFailed'))
     }
   }
 
@@ -171,10 +176,10 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
       >
         <UserX className="mx-auto mb-3 size-10 text-amber-500/70" strokeWidth={1.25} aria-hidden />
         <p className="font-mono-technical text-[11px] font-bold uppercase tracking-[0.28em] text-amber-300">
-          Lütfen operatör seçiniz
+          {t('education.fof.emptyTitle')}
         </p>
         <p className="mt-2 font-mono-technical text-[9px] uppercase text-app-text/55">
-          FoF değerlendirmesi için grup üyesi seçilmelidir
+          {t('education.fof.emptyHint')}
         </p>
       </Motion.div>
     )
@@ -189,7 +194,7 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
         <div className="flex flex-col gap-4 border-b border-accent/15 bg-app-bg px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
           <div className="min-w-0">
             <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.32em] text-accent/75">
-              [ FORCE-ON-FORCE · CANLI DEĞERLENDİRME ]
+              {t('education.fof.liveBanner')}
             </p>
             <div className="mt-1 flex items-center gap-2">
               <Crosshair className="size-4 shrink-0 text-accent" strokeWidth={1.5} aria-hidden />
@@ -198,7 +203,7 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
               </h3>
             </div>
             <p className="mt-0.5 font-mono-technical text-[9px] uppercase text-app-text/55">
-              UID · {selectedOperator.uid.slice(0, 12)}…
+              {t('education.fof.uidPrefix', { uid: selectedOperator.uid.slice(0, 12) })}
             </p>
           </div>
 
@@ -210,13 +215,13 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
             className={`flex min-w-[9rem] flex-col items-center rounded-lg border-2 px-5 py-3 ${hudStyle.ring}`}
           >
             <p className="font-mono-technical text-[7px] font-bold uppercase tracking-[0.28em] text-app-text/55">
-              HUD SKOR
+              {t('education.fof.hudScore')}
             </p>
             <p className={`font-display text-4xl font-bold tabular-nums leading-none ${hudStyle.text}`}>
               {assessment.finalScore}
             </p>
             <p className={`mt-1 font-mono-technical text-[8px] font-bold uppercase tracking-wider ${hudStyle.text}`}>
-              {hudStyle.label}
+              {formatInstructorFofHudToneLabel(hudTone)}
             </p>
             <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
               <Motion.div
@@ -240,7 +245,9 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
             >
               <p className="flex items-center gap-2 font-mono-technical text-[9px] font-bold uppercase text-red-300">
                 <ShieldAlert className="size-3.5 shrink-0" aria-hidden />
-                ANINDA FAIL · {assessment.failReason}
+                {t('education.fof.instantFail', {
+                  reason: formatInstructorFofFailReason(assessment.failReason),
+                })}
               </p>
             </Motion.div>
           ) : null}
@@ -248,7 +255,7 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
 
         <div className="space-y-5 p-4 sm:p-5">
           <label className="block space-y-1.5">
-            <span className={labelClass}>Senaryo Tipi</span>
+            <span className={labelClass}>{t('education.fof.scenarioType')}</span>
             <select
               className={selectClass}
               value={form.scenarioType}
@@ -256,16 +263,16 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
             >
               {FOF_SCENARIO_TYPES.map((s) => (
                 <option key={s} value={s}>
-                  {s}
+                  {formatInstructorFofScenarioLabel(s)}
                 </option>
               ))}
             </select>
           </label>
 
           <fieldset className="space-y-3">
-            <legend className={`${labelClass} mb-2 block`}>Performans Metrikleri · 1–5 Puan</legend>
+            <legend className={`${labelClass} mb-2 block`}>{t('education.fof.metricsLegend')}</legend>
             <div className="grid gap-3 lg:grid-cols-3">
-              {METRIC_FIELDS.map((field, idx) => {
+              {metricFields.map((field, idx) => {
                 const MetricIcon = field.Icon
                 return (
                 <Motion.div
@@ -307,11 +314,13 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
           </fieldset>
 
           <fieldset className="space-y-2">
-            <legend className={`${labelClass} mb-2 block`}>Vuruluş / İsabet Alımı</legend>
+            <legend className={`${labelClass} mb-2 block`}>{t('education.fof.hitStatusLegend')}</legend>
             <div className="grid gap-2 sm:grid-cols-3">
               {FOF_HIT_STATUS_OPTIONS.map((opt) => {
                 const active = form.hitStatus === opt.id
                 const isCritical = opt.id === 'KRİTİK'
+                const displayLabel = formatInstructorFofHitStatusField(opt.id, 'label', opt.label)
+                const displayHint = formatInstructorFofHitStatusField(opt.id, 'hint', opt.hint)
                 return (
                   <Motion.button
                     key={opt.id}
@@ -329,9 +338,9 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
                         : 'border-white/10 bg-black/30 text-app-text/70 hover:border-accent/30 hover:text-app-text',
                     ].join(' ')}
                   >
-                    <p className="font-mono-technical text-[10px] font-bold uppercase tracking-wider">{opt.label}</p>
+                    <p className="font-mono-technical text-[10px] font-bold uppercase tracking-wider">{displayLabel}</p>
                     <p className="mt-0.5 font-mono-technical text-[7px] uppercase leading-snug opacity-80">
-                      {opt.hint}
+                      {displayHint}
                     </p>
                   </Motion.button>
                 )
@@ -342,11 +351,13 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
           <fieldset className="space-y-2">
             <legend className={`${labelClass} mb-2 flex items-center gap-2`}>
               <AlertTriangle className="size-3 text-red-400" aria-hidden />
-              Kritik Cezalar · Penalties
+              {t('education.fof.penaltiesLegend')}
             </legend>
             <div className="grid gap-2 sm:grid-cols-1">
               {FOF_PENALTY_OPTIONS.map((pen) => {
                 const active = form.penalties[pen.id] === true
+                const displayLabel = formatInstructorFofPenaltyField(pen.id, 'label', pen.label)
+                const displaySublabel = formatInstructorFofPenaltyField(pen.id, 'sublabel', pen.sublabel)
                 return (
                   <Motion.label
                     key={pen.id}
@@ -368,15 +379,15 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
                     />
                     <span>
                       <span className="block font-mono-technical text-[10px] font-bold uppercase tracking-wide">
-                        {pen.label}
+                        {displayLabel}
                         {pen.instantFail ? (
-                          <span className="ml-2 text-red-400">· INSTANT FAIL</span>
+                          <span className="ml-2 text-red-400">{t('education.fof.instantFailSuffix')}</span>
                         ) : pen.deduction ? (
                           <span className="ml-2 text-app-text/55">· −{pen.deduction}</span>
                         ) : null}
                       </span>
                       <span className="mt-0.5 block font-mono-technical text-[8px] uppercase text-app-text/55">
-                        {pen.sublabel}
+                        {displaySublabel}
                       </span>
                     </span>
                   </Motion.label>
@@ -386,10 +397,10 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
           </fieldset>
 
           <label className="block space-y-1.5">
-            <span className={labelClass}>AAR · After Action Review Notu</span>
+            <span className={labelClass}>{t('education.fof.aarLabel')}</span>
             <textarea
               className={textareaClass}
-              placeholder="Saha gözlemleri, öğrenilen dersler, iyileştirme noktaları…"
+              placeholder={t('education.fof.aarPlaceholder')}
               value={form.aarNotes}
               onChange={(e) => patch({ aarNotes: e.target.value })}
               maxLength={2000}
@@ -408,14 +419,14 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
               exit={{ opacity: 0 }}
               className={[
                 'font-mono-technical text-[9px] font-bold uppercase',
-                saveMsg.includes('LOGLANDI') ? 'text-accent' : 'text-red-400',
+                saveOk ? 'text-accent' : 'text-red-400',
               ].join(' ')}
             >
               {saveMsg}
             </Motion.p>
           ) : (
             <p className="font-mono-technical text-[8px] uppercase text-app-text/45">
-              ORS · 100 baz · metrik ağırlıklı · kritik ihlal = 0
+              {t('education.fof.orsHint')}
             </p>
           )}
         </AnimatePresence>
@@ -428,7 +439,7 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
             className="inline-flex items-center gap-2 rounded border border-white/15 bg-black/40 px-4 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-app-text/70 transition hover:border-white/30 hover:text-app-text disabled:opacity-40"
           >
             <RotateCcw className="size-3.5" aria-hidden />
-            Sıfırla
+            {t('education.fof.reset')}
           </button>
           <button
             type="button"
@@ -437,7 +448,7 @@ export default function ForceonForceTerminal({ selectedOperator = null, onSaveEv
             className="inline-flex items-center gap-2 rounded border border-accent/55 bg-accent/12 px-5 py-2.5 font-mono-technical text-[9px] font-bold uppercase tracking-wider text-accent shadow-[0_0_20px_-6px_rgba(255,180,0,0.45)] transition hover:bg-accent/22 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Target className="size-3.5" aria-hidden />
-            {saving ? 'AKTARILIYOR…' : 'Değerlendirmeyi Logla'}
+            {saving ? t('education.fof.logging') : t('education.fof.logButton')}
           </button>
         </div>
       </div>

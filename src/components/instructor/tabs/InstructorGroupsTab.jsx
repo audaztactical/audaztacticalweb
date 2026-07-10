@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Edit2, Loader2, Plus, Trash2, Users } from 'lucide-react'
 import {
   createTacticalGroup,
@@ -20,10 +21,12 @@ const inputClass =
  * }} props
  */
 export default function InstructorGroupsTab({ groups, loading, instructorId }) {
+  const { t } = useTranslation('instructor')
   const [groupName, setGroupName] = useState('')
   const [groupPassword, setGroupPassword] = useState('')
   const [creating, setCreating] = useState(false)
   const [formMsg, setFormMsg] = useState('')
+  const [formMsgOk, setFormMsgOk] = useState(false)
 
   const [editingId, setEditingId] = useState(/** @type {string | null} */ (null))
   const [editName, setEditName] = useState('')
@@ -42,16 +45,19 @@ export default function InstructorGroupsTab({ groups, loading, instructorId }) {
   const handleCreate = async (e) => {
     e.preventDefault()
     setFormMsg('')
+    setFormMsgOk(false)
     if (!instructorId) return
     setCreating(true)
     try {
       const created = await createTacticalGroup(instructorId, groupName, groupPassword)
-      setFormMsg(`"${created.groupName}" oluşturuldu`)
+      setFormMsg(t('groups.createdSuccess', { name: created.groupName }))
+      setFormMsgOk(true)
       setGroupName('')
       setGroupPassword('')
     } catch (err) {
       emitFirebaseError(err)
-      setFormMsg(err instanceof Error ? err.message : 'Oluşturulamadı')
+      setFormMsg(err instanceof Error ? err.message : t('groups.createFailed'))
+      setFormMsgOk(false)
     } finally {
       setCreating(false)
     }
@@ -85,9 +91,7 @@ export default function InstructorGroupsTab({ groups, loading, instructorId }) {
   }
 
   const handleDelete = async (g) => {
-    const ok = window.confirm(
-      `"${g.groupName}" grubunu silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`,
-    )
+    const ok = window.confirm(t('groups.deleteConfirm', { name: g.groupName }))
     if (!ok) return
     setDeletingId(g.groupId)
     try {
@@ -104,27 +108,31 @@ export default function InstructorGroupsTab({ groups, loading, instructorId }) {
       <section className="rounded-xl border border-amber-900/35 bg-slate-950/90 p-4">
         <p className="mb-3 flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-amber-400">
           <Plus className="size-4" strokeWidth={1.5} aria-hidden />
-          YENİ GRUP OLUŞTUR
+          {t('groups.createTitle')}
         </p>
         <form onSubmit={handleCreate} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto]">
           <label className="space-y-1.5">
-            <span className="font-mono text-[9px] font-bold uppercase text-app-text/55">Grup Adı</span>
+            <span className="font-mono text-[9px] font-bold uppercase text-app-text/55">
+              {t('groups.nameLabel')}
+            </span>
             <input
               type="text"
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
-              placeholder="ÖRN: MESKÛN MAHAL A TİMİ"
+              placeholder={t('groups.namePlaceholder')}
               className={inputClass}
               required
             />
           </label>
           <label className="space-y-1.5">
-            <span className="font-mono text-[9px] font-bold uppercase text-app-text/55">Katılım Şifresi</span>
+            <span className="font-mono text-[9px] font-bold uppercase text-app-text/55">
+              {t('groups.passwordLabel')}
+            </span>
             <input
               type="text"
               value={groupPassword}
               onChange={(e) => setGroupPassword(e.target.value.toUpperCase())}
-              placeholder="ÖRN: ALPHA99"
+              placeholder={t('groups.passwordPlaceholder')}
               className={inputClass}
               required
               minLength={4}
@@ -136,7 +144,7 @@ export default function InstructorGroupsTab({ groups, loading, instructorId }) {
               disabled={creating}
               className="h-[42px] w-full rounded border border-amber-500/45 bg-amber-950/50 px-4 font-mono text-[10px] font-bold uppercase tracking-wider text-amber-300 transition hover:border-amber-400/70 disabled:opacity-50 sm:w-auto"
             >
-              {creating ? '…' : 'OLUŞTUR'}
+              {creating ? t('groups.creating') : t('groups.createButton')}
             </button>
           </div>
         </form>
@@ -144,7 +152,7 @@ export default function InstructorGroupsTab({ groups, loading, instructorId }) {
           <p
             className={[
               'mt-3 font-mono text-[9px] font-bold uppercase',
-              formMsg.includes('oluşturuldu') ? 'text-emerald-400' : 'text-red-400',
+              formMsgOk ? 'text-emerald-400' : 'text-red-400',
             ].join(' ')}
           >
             {formMsg}
@@ -154,15 +162,17 @@ export default function InstructorGroupsTab({ groups, loading, instructorId }) {
 
       <section className="rounded-xl border border-amber-900/25 bg-slate-950/60 p-4">
         <p className="mb-4 font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-app-text/70">
-          GRUP LİSTESİ · {groups.length} KAYIT
+          {t('groups.listTitle', { count: groups.length })}
         </p>
         {loading ? (
           <p className="flex items-center gap-2 py-12 font-mono text-[10px] uppercase text-app-text/55">
             <Loader2 className="size-4 animate-spin text-amber-400" aria-hidden />
-            Yükleniyor…
+            {t('groups.loading')}
           </p>
         ) : groups.length === 0 ? (
-          <p className="py-10 text-center font-mono text-[10px] uppercase text-app-text/45">HENÜZ GRUP YOK</p>
+          <p className="py-10 text-center font-mono text-[10px] uppercase text-app-text/45">
+            {t('groups.empty')}
+          </p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {groups.map((g) => {
@@ -192,14 +202,14 @@ export default function InstructorGroupsTab({ groups, loading, instructorId }) {
                           onClick={() => handleSaveEdit(g.groupId)}
                           className="flex-1 rounded border border-emerald-600/50 bg-emerald-950/40 py-1.5 font-mono text-[9px] font-bold uppercase text-emerald-300"
                         >
-                          Kaydet
+                          {t('groups.save')}
                         </button>
                         <button
                           type="button"
                           onClick={cancelEdit}
                           className="rounded border border-slate-700 px-3 py-1.5 font-mono text-[9px] uppercase text-app-text/70"
                         >
-                          İptal
+                          {t('groups.cancel')}
                         </button>
                       </div>
                     </div>
@@ -208,7 +218,7 @@ export default function InstructorGroupsTab({ groups, loading, instructorId }) {
                       <p className="truncate font-mono text-sm font-bold uppercase text-amber-200">{g.groupName}</p>
                       <p className="mt-1 flex items-center gap-1.5 font-mono text-[9px] text-app-text/55">
                         <Users className="size-3" aria-hidden />
-                        {g.members.length} ÜYE
+                        {t('groups.memberCount', { count: g.members.length })}
                       </p>
                       <p className="mt-2 inline-flex items-center rounded border border-amber-800/50 bg-amber-950/30 px-2 py-0.5 font-mono text-[10px] font-bold tracking-widest text-amber-300">
                         {visible ? g.groupPassword : maskPassword(g.groupPassword)}
@@ -218,7 +228,7 @@ export default function InstructorGroupsTab({ groups, loading, instructorId }) {
                             setVisiblePasswords((p) => ({ ...p, [g.groupId]: !p[g.groupId] }))
                           }
                           className="ml-2 border-0 bg-transparent p-0"
-                          aria-label="Şifre görünürlüğü"
+                          aria-label={t('groups.passwordVisibilityAria')}
                         >
                           {visible ? (
                             <i className="fas fa-eye-slash text-emerald-500 text-xs" />
@@ -232,24 +242,24 @@ export default function InstructorGroupsTab({ groups, loading, instructorId }) {
                           type="button"
                           onClick={() => startEdit(g)}
                           className="inline-flex items-center gap-1 rounded border border-slate-700 px-2 py-1 font-mono text-[9px] uppercase text-app-text/90 hover:border-amber-700/50"
-                          aria-label="Düzenle"
+                          aria-label={t('groups.editAria')}
                         >
                           <Edit2 className="size-3.5 text-amber-400" aria-hidden />
-                          Düzenle
+                          {t('groups.edit')}
                         </button>
                         <button
                           type="button"
                           disabled={deletingId === g.groupId}
                           onClick={() => handleDelete(g)}
                           className="inline-flex items-center gap-1 rounded border border-red-900/50 bg-red-950/30 px-2 py-1 font-mono text-[9px] uppercase text-red-300 hover:border-red-600/60 disabled:opacity-50"
-                          aria-label="Sil"
+                          aria-label={t('groups.deleteAria')}
                         >
                           {deletingId === g.groupId ? (
                             <Loader2 className="size-3.5 animate-spin" aria-hidden />
                           ) : (
                             <Trash2 className="size-3.5" aria-hidden />
                           )}
-                          Sil
+                          {t('groups.delete')}
                         </button>
                       </div>
                     </>

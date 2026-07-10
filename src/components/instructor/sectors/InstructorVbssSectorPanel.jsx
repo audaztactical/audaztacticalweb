@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Anchor, ClipboardCheck, Loader2, Ship } from 'lucide-react'
 import { createVbssEvaluation } from '../../../lib/firestoreVbssEvaluations'
 import { emitFirebaseError } from '../../../lib/firebaseErrorBus'
@@ -9,6 +10,11 @@ import {
   buildVbssEvaluationPayload,
   validateVbssEvaluationForm,
 } from '../../../lib/vbssEvaluationPayload'
+import {
+  formatObservedEvalObservationNoteLabel,
+  formatObservedEvalPhaseSubtitle,
+  formatObservedEvalPhaseTitle,
+} from '../../../lib/instructorDisplayText'
 import PhaseSubCriteriaFields from '../../training/PhaseSubCriteriaFields'
 import BentoCard from '../cleanTactical/BentoCard'
 import InstructorGroupSelect from '../cleanTactical/InstructorGroupSelect'
@@ -35,9 +41,6 @@ import {
  *   phaseId: VbssPhaseId
  *   title: string
  *   subtitle: string
- *   phaseId: VbssPhaseId
- *   title: string
- *   subtitle: string
  *   subScores: Record<string, string>
  *   observation: string
  *   onSubScoreChange: (criterionId: string, value: string) => void
@@ -53,6 +56,7 @@ function VbssPhaseCard({
   onSubScoreChange,
   onObservationChange,
 }) {
+  const { t } = useTranslation('instructor')
   const criteria = VBSS_PHASE_SUB_CRITERIA[phaseId]
   return (
     <BentoCard
@@ -66,6 +70,8 @@ function VbssPhaseCard({
           criteria={criteria}
           subScores={subScores}
           onSubScoreChange={onSubScoreChange}
+          discipline="vbss"
+          phaseId={phaseId}
           min={0}
           max={10}
           variant="select"
@@ -73,13 +79,13 @@ function VbssPhaseCard({
           labelClassName={ctLabel}
         />
         <label className="block space-y-1.5" htmlFor={`vbss-note-${phaseId}`}>
-          <span className={ctLabel}>Gözlem notu</span>
+          <span className={ctLabel}>{formatObservedEvalObservationNoteLabel()}</span>
           <textarea
             id={`vbss-note-${phaseId}`}
             className={`${ctInput} min-h-[4.5rem] resize-y`}
             value={observation}
             onChange={(e) => onObservationChange(e.target.value)}
-            placeholder="Kısa taktik gözlem…"
+            placeholder={t('education.shared.observationPlaceholder')}
           />
         </label>
       </div>
@@ -103,9 +109,11 @@ export default function InstructorVbssSectorPanel({
   activeGroupId,
   onActiveGroupIdChange,
 }) {
+  const { t } = useTranslation('instructor')
   const [form, setForm] = useState(VBSS_EVALUATION_INITIAL_FORM)
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState('')
+  const [msgOk, setMsgOk] = useState(false)
 
   const activeGroup = useMemo(
     () => groups.find((g) => g.groupId === activeGroupId) ?? null,
@@ -158,6 +166,7 @@ export default function InstructorVbssSectorPanel({
   const handleSubmit = async (e) => {
     e.preventDefault()
     setMsg('')
+    setMsgOk(false)
     if (!activeGroupId || !instructorId) return
 
     const validation = validateVbssEvaluationForm(form)
@@ -176,21 +185,21 @@ export default function InstructorVbssSectorPanel({
           selectedOperator?.callsign || selectedOperator?.username || form.operatorId.slice(0, 8),
       })
       await createVbssEvaluation(payload)
-      setMsg('VBSS değerlendirmesi kaydedildi.')
+      setMsg(t('education.vbss.saved'))
+      setMsgOk(true)
       setForm({ ...VBSS_EVALUATION_INITIAL_FORM, operatorId: form.operatorId })
     } catch (err) {
       emitFirebaseError(err)
-      setMsg(err instanceof Error ? err.message : 'Kayıt başarısız.')
+      setMsgOk(false)
+      setMsg(err instanceof Error ? err.message : t('education.shared.saveFailed'))
     } finally {
       setSaving(false)
     }
   }
 
   if (!activeGroup) {
-    return <p className="py-12 text-center text-sm text-zinc-500">Aktif grup seçin</p>
+    return <p className="py-12 text-center text-sm text-zinc-500">{t('education.shared.selectActiveGroup')}</p>
   }
-
-  const msgOk = msg.includes('kaydedildi')
 
   return (
     <CleanFade className="space-y-5">
@@ -201,6 +210,7 @@ export default function InstructorVbssSectorPanel({
           onActiveGroupIdChange(id)
           setForm(VBSS_EVALUATION_INITIAL_FORM)
           setMsg('')
+          setMsgOk(false)
         }}
         className="max-w-xs"
       />
@@ -209,13 +219,13 @@ export default function InstructorVbssSectorPanel({
         <div className={ctBentoGrid}>
           <div className={ctBentoSpan12}>
             <BentoCard
-              title="Operasyonel metrikler"
-              description="Gemi operasyonu değerlendirme — operatör ve süre"
+              title={t('education.vbss.metricsTitle')}
+              description={t('education.vbss.metricsSubtitle')}
               icon={Ship}
             >
               <div className="grid gap-4 lg:grid-cols-2">
                 <label className="block space-y-1.5" htmlFor="vbss-operator">
-                  <span className={ctLabel}>Değerlendirilecek operatör</span>
+                  <span className={ctLabel}>{t('education.shared.evaluateOperator')}</span>
                   <select
                     id="vbss-operator"
                     className={ctSelect}
@@ -225,7 +235,7 @@ export default function InstructorVbssSectorPanel({
                     disabled={groupMembers.length === 0}
                   >
                     {groupMembers.length === 0 ? (
-                      <option value="">Grupta üye yok</option>
+                      <option value="">{t('education.shared.noGroupMembers')}</option>
                     ) : (
                       groupMembers.map((op) => (
                         <option key={op.uid} value={op.uid}>
@@ -244,12 +254,12 @@ export default function InstructorVbssSectorPanel({
                       checked={form.isTimed}
                       onChange={(e) => handleTimedChange(e.target.checked)}
                     />
-                    <span className="text-sm text-zinc-400">Zamanlı oturum</span>
+                    <span className="text-sm text-zinc-400">{t('education.shared.timedSession')}</span>
                   </label>
 
                   {form.isTimed ? (
                     <label className="block space-y-1.5" htmlFor="vbss-target-op-sec">
-                      <span className={ctLabel}>Hedef Operasyon Süresi</span>
+                      <span className={ctLabel}>{t('education.vbss.targetDuration')}</span>
                       <input
                         id="vbss-target-op-sec"
                         type="number"
@@ -258,10 +268,10 @@ export default function InstructorVbssSectorPanel({
                         className={`${ctInput} tabular-nums`}
                         value={form.targetOperationSec}
                         onChange={(e) => patchForm({ targetOperationSec: e.target.value })}
-                        placeholder="örn. 300"
+                        placeholder={t('education.shared.exampleShort', { value: '300' })}
                         required
                       />
-                      <p className={ctHelperText}>Saniye cinsinden hedef tamamlama süresi.</p>
+                      <p className={ctHelperText}>{t('education.vbss.targetDurationHint')}</p>
                     </label>
                   ) : null}
                 </div>
@@ -273,8 +283,8 @@ export default function InstructorVbssSectorPanel({
             <div key={meta.id} className={ctBentoSpan6}>
               <VbssPhaseCard
                 phaseId={meta.id}
-                title={meta.title}
-                subtitle={meta.subtitle}
+                title={formatObservedEvalPhaseTitle('vbss', meta.id, meta.title)}
+                subtitle={formatObservedEvalPhaseSubtitle('vbss', meta.id, meta.subtitle)}
                 subScores={form[meta.id].subScores}
                 observation={form[meta.id].observation}
                 onSubScoreChange={(criterionId, value) =>
@@ -293,11 +303,9 @@ export default function InstructorVbssSectorPanel({
               ) : (
                 <ClipboardCheck className="size-4" aria-hidden />
               )}
-              Değerlendirmeyi kaydet
+              {t('education.vbss.save')}
             </button>
-            <p className={ctHelperText}>
-              Kayıt hedefi: Firestore · vbss_evaluations · operasyonel puanlar ve notlar
-            </p>
+            <p className={ctHelperText}>{t('education.vbss.saveHint')}</p>
           </div>
         </div>
       </form>

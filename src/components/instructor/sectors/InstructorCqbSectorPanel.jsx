@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Loader2, Shield } from 'lucide-react'
 import { computeCqbMissionAssessment } from '../../../lib/instructorCqbAssessment'
 import {
@@ -12,6 +13,11 @@ import {
   createInitialCqbInfractionFlags,
   labelCqbSelectOption,
 } from '../../../lib/instructorCqbMatrix'
+import {
+  formatInstructorCqbInfractionLabel,
+  formatInstructorCqbOptionLabel,
+  formatInstructorCqbPhaseField,
+} from '../../../lib/instructorDisplayText'
 import { submitGroupCqbActivityLog } from '../../../lib/firestoreGroupTraining'
 import { emitFirebaseError } from '../../../lib/firebaseErrorBus'
 
@@ -81,6 +87,7 @@ export default function InstructorCqbSectorPanel({
   activeGroupId,
   onActiveGroupIdChange,
 }) {
+  const { t } = useTranslation('instructor')
   const [roomTopology, setRoomTopology] = useState(CQB_SELECT_PLACEHOLDER)
   const [entryMethod, setEntryMethod] = useState(CQB_SELECT_PLACEHOLDER)
   const [breachingType, setBreachingType] = useState(CQB_SELECT_PLACEHOLDER)
@@ -97,6 +104,7 @@ export default function InstructorCqbSectorPanel({
   const [logNotes, setLogNotes] = useState('')
   const [logSaving, setLogSaving] = useState(false)
   const [logMsg, setLogMsg] = useState('')
+  const [msgOk, setMsgOk] = useState(false)
 
   const activeGroup = useMemo(
     () => groups.find((g) => g.groupId === activeGroupId) ?? null,
@@ -162,35 +170,36 @@ export default function InstructorCqbSectorPanel({
   const handleSubmitLog = async (e) => {
     e.preventDefault()
     setLogMsg('')
+    setMsgOk(false)
 
     if (!activeGroupId || !instructorId || !logOperatorId) {
-      setLogMsg('GRUP VE OPERATÖR SEÇİMİ GEREKLİ')
+      setLogMsg(t('education.cqb.validation.groupOperator'))
       return
     }
     if (!roomTopology || !entryMethod || !breachingType || !doorState) {
-      setLogMsg('TÜM OPERASYON KONFİGÜRASYON ALANLARI ZORUNLU')
+      setLogMsg(t('education.cqb.validation.configRequired'))
       return
     }
 
     const threats = Number(tehditSayisi)
     const eliminated = Number(etkisizAlinan)
     if (!Number.isFinite(threats) || threats < 1) {
-      setLogMsg('TEHDİT SAYISI GEÇERSİZ')
+      setLogMsg(t('education.cqb.validation.threatInvalid'))
       return
     }
     if (!Number.isFinite(eliminated) || eliminated < 0 || eliminated > threats) {
-      setLogMsg(`ETKİSİZ ALINAN 0–${threats} ARALIĞINDA OLMALI`)
+      setLogMsg(t('education.cqb.validation.neutralizedRange', { threats }))
       return
     }
     if (isTimedDrill) {
       const dur = Number(temizlikSuresi)
       const maxSec = Number(maxAllowedSeconds)
       if (!Number.isFinite(dur) || dur < 0) {
-        setLogMsg('TEMİZLİK SÜRESİ GEÇERSİZ')
+        setLogMsg(t('education.cqb.validation.clearanceInvalid'))
         return
       }
       if (!Number.isFinite(maxSec) || maxSec <= 0) {
-        setLogMsg('MAKSİMUM SÜRE SINIRI GEÇERSİZ')
+        setLogMsg(t('education.cqb.validation.maxInvalid'))
         return
       }
     }
@@ -250,14 +259,16 @@ export default function InstructorCqbSectorPanel({
         },
         instructorNotes: logNotes,
       })
-      setLogMsg(`${assessment.statusResult} · CQB KAYDI İŞLENDİ`)
+      setLogMsg(t('education.cqb.saved', { status: assessment.statusResult }))
+      setMsgOk(true)
       setEtkisizAlinan('')
       setTemizlikSuresi('')
       setLogNotes('')
       resetInfractions()
     } catch (err) {
       emitFirebaseError(err)
-      setLogMsg(err instanceof Error ? err.message : 'KAYIT BAŞARISIZ')
+      setMsgOk(false)
+      setLogMsg(err instanceof Error ? err.message : t('education.shared.saveFailed'))
     } finally {
       setLogSaving(false)
     }
@@ -276,39 +287,59 @@ export default function InstructorCqbSectorPanel({
       />
 
       {!activeGroup ? (
-        <p className="py-10 text-center text-sm text-zinc-500">Aktif grup seçin</p>
+        <p className="py-10 text-center text-sm text-zinc-500">{t('education.shared.selectActiveGroup')}</p>
       ) : (
         <form onSubmit={handleSubmitLog} className="space-y-4">
           <div className={ctBentoGrid}>
             <section className={`${ctBentoSpan6} space-y-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 sm:p-5`}>
-              <p className="text-sm font-semibold text-zinc-100">Operasyon kurulumu</p>
+              <p className="text-sm font-semibold text-zinc-100">{t('education.cqb.setupTitle')}</p>
 
               <ConfigSelect
-                label="Oda Teşhisi / Tipi"
-                options={CQB_ROOM_TOPOLOGY_OPTIONS}
+                label={t('education.cqb.roomTopology')}
+                options={CQB_ROOM_TOPOLOGY_OPTIONS.map((o) => ({
+                  ...o,
+                  label: o.value
+                    ? formatInstructorCqbOptionLabel('roomTopology', o.value, o.label)
+                    : t('education.cqb.selectPlaceholder'),
+                }))}
                 value={roomTopology}
                 onChange={setRoomTopology}
               />
               <ConfigSelect
-                label="Giriş Metodu"
-                options={CQB_ENTRY_METHOD_OPTIONS}
+                label={t('education.cqb.entryMethod')}
+                options={CQB_ENTRY_METHOD_OPTIONS.map((o) => ({
+                  ...o,
+                  label: o.value
+                    ? formatInstructorCqbOptionLabel('entryMethod', o.value, o.label)
+                    : t('education.cqb.selectPlaceholder'),
+                }))}
                 value={entryMethod}
                 onChange={setEntryMethod}
               />
               <ConfigSelect
-                label="Sızma / Kırma Tipi"
-                options={CQB_BREACHING_TYPE_OPTIONS}
+                label={t('education.cqb.breachingType')}
+                options={CQB_BREACHING_TYPE_OPTIONS.map((o) => ({
+                  ...o,
+                  label: o.value
+                    ? formatInstructorCqbOptionLabel('breachingType', o.value, o.label)
+                    : t('education.cqb.selectPlaceholder'),
+                }))}
                 value={breachingType}
                 onChange={setBreachingType}
               />
               <ConfigSelect
-                label="Kapı Durumu"
-                options={CQB_DOOR_STATE_OPTIONS}
+                label={t('education.cqb.doorState')}
+                options={CQB_DOOR_STATE_OPTIONS.map((o) => ({
+                  ...o,
+                  label: o.value
+                    ? formatInstructorCqbOptionLabel('doorState', o.value, o.label)
+                    : t('education.cqb.selectPlaceholder'),
+                }))}
                 value={doorState}
                 onChange={setDoorState}
               />
               <label className="block space-y-1">
-                <span className={ctLabel}>Takım / Operatör Seçimi</span>
+                <span className={ctLabel}>{t('education.cqb.operatorSelect')}</span>
                 <select
                   className={ctSelect}
                   value={logOperatorId}
@@ -317,7 +348,7 @@ export default function InstructorCqbSectorPanel({
                   disabled={groupMembers.length === 0}
                 >
                   {groupMembers.length === 0 ? (
-                    <option value="">GRUPTA ÜYE YOK</option>
+                    <option value="">{t('education.shared.noGroupMembersUpper')}</option>
                   ) : (
                     groupMembers.map((op) => (
                       <option key={op.uid} value={op.uid}>
@@ -336,13 +367,13 @@ export default function InstructorCqbSectorPanel({
                   onChange={(e) => setIsTimedDrill(e.target.checked)}
                 />
                 <span className="font-mono-technical text-[8px] font-bold uppercase text-amber-400/90">
-                  [ ⏱️ SÜRELİ DEĞERLENDİRME AKTİF ]
+                  {t('education.cqb.timedActive')}
                 </span>
               </label>
 
               <div className="grid gap-3 sm:grid-cols-3">
                 <label className="block space-y-1">
-                  <span className={ctLabel}>Tehdit Sayısı</span>
+                  <span className={ctLabel}>{t('education.cqb.threatCount')}</span>
                   <input
                     type="number"
                     min={1}
@@ -353,7 +384,7 @@ export default function InstructorCqbSectorPanel({
                   />
                 </label>
                 <label className="block space-y-1">
-                  <span className={ctLabel}>Etkisiz Alınan</span>
+                  <span className={ctLabel}>{t('education.cqb.neutralizedCount')}</span>
                   <input
                     type="number"
                     min={0}
@@ -365,7 +396,7 @@ export default function InstructorCqbSectorPanel({
                   />
                 </label>
                 <label className="block space-y-1">
-                  <span className={ctLabel}>Temizlik Süresi (SN)</span>
+                  <span className={ctLabel}>{t('education.cqb.clearanceTime')}</span>
                   <input
                     type={isTimedDrill ? 'number' : 'text'}
                     min={isTimedDrill ? 0 : undefined}
@@ -373,8 +404,12 @@ export default function InstructorCqbSectorPanel({
                     disabled={!isTimedDrill}
                     readOnly={!isTimedDrill}
                     className={isTimedDrill ? `${ctInput} tabular-nums` : durationLockedClass}
-                    value={isTimedDrill ? temizlikSuresi : 'SERBEST'}
-                    placeholder={isTimedDrill ? 'örn. 8.40' : 'SERBEST'}
+                    value={isTimedDrill ? temizlikSuresi : t('education.shared.free')}
+                    placeholder={
+                      isTimedDrill
+                        ? t('education.shared.exampleShort', { value: '8.40' })
+                        : t('education.shared.free')
+                    }
                     onChange={(e) => setTemizlikSuresi(e.target.value)}
                     required={isTimedDrill}
                   />
@@ -383,7 +418,7 @@ export default function InstructorCqbSectorPanel({
 
               {isTimedDrill ? (
                 <label className="block max-w-xs space-y-1">
-                  <span className={ctLabel}>Maksimum İzin Süresi (SN)</span>
+                  <span className={ctLabel}>{t('education.cqb.maxAllowed')}</span>
                   <input
                     type="number"
                     min={0.01}
@@ -398,14 +433,16 @@ export default function InstructorCqbSectorPanel({
             </section>
 
             <section className={`${ctBentoSpan6} space-y-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 sm:p-5`}>
-              <p className="text-sm font-semibold text-zinc-100">Taktik hatalar · analiz</p>
+              <p className="text-sm font-semibold text-zinc-100">{t('education.cqb.infractionsTitle')}</p>
 
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4">
                 {CQB_PHASE_INFRACTION_MATRIX.map((phase) => (
                   <div key={phase.id} className={phaseColumnClass}>
                     <div className={phaseTitleClass}>
-                      <p>{phase.title}</p>
-                      <p className={phaseSubtitleClass}>{phase.subtitle}</p>
+                      <p>{formatInstructorCqbPhaseField(phase.id, 'title', phase.title)}</p>
+                      <p className={phaseSubtitleClass}>
+                        {formatInstructorCqbPhaseField(phase.id, 'subtitle', phase.subtitle)}
+                      </p>
                     </div>
                     <div className="space-y-1.5">
                       {phase.items.map((item) => (
@@ -417,7 +454,7 @@ export default function InstructorCqbSectorPanel({
                             onChange={(e) => toggleInfraction(item.key, e.target.checked)}
                           />
                           <span className="text-xs leading-snug text-zinc-400">
-                            {item.label}
+                            {formatInstructorCqbInfractionLabel(item.key, item.label)}
                           </span>
                         </label>
                       ))}
@@ -427,14 +464,12 @@ export default function InstructorCqbSectorPanel({
               </div>
 
               <label className="block space-y-1">
-                <span className={ctLabel}>
-                  Eğitmen Notu (Opsiyonel) — Etiketler, gözlem, #KılıftanÇekiş vb.
-                </span>
+                <span className={ctLabel}>{t('education.cqb.instructorNote')}</span>
                 <textarea
                   className={`${ctInput} min-h-[5rem] resize-y normal-case`}
                   value={logNotes}
                   onChange={(e) => setLogNotes(e.target.value)}
-                  placeholder="Operasyon gözlemi, etiket notları…"
+                  placeholder={t('education.cqb.notePlaceholder')}
                 />
               </label>
             </section>
@@ -450,8 +485,21 @@ export default function InstructorCqbSectorPanel({
               ].join(' ')}
             >
               {liveAssessment.statusResult === 'BAŞARILI'
-                ? `[ ✓ ${liveAssessment.statusResult} · ${liveAssessment.etkisizAlinan}/${liveAssessment.tehditSayisi} TEHDİT ]`
-                : `[ ✕ ${liveAssessment.statusResult} · ${liveAssessment.etkisizAlinan}/${liveAssessment.tehditSayisi} TEHDİT${liveAssessment.instructorInfractions.length ? ` · ${liveAssessment.instructorInfractions.length} İHLAL` : ''} ]`}
+                ? t('education.cqb.livePass', {
+                    status: liveAssessment.statusResult,
+                    elim: liveAssessment.etkisizAlinan,
+                    threat: liveAssessment.tehditSayisi,
+                  })
+                : t('education.cqb.liveFail', {
+                    status: liveAssessment.statusResult,
+                    elim: liveAssessment.etkisizAlinan,
+                    threat: liveAssessment.tehditSayisi,
+                    infractions: liveAssessment.instructorInfractions.length
+                      ? t('education.cqb.liveInfractions', {
+                          count: liveAssessment.instructorInfractions.length,
+                        })
+                      : '',
+                  })}
             </p>
           ) : null}
 
@@ -465,14 +513,10 @@ export default function InstructorCqbSectorPanel({
             ) : (
               <Shield className="size-4" strokeWidth={1.5} aria-hidden />
             )}
-            Kaydı işle
+            {t('education.cqb.submit')}
           </button>
 
-          {logMsg ? (
-            <p className={logMsg.includes('İŞLENDİ') || logMsg.includes('BAŞARILI') ? ctMsgOk : ctMsgErr}>
-              {logMsg}
-            </p>
-          ) : null}
+          {logMsg ? <p className={msgOk ? ctMsgOk : ctMsgErr}>{logMsg}</p> : null}
         </form>
       )}
     </div>

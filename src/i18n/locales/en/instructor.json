@@ -146,9 +146,400 @@
     }
   },
   "groups": {
-    "stubNote": "Group management UI — labels localized in this pass; full sector copy continues in Training tab."
+    "createTitle": "CREATE NEW GROUP",
+    "nameLabel": "Group name",
+    "namePlaceholder": "E.G.: URBAN A TEAM",
+    "passwordLabel": "Access code",
+    "passwordPlaceholder": "E.G.: ALPHA99",
+    "createButton": "CREATE",
+    "creating": "…",
+    "createdSuccess": "\"{{name}}\" created",
+    "createFailed": "Could not create",
+    "listTitle": "GROUP LIST · {{count}} RECORDS",
+    "loading": "Loading…",
+    "empty": "NO GROUPS YET",
+    "memberCount": "{{count}} MEMBERS",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "passwordVisibilityAria": "Toggle password visibility",
+    "editAria": "Edit",
+    "deleteAria": "Delete",
+    "deleteConfirm": "Delete group \"{{name}}\"? This cannot be undone."
   },
-  "training": {
-    "stubNote": "Live training sectors — shared discipline labels applied; deep sector forms use training namespace where already wired."
+  "education": {
+    "hub": {
+      "title": "Training sectors",
+      "subtitle": "Select a category — module and live tracking open",
+      "backToSectors": "Back to sectors",
+      "sectorFallback": "Sector",
+      "moduleNotFound": "Sector module not found.",
+      "moduleSuffix": "{{label}} module"
+    },
+    "sectors": {
+      "atis": {
+        "title": "MARKSMANSHIP",
+        "subtitle": "Drill library and live session tracking"
+      },
+      "cqb": {
+        "title": "CQB",
+        "subtitle": "Room topology, entry and tactical assessment"
+      },
+      "fof": {
+        "title": "FOF",
+        "subtitle": "Scenario and engagement metrics"
+      },
+      "vbss": {
+        "title": "VBSS",
+        "subtitle": "Ship-boarding evaluation form — phase scores and observation"
+      },
+      "tccc": {
+        "title": "TCCC",
+        "subtitle": "Tactical medical evaluation — MARCH phase score, critical fail and observation"
+      }
+    },
+    "groupSelect": {
+      "label": "Active group",
+      "empty": "Create a group first",
+      "option": "{{name}} · {{count}} operators"
+    },
+    "shared": {
+      "selectActiveGroup": "Select an active group",
+      "noGroupMembers": "No members in group",
+      "noGroupMembersUpper": "NO MEMBERS IN GROUP",
+      "evaluateOperator": "Operator to evaluate",
+      "operator": "Operator",
+      "instructor": "Instructor",
+      "timedSession": "Timed session",
+      "observationNote": "Observation note",
+      "observationPlaceholder": "Brief tactical observation…",
+      "saveFailed": "Save failed",
+      "saving": "Saving…",
+      "hits": "Hits",
+      "duration": "Duration",
+      "status": "Status",
+      "drill": "Drill",
+      "level": "Level",
+      "participant": "Participant",
+      "exampleShort": "e.g. {{value}}",
+      "free": "FREE"
+    },
+    "atis": {
+      "tabsAria": "Marksmanship sector view",
+      "tabActive": "Active sessions",
+      "tabHistory": "Session history",
+      "libraryTitle": "Drill library",
+      "libraryHint": "Select level and drill, then start the session",
+      "liveSession": "Live session",
+      "liveMeta": "{{level}} · threshold {{minPassScore}} · target {{sec}}s · {{count}} participants",
+      "pickSessionHint": "Select an active session to follow",
+      "closeSession": "Close session",
+      "idleHint": "Use Follow on an active session to enter the live feed",
+      "newDrillTitle": "New drill — {{level}}",
+      "drillName": "Drill name",
+      "drillNamePlaceholder": "E.g.: VTAC Barricade Drill",
+      "drillNameHint": "Enter a clear drill name in standard format.",
+      "ammo": "Ammo",
+      "threshold": "Threshold",
+      "timed": "Timed",
+      "saveToLibrary": "Save to library",
+      "freeSuffix": " · free",
+      "validation": {
+        "ammoMin": "Ammo count must be at least 1",
+        "thresholdInvalid": "Pass threshold score is invalid",
+        "thresholdExceedsAmmo": "Threshold cannot exceed ammo count",
+        "selectLevel": "Select or create a target level first.",
+        "levelRequired": "Select a target level.",
+        "drillRequired": "Select a drill or add a new one.",
+        "targetTimeInvalid": "Target time is invalid.",
+        "drillNameRequired": "Training / drill name is required."
+      },
+      "messages": {
+        "templateSaved": "Template saved to library",
+        "sessionStarted": "Session active — live tracking started",
+        "startFailed": "Start failed",
+        "sessionClosed": "Session completed"
+      },
+      "quick": {
+        "level": "Level",
+        "selectLevel": "Select level",
+        "newLevel": "+ New level",
+        "newLevelName": "New level name",
+        "newLevelPlaceholder": "E.g.: Level 4 (Advanced Operations)",
+        "newLevelHint": "Use 'Level X (Description)' format so the list stays ordered.",
+        "drill": "Drill",
+        "selectDrill": "Select drill",
+        "newDrill": "+ New drill",
+        "libraryLoading": "Loading library…",
+        "ammo": "Ammo",
+        "passThreshold": "Pass threshold",
+        "timedSession": "Timed session",
+        "targetDuration": "Target duration (sec)",
+        "targetPlaceholder": "e.g. 12",
+        "startSession": "Start session",
+        "twoStepHint": "Select drill → Start (2 steps)"
+      },
+      "sessions": {
+        "title": "Active sessions",
+        "liveCount": "{{count}} LIVE",
+        "syncing": "Syncing sessions",
+        "empty": "No active sessions",
+        "emptyHint": "Sessions appear here after you start a drill",
+        "colDrill": "Drill",
+        "colLevel": "Level",
+        "colStart": "Start",
+        "colParticipant": "Participant",
+        "colCommand": "Command",
+        "followBadge": "FOLLOW",
+        "follow": "Follow",
+        "close": "Close"
+      },
+      "history": {
+        "title": "Session history",
+        "closedCount": "{{count}} CLOSED",
+        "drillName": "Drill name",
+        "filterPlaceholder": "Filter…",
+        "startDate": "Start date",
+        "endDate": "End date",
+        "clearFilter": "Clear filter",
+        "loading": "Loading session history",
+        "emptyFiltered": "No sessions match the filter",
+        "empty": "No completed sessions",
+        "emptyFilteredHint": "Try a different drill or date range",
+        "emptyHint": "Closed RNG-01 sessions are archived here",
+        "opened": "Opened",
+        "closed": "Closed",
+        "participant": "Participant",
+        "avgSuccess": "Avg. success",
+        "instructor": "Instructor",
+        "ammoThreshold": "Ammo / threshold",
+        "targetSec": "Target {{sec}}s",
+        "freeDuration": "Untimed",
+        "scoreRange": "Score range",
+        "avgPercent": "Avg. {{percent}}%",
+        "groupInstructor": "Group · instructor",
+        "noResults": "No participant results for this session",
+        "zeroSessions": "0 sessions",
+        "rangeSessions": "{{start}}–{{end}} of {{total}} sessions",
+        "page": "Page {{page}}/{{totalPages}}",
+        "prev": "Previous",
+        "next": "Next",
+        "colOperator": "Operator",
+        "colHits": "Hits",
+        "colDuration": "Duration",
+        "colStatus": "Status"
+      },
+      "live": {
+        "idleBody": "Results appear here when a live session starts.",
+        "idleHint": "Select a drill and start the session",
+        "streaming": "Live session · operator results streaming",
+        "syncing": "Syncing results",
+        "connecting": "Connecting live feed…",
+        "waiting": "Waiting for operator input",
+        "waitingHint": "Group members can submit results from the Training module",
+        "targetSec": "target {{sec}}s"
+      }
+    },
+    "cqb": {
+      "setupTitle": "Operation setup",
+      "infractionsTitle": "Tactical errors · analysis",
+      "roomTopology": "Room topology",
+      "entryMethod": "Entry method",
+      "breachingType": "Breaching type",
+      "doorState": "Door state",
+      "operatorSelect": "Team / operator selection",
+      "timedActive": "[ TIMED ASSESSMENT ACTIVE ]",
+      "threatCount": "Threat count",
+      "neutralizedCount": "Neutralized",
+      "clearanceTime": "Clearance time (sec)",
+      "maxAllowed": "Maximum allowed time (sec)",
+      "instructorNote": "Instructor note (optional) — tags, observation, #DrawFromHolster etc.",
+      "notePlaceholder": "Operation observation, tag notes…",
+      "submit": "Process record",
+      "selectPlaceholder": "Select",
+      "livePass": "[ ✓ {{status}} · {{elim}}/{{threat}} THREATS ]",
+      "liveFail": "[ ✕ {{status}} · {{elim}}/{{threat}} THREATS{{infractions}} ]",
+      "liveInfractions": " · {{count}} INFRACTIONS",
+      "saved": "{{status}} · CQB RECORD PROCESSED",
+      "validation": {
+        "groupOperator": "GROUP AND OPERATOR SELECTION REQUIRED",
+        "configRequired": "ALL OPERATION CONFIG FIELDS ARE REQUIRED",
+        "threatInvalid": "THREAT COUNT INVALID",
+        "neutralizedRange": "NEUTRALIZED MUST BE BETWEEN 0–{{threats}}",
+        "clearanceInvalid": "CLEARANCE TIME INVALID",
+        "maxInvalid": "MAXIMUM TIME LIMIT INVALID"
+      },
+      "options": {
+        "roomTopology": {
+          "single_room": "Single Room",
+          "l_room": "L-Room",
+          "t_room": "T-Room",
+          "corridor": "Corridor"
+        },
+        "entryMethod": {
+          "cross_entry": "Cross Entry",
+          "hook_entry": "Hook Entry",
+          "high_low": "High-Low Technique",
+          "dynamic_entry": "Dynamic Entry"
+        },
+        "breachingType": {
+          "mechanical": "Mechanical",
+          "ballistic": "Ballistic",
+          "explosive": "Explosive",
+          "stealth": "Stealth/Silent"
+        },
+        "doorState": {
+          "open": "Open",
+          "locked": "Closed/Locked",
+          "barricaded": "Barricaded"
+        }
+      },
+      "phases": {
+        "pre_breach": {
+          "title": "PRE-ENTRY",
+          "subtitle": "Pre-Breach Discipline"
+        },
+        "entry_phase": {
+          "title": "ENTRY PHASE / FATAL FUNNEL",
+          "subtitle": "Entry Phase"
+        },
+        "room_geometry": {
+          "title": "ROOM GEOMETRY",
+          "subtitle": "Room Geometry"
+        },
+        "weapon_comm": {
+          "title": "WEAPON & COMMUNICATION",
+          "subtitle": "Weapon & Communication"
+        }
+      },
+      "infractions": {
+        "breachingGecikmesi": "Breaching delay",
+        "koldaAcikVerme": "Stack exposure",
+        "sesDisipliniIhlali": "Noise discipline compromised",
+        "yetersizDilimleme": "Poor threshold pieing",
+        "olumHunisindeCakilma": "Fatal funnel hang",
+        "derineFazlaKacma": "Over-penetration",
+        "korlemesineGiris": "Blind entry",
+        "yavasKirma": "Slow breach",
+        "gevsekKoseKontrolu": "Poor corner check",
+        "sektorBoslugu": "Leaving sectors uncovered",
+        "tehditOnceligiHatasi": "Threat priority error",
+        "operatorCakismasi": "Operator collision",
+        "namluIhlali": "Muzzle flagging / blue-on-blue",
+        "tunelVizyonu": "Tunnel vision",
+        "zayifIletisim": "Poor radio / verbal communication",
+        "taktikSarjorHatasi": "Tactical reload error"
+      }
+    },
+    "fof": {
+      "panelTitle": "FoF evaluation",
+      "panelSubtitle": "Scenario, OODA and tactical metrics",
+      "groupRequired": "Group selection required",
+      "emptyTitle": "Please select an operator",
+      "emptyHint": "A group member must be selected for FoF evaluation",
+      "liveBanner": "[ FORCE-ON-FORCE · LIVE EVALUATION ]",
+      "uidPrefix": "UID · {{uid}}…",
+      "hudScore": "HUD SCORE",
+      "toneOperational": "OPERATIONAL",
+      "toneDevelop": "DEVELOPABLE",
+      "toneFail": "FAIL / CRITICAL",
+      "instantFail": "INSTANT FAIL · {{reason}}",
+      "scenarioType": "Scenario type",
+      "metricsLegend": "Performance metrics · 1–5 points",
+      "hitStatusLegend": "Hit / impact taken",
+      "penaltiesLegend": "Critical penalties",
+      "instantFailSuffix": "· INSTANT FAIL",
+      "aarLabel": "AAR · After Action Review note",
+      "aarPlaceholder": "Field observations, lessons learned, improvement points…",
+      "orsHint": "ORS · 100 base · metric-weighted · critical violation = 0",
+      "reset": "Reset",
+      "logButton": "Log evaluation",
+      "logging": "SAVING…",
+      "logged": "EVALUATION LOGGED",
+      "metrics": {
+        "oodaCycle": {
+          "label": "OODA loop / decision mechanism",
+          "hint": "Threat detection and action speed"
+        },
+        "tacticalCommunication": {
+          "label": "Tactical communication / team integration",
+          "hint": "Radio / verbal coordination under pressure"
+        },
+        "coverManagement": {
+          "label": "Cover and line management",
+          "hint": "Exposure during movement and reloads"
+        }
+      },
+      "scenarios": {
+        "CQB Sızma": "CQB infiltration",
+        "Rehine Kurtarma": "Hostage rescue",
+        "Milsim Temas": "Milsim contact"
+      },
+      "hitStatus": {
+        "TEMİZ": {
+          "label": "CLEAN",
+          "hint": "Not hit"
+        },
+        "YARALI": {
+          "label": "WOUNDED",
+          "hint": "Extremity hit — TCCC required"
+        },
+        "KRİTİK": {
+          "label": "CRITICAL",
+          "hint": "Torso / head hit — mission out"
+        }
+      },
+      "penalties": {
+        "muzzleAwarenessViolation": {
+          "label": "Muzzle Awareness Violation",
+          "sublabel": "Muzzle discipline / pointing at friendly"
+        },
+        "collateralDamage": {
+          "label": "Collateral Damage",
+          "sublabel": "Civilian / hostage casualty"
+        },
+        "panicFreeze": {
+          "label": "Panic / Freeze",
+          "sublabel": "Lock-up under stress"
+        }
+      },
+      "failReasons": {
+        "collateral": "COLLATERAL_DAMAGE · CIVILIAN/HOSTAGE CASUALTY",
+        "criticalHit": "CRITICAL_HIT · MISSION_OUT"
+      }
+    },
+    "vbss": {
+      "metricsTitle": "Operational metrics",
+      "metricsSubtitle": "Ship-boarding evaluation — operator and timing",
+      "targetDuration": "Target operation duration",
+      "targetDurationHint": "Target completion time in seconds.",
+      "save": "Save evaluation",
+      "saveHint": "Save target: Firestore · vbss_evaluations · operational scores and notes",
+      "saved": "VBSS evaluation saved."
+    },
+    "tccc": {
+      "cardBanner": "[ DIGITAL TCCC CARD · TELEMETRY ]",
+      "cardSubtitle": "Instructor MARCH evaluation · HUD input",
+      "telemetryTitle": "Intervention telemetry",
+      "telemetrySubtitle": "Operator · timed intervention · live status",
+      "targetIntervention": "Intervention target duration (sec)",
+      "targetOperator": "Target · {{operator}}",
+      "save": "Save telemetry · tccc_evaluations",
+      "saveHint": "MARCH scores · action chips · KIA · casualtyStatus",
+      "saved": "TCCC MARCH telemetry saved.",
+      "performanceScore": "Performance score",
+      "scoreAria": "Score {{n}}",
+      "scoreGroupAria": "Score 1–10",
+      "tacticalIntervention": "Tactical intervention",
+      "criticalFailAria": "Critical fail KIA",
+      "criticalFailActive": "■ KIA ACTIVE",
+      "criticalFailIdle": "○ CRITICAL FAIL (KIA)",
+      "casualtyLabel": "Casualty status",
+      "casualtyUnstable": "EKS / KIA",
+      "casualtyStable": "STABLE",
+      "effectiveScore": "Effective score:",
+      "observationPlaceholder": "// MARCH intervention observation…"
+    }
   }
 }

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronDown, ChevronLeft, ChevronRight, History, Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../../context/AuthContext'
 import { subscribeInstructorMergedGroupTrainingResults } from '../../../lib/firestoreGroupTrainings'
 import {
@@ -59,6 +60,7 @@ function dateInputToMs(dateStr, edge) {
  * }} props
  */
 export default function AtisSessionHistoryPanel({ groups, operators, instructorId }) {
+  const { t } = useTranslation('instructor')
   const { user, userData } = useAuth()
   const accent = resolveSectorAccent('atis')
 
@@ -79,16 +81,19 @@ export default function AtisSessionHistoryPanel({ groups, operators, instructorI
     return map
   }, [groups])
 
+  const instructorFallback = t('education.shared.instructor')
+  const operatorFallback = t('education.shared.operator')
+
   const callsignByUid = useMemo(() => {
     /** @type {Map<string, string>} */
     const map = new Map()
-    const selfCallsign = (userData?.callsign || user?.displayName || 'Eğitmen').trim()
+    const selfCallsign = (userData?.callsign || user?.displayName || instructorFallback).trim()
     if (instructorId) map.set(instructorId, selfCallsign)
     for (const op of operators) {
-      map.set(op.uid, (op.callsign || op.username || 'Operatör').trim())
+      map.set(op.uid, (op.callsign || op.username || operatorFallback).trim())
     }
     return map
-  }, [operators, instructorId, user, userData])
+  }, [operators, instructorId, user, userData, instructorFallback, operatorFallback])
 
   useEffect(() => {
     if (!groupIds.length || !instructorId) {
@@ -205,23 +210,23 @@ export default function AtisSessionHistoryPanel({ groups, operators, instructorI
         <div className="flex items-center gap-2 border-b border-amber-500/20 bg-amber-950/15 px-3 py-2">
           <History className={`size-3.5 ${accent.icon}`} strokeWidth={1.5} aria-hidden />
           <p className={`font-mono-technical text-[9px] font-bold uppercase tracking-[0.22em] ${accent.title}`}>
-            Oturum geçmişi
+            {t('education.atis.history.title')}
           </p>
           <span className="ml-auto font-mono-technical text-[9px] tabular-nums text-app-text/45">
-            {filteredSessions.length} KAPALI
+            {t('education.atis.history.closedCount', { count: filteredSessions.length })}
           </span>
         </div>
 
         <div className="border-b border-amber-900/20 bg-black/25 px-3 py-3">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <label className="block space-y-1 sm:col-span-2 lg:col-span-1">
-              <span className={ctLabel}>Drill adı</span>
+              <span className={ctLabel}>{t('education.atis.history.drillName')}</span>
               <input
                 type="search"
                 list="atis-history-drill-options"
                 value={drillFilter}
                 onChange={(e) => setDrillFilter(e.target.value)}
-                placeholder="Filtrele…"
+                placeholder={t('education.atis.history.filterPlaceholder')}
                 className={`${ctInput} font-mono-technical text-[11px] uppercase`}
               />
               <datalist id="atis-history-drill-options">
@@ -231,7 +236,7 @@ export default function AtisSessionHistoryPanel({ groups, operators, instructorI
               </datalist>
             </label>
             <label className="block space-y-1">
-              <span className={ctLabel}>Başlangıç tarihi</span>
+              <span className={ctLabel}>{t('education.atis.history.startDate')}</span>
               <input
                 type="date"
                 value={dateFrom}
@@ -240,7 +245,7 @@ export default function AtisSessionHistoryPanel({ groups, operators, instructorI
               />
             </label>
             <label className="block space-y-1">
-              <span className={ctLabel}>Bitiş tarihi</span>
+              <span className={ctLabel}>{t('education.atis.history.endDate')}</span>
               <input
                 type="date"
                 value={dateTo}
@@ -255,7 +260,7 @@ export default function AtisSessionHistoryPanel({ groups, operators, instructorI
                 disabled={!hasActiveFilters}
                 className={`${ctBtnSecondary} w-full font-mono-technical text-[10px] uppercase tracking-wider disabled:opacity-40`}
               >
-                Filtreyi temizle
+                {t('education.atis.history.clearFilter')}
               </button>
             </div>
           </div>
@@ -264,17 +269,19 @@ export default function AtisSessionHistoryPanel({ groups, operators, instructorI
         {loading && completedTrainings.length === 0 ? (
           <div className={icEmptyCell}>
             <Loader2 className="mx-auto size-5 animate-spin text-amber-400" aria-hidden />
-            <p className={`${icEmptyTitle} mt-3`}>Geçmiş oturumlar yükleniyor</p>
+            <p className={`${icEmptyTitle} mt-3`}>{t('education.atis.history.loading')}</p>
           </div>
         ) : filteredSessions.length === 0 ? (
           <div className={icEmptyCell}>
             <p className={icEmptyTitle}>
-              {hasActiveFilters ? 'Filtreye uyan oturum yok' : 'Tamamlanmış oturum yok'}
+              {hasActiveFilters
+                ? t('education.atis.history.emptyFiltered')
+                : t('education.atis.history.empty')}
             </p>
             <p className={icEmptyDesc}>
               {hasActiveFilters
-                ? 'Farklı drill veya tarih aralığı deneyin'
-                : 'Kapatılan RNG-01 oturumları burada arşivlenir'}
+                ? t('education.atis.history.emptyFilteredHint')
+                : t('education.atis.history.emptyHint')}
             </p>
           </div>
         ) : (
@@ -319,23 +326,33 @@ export default function AtisSessionHistoryPanel({ groups, operators, instructorI
                       </p>
                     </div>
                     <div className="font-mono-technical text-[9px] uppercase text-app-text/55">
-                      <span className="block text-[8px] text-app-text/40">Açılış</span>
+                      <span className="block text-[8px] text-app-text/40">
+                        {t('education.atis.history.opened')}
+                      </span>
                       {formatAtisSessionTimestamp(session.createdAt)}
                     </div>
                     <div className="font-mono-technical text-[9px] uppercase text-app-text/55">
-                      <span className="block text-[8px] text-app-text/40">Kapanış</span>
+                      <span className="block text-[8px] text-app-text/40">
+                        {t('education.atis.history.closed')}
+                      </span>
                       {closedMs ? formatAtisSessionTimestamp(closedMs) : '—'}
                     </div>
                     <div className="font-mono-technical text-[10px] tabular-nums text-sky-400">
-                      <span className="block text-[8px] uppercase text-app-text/40">Katılımcı</span>
+                      <span className="block text-[8px] uppercase text-app-text/40">
+                        {t('education.atis.history.participant')}
+                      </span>
                       {participantCount}
                     </div>
                     <div className="font-mono-technical text-[10px] tabular-nums text-emerald-400">
-                      <span className="block text-[8px] uppercase text-app-text/40">Başarı ort.</span>
+                      <span className="block text-[8px] uppercase text-app-text/40">
+                        {t('education.atis.history.avgSuccess')}
+                      </span>
                       %{successAvg}
                     </div>
                     <div className="font-mono-technical text-[9px] uppercase text-amber-200/80">
-                      <span className="block text-[8px] text-app-text/40">Eğitmen</span>
+                      <span className="block text-[8px] text-app-text/40">
+                        {t('education.atis.history.instructor')}
+                      </span>
                       {instructorLabel}
                     </div>
                   </button>
@@ -344,52 +361,62 @@ export default function AtisSessionHistoryPanel({ groups, operators, instructorI
                     <div className="border-t border-amber-900/25 bg-black/35 px-3 py-4">
                       <div className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                         <div className="rounded border border-slate-800 bg-black/40 p-2.5">
-                          <p className="font-mono-technical text-[8px] uppercase text-app-text/45">Drill</p>
+                          <p className="font-mono-technical text-[8px] uppercase text-app-text/45">
+                            {t('education.shared.drill')}
+                          </p>
                           <p className="mt-1 font-mono-technical text-[10px] uppercase text-app-text">
                             {session.trainingName}
                           </p>
                           <p className="font-mono-technical text-[9px] text-app-text/55">{session.level}</p>
                         </div>
                         <div className="rounded border border-slate-800 bg-black/40 p-2.5">
-                          <p className="font-mono-technical text-[8px] uppercase text-app-text/45">Mühimmat / baraj</p>
+                          <p className="font-mono-technical text-[8px] uppercase text-app-text/45">
+                            {t('education.atis.history.ammoThreshold')}
+                          </p>
                           <p className="mt-1 font-mono-technical text-sm tabular-nums text-amber-300">
                             {session.totalAmmo} / {session.minPassScore}
                           </p>
                           {session.isTimed && session.targetTimeSec != null ? (
                             <p className="font-mono-technical text-[9px] text-app-text/55">
-                              Hedef {session.targetTimeSec}s
+                              {t('education.atis.history.targetSec', { sec: session.targetTimeSec })}
                             </p>
                           ) : (
-                            <p className="font-mono-technical text-[9px] text-app-text/55">Serbest süre</p>
+                            <p className="font-mono-technical text-[9px] text-app-text/55">
+                              {t('education.atis.history.freeDuration')}
+                            </p>
                           )}
                         </div>
                         <div className="rounded border border-slate-800 bg-black/40 p-2.5">
-                          <p className="font-mono-technical text-[8px] uppercase text-app-text/45">Skor aralığı</p>
+                          <p className="font-mono-technical text-[8px] uppercase text-app-text/45">
+                            {t('education.atis.history.scoreRange')}
+                          </p>
                           <p className="mt-1 font-mono-technical text-[10px] tabular-nums text-app-text">
                             %{stats.lowest} – %{stats.highest}
                           </p>
                           <p className="font-mono-technical text-[9px] text-emerald-400/90">
-                            Ort. %{stats.average}
+                            {t('education.atis.history.avgPercent', { percent: stats.average })}
                           </p>
                         </div>
                         <div className="rounded border border-slate-800 bg-black/40 p-2.5">
-                          <p className="font-mono-technical text-[8px] uppercase text-app-text/45">Grup · eğitmen</p>
+                          <p className="font-mono-technical text-[8px] uppercase text-app-text/45">
+                            {t('education.atis.history.groupInstructor')}
+                          </p>
                           <p className="mt-1 font-mono-technical text-[10px] uppercase text-app-text">{groupLabel}</p>
                           <p className="font-mono-technical text-[9px] text-amber-200/80">{instructorLabel}</p>
                         </div>
                       </div>
 
                       {sessionResults.length === 0 ? (
-                        <p className={icEmptyDesc}>Bu oturumda kayıtlı katılımcı sonucu yok</p>
+                        <p className={icEmptyDesc}>{t('education.atis.history.noResults')}</p>
                       ) : (
                         <div className={icTableWrap}>
                           <table className={icTable}>
                             <thead>
                               <tr>
-                                <th className={icTh}>Operatör</th>
-                                <th className={icTh}>Vuruş</th>
-                                <th className={icTh}>Süre</th>
-                                <th className={icTh}>Durum</th>
+                                <th className={icTh}>{t('education.atis.history.colOperator')}</th>
+                                <th className={icTh}>{t('education.atis.history.colHits')}</th>
+                                <th className={icTh}>{t('education.atis.history.colDuration')}</th>
+                                <th className={icTh}>{t('education.atis.history.colStatus')}</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -452,10 +479,14 @@ export default function AtisSessionHistoryPanel({ groups, operators, instructorI
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-amber-900/25 bg-black/30 px-3 py-2.5">
             <p className="font-mono-technical text-[9px] uppercase tabular-nums text-app-text/55">
               {filteredSessions.length === 0
-                ? '0 oturum'
-                : `${filteredSessions.length} oturumdan ${rangeStart}–${rangeEnd}`}
+                ? t('education.atis.history.zeroSessions')
+                : t('education.atis.history.rangeSessions', {
+                    total: filteredSessions.length,
+                    start: rangeStart,
+                    end: rangeEnd,
+                  })}
               {' · '}
-              Sayfa {safePage}/{totalPages}
+              {t('education.atis.history.page', { page: safePage, totalPages })}
             </p>
             <div className="flex gap-2">
               <button
@@ -465,7 +496,7 @@ export default function AtisSessionHistoryPanel({ groups, operators, instructorI
                 className={`${ctBtnSecondary} inline-flex items-center gap-1 px-2 py-1 font-mono-technical text-[9px] uppercase disabled:opacity-40`}
               >
                 <ChevronLeft className="size-3.5" aria-hidden />
-                Önceki
+                {t('education.atis.history.prev')}
               </button>
               <button
                 type="button"
@@ -473,7 +504,7 @@ export default function AtisSessionHistoryPanel({ groups, operators, instructorI
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 className={`${ctBtnSecondary} inline-flex items-center gap-1 px-2 py-1 font-mono-technical text-[9px] uppercase disabled:opacity-40`}
               >
-                Sonraki
+                {t('education.atis.history.next')}
                 <ChevronRight className="size-3.5" aria-hidden />
               </button>
             </div>
