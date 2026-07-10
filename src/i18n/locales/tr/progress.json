@@ -275,5 +275,10 @@
       "alreadyMember": "• [BAŞARILI]: Zaten \"{{name}}\" grubundasınız.",
       "joined": "• [BAŞARILI]: Gruba başarıyla dahil oldunuz!"
     }
+  },
+  "groupLeave": {
+    "confirm": "Taktik timinden ayrılmak istediğinize emin misiniz?",
+    "success": "• [BAŞARILI]: Timden ayrıldınız.",
+    "failed": "Timden ayrılma başarısız."
   }
 }

@@ -4,5 +4,29 @@
     "tr": "TR",
     "en": "EN"
   },
-  "unitSystem": "Birim Sistemi"
+  "unitSystem": "Birim Sistemi",
+  "firebaseError": {
+    "fallback": "İşlem tamamlanamadı."
+  },
+  "accessCode": {
+    "authRequired": "Oturum gerekli.",
+    "invalidCode": "Geçerli bir erişim kodu girin.",
+    "success": "• [BAŞARILI]: {{plan}} erişimi etkinleştirildi.",
+    "planPremium": "Premium",
+    "planProInstructor": "Pro-Eğitmen",
+    "alreadyUsed": "Bu kodu daha önce kullandınız.",
+    "notFound": "Erişim kodu bulunamadı.",
+    "exhausted": "Kod kullanım limitine ulaşmış.",
+    "unavailable": "Kod kullanılamıyor.",
+    "failed": "Kod kullanılamadı."
+  },
+  "feedback": {
+    "authRequired": "Geri bildirim göndermek için oturum açın.",
+    "success": "GERİ_BİLDİRİM_KAYDEDİLDİ · TEŞEKKÜRLER",
+    "submitFailed": "Gönderim başarısız — yeniden deneyin."
+  },
+  "legal": {
+    "authRequired": "Onay kaydı için oturum gerekli.",
+    "saveFailed": "Onay kaydedilemedi — tekrar deneyin."
+  }
 }

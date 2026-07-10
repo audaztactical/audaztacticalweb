@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Loader2, MessageSquarePlus, Send } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { emitFirebaseError } from '../lib/firebaseErrorBus'
@@ -19,6 +20,7 @@ const labelClass =
  * @param {{ className?: string; onSubmitted?: () => void; bare?: boolean }} [props]
  */
 export default function FeedbackForm({ className = '', onSubmitted, bare = false }) {
+  const { t } = useTranslation('common')
   const { user, userData } = useAuth()
   const [issueType, setIssueType] = useState(/** @type {FeedbackIssueType} */ ('Hata'))
   const [description, setDescription] = useState('')
@@ -29,7 +31,7 @@ export default function FeedbackForm({ className = '', onSubmitted, bare = false
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!user?.uid) {
-      setMsg({ type: 'err', text: 'Geri bildirim göndermek için oturum açın.' })
+      setMsg({ type: 'err', text: t('feedback.authRequired') })
       return
     }
 
@@ -47,13 +49,13 @@ export default function FeedbackForm({ className = '', onSubmitted, bare = false
       setDescription('')
       setScreenshotURL('')
       setIssueType('Hata')
-      setMsg({ type: 'ok', text: 'GERİ_BİLDİRİM_KAYDEDİLDİ · TEŞEKKÜRLER' })
+      setMsg({ type: 'ok', text: t('feedback.success') })
       onSubmitted?.()
     } catch (err) {
       emitFirebaseError(err)
       setMsg({
         type: 'err',
-        text: err instanceof Error ? err.message : 'Gönderim başarısız — yeniden deneyin.',
+        text: err instanceof Error ? err.message : t('feedback.submitFailed'),
       })
     } finally {
       setBusy(false)

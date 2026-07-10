@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components -- Provider + useFirebaseErrorReporter aynı modülde */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import AmberAlert from '../components/common/AmberAlert'
 import { mapFirebaseError } from '../lib/firebaseErrorMap'
 import { emitFirebaseError, subscribeFirebaseErrors } from '../lib/firebaseErrorBus'
@@ -9,6 +10,7 @@ const FirebaseErrorContext = createContext(null)
 const AUTO_DISMISS_MS = 9000
 
 export function FirebaseErrorProvider({ children }) {
+  const { t } = useTranslation('common')
   const [toast, setToast] = useState(null)
 
   const reportFirebaseError = useCallback((err) => {
@@ -22,8 +24,8 @@ export function FirebaseErrorProvider({ children }) {
 
   useEffect(() => {
     if (!toast) return undefined
-    const t = setTimeout(() => setToast(null), AUTO_DISMISS_MS)
-    return () => clearTimeout(t)
+    const timer = setTimeout(() => setToast(null), AUTO_DISMISS_MS)
+    return () => clearTimeout(timer)
   }, [toast])
 
   const value = useMemo(
@@ -45,7 +47,7 @@ export function FirebaseErrorProvider({ children }) {
           <div className="pointer-events-auto shadow-lg shadow-black/40">
             <AmberAlert label={toast.technical}>
               <span className="text-amber-100/90">
-                {toast.message ? `${toast.message}` : 'İşlem tamamlanamadı.'}
+                {toast.message ? `${toast.message}` : t('firebaseError.fallback')}
               </span>
             </AmberAlert>
           </div>

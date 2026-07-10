@@ -4,5 +4,29 @@
     "tr": "TR",
     "en": "EN"
   },
-  "unitSystem": "Unit System"
+  "unitSystem": "Unit System",
+  "firebaseError": {
+    "fallback": "The operation could not be completed."
+  },
+  "accessCode": {
+    "authRequired": "Sign-in required.",
+    "invalidCode": "Enter a valid access code.",
+    "success": "• [SUCCESS]: {{plan}} access enabled.",
+    "planPremium": "Premium",
+    "planProInstructor": "Pro-Instructor",
+    "alreadyUsed": "You have already used this code.",
+    "notFound": "Access code not found.",
+    "exhausted": "This code has reached its usage limit.",
+    "unavailable": "Code cannot be used.",
+    "failed": "Could not redeem code."
+  },
+  "feedback": {
+    "authRequired": "Sign in to submit feedback.",
+    "success": "FEEDBACK_SAVED · THANK YOU",
+    "submitFailed": "Submit failed — try again."
+  },
+  "legal": {
+    "authRequired": "Sign-in required to record acceptance.",
+    "saveFailed": "Could not save acceptance — try again."
+  }
 }

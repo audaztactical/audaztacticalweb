@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Loader2, LogOut, Users } from 'lucide-react'
 import GroupJoinPanel from '../progress/GroupJoinPanel'
 import { useAuth } from '../../context/AuthContext'
@@ -11,6 +12,7 @@ import { emitFirebaseError } from '../../lib/firebaseErrorBus'
  * Ayarlar · [ TAKTİK TİM ] — gruba katılım veya aktif tim özeti.
  */
 export default function SettingsGroupSection() {
+  const { t } = useTranslation('progress')
   const { user, refreshUserProfile } = useAuth()
   const { membership, isMember, loading, refresh } = useOperatorGroup()
   const [memberCount, setMemberCount] = useState(0)
@@ -61,7 +63,7 @@ export default function SettingsGroupSection() {
   const handleLeave = async () => {
     if (!user?.uid || !membership?.groupId || leaveBusy) return
 
-    const confirmed = window.confirm('Taktik timinden ayrılmak istediğinize emin misiniz?')
+    const confirmed = window.confirm(t('groupLeave.confirm'))
     if (!confirmed) return
 
     setLeaveBusy(true)
@@ -70,14 +72,14 @@ export default function SettingsGroupSection() {
     try {
       await leaveTacticalGroup(user.uid)
       setLeaveSuccess(true)
-      setLeaveMsg('• [BAŞARILI]: Timden ayrıldınız.')
+      setLeaveMsg(t('groupLeave.success'))
       if (typeof refreshUserProfile === 'function') {
         await refreshUserProfile()
       }
       await refresh()
     } catch (err) {
       emitFirebaseError(err)
-      setLeaveMsg(err instanceof Error ? err.message : 'Timden ayrılma başarısız.')
+      setLeaveMsg(err instanceof Error ? err.message : t('groupLeave.failed'))
     } finally {
       setLeaveBusy(false)
     }

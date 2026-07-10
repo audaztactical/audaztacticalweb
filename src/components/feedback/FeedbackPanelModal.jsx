@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ImagePlus, Loader2, Send, Trash2, X } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useFeedbackPanelOptional } from '../../context/FeedbackPanelContext'
@@ -22,6 +23,7 @@ const labelClass = 'block text-[10px] font-bold uppercase tracking-wider text-zi
  */
 
 export default function FeedbackPanelModal() {
+  const { t } = useTranslation('common')
   const ctx = useFeedbackPanelOptional()
   const { user, userData } = useAuth()
   const fileInputRef = useRef(/** @type {HTMLInputElement | null} */ (null))
@@ -123,11 +125,11 @@ export default function FeedbackPanelModal() {
       setPendingImages([])
       setSubject('')
       setMessage('')
-      ctx.pushToast('GERİ_BİLDİRİM_KAYDEDİLDİ · TEŞEKKÜRLER')
+      ctx.pushToast(t('feedback.success'))
       ctx.closePanel()
     } catch (err) {
       emitFirebaseError(err)
-      setError(err instanceof Error ? err.message : 'Gönderim başarısız — yeniden deneyin.')
+      setError(err instanceof Error ? err.message : t('feedback.submitFailed'))
     } finally {
       setBusy(false)
       setUploadProgress(null)

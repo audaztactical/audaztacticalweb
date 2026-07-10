@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { AnimatePresence, motion as Motion } from 'framer-motion'
 import { Loader2, Scale, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
@@ -31,6 +32,7 @@ export default function LegalDisclaimer({
   dismissible = true,
   title = 'OPERASYONEL VE HUKUKİ PROTOKOL',
 }) {
+  const { t } = useTranslation('common')
   const { user, agreeToTerms } = useAuth()
   const [checked, setChecked] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -53,7 +55,7 @@ export default function LegalDisclaimer({
     try {
       if (persist) {
         if (!user?.uid) {
-          setError('Onay kaydı için oturum gerekli.')
+          setError(t('legal.authRequired'))
           return
         }
         await agreeToTerms()
@@ -61,11 +63,11 @@ export default function LegalDisclaimer({
       onConfirmed?.()
     } catch (err) {
       emitFirebaseError(err)
-      setError(err instanceof Error ? err.message : 'Onay kaydedilemedi — tekrar deneyin.')
+      setError(err instanceof Error ? err.message : t('legal.saveFailed'))
     } finally {
       setBusy(false)
     }
-  }, [agreeToTerms, busy, checked, onConfirmed, persist, user?.uid])
+  }, [agreeToTerms, busy, checked, onConfirmed, persist, t, user?.uid])
 
   const handleClose = () => {
     if (busy || !dismissible) return

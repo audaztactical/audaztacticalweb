@@ -275,5 +275,10 @@
       "alreadyMember": "• [SUCCESS]: You are already in \"{{name}}\".",
       "joined": "• [SUCCESS]: You have successfully joined the group!"
     }
+  },
+  "groupLeave": {
+    "confirm": "Are you sure you want to leave the tactical team?",
+    "success": "• [SUCCESS]: You have left the team.",
+    "failed": "Failed to leave the team."
   }
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { KeyRound, Loader2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { callRedeemAccessCode } from '../lib/cloudFunctions'
@@ -12,6 +13,7 @@ const inputClass =
  * @param {{ className?: string; bare?: boolean }} [props]
  */
 export default function AccessCodeRedeemPanel({ className = '', bare = false }) {
+  const { t } = useTranslation('common')
   const { user, refreshUserProfile } = useAuth()
   const [code, setCode] = useState('')
   const [busy, setBusy] = useState(false)
@@ -24,13 +26,13 @@ export default function AccessCodeRedeemPanel({ className = '', bare = false }) 
     setSuccess(false)
 
     if (!user?.uid) {
-      setMessage('Oturum gerekli.')
+      setMessage(t('accessCode.authRequired'))
       return
     }
 
     const normalized = normalizeAccessCode(code)
     if (normalized.length < 8) {
-      setMessage('Geçerli bir erişim kodu girin.')
+      setMessage(t('accessCode.invalidCode'))
       return
     }
 
@@ -38,9 +40,11 @@ export default function AccessCodeRedeemPanel({ className = '', bare = false }) 
     try {
       const result = await callRedeemAccessCode(normalized)
       const planLabel =
-        result.plan === 'pro_instructor' ? 'Pro-Eğitmen' : 'Premium'
+        result.plan === 'pro_instructor'
+          ? t('accessCode.planProInstructor')
+          : t('accessCode.planPremium')
       setSuccess(true)
-      setMessage(`• [BAŞARILI]: ${planLabel} erişimi etkinleştirildi.`)
+      setMessage(t('accessCode.success', { plan: planLabel }))
       setCode('')
       if (typeof refreshUserProfile === 'function') {
         await refreshUserProfile()
@@ -49,15 +53,15 @@ export default function AccessCodeRedeemPanel({ className = '', bare = false }) 
       emitFirebaseError(err)
       const errCode = String(/** @type {{ code?: string }} */ (err)?.code ?? '')
       if (errCode.includes('already-exists')) {
-        setMessage('Bu kodu daha önce kullandınız.')
+        setMessage(t('accessCode.alreadyUsed'))
       } else if (errCode.includes('not-found')) {
-        setMessage('Erişim kodu bulunamadı.')
+        setMessage(t('accessCode.notFound'))
       } else if (errCode.includes('resource-exhausted')) {
-        setMessage('Kod kullanım limitine ulaşmış.')
+        setMessage(t('accessCode.exhausted'))
       } else if (errCode.includes('failed-precondition')) {
-        setMessage(err instanceof Error ? err.message : 'Kod kullanılamıyor.')
+        setMessage(err instanceof Error ? err.message : t('accessCode.unavailable'))
       } else {
-        setMessage(err instanceof Error ? err.message : 'Kod kullanılamadı.')
+        setMessage(err instanceof Error ? err.message : t('accessCode.failed'))
       }
     } finally {
       setBusy(false)
