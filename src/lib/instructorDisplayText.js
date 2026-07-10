@@ -3,6 +3,7 @@ import {
   formatAtisDrillLabel,
   formatCqbTacticalErrorGroupTitle,
   formatCqbTacticalErrorLabel,
+  formatObservedEvalCriterionLabel,
   formatObservedEvalObservationNoteLabel,
   formatObservedEvalPhaseSubtitle,
   formatObservedEvalPhaseTitle,
@@ -10,8 +11,10 @@ import {
   formatTcccCasualtyStatusDisplay,
   formatTcccCriticalFailLabel,
   formatTcccMarchActionChipLabel,
+  formatTcccObservedEvalValidationError,
   formatTrainingCategoryTitle,
   formatTrainingSectorLabel,
+  formatVbssObservedEvalValidationError,
 } from './trainingDisplayText'
 
 const NS = 'instructor'
@@ -297,4 +300,49 @@ export function formatInstructorFofHudToneLabel(tone) {
   if (tone === 'green') return instructorT('education.fof.toneOperational')
   if (tone === 'amber') return instructorT('education.fof.toneDevelop')
   return instructorT('education.fof.toneFail')
+}
+
+/**
+ * Instructor VBSS/TCCC evaluation validation → localized message.
+ * Prefers EVAL:* codes; falls back to training observed-eval formatters (legacy TR strings).
+ * @param {'vbss' | 'tccc'} discipline
+ * @param {string | null | undefined} err
+ */
+export function formatInstructorEvaluationValidationError(discipline, err) {
+  if (!err) return null
+  const raw = String(err)
+
+  if (raw === 'EVAL:operatorRequired') {
+    return instructorT(`education.${discipline}.validation.operatorRequired`)
+  }
+  if (raw === 'EVAL:targetDurationInvalid') {
+    return (
+      instructorT('education.vbss.validation.targetDurationInvalid') ||
+      i18n.t('sectors.vbss.observedEval.validation.targetDurationInvalid', { ns: 'training' })
+    )
+  }
+  if (raw === 'EVAL:targetInterventionInvalid') {
+    return (
+      instructorT('education.tccc.validation.targetInterventionInvalid') ||
+      i18n.t('sectors.tccc.observedEval.validation.targetInterventionInvalid', { ns: 'training' })
+    )
+  }
+
+  const scoreMatch = raw.match(/^EVAL:criterionScoreRequired:([^:]*):([^:]+):(\d+):(\d+)$/)
+  if (scoreMatch) {
+    const [, phaseId, criterionId, min, max] = scoreMatch
+    const phase = formatObservedEvalPhaseTitle(discipline, phaseId, phaseId)
+    const criterion = formatObservedEvalCriterionLabel(discipline, phaseId, criterionId, criterionId)
+    return i18n.t(`sectors.${discipline}.observedEval.validation.criterionScoreRequired`, {
+      ns: 'training',
+      phase,
+      criterion,
+      min,
+      max,
+    })
+  }
+
+  // Legacy Turkish strings (observed-eval / older payloads)
+  if (discipline === 'vbss') return formatVbssObservedEvalValidationError(raw)
+  return formatTcccObservedEvalValidationError(raw)
 }

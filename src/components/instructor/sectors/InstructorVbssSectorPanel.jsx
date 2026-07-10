@@ -11,6 +11,7 @@ import {
   validateVbssEvaluationForm,
 } from '../../../lib/vbssEvaluationPayload'
 import {
+  formatInstructorEvaluationValidationError,
   formatObservedEvalObservationNoteLabel,
   formatObservedEvalPhaseSubtitle,
   formatObservedEvalPhaseTitle,
@@ -171,7 +172,7 @@ export default function InstructorVbssSectorPanel({
 
     const validation = validateVbssEvaluationForm(form)
     if (validation) {
-      setMsg(validation)
+      setMsg(formatInstructorEvaluationValidationError('vbss', validation) ?? validation)
       return
     }
 

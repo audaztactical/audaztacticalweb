@@ -44,7 +44,9 @@ export function validateVbssObservedEvalForm(form) {
   if (!invStr(form.observerName).trim()) return 'Gözlemci adı zorunludur.'
   if (!invStr(form.observedAt).trim()) return 'Saha tarihi zorunludur.'
   const coreErr = validateVbssEvaluationForm({ ...form, operatorId: 'self' })
-  if (coreErr && coreErr !== 'Değerlendirilecek operatör seçin.') return coreErr
+  if (coreErr && coreErr !== 'Değerlendirilecek operatör seçin.' && coreErr !== 'EVAL:operatorRequired') {
+    return coreErr
+  }
   if (form.isTimed) {
     const sec = Number(form.targetOperationSec)
     if (!Number.isFinite(sec) || sec <= 0) return 'Hedef operasyon süresi geçersiz.'

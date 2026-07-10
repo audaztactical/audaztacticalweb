@@ -516,7 +516,11 @@
       "targetDurationHint": "Target completion time in seconds.",
       "save": "Save evaluation",
       "saveHint": "Save target: Firestore · vbss_evaluations · operational scores and notes",
-      "saved": "VBSS evaluation saved."
+      "saved": "VBSS evaluation saved.",
+      "validation": {
+        "operatorRequired": "Select an operator to evaluate.",
+        "targetDurationInvalid": "Target operation duration is invalid."
+      }
     },
     "tccc": {
       "cardBanner": "[ DIGITAL TCCC CARD · TELEMETRY ]",
@@ -539,7 +543,11 @@
       "casualtyUnstable": "EKS / KIA",
       "casualtyStable": "STABLE",
       "effectiveScore": "Effective score:",
-      "observationPlaceholder": "// MARCH intervention observation…"
+      "observationPlaceholder": "// MARCH intervention observation…",
+      "validation": {
+        "operatorRequired": "Select an operator to evaluate.",
+        "targetInterventionInvalid": "Intervention target duration is invalid."
+      }
     }
   }
 }

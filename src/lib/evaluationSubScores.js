@@ -51,14 +51,17 @@ export function computePhaseScoreFromForm(subScoresForm, criteria, opts) {
 /**
  * @param {Record<string, string>} subScoresForm
  * @param {EvaluationSubCriterion[]} criteria
- * @param {{ min: number; max: number; criticalFail?: boolean; phaseTitle: string }} opts
- * @returns {string | null}
+ * @param {{ min: number; max: number; criticalFail?: boolean; phaseTitle: string; phaseId?: string }} opts
+ * @returns {string | null} Stable EVAL:* code for i18n display (not a localized sentence)
  */
 export function validatePhaseSubScoresForm(subScoresForm, criteria, opts) {
   if (opts.criticalFail) return null
   for (const c of criteria) {
     const v = parseCriterionScore(subScoresForm[c.id], opts.min, opts.max)
-    if (v == null) return `${opts.phaseTitle} · ${c.label} için geçerli skor seçin (${opts.min}–${opts.max}).`
+    if (v == null) {
+      const phaseId = String(opts.phaseId ?? '').trim()
+      return `EVAL:criterionScoreRequired:${phaseId}:${c.id}:${opts.min}:${opts.max}`
+    }
   }
   return null
 }

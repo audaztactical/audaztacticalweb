@@ -55,19 +55,20 @@ export function parsePhaseScore(phase, phaseId) {
  * @returns {string | null}
  */
 export function validateVbssEvaluationForm(form) {
-  if (!form.operatorId.trim()) return 'Değerlendirilecek operatör seçin.'
+  if (!form.operatorId.trim()) return 'EVAL:operatorRequired'
   for (const meta of VBSS_EVALUATION_PHASES) {
     const phase = form[meta.id]
     const err = validatePhaseSubScoresForm(phase.subScores, VBSS_PHASE_SUB_CRITERIA[meta.id], {
       min: 0,
       max: 10,
       phaseTitle: meta.title,
+      phaseId: meta.id,
     })
     if (err) return err
   }
   if (form.isTimed) {
     const sec = Number(form.targetOperationSec)
-    if (!Number.isFinite(sec) || sec <= 0) return 'Hedef operasyon süresi geçersiz.'
+    if (!Number.isFinite(sec) || sec <= 0) return 'EVAL:targetDurationInvalid'
   }
   return null
 }

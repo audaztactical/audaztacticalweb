@@ -130,7 +130,7 @@ export function formHasAnyCriticalFail(form) {
  * @returns {string | null}
  */
 export function validateTcccEvaluationForm(form) {
-  if (!form.operatorId.trim()) return 'Değerlendirilecek operatör seçin.'
+  if (!form.operatorId.trim()) return 'EVAL:operatorRequired'
   for (const meta of TCCC_MARCH_EVALUATION_PHASES) {
     const phase = form[meta.id]
     if (phase.criticalFail) continue
@@ -138,12 +138,13 @@ export function validateTcccEvaluationForm(form) {
       min: 1,
       max: 10,
       phaseTitle: meta.title,
+      phaseId: meta.id,
     })
     if (err) return err
   }
   if (form.isTimed) {
     const sec = Number(form.targetInterventionSec)
-    if (!Number.isFinite(sec) || sec <= 0) return 'Müdahale hedef süresi geçersiz.'
+    if (!Number.isFinite(sec) || sec <= 0) return 'EVAL:targetInterventionInvalid'
   }
   return null
 }

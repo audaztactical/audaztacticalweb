@@ -47,7 +47,9 @@ export function validateTcccObservedEvalForm(form) {
   if (!invStr(form.observerName).trim()) return 'Gözlemci adı zorunludur.'
   if (!invStr(form.observedAt).trim()) return 'Saha tarihi zorunludur.'
   const coreErr = validateTcccEvaluationForm({ ...form, operatorId: 'self' })
-  if (coreErr && coreErr !== 'Değerlendirilecek operatör seçin.') return coreErr
+  if (coreErr && coreErr !== 'Değerlendirilecek operatör seçin.' && coreErr !== 'EVAL:operatorRequired') {
+    return coreErr
+  }
   if (form.isTimed) {
     const sec = Number(form.targetInterventionSec)
     if (!Number.isFinite(sec) || sec <= 0) return 'Müdahale hedef süresi geçersiz.'

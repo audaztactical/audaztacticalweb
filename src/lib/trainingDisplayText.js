@@ -993,16 +993,40 @@ export function formatVbssDrillSubmitBlockedReason(reasonKey) {
  */
 export function formatVbssObservedEvalValidationError(err) {
   if (!err) return null
+  const raw = String(err)
+
+  if (raw === 'EVAL:operatorRequired') {
+    return i18n.t('sectors.vbss.observedEval.validation.operatorRequired', {
+      ns: 'training',
+      defaultValue: i18n.t('sectors.vbss.observedEval.validation.observerNameRequired', { ns: 'training' }),
+    })
+  }
+  if (raw === 'EVAL:targetDurationInvalid' || raw === 'Hedef operasyon süresi geçersiz.') {
+    return i18n.t('sectors.vbss.observedEval.validation.targetDurationInvalid', { ns: 'training' })
+  }
+
+  const evalScore = raw.match(/^EVAL:criterionScoreRequired:([^:]*):([^:]+):(\d+):(\d+)$/)
+  if (evalScore) {
+    const [, phaseId, criterionId, min, max] = evalScore
+    return i18n.t('sectors.vbss.observedEval.validation.criterionScoreRequired', {
+      ns: 'training',
+      phase: formatObservedEvalPhaseTitle('vbss', phaseId, phaseId),
+      criterion: formatObservedEvalCriterionLabel('vbss', phaseId, criterionId, criterionId),
+      min,
+      max,
+    })
+  }
+
   const staticMap = {
     'Gözlemci adı zorunludur.': 'observerNameRequired',
     'Saha tarihi zorunludur.': 'observedAtRequired',
     'Hedef operasyon süresi geçersiz.': 'targetDurationInvalid',
   }
-  if (staticMap[err]) {
-    return i18n.t(`sectors.vbss.observedEval.validation.${staticMap[err]}`, { ns: 'training' })
+  if (staticMap[raw]) {
+    return i18n.t(`sectors.vbss.observedEval.validation.${staticMap[raw]}`, { ns: 'training' })
   }
 
-  const scoreMatch = err.match(/^(.+) · (.+) için geçerli skor seçin \((\d+)–(\d+)\)\.$/)
+  const scoreMatch = raw.match(/^(.+) · (.+) için geçerli skor seçin \((\d+)–(\d+)\)\.$/)
   if (scoreMatch) {
     const [, phaseTitle, criterionLabel, min, max] = scoreMatch
     for (const meta of VBSS_EVALUATION_PHASES) {
@@ -1022,7 +1046,7 @@ export function formatVbssObservedEvalValidationError(err) {
       }
     }
   }
-  return err
+  return raw
 }
 
 /** @param {Record<string, unknown>} row */
@@ -1261,16 +1285,40 @@ export function formatTcccDrillSubmitBlockedReason(reasonKey) {
  */
 export function formatTcccObservedEvalValidationError(err) {
   if (!err) return null
+  const raw = String(err)
+
+  if (raw === 'EVAL:operatorRequired') {
+    return i18n.t('sectors.tccc.observedEval.validation.operatorRequired', {
+      ns: 'training',
+      defaultValue: i18n.t('sectors.tccc.observedEval.validation.observerNameRequired', { ns: 'training' }),
+    })
+  }
+  if (raw === 'EVAL:targetInterventionInvalid' || raw === 'Müdahale hedef süresi geçersiz.') {
+    return i18n.t('sectors.tccc.observedEval.validation.targetInterventionInvalid', { ns: 'training' })
+  }
+
+  const evalScore = raw.match(/^EVAL:criterionScoreRequired:([^:]*):([^:]+):(\d+):(\d+)$/)
+  if (evalScore) {
+    const [, phaseId, criterionId, min, max] = evalScore
+    return i18n.t('sectors.tccc.observedEval.validation.criterionScoreRequired', {
+      ns: 'training',
+      phase: formatObservedEvalPhaseTitle('tccc', phaseId, phaseId),
+      criterion: formatObservedEvalCriterionLabel('tccc', phaseId, criterionId, criterionId),
+      min,
+      max,
+    })
+  }
+
   const staticMap = {
     'Gözlemci adı zorunludur.': 'observerNameRequired',
     'Saha tarihi zorunludur.': 'observedAtRequired',
     'Müdahale hedef süresi geçersiz.': 'targetInterventionInvalid',
   }
-  if (staticMap[err]) {
-    return i18n.t(`sectors.tccc.observedEval.validation.${staticMap[err]}`, { ns: 'training' })
+  if (staticMap[raw]) {
+    return i18n.t(`sectors.tccc.observedEval.validation.${staticMap[raw]}`, { ns: 'training' })
   }
 
-  const scoreMatch = err.match(/^(.+) · (.+) için geçerli skor seçin \((\d+)–(\d+)\)\.$/)
+  const scoreMatch = raw.match(/^(.+) · (.+) için geçerli skor seçin \((\d+)–(\d+)\)\.$/)
   if (scoreMatch) {
     const [, phaseTitle, criterionLabel, min, max] = scoreMatch
     for (const meta of TCCC_MARCH_EVALUATION_PHASES) {
@@ -1290,7 +1338,7 @@ export function formatTcccObservedEvalValidationError(err) {
       }
     }
   }
-  return err
+  return raw
 }
 
 /** @param {Record<string, unknown>} row */

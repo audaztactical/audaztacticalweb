@@ -23,6 +23,7 @@ import {
   validateTcccEvaluationForm,
 } from '../../../lib/tcccEvaluationPayload'
 import {
+  formatInstructorEvaluationValidationError,
   formatObservedEvalObservationNoteLabel,
   formatObservedEvalPhaseSubtitle,
   formatObservedEvalPhaseTitle,
@@ -393,7 +394,7 @@ export default function InstructorTcccSectorPanel({
 
     const validation = validateTcccEvaluationForm(form)
     if (validation) {
-      setMsg(validation)
+      setMsg(formatInstructorEvaluationValidationError('tccc', validation) ?? validation)
       return
     }
 

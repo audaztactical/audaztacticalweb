@@ -516,7 +516,11 @@
       "targetDurationHint": "Saniye cinsinden hedef tamamlama süresi.",
       "save": "Değerlendirmeyi kaydet",
       "saveHint": "Kayıt hedefi: Firestore · vbss_evaluations · operasyonel puanlar ve notlar",
-      "saved": "VBSS değerlendirmesi kaydedildi."
+      "saved": "VBSS değerlendirmesi kaydedildi.",
+      "validation": {
+        "operatorRequired": "Değerlendirilecek operatör seçin.",
+        "targetDurationInvalid": "Hedef operasyon süresi geçersiz."
+      }
     },
     "tccc": {
       "cardBanner": "[ DİJİTAL TCCC KARTI · TELEMETRİ ]",
@@ -539,7 +543,11 @@
       "casualtyUnstable": "EKS / K.İ.A",
       "casualtyStable": "STABİL",
       "effectiveScore": "Etkin skor:",
-      "observationPlaceholder": "// MARCH müdahale gözlemi…"
+      "observationPlaceholder": "// MARCH müdahale gözlemi…",
+      "validation": {
+        "operatorRequired": "Değerlendirilecek operatör seçin.",
+        "targetInterventionInvalid": "Müdahale hedef süresi geçersiz."
+      }
     }
   }
 }
