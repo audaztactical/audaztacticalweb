@@ -1,22 +1,18 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { AnimatePresence, motion as Motion } from 'framer-motion'
 import { X } from 'lucide-react'
 import AmberAlert from '../common/AmberAlert'
 import Input from '../common/Input'
 import { useAuth } from '../../context/AuthContext'
 import { useFirebaseErrorReporter } from '../../context/FirebaseErrorContext'
+import { formatAuthErrorDisplay, formatGoogleAuthAlert } from '../../lib/authErrorDisplay'
 import { auth, isFirebaseConfigured } from '../../lib/firebase'
 import { userRequiresEmailVerification } from '../../lib/authEmailVerification'
-import { resolveAuthEmailInput, validateBetaPassword } from '../../lib/betaAuth'
+import { BETA_MIN_PASSWORD_LENGTH, resolveAuthEmailInput, validateBetaPassword } from '../../lib/betaAuth'
 import { isPlatformInBetaPeriod } from '../../lib/registrationPolicy'
 import Register from './Register'
-
-function formatAuthDebug(err) {
-  const code = err?.code ?? 'no-code'
-  const msg = typeof err?.message === 'string' ? err.message : String(err ?? '')
-  return `AUTH_FAIL: ${code} — ${msg}`
-}
 
 function GoogleMark({ className }) {
   return (
@@ -42,6 +38,7 @@ function GoogleMark({ className }) {
 }
 
 export default function AuthModal({ open, onClose, initialMode = 'login', redirectTo = '/dashboard', registerTermsPreAccepted = false }) {
+  const { t } = useTranslation('auth')
   const navigate = useNavigate()
   const {
     signInWithGoogle,
@@ -74,19 +71,21 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
     const fe = {}
     const loginId = email.trim()
     if (!loginId) {
-      fe.email = 'ERR: E-posta veya kullanıcı adı gerekli (VALIDATION_LOGIN)'
+      fe.email = t('validation.errLoginId')
     } else if (loginId.includes('@')) {
       const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(loginId)
       if (!emailOk) {
-        fe.email = 'ERR: Geçersiz e-posta formatı (VALIDATION_EMAIL)'
+        fe.email = t('validation.errEmailInvalid')
       }
     } else if (loginId.length < 3) {
-      fe.email = 'ERR: Geçersiz kullanıcı adı (VALIDATION_USERNAME)'
+      fe.email = t('validation.errUsernameFormat')
     }
 
     const passwordCheck = validateBetaPassword(password)
     if (!passwordCheck.ok) {
-      fe.password = `ERR: ${passwordCheck.message} (POLICY_AUTH_01)`
+      fe.password = t('validation.errPasswordPolicy', {
+        message: t('validation.passwordMin', { min: BETA_MIN_PASSWORD_LENGTH }),
+      })
     }
     setFieldErrors(fe)
     return Object.keys(fe).length === 0
@@ -96,7 +95,7 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
 
   const handleGoogleSignIn = async () => {
     if (!configured) {
-      setError('Firebase yapılandırılmadı (.env.local).')
+      setError(t('errors.firebaseNotConfiguredEnv'))
       return
     }
     setError('')
@@ -115,57 +114,16 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
       // mode === 'redirect' → sayfa Google'a gider; dönüş GoogleAuthRedirectHandler + AuthContext'te
     } catch (err) {
       reportFirebaseError(err)
-      const code = err?.code ?? ''
-      const msg = typeof err?.message === 'string' ? err.message : 'Google ile giriş tamamlanamadı.'
 
       if (import.meta.env.DEV) {
         console.error('[AUDAZ HUD · GOOGLE_AUTH · AuthModal]', {
-          firebaseAuthErrorCode: code,
-          message: msg,
+          firebaseAuthErrorCode: err?.code ?? '',
+          message: typeof err?.message === 'string' ? err.message : String(err ?? ''),
         })
       }
 
-      if (
-        code === 'auth/popup-closed-by-user' ||
-        code === 'auth/cancelled-popup-request' ||
-        code === 'auth/redirect-cancelled-by-user'
-      ) {
-        setOauthAlert({
-          label: '[ ERR_GOOGLE_AUTH_CANCELLED ]',
-          body: 'Google oturum penceresi kapatıldı veya iptal edildi.',
-        })
-      } else if (code === 'auth/unauthorized-domain') {
-        setOauthAlert({
-          label: '[ ERR_AUTH_UNAUTHORIZED_DOMAIN ]',
-          body: 'Bu alan adı Firebase Authorized domains listesinde değil. Console → Authentication → Settings.',
-        })
-      } else if (code === 'auth/operation-not-allowed') {
-        setOauthAlert({
-          label: '[ ERR_AUTH_PROVIDER_DISABLED ]',
-          body: 'Google girişi Firebase Console’da etkin değil. Sign-in method → Google → Enable.',
-        })
-      } else if (code === 'auth/popup-blocked') {
-        setOauthAlert({
-          label: '[ ERR_AUTH_POPUP_BLOCKED ]',
-          body: 'Tarayıcı popup’ı engelledi. Adres çubuğundan izin verin veya farklı tarayıcı deneyin.',
-        })
-      } else if (code === 'auth/account-exists-with-different-credential') {
-        setOauthAlert({
-          label: '[ ERR_AUTH_ACCOUNT_EXISTS ]',
-          body:
-            'Bu e-posta daha önce şifre ile kayıt edilmiş. Aynı e-posta ile e-posta/şifre girişi yapın veya Firebase Console’da hesapları birleştirin.',
-        })
-      } else if (code === 'auth/redirect-operation-pending') {
-        setOauthAlert({
-          label: '[ ERR_AUTH_REDIRECT_PENDING ]',
-          body: 'Önceki Google girişi henüz tamamlanmadı. Sayfayı yenileyin ve birkaç saniye bekleyip tekrar deneyin.',
-        })
-      } else {
-        setOauthAlert({
-          label: '[ ERR_GOOGLE_AUTH ]',
-          body: `${code ? `${code} — ` : ''}${msg}`,
-        })
-      }
+      const { title, body } = formatGoogleAuthAlert(err)
+      setOauthAlert({ label: title, body })
     } finally {
       setBusy(false)
     }
@@ -178,7 +136,7 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
     setFieldErrors({})
 
     if (!configured) {
-      setError('Firebase yapılandırılmadı (.env.local).')
+      setError(t('errors.firebaseNotConfiguredEnv'))
       return
     }
 
@@ -207,27 +165,27 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
       reportFirebaseError(err)
       const code = err?.code ?? ''
       if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
-        setError('AUTH_FAIL: Kimlik doğrulanamadı (ERR_INVALID_CREDENTIAL)')
+        setError(formatAuthErrorDisplay(err, { coded: true }))
       } else if (code === 'auth/email-already-in-use') {
-        setError('AUTH_FAIL: E-posta kayıtlı (ERR_EMAIL_IN_USE)')
+        setError(formatAuthErrorDisplay(err, { coded: true }))
       } else if (code === 'auth/invalid-email') {
-        setFieldErrors((f) => ({ ...f, email: 'ERR: Geçersiz e-posta (AUTH_INVALID_EMAIL)' }))
+        setFieldErrors((f) => ({ ...f, email: formatAuthErrorDisplay(err, { coded: true }) }))
       } else if (code === 'auth/weak-password') {
-        setFieldErrors((f) => ({ ...f, password: 'ERR: Şifre zayıf — min. 6 karakter (AUTH_WEAK_PASSWORD)' }))
+        setFieldErrors((f) => ({ ...f, password: formatAuthErrorDisplay(err, { coded: true }) }))
       } else if (code === 'username-already-in-use') {
         setFieldErrors((f) => ({
           ...f,
-          usernameDraft: 'ERR: Bu kullanıcı adı alınmış (USERNAME_TAKEN)',
+          usernameDraft: formatAuthErrorDisplay(err, { coded: true }),
         }))
       } else if (code === 'username-invalid') {
         setFieldErrors((f) => ({
           ...f,
-          usernameDraft: 'ERR: Geçersiz kullanıcı adı formatı (RULE_USERNAME)',
+          usernameDraft: formatAuthErrorDisplay(err, { coded: true }),
         }))
-      } else if (err?.message?.includes('Firebase yapılandırılmadı')) {
-        setError(String(err.message))
+      } else if (err?.message?.includes('Firebase yapılandırılmadı') || err?.message?.includes('Firebase is not configured')) {
+        setError(t('errors.firebaseNotConfiguredEnv'))
       } else {
-        setError(formatAuthDebug(err))
+        setError(formatAuthErrorDisplay(err))
       }
     } finally {
       setBusy(false)
@@ -243,7 +201,7 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
           <Motion.button
             type="button"
             className="absolute inset-0 bg-[#050608]/85"
-            aria-label="Kapat"
+            aria-label={t('chrome.close')}
             onClick={onClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -269,7 +227,7 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
                   type="button"
                   onClick={onClose}
                   className="absolute right-4 top-4 rounded-lg p-2 text-app-text/55 transition hover:bg-white/10 hover:text-app-text"
-                  aria-label="Modalı kapat"
+                  aria-label={t('chrome.closeModal')}
                 >
                   <X className="size-5" strokeWidth={1.75} />
                 </button>
@@ -287,7 +245,7 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
                     />
                   </Motion.div>
                   <h2 id="auth-modal-title" className="font-display text-lg font-bold tracking-wide text-app-text">
-                    {isRegister ? 'Operatör Kaydı' : 'Operatör Girişi'}
+                    {isRegister ? t('tabs.register') : t('tabs.login')}
                   </h2>
                 </div>
               </Motion.div>
@@ -309,7 +267,7 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
                         : 'text-app-text/55 hover:text-app-text/90',
                     ].join(' ')}
                   >
-                    Giriş Yap
+                    {t('actions.switchToLogin')}
                   </button>
                   <button
                     type="button"
@@ -326,7 +284,7 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
                         : 'text-app-text/55 hover:text-app-text/90',
                     ].join(' ')}
                   >
-                    Kayıt
+                    {t('actions.switchToRegister')}
                   </button>
                 </div>
 
@@ -368,34 +326,34 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
                     >
                       <Input
                         variant="gold"
-                        label={isPlatformInBetaPeriod() ? 'Kullanıcı adı veya e-posta' : 'E-posta'}
+                        label={isPlatformInBetaPeriod() ? t('fields.loginIdOrEmail') : t('fields.email')}
                         id="auth-email"
                         type="text"
                         name="email"
                         autoComplete="username"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder={isPlatformInBetaPeriod() ? 'wolf_alpha veya operatör@kurum.tr' : 'operatör@kurum.tr'}
+                        placeholder={isPlatformInBetaPeriod() ? t('placeholders.loginIdBeta') : t('placeholders.loginId')}
                         error={fieldErrors.email}
                         required
                       />
 
                       <Input
                         variant="gold"
-                        label="Şifre"
+                        label={t('fields.password')}
                         id="auth-password"
                         type="password"
                         name="password"
                         autoComplete="current-password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        placeholder="En az 6 karakter"
+                        placeholder={t('placeholders.password', { min: BETA_MIN_PASSWORD_LENGTH })}
                         error={fieldErrors.password}
                         required
                       />
                       {isPlatformInBetaPeriod() ? (
                         <p className="font-mono-technical text-[9px] leading-relaxed text-app-text/50">
-                          Beta test: yalnızca kullanıcı adınızı girerek de oturum açabilirsiniz.
+                          {t('hints.betaUsernameLogin')}
                         </p>
                       ) : null}
 
@@ -409,7 +367,7 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
                         {busy ? (
                           <span className="font-mono-technical tracking-widest">…</span>
                         ) : (
-                          'Giriş Yap'
+                          t('actions.login')
                         )}
                       </button>
                     </Motion.form>
@@ -420,7 +378,7 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
                   <div className="flex items-center gap-3">
                     <span className="h-px flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
                     <span className="font-mono-technical text-[10px] font-semibold uppercase tracking-[0.35em] text-app-text/55">
-                      veya
+                      {t('chrome.or')}
                     </span>
                     <span className="h-px flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
                   </div>
@@ -436,7 +394,7 @@ export default function AuthModal({ open, onClose, initialMode = 'login', redire
                     className="glass-card flex w-full items-center justify-center gap-3 rounded-xl border border-[#d4af37]/55 bg-white/[0.04] px-4 py-3.5 font-display text-[11px] font-bold uppercase tracking-[0.28em] text-app-text shadow-[inset_0_1px_0_rgba(255,180,0,0.12),0_8px_32px_-12px_rgba(0,0,0,0.5)] transition hover:border-accent/80 hover:bg-accent/[0.08] disabled:cursor-not-allowed disabled:opacity-45"
                   >
                     <GoogleMark className="size-5 shrink-0" />
-                    <span className="text-[#f0e6d2]">GOOGLE İLE OPERATÖR GİRİŞİ</span>
+                    <span className="text-[#f0e6d2]">{t('actions.googleSignInUpper')}</span>
                   </button>
                 </Motion.div>
               </Motion.div>

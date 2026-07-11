@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Scale } from 'lucide-react'
 import Input from '../common/Input'
 import LegalDisclaimer from '../LegalDisclaimer'
 import { useAuth } from '../../context/AuthContext'
+import { formatAuthErrorDisplay } from '../../lib/authErrorDisplay'
 import { isPlatformInBetaPeriod } from '../../lib/registrationPolicy'
-import { validateBetaPassword } from '../../lib/betaAuth'
+import { BETA_MIN_PASSWORD_LENGTH, validateBetaPassword } from '../../lib/betaAuth'
+import { LEGAL_PROTOCOL_COUNT } from '../../data/legalProtocols'
 import {
   normalizeUsername,
   isUsernameAvailable,
@@ -36,6 +39,7 @@ export default function Register({
   disabled = false,
   initialTermsAccepted = false,
 }) {
+  const { t } = useTranslation('auth')
   const { agreeToTerms } = useAuth()
   const betaMode = isPlatformInBetaPeriod()
   const [email, setEmail] = useState('')
@@ -56,38 +60,39 @@ export default function Register({
     const fe = {}
 
     if (!callsign.trim()) {
-      fe.callsign = 'ERR: Callsign zorunlu (FIELD_CALLSIGN)'
+      fe.callsign = t('validation.errCallsign')
     }
 
     const mail = email.trim()
     if (!mail) {
-      fe.email = 'ERR: E-posta zorunlu (FIELD_EMAIL)'
+      fe.email = t('validation.errEmailRequired')
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) {
-      fe.email = 'ERR: Geçerli bir e-posta girin (VALIDATION_EMAIL)'
+      fe.email = t('validation.errEmailInvalid')
     }
 
     const normalized = normalizeUsername(usernameDraft)
     if (!normalized) {
-      fe.usernameDraft = 'ERR: Operatör kullanıcı adı zorunlu (FIELD_USERNAME)'
+      fe.usernameDraft = t('validation.errUsernameRequired')
     } else if (!isValidUsernameNormalized(normalized)) {
-      fe.usernameDraft =
-        'ERR: 3–24 karakter; yalnızca a-z, 0-9 ve _ (otomatik küçük harfe çevrilir) (RULE_USERNAME)'
+      fe.usernameDraft = t('validation.errUsernameFormat')
     } else {
       setCheckingUsername(true)
       try {
         const free = await isUsernameAvailable(normalized)
         if (!free) {
-          fe.usernameDraft = 'ERR: Bu kullanıcı adı alınmış (USERNAME_TAKEN)'
+          fe.usernameDraft = t('validation.errUsernameTaken')
         }
       } catch {
-        fe.usernameDraft = 'ERR: Kullanıcı adı doğrulanamadı — tekrar deneyin.'
+        fe.usernameDraft = t('validation.usernameCheckFailed')
       } finally {
         setCheckingUsername(false)
       }
     }
 
     if (!validateBetaPassword(password).ok) {
-      fe.password = 'ERR: Şifre min. 6 karakter (POLICY_AUTH_01)'
+      fe.password = t('validation.errPasswordPolicy', {
+        message: t('validation.passwordMin', { min: BETA_MIN_PASSWORD_LENGTH }),
+      })
     }
 
     setFieldErrors(fe)
@@ -130,24 +135,24 @@ export default function Register({
     } catch (err) {
       const code = err?.code ?? ''
       if (code === 'auth/email-already-in-use') {
-        onError('AUTH_FAIL: Bu e-posta zaten kayıtlı (EMAIL_IN_USE)')
+        onError(formatAuthErrorDisplay(err, { emailOrUsername: true }))
       } else if (code === 'auth/invalid-email') {
-        onError('Geçersiz e-posta adresi — kontrol edin.')
+        onError(formatAuthErrorDisplay(err))
       } else if (code === 'auth/weak-password') {
-        onError('ERR: Şifre politikası — farklı bir kullanıcı adı deneyin.')
+        onError(t('errors.errPasswordUsernameHint'))
       } else if (code === 'username-already-in-use') {
         setFieldErrors((f) => ({
           ...f,
-          usernameDraft: 'ERR: Bu kullanıcı adı alınmış (USERNAME_TAKEN)',
+          usernameDraft: formatAuthErrorDisplay(err, { coded: true }),
         }))
       } else if (code === 'username-invalid') {
         setFieldErrors((f) => ({
           ...f,
-          usernameDraft: 'ERR: Geçersiz kullanıcı adı formatı (RULE_USERNAME)',
+          usernameDraft: formatAuthErrorDisplay(err, { coded: true }),
         }))
       } else {
         onError(
-          typeof err?.message === 'string' ? err.message : 'Kayıt tamamlanamadı.',
+          formatAuthErrorDisplay(err),
           undefined,
         )
       }
@@ -164,67 +169,66 @@ export default function Register({
       {betaMode ? (
         <div className="rounded-lg border border-lime-500/35 bg-lime-950/25 px-4 py-3.5">
           <p className="font-mono-technical text-xs font-bold uppercase tracking-wider text-lime-300">
-            Beta Test — Operatör kaydı
+            {t('hints.betaBannerTitle')}
           </p>
           <p className="mt-1.5 font-sans text-sm leading-relaxed text-zinc-300">
-            Callsign, e-posta, kullanıcı adı ve şifre ile kayıt olun. Beta döneminde e-posta doğrulaması
-            zorunlu değildir; kayıt sonrası doğrudan Dashboard&apos;a yönlendirilirsiniz.
+            {t('hints.betaBannerBody')}
           </p>
         </div>
       ) : null}
 
       <Input
         variant="gold"
-        label="Callsign (Kod adı)"
+        label={t('fields.callsignFull')}
         name="callsign"
         autoComplete="nickname"
         value={callsign}
         onChange={(e) => setCallsign(e.target.value.toUpperCase())}
-        placeholder="ÖRN: WOLF-1"
+        placeholder={t('placeholders.callsignExample')}
         error={fieldErrors.callsign}
         required
       />
       <Input
         variant="gold"
-        label="E-posta"
+        label={t('fields.email')}
         name="email"
         type="email"
         autoComplete="email"
         value={email}
         onChange={(e) => setEmail(e.target.value.trim())}
-        placeholder="operatör@kurum.tr"
+        placeholder={t('placeholders.email')}
         error={fieldErrors.email}
         required
       />
       <Input
         variant="gold"
-        label="Operatör kullanıcı adı (benzersiz)"
+        label={t('fields.usernameUnique')}
         name="username"
         autoComplete="username"
         value={usernameDraft}
         onChange={(e) => setUsernameDraft(e.target.value.toLowerCase().replace(/[^a-z0-9_\s]/g, ''))}
-        placeholder="örn: wolf_alpha"
-        hint="İngilizce harf ve rakamlar; boşluk alt çizgiye döner."
+        placeholder={t('placeholders.usernameExample')}
+        hint={t('hints.usernameChars')}
         error={fieldErrors.usernameDraft}
         required
       />
 
       <Input
         variant="gold"
-        label="Şifre"
+        label={t('fields.password')}
         name="password"
         type="password"
         autoComplete="new-password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        placeholder="En az 6 karakter"
+        placeholder={t('placeholders.password', { min: BETA_MIN_PASSWORD_LENGTH })}
         error={fieldErrors.password}
         required
       />
 
       {checkingUsername ? (
         <p className="text-center font-mono-technical text-[10px] text-app-text/55">
-          kullanıcı adı doğrulanıyor...
+          {t('actions.verifyingUsername')}
         </p>
       ) : null}
 
@@ -232,12 +236,12 @@ export default function Register({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="font-mono-technical text-xs font-bold uppercase tracking-wider text-accent">
-              Operasyonel ve Hukuki Protokol
+              {t('legal.panelTitle')}
             </p>
             <p className="mt-1.5 font-sans text-sm leading-relaxed text-zinc-400">
               {termsAccepted
-                ? 'Protokol onaylandı — kayıt tamamlanabilir.'
-                : 'Kayıt için 46 maddelik protokolü okuyup onaylayın.'}
+                ? t('legal.accepted')
+                : t('legal.requiredHint', { count: LEGAL_PROTOCOL_COUNT })}
             </p>
           </div>
           <button
@@ -246,7 +250,7 @@ export default function Register({
             className="inline-flex shrink-0 items-center gap-1.5 rounded border border-accent/45 bg-accent/10 px-4 py-2.5 font-mono-technical text-[11px] font-bold uppercase tracking-wider text-accent transition hover:bg-accent/18"
           >
             <Scale className="size-3.5" aria-hidden />
-            {termsAccepted ? 'Yeniden Oku' : 'Protokolü Oku'}
+            {termsAccepted ? t('legal.readAgain') : t('legal.readProtocol')}
           </button>
         </div>
       </div>
@@ -259,11 +263,11 @@ export default function Register({
         {busy ? (
           <span className="font-mono-technical tracking-widest">…</span>
         ) : (
-          'OPERATÖRÜ KAYDET'
+          t('actions.registerUpper')
         )}
       </button>
       <p className="text-center font-mono-technical text-[9px] uppercase tracking-[0.35em] text-app-text/45">
-        {betaMode ? 'BETA ENROLMENT // DASHBOARD_READY' : 'ENROLMENT // SECURE_CHANNEL'}
+        {betaMode ? t('hints.enrolmentFooter') : t('hints.secureFooter')}
       </p>
 
       <LegalDisclaimer

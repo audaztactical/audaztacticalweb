@@ -7,6 +7,7 @@ import {
   formatStorageErrorDisplay,
   resolveStorageErrorCode,
 } from '../services/storageService'
+import { formatAuthErrorDisplay } from './authErrorDisplay'
 
 const MAP = {
   'permission-denied': '[ ERR_FIRESTORE_DENIED ]',
@@ -76,7 +77,16 @@ export function mapFirebaseError(error) {
   }
 
   const technical = MAP[rawCode] || '[ ERR_FIREBASE_UNKNOWN ]'
-  const message = typeof error?.message === 'string' ? error.message : String(error ?? '')
+  const isAuthRelated =
+    rawCode.startsWith('auth/') ||
+    rawCode === 'username-already-in-use' ||
+    rawCode === 'username-invalid'
+
+  const message = isAuthRelated
+    ? formatAuthErrorDisplay(error)
+    : typeof error?.message === 'string'
+      ? error.message
+      : String(error ?? '')
 
   return { code: rawCode || 'unknown', technical, message }
 }

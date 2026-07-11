@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Volume2, VolumeX } from 'lucide-react'
 import { markIntroAsShown } from '../lib/introStorage'
 
@@ -7,6 +8,7 @@ import { markIntroAsShown } from '../lib/introStorage'
  * @param {{ onFinish: () => void }} props
  */
 export default function IntroOverlay({ onFinish }) {
+  const { t } = useTranslation('landing')
   const videoRef = useRef(/** @type {HTMLVideoElement | null} */ (null))
   const exitTimerRef = useRef(/** @type {ReturnType<typeof setTimeout> | null} */ (null))
   const startedRef = useRef(false)
@@ -161,7 +163,7 @@ export default function IntroOverlay({ onFinish }) {
         phase === 'exiting' ? 'intro-overlay--exit' : '',
       ].join(' ')}
       role="dialog"
-      aria-label="Giriş deneyimi"
+      aria-label={t('intro.dialogAria')}
     >
       {phase === 'welcome' ? (
         <div className="entry-gate__atmosphere pointer-events-none absolute inset-0 z-[2]" aria-hidden />
@@ -184,7 +186,7 @@ export default function IntroOverlay({ onFinish }) {
           type="button"
           onClick={startIntroFromGesture}
           className="entry-gate group absolute inset-0 z-[3] flex items-center justify-center border-0 bg-transparent p-6 outline-none"
-          aria-label="Hoş geldin, devam etmek için giriş yap"
+          aria-label={t('intro.welcomeAria')}
         >
           <div className="entry-gate__frame pointer-events-none absolute inset-8 border border-white/[0.06] sm:inset-12" aria-hidden>
             <span className="entry-gate__corner entry-gate__corner--tl" />
@@ -197,10 +199,10 @@ export default function IntroOverlay({ onFinish }) {
 
           <div className="entry-gate__content relative z-10 max-w-xl text-center">
             <p className="entry-gate__title font-display text-2xl font-semibold leading-snug tracking-wide text-app-text transition duration-500 group-hover:text-accent sm:text-3xl md:text-4xl">
-              Hoş Geldin.
+              {t('intro.welcomeTitle')}
             </p>
             <p className="entry-gate__subtitle mt-4 font-display text-sm font-medium tracking-[0.12em] text-app-text/70 transition duration-500 group-hover:text-app-text sm:text-base">
-              devam etmek için giriş yap
+              {t('intro.welcomeSubtitle')}
             </p>
             <div className="entry-gate__pulse mx-auto mt-10 h-px w-24 bg-gradient-to-r from-transparent via-accent/80 to-transparent" aria-hidden />
           </div>
@@ -217,8 +219,8 @@ export default function IntroOverlay({ onFinish }) {
               ? 'intro-sound-btn--muted border-accent/45 text-accent hover:border-accent/70 hover:bg-accent/10'
               : 'border-white/20 text-app-text/90 hover:border-white/35 hover:text-app-text',
           ].join(' ')}
-          aria-label={isMuted ? 'Sesi aç' : 'Sesi kapat'}
-          title={isMuted ? 'Sesi aç' : 'Sesi kapat'}
+          aria-label={isMuted ? t('intro.unmute') : t('intro.mute')}
+          title={isMuted ? t('intro.unmute') : t('intro.mute')}
         >
           {isMuted ? (
             <VolumeX className="size-4" strokeWidth={2} aria-hidden />
@@ -238,7 +240,7 @@ export default function IntroOverlay({ onFinish }) {
               disabled={phase === 'exiting'}
               className="intro-overlay__cta pointer-events-auto rounded-sm border border-white/25 bg-black/35 px-11 py-3 font-display text-xs font-semibold uppercase tracking-[0.32em] text-slate-100 backdrop-blur-md transition duration-300 hover:border-accent/55 hover:bg-accent/[0.07] hover:text-accent hover:shadow-[0_0_32px_-14px_rgba(255,180,0,0.55)] disabled:pointer-events-none disabled:opacity-50 sm:px-12 sm:py-3.5 sm:text-sm"
             >
-              Sisteme giriş
+              {t('intro.enterSystem')}
             </button>
           </div>
         </div>

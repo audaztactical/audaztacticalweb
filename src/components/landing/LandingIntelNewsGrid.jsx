@@ -15,6 +15,7 @@ import {
  * @param {{ teaser: NewsTeaser }} props
  */
 function NewsTeaserCard({ teaser }) {
+  const { t } = useTranslation('landing')
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-sm border border-emerald-500/15 bg-black/30 transition hover:border-emerald-400/35 hover:shadow-[0_0_24px_-10px_rgba(52,211,153,0.2)]">
       <div className="relative aspect-[16/10] overflow-hidden border-b border-emerald-500/10 bg-gradient-to-br from-emerald-950/30 via-[#0a0b0d] to-black">
@@ -33,7 +34,7 @@ function NewsTeaserCard({ teaser }) {
         <div className="relative flex h-full flex-col items-center justify-center gap-2 p-4">
           <ImageIcon className="size-8 text-emerald-400/35" strokeWidth={1.25} aria-hidden />
           <p className="font-mono-technical text-[8px] uppercase tracking-[0.25em] text-emerald-400/50">
-            {teaser.live ? 'Güncel haber' : 'TEASER · GÖRSEL'}
+            {teaser.live ? t('news.cardLive') : t('news.cardTeaser')}
           </p>
         </div>
         {teaser.live ? (

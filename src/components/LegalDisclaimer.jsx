@@ -10,11 +10,9 @@ import {
 } from '../data/legalProtocols'
 import { emitFirebaseError } from '../lib/firebaseErrorBus'
 
-const CHECKBOX_LABEL =
-  'Yukarıdaki 46 maddelik Operasyonel ve Hukuki Protokolü okudum, anladım ve kabul ediyorum.'
-
 /**
  * Operasyonel ve Hukuki Protokol onay modali.
+ * Chrome/checkbox i18n; madde gövdeleri (legalProtocols.js) bu turda TR kalır.
  * @param {{
  *   open: boolean
  *   onClose?: () => void
@@ -30,9 +28,10 @@ export default function LegalDisclaimer({
   onConfirmed,
   persist = true,
   dismissible = true,
-  title = 'OPERASYONEL VE HUKUKİ PROTOKOL',
+  title,
 }) {
-  const { t } = useTranslation('common')
+  const { t } = useTranslation(['auth', 'common'])
+  const resolvedTitle = title ?? t('legal.title', { ns: 'auth' })
   const { user, agreeToTerms } = useAuth()
   const [checked, setChecked] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -55,7 +54,7 @@ export default function LegalDisclaimer({
     try {
       if (persist) {
         if (!user?.uid) {
-          setError(t('legal.authRequired'))
+          setError(t('legal.authRequired', { ns: 'common' }))
           return
         }
         await agreeToTerms()
@@ -63,7 +62,7 @@ export default function LegalDisclaimer({
       onConfirmed?.()
     } catch (err) {
       emitFirebaseError(err)
-      setError(err instanceof Error ? err.message : t('legal.saveFailed'))
+      setError(err instanceof Error ? err.message : t('legal.saveFailed', { ns: 'common' }))
     } finally {
       setBusy(false)
     }
@@ -87,7 +86,7 @@ export default function LegalDisclaimer({
           <button
             type="button"
             className="absolute inset-0 bg-[#050608]/90"
-            aria-label="Modali kapat"
+            aria-label={t('chrome.closeModal', { ns: 'auth' })}
             onClick={handleClose}
             tabIndex={dismissible ? 0 : -1}
           />
@@ -115,10 +114,10 @@ export default function LegalDisclaimer({
                     id="legal-disclaimer-title"
                     className="font-mono-technical text-sm font-bold uppercase tracking-[0.2em] text-accent sm:text-base"
                   >
-                    {title}
+                    {resolvedTitle}
                   </h2>
                   <p className="mt-1.5 font-mono-technical text-[11px] uppercase tracking-wider text-zinc-400 sm:text-xs">
-                    {LEGAL_PROTOCOL_COUNT} MADDE · OPERATÖR UYUMLULUK PAKETİ
+                    {t('legal.packLabel', { ns: 'auth', count: LEGAL_PROTOCOL_COUNT })}
                   </p>
                 </div>
               </div>
@@ -128,7 +127,7 @@ export default function LegalDisclaimer({
                   onClick={handleClose}
                   disabled={busy}
                   className="rounded border border-accent/20 p-1.5 text-app-text/55 transition hover:border-accent/40 hover:text-accent disabled:opacity-40"
-                  aria-label="Kapat"
+                  aria-label={t('chrome.close', { ns: 'auth' })}
                 >
                   <X className="size-4" aria-hidden />
                 </button>
@@ -138,7 +137,7 @@ export default function LegalDisclaimer({
             <div
               className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6 lg:px-8 lg:py-6"
               tabIndex={0}
-              aria-label="Protokol maddeleri"
+              aria-label={t('legal.articlesAria', { ns: 'auth' })}
             >
               <div className="space-y-8">
                 {LEGAL_PROTOCOLS.map((block) => (
@@ -153,7 +152,10 @@ export default function LegalDisclaimer({
                           className="rounded-lg border border-zinc-700/80 bg-[#0a0d12] px-4 py-3"
                         >
                           <span className="font-mono-technical text-xs font-bold tabular-nums text-accent">
-                            Madde {String(item.id).padStart(2, '0')}
+                            {t('legal.articleLabel', {
+                              ns: 'auth',
+                              n: String(item.id).padStart(2, '0'),
+                            })}
                           </span>
                           <p className="mt-2 font-sans text-[13px] leading-[1.65] text-zinc-200 sm:text-sm sm:leading-relaxed">
                             {item.text}
@@ -181,7 +183,7 @@ export default function LegalDisclaimer({
                   onChange={(e) => setChecked(e.target.checked)}
                 />
                 <span className="font-sans text-xs leading-relaxed text-zinc-200 sm:text-sm">
-                  {CHECKBOX_LABEL}
+                  {t('legal.checkbox', { ns: 'auth', count: LEGAL_PROTOCOL_COUNT })}
                 </span>
               </label>
 
@@ -199,7 +201,7 @@ export default function LegalDisclaimer({
                     disabled={busy}
                     className="rounded border border-accent/20 px-4 py-2.5 font-mono-technical text-[10px] font-bold uppercase tracking-wider text-app-text/70 transition hover:border-accent/40 hover:text-app-text disabled:opacity-40"
                   >
-                    Vazgeç
+                    {t('legal.cancel', { ns: 'auth' })}
                   </button>
                 ) : null}
                 <button
@@ -211,10 +213,10 @@ export default function LegalDisclaimer({
                   {busy ? (
                     <>
                       <Loader2 className="size-3.5 animate-spin" aria-hidden />
-                      Kaydediliyor…
+                      {t('legal.saving', { ns: 'auth' })}
                     </>
                   ) : (
-                    'Onayla'
+                    t('legal.confirm', { ns: 'auth' })
                   )}
                 </button>
               </div>
@@ -226,4 +228,6 @@ export default function LegalDisclaimer({
   )
 }
 
-export { CHECKBOX_LABEL }
+/** @deprecated Use auth:legal.checkbox */
+export const CHECKBOX_LABEL =
+  'Yukarıdaki 46 maddelik Operasyonel ve Hukuki Protokolü okudum, anladım ve kabul ediyorum.'

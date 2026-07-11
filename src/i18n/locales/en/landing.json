@@ -1,0 +1,98 @@
+{
+  "nav": {
+    "homeAria": "Home",
+    "googleSync": "[ GOOGLE · SYNC ]",
+    "goToPanel": "Go to panel",
+    "signIn": "Sign in",
+    "joinNow": "Join now"
+  },
+  "hero": {
+    "eyebrow": "OPERATIONAL PLATFORM",
+    "brandAudaz": "AUDAZ",
+    "brandTactical": "TACTICAL",
+    "tagline": "Digitize Your Edge"
+  },
+  "news": {
+    "title": "NEWS FEED / DOCTRINE",
+    "subtitle": "Security strategy and field intel — full encrypted access only in the member console.",
+    "statusSyncing": "SYNCING",
+    "statusLive": "DATA FEED ACTIVE",
+    "statusTeaser": "NEWS TEASER MODE",
+    "cardLive": "Live news",
+    "cardTeaser": "TEASER · VISUAL",
+    "defaultSource": "NEWS · Global News Network"
+  },
+  "teasers": {
+    "t1": {
+      "title": "Regional Security Dynamics — Border Line Brief",
+      "source": "NEWS · Global News Network",
+      "body": "Open-source signals point to rising activity along border regions. Full analysis and geographic context for members only."
+    },
+    "t2": {
+      "title": "Cyber Threat Vector — Critical Infrastructure Scan",
+      "source": "NEWS · Threat Matrix",
+      "body": "IDS alerts over the last 72 hours remain low intensity. Deep packet analysis and IOC lists are inside the platform."
+    },
+    "t3": {
+      "title": "Maritime Lane Operations — Open-Source Imagery",
+      "source": "NEWS · Maritime Watch",
+      "body": "Preview compiled from satellite and AIS sources. Full route reconstruction and operational briefing require membership."
+    }
+  },
+  "footer": {
+    "copyright": "© AUDAZ TACTICAL – AUTHORIZED USE ONLY"
+  },
+  "hud": {
+    "topologyTitle": "AUDAZ · TACTICAL DATA TOPOLOGY",
+    "topologyLive": "Live simulation",
+    "topologyExpanded": "Expanded topology · session active",
+    "tickerSecure": "Secure Link · Audaz Tactical",
+    "tickerNetwork": "Operational data network · encrypted",
+    "threatTitle": "Cyber Threat Matrix",
+    "threatHint": "Threat: low · protection active",
+    "taskTitle": "TASK MATRIX",
+    "networkTitle": "NETWORK STATUS",
+    "operatorHq": "Operator HQ",
+    "secureFooter": "Secure Link · Audaz Tactical",
+    "taskStatus": {
+      "active": "ACTIVE",
+      "wait": "HOLD",
+      "ready": "READY"
+    },
+    "network": {
+      "comms": "Comms",
+      "commsValue": "ENCRYPTED",
+      "news": "Global news",
+      "newsValue": "Live",
+      "ors": "ORS engine",
+      "orsValue": "SYNC",
+      "armory": "Armory",
+      "armoryValue": "87%"
+    },
+    "nodes": {
+      "siber_savunma": { "label": "Cyber Defense", "sub": "Threat shield" },
+      "istihbarat": { "label": "Global News", "sub": "Live feed" },
+      "muhabere": { "label": "Comms", "sub": "Encrypted" },
+      "task_matrix": { "label": "Mission Center", "sub": "Tasks · sync" },
+      "cephanelik": { "label": "Armory", "sub": "Inventory · 87%" },
+      "tccc": { "label": "TCCC", "sub": "Evac" },
+      "ors": { "label": "ORS", "sub": "Risk Score" }
+    },
+    "tiles": {
+      "dashboard": { "label": "Home", "sub": "ORS · inventory · readiness" },
+      "training": { "label": "Training", "sub": "Range · CQB · FoF" },
+      "comms": { "label": "Comms", "sub": "Tactical channels" },
+      "tccc": { "label": "TCCC · Health", "sub": "Evac · IFAK" },
+      "armory": { "label": "Armory", "sub": "Weapons · ammo" }
+    }
+  },
+  "intro": {
+    "dialogAria": "Entry experience",
+    "welcomeAria": "Welcome — sign in to continue",
+    "welcomeTitle": "Welcome.",
+    "welcomeSubtitle": "sign in to continue",
+    "unmute": "Unmute",
+    "mute": "Mute",
+    "enterSystem": "Enter system"
+  }
+}

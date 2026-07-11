@@ -32,11 +32,21 @@ export function LanguagePreferenceProvider({ children }) {
       ref,
       (snap) => {
         const pref = snap.data()?.preferredLanguage
+        const current = i18n.language?.startsWith('tr') ? 'tr' : 'en'
         if (pref === 'tr' || pref === 'en') {
-          const current = i18n.language?.startsWith('tr') ? 'tr' : 'en'
           if (current !== pref) {
             void i18n.changeLanguage(pref)
           }
+        } else {
+          // Guest chose a language before signup — seed Firestore once on first profile load
+          void setDoc(
+            ref,
+            prepareAudazPatchPayload({
+              preferredLanguage: current,
+              updatedAt: serverTimestamp(),
+            }),
+            { merge: true },
+          ).catch((err) => emitFirebaseError(err))
         }
         setHydrated(true)
       },

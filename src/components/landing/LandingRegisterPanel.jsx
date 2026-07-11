@@ -1,10 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Loader2, Scale } from 'lucide-react'
 import Input from '../common/Input'
 import LegalDisclaimer from '../LegalDisclaimer'
 import { useAuth } from '../../context/AuthContext'
-import { resolveAuthEmailInput, validateBetaPassword } from '../../lib/betaAuth'
+import {
+  formatAuthErrorDisplay,
+  formatGoogleAuthErrorDisplay,
+} from '../../lib/authErrorDisplay'
+import { BETA_MIN_PASSWORD_LENGTH, resolveAuthEmailInput, validateBetaPassword } from '../../lib/betaAuth'
 import { auth, isFirebaseConfigured } from '../../lib/firebase'
 import { isPlatformInBetaPeriod } from '../../lib/registrationPolicy'
 import {
@@ -12,6 +17,7 @@ import {
   isValidUsernameNormalized,
   normalizeUsername,
 } from '../../lib/firestoreUsers'
+import { LEGAL_PROTOCOL_COUNT } from '../../data/legalProtocols'
 
 function GoogleMark({ className }) {
   return (
@@ -36,37 +42,11 @@ function GoogleMark({ className }) {
   )
 }
 
-function googleAuthErrorMessage(err) {
-  const code = err?.code ?? ''
-  if (
-    code === 'auth/popup-closed-by-user' ||
-    code === 'auth/cancelled-popup-request' ||
-    code === 'auth/redirect-cancelled-by-user'
-  ) {
-    return 'Google oturumu iptal edildi'
-  }
-  if (code === 'auth/unauthorized-domain') {
-    return 'Alan adı Firebase Authorized domains listesinde değil'
-  }
-  if (code === 'auth/operation-not-allowed') {
-    return 'Google girişi Firebase Console’da etkin değil'
-  }
-  if (code === 'auth/popup-blocked') {
-    return 'Tarayıcı popup’ı engelledi'
-  }
-  if (code === 'auth/account-exists-with-different-credential') {
-    return 'Bu e-posta farklı bir yöntemle kayıtlı — e-posta/şifre deneyin'
-  }
-  if (code === 'auth/redirect-operation-pending') {
-    return 'Önceki Google girişi tamamlanmadı — sayfayı yenileyin'
-  }
-  return typeof err?.message === 'string' ? err.message : 'Google ile giriş tamamlanamadı'
-}
-
 /**
  * @param {{ initialMode?: 'register' | 'login'; onDismissIntro?: () => void }} props
  */
 export default function LandingRegisterPanel({ initialMode = 'register', onDismissIntro }) {
+  const { t } = useTranslation('auth')
   const navigate = useNavigate()
   const { registerWithEmailPassword, agreeToTerms, signInWithEmailPassword, signInWithGoogle } =
     useAuth()
@@ -95,39 +75,39 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
     setFormError('')
 
     if (!callsign.trim()) {
-      fe.callsign = 'Callsign zorunlu'
+      fe.callsign = t('validation.callsignRequired')
     }
 
     const mail = email.trim()
     if (!mail) {
-      fe.email = 'E-posta zorunlu'
+      fe.email = t('validation.emailRequired')
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) {
-      fe.email = 'Geçerli bir e-posta girin'
+      fe.email = t('validation.emailInvalid')
     }
 
     const normalized = normalizeUsername(usernameDraft)
     if (!normalized) {
-      fe.usernameDraft = 'Kullanıcı adı zorunlu'
+      fe.usernameDraft = t('validation.usernameRequired')
     } else if (!isValidUsernameNormalized(normalized)) {
-      fe.usernameDraft = '3–24 karakter; a-z, 0-9 ve _'
+      fe.usernameDraft = t('validation.usernameFormat')
     } else {
       setCheckingUsername(true)
       try {
         const free = await isUsernameAvailable(normalized)
-        if (!free) fe.usernameDraft = 'Bu kullanıcı adı alınmış'
+        if (!free) fe.usernameDraft = t('validation.usernameTaken')
       } catch {
-        fe.usernameDraft = 'Kullanıcı adı doğrulanamadı'
+        fe.usernameDraft = t('validation.usernameCheckFailed')
       } finally {
         setCheckingUsername(false)
       }
     }
 
     if (!validateBetaPassword(password).ok) {
-      fe.password = 'Şifre min. 6 karakter'
+      fe.password = t('validation.passwordMinShort', { min: BETA_MIN_PASSWORD_LENGTH })
     }
 
     if (!termsAccepted) {
-      setFormError('Kayıt için 46 maddelik protokolü okuyup onaylayın')
+      setFormError(t('legal.mustAccept', { count: LEGAL_PROTOCOL_COUNT }))
     }
 
     setFieldErrors(fe)
@@ -138,9 +118,9 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
     const fe = {}
     setFormError('')
     const id = loginId.trim()
-    if (!id) fe.loginId = 'E-posta veya kullanıcı adı gerekli'
+    if (!id) fe.loginId = t('validation.loginIdRequired')
     if (!password || !validateBetaPassword(password).ok) {
-      fe.password = 'Şifre min. 6 karakter'
+      fe.password = t('validation.passwordMinShort', { min: BETA_MIN_PASSWORD_LENGTH })
     }
     setFieldErrors(fe)
     return Object.keys(fe).length === 0
@@ -150,7 +130,7 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
     e.preventDefault()
     if (!termsAccepted) {
       setLegalOpen(true)
-      setFormError('Kayıt için 46 maddelik protokolü okuyup onaylayın')
+      setFormError(t('legal.mustAccept', { count: LEGAL_PROTOCOL_COUNT }))
       return
     }
 
@@ -182,15 +162,13 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
     } catch (err) {
       const code = err?.code ?? ''
       if (code === 'auth/email-already-in-use') {
-        setFormError('Bu e-posta veya kullanıcı adı zaten kayıtlı')
+        setFormError(formatAuthErrorDisplay(err, { emailOrUsername: true }))
       } else if (code === 'username-already-in-use') {
-        setFieldErrors((f) => ({ ...f, usernameDraft: 'Bu kullanıcı adı alınmış' }))
+        setFieldErrors((f) => ({ ...f, usernameDraft: t('validation.usernameTaken') }))
       } else if (code === 'permission-denied' || String(code).includes('permission')) {
-        setFormError(
-          'Profil kaydı reddedildi. Sayfayı Ctrl+F5 ile yenileyip tekrar deneyin; sorun sürerse destek ile iletişime geçin.',
-        )
+        setFormError(t('errors.permissionDenied'))
       } else {
-        setFormError(typeof err?.message === 'string' ? err.message : 'Kayıt tamamlanamadı')
+        setFormError(formatAuthErrorDisplay(err))
       }
     } finally {
       setBusy(false)
@@ -208,8 +186,8 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
 
       await signInWithEmailPassword(authEmail, password)
       navigate('/dashboard', { replace: true })
-    } catch {
-      setFormError('Kimlik doğrulanamadı — bilgileri kontrol edin')
+    } catch (err) {
+      setFormError(formatAuthErrorDisplay(err))
     } finally {
       setBusy(false)
     }
@@ -217,7 +195,7 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
 
   const handleGoogleSignIn = async () => {
     if (!configured) {
-      setFormError('Firebase yapılandırılmadı')
+      setFormError(t('errors.firebaseNotConfigured'))
       return
     }
 
@@ -230,7 +208,7 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
         navigate('/dashboard', { replace: true })
       }
     } catch (err) {
-      setFormError(googleAuthErrorMessage(err))
+      setFormError(formatGoogleAuthErrorDisplay(err))
     } finally {
       setBusy(false)
     }
@@ -239,10 +217,10 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
   const submitBusy = busy || checkingUsername
 
   const registerButtonLabel = checkingUsername
-    ? 'Kullanıcı adı kontrol ediliyor…'
+    ? t('actions.checkingUsername')
     : busy
-      ? 'Kayıt yapılıyor…'
-      : 'Operatörü Kaydet'
+      ? t('actions.registering')
+      : t('actions.register')
 
   return (
     <div
@@ -264,7 +242,7 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
               : 'text-app-text/50 hover:text-app-text/80',
           ].join(' ')}
         >
-          Operatör Kaydı
+          {t('tabs.register')}
         </button>
         <button
           type="button"
@@ -281,68 +259,68 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
               : 'text-app-text/50 hover:text-app-text/80',
           ].join(' ')}
         >
-          Operatör Girişi
+          {t('tabs.login')}
         </button>
       </div>
 
       {mode === 'register' ? (
         <form onSubmit={(e) => void handleRegister(e)} className="space-y-3">
           <p className="font-mono-technical text-[9px] uppercase tracking-[0.2em] text-emerald-400/80">
-            [ ENROLMENT · BETA ]
+            {t('chrome.enrolment')}
           </p>
 
           <Input
             variant="gold"
-            label="Callsign"
+            label={t('fields.callsign')}
             name="callsign"
             autoComplete="nickname"
             value={callsign}
             onChange={(e) => setCallsign(e.target.value.toUpperCase())}
-            placeholder="WOLF-1"
+            placeholder={t('placeholders.callsign')}
             error={fieldErrors.callsign}
             required
           />
           <Input
             variant="gold"
-            label="E-posta"
+            label={t('fields.email')}
             name="email"
             type="email"
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value.trim())}
-            placeholder="operatör@kurum.tr"
+            placeholder={t('placeholders.email')}
             error={fieldErrors.email}
             required
           />
           <Input
             variant="gold"
-            label="Kullanıcı adı"
+            label={t('fields.username')}
             name="username"
             autoComplete="username"
             value={usernameDraft}
             onChange={(e) =>
               setUsernameDraft(e.target.value.toLowerCase().replace(/[^a-z0-9_\s]/g, ''))
             }
-            placeholder="wolf_alpha"
+            placeholder={t('placeholders.username')}
             error={fieldErrors.usernameDraft}
             required
           />
           <Input
             variant="gold"
-            label="Şifre"
+            label={t('fields.password')}
             name="password"
             type="password"
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="En az 6 karakter"
+            placeholder={t('placeholders.password', { min: BETA_MIN_PASSWORD_LENGTH })}
             error={fieldErrors.password}
             required
           />
 
           {checkingUsername ? (
             <p className="font-mono-technical text-[9px] text-app-text/45" aria-live="polite">
-              Kullanıcı adı doğrulanıyor…
+              {t('actions.verifyingUsername')}
             </p>
           ) : null}
 
@@ -350,12 +328,12 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="min-w-0">
                 <p className="font-mono-technical text-[10px] font-bold uppercase tracking-wider text-emerald-400">
-                  Operasyonel ve Hukuki Protokol
+                  {t('legal.panelTitle')}
                 </p>
                 <p className="mt-1.5 font-sans text-xs leading-relaxed text-app-text/60">
                   {termsAccepted
-                    ? 'Protokol onaylandı — kayıt tamamlanabilir.'
-                    : 'Üyelik için 46 maddelik protokolü okuyup onaylayın.'}
+                    ? t('legal.accepted')
+                    : t('legal.requiredHint', { count: LEGAL_PROTOCOL_COUNT })}
                 </p>
               </div>
               <button
@@ -364,7 +342,7 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
                 className="inline-flex shrink-0 items-center gap-1.5 rounded-sm border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 font-mono-technical text-[10px] font-bold uppercase tracking-wider text-emerald-400 transition hover:bg-emerald-500/18"
               >
                 <Scale className="size-3.5" aria-hidden />
-                {termsAccepted ? 'Yeniden Oku' : 'Protokolü Oku'}
+                {termsAccepted ? t('legal.readAgain') : t('legal.readProtocol')}
               </button>
             </div>
           </div>
@@ -384,12 +362,12 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
                 <span>{registerButtonLabel}</span>
               </>
             ) : (
-              'Operatörü Kaydet'
+              t('actions.register')
             )}
           </button>
           {betaMode ? (
             <p className="font-mono-technical text-[8px] uppercase tracking-wider text-app-text/40">
-              Beta: e-posta doğrulaması yok — kayıt sonrası doğrudan Dashboard
+              {t('hints.betaNoEmailVerify')}
             </p>
           ) : null}
 
@@ -408,29 +386,29 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
         <div className="space-y-3">
           <form onSubmit={(e) => void handleLogin(e)} className="space-y-3">
             <p className="font-mono-technical text-[9px] uppercase tracking-[0.2em] text-emerald-400/80">
-              [ AUTH · SECURE CHANNEL ]
+              {t('chrome.secureChannel')}
             </p>
 
             <Input
               variant="gold"
-              label="E-posta veya kullanıcı adı"
+              label={t('fields.loginId')}
               name="loginId"
               autoComplete="username"
               value={loginId}
               onChange={(e) => setLoginId(e.target.value)}
-              placeholder={betaMode ? 'wolf_alpha veya operatör@kurum.tr' : 'operatör@kurum.tr'}
+              placeholder={betaMode ? t('placeholders.loginIdBeta') : t('placeholders.loginId')}
               error={fieldErrors.loginId}
               required
             />
             <Input
               variant="gold"
-              label="Şifre"
+              label={t('fields.password')}
               name="password"
               type="password"
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="En az 6 karakter"
+              placeholder={t('placeholders.password', { min: BETA_MIN_PASSWORD_LENGTH })}
               error={fieldErrors.password}
               required
             />
@@ -447,10 +425,10 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
               {busy ? (
                 <>
                   <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
-                  <span>Giriş yapılıyor…</span>
+                  <span>{t('actions.signingIn')}</span>
                 </>
               ) : (
-                'Giriş Yap'
+                t('actions.login')
               )}
             </button>
           </form>
@@ -458,7 +436,7 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
           <div className="flex items-center gap-3">
             <span className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
             <span className="font-mono-technical text-[9px] uppercase tracking-[0.25em] text-app-text/45">
-              veya
+              {t('chrome.or')}
             </span>
             <span className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
           </div>
@@ -470,7 +448,7 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
             className="flex w-full items-center justify-center gap-2.5 rounded-sm border border-white/15 bg-black/30 py-3 font-display text-[10px] font-bold uppercase tracking-[0.18em] text-app-text/90 transition hover:border-emerald-500/35 hover:bg-emerald-950/25 disabled:opacity-45"
           >
             <GoogleMark className="size-4 shrink-0" />
-            Google ile Operatör Girişi
+            {t('actions.googleSignIn')}
           </button>
         </div>
       )}

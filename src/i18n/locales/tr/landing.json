@@ -1,0 +1,98 @@
+{
+  "nav": {
+    "homeAria": "Ana sayfa",
+    "googleSync": "[ GOOGLE · SYNC ]",
+    "goToPanel": "Panele git",
+    "signIn": "Giriş Yap",
+    "joinNow": "Hemen Katıl"
+  },
+  "hero": {
+    "eyebrow": "OPERASYONEL PLATFORM",
+    "brandAudaz": "AUDAZ",
+    "brandTactical": "TACTICAL",
+    "tagline": "Sınırlarını Dijitalleştir"
+  },
+  "news": {
+    "title": "HABER AKIŞI / DOKTRİN",
+    "subtitle": "Güvenlik stratejileri ve sahadan bilgiler; sadece üye konsolunda şifrelenmiş tam erişimle.",
+    "statusSyncing": "SENKRONIZE EDİLİYOR",
+    "statusLive": "VERI AKIŞI AKTİF",
+    "statusTeaser": "HABER TEASER MODU",
+    "cardLive": "Güncel haber",
+    "cardTeaser": "TEASER · GÖRSEL",
+    "defaultSource": "HABER · Küresel Haber Ağı"
+  },
+  "teasers": {
+    "t1": {
+      "title": "Bölgesel Güvenlik Dinamikleri — Sınır Hattı Özeti",
+      "source": "HABER · Küresel Haber Ağı",
+      "body": "Açık kaynak sinyalleri, sınır bölgelerinde artan hareketliliğe işaret ediyor. Tam analiz ve coğrafi bağlam üyelere özel."
+    },
+    "t2": {
+      "title": "Siber Tehdit Vektörü — Kritik Altyapı Taraması",
+      "source": "HABER · Tehdit Matrisi",
+      "body": "Son 72 saatte raporlanan IDS uyarıları düşük yoğunlukta. Derinlemesine paket analizi ve IOC listesi platform içinde."
+    },
+    "t3": {
+      "title": "Deniz Hattı Operasyonları — Açık Kaynak Görüntüleme",
+      "source": "HABER · Deniz Gözetim",
+      "body": "Uydu ve AIS kaynaklarından derlenen ön izleme. Tam rota reconstrüksiyonu ve operasyonel brifing üyelik gerektirir."
+    }
+  },
+  "footer": {
+    "copyright": "© AUDAZ TACTICAL – YETKİLİ KULLANIM"
+  },
+  "hud": {
+    "topologyTitle": "AUDAZ · TAKTİK VERİ TOPOLOJİSİ",
+    "topologyLive": "Canlı simülasyon",
+    "topologyExpanded": "Genişletilmiş topoloji · oturum aktif",
+    "tickerSecure": "Güvenli Bağlantı · Audaz Tactical",
+    "tickerNetwork": "Operasyonel veri ağı · şifreli",
+    "threatTitle": "Siber Tehdit Matrisi",
+    "threatHint": "Tehdit: düşük · koruma aktif",
+    "taskTitle": "GÖREV MATRİSİ",
+    "networkTitle": "AĞ DURUMU",
+    "operatorHq": "Operatör Karargâh",
+    "secureFooter": "Güvenli Bağlantı · Audaz Tactical",
+    "taskStatus": {
+      "active": "AKTİF",
+      "wait": "BEKLE",
+      "ready": "HAZIR"
+    },
+    "network": {
+      "comms": "Muhabere",
+      "commsValue": "ŞİFRELİ",
+      "news": "Küresel haber",
+      "newsValue": "Canlı",
+      "ors": "ORS motoru",
+      "orsValue": "SENKRON",
+      "armory": "Cephanelik",
+      "armoryValue": "%87"
+    },
+    "nodes": {
+      "siber_savunma": { "label": "Siber Savunma", "sub": "Tehdit kalkanı" },
+      "istihbarat": { "label": "Küresel Haber", "sub": "Canlı akış" },
+      "muhabere": { "label": "Muhabere", "sub": "Şifreli" },
+      "task_matrix": { "label": "Görev Merkezi", "sub": "Görev · senkron" },
+      "cephanelik": { "label": "Cephanelik", "sub": "Envanter · %87" },
+      "tccc": { "label": "TCCC", "sub": "Tahliye" },
+      "ors": { "label": "ORS", "sub": "Risk Skoru" }
+    },
+    "tiles": {
+      "dashboard": { "label": "Ana Sayfa", "sub": "ORS · envanter · hazırlık" },
+      "training": { "label": "Antrenman", "sub": "Atış · CQB · FoF" },
+      "comms": { "label": "Muhabere", "sub": "Taktik kanallar" },
+      "tccc": { "label": "TCCC · Sağlık", "sub": "Tahliye · IFAK" },
+      "armory": { "label": "Cephanelik", "sub": "Silah · mühimmat" }
+    }
+  },
+  "intro": {
+    "dialogAria": "Giriş deneyimi",
+    "welcomeAria": "Hoş geldin, devam etmek için giriş yap",
+    "welcomeTitle": "Hoş Geldin.",
+    "welcomeSubtitle": "devam etmek için giriş yap",
+    "unmute": "Sesi aç",
+    "mute": "Sesi kapat",
+    "enterSystem": "Sisteme giriş"
+  }
+}

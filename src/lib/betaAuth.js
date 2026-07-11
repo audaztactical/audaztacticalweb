@@ -44,6 +44,7 @@ export function validateBetaPassword(password) {
   if (value.length < BETA_MIN_PASSWORD_LENGTH) {
     return {
       ok: false,
+      minLength: BETA_MIN_PASSWORD_LENGTH,
       message: `Şifre en az ${BETA_MIN_PASSWORD_LENGTH} karakter olmalı.`,
     }
   }

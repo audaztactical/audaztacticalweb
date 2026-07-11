@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import {
   Crosshair,
   HeartPulse,
@@ -8,17 +9,17 @@ import {
   Shield,
 } from 'lucide-react'
 
-/** @typedef {{ id: string, label: string, sub: string, x: string, y: string, accent?: 'green' | 'gold' | 'cyan' }} SchematicNode */
+/** @typedef {{ id: string, x: string, y: string, accent?: 'green' | 'gold' | 'cyan' }} SchematicNode */
 
 /** @type {SchematicNode[]} */
 const NODES = [
-  { id: 'siber_savunma', label: 'Siber Savunma', sub: 'Tehdit kalkanı', x: '50%', y: '12%', accent: 'green' },
-  { id: 'istihbarat', label: 'Küresel Haber', sub: 'Canlı akış', x: '82%', y: '22%', accent: 'cyan' },
-  { id: 'muhabere', label: 'Muhabere', sub: 'Şifreli', x: '14%', y: '38%', accent: 'gold' },
-  { id: 'task_matrix', label: 'Görev Merkezi', sub: 'Görev · senkron', x: '50%', y: '42%', accent: 'green' },
-  { id: 'cephanelik', label: 'Cephanelik', sub: 'Envanter · %87', x: '86%', y: '48%', accent: 'gold' },
-  { id: 'tccc', label: 'TCCC', sub: 'Tahliye', x: '18%', y: '68%', accent: 'cyan' },
-  { id: 'ors', label: 'ORS', sub: 'Risk Skoru', x: '78%', y: '72%', accent: 'green' },
+  { id: 'siber_savunma', x: '50%', y: '12%', accent: 'green' },
+  { id: 'istihbarat', x: '82%', y: '22%', accent: 'cyan' },
+  { id: 'muhabere', x: '14%', y: '38%', accent: 'gold' },
+  { id: 'task_matrix', x: '50%', y: '42%', accent: 'green' },
+  { id: 'cephanelik', x: '86%', y: '48%', accent: 'gold' },
+  { id: 'tccc', x: '18%', y: '68%', accent: 'cyan' },
+  { id: 'ors', x: '78%', y: '72%', accent: 'green' },
 ]
 
 const EDGES = [
@@ -40,27 +41,23 @@ const THREAT_MATRIX = [
 ]
 
 const TASK_ROWS = [
-  { id: 'ALPHA-7', status: 'AKTİF', pct: 87 },
-  { id: 'BRAVO-2', status: 'BEKLE', pct: 42 },
-  { id: 'DELTA-1', status: 'HAZIR', pct: 100 },
+  { id: 'ALPHA-7', statusKey: 'active', pct: 87 },
+  { id: 'BRAVO-2', statusKey: 'wait', pct: 42 },
+  { id: 'DELTA-1', statusKey: 'ready', pct: 100 },
 ]
 
 const OPERATOR_TILES = [
-  { to: '/dashboard', label: 'Ana Sayfa', sub: 'ORS · envanter · hazırlık', icon: LayoutDashboard },
-  { to: '/antrenman', label: 'Antrenman', sub: 'Atış · CQB · FoF', icon: Crosshair },
-  { to: '/mesajlar', label: 'Muhabere', sub: 'Taktik kanallar', icon: MessageSquare },
-  { to: '/tccc', label: 'TCCC · Sağlık', sub: 'Tahliye · IFAK', icon: HeartPulse },
-  { to: '/cephanelik', label: 'Cephanelik', sub: 'Silah · mühimmat', icon: Shield },
+  { to: '/dashboard', tileKey: 'dashboard', icon: LayoutDashboard },
+  { to: '/antrenman', tileKey: 'training', icon: Crosshair },
+  { to: '/mesajlar', tileKey: 'comms', icon: MessageSquare },
+  { to: '/tccc', tileKey: 'tccc', icon: HeartPulse },
+  { to: '/cephanelik', tileKey: 'armory', icon: Shield },
 ]
 
-const TICKER_TEXT = ['Güvenli Bağlantı · Audaz Tactical', 'Operasyonel veri ağı · şifreli']
-  .concat(['Güvenli Bağlantı · Audaz Tactical', 'Operasyonel veri ağı · şifreli'])
-  .join(' · ')
-
 /**
- * @param {{ node: SchematicNode }} props
+ * @param {{ node: SchematicNode, label: string, sub: string }} props
  */
-function HudNode({ node }) {
+function HudNode({ node, label, sub }) {
   const ring =
     node.accent === 'gold'
       ? 'border-[#ffaa00]/55 shadow-[0_0_18px_-4px_rgba(255,170,0,0.55)]'
@@ -86,20 +83,22 @@ function HudNode({ node }) {
           aria-hidden
         />
         <p className={`font-mono-technical text-[7px] font-bold uppercase tracking-[0.18em] sm:text-[8px] ${labelColor}`}>
-          {node.label}
+          {label}
         </p>
-        <p className="font-mono-technical text-[6px] tabular-nums text-app-text/55 sm:text-[7px]">{node.sub}</p>
+        <p className="font-mono-technical text-[6px] tabular-nums text-app-text/55 sm:text-[7px]">{sub}</p>
       </motion.div>
     </div>
   )
 }
 
 function OperatorKarargahPanel() {
+  const { t } = useTranslation('landing')
+
   return (
     <div className="flex h-full flex-col border-t border-emerald-500/15 bg-[#050607] lg:border-l lg:border-t-0">
       <div className="border-b border-emerald-500/10 px-3 py-2 sm:px-4">
         <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.28em] text-[#ffaa00] sm:text-[9px]">
-          Operatör Karargâh
+          {t('hud.operatorHq')}
         </p>
       </div>
 
@@ -118,9 +117,11 @@ function OperatorKarargahPanel() {
                 </span>
                 <div className="min-w-0">
                   <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.14em] text-app-text group-hover:text-emerald-300">
-                    {tile.label}
+                    {t(`hud.tiles.${tile.tileKey}.label`)}
                   </p>
-                  <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-app-text/45">{tile.sub}</p>
+                  <p className="mt-0.5 font-mono-technical text-[7px] uppercase text-app-text/45">
+                    {t(`hud.tiles.${tile.tileKey}.sub`)}
+                  </p>
                 </div>
               </div>
             </Link>
@@ -130,7 +131,7 @@ function OperatorKarargahPanel() {
 
       <div className="border-t border-emerald-500/10 px-3 py-3 sm:px-4">
         <p className="font-mono-technical text-[7px] uppercase tracking-wider text-app-text/40">
-          Güvenli Bağlantı · Audaz Tactical
+          {t('hud.secureFooter')}
         </p>
       </div>
     </div>
@@ -139,11 +140,17 @@ function OperatorKarargahPanel() {
 
 /**
  * @param {Record<string, SchematicNode>} nodeMap
+ * @param {boolean} expanded
+ * @param {(key: string) => string} t
  */
-function TopologyCanvas({ nodeMap, expanded }) {
+function TopologyCanvas({ nodeMap, expanded, t }) {
   const canvasClass = expanded
     ? 'relative aspect-video min-h-[260px] w-full sm:min-h-[320px] md:min-h-[380px]'
     : 'relative aspect-video min-h-[220px] w-full sm:min-h-[280px] md:min-h-[340px]'
+
+  const tickerText = [t('hud.tickerSecure'), t('hud.tickerNetwork')]
+    .concat([t('hud.tickerSecure'), t('hud.tickerNetwork')])
+    .join(' · ')
 
   return (
     <div className={canvasClass}>
@@ -191,7 +198,12 @@ function TopologyCanvas({ nodeMap, expanded }) {
       </div>
 
       {NODES.map((node) => (
-        <HudNode key={node.id} node={node} />
+        <HudNode
+          key={node.id}
+          node={node}
+          label={t(`hud.nodes.${node.id}.label`)}
+          sub={t(`hud.nodes.${node.id}.sub`)}
+        />
       ))}
 
       <motion.div
@@ -203,7 +215,7 @@ function TopologyCanvas({ nodeMap, expanded }) {
           animate={{ x: ['0%', '-50%'] }}
           transition={{ duration: 22, repeat: Infinity, ease: 'linear' }}
         >
-          {TICKER_TEXT}
+          {tickerText}
         </motion.p>
       </motion.div>
     </div>
@@ -211,10 +223,11 @@ function TopologyCanvas({ nodeMap, expanded }) {
 }
 
 function ThreatMatrixPanel() {
+  const { t } = useTranslation('landing')
   return (
     <div className="border-b border-emerald-500/10 p-3 sm:p-4 md:border-b-0 md:border-r">
       <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-emerald-400 sm:text-[9px]">
-        Siber Tehdit Matrisi
+        {t('hud.threatTitle')}
       </p>
       <div className="mt-3 inline-grid grid-cols-4 gap-1.5">
         {THREAT_MATRIX.flatMap((row, ri) =>
@@ -233,16 +246,17 @@ function ThreatMatrixPanel() {
           )),
         )}
       </div>
-      <p className="mt-2 font-mono-technical text-[7px] text-app-text/45">Tehdit: düşük · koruma aktif</p>
+      <p className="mt-2 font-mono-technical text-[7px] text-app-text/45">{t('hud.threatHint')}</p>
     </div>
   )
 }
 
 function TaskMatrixPanel() {
+  const { t } = useTranslation('landing')
   return (
     <div className="p-3 sm:p-4">
       <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-[#ffaa00] sm:text-[9px]">
-        GÖREV MATRİSİ
+        {t('hud.taskTitle')}
       </p>
       <ul className="mt-3 space-y-2">
         {TASK_ROWS.map((row) => (
@@ -255,7 +269,7 @@ function TaskMatrixPanel() {
               />
             </div>
             <span className="w-12 shrink-0 text-right font-mono-technical text-[7px] uppercase text-emerald-400/90">
-              {row.status}
+              {t(`hud.taskStatus.${row.statusKey}`)}
             </span>
           </li>
         ))}
@@ -265,27 +279,28 @@ function TaskMatrixPanel() {
 }
 
 function NetworkStatusPanel() {
+  const { t } = useTranslation('landing')
   return (
     <div className="border-t border-emerald-500/10 p-3 sm:p-4 md:border-t-0 md:border-l">
       <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-cyan-400 sm:text-[9px]">
-        AĞ DURUMU
+        {t('hud.networkTitle')}
       </p>
       <ul className="mt-3 space-y-2 font-mono-technical text-[8px] uppercase text-app-text/60">
         <li className="flex justify-between gap-2">
-          <span>Muhabere</span>
-          <span className="text-emerald-400">ŞİFRELİ</span>
+          <span>{t('hud.network.comms')}</span>
+          <span className="text-emerald-400">{t('hud.network.commsValue')}</span>
         </li>
         <li className="flex justify-between gap-2">
-          <span>Küresel haber</span>
-          <span className="text-emerald-400">Canlı</span>
+          <span>{t('hud.network.news')}</span>
+          <span className="text-emerald-400">{t('hud.network.newsValue')}</span>
         </li>
         <li className="flex justify-between gap-2">
-          <span>ORS motoru</span>
-          <span className="text-[#ffaa00]">SENKRON</span>
+          <span>{t('hud.network.ors')}</span>
+          <span className="text-[#ffaa00]">{t('hud.network.orsValue')}</span>
         </li>
         <li className="flex justify-between gap-2">
-          <span>Cephanelik</span>
-          <span className="text-emerald-400">%87</span>
+          <span>{t('hud.network.armory')}</span>
+          <span className="text-emerald-400">{t('hud.network.armoryValue')}</span>
         </li>
       </ul>
     </div>
@@ -297,6 +312,7 @@ function NetworkStatusPanel() {
  * @param {{ expanded?: boolean }} props
  */
 export default function LandingHeroGraphic({ expanded = false }) {
+  const { t } = useTranslation('landing')
   const nodeMap = Object.fromEntries(NODES.map((n) => [n.id, n]))
 
   return (
@@ -318,20 +334,20 @@ export default function LandingHeroGraphic({ expanded = false }) {
 
       <div className="relative border-b border-emerald-500/15 px-3 py-2 sm:px-4">
         <p className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.35em] text-emerald-400/90 sm:text-[9px]">
-          AUDAZ · TAKTİK VERİ TOPOLOJİSİ
+          {t('hud.topologyTitle')}
         </p>
         <p className="mt-0.5 font-mono-technical text-[7px] uppercase tracking-wider text-app-text/40">
-          {expanded ? 'Genişletilmiş topoloji · oturum aktif' : 'Canlı simülasyon'}
+          {expanded ? t('hud.topologyExpanded') : t('hud.topologyLive')}
         </p>
       </div>
 
       {expanded ? (
         <div className="lg:grid lg:grid-cols-[1.55fr_0.85fr] lg:items-stretch">
-          <TopologyCanvas nodeMap={nodeMap} expanded />
+          <TopologyCanvas nodeMap={nodeMap} expanded t={t} />
           <OperatorKarargahPanel />
         </div>
       ) : (
-        <TopologyCanvas nodeMap={nodeMap} expanded={false} />
+        <TopologyCanvas nodeMap={nodeMap} expanded={false} t={t} />
       )}
 
       <div className={expanded ? 'grid border-t border-emerald-500/15 md:grid-cols-3' : 'grid border-t border-emerald-500/15 md:grid-cols-2'}>
