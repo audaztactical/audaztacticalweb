@@ -4,6 +4,9 @@
 /** Operasyonel ve Hukuki Protokol — toplam madde sayısı */
 export const LEGAL_PROTOCOL_COUNT = 46
 
+/** Yaş beyanı metin sürümü — metin değişince artırın (Firestore ageDeclaration.version). */
+export const AGE_DECLARATION_VERSION = 'v1.0'
+
 /** Kayıt sonrası premium geçiş için deneme süresi (gün) */
 export const TRIAL_PERIOD_DAYS = 20
 

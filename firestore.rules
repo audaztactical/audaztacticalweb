@@ -135,6 +135,33 @@ service cloud.firestore {
         && request.resource.data.agreedToTerms == true;
     }
 
+    /** Yaş beyanı map doğrulaması — users/{uid}.ageDeclaration */
+    function isValidAgeDeclarationMap(data) {
+      return data is map
+        && data.accepted == true
+        && data.version is string
+        && data.version.size() > 0
+        && data.version.size() <= 32
+        && data.keys().hasAll(['accepted', 'version', 'acceptedAt']);
+    }
+
+    /** Kayıt onayları — protokol + yaş beyanı (yalnızca bu alanlar). */
+    function isOwnerRegistrationConsentsOnly() {
+      return request.resource.data.keys().hasOnly([
+          'agreedToTerms', 'termsAgreedAt', 'ageDeclaration', 'updatedAt'
+        ])
+        && request.resource.data.agreedToTerms == true
+        && isValidAgeDeclarationMap(request.resource.data.ageDeclaration);
+    }
+
+    /** Yalnızca yaş beyanı güncellemesi (owner). */
+    function isOwnerAgeDeclarationOnlyUpdate(uid) {
+      return isOwnerUid(uid)
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['ageDeclaration', 'updatedAt'])
+        && isValidAgeDeclarationMap(request.resource.data.ageDeclaration);
+    }
+
     /** Muhabere çevrimiçi durumu — yalnızca lastSeenAt / isOnline (presence heartbeat). */
     function isOwnerPresenceOnlyUpdate(uid) {
       return isOwnerUid(uid)
@@ -200,12 +227,18 @@ service cloud.firestore {
       allow list: if isContentAdmin()
         || isInstructor()
         || (isSignedIn() && isAuthMuhabereVisibleUser());
-      allow create: if isOwnerUid(userId) && (validselfRegistrationRole() || isOwnerTermsAckOnly());
+      allow create: if isOwnerUid(userId) && (
+        validselfRegistrationRole()
+        || isOwnerTermsAckOnly()
+        || isOwnerRegistrationConsentsOnly()
+      );
       allow update: if isContentAdmin()
         || isMuhaberePeerContactLink(userId)
         || isMuhaberePeerContactUnlink(userId)
         || (isOwnerUid(userId) && !exists(/databases/$(database)/documents/users/$(userId)) && validselfRegistrationRole())
         || (isOwnerUid(userId) && isOwnerTermsAckOnly())
+        || (isOwnerUid(userId) && isOwnerRegistrationConsentsOnly())
+        || (isOwnerUid(userId) && isOwnerAgeDeclarationOnlyUpdate(userId))
         || (isOwnerUid(userId) && isOwnerPresenceOnlyUpdate(userId))
         || (isOwnerUid(userId) && isOwnerFcmTokensOnlyUpdate(userId))
         || (isOwnerUid(userId) && isOwnerSidebarGroupStateOnlyUpdate(userId))

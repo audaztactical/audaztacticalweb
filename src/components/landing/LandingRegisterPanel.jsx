@@ -47,8 +47,9 @@ function GoogleMark({ className }) {
  */
 export default function LandingRegisterPanel({ initialMode = 'register', onDismissIntro }) {
   const { t } = useTranslation('auth')
+  const { t: tCommon } = useTranslation('common')
   const navigate = useNavigate()
-  const { registerWithEmailPassword, agreeToTerms, signInWithEmailPassword, signInWithGoogle } =
+  const { registerWithEmailPassword, recordRegistrationConsents, signInWithEmailPassword, signInWithGoogle } =
     useAuth()
   const betaMode = isPlatformInBetaPeriod()
   const configured = isFirebaseConfigured() && auth
@@ -64,6 +65,7 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
   const [loginId, setLoginId] = useState('')
   const [password, setPassword] = useState('')
   const [termsAccepted, setTermsAccepted] = useState(false)
+  const [ageDeclared, setAgeDeclared] = useState(false)
   const [legalOpen, setLegalOpen] = useState(false)
   const [fieldErrors, setFieldErrors] = useState({})
   const [formError, setFormError] = useState('')
@@ -110,8 +112,12 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
       setFormError(t('legal.mustAccept', { count: LEGAL_PROTOCOL_COUNT }))
     }
 
+    if (!ageDeclared) {
+      setFormError((prev) => prev || tCommon('legal.ageDeclaration.required'))
+    }
+
     setFieldErrors(fe)
-    return Object.keys(fe).length === 0
+    return Object.keys(fe).length === 0 && termsAccepted && ageDeclared
   }
 
   const validateLogin = () => {
@@ -131,6 +137,11 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
     if (!termsAccepted) {
       setLegalOpen(true)
       setFormError(t('legal.mustAccept', { count: LEGAL_PROTOCOL_COUNT }))
+      return
+    }
+
+    if (!ageDeclared) {
+      setFormError(tCommon('legal.ageDeclaration.required'))
       return
     }
 
@@ -154,7 +165,7 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
         accountStatus: 'active',
       })
       try {
-        await agreeToTerms()
+        await recordRegistrationConsents()
       } catch {
         /* profil güncellemesi opsiyonel */
       }
@@ -347,13 +358,26 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
             </div>
           </div>
 
+          <label className="flex cursor-pointer items-start gap-3 rounded-sm border border-emerald-500/20 bg-black/30 px-3 py-3">
+            <input
+              type="checkbox"
+              className="mt-1 size-4 shrink-0 accent-emerald-400"
+              checked={ageDeclared}
+              disabled={submitBusy}
+              onChange={(e) => setAgeDeclared(e.target.checked)}
+            />
+            <span className="font-sans text-xs leading-relaxed text-app-text/80">
+              {tCommon('legal.ageDeclaration.checkbox')}
+            </span>
+          </label>
+
           {formError ? (
             <p className="font-mono-technical text-[10px] text-accent/90">{formError}</p>
           ) : null}
 
           <button
             type="submit"
-            disabled={submitBusy || !termsAccepted}
+            disabled={submitBusy || !termsAccepted || !ageDeclared}
             className="flex w-full min-h-[44px] items-center justify-center gap-2 rounded-sm border border-emerald-500/55 bg-emerald-500/15 py-3 font-mono-technical text-xs font-bold uppercase tracking-[0.16em] text-emerald-400 transition hover:bg-emerald-500/22 disabled:cursor-not-allowed disabled:border-white/15 disabled:bg-black/35 disabled:text-app-text/50"
           >
             {submitBusy ? (

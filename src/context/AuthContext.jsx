@@ -33,10 +33,12 @@ import {
   subscribeUserProfile,
   completePremiumUpgrade,
   updateUserAgreedToTerms,
+  updateUserRegistrationConsents,
   normalizeUsername,
   releaseUsernameIfOrphaned,
   repairPendingOperatorProfile,
 } from '../lib/firestoreUsers'
+import { AGE_DECLARATION_VERSION } from '../data/legalProtocols'
 import {
   clearPendingOperatorProfile,
   savePendingOperatorProfile,
@@ -76,6 +78,19 @@ function mergeWithGuest(partial, authUser) {
       typeof partial.instructorId === 'string' && partial.instructorId.trim() ? partial.instructorId.trim() : null,
     agreedToTerms: partial.agreedToTerms === true,
     termsAgreedAt: partial.termsAgreedAt ?? null,
+    ageDeclaration:
+      partial.ageDeclaration &&
+      typeof partial.ageDeclaration === 'object' &&
+      /** @type {{ accepted?: boolean }} */ (partial.ageDeclaration).accepted === true
+        ? {
+            accepted: true,
+            version:
+              typeof /** @type {{ version?: string }} */ (partial.ageDeclaration).version === 'string'
+                ? /** @type {{ version: string }} */ (partial.ageDeclaration).version
+                : AGE_DECLARATION_VERSION,
+            acceptedAt: /** @type {{ acceptedAt?: unknown }} */ (partial.ageDeclaration).acceptedAt ?? null,
+          }
+        : null,
     photoURL:
       typeof partial.photoURL === 'string' && partial.photoURL.trim()
         ? partial.photoURL.trim()
@@ -417,6 +432,30 @@ export function AuthProvider({ children }) {
     )
   }, [])
 
+  /** Kayıt formu — protokol + 18+ yaş beyanı (tek yazma). */
+  const recordRegistrationConsents = useCallback(async () => {
+    if (!isFirebaseConfigured() || !auth?.currentUser?.uid) {
+      throw new Error('Oturum gerekli')
+    }
+    const uid = auth.currentUser.uid
+    await updateUserRegistrationConsents(uid)
+    setUserData((prev) =>
+      mergeWithGuest(
+        {
+          ...(prev ?? {}),
+          agreedToTerms: true,
+          termsAgreedAt: new Date(),
+          ageDeclaration: {
+            accepted: true,
+            version: AGE_DECLARATION_VERSION,
+            acceptedAt: new Date(),
+          },
+        },
+        auth.currentUser,
+      ),
+    )
+  }, [])
+
   const upgradeToPremium = useCallback(async (paymentIntentId) => {
     if (!isFirebaseConfigured() || !auth?.currentUser?.uid) {
       throw new Error('Oturum gerekli')
@@ -470,6 +509,7 @@ export function AuthProvider({ children }) {
       registerWithEmailPassword,
       linkAccountWithPassword,
       agreeToTerms,
+      recordRegistrationConsents,
       upgradeToPremium,
       refreshUserProfile,
       googleRedirectResolving,
@@ -495,6 +535,7 @@ export function AuthProvider({ children }) {
       registerWithEmailPassword,
       linkAccountWithPassword,
       agreeToTerms,
+      recordRegistrationConsents,
       upgradeToPremium,
       refreshUserProfile,
       googleRedirectResolving,

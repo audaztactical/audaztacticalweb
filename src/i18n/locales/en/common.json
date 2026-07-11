@@ -68,7 +68,11 @@
   },
   "legal": {
     "authRequired": "Sign-in required to record acceptance.",
-    "saveFailed": "Could not save acceptance — try again."
+    "saveFailed": "Could not save acceptance — try again.",
+    "ageDeclaration": {
+      "checkbox": "I am 18 years of age or older and I am making this declaration voluntarily.",
+      "required": "Confirm that you are 18 or older to register."
+    }
   },
   "push": {
     "label": "Push notifications",

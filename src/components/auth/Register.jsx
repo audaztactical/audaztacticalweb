@@ -40,7 +40,8 @@ export default function Register({
   initialTermsAccepted = false,
 }) {
   const { t } = useTranslation('auth')
-  const { agreeToTerms } = useAuth()
+  const { t: tCommon } = useTranslation('common')
+  const { recordRegistrationConsents } = useAuth()
   const betaMode = isPlatformInBetaPeriod()
   const [email, setEmail] = useState('')
   const [usernameDraft, setUsernameDraft] = useState('')
@@ -50,6 +51,7 @@ export default function Register({
   const [busy, setBusy] = useState(false)
   const [checkingUsername, setCheckingUsername] = useState(false)
   const [termsAccepted, setTermsAccepted] = useState(initialTermsAccepted)
+  const [ageDeclared, setAgeDeclared] = useState(false)
   const [legalOpen, setLegalOpen] = useState(false)
 
   useEffect(() => {
@@ -111,6 +113,11 @@ export default function Register({
       return
     }
 
+    if (!ageDeclared) {
+      onError(tCommon('legal.ageDeclaration.required'))
+      return
+    }
+
     setBusy(true)
     try {
       const normalizedUsername = normalizeUsername(usernameDraft)
@@ -127,7 +134,7 @@ export default function Register({
         accountStatus: 'active',
       })
       try {
-        await agreeToTerms()
+        await recordRegistrationConsents()
       } catch {
         /* Kayıt tamam; protokol onayı ayarlardan tekrarlanabilir */
       }
@@ -162,7 +169,7 @@ export default function Register({
   }
 
   const formDisabled = disabled || busy || checkingUsername
-  const canSubmit = termsAccepted
+  const canSubmit = termsAccepted && ageDeclared
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3 pb-6">
@@ -254,6 +261,19 @@ export default function Register({
           </button>
         </div>
       </div>
+
+      <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-accent/25 bg-[#0a0d12] px-4 py-3.5">
+        <input
+          type="checkbox"
+          className="mt-1 size-4 shrink-0 accent-accent"
+          checked={ageDeclared}
+          disabled={formDisabled}
+          onChange={(e) => setAgeDeclared(e.target.checked)}
+        />
+        <span className="font-sans text-xs leading-relaxed text-zinc-200 sm:text-sm">
+          {tCommon('legal.ageDeclaration.checkbox')}
+        </span>
+      </label>
 
       <button
         type="submit"

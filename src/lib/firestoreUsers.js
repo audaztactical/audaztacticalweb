@@ -8,6 +8,7 @@ import {
   clearPendingOperatorProfile,
   readPendingOperatorProfile,
 } from './pendingOperatorProfile'
+import { AGE_DECLARATION_VERSION } from '../data/legalProtocols'
 
 /** Firestore'da kayıt yoksa veya hata durumunda AuthContext varsayılanları */
 export const GUEST_PROFILE = {
@@ -70,6 +71,21 @@ export async function releaseUsernameIfOrphaned(uid, normalizedKey) {
 }
 
 /**
+ * @param {unknown} raw
+ * @returns {{ accepted: boolean, version: string, acceptedAt: unknown } | null}
+ */
+function mapAgeDeclaration(raw) {
+  if (!raw || typeof raw !== 'object') return null
+  const d = /** @type {Record<string, unknown>} */ (raw)
+  if (d.accepted !== true) return null
+  return {
+    accepted: true,
+    version: typeof d.version === 'string' && d.version.trim() ? d.version.trim() : AGE_DECLARATION_VERSION,
+    acceptedAt: d.acceptedAt ?? null,
+  }
+}
+
+/**
  * @param {import('firebase/firestore').DocumentData | undefined} d
  */
 export function mapUserDocToProfile(d) {
@@ -106,6 +122,7 @@ export function mapUserDocToProfile(d) {
     instructorId: typeof d.instructorId === 'string' && d.instructorId.trim() ? d.instructorId.trim() : null,
     agreedToTerms: d.agreedToTerms === true,
     termsAgreedAt: d.termsAgreedAt ?? null,
+    ageDeclaration: mapAgeDeclaration(d.ageDeclaration),
     photoURL:
       typeof d.photoURL === 'string' && d.photoURL.trim()
         ? d.photoURL.trim()
@@ -476,6 +493,55 @@ export async function updateUserAgreedToTerms(uid) {
     {
       agreedToTerms: true,
       termsAgreedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  )
+}
+
+/**
+ * 18+ yaş beyanı — users/{uid}.ageDeclaration
+ * @param {string} uid
+ * @param {string} [version]
+ */
+export async function updateUserAgeDeclaration(uid, version = AGE_DECLARATION_VERSION) {
+  if (!isFirebaseConfigured() || !db) throw new Error('Firebase yapılandırılmadı')
+  if (!uid) throw new Error('Oturum gerekli')
+
+  const ref = doc(db, 'users', uid)
+  await setDoc(
+    ref,
+    {
+      ageDeclaration: {
+        accepted: true,
+        version: String(version ?? AGE_DECLARATION_VERSION),
+        acceptedAt: serverTimestamp(),
+      },
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  )
+}
+
+/**
+ * Kayıt sonrası protokol + yaş beyanı (tek yazma).
+ * @param {string} uid
+ */
+export async function updateUserRegistrationConsents(uid) {
+  if (!isFirebaseConfigured() || !db) throw new Error('Firebase yapılandırılmadı')
+  if (!uid) throw new Error('Oturum gerekli')
+
+  const ref = doc(db, 'users', uid)
+  await setDoc(
+    ref,
+    {
+      agreedToTerms: true,
+      termsAgreedAt: serverTimestamp(),
+      ageDeclaration: {
+        accepted: true,
+        version: AGE_DECLARATION_VERSION,
+        acceptedAt: serverTimestamp(),
+      },
       updatedAt: serverTimestamp(),
     },
     { merge: true },

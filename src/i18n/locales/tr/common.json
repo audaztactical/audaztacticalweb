@@ -68,7 +68,11 @@
   },
   "legal": {
     "authRequired": "Onay kaydı için oturum gerekli.",
-    "saveFailed": "Onay kaydedilemedi — tekrar deneyin."
+    "saveFailed": "Onay kaydedilemedi — tekrar deneyin.",
+    "ageDeclaration": {
+      "checkbox": "18 yaşından büyüğüm ve bu beyanı kendi irademle veriyorum.",
+      "required": "Kayıt için 18 yaş ve üzeri olduğunuzu onaylayın."
+    }
   },
   "push": {
     "label": "Push bildirimleri",
