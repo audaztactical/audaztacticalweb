@@ -137,7 +137,8 @@
       "desc": "Saatlik rüzgar hızı",
       "estimated": "Tahmini",
       "chartEstimated": "Gerçek veri alınamadı — tahmini eğilim gösteriliyor",
-      "chartLive": "Saatlik rüzgar (km/h) · Open-Meteo"
+      "chartLive": "Saatlik rüzgar (km/h) · Open-Meteo",
+      "tooltip": "{{time}} · {{speed}} km/h"
     },
     "geo": {
       "label": "Konum Haritası",

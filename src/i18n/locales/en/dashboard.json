@@ -137,7 +137,8 @@
       "desc": "Hourly wind speed",
       "estimated": "Estimated",
       "chartEstimated": "Live data unavailable — showing estimated trend",
-      "chartLive": "Hourly wind (km/h) · Open-Meteo"
+      "chartLive": "Hourly wind (km/h) · Open-Meteo",
+      "tooltip": "{{time}} · {{speed}} km/h"
     },
     "geo": {
       "label": "Location Map",

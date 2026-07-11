@@ -161,7 +161,7 @@ export default function Dashboard() {
     const base = orsResult?.score ?? 68
     const notifyDrag = totalNotifications > 0 ? -10 : 0
     return ['08', '10', '12', '14', '16', '18', '20'].map((hour, i) => ({
-      t: hour,
+      t: `${hour}:00`,
       v: Math.max(18, Math.min(100, base + ((i % 3) - 1) * 5 + notifyDrag)),
     }))
   }, [orsResult?.score, totalNotifications])

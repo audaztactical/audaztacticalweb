@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   ChevronDown,
@@ -7,11 +7,20 @@ import {
   Map,
   Radio,
 } from 'lucide-react'
-import { Line, LineChart, ResponsiveContainer, YAxis } from 'recharts'
+import { Line, LineChart, ResponsiveContainer, Tooltip, YAxis } from 'recharts'
 import LocationSelector from './LocationSelector'
 import { useDefaultLocationSelection, useLocationWeather } from '../../hooks/useLocationWeather'
 import { formatDashboardPrecipitationRows } from '../../lib/dashboardWeatherDisplay'
 import { formatWeatherSource } from '../../lib/weatherService'
+
+/** @param {unknown} t */
+function formatWindTimeLabel(t) {
+  if (t == null) return '—'
+  const s = String(t).trim()
+  if (/^\d{1,2}:\d{2}$/.test(s)) return s.length === 4 ? `0${s}` : s
+  if (/^\d{1,2}$/.test(s)) return `${s.padStart(2, '0')}:00`
+  return s
+}
 
 /**
  * @param {{ label: string, value: string, detail?: string, icon?: import('react').ReactNode, loading?: boolean, loadingText: string }} props
@@ -67,6 +76,25 @@ export default function CommandSideWidgets({ signalSeries: _legacySignal }) {
   }
 
   const precipRows = useMemo(() => formatDashboardPrecipitationRows(data), [data, i18n.language])
+
+  /** @param {import('recharts').TooltipProps<number, string>} props */
+  const WindTrendTooltip = useCallback(
+    (props) => {
+      const { active, payload } = props
+      if (!active || !payload?.length) return null
+      const row = payload[0]?.payload
+      if (!row || typeof row !== 'object') return null
+      const time = formatWindTimeLabel(/** @type {{ t?: unknown }} */ (row).t)
+      const speed = Number(/** @type {{ v?: unknown }} */ (row).v)
+      if (!Number.isFinite(speed)) return null
+      return (
+        <div className="cmd-wind-tooltip" role="tooltip">
+          {t('widgets.wind.tooltip', { time, speed })}
+        </div>
+      )
+    },
+    [t],
+  )
 
   const seaText = useMemo(() => {
     if (!location.coastal) return t('widgets.notCoastal')
@@ -187,20 +215,36 @@ export default function CommandSideWidgets({ signalSeries: _legacySignal }) {
                 ) : null}
 
                 {w.chart ? (
-                  <div className="cmd-widget__chart mt-2 h-14 w-full min-w-0">
-                    <ResponsiveContainer width="100%" height={56} minWidth={0}>
-                      <LineChart data={windSeries}>
-                        <YAxis hide domain={[0, 'auto']} />
-                        <Line
-                          type="monotone"
-                          dataKey="v"
-                          stroke="var(--accent-color)"
-                          strokeWidth={2}
-                          dot={false}
-                          style={{ filter: 'drop-shadow(0 0 6px rgba(0,255,65,0.45))' }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
+                  <div className="cmd-widget__chart-wrap mt-2 w-full min-w-0">
+                    <div className="cmd-widget__chart h-28 w-full min-w-0 sm:h-32">
+                      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={112}>
+                        <LineChart
+                          data={windSeries}
+                          margin={{ top: 10, right: 10, left: 4, bottom: 4 }}
+                        >
+                          <YAxis hide domain={[0, 'auto']} />
+                          <Tooltip
+                            content={WindTrendTooltip}
+                            cursor={{ stroke: 'rgb(148 163 184 / 0.35)', strokeWidth: 1 }}
+                            allowEscapeViewBox={{ x: true, y: true }}
+                            wrapperStyle={{ outline: 'none', zIndex: 30 }}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="v"
+                            stroke="var(--accent-color)"
+                            strokeWidth={2}
+                            dot={false}
+                            activeDot={{
+                              r: 4,
+                              strokeWidth: 0,
+                              fill: 'var(--accent-color)',
+                            }}
+                            style={{ filter: 'drop-shadow(0 0 6px rgba(0,255,65,0.45))' }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
                     <p className="cmd-met-chart-caption break-words">
                       {windSeriesIsEstimated ? t('widgets.wind.chartEstimated') : t('widgets.wind.chartLive')}
                     </p>

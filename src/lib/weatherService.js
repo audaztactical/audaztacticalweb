@@ -200,7 +200,7 @@ async function fetchOpenMeteo(lat, lon, coastal) {
   const windDeg = Number(cur.wind_direction_10m ?? 0)
 
   const windSeries = (hourly.time ?? []).slice(0, 7).map((t, i) => ({
-    t: String(t).slice(11, 13),
+    t: String(t).slice(11, 16) || String(t).slice(11, 13),
     v: Math.round(Number(hourly.wind_speed_10m?.[i] ?? 0)),
   }))
 

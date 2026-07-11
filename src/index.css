@@ -1122,11 +1122,34 @@
   box-shadow: 0 0 20px -6px rgb(148 163 184 / 0.2);
 }
 
+.cmd-widget__chart-wrap {
+  min-width: 0;
+}
+
 .cmd-widget__chart {
   border-radius: 4px;
   background: rgb(0 0 0 / 0.22);
-  padding: 0.25rem 0.35rem;
+  padding: 0.35rem 0.4rem;
   min-width: 0;
+  overflow: visible;
+}
+
+.cmd-widget--panel.cmd-widget--open.cmd-glass-panel {
+  overflow: visible;
+}
+
+.cmd-wind-tooltip {
+  pointer-events: none;
+  white-space: nowrap;
+  padding: 0.35rem 0.55rem;
+  border-radius: 4px;
+  border: 1px solid rgb(71 85 105 / 0.55);
+  background: rgb(15 23 42 / 0.94);
+  font-family: 'Roboto Mono', var(--font-hud);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: rgb(226 232 240);
+  box-shadow: 0 8px 20px -10px rgb(0 0 0 / 0.65);
 }
 
 .cmd-heatmap {
