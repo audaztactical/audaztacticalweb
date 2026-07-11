@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { GUIDE_NAV_TREE } from '../../data/guideNavTree'
 
 /**
@@ -9,6 +10,7 @@ import { GUIDE_NAV_TREE } from '../../data/guideNavTree'
  * }} props
  */
 export default function GuideNav({ activeId, onSelect, className = '' }) {
+  const { t } = useTranslation('guide')
   const [expandedGroups, setExpandedGroups] = useState(
     /** @type {Record<string, boolean>} */ ({}),
   )
@@ -18,10 +20,7 @@ export default function GuideNav({ activeId, onSelect, className = '' }) {
   }, [])
 
   return (
-    <nav
-      className={['space-y-1', className].join(' ')}
-      aria-label="Kılavuz içindekiler"
-    >
+    <nav className={['space-y-1', className].join(' ')} aria-label={t('ui.navAria')}>
       {GUIDE_NAV_TREE.map((group) => {
         const open = expandedGroups[group.id] === true
         return (
@@ -32,7 +31,7 @@ export default function GuideNav({ activeId, onSelect, className = '' }) {
               className="flex w-full items-center justify-between px-3 py-2.5 text-left font-mono-technical text-[9px] font-bold uppercase tracking-[0.18em] text-amber-500/85 transition hover:bg-amber-950/20"
               aria-expanded={open}
             >
-              {group.label}
+              {t(`nav.groups.${group.id}`)}
               <span className="text-amber-500/50">{open ? '−' : '+'}</span>
             </button>
             {open && group.children ? (
@@ -55,7 +54,7 @@ export default function GuideNav({ activeId, onSelect, className = '' }) {
                         ].join(' ')}
                         aria-current={active ? 'location' : undefined}
                       >
-                        {item.label}
+                        {t(`nav.items.${item.id}`)}
                       </a>
                     </li>
                   )

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { BookOpen } from 'lucide-react'
 import HudFluffDecor from '../components/dashboard/HudFluffDecor'
 import GuideShell from '../components/guide/GuideShell'
@@ -9,6 +10,7 @@ import { GUIDE_SECTIONS } from '../data/guideContent'
 import { flattenGuideNavIds } from '../data/guideNavTree'
 
 export default function UsageGuide() {
+  const { t } = useTranslation('guide')
   const sectionIds = useMemo(() => flattenGuideNavIds(), [])
   const [activeId, setActiveId] = useState(sectionIds[0] ?? 'platform-intro')
 
@@ -63,22 +65,17 @@ export default function UsageGuide() {
         <div className="mb-2 flex items-center gap-2">
           <BookOpen className="size-5 text-amber-500/80" strokeWidth={1.5} aria-hidden />
           <p className="font-mono-technical text-[10px] font-bold uppercase tracking-[0.32em] text-amber-500/85">
-            [ KULLANIM KILAVUZU ]
+            {t('page.eyebrow')}
           </p>
         </div>
         <h1 className="font-display text-2xl font-bold tracking-[0.12em] text-app-text sm:text-3xl">
-          Operatör Kılavuzu
+          {t('page.title')}
         </h1>
         <p className="mt-2 max-w-2xl font-mono-technical text-xs leading-relaxed text-app-text/55">
-          Audaz Tactical modüllerinin amacı, ön koşulları ve adım adım kullanımı. Her bölümde güncel
-          durum sade bir bilgi notu olarak özetlenir.
+          {t('page.subtitle')}
         </p>
         <div className="mt-4">
-          <GuideInfoNote>
-            Beta dönemindesiniz: tüm bireysel antrenman sektörleri açık, atış kayıt sınırı uygulanmıyor
-            ve ücretli ödeme henüz aktif değil — premium veya eğitmen erişimi erişim kodu ile
-            verilebilir. Resmi lansman sonrasında planlar değişebilir.
-          </GuideInfoNote>
+          <GuideInfoNote>{t('page.betaNote')}</GuideInfoNote>
         </div>
       </header>
 

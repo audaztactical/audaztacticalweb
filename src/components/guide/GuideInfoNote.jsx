@@ -1,9 +1,12 @@
+import { useTranslation } from 'react-i18next'
+
 /**
  * Tek paragraflık bilgi notu — durum veya önemli uyarılar için.
  *
  * @param {{ children: import('react').ReactNode, className?: string }} props
  */
 export default function GuideInfoNote({ children, className = '' }) {
+  const { t } = useTranslation('guide')
   return (
     <div
       className={[
@@ -13,7 +16,7 @@ export default function GuideInfoNote({ children, className = '' }) {
       role="note"
     >
       <p className="mb-1.5 font-mono-technical text-[9px] font-bold uppercase tracking-[0.24em] text-amber-400/90">
-        Bilgi
+        {t('ui.infoLabel')}
       </p>
       {children}
     </div>
@@ -23,7 +26,9 @@ export default function GuideInfoNote({ children, className = '' }) {
 /**
  * @param {{ children: import('react').ReactNode, label?: string, className?: string }} props
  */
-export function GuidePrerequisiteCallout({ children, label = 'Ön koşul', className = '' }) {
+export function GuidePrerequisiteCallout({ children, label, className = '' }) {
+  const { t } = useTranslation('guide')
+  const resolvedLabel = label ?? t('ui.prerequisiteLabel')
   return (
     <div
       className={[
@@ -31,7 +36,7 @@ export function GuidePrerequisiteCallout({ children, label = 'Ön koşul', class
         className,
       ].join(' ')}
     >
-      <span className="font-bold text-amber-400/95">{label}: </span>
+      <span className="font-bold text-amber-400/95">{resolvedLabel}: </span>
       {children}
     </div>
   )

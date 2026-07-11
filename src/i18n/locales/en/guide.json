@@ -1,0 +1,543 @@
+{
+  "page": {
+    "eyebrow": "[ USAGE GUIDE ]",
+    "title": "Operator Guide",
+    "subtitle": "Purpose, prerequisites, and step-by-step usage for Audaz Tactical modules. Each section summarizes the current state in a concise info note.",
+    "betaNote": "You are in the beta period: all individual training sectors are open, there is no shooting log limit, and paid billing is not yet active — premium or instructor access can be granted via access code. Plans may change after the official launch."
+  },
+  "ui": {
+    "navAria": "Guide table of contents",
+    "accessLabel": "Who can use it",
+    "purposeLabel": "What it does",
+    "stepsLabel": "How to use it",
+    "infoLabel": "Info",
+    "prerequisiteLabel": "Prerequisite",
+    "flowDiagramLabel": "[ FLOW DIAGRAM ]",
+    "badgeInstructor": "Instructor",
+    "badgeAdmin": "Admin"
+  },
+  "nav": {
+    "groups": {
+      "baslangic": "Getting Started",
+      "karargah-profil": "Headquarters & Profile",
+      "audaz-agi": "Audaz Network",
+      "operasyon-lojistik": "Operations & Logistics",
+      "komuta-analitik": "Command & Analytics",
+      "sistem": "System",
+      "ekler": "Appendices"
+    },
+    "items": {
+      "platform-intro": "Platform overview",
+      "first-login-checklist": "First login checklist",
+      "roles-access-matrix": "Roles and access",
+      "email-verification-locked": "Verification and locked account",
+      "landing": "Headquarters (Landing)",
+      "dashboard": "Home",
+      "profile": "My Profile",
+      "operator-profile": "Operator record",
+      "akademi": "Audaz Academy",
+      "forum": "Briefing Room",
+      "forum-reports": "Forum reports",
+      "intel-feed": "Global News Network",
+      "feedback-system": "Feedback & Suggestions",
+      "training-hub": "Training hub",
+      "sector-atis": "ATIŞ sector",
+      "sector-cqb": "CQB sector",
+      "sector-fof": "FOF sector",
+      "sector-vbss": "VBSS sector",
+      "sector-tccc-training": "TCCC terminal (training)",
+      "sector-egitim": "TRAINING sector",
+      "group-training": "Group training",
+      "tccc-suite": "TCCC & Medical",
+      "cephanelik": "Armory",
+      "balistik-terminal": "Ballistics Terminal",
+      "progress-tracker": "Personal Achievement Tracking",
+      "group-join": "Join a group",
+      "instructor-dashboard": "Instructor Control Panel",
+      "language-switcher": "Language switcher",
+      "settings": "Settings",
+      "access-codes": "Access codes",
+      "troubleshooting": "Troubleshooting",
+      "deep-links": "Quick navigation tips",
+      "glossary": "Glossary"
+    }
+  },
+  "flows": {
+    "ilk-kurulum": {
+      "title": "Initial Setup",
+      "steps": {
+        "1": "Register / Sign in",
+        "2": "Profile (callsign)",
+        "3": "Armory",
+        "4": "ATIŞ log",
+        "5": "Dashboard ORS"
+      }
+    },
+    "atis-kaydi": {
+      "title": "ATIŞ Log",
+      "steps": {
+        "1": "Select weapon",
+        "2": "Match ammo",
+        "3": "Drill / rounds",
+        "4": "Confirm",
+        "5": "Stock deduction"
+      }
+    },
+    "grup-egitimi": {
+      "title": "Group Training",
+      "steps": {
+        "1": "Instructor signs in",
+        "2": "Operator joins with password",
+        "3": "Hub ACTIVE",
+        "4": "Enter sector"
+      }
+    }
+  },
+  "sections": {
+    "platform-intro": {
+      "title": "Platform overview",
+      "access": "The Headquarters page is public; sign-in is required for other modules.",
+      "purpose": "Audaz Tactical brings training logs, armory, mission and evaluation reports, tactical comms, and performance tracking into one place.",
+      "steps": [
+        "Register or sign in from the Headquarters page.",
+        "Sign in with email and password or a Google account.",
+        "During beta, active accounts are routed directly to Home.",
+        "In the left menu you will see Personal, Audaz Network, Operations, Command, Usage Guide, and System sections."
+      ],
+      "infoNote": "The platform is currently in beta. Paid membership billing is not yet open; the Membership Upgrade screen routes you to Home. New registrations and locked-account rules may change after the official launch.",
+      "notes": [
+        "This guide reflects the application's current behavior."
+      ]
+    },
+    "first-login-checklist": {
+      "title": "First login checklist",
+      "access": "All newly registered operators.",
+      "purpose": "Recommended order to complete basic setup on your first session.",
+      "steps": [
+        "Complete registration or sign-in and go to Home.",
+        "On My Profile, check your callsign, profile photo, and blood type.",
+        "From Armory, add at least one weapon and compatible ammo.",
+        "From Training & Ops, open the ATIŞ sector and create your first shooting log.",
+        "On Home, review the ORS (Operational Readiness Score) indicator and recent activity summary."
+      ],
+      "prerequisites": [
+        "Signed in",
+        "Operator profile created"
+      ],
+      "infoNote": "All ATIŞ, CQB, FOF, VBSS, TCCC, and TRAINING sectors are currently open to registered operators. You must add weapons and ammo to Armory before logging ATIŞ. On the free plan later, only ATIŞ and a limited log count may apply."
+    },
+    "roles-access-matrix": {
+      "title": "Roles and access",
+      "access": "All signed-in users.",
+      "purpose": "Understand which user type can access which areas.",
+      "steps": [
+        "Standard operator: All daily modules including missions, training, forum, comms, and analytics; except the Instructor Control Panel.",
+        "Premium operator: Currently upgraded via access code; no extra restrictions on training sectors.",
+        "Instructor: Additionally the Instructor Control Panel, group creation, and starting live group training sessions.",
+        "Admin: Additionally the Admin Panel and Pricing page.",
+        "Locked account: When billing is active, access only to Settings and membership screens; this restriction does not apply during beta."
+      ],
+      "infoNote": "Training sectors are currently open regardless of role. Instructor and admin pages are visible only to authorized accounts. After launch, premium membership may offer additional analytics and unlimited logs."
+    },
+    "email-verification-locked": {
+      "title": "Email verification and locked account",
+      "access": "Email verification: password registrants, after launch. Locked account: operators whose subscription has expired.",
+      "purpose": "Manage account security and membership status.",
+      "steps": [
+        "After registering with a password, you may be routed to the Verification page after the official launch.",
+        "Click the link in your email, then recheck on the page and return to Home.",
+        "Google sign-in users generally do not see a separate email verification step.",
+        "If your account is locked, you can access Settings; other modules may be restricted when billing is active."
+      ],
+      "pageLink": "Go to Verification page",
+      "infoNote": "During beta, active accounts are not sent to the email verification screen. Locked-account routing also does not apply until the billing system is live."
+    },
+    "landing": {
+      "title": "Headquarters",
+      "access": "Everyone. Also available from the menu via Return to HQ when signed in.",
+      "purpose": "Introduction, news preview, registration, and sign-in.",
+      "steps": [
+        "A short intro screen may appear on first visit; you can skip it.",
+        "Scroll to the operations panel and choose the Register or Sign In tab.",
+        "Register with Google or email; username and legal consent are required.",
+        "When signed in, you are routed to Home."
+      ],
+      "pageLink": "Go to Headquarters"
+    },
+    "dashboard": {
+      "title": "Home",
+      "access": "All signed-in operators.",
+      "purpose": "ORS (Operational Readiness Score), active missions, armory maintenance alerts, comms notifications, and operations summary.",
+      "steps": [
+        "After sign-in, this is your default landing page.",
+        "Use cards to jump to missions, armory, or training modules.",
+        "The system log lists your recent activity."
+      ],
+      "pageLink": "Go to Home"
+    },
+    "profile": {
+      "title": "My Profile",
+      "access": "All signed-in operators.",
+      "purpose": "Callsign, username, profile photo, phone, blood type; ORS (Operational Readiness Score) summary and activity history.",
+      "steps": [
+        "Edit and save your callsign and username.",
+        "Upload a profile photo.",
+        "Select your blood type; compatible with the health module.",
+        "You can change your email account password here."
+      ],
+      "pageLink": "Go to My Profile",
+      "prerequisites": [
+        "Operator profile created during registration"
+      ]
+    },
+    "operator-profile": {
+      "title": "Operator record",
+      "access": "All signed-in operators; another operator's summary.",
+      "purpose": "Read-only operator card opened from the forum or comms.",
+      "steps": [
+        "In a forum post or comms thread, click the operator callsign.",
+        "The record card opens.",
+        "Use the Return to Briefing Room link to go back to the forum."
+      ]
+    },
+    "akademi": {
+      "title": "Audaz Academy",
+      "access": "All signed-in operators.",
+      "purpose": "Doctrine texts and training videos.",
+      "steps": [
+        "Select Audaz Academy from the left menu.",
+        "When the module is fully live, doctrine lists and videos will appear here."
+      ],
+      "pageLink": "Go to Audaz Academy",
+      "infoNote": "The module currently shows a development screen; content is not accessible. Full access is planned on the premium plan."
+    },
+    "forum": {
+      "title": "Briefing Room",
+      "access": "All signed-in operators.",
+      "purpose": "Categorized tactical discussion: posts, replies, likes, and image sharing.",
+      "steps": [
+        "Choose a category: Weapon Systems, CQB & Tactics, TCCC & Medical, General Operations.",
+        "Open a new briefing; add title, text, and an optional image.",
+        "Click a post to reply or like.",
+        "From the author's callsign, you can open the operator record."
+      ],
+      "pageLink": "Go to Briefing Room"
+    },
+    "forum-reports": {
+      "title": "Forum reports",
+      "access": "Reports: all users. Review: admins.",
+      "purpose": "Report inappropriate forum content.",
+      "steps": [
+        "Click the flag icon on a post or reply.",
+        "Select a reason and submit.",
+        "Admins review from the Forum Moderation section."
+      ],
+      "notes": [
+        "General site feedback is a separate channel via Feedback & Suggestions in the menu."
+      ]
+    },
+    "intel-feed": {
+      "title": "Global News Network",
+      "access": "All signed-in operators.",
+      "purpose": "Written news and video news feed; Turkish and English summaries.",
+      "steps": [
+        "Choose the Written or Video tab.",
+        "Read the summary on the card; switch language if available.",
+        "Follow the source link to read the full article."
+      ],
+      "pageLink": "Go to Global News Network"
+    },
+    "feedback-system": {
+      "title": "Feedback & Suggestions",
+      "access": "All signed-in operators.",
+      "purpose": "General platform feedback; separate from forum reports.",
+      "steps": [
+        "From the left menu, choose Feedback & Suggestions under System.",
+        "Write your message in the panel and submit.",
+        "Admins read it from the Feedback section."
+      ]
+    },
+    "training-hub": {
+      "title": "Training & Ops",
+      "access": "Main hub open to all operators. Group Training card: group members or instructors.",
+      "purpose": "Six individual training sectors, group training, and a control panel card for instructors.",
+      "steps": [
+        "Select Training & Ops from the left menu.",
+        "Click a sector card; the corresponding log screen opens.",
+        "Use the back arrow to return to the sector list.",
+        "If an instructor session is active, a live training notice appears at the top."
+      ],
+      "pageLink": "Go to Training",
+      "infoNote": "All six individual sectors are currently open to everyone. Group training is only for operators in a group and instructors. Some sectors may be locked on the free plan later."
+    },
+    "sector-atis": {
+      "title": "ATIŞ sector",
+      "access": "All signed-in operators.",
+      "purpose": "Shooting log; drill type, rounds, and hits; ammo stock decreases after logging.",
+      "steps": [
+        "Select a weapon from Armory.",
+        "Ammo is matched automatically or manually.",
+        "Choose a drill type; for a custom drill, enter its name.",
+        "Enter round and hit counts; for timed fire, fill in the time fields.",
+        "Save; stock updates and your logs are listed."
+      ],
+      "pageLink": "Go to ATIŞ sector from Training",
+      "prerequisites": [
+        "At least one weapon in Armory",
+        "At least one ammo record compatible with the weapon"
+      ],
+      "infoNote": "There is currently no limit on shooting logs. If ammo stock is insufficient, the log is not accepted. A total limit of ten shooting logs may apply on the free plan later."
+    },
+    "sector-cqb": {
+      "title": "CQB sector",
+      "access": "All signed-in operators.",
+      "purpose": "Close-quarters clearing training log.",
+      "steps": [
+        "Select room layout, entry method, breaching type, and door status.",
+        "Enter team size along with threat and neutralized counts.",
+        "Enter clearing time, hit percentage, and safety violation count.",
+        "Choose a tactical decision and save."
+      ],
+      "pageLink": "Go to CQB sector from Training",
+      "infoNote": "Currently open to all operators; Armory is not required. May be locked on the free plan later and unlocked with premium."
+    },
+    "sector-fof": {
+      "title": "FOF sector",
+      "access": "All signed-in operators.",
+      "purpose": "Force-on-force simulation log and post-mission evaluation note.",
+      "steps": [
+        "Select scenario and simulation system.",
+        "Enter duration, shot count, and engagement type.",
+        "Enter decision accuracy percentage.",
+        "Evaluation note is required; save."
+      ],
+      "pageLink": "Go to FOF sector from Training",
+      "infoNote": "Currently open to everyone. Premium membership may be required later."
+    },
+    "sector-vbss": {
+      "title": "VBSS sector",
+      "access": "All signed-in operators.",
+      "purpose": "VBSS operation training log.",
+      "steps": [
+        "Fill in the form fields.",
+        "Save once validation passes.",
+        "Appears under the VBSS discipline in Personal Achievement Tracking."
+      ],
+      "pageLink": "Go to VBSS sector from Training",
+      "infoNote": "Currently no restriction by account type. Expanded access may be planned on the premium plan."
+    },
+    "sector-tccc-training": {
+      "title": "TCCC training terminal",
+      "access": "All signed-in operators; group membership required for group evaluation.",
+      "purpose": "MARCH phase evaluation and field training log.",
+      "steps": [
+        "Switch among summary, document, log, or observation modes.",
+        "Enter MARCH phase scores.",
+        "Complete the log."
+      ],
+      "pageLink": "Go to TCCC sector from Training",
+      "infoNote": "Individual TCCC training is currently open to everyone. Full medical document package is planned on the premium plan.",
+      "notes": [
+        "Different from the personal health module under TCCC & Medical; this screen is for training logs."
+      ]
+    },
+    "sector-egitim": {
+      "title": "TRAINING sector",
+      "access": "All signed-in operators.",
+      "purpose": "Training plan and exercise objective log.",
+      "steps": [
+        "Select training focus and difficulty level.",
+        "Enter target date and estimated duration.",
+        "Save the plan; update progress."
+      ],
+      "pageLink": "Go to TRAINING sector from Training",
+      "infoNote": "Currently open to everyone. May be locked on the free plan later."
+    },
+    "group-training": {
+      "title": "Group training",
+      "access": "Operators in a group and instructors.",
+      "purpose": "Join a live session started by an instructor.",
+      "steps": [
+        "The instructor starts a session from the Training tab in the Instructor Control Panel.",
+        "The operator joins the group with the group password from the instructor.",
+        "An active instructor session notice appears on the Training page.",
+        "Enter the session from the Group Training card."
+      ],
+      "pageLink": "Go to Group Training sector from Training",
+      "prerequisites": [
+        "Joined a group or be an instructor",
+        "Instructor has an active session open"
+      ]
+    },
+    "tccc-suite": {
+      "title": "TCCC & Medical",
+      "access": "All signed-in operators.",
+      "purpose": "Personal health profile, tactical medical documents, and IFAK inventory tracking.",
+      "steps": [
+        "Choose Personal Health, Medical Guide and Documents, or IFAK & Logistics card.",
+        "In Health, update allergies, vaccinations, and blood type.",
+        "Add IFAK supplies; expiration date warnings are shown."
+      ],
+      "pageLink": "Go to TCCC & Medical",
+      "infoNote": "Basic health and IFAK modules are currently open to everyone. Extended document package is planned on the premium plan.",
+      "notes": [
+        "For training logs, use the TCCC sector under Training."
+      ]
+    },
+    "cephanelik": {
+      "title": "Armory",
+      "access": "All signed-in operators.",
+      "purpose": "Weapon, accessory, and ammo inventory; maintenance and barrel life tracking.",
+      "steps": [
+        "Choose Weapons, Accessories, or Ammo section.",
+        "Add a new record and fill in technical details. Sniper Rifle (KNT) is also available as a weapon type.",
+        "On weapon, optic, and ammo forms, open the \"Ballistics Info (Optional)\" accordion; fill fields such as barrel length, twist rate, muzzle velocity, and sight height — Ballistics Terminal pulls these automatically via \"Load from Armory\".",
+        "Edit from the list; narrow with filters.",
+        "The ATIŞ sector takes weapons and ammo from here.",
+        "When a maintenance threshold is exceeded, an alert may appear on Home."
+      ],
+      "pageLink": "Go to Armory",
+      "infoNote": "Full inventory access is currently open to everyone. Audit logging may be added on the premium plan later.",
+      "notes": [
+        "Ballistics Terminal uses weapon/optic/ammo inventory and optional ballistics fields from Armory via \"Load from Armory\"."
+      ]
+    },
+    "balistik-terminal": {
+      "title": "Ballistics Terminal",
+      "access": "All signed-in operators.",
+      "purpose": "External ballistics calculation from bullet/weapon/optic data (drop, wind drift, time of flight, MOA/MRAD click values); automatic data pull from Armory, saved profile management, and PDF reporting.",
+      "steps": [
+        "With Load from Armory, select a weapon from your inventory; weapon, optic, and ammo fields auto-fill (these arrive read-only; use Unlock to edit if needed).",
+        "Enter ballistics-specific fields not in Armory (muzzle velocity, BC, sight height, zero distance, etc.) manually.",
+        "Select your optic unit (MOA or MRAD); only the chosen unit is shown.",
+        "Enter environment conditions (temperature, pressure, humidity, altitude, wind); entered separately each calculation, not saved to the profile.",
+        "Set the target distance range and press Calculate.",
+        "In the Quick Reference panel, choose CLICK (scope dial adjustment) or HOLD (direct holdover point) mode.",
+        "With Lock Reference, set the current distance as reference so when you move to another distance you see the DELTA (difference) instead of totals.",
+        "Switch between Chart and Full Table tabs; download the report as PDF.",
+        "Save the profile with a name; you can delete it anytime."
+      ],
+      "pageLink": "Go to Ballistics Terminal",
+      "prerequisites": [
+        "If using Load from Armory, at least one weapon record (and compatible optic/ammo if possible)"
+      ],
+      "infoNote": "Calculations in this terminal are theoretical estimates and must be verified with live fire (an info modal on each visit warns about this). Currently open to everyone.",
+      "notes": [
+        "Data from Armory (weapon/optic/ammo names) arrives read-only; edit those records separately in Armory."
+      ]
+    },
+    "progress-tracker": {
+      "title": "Personal Achievement Tracking",
+      "access": "All signed-in operators.",
+      "purpose": "ORS (Operational Readiness Score), discipline filters, trend charts, and activity summary.",
+      "steps": [
+        "Select last seven days, thirty days, or all time.",
+        "Filter by ATIŞ, CQB, FOF, VBSS, or TCCC discipline.",
+        "Expand summary panels; focus on log details.",
+        "With Download Bulk Report, export HUD, all analytics charts, historical logs, and error codes in one PDF.",
+        "Instructor accounts: from the Select Operator menu, choose a member of your group; the \"Currently Viewing: {name}\" indicator at the top of the page makes it clear whose data you are reviewing."
+      ],
+      "pageLink": "Go to Personal Achievement Tracking",
+      "prerequisites": [
+        "Training logs for meaningful results"
+      ],
+      "infoNote": "All analytics panels are currently open to everyone. Advanced ORS (Operational Readiness Score) charts may be added on the premium plan later."
+    },
+    "group-join": {
+      "title": "Join a group",
+      "access": "Operators not yet in a group.",
+      "purpose": "Join a team with the group password from an instructor.",
+      "steps": [
+        "On Settings, open the TACTICAL TEAM section.",
+        "Enter a password of at least four characters in the Group Password field and tap Join.",
+        "On success, the Group Training card appears on the Training page."
+      ],
+      "pageLink": "Go to Settings · TACTICAL TEAM section"
+    },
+    "instructor-dashboard": {
+      "title": "Instructor Control Panel",
+      "access": "Instructor accounts only.",
+      "purpose": "Group management, operator reports, live training session, and analytics.",
+      "steps": [
+        "On the Groups tab, create a group, set a password, and view members.",
+        "On the Operator Reporting tab, review platform operators; export activity feed and related summaries with Download Bulk Report (PDF).",
+        "On the Training tab, start a session; operators join from Group Training.",
+        "On the Analytics tab, track group activity; download activity feed and group performance charts in one file with Download Bulk Report (PDF)."
+      ],
+      "pageLink": "Go to Instructor Control Panel",
+      "notes": [
+        "Added under Command & Analytics in the left menu for instructors."
+      ]
+    },
+    "language-switcher": {
+      "title": "Language switcher",
+      "access": "Public.",
+      "purpose": "Change the interface language with the TR/EN language switcher in the top bar.",
+      "steps": [
+        "Click the TR or EN button in the top bar; the entire interface switches to the selected language instantly, and your preference is saved to your account."
+      ]
+    },
+    "settings": {
+      "title": "Settings",
+      "access": "All signed-in operators; locked accounts can also access.",
+      "purpose": "Appearance, notification preferences, and feedback.",
+      "steps": [
+        "Change theme and notification settings.",
+        "Send a message via the feedback form.",
+        "Admins can generate one-time instructor invite codes."
+      ],
+      "pageLink": "Go to Settings"
+    },
+    "access-codes": {
+      "title": "Access codes",
+      "access": "All signed-in operators.",
+      "purpose": "Activate premium or instructor access; the main upgrade path during beta.",
+      "steps": [
+        "On Settings, open the Access Code section.",
+        "Enter a code of at least eight characters and apply it.",
+        "Your account role updates; you may need to refresh the page."
+      ],
+      "pageLink": "Go to Settings",
+      "infoNote": "Paid billing is currently off; upgrades are done via access code. A payment screen may also go live after launch."
+    },
+    "troubleshooting": {
+      "title": "Troubleshooting",
+      "access": "All users.",
+      "purpose": "Common issues and fixes.",
+      "steps": [
+        "If you cannot log ATIŞ, add a weapon to Armory first.",
+        "On insufficient stock warning, increase ammo stock or reduce round count.",
+        "If the group password is invalid, confirm the code with your instructor.",
+        "If a forum report cannot be sent, notify an admin.",
+        "If you see a connection or save error, read the error notice on screen."
+      ]
+    },
+    "deep-links": {
+      "title": "Quick navigation tips",
+      "access": "Reference.",
+      "purpose": "Practical shortcuts to reach modules faster.",
+      "steps": [
+        "On the Training page, click a sector card directly to open ATIŞ, CQB, FOF, VBSS, TCCC, or TRAINING.",
+        "Follow the notification on an instructor session invite or the active training alert on the Training page.",
+        "From the forum or comms, click an operator callsign to open the record card.",
+        "The comms notification counter appears in the left menu; click to go to messages."
+      ]
+    },
+    "glossary": {
+      "title": "Glossary",
+      "access": "Reference.",
+      "purpose": "Frequently used abbreviations.",
+      "steps": [
+        "ORS (Operational Readiness Score) — overall readiness indicator calculated from training data.",
+        "ILWS — armory inventory system.",
+        "BLST — Ballistics Terminal (external ballistics calculation).",
+        "MARCH — hemorrhage, airway, respiration, circulation, and hypothermia phases.",
+        "FOF — force-on-force training.",
+        "VBSS — visit, board, search, and seizure operation.",
+        "TCCC — Tactical Combat Casualty Care.",
+        "IFAK — Individual First Aid Kit."
+      ]
+    }
+  }
+}
+

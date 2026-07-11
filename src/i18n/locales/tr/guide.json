@@ -1,0 +1,542 @@
+{
+  "page": {
+    "eyebrow": "[ KULLANIM KILAVUZU ]",
+    "title": "Operatör Kılavuzu",
+    "subtitle": "Audaz Tactical modüllerinin amacı, ön koşulları ve adım adım kullanımı. Her bölümde güncel durum sade bir bilgi notu olarak özetlenir.",
+    "betaNote": "Beta dönemindesiniz: tüm bireysel antrenman sektörleri açık, atış kayıt sınırı uygulanmıyor ve ücretli ödeme henüz aktif değil — premium veya eğitmen erişimi erişim kodu ile verilebilir. Resmi lansman sonrasında planlar değişebilir."
+  },
+  "ui": {
+    "navAria": "Kılavuz içindekiler",
+    "accessLabel": "Kimler kullanabilir",
+    "purposeLabel": "Ne işe yarar",
+    "stepsLabel": "Nasıl kullanılır",
+    "infoLabel": "Bilgi",
+    "prerequisiteLabel": "Ön koşul",
+    "flowDiagramLabel": "[ AKIŞ ŞEMASI ]",
+    "badgeInstructor": "Eğitmen",
+    "badgeAdmin": "Yönetici"
+  },
+  "nav": {
+    "groups": {
+      "baslangic": "Başlangıç",
+      "karargah-profil": "Karargâh & Profil",
+      "audaz-agi": "Audaz Ağı",
+      "operasyon-lojistik": "Operasyon & Lojistik",
+      "komuta-analitik": "Komuta & Analitik",
+      "sistem": "Sistem",
+      "ekler": "Ekler"
+    },
+    "items": {
+      "platform-intro": "Platform tanıtımı",
+      "first-login-checklist": "İlk giriş checklist",
+      "roles-access-matrix": "Roller ve erişim",
+      "email-verification-locked": "Doğrulama ve kilitli hesap",
+      "landing": "Karargâh (Landing)",
+      "dashboard": "Ana Sayfa",
+      "profile": "Profilim",
+      "operator-profile": "Operatör sicili",
+      "akademi": "Audaz Akademi",
+      "forum": "Brifing Odası",
+      "forum-reports": "Forum şikayet",
+      "intel-feed": "Küresel Haber Ağı",
+      "feedback-system": "Şikayet & Öneri",
+      "training-hub": "Antrenman hub",
+      "sector-atis": "ATIŞ sektörü",
+      "sector-cqb": "CQB sektörü",
+      "sector-fof": "FOF sektörü",
+      "sector-vbss": "VBSS sektörü",
+      "sector-tccc-training": "TCCC terminal (antrenman)",
+      "sector-egitim": "EĞİTİM sektörü",
+      "group-training": "Grup eğitimi",
+      "tccc-suite": "TCCC & Sağlık",
+      "cephanelik": "Cephanelik",
+      "balistik-terminal": "Balistik Terminal",
+      "progress-tracker": "Kişisel Başarı Takibi",
+      "group-join": "Gruba katılım",
+      "instructor-dashboard": "Eğitmen Kontrol Paneli",
+      "language-switcher": "Dil seçici",
+      "settings": "Ayarlar",
+      "access-codes": "Erişim kodları",
+      "troubleshooting": "Sorun giderme",
+      "deep-links": "Hızlı geçiş ipuçları",
+      "glossary": "Terimler sözlüğü"
+    }
+  },
+  "flows": {
+    "ilk-kurulum": {
+      "title": "İlk Kurulum",
+      "steps": {
+        "1": "Kayıt / Giriş",
+        "2": "Profil (callsign)",
+        "3": "Cephanelik",
+        "4": "ATIŞ kaydı",
+        "5": "Dashboard ORS"
+      }
+    },
+    "atis-kaydi": {
+      "title": "ATIŞ Kaydı",
+      "steps": {
+        "1": "Silah seç",
+        "2": "Mühimmat eşle",
+        "3": "Drill / atım",
+        "4": "Onayla",
+        "5": "Stok düşümü"
+      }
+    },
+    "grup-egitimi": {
+      "title": "Grup Eğitimi",
+      "steps": {
+        "1": "Eğitmen oturum aç",
+        "2": "Operatör şifreyle katıl",
+        "3": "Hub AKTİF",
+        "4": "Sektöre gir"
+      }
+    }
+  },
+  "sections": {
+    "platform-intro": {
+      "title": "Platform tanıtımı",
+      "access": "Karargâh sayfası herkese açık; diğer modüller için giriş gerekir.",
+      "purpose": "Audaz Tactical, antrenman kayıtları, cephanelik, görev ve değerlendirme raporları, taktik muhabere ile performans takibini tek yerde toplar.",
+      "steps": [
+        "Karargâh sayfasından kayıt olun veya giriş yapın.",
+        "E-posta ve şifre ya da Google hesabı ile oturum açın.",
+        "Beta sürecinde aktif hesaplar doğrudan Ana Sayfaya yönlendirilir.",
+        "Sol menüde Kişisel, Audaz Ağı, Operasyon, Komuta, Kullanım Kılavuzu ve Sistem bölümlerini görürsünüz."
+      ],
+      "infoNote": "Platform şu an beta test döneminde. Ücretli üyelik ödemesi henüz açık değil; Üyelik Geçiş ekranı sizi Ana Sayfaya yönlendirir. Resmi lansman sonrasında yeni kayıtlar ve kilitli hesap kuralları değişebilir.",
+      "notes": [
+        "Bu kılavuz, uygulamanın güncel davranışına göre hazırlanmıştır."
+      ]
+    },
+    "first-login-checklist": {
+      "title": "İlk giriş checklist",
+      "access": "Yeni kayıt olan tüm operatörler.",
+      "purpose": "İlk oturumda temel hazırlığı tamamlamak için önerilen sıra.",
+      "steps": [
+        "Kayıt veya girişi tamamlayın, Ana Sayfaya gidin.",
+        "Profilim sayfasından takma adınızı, profil fotoğrafınızı ve kan grubunuzu kontrol edin.",
+        "Cephanelik sayfasından en az bir silah ve uyumlu mühimmat ekleyin.",
+        "Antrenman ve Operasyon menüsünden ATIŞ sektörüne girip ilk atış kaydınızı oluşturun.",
+        "Ana Sayfada ORS (Operasyonel Hazırlık Skoru) göstergesini ve son aktivite özetini kontrol edin."
+      ],
+      "prerequisites": [
+        "Giriş yapmış olmak",
+        "Operatör profilinizin oluşturulmuş olması"
+      ],
+      "infoNote": "Şu anda ATIŞ, CQB, FOF, VBSS, TCCC ve EĞİTİM sektörlerinin tamamı kayıtlı operatörlere açık. ATIŞ kaydı için önce cephaneliğe silah ve mühimmat eklemeniz gerekir. İleride ücretsiz planda yalnızca ATIŞ ve sınırlı kayıt sayısı uygulanabilir."
+    },
+    "roles-access-matrix": {
+      "title": "Roller ve erişim",
+      "access": "Tüm giriş yapmış kullanıcılar.",
+      "purpose": "Hangi kullanıcı tipinin nereye girebileceğini anlamak.",
+      "steps": [
+        "Standart operatör: Görevler, antrenman, forum, muhabere ve analitik dahil tüm günlük modüller; Eğitmen Kontrol Paneli hariç.",
+        "Premium operatör: Şu an erişim kodu ile yükseltilir; antrenman sektörlerinde ek kısıtlama yok.",
+        "Eğitmen: Ek olarak Eğitmen Kontrol Paneli, grup oluşturma ve canlı grup eğitimi oturumu başlatma.",
+        "Yönetici: Ek olarak Yönetici Paneli ve Fiyatlandırma sayfası.",
+        "Kilitli hesap: Ödeme sistemi açıldığında yalnızca Ayarlar ve üyelik ekranlarına erişim; beta döneminde bu kısıtlama uygulanmaz."
+      ],
+      "infoNote": "Antrenman sektörleri şu an rolünüze bakılmaksızın açık. Eğitmen ve yönetici sayfaları yalnızca yetkili hesaplara görünür. Lansman sonrasında premium üyelikle ek analitik ve sınırsız kayıt vaat edilebilir."
+    },
+    "email-verification-locked": {
+      "title": "E-posta doğrulama ve kilitli hesap",
+      "access": "E-posta doğrulama: şifre ile kayıt olanlar, lansman sonrası. Kilitli hesap: abonelik süresi dolmuş operatörler.",
+      "purpose": "Hesap güvenliği ve üyelik durumunu yönetmek.",
+      "steps": [
+        "Şifre ile kayıt olduktan sonra, resmi lansman sonrasında Doğrulama sayfasına yönlendirilebilirsiniz.",
+        "E-postanızdaki bağlantıya tıklayın, ardından sayfada yeniden kontrol edin ve Ana Sayfaya dönün.",
+        "Google ile giriş yapanlar genelde ayrıca e-posta doğrulaması görmez.",
+        "Hesabınız kilitliyse Ayarlar sayfasına erişebilirsiniz; ödeme açıkken diğer modüller kısıtlanabilir."
+      ],
+      "pageLink": "Doğrulama sayfasına git",
+      "infoNote": "Beta döneminde aktif hesaplar e-posta doğrulama ekranına düşmez. Kilitli hesap yönlendirmesi de ödeme sistemi devreye girene kadar uygulanmaz."
+    },
+    "landing": {
+      "title": "Karargâh",
+      "access": "Herkes. Giriş yapmışken menüden Karargâha Dön ile de açılır.",
+      "purpose": "Tanıtım, haber önizlemesi, kayıt ve giriş.",
+      "steps": [
+        "İlk ziyarette kısa tanıtım ekranı çıkabilir; atlayabilirsiniz.",
+        "Operasyon paneline kaydırın, Kayıt veya Giriş sekmesini seçin.",
+        "Google veya e-posta ile kayıt olun; kullanıcı adı ve yasal onay gerekir.",
+        "Oturum açıldığında Ana Sayfaya yönlendirilirsiniz."
+      ],
+      "pageLink": "Karargâh sayfasına git"
+    },
+    "dashboard": {
+      "title": "Ana Sayfa",
+      "access": "Giriş yapmış tüm operatörler.",
+      "purpose": "ORS (Operasyonel Hazırlık Skoru), aktif görevler, cephanelik bakım uyarıları, muhabere bildirimleri ve operasyon özeti.",
+      "steps": [
+        "Girişten sonra varsayılan olarak buradasınız.",
+        "Kartlardan görev, cephanelik veya antrenman modüllerine geçin.",
+        "Sistem günlüğü son aktivitelerinizi listeler."
+      ],
+      "pageLink": "Ana Sayfaya git"
+    },
+    "profile": {
+      "title": "Profilim",
+      "access": "Giriş yapmış tüm operatörler.",
+      "purpose": "Takma ad, kullanıcı adı, profil fotoğrafı, telefon, kan grubu; ORS (Operasyonel Hazırlık Skoru) özeti ve aktivite geçmişi.",
+      "steps": [
+        "Takma adınızı ve kullanıcı adınızı düzenleyip kaydedin.",
+        "Profil fotoğrafı yükleyin.",
+        "Kan grubunuzu seçin; sağlık modülüyle uyumludur.",
+        "E-posta hesabınızın şifresini buradan değiştirebilirsiniz."
+      ],
+      "pageLink": "Profilim sayfasına git",
+      "prerequisites": [
+        "Kayıt sırasında oluşturulan operatör profili"
+      ]
+    },
+    "operator-profile": {
+      "title": "Operatör sicili",
+      "access": "Giriş yapmış tüm operatörler; başka bir operatörün özeti.",
+      "purpose": "Forum veya muhabereden açılan salt okunur operatör kartı.",
+      "steps": [
+        "Forum gönderisinde veya muhaberede operatör takma adına tıklayın.",
+        "Sicil kartı açılır.",
+        "Brifing Odasına dön bağlantısıyla foruma geri dönebilirsiniz."
+      ]
+    },
+    "akademi": {
+      "title": "Audaz Akademi",
+      "access": "Giriş yapmış tüm operatörler.",
+      "purpose": "Doktrin metinleri ve eğitim videoları.",
+      "steps": [
+        "Sol menüden Audaz Akademi seçin.",
+        "Modül tam açıldığında doktrin listesi ve videolar burada yer alacak."
+      ],
+      "pageLink": "Audaz Akademi sayfasına git",
+      "infoNote": "Şu an modül geliştirme aşamasında ekranı gösterilir; içeriğe erişilemez. Premium planda tam erişim planlanmaktadır."
+    },
+    "forum": {
+      "title": "Brifing Odası",
+      "access": "Giriş yapmış tüm operatörler.",
+      "purpose": "Kategorili taktik tartışma: gönderi, yanıt, beğeni ve görsel paylaşım.",
+      "steps": [
+        "Kategori seçin: Silah Sistemleri, CQB ve Taktik, TCCC ve Medikal, Genel Operasyon.",
+        "Yeni brifing açın; başlık, metin ve isteğe bağlı görsel ekleyin.",
+        "Gönderiye tıklayıp yanıt yazın veya beğenin.",
+        "Yazar takma adından operatör siciline gidebilirsiniz."
+      ],
+      "pageLink": "Brifing Odası sayfasına git"
+    },
+    "forum-reports": {
+      "title": "Forum şikayet",
+      "access": "Şikayet: tüm kullanıcılar. İnceleme: yöneticiler.",
+      "purpose": "Uygunsuz forum içeriğini bildirmek.",
+      "steps": [
+        "Gönderi veya yanıttaki bayrak simgesine tıklayın.",
+        "Sebebi seçin ve gönderin.",
+        "Yöneticiler Forum Moderasyonu bölümünden inceler."
+      ],
+      "notes": [
+        "Genel site geri bildirimi menüdeki Şikayet ve Öneri ile ayrı bir kanaldır."
+      ]
+    },
+    "intel-feed": {
+      "title": "Küresel Haber Ağı",
+      "access": "Giriş yapmış tüm operatörler.",
+      "purpose": "Yazılı haberler ve video haber akışı; Türkçe ve İngilizce özet.",
+      "steps": [
+        "Yazılı veya Video sekmesini seçin.",
+        "Kartta özeti okuyun; varsa dili değiştirin.",
+        "Kaynak linkiyle haberin tamamına gidebilirsiniz."
+      ],
+      "pageLink": "Küresel Haber Ağı sayfasına git"
+    },
+    "feedback-system": {
+      "title": "Şikayet ve Öneri",
+      "access": "Giriş yapmış tüm operatörler.",
+      "purpose": "Platform hakkında genel geri bildirim; forum şikayetinden bağımsızdır.",
+      "steps": [
+        "Sol menüde Sistem bölümünden Şikayet ve Öneri seçin.",
+        "Açılan panelde mesajınızı yazıp gönderin.",
+        "Yöneticiler Geri Bildirimler bölümünden okur."
+      ]
+    },
+    "training-hub": {
+      "title": "Antrenman ve Operasyon",
+      "access": "Ana hub tüm operatörlere açık. Grup Eğitimi kartı: gruba üye veya eğitmen.",
+      "purpose": "Altı bireysel antrenman sektörü, grup eğitimi ve eğitmenler için kontrol paneli kartı.",
+      "steps": [
+        "Sol menüden Antrenman ve Operasyon seçin.",
+        "Sektör kartına tıklayın; ilgili kayıt ekranı açılır.",
+        "Geri ok ile sektör listesine dönün.",
+        "Eğitmen oturumu varsa üstte aktif eğitim bildirimi görünür."
+      ],
+      "pageLink": "Antrenman sayfasına git",
+      "infoNote": "Altı bireysel sektör şu an herkese açık. Grup eğitimi yalnızca bir gruba dahil operatörler ve eğitmenler içindir. İleride ücretsiz planda bazı sektörler kilitlenebilir."
+    },
+    "sector-atis": {
+      "title": "ATIŞ sektörü",
+      "access": "Giriş yapmış tüm operatörler.",
+      "purpose": "Atış günlüğü; drill türü, atım ve isabet; kayıt sonrası mühimmat stoğu düşer.",
+      "steps": [
+        "Cephanelikten silah seçin.",
+        "Mühimmat otomatik veya elle eşleştirilir.",
+        "Drill türünü seçin; özel drill ise adını yazın.",
+        "Atım ve isabet sayısını girin; süreli atışta süre alanlarını doldurun.",
+        "Kaydedin; stok güncellenir ve kayıtlarınız listelenir."
+      ],
+      "pageLink": "Antrenman sayfasından ATIŞ sektörüne git",
+      "prerequisites": [
+        "Cephanelikte en az bir silah kaydı",
+        "Silahla uyumlu en az bir mühimmat kaydı"
+      ],
+      "infoNote": "Şu an atış kayıt sayısında sınır yok. Mühimmat stoğu yetmezse kayıt alınmaz. İleride ücretsiz planda toplam on atış kaydı sınırı gelebilir."
+    },
+    "sector-cqb": {
+      "title": "CQB sektörü",
+      "access": "Giriş yapmış tüm operatörler.",
+      "purpose": "Kapalı alan temizleme antrenman kaydı.",
+      "steps": [
+        "Oda düzeni, giriş yöntemi, kapı kırma tipi ve kapı durumunu seçin.",
+        "Takım boyutu ile tehdit ve etkisiz hale getirilen sayılarını girin.",
+        "Temizleme süresini, isabet yüzdesini ve güvenlik ihlali sayısını yazın.",
+        "Taktik kararı seçip kaydedin."
+      ],
+      "pageLink": "Antrenman sayfasından CQB sektörüne git",
+      "infoNote": "Şu an tüm operatörlere açık; cephanelik zorunluluğu yok. İleride ücretsiz planda kilitlenebilir, premium ile açılabilir."
+    },
+    "sector-fof": {
+      "title": "FOF sektörü",
+      "access": "Giriş yapmış tüm operatörler.",
+      "purpose": "Karşılıklı güç simülasyonu kaydı ve görev sonrası değerlendirme notu.",
+      "steps": [
+        "Senaryo ve simülasyon sistemini seçin.",
+        "Süreyi, atış sayısını ve angajman türünü girin.",
+        "Karar doğruluğu yüzdesini yazın.",
+        "Değerlendirme notu zorunludur; kaydedin."
+      ],
+      "pageLink": "Antrenman sayfasından FOF sektörüne git",
+      "infoNote": "Şu an herkese açık. İleride premium üyelik gerekebilir."
+    },
+    "sector-vbss": {
+      "title": "VBSS sektörü",
+      "access": "Giriş yapmış tüm operatörler.",
+      "purpose": "VBSS operasyon antrenman günlüğü.",
+      "steps": [
+        "Form alanlarını doldurun.",
+        "Doğrulama geçince kaydedin.",
+        "Kişisel Başarı Takibinde VBSS disiplini altında görünür."
+      ],
+      "pageLink": "Antrenman sayfasından VBSS sektörüne git",
+      "infoNote": "Şu an hesap türüne göre kısıtlama yok. Premium planda genişletilmiş erişim planlanabilir."
+    },
+    "sector-tccc-training": {
+      "title": "TCCC antrenman terminali",
+      "access": "Giriş yapmış tüm operatörler; grup değerlendirmesi için gruba üye olmak gerekir.",
+      "purpose": "MARCH aşama değerlendirmesi ve saha antrenman kaydı.",
+      "steps": [
+        "Özet, belge, kayıt veya gözlem modları arasında geçin.",
+        "MARCH aşama puanlarını girin.",
+        "Kaydı tamamlayın."
+      ],
+      "pageLink": "Antrenman sayfasından TCCC sektörüne git",
+      "infoNote": "Bireysel TCCC antrenmanı şu an herkese açık. Tam medikal evrak paketi premium planda planlanmaktadır.",
+      "notes": [
+        "TCCC ve Sağlık menüsündeki kişisel sağlık modülünden farklıdır; bu ekran antrenman kaydı içindir."
+      ]
+    },
+    "sector-egitim": {
+      "title": "EĞİTİM sektörü",
+      "access": "Giriş yapmış tüm operatörler.",
+      "purpose": "Eğitim planı ve tatbikat hedefi kaydı.",
+      "steps": [
+        "Eğitim odağını ve zorluk seviyesini seçin.",
+        "Hedef tarih ve tahmini süreyi girin.",
+        "Planı kaydedin; ilerlemeyi güncelleyin."
+      ],
+      "pageLink": "Antrenman sayfasından EĞİTİM sektörüne git",
+      "infoNote": "Şu an herkese açık. İleride ücretsiz planda kilitlenebilir."
+    },
+    "group-training": {
+      "title": "Grup eğitimi",
+      "access": "Gruba üye operatörler ve eğitmenler.",
+      "purpose": "Eğitmenin başlattığı canlı oturuma katılmak.",
+      "steps": [
+        "Eğitmen, Eğitmen Kontrol Panelinde Eğitim sekmesinden oturum başlatır.",
+        "Operatör, eğitmenden aldığı grup şifresiyle gruba katılır.",
+        "Antrenman sayfasında aktif eğitmen oturumu bildirimi görünür.",
+        "Grup Eğitimi kartından oturuma girin."
+      ],
+      "pageLink": "Antrenman sayfasından Grup Eğitimi sektörüne git",
+      "prerequisites": [
+        "Gruba katılmış olmak veya eğitmen olmak",
+        "Eğitmenin aktif oturum açmış olması"
+      ]
+    },
+    "tccc-suite": {
+      "title": "TCCC ve Sağlık",
+      "access": "Giriş yapmış tüm operatörler.",
+      "purpose": "Kişisel sağlık profili, taktik medikal evrak ve IFAK envanter takibi.",
+      "steps": [
+        "Kişisel Sağlık, Medikal Kılavuz ve Evrak veya IFAK ve Lojistik kartını seçin.",
+        "Sağlık bölümünde alerji, aşı ve kan grubunu güncelleyin.",
+        "IFAK malzemelerini ekleyin; son kullanma tarihi uyarıları görüntülenir."
+      ],
+      "pageLink": "TCCC ve Sağlık sayfasına git",
+      "infoNote": "Temel sağlık ve IFAK modülleri şu an herkese açık. Geniş evrak paketi premium planda planlanır.",
+      "notes": [
+        "Antrenman kaydı için Antrenman menüsündeki TCCC sektörünü kullanın."
+      ]
+    },
+    "cephanelik": {
+      "title": "Cephanelik",
+      "access": "Giriş yapmış tüm operatörler.",
+      "purpose": "Silah, aksesuar ve mühimmat envanteri; bakım ve namlu ömrü takibi.",
+      "steps": [
+        "Silahlar, Aksesuarlar veya Mühimmat bölümünü seçin.",
+        "Yeni kayıt ekleyip teknik bilgileri doldurun. Silah tipinde Keskin Nişancı Tüfeği (KNT) kategorisi de seçilebilir.",
+        "Silah, optik ve mühimmat formlarında \"Balistik Bilgileri (Opsiyonel)\" akordionunu açın; namlu uzunluğu, twist rate, namlu hızı, sight height gibi alanları doldurun — Balistik Terminal \"Cephanelikten Getir\" ile bunları otomatik çeker.",
+        "Listeden düzenleyin; filtrelerle daraltın.",
+        "ATIŞ sektörü silah ve mühimmatı buradan alır.",
+        "Bakım eşiği aşılınca Ana Sayfada uyarı çıkabilir."
+      ],
+      "pageLink": "Cephanelik sayfasına git",
+      "infoNote": "Şu an tam envanter erişimi herkese açık. İleride premium planda denetim kaydı eklenebilir.",
+      "notes": [
+        "Balistik Terminal, Cephanelik envanterindeki silah/optik/mühimmat ve opsiyonel balistik alanlarını \"Cephanelikten Getir\" ile kullanır."
+      ]
+    },
+    "balistik-terminal": {
+      "title": "Balistik Terminal",
+      "access": "Giriş yapmış tüm operatörler.",
+      "purpose": "Mermi/silah/optik verilerine dayalı dış balistik hesaplama (drop, rüzgar sapması, uçuş süresi, MOA/MRAD click değerleri); Cephanelik’ten otomatik veri çekme, kayıtlı profil yönetimi ve PDF raporlama.",
+      "steps": [
+        "Cephanelikten Getir ile envanterinizdeki bir silahı seçin; silah, optik ve mühimmat bilgileri otomatik doldurulur (bu alanlar salt-okunur gelir, gerekirse Kilidi Aç ile düzenleyebilirsiniz).",
+        "Cephanelik’te olmayan balistik-özel alanları (namlu hızı, BC, sight height, zero mesafesi gibi) elle girin.",
+        "Optik biriminizi (MOA veya MRAD) seçin; sadece seçtiğiniz birim gösterilir.",
+        "Çevre koşullarını (sıcaklık, basınç, nem, rakım, rüzgar) girin; her hesaplamada ayrı girilir, profile kaydedilmez.",
+        "Hedef mesafe aralığını belirleyip Hesapla’ya basın.",
+        "Hızlı Referans panelinde TİK (dürbün çevirme) veya NİŞAN (doğrudan nişan noktası) modunu seçin.",
+        "Referans Kilitle ile mevcut mesafeyi referans alıp, başka bir mesafeye geçtiğinizde aradaki FARKI (toplam yerine) görebilirsiniz.",
+        "Grafik, Tam Tablo sekmeleri arasında geçiş yapın; PDF olarak raporu indirin.",
+        "Profili isim vererek kaydedin; istediğinizde silebilirsiniz."
+      ],
+      "pageLink": "Balistik Terminal sayfasına git",
+      "prerequisites": [
+        "Cephanelikten Getir kullanacaksanız en az bir silah (ve mümkünse uyumlu optik/mühimmat) kaydı"
+      ],
+      "infoNote": "Bu terminaldeki hesaplamalar teorik tahminlerdir, gerçek atışla mutlaka doğrulanmalıdır (sayfaya her girişte bir bilgilendirme modalı bu konuda uyarır). Şu an herkese açık.",
+      "notes": [
+        "Cephanelik’ten gelen veriler (silah/optik/mühimmat adı) salt-okunur gelir; bu veriler ayrı olarak Cephanelik’te düzenlenir."
+      ]
+    },
+    "progress-tracker": {
+      "title": "Kişisel Başarı Takibi",
+      "access": "Giriş yapmış tüm operatörler.",
+      "purpose": "ORS (Operasyonel Hazırlık Skoru), disiplin filtreleri, trend grafikleri ve aktivite özeti.",
+      "steps": [
+        "Son yedi gün, otuz gün veya tüm zamanlar aralığını seçin.",
+        "ATIŞ, CQB, FOF, VBSS veya TCCC disiplinine göre filtreleyin.",
+        "Özet panelleri genişletin; kayıt detayına odaklanın.",
+        "Toplu Rapor İndir ile HUD, tüm analitik grafikler, geçmiş kayıtlar ve hata kodlarını tek PDF’te indirin.",
+        "Eğitmen hesapları: Operatör Seç menüsünden kendi grubunuzdaki bir üyeyi seçin; sayfanın üstünde \"Şu An Görüntülenen: {isim}\" göstergesiyle kimin verisini izlediğiniz netleşir."
+      ],
+      "pageLink": "Kişisel Başarı Takibi sayfasına git",
+      "prerequisites": [
+        "Anlamlı sonuç için antrenman kayıtları"
+      ],
+      "infoNote": "Tüm analitik paneller şu an herkese açık. İleride premium planda gelişmiş ORS (Operasyonel Hazırlık Skoru) grafikleri eklenebilir."
+    },
+    "group-join": {
+      "title": "Gruba katılım",
+      "access": "Henüz gruba dahil olmayan operatörler.",
+      "purpose": "Eğitmenin verdiği grup şifresiyle takıma katılmak.",
+      "steps": [
+        "Ayarlar sayfasında TAKTİK TİM bölümünü açın.",
+        "Grup Şifresi alanına en az dört karakterlik şifreyi girip Katıl deyin.",
+        "Başarılı olunca Grup Eğitimi kartı antrenman sayfasında görünür."
+      ],
+      "pageLink": "Ayarlar · TAKTİK TİM bölümüne git"
+    },
+    "instructor-dashboard": {
+      "title": "Eğitmen Kontrol Paneli",
+      "access": "Yalnızca eğitmen hesapları.",
+      "purpose": "Grup yönetimi, operatör raporları, canlı eğitim oturumu ve analitik.",
+      "steps": [
+        "Gruplar sekmesinde grup oluşturun, şifre verin, üyeleri görün.",
+        "Operatör Raporlama sekmesinde platform operatörlerini inceleyin; Toplu Rapor İndir (PDF) ile aktivite feed’i ve ilgili özetleri dışa aktarın.",
+        "Eğitim sekmesinde oturum başlatın; operatörler Grup Eğitiminden katılır.",
+        "Analitik sekmesinde grup aktivitelerini takip edin; Toplu Rapor İndir (PDF) ile aktivite feed’i ve grup performans grafiklerini tek dosyada indirin."
+      ],
+      "pageLink": "Eğitmen Kontrol Paneline git",
+      "notes": [
+        "Sol menüde Komuta ve Analitik bölümüne eğitmenler için eklenir."
+      ]
+    },
+    "language-switcher": {
+      "title": "Dil seçici",
+      "access": "Herkese açık.",
+      "purpose": "Üst bar’daki TR/EN dil seçici ile arayüz dilini değiştirmek.",
+      "steps": [
+        "Üst bar’daki TR veya EN butonuna tıklayın; tüm arayüz anında seçilen dile geçer, tercihiniz hesabınıza kaydedilir."
+      ]
+    },
+    "settings": {
+      "title": "Ayarlar",
+      "access": "Giriş yapmış tüm operatörler; kilitli hesaplar da erişebilir.",
+      "purpose": "Görünüm, bildirim tercihleri ve geri bildirim.",
+      "steps": [
+        "Tema ve bildirim ayarlarını değiştirin.",
+        "Geri bildirim formu ile mesaj gönderin.",
+        "Yöneticiler tek kullanımlık eğitmen davet kodu üretebilir."
+      ],
+      "pageLink": "Ayarlar sayfasına git"
+    },
+    "access-codes": {
+      "title": "Erişim kodları",
+      "access": "Giriş yapmış tüm operatörler.",
+      "purpose": "Premium veya eğitmen erişimini etkinleştirmek; beta döneminde ana yükseltme yolu.",
+      "steps": [
+        "Ayarlar sayfasında Erişim Kodu bölümünü açın.",
+        "En az sekiz karakterlik kodu girip kullanın.",
+        "Hesap rolünüz güncellenir; sayfayı yenilemeniz gerekebilir."
+      ],
+      "pageLink": "Ayarlar sayfasına git",
+      "infoNote": "Ücretli ödeme şu an kapalı; yükseltme erişim kodu ile yapılır. Lansman sonrasında ödeme ekranı da devreye girebilir."
+    },
+    "troubleshooting": {
+      "title": "Sorun giderme",
+      "access": "Tüm kullanıcılar.",
+      "purpose": "Sık karşılaşılan sorunlar ve çözümleri.",
+      "steps": [
+        "ATIŞ kaydı alınamıyorsa önce cephaneliğe silah ekleyin.",
+        "Stok yetersiz uyarısında mühimmat stoğunu artırın veya atım sayısını azaltın.",
+        "Grup şifresi geçersizse eğitmeninizden kodu doğrulayın.",
+        "Forum şikayeti gönderilemiyorsa yöneticiye bildirin.",
+        "Bağlantı veya kayıt hatası görürseniz ekrandaki hata bildirimini okuyun."
+      ]
+    },
+    "deep-links": {
+      "title": "Hızlı geçiş ipuçları",
+      "access": "Referans.",
+      "purpose": "Modüllere daha hızlı ulaşmak için pratik yollar.",
+      "steps": [
+        "Antrenman sayfasında doğrudan sektör kartına tıklayarak ATIŞ, CQB, FOF, VBSS, TCCC veya EĞİTİM ekranına girin.",
+        "Eğitmen oturumu davetinde bildirim veya antrenman sayfasındaki aktif eğitim uyarısını takip edin.",
+        "Forum veya muhabereden operatör takma adına tıklayarak sicil kartını açın.",
+        "Muhabere bildirim sayacı sol menüde görünür; tıklayarak mesajlara gidin."
+      ]
+    },
+    "glossary": {
+      "title": "Terimler sözlüğü",
+      "access": "Referans.",
+      "purpose": "Sık kullanılan kısaltmalar.",
+      "steps": [
+        "ORS (Operasyonel Hazırlık Skoru) — antrenman verilerinden hesaplanan genel hazırlık göstergesi.",
+        "ILWS — cephanelik envanter sistemi.",
+        "BLST — Balistik Terminal (dış balistik hesaplama).",
+        "MARCH — kanama, hava yolu, solunum, dolaşım ve hipotermi aşamaları.",
+        "FOF — karşılıklı güç antrenmanı.",
+        "VBSS — gemi biniş, arama ve ele geçirme operasyonu.",
+        "TCCC — taktik savaş yaralanması bakımı.",
+        "IFAK — bireysel ilk yardım kiti."
+      ]
+    }
+  }
+}

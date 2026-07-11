@@ -1,4 +1,5 @@
-import { GUIDE_FLOWS } from '../../data/guideFlows'
+import { useTranslation } from 'react-i18next'
+import { resolveGuideFlowDisplay } from '../../lib/guideDisplayText'
 
 /**
  * Terminal estetiğinde yatay adım şeması.
@@ -12,10 +13,13 @@ import { GUIDE_FLOWS } from '../../data/guideFlows'
  * }} props
  */
 export default function GuideFlowDiagram({ flowId, title, opsCode, steps: stepsProp, className = '' }) {
-  const flow = flowId ? GUIDE_FLOWS[flowId] : null
-  const steps = stepsProp ?? flow?.steps ?? []
-  const displayTitle = title ?? flow?.title ?? 'Akış'
-  const displayOps = opsCode ?? flow?.opsCode
+  const { t, i18n } = useTranslation('guide')
+  void i18n.language
+
+  const resolved = flowId ? resolveGuideFlowDisplay(flowId) : null
+  const steps = stepsProp ?? resolved?.steps ?? []
+  const displayTitle = title ?? resolved?.title ?? ''
+  const displayOps = opsCode ?? resolved?.opsCode
 
   if (!steps.length) return null
 
@@ -26,7 +30,7 @@ export default function GuideFlowDiagram({ flowId, title, opsCode, steps: stepsP
     >
       <figcaption className="mb-3 flex flex-wrap items-center gap-2">
         <span className="font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-amber-400/90">
-          [ AKIŞ ŞEMASI ]
+          {t('ui.flowDiagramLabel')}
         </span>
         <span className="font-mono-technical text-[10px] font-bold uppercase tracking-wider text-app-text/80">
           {displayTitle}
