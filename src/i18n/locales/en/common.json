@@ -1,6 +1,8 @@
 {
   "language": {
     "switchAria": "Language selection",
+    "switchToEn": "Switch to English",
+    "switchToTr": "Switch to Turkish",
     "tr": "TR",
     "en": "EN"
   },

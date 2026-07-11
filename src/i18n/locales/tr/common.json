@@ -1,6 +1,8 @@
 {
   "language": {
     "switchAria": "Dil seçimi",
+    "switchToEn": "İngilizce'ye geç",
+    "switchToTr": "Türkçe'ye geç",
     "tr": "TR",
     "en": "EN"
   },

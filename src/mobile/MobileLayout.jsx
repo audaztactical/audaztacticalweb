@@ -64,7 +64,7 @@ export default function MobileLayout() {
         </Link>
 
         <div className="flex shrink-0 items-center gap-1.5">
-          <LanguageSwitcher compact />
+          <LanguageSwitcher />
           <NotificationDropdown />
         </div>
       </header>

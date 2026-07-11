@@ -186,7 +186,7 @@ export default function MainLayout() {
             />
           </Link>
           <NotificationDropdown />
-          <LanguageSwitcher compact />
+          <LanguageSwitcher />
         </header>
 
         <main

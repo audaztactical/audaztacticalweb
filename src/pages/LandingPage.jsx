@@ -160,7 +160,7 @@ export default function LandingPage() {
             </div>
           </Link>
           <nav className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
-            <LanguageSwitcher compact />
+            <LanguageSwitcher />
             {googleRedirectResolving ? (
               <span className="font-mono-technical text-[9px] uppercase tracking-wider text-emerald-400/70">
                 {t('nav.googleSync')}
