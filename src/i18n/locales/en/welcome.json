@@ -1,0 +1,49 @@
+{
+  "title": "Welcome, Operator",
+  "settingsSection": "WELCOME, OPERATOR",
+  "settingsHint": "Re-read the operator briefing",
+  "settingsOpen": "Open briefing",
+  "intro": "Welcome to AUDAZ TACTICAL. This platform is built so you can log training, manage your armory, run ballistic calculations, communicate with your tactical team, and track performance.",
+  "introContinue": "Before you continue, please review a few important points:",
+  "sections": {
+    "firearms": {
+      "title": "For Firearm Users",
+      "body": "Ballistic calculations and training logs on this platform are theoretical / informational. Always follow firearm safety rules in the physical world (muzzle direction, trigger discipline, target confirmation). No data in the app replaces on-site safety protocols."
+    },
+    "personnel": {
+      "title": "For Duty Personnel (Military, Police, Security, etc.)",
+      "body": "If you serve in an official organization, you may use a callsign or alias on the platform instead of your real name, rank, or unit details to protect your identity. That choice is entirely yours."
+    },
+    "rules": {
+      "title": "General Rules — Forum and Comms Use",
+      "lead": "All communication on the platform is treated as a professional operational environment.",
+      "prohibitedTitle": "Prohibited Conduct:",
+      "prohibited": [
+        "Insults, profanity, or personally aggressive language",
+        "Discrimination based on race, gender, religion, nationality, or identity",
+        "Threats, intimidation, or harassment",
+        "Sharing or requesting personal information (real name, address, phone, organization details)",
+        "Real / graphic imagery of violence, injury, or death (e.g. wounded or shot persons)",
+        "Obscene, pornographic, or sexual imagery or text",
+        "Hate speech or extremist content",
+        "Spam, irrelevant advertising, or malicious links"
+      ],
+      "reportTitle": "Reporting Process:",
+      "reportBody": "Flag inappropriate content with the flag icon; reports are kept confidential and reviewed. False reports are also evaluated.",
+      "enforcementTitle": "Review and Outcomes:",
+      "enforcementBody": "First violations may receive a warning; repeated or serious violations may lead to temporary restrictions; severe violations may result in permanent account suspension. Outcomes are delivered by notification; you retain the right to appeal.",
+      "responsibilityTitle": "Responsibility:",
+      "responsibilityBody": "You are responsible for content you share; the platform does not take sides in disputes between users."
+    }
+  },
+  "footer": "You can re-read this briefing anytime under Settings → Welcome, Operator.",
+  "ack": "I have read and understood",
+  "neverShow": "Don't show again",
+  "close": "Close",
+  "saving": "Saving…",
+  "closeAria": "Close modal",
+  "errors": {
+    "authRequired": "Sign-in required.",
+    "saveFailed": "Could not save preference — try again."
+  }
+}

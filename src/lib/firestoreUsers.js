@@ -9,6 +9,7 @@ import {
   readPendingOperatorProfile,
 } from './pendingOperatorProfile'
 import { AGE_DECLARATION_VERSION } from '../data/legalProtocols'
+import { WELCOME_MODAL_VERSION } from './welcomeModal'
 
 /** Firestore'da kayıt yoksa veya hata durumunda AuthContext varsayılanları */
 export const GUEST_PROFILE = {
@@ -72,6 +73,23 @@ export async function releaseUsernameIfOrphaned(uid, normalizedKey) {
 
 /**
  * @param {unknown} raw
+ * @returns {{ neverShowAgain: boolean, acknowledgedAt: unknown, version: string } | null}
+ */
+function mapWelcomeModalDismissed(raw) {
+  if (!raw || typeof raw !== 'object') return null
+  const d = /** @type {Record<string, unknown>} */ (raw)
+  return {
+    neverShowAgain: d.neverShowAgain === true,
+    acknowledgedAt: d.acknowledgedAt ?? null,
+    version:
+      typeof d.version === 'string' && d.version.trim()
+        ? d.version.trim()
+        : WELCOME_MODAL_VERSION,
+  }
+}
+
+/**
+ * @param {unknown} raw
  * @returns {{ accepted: boolean, version: string, acceptedAt: unknown } | null}
  */
 function mapAgeDeclaration(raw) {
@@ -123,6 +141,7 @@ export function mapUserDocToProfile(d) {
     agreedToTerms: d.agreedToTerms === true,
     termsAgreedAt: d.termsAgreedAt ?? null,
     ageDeclaration: mapAgeDeclaration(d.ageDeclaration),
+    welcomeModalDismissed: mapWelcomeModalDismissed(d.welcomeModalDismissed),
     photoURL:
       typeof d.photoURL === 'string' && d.photoURL.trim()
         ? d.photoURL.trim()
@@ -541,6 +560,33 @@ export async function updateUserRegistrationConsents(uid) {
         accepted: true,
         version: AGE_DECLARATION_VERSION,
         acceptedAt: serverTimestamp(),
+      },
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  )
+}
+
+/**
+ * Hoş Geldin Operatör modal tercihi — users/{uid}.welcomeModalDismissed
+ * @param {string} uid
+ * @param {{ neverShowAgain: boolean, version?: string }} input
+ */
+export async function updateUserWelcomeModalDismissed(uid, input) {
+  if (!isFirebaseConfigured() || !db) throw new Error('Firebase yapılandırılmadı')
+  if (!uid) throw new Error('Oturum gerekli')
+
+  const neverShowAgain = input?.neverShowAgain === true
+  const version = String(input?.version ?? WELCOME_MODAL_VERSION).trim() || WELCOME_MODAL_VERSION
+
+  const ref = doc(db, 'users', uid)
+  await setDoc(
+    ref,
+    {
+      welcomeModalDismissed: {
+        neverShowAgain,
+        acknowledgedAt: serverTimestamp(),
+        version,
       },
       updatedAt: serverTimestamp(),
     },

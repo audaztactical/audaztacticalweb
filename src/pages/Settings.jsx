@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { signOut } from 'firebase/auth'
 import {
   Bell,
+  BookOpen,
   CreditCard,
   KeyRound,
   Loader2,
@@ -20,6 +22,7 @@ import SettingsPanel from '../components/SettingsPanel'
 import FeedbackForm from '../components/FeedbackForm'
 import SettingsAccordionSection from '../components/settings/SettingsAccordionSection'
 import SettingsGroupSection from '../components/settings/SettingsGroupSection'
+import { useWelcomeOperatorOptional } from '../components/welcome/WelcomeOperatorProvider'
 import { useAuth } from '../context/AuthContext'
 import { auth } from '../lib/firebase'
 
@@ -30,6 +33,8 @@ function formatRoleLabel(role) {
 }
 
 export default function Settings() {
+  const { t } = useTranslation('welcome')
+  const welcome = useWelcomeOperatorOptional()
   const { isAdmin, showAdminPanel, user, userData, role, isPremiumMember } = useAuth()
   const showPricingLink = showAdminPanel || isAdmin
   const [signingOut, setSigningOut] = useState(false)
@@ -97,6 +102,28 @@ export default function Settings() {
 
         <SettingsAccordionSection id="access-code" title="ERİŞİM KODU" color="#A855F7" icon={KeyRound}>
           {showAdminPanel || isAdmin ? <AccessCodesPanel /> : <AccessCodeRedeemPanel bare />}
+        </SettingsAccordionSection>
+
+        <SettingsAccordionSection
+          id="welcome-operator"
+          title={t('settingsSection')}
+          color="#84CC16"
+          icon={BookOpen}
+        >
+          <div className="space-y-3">
+            <p className="font-mono-technical text-[11px] leading-relaxed text-app-text/60">
+              {t('settingsHint')}
+            </p>
+            <button
+              type="button"
+              onClick={() => welcome?.openWelcomeBriefing()}
+              disabled={!welcome}
+              className="inline-flex items-center justify-center gap-2 rounded border border-lime-500/40 bg-lime-950/30 px-4 py-2.5 font-mono-technical text-[10px] font-bold uppercase tracking-[0.2em] text-lime-300 transition hover:border-lime-400/60 hover:bg-lime-950/45 disabled:opacity-50"
+            >
+              <BookOpen className="size-3.5" strokeWidth={1.75} aria-hidden />
+              {t('settingsOpen')}
+            </button>
+          </div>
         </SettingsAccordionSection>
 
         <SettingsAccordionSection

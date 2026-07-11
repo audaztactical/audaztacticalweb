@@ -8,6 +8,7 @@ import FeedbackBubble from '../components/feedback/FeedbackBubble'
 import FeedbackPanelModal from '../components/feedback/FeedbackPanelModal'
 import FeedbackToast from '../components/feedback/FeedbackToast'
 import SuspensionGate from '../components/auth/SuspensionGate'
+import { WelcomeOperatorProvider } from '../components/welcome/WelcomeOperatorProvider'
 
 /** Telefon / tablet tarayıcı + Capacitor — alt sekme çubuğu kabuğu; masaüstünde sidebar. */
 export default function ResponsiveAppLayout() {
@@ -27,12 +28,14 @@ export default function ResponsiveAppLayout() {
 
   return (
     <FeedbackPanelProvider>
-      <SuspensionGate>
-        {compact ? <MobileLayout /> : <MainLayout />}
-        <FeedbackBubble />
-        <FeedbackPanelModal />
-        <FeedbackToast />
-      </SuspensionGate>
+      <WelcomeOperatorProvider>
+        <SuspensionGate>
+          {compact ? <MobileLayout /> : <MainLayout />}
+          <FeedbackBubble />
+          <FeedbackPanelModal />
+          <FeedbackToast />
+        </SuspensionGate>
+      </WelcomeOperatorProvider>
     </FeedbackPanelProvider>
   )
 }

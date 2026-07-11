@@ -162,6 +162,23 @@ service cloud.firestore {
         && isValidAgeDeclarationMap(request.resource.data.ageDeclaration);
     }
 
+    /** Hoş Geldin Operatör modal tercihi — users/{uid}.welcomeModalDismissed */
+    function isValidWelcomeModalDismissedMap(data) {
+      return data is map
+        && data.neverShowAgain is bool
+        && data.version is string
+        && data.version.size() > 0
+        && data.version.size() <= 32
+        && data.keys().hasAll(['neverShowAgain', 'acknowledgedAt', 'version']);
+    }
+
+    function isOwnerWelcomeModalDismissedOnlyUpdate(uid) {
+      return isOwnerUid(uid)
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['welcomeModalDismissed', 'updatedAt'])
+        && isValidWelcomeModalDismissedMap(request.resource.data.welcomeModalDismissed);
+    }
+
     /** Muhabere çevrimiçi durumu — yalnızca lastSeenAt / isOnline (presence heartbeat). */
     function isOwnerPresenceOnlyUpdate(uid) {
       return isOwnerUid(uid)
@@ -239,6 +256,7 @@ service cloud.firestore {
         || (isOwnerUid(userId) && isOwnerTermsAckOnly())
         || (isOwnerUid(userId) && isOwnerRegistrationConsentsOnly())
         || (isOwnerUid(userId) && isOwnerAgeDeclarationOnlyUpdate(userId))
+        || (isOwnerUid(userId) && isOwnerWelcomeModalDismissedOnlyUpdate(userId))
         || (isOwnerUid(userId) && isOwnerPresenceOnlyUpdate(userId))
         || (isOwnerUid(userId) && isOwnerFcmTokensOnlyUpdate(userId))
         || (isOwnerUid(userId) && isOwnerSidebarGroupStateOnlyUpdate(userId))

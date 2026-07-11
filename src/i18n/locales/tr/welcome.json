@@ -1,0 +1,49 @@
+{
+  "title": "Hoş Geldin, Operatör",
+  "settingsSection": "HOŞ GELDİN, OPERATÖR",
+  "settingsHint": "Operatör brifingini tekrar oku",
+  "settingsOpen": "Brifingi aç",
+  "intro": "AUDAZ TACTICAL'a hoş geldiniz. Bu platform; antrenman kayıtlarınızı tutmanız, cephaneliğinizi yönetmeniz, balistik hesaplama yapmanız, taktik ekibinizle iletişim kurmanız ve performansınızı takip etmeniz için tasarlandı.",
+  "introContinue": "Devam etmeden önce birkaç önemli noktayı okumanızı rica ederiz:",
+  "sections": {
+    "firearms": {
+      "title": "Ateşli Silah Kullanıcıları İçin",
+      "body": "Bu platformdaki balistik hesaplamalar ve antrenman kayıtları teorik/bilgilendirme amaçlıdır. Silah güvenliği kurallarına (namlu yönü, tetik disiplini, hedef doğrulama) her zaman fiziksel olarak uyun. Uygulamadaki hiçbir veri, sahadaki güvenlik protokollerinin yerini tutmaz."
+    },
+    "personnel": {
+      "title": "Görev Personeli İçin (Asker, Polis, Güvenlik vb.)",
+      "body": "Eğer resmi bir kurumda görevliyseniz, kimlik gizliliğiniz için platformda gerçek adınız, rütbeniz veya birim bilginiz yerine bir çağrı işareti (callsign) veya takma ad kullanabilirsiniz. Bu tamamen sizin tercihinizdir."
+    },
+    "rules": {
+      "title": "Genel Kurallar — Forum ve Muhabere Kullanımı",
+      "lead": "Platform üzerindeki tüm iletişim profesyonel bir operasyon ortamı gibi değerlendirilir.",
+      "prohibitedTitle": "Yasak Davranışlar:",
+      "prohibited": [
+        "Hakaret, argo/küfür veya kişiye yönelik saldırgan dil",
+        "Irk, cinsiyet, din, milliyet veya kimlik unsuru üzerinden ayrımcılık",
+        "Tehdit, sindirme veya taciz",
+        "Kişisel bilgi (gerçek ad, adres, telefon, kurum bilgisi) paylaşımı veya talebi",
+        "Şiddet, yaralanma veya ölüm içeren gerçek/grafik görseller (örn. yaralı/vurulmuş kişi görüntüleri)",
+        "Müstehcen, pornografik veya cinsel içerikli görsel/metin paylaşımı",
+        "Nefret söylemi veya aşırılık yanlısı içerik",
+        "Spam, alakasız reklam veya kötü amaçlı bağlantı"
+      ],
+      "reportTitle": "Şikayet Süreci:",
+      "reportBody": "Uygunsuz içeriği bayrak simgesiyle bildirin; şikayetiniz gizli tutulur ve incelenir. Asılsız şikayetler de değerlendirmeye alınır.",
+      "enforcementTitle": "Değerlendirme ve Sonuçları:",
+      "enforcementBody": "İlk ihlallerde uyarı; tekrarlanan/ciddi ihlallerde geçici kısıtlama; ağır ihlallerde kalıcı hesap askıya alma. Sonuç bildirimle iletilir, itiraz hakkınız saklıdır.",
+      "responsibilityTitle": "Sorumluluk:",
+      "responsibilityBody": "Paylaştığınız içerikten siz sorumlusunuz; platform kullanıcılar arası anlaşmazlıklarda taraf olmaz."
+    }
+  },
+  "footer": "Bu bilgilendirmeyi istediğiniz zaman Ayarlar → Hoş Geldin, Operatör üzerinden tekrar okuyabilirsiniz.",
+  "ack": "Okudum, Anladım",
+  "neverShow": "Bir daha gösterme",
+  "close": "Kapat",
+  "saving": "Kaydediliyor…",
+  "closeAria": "Modali kapat",
+  "errors": {
+    "authRequired": "Oturum gerekli.",
+    "saveFailed": "Tercih kaydedilemedi — tekrar deneyin."
+  }
+}

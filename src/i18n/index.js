@@ -44,6 +44,8 @@ import trLanding from './locales/tr/landing.json'
 import enLanding from './locales/en/landing.json'
 import trAuth from './locales/tr/auth.json'
 import enAuth from './locales/en/auth.json'
+import trWelcome from './locales/tr/welcome.json'
+import enWelcome from './locales/en/welcome.json'
 
 export const SUPPORTED_LANGUAGES = /** @type {const} */ (['tr', 'en'])
 
@@ -60,14 +62,14 @@ const isDev = typeof import.meta !== 'undefined' && Boolean(import.meta.env?.DEV
 
 i18n.use(initReactI18next).init({
   resources: {
-    tr: { common: trCommon, dashboard: trDashboard, nav: trNav, profile: trProfile, messages: trMessages, academy: trAcademy, forum: trForum, intel: trIntel, training: trTraining, 'training-pdf': trTrainingPdf, health: trHealth, 'health-pdf': trHealthPdf, armory: trArmory, ballistics: trBallistics, 'ballistics-pdf': trBallisticsPdf, progress: trProgress, 'progress-pdf': trProgressPdf, instructor: trInstructor, 'instructor-pdf': trInstructorPdf, guide: trGuide, landing: trLanding, auth: trAuth },
-    en: { common: enCommon, dashboard: enDashboard, nav: enNav, profile: enProfile, messages: enMessages, academy: enAcademy, forum: enForum, intel: enIntel, training: enTraining, 'training-pdf': enTrainingPdf, health: enHealth, 'health-pdf': enHealthPdf, armory: enArmory, ballistics: enBallistics, 'ballistics-pdf': enBallisticsPdf, progress: enProgress, 'progress-pdf': enProgressPdf, instructor: enInstructor, 'instructor-pdf': enInstructorPdf, guide: enGuide, landing: enLanding, auth: enAuth },
+    tr: { common: trCommon, dashboard: trDashboard, nav: trNav, profile: trProfile, messages: trMessages, academy: trAcademy, forum: trForum, intel: trIntel, training: trTraining, 'training-pdf': trTrainingPdf, health: trHealth, 'health-pdf': trHealthPdf, armory: trArmory, ballistics: trBallistics, 'ballistics-pdf': trBallisticsPdf, progress: trProgress, 'progress-pdf': trProgressPdf, instructor: trInstructor, 'instructor-pdf': trInstructorPdf, guide: trGuide, landing: trLanding, auth: trAuth, welcome: trWelcome },
+    en: { common: enCommon, dashboard: enDashboard, nav: enNav, profile: enProfile, messages: enMessages, academy: enAcademy, forum: enForum, intel: enIntel, training: enTraining, 'training-pdf': enTrainingPdf, health: enHealth, 'health-pdf': enHealthPdf, armory: enArmory, ballistics: enBallistics, 'ballistics-pdf': enBallisticsPdf, progress: enProgress, 'progress-pdf': enProgressPdf, instructor: enInstructor, 'instructor-pdf': enInstructorPdf, guide: enGuide, landing: enLanding, auth: enAuth, welcome: enWelcome },
   },
   lng: detectBrowserLanguage(),
   fallbackLng: 'en',
   supportedLngs: [...SUPPORTED_LANGUAGES],
   defaultNS: 'common',
-  ns: ['common', 'dashboard', 'nav', 'profile', 'messages', 'academy', 'forum', 'intel', 'training', 'training-pdf', 'health', 'health-pdf', 'armory', 'ballistics', 'ballistics-pdf', 'progress', 'progress-pdf', 'instructor', 'instructor-pdf', 'guide', 'landing', 'auth'],
+  ns: ['common', 'dashboard', 'nav', 'profile', 'messages', 'academy', 'forum', 'intel', 'training', 'training-pdf', 'health', 'health-pdf', 'armory', 'ballistics', 'ballistics-pdf', 'progress', 'progress-pdf', 'instructor', 'instructor-pdf', 'guide', 'landing', 'auth', 'welcome'],
   interpolation: { escapeValue: false },
   ...(isDev
     ? {
