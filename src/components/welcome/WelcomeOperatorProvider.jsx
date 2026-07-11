@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
-import { shouldAutoShowWelcomeModal } from '../../lib/welcomeModal'
+import { shouldAutoShowWelcomeModal, WELCOME_MODAL_VERSION } from '../../lib/welcomeModal'
 import WelcomeOperatorModal from './WelcomeOperatorModal'
 
 const WelcomeOperatorContext = createContext(
@@ -9,25 +9,34 @@ const WelcomeOperatorContext = createContext(
 
 /**
  * Giriş sonrası otomatik brifing + Ayarlar'dan manuel açma.
+ *
+ * Auto-show waits until profileLoading === false so welcomeModalDismissed from
+ * users/{uid} is available (avoids race: open before profile merge).
  */
 export function WelcomeOperatorProvider({ children }) {
   const { user, userData, profileLoading, loading } = useAuth()
   const [sessionDismissed, setSessionDismissed] = useState(false)
   const [manualOpen, setManualOpen] = useState(false)
   const [readOnly, setReadOnly] = useState(false)
+  /** Optimistic override after successful dismiss write (before snapshot/merge settles). */
+  const [localDismissed, setLocalDismissed] = useState(
+    /** @type {{ neverShowAgain: boolean, version: string } | null} */ (null),
+  )
 
   useEffect(() => {
     setSessionDismissed(false)
     setManualOpen(false)
     setReadOnly(false)
+    setLocalDismissed(null)
   }, [user?.uid])
 
+  const dismissedPreference = localDismissed ?? userData?.welcomeModalDismissed ?? null
+
+  const profileReady = Boolean(user?.uid) && !loading && !profileLoading && Boolean(userData)
+
   const autoEligible =
-    Boolean(user?.uid) &&
-    !loading &&
-    !profileLoading &&
-    Boolean(userData) &&
-    shouldAutoShowWelcomeModal(userData?.welcomeModalDismissed) &&
+    profileReady &&
+    shouldAutoShowWelcomeModal(dismissedPreference) &&
     !sessionDismissed
 
   const open = autoEligible || manualOpen
@@ -46,8 +55,14 @@ export function WelcomeOperatorProvider({ children }) {
     setSessionDismissed(true)
   }, [manualOpen])
 
-  const handleDismissed = useCallback(() => {
+  const handleDismissed = useCallback((/** @type {{ neverShowAgain: boolean }} */ payload) => {
     setSessionDismissed(true)
+    if (payload?.neverShowAgain) {
+      setLocalDismissed({
+        neverShowAgain: true,
+        version: WELCOME_MODAL_VERSION,
+      })
+    }
   }, [])
 
   const value = useMemo(() => ({ openWelcomeBriefing }), [openWelcomeBriefing])

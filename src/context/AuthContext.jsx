@@ -39,6 +39,7 @@ import {
   repairPendingOperatorProfile,
 } from '../lib/firestoreUsers'
 import { AGE_DECLARATION_VERSION } from '../data/legalProtocols'
+import { WELCOME_MODAL_VERSION } from '../lib/welcomeModal'
 import {
   clearPendingOperatorProfile,
   savePendingOperatorProfile,
@@ -49,6 +50,23 @@ import {
 } from '../config/admin'
 
 const AuthContext = createContext(null)
+
+/**
+ * @param {unknown} raw
+ * @returns {{ neverShowAgain: boolean, acknowledgedAt: unknown, version: string } | null}
+ */
+function mapWelcomeModalDismissedForAuth(raw) {
+  if (!raw || typeof raw !== 'object') return null
+  const d = /** @type {Record<string, unknown>} */ (raw)
+  return {
+    neverShowAgain: d.neverShowAgain === true,
+    acknowledgedAt: d.acknowledgedAt ?? null,
+    version:
+      typeof d.version === 'string' && d.version.trim()
+        ? d.version.trim()
+        : WELCOME_MODAL_VERSION,
+  }
+}
 
 function mergeWithGuest(partial, authUser) {
   return {
@@ -91,6 +109,7 @@ function mergeWithGuest(partial, authUser) {
             acceptedAt: /** @type {{ acceptedAt?: unknown }} */ (partial.ageDeclaration).acceptedAt ?? null,
           }
         : null,
+    welcomeModalDismissed: mapWelcomeModalDismissedForAuth(partial.welcomeModalDismissed),
     photoURL:
       typeof partial.photoURL === 'string' && partial.photoURL.trim()
         ? partial.photoURL.trim()

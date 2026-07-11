@@ -17,7 +17,7 @@ import { WELCOME_MODAL_VERSION } from '../../lib/welcomeModal'
  */
 export default function WelcomeOperatorModal({ open, readOnly = false, onClose, onDismissed }) {
   const { t } = useTranslation('welcome')
-  const { user } = useAuth()
+  const { user, refreshUserProfile } = useAuth()
   const [ack, setAck] = useState(false)
   const [neverShow, setNeverShow] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -53,6 +53,9 @@ export default function WelcomeOperatorModal({ open, readOnly = false, onClose, 
         neverShowAgain: neverShow,
         version: WELCOME_MODAL_VERSION,
       })
+      if (typeof refreshUserProfile === 'function') {
+        await refreshUserProfile()
+      }
       onDismissed?.({ neverShowAgain: neverShow })
       onClose?.()
     } catch (err) {
@@ -61,7 +64,7 @@ export default function WelcomeOperatorModal({ open, readOnly = false, onClose, 
     } finally {
       setBusy(false)
     }
-  }, [ack, busy, neverShow, onClose, onDismissed, readOnly, t, user?.uid])
+  }, [ack, busy, neverShow, onClose, onDismissed, readOnly, refreshUserProfile, t, user?.uid])
 
   const prohibited = t('sections.rules.prohibited', { returnObjects: true })
   const prohibitedList = Array.isArray(prohibited) ? prohibited : []
