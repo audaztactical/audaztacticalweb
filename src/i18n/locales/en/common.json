@@ -31,6 +31,20 @@
       "justNow": "Just now",
       "minutesAgo": "{{count}} min ago",
       "hoursAgo": "{{count}} h ago"
+    },
+    "categories": {
+      "intel": "New Intel",
+      "forumPost": "New Briefing Share",
+      "academy": "New Field Doctrine",
+      "comment": "New Briefing Reply",
+      "like": "Briefing Acknowledged",
+      "friendRequest": "Contact Request",
+      "friendAccepted": "Request Approved",
+      "appealResponse": "Appeal Response",
+      "groupTrainingNew": "New Group Training",
+      "groupTrainingYourResult": "Your Group Training Result",
+      "groupTrainingInstructorResult": "New Group Training Result",
+      "fallback": "Notification"
     }
   },
   "accessCode": {

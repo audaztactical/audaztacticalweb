@@ -31,6 +31,20 @@
       "justNow": "Az önce",
       "minutesAgo": "{{count}} dk önce",
       "hoursAgo": "{{count}} sa önce"
+    },
+    "categories": {
+      "intel": "Yeni İstihbarat",
+      "forumPost": "Yeni Brifing Paylaşımı",
+      "academy": "Yeni saha doktrini",
+      "comment": "Yeni brifing yanıtı",
+      "like": "Brifing mutabık",
+      "friendRequest": "İrtibat isteği",
+      "friendAccepted": "İstek onaylandı",
+      "appealResponse": "İtirazınıza yanıt geldi",
+      "groupTrainingNew": "Yeni grup eğitimi",
+      "groupTrainingYourResult": "Grup eğitimi sonucunuz",
+      "groupTrainingInstructorResult": "Yeni grup eğitimi sonucu",
+      "fallback": "Bildirim"
     }
   },
   "accessCode": {

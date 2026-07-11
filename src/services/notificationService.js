@@ -42,6 +42,84 @@ export const NOTIFICATION_TYPES = /** @type {const} */ ([
 ])
 
 /**
+ * Fixed category titles written at send-time (often TR-only). Matched case-insensitively
+ * so the dropdown can re-localize by active UI language without rewriting Firestore docs.
+ * MESSAGE titles (callsigns) and variable content are intentionally absent.
+ * @type {Record<string, string>}
+ */
+const NOTIFICATION_CATEGORY_TITLE_KEYS = {
+  'yeni istihbarat': 'notifications.categories.intel',
+  'yeni brifing paylaşımı': 'notifications.categories.forumPost',
+  'yeni saha doktrini': 'notifications.categories.academy',
+  'yeni brifing yanıtı': 'notifications.categories.comment',
+  'brifing mutabık': 'notifications.categories.like',
+  'irtibat isteği': 'notifications.categories.friendRequest',
+  'istek onaylandı': 'notifications.categories.friendAccepted',
+  'itirazınıza yanıt geldi': 'notifications.categories.appealResponse',
+  'yeni grup eğitimi': 'notifications.categories.groupTrainingNew',
+  'grup eğitimi sonucunuz': 'notifications.categories.groupTrainingYourResult',
+  'yeni grup eğitimi sonucu': 'notifications.categories.groupTrainingInstructorResult',
+  // EN send-time variants (group training preferredLanguage) — remap on language switch
+  'new intel': 'notifications.categories.intel',
+  'new briefing share': 'notifications.categories.forumPost',
+  'new field doctrine': 'notifications.categories.academy',
+  'new briefing reply': 'notifications.categories.comment',
+  'briefing acknowledged': 'notifications.categories.like',
+  'contact request': 'notifications.categories.friendRequest',
+  'request approved': 'notifications.categories.friendAccepted',
+  'appeal response': 'notifications.categories.appealResponse',
+  'new group training': 'notifications.categories.groupTrainingNew',
+  'your group training result': 'notifications.categories.groupTrainingYourResult',
+  'new group training result': 'notifications.categories.groupTrainingInstructorResult',
+  bildirim: 'notifications.categories.fallback',
+  notification: 'notifications.categories.fallback',
+}
+
+/**
+ * @param {string} title
+ */
+function normalizeNotificationCategoryTitle(title) {
+  return String(title ?? '')
+    .trim()
+    .toLocaleLowerCase('tr-TR')
+    .replace(/\s+/g, ' ')
+}
+
+/**
+ * Display-time category label for the notifications panel.
+ * Remaps known fixed titles (and INTEL / FORUM_POST / ACADEMY types) to `common.notifications.categories.*`.
+ * Leaves MESSAGE callsigns and any unknown titles unchanged. Never touches `item.message` (RSS/content).
+ *
+ * @param {Pick<AppNotification, 'type' | 'title'>} item
+ * @returns {string}
+ */
+export function resolveNotificationTitle(item) {
+  const type = item?.type
+  const raw = String(item?.title ?? '').trim()
+
+  if (type === 'INTEL') {
+    return i18n.t('notifications.categories.intel', { ns: 'common' })
+  }
+  if (type === 'FORUM_POST') {
+    return i18n.t('notifications.categories.forumPost', { ns: 'common' })
+  }
+  if (type === 'ACADEMY') {
+    return i18n.t('notifications.categories.academy', { ns: 'common' })
+  }
+
+  const key = NOTIFICATION_CATEGORY_TITLE_KEYS[normalizeNotificationCategoryTitle(raw)]
+  if (key) {
+    return i18n.t(key, { ns: 'common' })
+  }
+
+  if (!raw) {
+    return i18n.t('notifications.categories.fallback', { ns: 'common' })
+  }
+
+  return raw
+}
+
+/**
  * @param {string} text
  * @param {number} [maxLen=60]
  * @returns {string}

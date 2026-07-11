@@ -19,6 +19,7 @@ import { useNotifications } from '../../context/NotificationContext'
 import {
   buildNotificationNavigationTarget,
   formatNotificationTime,
+  resolveNotificationTitle,
 } from '../../services/notificationService'
 
 /** @typedef {import('../../services/notificationService').NotificationType} NotificationType */
@@ -38,7 +39,7 @@ const TYPE_META = {
 
 /**
  * Üst menü bildirim çanı — gerçek zamanlı rozet ve taktik dropdown panel.
- * Chrome (title/buttons/empty) is i18n; item.title / item.message stay as stored content.
+ * Chrome + fixed category titles are i18n; item.message (RSS/content) stays as stored.
  */
 export default function NotificationDropdown() {
   const { t, i18n } = useTranslation('common')
@@ -213,7 +214,7 @@ export default function NotificationDropdown() {
                               item.isRead ? 'text-zinc-400' : 'text-zinc-100',
                             ].join(' ')}
                           >
-                            {item.title}
+                            {resolveNotificationTitle(item)}
                           </span>
                           {!item.isRead ? (
                             <span className="mt-1 size-1.5 shrink-0 rounded-full bg-lime-400" aria-hidden />
