@@ -79,49 +79,4 @@ export function formatAuthErrorDisplay(err, opts = {}) {
   })
 }
 
-/**
- * Google OAuth — short inline message for landing panel.
- * @param {unknown} err
- */
-export function formatGoogleAuthErrorDisplay(err) {
-  const key = resolveAuthErrorKey(err)
-  if (key === 'generic') {
-    return i18n.t('errors.googleFailed', { ns: 'auth' })
-  }
-  return i18n.t(`errors.${key}`, {
-    ns: 'auth',
-    min: BETA_MIN_PASSWORD_LENGTH,
-    defaultValue: i18n.t('errors.googleFailed', { ns: 'auth' }),
-  })
-}
-
-/**
- * Google OAuth — title + body pair for AuthModal alerts.
- * @param {unknown} err
- * @returns {{ title: string, body: string }}
- */
-export function formatGoogleAuthAlert(err) {
-  const key = resolveAuthErrorKey(err)
-  /** @type {Record<string, [string, string]>} */
-  const pairs = {
-    popupCancelled: ['googleCancelTitle', 'googleCancelBody'],
-    unauthorizedDomain: ['googleDomainTitle', 'googleDomainBody'],
-    providerDisabled: ['googleProviderTitle', 'googleProviderBody'],
-    popupBlocked: ['googlePopupTitle', 'googlePopupBody'],
-    accountExists: ['googleExistsTitle', 'googleExistsBody'],
-    redirectPending: ['googleRedirectTitle', 'googleRedirectBody'],
-  }
-  const pair = pairs[key]
-  if (pair) {
-    return {
-      title: i18n.t(`errors.${pair[0]}`, { ns: 'auth' }),
-      body: i18n.t(`errors.${pair[1]}`, { ns: 'auth' }),
-    }
-  }
-  return {
-    title: i18n.t('errors.googleGenericTitle', { ns: 'auth' }),
-    body: formatGoogleAuthErrorDisplay(err),
-  }
-}
-
 export { FIREBASE_AUTH_CODE_MAP }

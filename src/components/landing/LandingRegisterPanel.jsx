@@ -5,10 +5,7 @@ import { Loader2, Scale } from 'lucide-react'
 import Input from '../common/Input'
 import LegalDisclaimer from '../LegalDisclaimer'
 import { useAuth } from '../../context/AuthContext'
-import {
-  formatAuthErrorDisplay,
-  formatGoogleAuthErrorDisplay,
-} from '../../lib/authErrorDisplay'
+import { formatAuthErrorDisplay } from '../../lib/authErrorDisplay'
 import { BETA_MIN_PASSWORD_LENGTH, resolveAuthEmailInput, validateBetaPassword } from '../../lib/betaAuth'
 import { auth, isFirebaseConfigured } from '../../lib/firebase'
 import { isPlatformInBetaPeriod } from '../../lib/registrationPolicy'
@@ -19,29 +16,6 @@ import {
 } from '../../lib/firestoreUsers'
 import { LEGAL_PROTOCOL_COUNT } from '../../data/legalProtocols'
 
-function GoogleMark({ className }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" aria-hidden>
-      <path
-        fill="#4285F4"
-        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-      />
-      <path
-        fill="#34A853"
-        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-      />
-      <path
-        fill="#FBBC05"
-        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-      />
-      <path
-        fill="#EA4335"
-        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-      />
-    </svg>
-  )
-}
-
 /**
  * @param {{ initialMode?: 'register' | 'login'; onDismissIntro?: () => void }} props
  */
@@ -49,8 +23,7 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
   const { t } = useTranslation('auth')
   const { t: tCommon } = useTranslation('common')
   const navigate = useNavigate()
-  const { registerWithEmailPassword, recordRegistrationConsents, signInWithEmailPassword, signInWithGoogle } =
-    useAuth()
+  const { registerWithEmailPassword, recordRegistrationConsents, signInWithEmailPassword } = useAuth()
   const betaMode = isPlatformInBetaPeriod()
   const configured = isFirebaseConfigured() && auth
 
@@ -199,27 +172,6 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
       navigate('/dashboard', { replace: true })
     } catch (err) {
       setFormError(formatAuthErrorDisplay(err))
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const handleGoogleSignIn = async () => {
-    if (!configured) {
-      setFormError(t('errors.firebaseNotConfigured'))
-      return
-    }
-
-    onDismissIntro?.()
-    setFormError('')
-    setBusy(true)
-    try {
-      const outcome = await signInWithGoogle('/dashboard')
-      if (outcome?.mode === 'popup' && outcome.credential?.user) {
-        navigate('/dashboard', { replace: true })
-      }
-    } catch (err) {
-      setFormError(formatGoogleAuthErrorDisplay(err))
     } finally {
       setBusy(false)
     }
@@ -377,7 +329,7 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
 
           <button
             type="submit"
-            disabled={submitBusy || !termsAccepted || !ageDeclared}
+            disabled={submitBusy || !termsAccepted || !ageDeclared || !configured}
             className="flex w-full min-h-[44px] items-center justify-center gap-2 rounded-sm border border-emerald-500/55 bg-emerald-500/15 py-3 font-mono-technical text-xs font-bold uppercase tracking-[0.16em] text-emerald-400 transition hover:bg-emerald-500/22 disabled:cursor-not-allowed disabled:border-white/15 disabled:bg-black/35 disabled:text-app-text/50"
           >
             {submitBusy ? (
@@ -407,74 +359,54 @@ export default function LandingRegisterPanel({ initialMode = 'register', onDismi
           />
         </form>
       ) : (
-        <div className="space-y-3">
-          <form onSubmit={(e) => void handleLogin(e)} className="space-y-3">
-            <p className="font-mono-technical text-[9px] uppercase tracking-[0.2em] text-emerald-400/80">
-              {t('chrome.secureChannel')}
-            </p>
+        <form onSubmit={(e) => void handleLogin(e)} className="space-y-3">
+          <p className="font-mono-technical text-[9px] uppercase tracking-[0.2em] text-emerald-400/80">
+            {t('chrome.secureChannel')}
+          </p>
 
-            <Input
-              variant="gold"
-              label={t('fields.loginId')}
-              name="loginId"
-              autoComplete="username"
-              value={loginId}
-              onChange={(e) => setLoginId(e.target.value)}
-              placeholder={betaMode ? t('placeholders.loginIdBeta') : t('placeholders.loginId')}
-              error={fieldErrors.loginId}
-              required
-            />
-            <Input
-              variant="gold"
-              label={t('fields.password')}
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={t('placeholders.password', { min: BETA_MIN_PASSWORD_LENGTH })}
-              error={fieldErrors.password}
-              required
-            />
+          <Input
+            variant="gold"
+            label={t('fields.loginId')}
+            name="loginId"
+            autoComplete="username"
+            value={loginId}
+            onChange={(e) => setLoginId(e.target.value)}
+            placeholder={betaMode ? t('placeholders.loginIdBeta') : t('placeholders.loginId')}
+            error={fieldErrors.loginId}
+            required
+          />
+          <Input
+            variant="gold"
+            label={t('fields.password')}
+            name="password"
+            type="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder={t('placeholders.password', { min: BETA_MIN_PASSWORD_LENGTH })}
+            error={fieldErrors.password}
+            required
+          />
 
-            {formError ? (
-              <p className="font-mono-technical text-[10px] text-accent/90">{formError}</p>
-            ) : null}
-
-            <button
-              type="submit"
-              disabled={submitBusy}
-              className="flex w-full min-h-[44px] items-center justify-center gap-2 rounded-sm border border-emerald-500/55 bg-emerald-500/15 py-3 font-mono-technical text-xs font-bold uppercase tracking-[0.16em] text-emerald-400 transition hover:bg-emerald-500/22 disabled:cursor-not-allowed disabled:border-white/15 disabled:bg-black/35 disabled:text-app-text/50"
-            >
-              {busy ? (
-                <>
-                  <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
-                  <span>{t('actions.signingIn')}</span>
-                </>
-              ) : (
-                t('actions.login')
-              )}
-            </button>
-          </form>
-
-          <div className="flex items-center gap-3">
-            <span className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-            <span className="font-mono-technical text-[9px] uppercase tracking-[0.25em] text-app-text/45">
-              {t('chrome.or')}
-            </span>
-            <span className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-          </div>
+          {formError ? (
+            <p className="font-mono-technical text-[10px] text-accent/90">{formError}</p>
+          ) : null}
 
           <button
-            type="button"
-            onClick={() => void handleGoogleSignIn()}
+            type="submit"
             disabled={submitBusy || !configured}
-            className="flex w-full items-center justify-center gap-2.5 rounded-sm border border-white/15 bg-black/30 py-3 font-display text-[10px] font-bold uppercase tracking-[0.18em] text-app-text/90 transition hover:border-emerald-500/35 hover:bg-emerald-950/25 disabled:opacity-45"
+            className="flex w-full min-h-[44px] items-center justify-center gap-2 rounded-sm border border-emerald-500/55 bg-emerald-500/15 py-3 font-mono-technical text-xs font-bold uppercase tracking-[0.16em] text-emerald-400 transition hover:bg-emerald-500/22 disabled:cursor-not-allowed disabled:border-white/15 disabled:bg-black/35 disabled:text-app-text/50"
           >
-            <GoogleMark className="size-4 shrink-0" />
-            {t('actions.googleSignIn')}
+            {busy ? (
+              <>
+                <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
+                <span>{t('actions.signingIn')}</span>
+              </>
+            ) : (
+              t('actions.login')
+            )}
           </button>
-        </div>
+        </form>
       )}
     </div>
   )

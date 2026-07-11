@@ -100,7 +100,7 @@
       "purpose": "Audaz Tactical, antrenman kayıtları, cephanelik, görev ve değerlendirme raporları, taktik muhabere ile performans takibini tek yerde toplar.",
       "steps": [
         "Karargâh sayfasından kayıt olun veya giriş yapın.",
-        "E-posta ve şifre ya da Google hesabı ile oturum açın.",
+        "E-posta ve şifre ile oturum açın.",
         "Beta sürecinde aktif hesaplar doğrudan Ana Sayfaya yönlendirilir.",
         "Sol menüde Kişisel, Audaz Ağı, Operasyon, Komuta, Kullanım Kılavuzu ve Sistem bölümlerini görürsünüz."
       ],
@@ -146,7 +146,6 @@
       "steps": [
         "Şifre ile kayıt olduktan sonra, resmi lansman sonrasında Doğrulama sayfasına yönlendirilebilirsiniz.",
         "E-postanızdaki bağlantıya tıklayın, ardından sayfada yeniden kontrol edin ve Ana Sayfaya dönün.",
-        "Google ile giriş yapanlar genelde ayrıca e-posta doğrulaması görmez.",
         "Hesabınız kilitliyse Ayarlar sayfasına erişebilirsiniz; ödeme açıkken diğer modüller kısıtlanabilir."
       ],
       "pageLink": "Doğrulama sayfasına git",
@@ -159,7 +158,7 @@
       "steps": [
         "İlk ziyarette kısa tanıtım ekranı çıkabilir; atlayabilirsiniz.",
         "Operasyon paneline kaydırın, Kayıt veya Giriş sekmesini seçin.",
-        "Google veya e-posta ile kayıt olun; kullanıcı adı ve yasal onay gerekir.",
+        "E-posta ve şifre ile kayıt olun; kullanıcı adı ve yasal onay gerekir.",
         "Oturum açıldığında Ana Sayfaya yönlendirilirsiniz."
       ],
       "pageLink": "Karargâh sayfasına git"

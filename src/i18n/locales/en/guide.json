@@ -100,7 +100,7 @@
       "purpose": "Audaz Tactical brings training logs, armory, mission and evaluation reports, tactical comms, and performance tracking into one place.",
       "steps": [
         "Register or sign in from the Headquarters page.",
-        "Sign in with email and password or a Google account.",
+        "Sign in with email and password.",
         "During beta, active accounts are routed directly to Home.",
         "In the left menu you will see Personal, Audaz Network, Operations, Command, Usage Guide, and System sections."
       ],
@@ -146,7 +146,6 @@
       "steps": [
         "After registering with a password, you may be routed to the Verification page after the official launch.",
         "Click the link in your email, then recheck on the page and return to Home.",
-        "Google sign-in users generally do not see a separate email verification step.",
         "If your account is locked, you can access Settings; other modules may be restricted when billing is active."
       ],
       "pageLink": "Go to Verification page",
@@ -159,7 +158,7 @@
       "steps": [
         "A short intro screen may appear on first visit; you can skip it.",
         "Scroll to the operations panel and choose the Register or Sign In tab.",
-        "Register with Google or email; username and legal consent are required.",
+        "Register with email and password; username and legal consent are required.",
         "When signed in, you are routed to Home."
       ],
       "pageLink": "Go to Headquarters"

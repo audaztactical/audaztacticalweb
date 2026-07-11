@@ -15,14 +15,6 @@ import {
   GoogleAuthProvider,
 } from 'firebase/auth'
 import { auth, db, isFirebaseConfigured } from '../lib/firebase'
-import {
-  isBenignGoogleRedirectError,
-  logGoogleAuthHud,
-  resolveGoogleRedirectReturn,
-  startGoogleSignIn,
-} from '../lib/googleRedirectAuth'
-import { hasPendingGoogleAuthRedirectPath } from '../lib/googleAuth'
-import { emitFirebaseError } from '../lib/firebaseErrorBus'
 import { callEnsureAdminClaim, isCloudFunctionUnavailableError, isEnsureAdminClaimDenied } from '../lib/cloudFunctions'
 import { isPlatformInBetaPeriod } from '../lib/registrationPolicy'
 import { isInstructorRole, isPremiumMemberRole, normalizeAccountStatus, normalizeUserRole } from '../lib/authRoles'
@@ -122,8 +114,6 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
   const [userData, setUserData] = useState(null)
   const [profileLoading, setProfileLoading] = useState(false)
-  const [googleRedirectResolving, setGoogleRedirectResolving] = useState(false)
-  const [googleAuthError, setGoogleAuthError] = useState(/** @type {{ code: string, message: string } | null} */ (null))
   const [isAdmin, setIsAdmin] = useState(false)
   /** Kayıt tamamlanana kadar landing → dashboard otomatik yönlendirmeyi engeller */
   const [registrationInProgress, setRegistrationInProgress] = useState(false)
@@ -166,36 +156,6 @@ export function AuthProvider({ children }) {
     const admin = await resolveUserIsAdmin(authUser)
     setIsAdmin(admin)
     return admin
-  }, [])
-
-  // Google signInWithRedirect dönüşü — yalnızca bekleyen redirect varsa getRedirectResult çağır
-  useEffect(() => {
-    if (!isFirebaseConfigured() || !auth) return undefined
-    if (!hasPendingGoogleAuthRedirectPath()) return undefined
-
-    let mounted = true
-    setGoogleRedirectResolving(true)
-
-    resolveGoogleRedirectReturn(auth)
-      .then((result) => {
-        if (!mounted) return
-        if (result?.user) {
-          setGoogleAuthError(null)
-        }
-      })
-      .catch((err) => {
-        if (!mounted || isBenignGoogleRedirectError(err)) return
-        const logged = logGoogleAuthHud('AuthContext.resolveRedirect', err)
-        setGoogleAuthError(logged)
-        emitFirebaseError(err)
-      })
-      .finally(() => {
-        if (mounted) setGoogleRedirectResolving(false)
-      })
-
-    return () => {
-      mounted = false
-    }
   }, [])
 
   useEffect(() => {
@@ -315,20 +275,6 @@ export function AuthProvider({ children }) {
       setProfileLoading(false)
     }
   }, [user])
-
-  const signInWithGoogle = useCallback(async (redirectPath = '/dashboard') => {
-    if (!isFirebaseConfigured() || !auth) {
-      throw new Error('Firebase yapılandırılmadı')
-    }
-    setGoogleAuthError(null)
-    try {
-      return await startGoogleSignIn(auth, redirectPath)
-    } catch (err) {
-      const logged = logGoogleAuthHud('AuthContext.signInWithGoogle', err)
-      setGoogleAuthError(logged)
-      throw err
-    }
-  }, [])
 
   const signInWithEmailPassword = useCallback(async (email, password) => {
     if (!isFirebaseConfigured() || !auth) throw new Error('Firebase yapılandırılmadı')
@@ -523,7 +469,6 @@ export function AuthProvider({ children }) {
       showAdminPanel,
       role,
       syncAdminClaim,
-      signInWithGoogle,
       signInWithEmailPassword,
       registerWithEmailPassword,
       linkAccountWithPassword,
@@ -531,9 +476,6 @@ export function AuthProvider({ children }) {
       recordRegistrationConsents,
       upgradeToPremium,
       refreshUserProfile,
-      googleRedirectResolving,
-      googleAuthError,
-      clearGoogleAuthError: () => setGoogleAuthError(null),
       registrationInProgress,
     }),
     [
@@ -549,7 +491,6 @@ export function AuthProvider({ children }) {
       showAdminPanel,
       role,
       syncAdminClaim,
-      signInWithGoogle,
       signInWithEmailPassword,
       registerWithEmailPassword,
       linkAccountWithPassword,
@@ -557,8 +498,6 @@ export function AuthProvider({ children }) {
       recordRegistrationConsents,
       upgradeToPremium,
       refreshUserProfile,
-      googleRedirectResolving,
-      googleAuthError,
     ],
   )
 

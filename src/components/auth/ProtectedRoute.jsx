@@ -19,11 +19,11 @@ function RouteLoader() {
 }
 
 export default function ProtectedRoute() {
-  const { user, userData, loading, profileLoading, googleRedirectResolving } = useAuth()
+  const { user, userData, loading, profileLoading } = useAuth()
   const { emailVerificationRequired, ready: authSettingsReady } = useAuthAppSettings()
   const location = useLocation()
 
-  if (loading || googleRedirectResolving || (user && profileLoading && !userData)) {
+  if (loading || (user && profileLoading && !userData)) {
     return <RouteLoader />
   }
 

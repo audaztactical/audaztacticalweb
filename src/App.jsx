@@ -15,7 +15,6 @@ import InstructorRoute from './components/auth/InstructorRoute'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import ResponsiveAppLayout from './layouts/ResponsiveAppLayout'
 import TacticalLoader from './components/TacticalLoader'
-import GoogleAuthRedirectHandler from './components/auth/GoogleAuthRedirectHandler'
 import FcmPushBootstrap from './components/notifications/FcmPushBootstrap'
 import ScrollToTop from './components/navigation/ScrollToTop'
 
@@ -52,7 +51,6 @@ export default function App() {
           <BrowserRouter>
           <ScrollToTop />
           <MuhabereNotifyProvider>
-          <GoogleAuthRedirectHandler />
           <Suspense fallback={<TacticalLoader />}>
           <Routes>
             <Route path="/" element={<LandingPage />} />

@@ -8,16 +8,12 @@ import LandingRegisterPanel from '../components/landing/LandingRegisterPanel'
 import { feedStatusLabel } from '../components/landing/landingNewsTeasers'
 import LanguageSwitcher from '../components/shared/LanguageSwitcher'
 import { useAuth } from '../context/AuthContext'
-import {
-  consumeGoogleAuthRedirectPath,
-  hasPendingGoogleAuthRedirectPath,
-} from '../lib/googleAuth'
-import { markIntroAsShown, shouldShowIntro } from '../lib/introStorage'
+import { shouldShowIntro } from '../lib/introStorage'
 
 /** @typedef {import('../components/landing/landingNewsTeasers').FeedStatus} FeedStatus */
 
 function resolveShowIntro(skipIntro) {
-  if (skipIntro || hasPendingGoogleAuthRedirectPath()) return false
+  if (skipIntro) return false
   return shouldShowIntro(false)
 }
 
@@ -48,7 +44,7 @@ function HudStatusPill({ status }) {
 
 export default function LandingPage() {
   const { t } = useTranslation('landing')
-  const { user, loading, googleRedirectResolving, profileLoading, userData, registrationInProgress } =
+  const { user, loading, profileLoading, userData, registrationInProgress } =
     useAuth()
   const location = useLocation()
   const navigate = useNavigate()
@@ -78,12 +74,6 @@ export default function LandingPage() {
   }, [location.key, location.state?.skipIntro])
 
   useEffect(() => {
-    if (!hasPendingGoogleAuthRedirectPath()) return
-    markIntroAsShown()
-    setShowIntro(false)
-  }, [])
-
-  useEffect(() => {
     if (!showIntro) return undefined
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -98,17 +88,13 @@ export default function LandingPage() {
   }, [location.state?.openAuth, scrollToPanel])
 
   useEffect(() => {
-    if (loading || googleRedirectResolving || registrationInProgress || !user || showIntro) return
+    if (loading || registrationInProgress || !user || showIntro) return
     if (profileLoading || !userData?.username?.trim()) return
     if (location.state?.skipIntro === true) return
-    const target = hasPendingGoogleAuthRedirectPath()
-      ? consumeGoogleAuthRedirectPath()
-      : '/dashboard'
-    navigate(target, { replace: true })
+    navigate('/dashboard', { replace: true })
   }, [
     user,
     loading,
-    googleRedirectResolving,
     registrationInProgress,
     profileLoading,
     userData?.username,
@@ -161,11 +147,6 @@ export default function LandingPage() {
           </Link>
           <nav className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-3">
             <LanguageSwitcher />
-            {googleRedirectResolving ? (
-              <span className="font-mono-technical text-[9px] uppercase tracking-wider text-emerald-400/70">
-                {t('nav.googleSync')}
-              </span>
-            ) : null}
             {!loading && user ? (
               <Link
                 to="/dashboard"

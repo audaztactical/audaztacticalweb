@@ -79,7 +79,7 @@ function inferAdminUserProfileKind(row) {
       kind: 'complete',
       label: 'Kayıt tamamlanmış',
       hint: hasEmail
-        ? 'E-posta/şifre veya Google OAuth — registerOperatorProfile'
+        ? 'E-posta/şifre — registerOperatorProfile'
         : 'Profil oluşturulmuş (e-posta Firestore\'da boş)',
     }
   }
