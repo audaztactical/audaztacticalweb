@@ -76,20 +76,20 @@ export function resolveTrainingNumberValidityMessage(input) {
   const step = input.step !== '' && input.step !== 'any' ? Number(input.step) : NaN
 
   if (validity.valueMissing) {
-    return i18n.t('common.numberValidation.required', { ns: 'training' })
+    return i18n.t('formValidation.required', { ns: 'common' })
   }
   if (validity.badInput) {
-    return i18n.t('common.numberValidation.badInput', { ns: 'training' })
+    return i18n.t('formValidation.badInput', { ns: 'common' })
   }
   if (validity.rangeUnderflow) {
-    return i18n.t('common.numberValidation.rangeUnderflow', {
-      ns: 'training',
+    return i18n.t('formValidation.rangeUnderflow', {
+      ns: 'common',
       min: input.min,
     })
   }
   if (validity.rangeOverflow) {
-    return i18n.t('common.numberValidation.rangeOverflow', {
-      ns: 'training',
+    return i18n.t('formValidation.rangeOverflow', {
+      ns: 'common',
       max: input.max,
     })
   }
@@ -99,15 +99,15 @@ export function resolveTrainingNumberValidityMessage(input) {
     }
     const nearest = nearestStepValues(input)
     if (nearest) {
-      return i18n.t('common.numberValidation.stepMismatch', {
-        ns: 'training',
+      return i18n.t('formValidation.stepMismatch', {
+        ns: 'common',
         low: formatStepNumber(nearest.low),
         high: formatStepNumber(nearest.high),
       })
     }
-    return i18n.t('common.numberValidation.stepGeneric', { ns: 'training' })
+    return i18n.t('formValidation.stepGeneric', { ns: 'common' })
   }
-  return i18n.t('common.numberValidation.generic', { ns: 'training' })
+  return i18n.t('formValidation.generic', { ns: 'common' })
 }
 
 /** @param {import('react').InvalidEvent<HTMLInputElement>} event */

@@ -8,6 +8,7 @@ import {
 } from '../../../lib/firestoreGroups'
 import { emitFirebaseError } from '../../../lib/firebaseErrorBus'
 import { formatGroupErrorDisplay } from '../../../lib/progressDisplayText'
+import { requiredFieldHandlers } from '../../../lib/formValidationMessages'
 
 /** @typedef {import('../../../lib/firestoreGroups').TacticalGroup} TacticalGroup */
 
@@ -119,10 +120,10 @@ export default function InstructorGroupsTab({ groups, loading, instructorId }) {
             <input
               type="text"
               value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
               placeholder={t('groups.namePlaceholder')}
               className={inputClass}
               required
+              {...requiredFieldHandlers((e) => setGroupName(e.target.value))}
             />
           </label>
           <label className="space-y-1.5">
@@ -132,11 +133,11 @@ export default function InstructorGroupsTab({ groups, loading, instructorId }) {
             <input
               type="text"
               value={groupPassword}
-              onChange={(e) => setGroupPassword(e.target.value.toUpperCase())}
               placeholder={t('groups.passwordPlaceholder')}
               className={inputClass}
               required
               minLength={4}
+              {...requiredFieldHandlers((e) => setGroupPassword(e.target.value.toUpperCase()))}
             />
           </label>
           <div className="flex items-end">

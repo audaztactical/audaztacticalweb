@@ -9,6 +9,7 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore'
+import i18n from '../i18n'
 import { db, isFirebaseConfigured } from '../lib/firebase'
 import { safeOnSnapshot, timestampToMs } from '../lib/firestoreSnapshot'
 
@@ -563,11 +564,22 @@ export function formatNotificationTime(ts) {
   if (!ms) return '—'
 
   const diff = Date.now() - ms
-  if (diff < 60_000) return 'Az önce'
-  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)} dk önce`
-  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)} sa önce`
+  if (diff < 60_000) return i18n.t('notifications.time.justNow', { ns: 'common' })
+  if (diff < 3_600_000) {
+    return i18n.t('notifications.time.minutesAgo', {
+      ns: 'common',
+      count: Math.floor(diff / 60_000),
+    })
+  }
+  if (diff < 86_400_000) {
+    return i18n.t('notifications.time.hoursAgo', {
+      ns: 'common',
+      count: Math.floor(diff / 3_600_000),
+    })
+  }
 
-  return new Intl.DateTimeFormat('tr-TR', {
+  const locale = i18n.language?.startsWith('tr') ? 'tr-TR' : 'en-US'
+  return new Intl.DateTimeFormat(locale, {
     day: '2-digit',
     month: '2-digit',
     hour: '2-digit',

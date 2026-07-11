@@ -8,6 +8,31 @@
   "firebaseError": {
     "fallback": "The operation could not be completed."
   },
+  "formValidation": {
+    "required": "Please fill out this field.",
+    "tooShort": "Please use at least {{min}} characters.",
+    "tooLong": "Please use no more than {{max}} characters.",
+    "typeMismatch": "Please enter a valid value.",
+    "patternMismatch": "Please match the requested format.",
+    "badInput": "Please enter a valid number.",
+    "rangeUnderflow": "Value must be at least {{min}}.",
+    "rangeOverflow": "Value must be at most {{max}}.",
+    "stepMismatch": "Please enter a valid value. The two nearest valid values are {{low}} and {{high}}.",
+    "stepGeneric": "Please enter a valid value for this field.",
+    "generic": "Please enter a valid value."
+  },
+  "notifications": {
+    "title": "[ NOTIFICATIONS ]",
+    "markAllRead": "Mark all read",
+    "syncing": "Syncing…",
+    "empty": "No active notifications.",
+    "aria": "Notifications",
+    "time": {
+      "justNow": "Just now",
+      "minutesAgo": "{{count}} min ago",
+      "hoursAgo": "{{count}} h ago"
+    }
+  },
   "accessCode": {
     "authRequired": "Sign-in required.",
     "invalidCode": "Enter a valid access code.",

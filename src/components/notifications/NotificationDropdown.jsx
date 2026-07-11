@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   Bell,
   BookOpen,
@@ -37,8 +38,11 @@ const TYPE_META = {
 
 /**
  * Üst menü bildirim çanı — gerçek zamanlı rozet ve taktik dropdown panel.
+ * Chrome (title/buttons/empty) is i18n; item.title / item.message stay as stored content.
  */
 export default function NotificationDropdown() {
+  const { t, i18n } = useTranslation('common')
+  void i18n.language
   const navigate = useNavigate()
   const { notifications, unreadCount, loading, markNotificationRead, markAllNotificationsRead } =
     useNotifications()
@@ -147,7 +151,7 @@ export default function NotificationDropdown() {
       >
         <div className="flex items-center justify-between gap-2 border-b border-zinc-800 px-3 py-2.5">
           <p className="font-mono text-[10px] font-bold uppercase tracking-[0.28em] text-amber-500/90">
-            [ BİLDİRİMLER ]
+            {t('notifications.title')}
           </p>
           <div className="flex items-center gap-1.5">
             <button
@@ -161,7 +165,7 @@ export default function NotificationDropdown() {
               ) : (
                 <CheckCheck className="size-3" strokeWidth={2} aria-hidden />
               )}
-              Tümünü oku
+              {t('notifications.markAllRead')}
             </button>
           </div>
         </div>
@@ -170,10 +174,12 @@ export default function NotificationDropdown() {
           {loading ? (
             <p className="flex items-center justify-center gap-2 px-4 py-8 font-mono text-xs text-zinc-500">
               <Loader2 className="size-4 animate-spin text-amber-500/60" aria-hidden />
-              Senkronize ediliyor…
+              {t('notifications.syncing')}
             </p>
           ) : notifications.length === 0 ? (
-            <p className="px-4 py-8 text-center font-mono text-xs text-zinc-500">Aktif bildirim yok.</p>
+            <p className="px-4 py-8 text-center font-mono text-xs text-zinc-500">
+              {t('notifications.empty')}
+            </p>
           ) : (
             <ul className="divide-y divide-zinc-800/80">
               {notifications.map((item) => {
@@ -241,7 +247,7 @@ export default function NotificationDropdown() {
             ? 'border-amber-500/50 bg-amber-950/30 text-amber-400'
             : 'border-white/10 bg-zinc-900/60 text-zinc-400 hover:border-amber-500/30 hover:text-amber-400',
         ].join(' ')}
-        aria-label="Bildirimler"
+        aria-label={t('notifications.aria')}
         aria-expanded={open}
         aria-haspopup="menu"
       >
