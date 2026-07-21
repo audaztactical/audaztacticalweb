@@ -534,7 +534,10 @@ export default function Profile() {
   }
 
   const missionN = m.ready ? m.items.length : '—'
-  const trainN = trainings.ready ? trainings.items.length : '—'
+  const trainN =
+    rangeLogs.ready && vbssLogs.ready && tcccLogs.ready
+      ? rangeLogs.items.length + vbssLogs.items.length + tcccLogs.items.length
+      : '—'
   const sihhiN = h.ready ? incidentCount : '—'
 
   const statMax = Math.max(
