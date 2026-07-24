@@ -142,7 +142,7 @@ export default function AcousticVuMeter({
       <div
         className={[
           'relative overflow-hidden rounded-sm border border-zinc-600/60 bg-[#0a0a0b]',
-          isVertical ? 'h-[7.5rem] w-7' : 'h-7 w-full',
+          isVertical ? 'h-[7.5rem] w-8 sm:w-7' : 'h-9 w-full sm:h-7',
         ].join(' ')}
       >
         <div

@@ -230,7 +230,7 @@ export default function TimerCalibrationPanel() {
                 : null
 
   return (
-    <div className="relative flex w-full min-w-0 flex-col gap-4">
+    <div className="relative flex w-full min-w-0 flex-col gap-4 overflow-x-hidden">
       {toast ? (
         <div
           className="pointer-events-none fixed left-1/2 top-[max(5.5rem,env(safe-area-inset-top))] z-[90] w-[min(24rem,calc(100vw-2rem))] -translate-x-1/2"
@@ -657,7 +657,7 @@ export default function TimerCalibrationPanel() {
         <button
           type="button"
           onClick={handleReset}
-          className="inline-flex items-center justify-center gap-1.5 rounded-sm border border-white/15 bg-transparent px-3 py-2.5 font-mono-technical text-[9px] uppercase tracking-[0.2em] text-app-text/60 transition hover:border-white/30 hover:text-app-text/85 sm:order-1"
+          className="inline-flex min-h-11 touch-manipulation items-center justify-center gap-1.5 rounded-sm border border-white/15 bg-transparent px-3 py-2.5 font-mono-technical text-[9px] uppercase tracking-[0.2em] text-app-text/60 transition hover:border-white/30 hover:text-app-text/85 sm:order-1"
         >
           <SlidersHorizontal className="size-3.5" strokeWidth={1.5} aria-hidden />
           {t('calibration.actions.reset')}
@@ -665,7 +665,7 @@ export default function TimerCalibrationPanel() {
         <button
           type="button"
           onClick={handleSave}
-          className="inline-flex items-center justify-center gap-1.5 rounded-sm border border-accent/45 bg-accent/[0.12] px-4 py-2.5 font-mono-technical text-[10px] font-bold uppercase tracking-[0.22em] text-accent transition hover:border-accent/70 hover:bg-accent/[0.18] sm:order-2"
+          className="inline-flex min-h-11 touch-manipulation items-center justify-center gap-1.5 rounded-sm border border-accent/45 bg-accent/[0.12] px-4 py-2.5 font-mono-technical text-[10px] font-bold uppercase tracking-[0.22em] text-accent transition hover:border-accent/70 hover:bg-accent/[0.18] sm:order-2"
         >
           <Send className="size-3.5" strokeWidth={1.5} aria-hidden />
           {t('calibration.actions.saveSend')}

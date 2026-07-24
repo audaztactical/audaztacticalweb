@@ -128,8 +128,11 @@ export function mapHitToFacePercent(x, y, distanceM, faceHitRadiusPct = 46) {
  */
 export function resolveHitMarkerSizePx(facePx, fullscreen = false) {
   const base = Math.max(1, Number(facePx) || 200)
-  const ratio = fullscreen ? 0.055 : 0.07
-  return Math.round(Math.min(fullscreen ? 44 : 28, Math.max(fullscreen ? 18 : 14, base * ratio)))
+  const ratio = fullscreen ? 0.055 : 0.08
+  // Mobilde okunabilir min; büyük yüzlerde tavan
+  const minPx = fullscreen ? 16 : 12
+  const maxPx = fullscreen ? 40 : 26
+  return Math.round(Math.min(maxPx, Math.max(minPx, base * ratio)))
 }
 
 /**

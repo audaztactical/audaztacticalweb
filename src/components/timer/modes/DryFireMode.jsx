@@ -578,7 +578,7 @@ export default function DryFireMode({
               type="button"
               disabled={hits.length === 0 || sessionSaving}
               onClick={() => void handleSaveSession()}
-              className="inline-flex min-h-9 items-center gap-1.5 rounded-sm border border-[#facc15]/45 bg-[rgba(250,204,21,0.1)] px-2.5 py-1.5 font-mono text-[8px] font-bold uppercase tracking-[0.16em] text-[#facc15] transition hover:bg-[rgba(250,204,21,0.16)] focus:outline-none focus-visible:ring-1 focus-visible:ring-[#facc15]/55 disabled:opacity-40"
+              className="inline-flex min-h-11 touch-manipulation items-center gap-1.5 rounded-sm border border-[#facc15]/45 bg-[rgba(250,204,21,0.1)] px-3 py-2 font-mono text-[8px] font-bold uppercase tracking-[0.16em] text-[#facc15] transition hover:bg-[rgba(250,204,21,0.16)] focus:outline-none focus-visible:ring-1 focus-visible:ring-[#facc15]/55 disabled:opacity-40 sm:min-h-9 sm:px-2.5 sm:py-1.5"
             >
               <Save className="size-3.5" strokeWidth={1.5} aria-hidden />
               {sessionSaving ? t('dryFire.session.saving') : t('dryFire.session.save')}
@@ -621,7 +621,7 @@ export default function DryFireMode({
 
           <section
             className={[
-              'order-1 relative w-full min-w-0 overflow-hidden rounded-xl border border-slate-800 bg-slate-950 px-3 py-5 sm:px-4 sm:py-6 lg:order-2 lg:flex-1',
+              'order-1 relative w-full min-w-0 overflow-hidden rounded-xl border border-slate-800 bg-slate-950 px-2.5 py-4 sm:px-4 sm:py-6 lg:order-2 lg:flex-1',
               'transition-all duration-200',
               flash
                 ? 'border-red-500/70 shadow-[0_0_28px_-8px_rgba(239,68,68,0.55)]'

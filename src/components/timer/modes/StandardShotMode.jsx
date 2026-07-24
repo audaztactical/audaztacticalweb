@@ -346,7 +346,7 @@ export default function StandardShotMode({
     reactionMs != null ? formatShotSeconds(reactionMs) : formatShotSeconds(liveMs)
 
   return (
-    <div className="flex w-full min-w-0 flex-col gap-4">
+    <div className="flex w-full min-w-0 flex-col gap-4 overflow-x-hidden">
       <div className="grid grid-cols-2 gap-1 rounded-sm border border-zinc-600/55 bg-[#0a0a0b]/90 p-1">
         <button
           type="button"

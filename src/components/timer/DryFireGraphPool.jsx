@@ -34,22 +34,29 @@ export default function DryFireGraphPool({
   if (poolCollapsed) {
     return (
       <aside
-        className="relative z-30 flex h-full w-9 shrink-0 flex-col border-r border-[#facc15]/25 bg-[#0a0a0b]"
+        className={[
+          'relative z-30 flex shrink-0 border-[#facc15]/25 bg-[#0a0a0b]',
+          'max-md:order-3 max-md:h-12 max-md:w-full max-md:flex-row max-md:items-center max-md:border-r-0 max-md:border-t max-md:px-2',
+          'md:order-2 md:h-full md:w-9 md:flex-col md:border-r',
+        ].join(' ')}
         aria-label={t('dryFire.analytics.pool.aria')}
       >
         <button
           type="button"
           onClick={onTogglePool}
-          className="mt-2 inline-flex size-8 items-center justify-center self-center rounded-sm border border-[#facc15]/40 text-[#facc15] transition hover:bg-[rgba(250,204,21,0.12)]"
+          className="inline-flex size-11 touch-manipulation items-center justify-center rounded-sm border border-[#facc15]/40 text-[#facc15] transition hover:bg-[rgba(250,204,21,0.12)] md:mt-2 md:size-8 md:self-center"
           aria-expanded={false}
           aria-label={t('dryFire.analytics.pool.expand')}
           title={t('dryFire.analytics.pool.expand')}
         >
-          <ChevronRight className="size-4" strokeWidth={1.5} aria-hidden />
+          <ChevronRight className="size-4 rotate-90 md:rotate-0" strokeWidth={1.5} aria-hidden />
         </button>
         <p
-          className="mt-3 flex-1 select-none font-mono-technical text-[8px] font-bold uppercase tracking-[0.28em] text-[#facc15]/70"
-          style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+          className={[
+            'select-none font-mono-technical text-[8px] font-bold uppercase tracking-[0.28em] text-[#facc15]/70',
+            'max-md:ml-2 max-md:flex-1',
+            'md:mt-3 md:flex-1 md:[writing-mode:vertical-rl] md:[text-orientation:mixed]',
+          ].join(' ')}
         >
           {t('dryFire.analytics.pool.collapsedLabel', { n: ordered.length })}
         </p>
@@ -59,7 +66,11 @@ export default function DryFireGraphPool({
 
   return (
     <aside
-      className="relative z-30 flex h-full min-w-0 flex-1 flex-col border-r border-[#facc15]/25 bg-[#070708]"
+      className={[
+        'relative z-30 flex min-w-0 flex-col border-[#facc15]/25 bg-[#070708]',
+        'max-md:order-3 max-md:h-[min(34dvh,15rem)] max-md:w-full max-md:shrink-0 max-md:border-r-0 max-md:border-t',
+        'md:order-2 md:h-full md:flex-1 md:border-r',
+      ].join(' ')}
       aria-label={t('dryFire.analytics.pool.aria')}
     >
       <div className="flex shrink-0 items-center justify-between gap-2 border-b border-[#facc15]/20 px-3 py-2.5">

@@ -25,7 +25,7 @@ export default function DryFireLiveTelemetryPanel({
 
   return (
     <aside
-      className="relative flex w-full min-w-0 flex-col rounded-xl border border-slate-800 bg-slate-950 p-5"
+      className="relative flex w-full min-w-0 flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-950 p-3 sm:p-5"
       aria-label={t('dryFire.telemetry.kicker')}
     >
       <span
@@ -63,7 +63,7 @@ export default function DryFireLiveTelemetryPanel({
         </div>
       </div>
 
-      <div className="mt-4 min-w-0 [&_.aspect-square]:max-w-[min(100%,14rem)]">
+      <div className="mt-4 min-w-0 w-full max-w-full [&_.aspect-square]:mx-auto [&_.aspect-square]:max-w-[min(100%,14rem)]">
         <MpuCalibrationTarget
           preview
           offsetX={offsetX}

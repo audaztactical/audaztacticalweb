@@ -19,7 +19,7 @@ export default function TimerModeSelector({ onModeSelect }) {
         <p className="mt-1 font-mono text-xs text-app-text/70">{t('hub.hint')}</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-4 md:gap-5">
         {TIMER_MODES.map((mode) => (
           <TimerModeCard
             key={mode.id}

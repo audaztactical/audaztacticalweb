@@ -203,7 +203,12 @@ export default function DryFireTargetBoard({
       // Güvenlik onayı yalnızca "Tam Ekran" buton niyetinde açılır — burası sadece UI senkronu.
       wasFullscreenRef.current = on
       setIsFullscreen(on)
-      if (on) setSidebarOpen(true)
+      if (on) {
+        // Dar ekranda hedef alanını koru — toolbar varsayılan kapalı
+        const narrow =
+          typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
+        setSidebarOpen(!narrow)
+      }
       window.requestAnimationFrame(() => {
         const host = boardHostRef.current
         if (!host) return
@@ -340,8 +345,10 @@ export default function DryFireTargetBoard({
     <div
       ref={boardHostRef}
       className={[
-        'mx-auto flex w-full items-center justify-center',
-        isFullscreen ? 'min-h-0 w-full flex-1' : 'aspect-square max-h-[min(100vw,22rem)]',
+        'mx-auto flex w-full min-w-0 max-w-full items-center justify-center',
+        isFullscreen
+          ? 'min-h-0 w-full flex-1'
+          : 'aspect-square max-h-[min(72vw,20rem)] sm:max-h-[min(100vw,22rem)]',
       ].join(' ')}
     >
       <div
@@ -536,13 +543,13 @@ export default function DryFireTargetBoard({
               aria-label={t('dryFire.fullscreen.enter')}
               title={t('dryFire.fullscreen.enter')}
               className={[
-                'inline-flex size-8 items-center justify-center rounded-md',
+                'inline-flex size-11 touch-manipulation items-center justify-center rounded-md sm:size-8',
                 'border border-white/10 bg-black/55 text-[#facc15]/90 shadow-sm backdrop-blur-md',
                 'transition hover:border-[#facc15]/40 hover:bg-black/75 hover:text-[#facc15]',
                 'focus:outline-none focus-visible:ring-1 focus-visible:ring-[#facc15]/55',
               ].join(' ')}
             >
-              <Maximize2 className="size-3.5" strokeWidth={1.75} aria-hidden />
+              <Maximize2 className="size-4 sm:size-3.5" strokeWidth={1.75} aria-hidden />
             </button>
             <button
               type="button"
@@ -555,7 +562,7 @@ export default function DryFireTargetBoard({
                 vectorsVisible ? t('dryFire.target.vectorsHide') : t('dryFire.target.vectorsShow')
               }
               className={[
-                'inline-flex min-h-8 items-center gap-1.5 rounded-md border px-2 py-1 shadow-sm backdrop-blur-md',
+                'inline-flex min-h-11 touch-manipulation items-center gap-1.5 rounded-md border px-2.5 py-1.5 shadow-sm backdrop-blur-md sm:min-h-8 sm:px-2 sm:py-1',
                 'font-mono-technical text-[7px] font-bold uppercase tracking-[0.14em] transition',
                 'focus:outline-none focus-visible:ring-1 focus-visible:ring-teal-400/55',
                 vectorsVisible
@@ -564,9 +571,9 @@ export default function DryFireTargetBoard({
               ].join(' ')}
             >
               {vectorsVisible ? (
-                <Eye className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden />
+                <Eye className="size-4 shrink-0 sm:size-3.5" strokeWidth={1.75} aria-hidden />
               ) : (
-                <EyeOff className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden />
+                <EyeOff className="size-4 shrink-0 sm:size-3.5" strokeWidth={1.75} aria-hidden />
               )}
               <span className="max-w-[4.5rem] leading-tight">{t('dryFire.target.vectorsToggle')}</span>
             </button>
@@ -583,7 +590,7 @@ export default function DryFireTargetBoard({
               vectorsVisible ? t('dryFire.target.vectorsHide') : t('dryFire.target.vectorsShow')
             }
             className={[
-              'absolute left-1.5 top-1.5 z-30 inline-flex min-h-8 items-center gap-1.5 rounded-md border px-2 py-1',
+              'absolute left-1.5 top-1.5 z-30 inline-flex min-h-11 touch-manipulation items-center gap-1.5 rounded-md border px-2.5 py-1.5 sm:min-h-8 sm:px-2 sm:py-1',
               'font-mono-technical text-[7px] font-bold uppercase tracking-[0.14em] shadow-sm backdrop-blur-md transition',
               'focus:outline-none focus-visible:ring-1 focus-visible:ring-teal-400/55',
               vectorsVisible
@@ -592,9 +599,9 @@ export default function DryFireTargetBoard({
             ].join(' ')}
           >
             {vectorsVisible ? (
-              <Eye className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden />
+              <Eye className="size-4 shrink-0 sm:size-3.5" strokeWidth={1.75} aria-hidden />
             ) : (
-              <EyeOff className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden />
+              <EyeOff className="size-4 shrink-0 sm:size-3.5" strokeWidth={1.75} aria-hidden />
             )}
             <span>{t('dryFire.target.vectorsToggle')}</span>
           </button>
@@ -651,9 +658,13 @@ export default function DryFireTargetBoard({
     <div
       ref={fsRootRef}
       className={[
-        'relative w-full',
+        'relative w-full min-w-0',
         isFullscreen
-          ? 'flex h-[100dvh] w-full max-w-none flex-row overflow-hidden bg-[#0a0a0b]'
+          ? [
+              'flex h-[100dvh] w-full max-w-none overflow-hidden bg-[#0a0a0b]',
+              /* Mobil: dikey yığın; md+: toolbar | pool | hedef */
+              'flex-col md:flex-row',
+            ].join(' ')
           : 'mx-auto w-full max-w-[min(100%,22rem)]',
       ].join(' ')}
       style={isFullscreen ? { pointerEvents: 'auto' } : undefined}
@@ -667,16 +678,15 @@ export default function DryFireTargetBoard({
           aria-label={t('dryFire.fullscreen.exitEsc')}
           title={t('dryFire.fullscreen.exitEsc')}
           className={[
-            'absolute right-3 top-3 z-[280] inline-flex min-h-11 items-center gap-2 rounded-sm border border-[#facc15]/55',
-            'bg-[#0a0a0b]/92 px-3 py-2 font-mono-technical text-[9px] font-bold uppercase tracking-[0.16em] text-[#facc15]',
-            'shadow-[0_8px_28px_-10px_rgba(0,0,0,0.85)] backdrop-blur-md transition',
+            'absolute right-2 top-2 z-[280] inline-flex min-h-11 touch-manipulation items-center gap-1.5 rounded-sm border border-[#facc15]/55 sm:right-3 sm:top-3 sm:gap-2',
+            'bg-[#0a0a0b]/92 px-2.5 py-2 font-mono-technical text-[8px] font-bold uppercase tracking-[0.14em] text-[#facc15] sm:px-3 sm:text-[9px] sm:tracking-[0.16em]',
+            'max-w-[calc(100vw-5.5rem)] shadow-[0_8px_28px_-10px_rgba(0,0,0,0.85)] backdrop-blur-md transition',
             'hover:border-[#facc15]/75 hover:bg-[rgba(250,204,21,0.12)]',
             'focus:outline-none focus-visible:ring-1 focus-visible:ring-[#facc15]/55',
-            'touch-manipulation',
           ].join(' ')}
         >
           <Minimize2 className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />
-          <span className="whitespace-nowrap">{t('dryFire.fullscreen.exitEsc')}</span>
+          <span className="truncate sm:whitespace-nowrap">{t('dryFire.fullscreen.exitEsc')}</span>
         </button>
       ) : null}
 
@@ -747,16 +757,18 @@ export default function DryFireTargetBoard({
           'flex min-w-0 flex-col',
           isFullscreen
             ? [
-                'h-full min-h-0 overflow-hidden p-3 sm:p-4',
+                'min-h-0 overflow-hidden p-2 sm:p-3 md:p-4',
+                /* Mobil: hedef üstte (order-1); md+: sağda (order-3) */
+                'order-1 flex-1 md:order-3',
                 openGraphIds.length > 0 && !poolCollapsed
-                  ? 'w-[min(42vh,22rem)] shrink-0 grow-0'
-                  : 'flex-1',
+                  ? 'md:w-[min(42vh,22rem)] md:shrink-0 md:grow-0 md:flex-none'
+                  : 'md:flex-1',
               ].join(' ')
             : '',
         ].join(' ')}
       >
         {fsError ? (
-          <p className="mb-2 shrink-0 text-center font-mono-technical text-[9px] text-red-400/90">
+          <p className="mb-2 shrink-0 px-1 text-center font-mono-technical text-[9px] text-red-400/90">
             {fsError}
           </p>
         ) : null}
@@ -764,7 +776,7 @@ export default function DryFireTargetBoard({
         {canvas}
 
         {isFullscreen ? (
-          <p className="mt-2 shrink-0 text-center font-mono-technical text-[8px] uppercase tracking-[0.2em] text-zinc-600">
+          <p className="mt-1.5 hidden shrink-0 text-center font-mono-technical text-[8px] uppercase tracking-[0.2em] text-zinc-600 md:mt-2 md:block">
             {t('dryFire.fullscreen.escHint')}
           </p>
         ) : null}

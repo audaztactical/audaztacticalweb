@@ -165,14 +165,19 @@ export default function DryFireFullscreenToolbar({
   return (
     <aside
       className={[
-        'relative z-40 flex h-full shrink-0 flex-col border-r border-[#facc15]/30 bg-[#0a0a0b] transition-[width] duration-300 ease-out',
-        open ? 'w-[min(100%,20rem)]' : 'w-11',
+        'z-40 flex shrink-0 flex-col border-[#facc15]/30 bg-[#0a0a0b] transition-[width,max-height] duration-300 ease-out',
+        /* Mobil: alt panel (order-2); md+: sol sütun (order-1) */
+        'max-md:order-2 max-md:w-full max-md:border-r-0 max-md:border-t md:order-1',
+        open
+          ? 'max-md:max-h-[min(48dvh,22rem)] md:w-[min(100%,20rem)]'
+          : 'max-md:max-h-[3.5rem] md:w-11',
+        'md:relative md:h-full md:border-r',
       ].join(' ')}
       aria-label={t('dryFire.toolbar.aria')}
     >
       <div className="flex shrink-0 items-center justify-between gap-1 border-b border-zinc-700/50 px-1.5 py-2">
         {open ? (
-          <p className="truncate px-1.5 font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-[#facc15]">
+          <p className="min-w-0 truncate px-1.5 font-mono-technical text-[8px] font-bold uppercase tracking-[0.22em] text-[#facc15]">
             {t('dryFire.toolbar.title')}
           </p>
         ) : (
@@ -181,20 +186,24 @@ export default function DryFireFullscreenToolbar({
         <button
           type="button"
           onClick={onToggle}
-          className="inline-flex size-8 items-center justify-center rounded-sm border border-[#facc15]/40 text-[#facc15] transition hover:bg-[rgba(250,204,21,0.12)]"
+          className="inline-flex size-11 touch-manipulation items-center justify-center rounded-sm border border-[#facc15]/40 text-[#facc15] transition hover:bg-[rgba(250,204,21,0.12)] md:size-8"
           aria-expanded={open}
           aria-label={open ? t('dryFire.toolbar.collapse') : t('dryFire.toolbar.expand')}
         >
           {open ? (
-            <ChevronLeft className="size-4" strokeWidth={1.5} aria-hidden />
+            <ChevronLeft className="hidden size-4 md:block" strokeWidth={1.5} aria-hidden />
           ) : (
-            <ChevronRight className="size-4" strokeWidth={1.5} aria-hidden />
+            <ChevronRight className="hidden size-4 md:block" strokeWidth={1.5} aria-hidden />
           )}
+          {/* Mobil: dikey aç/kapa hissi */}
+          <span className="font-mono-technical text-[8px] font-bold uppercase tracking-[0.14em] md:hidden">
+            {open ? '−' : '+'}
+          </span>
         </button>
       </div>
 
       {open ? (
-        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain px-2.5 py-2.5">
+        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain px-2.5 py-2.5 [-webkit-overflow-scrolling:touch]">
           {/* Zamanlayıcı — amber */}
           <DryFireToolbarAccordion
             id="timer"

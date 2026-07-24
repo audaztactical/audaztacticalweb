@@ -98,29 +98,29 @@ export default function TacticalTimer() {
       sessionActive={sessionActive}
       onFullscreenLost={handleFullscreenLost}
     >
-      <div className="ilws-shell relative mx-auto w-full min-w-0 max-w-[1480px] px-3 py-5 pt-12 sm:px-4 sm:pt-14 md:px-6">
-        <div className="relative z-[2] flex w-full min-w-0 flex-col space-y-5">
-          <header className="flex flex-wrap items-end justify-between gap-3 border-b border-white/10 pb-3">
+      <div className="ilws-shell relative mx-auto w-full min-w-0 max-w-[1480px] overflow-x-hidden px-2.5 py-4 pt-11 sm:px-4 sm:py-5 sm:pt-14 md:px-6">
+        <div className="relative z-[2] flex w-full min-w-0 flex-col space-y-4 sm:space-y-5">
+          <header className="flex w-full min-w-0 flex-col gap-3 border-b border-white/10 pb-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
             <div className="min-w-0 flex-1">
-              <p className="font-mono-technical text-[10px] font-semibold uppercase tracking-[0.32em] text-accent/85">
+              <p className="font-mono-technical text-[9px] font-semibold uppercase tracking-[0.28em] text-accent/85 sm:text-[10px] sm:tracking-[0.32em]">
                 [ {showCalibration ? t('calibration.kicker') : t('page.kicker')} ]
               </p>
-              <h1 className="font-display mt-1 break-words text-lg font-bold tracking-[0.1em] text-app-text sm:text-xl">
+              <h1 className="font-display mt-1 break-words text-base font-bold tracking-[0.08em] text-app-text sm:text-lg sm:tracking-[0.1em] md:text-xl">
                 {headerTitle}
               </h1>
-              <p className="mt-1 max-w-2xl break-words font-mono-technical text-[9px] leading-snug text-app-text/55">
+              <p className="mt-1 max-w-2xl break-words font-mono-technical text-[8px] leading-snug text-app-text/55 sm:text-[9px]">
                 {headerSubtitle}
               </p>
             </div>
-            <div className="flex shrink-0 flex-col items-end gap-2">
-              <div className="flex flex-wrap items-center justify-end gap-2">
+            <div className="flex w-full min-w-0 shrink-0 flex-col items-stretch gap-2 sm:w-auto sm:items-end">
+              <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                 {showCalibration ? (
                   <button
                     type="button"
                     onClick={closeCalibration}
-                    className="inline-flex items-center gap-1.5 rounded-sm border border-accent/25 bg-accent/[0.06] px-2.5 py-1.5 font-mono-technical text-[9px] uppercase tracking-[0.2em] text-accent/90 transition hover:border-accent/50 hover:bg-accent/10"
+                    className="inline-flex min-h-11 touch-manipulation items-center gap-1.5 rounded-sm border border-accent/25 bg-accent/[0.06] px-3 py-2 font-mono-technical text-[9px] uppercase tracking-[0.2em] text-accent/90 transition hover:border-accent/50 hover:bg-accent/10"
                   >
-                    <ArrowLeft className="size-3.5" strokeWidth={1.5} aria-hidden />
+                    <ArrowLeft className="size-3.5 shrink-0" strokeWidth={1.5} aria-hidden />
                     {t('page.backToModes')}
                   </button>
                 ) : (
@@ -129,25 +129,27 @@ export default function TacticalTimer() {
                       <button
                         type="button"
                         onClick={exitMode}
-                        className="inline-flex items-center gap-1.5 rounded-sm border border-accent/25 bg-accent/[0.06] px-2.5 py-1.5 font-mono-technical text-[9px] uppercase tracking-[0.2em] text-accent/90 transition hover:border-accent/50 hover:bg-accent/10"
+                        className="inline-flex min-h-11 touch-manipulation items-center gap-1.5 rounded-sm border border-accent/25 bg-accent/[0.06] px-3 py-2 font-mono-technical text-[9px] uppercase tracking-[0.2em] text-accent/90 transition hover:border-accent/50 hover:bg-accent/10"
                       >
-                        <ArrowLeft className="size-3.5" strokeWidth={1.5} aria-hidden />
+                        <ArrowLeft className="size-3.5 shrink-0" strokeWidth={1.5} aria-hidden />
                         {t('page.backToModes')}
                       </button>
                     ) : null}
                     <button
                       type="button"
                       onClick={openCalibration}
-                      className="inline-flex items-center gap-1.5 rounded-sm border border-white/15 bg-white/[0.03] px-2.5 py-1.5 font-mono-technical text-[9px] uppercase tracking-[0.2em] text-app-text/75 transition hover:border-accent/45 hover:bg-accent/[0.08] hover:text-accent"
+                      className="inline-flex min-h-11 touch-manipulation items-center gap-1.5 rounded-sm border border-white/15 bg-white/[0.03] px-3 py-2 font-mono-technical text-[9px] uppercase tracking-[0.2em] text-app-text/75 transition hover:border-accent/45 hover:bg-accent/[0.08] hover:text-accent"
                       aria-label={t('calibration.openAria')}
                     >
-                      <Settings2 className="size-3.5" strokeWidth={1.5} aria-hidden />
+                      <Settings2 className="size-3.5 shrink-0" strokeWidth={1.5} aria-hidden />
                       {t('calibration.open')}
                     </button>
                   </>
                 )}
               </div>
-              <HudTicker />
+              <div className="max-w-full overflow-hidden">
+                <HudTicker />
+              </div>
             </div>
           </header>
 
