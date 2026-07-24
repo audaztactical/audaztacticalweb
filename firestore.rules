@@ -322,6 +322,25 @@ service cloud.firestore {
     }
 
     /**
+     * Taktik Timer — Standart Atış oturumları.
+     * users/{uid}/tacticalSessions/{sessionId}
+     * Yalnızca sahip okur/yazar; ownerId/userId oturum uid ile eşleşmeli.
+     */
+    match /users/{userId}/tacticalSessions/{sessionId} {
+      allow read, list: if isOwnerUid(userId);
+      allow create: if isOwnerUid(userId)
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.keys().hasAll(['ownerId', 'userId', 'shotTimesMs', 'createdAt', 'mode']);
+      allow update: if isOwnerUid(userId)
+        && resource.data.ownerId == request.auth.uid
+        && request.resource.data.ownerId == resource.data.ownerId
+        && request.resource.data.userId == resource.data.userId;
+      allow delete: if isOwnerUid(userId)
+        && resource.data.ownerId == request.auth.uid;
+    }
+
+    /**
      * usernames/{normalizedKey} — tek alan: uid (kayıt sırasında benzersiz kullanıcı adı).
      * get: kayıt öncesi müsaitlik kontrolü için herkese açık (yalnızca var/yok).
      * create: yalnızca kendi uid’si ile; silme: yalnızca sahibi (ileride kullanıcı adı değişiminde).

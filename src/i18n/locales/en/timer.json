@@ -1,0 +1,479 @@
+{
+  "page": {
+    "kicker": "Timing terminal",
+    "title": "Audaz Tactical Timer",
+    "subtitle": "Select a mode — field timing and performance measurement",
+    "backToModes": "Back to mode select"
+  },
+  "hub": {
+    "kicker": "Mode select",
+    "title": "Operating principle",
+    "hint": "Choose a timing mode"
+  },
+  "modes": {
+    "standard-shot": {
+      "title": "Standard Shot",
+      "description": "Split and total time measurement for classic shooting cycles."
+    },
+    "dry-fire": {
+      "title": "Dry-Fire Analysis",
+      "description": "Dry-fire training with safety checks, rack filter, and shot→rack cycle scoring."
+    },
+    "fof": {
+      "title": "FOF (Force-on-Force)",
+      "description": "Scenario engagement times and decision intervals."
+    },
+    "structural-frame": {
+      "title": "Structural Frame Test",
+      "description": "Phased structural movement and frame-transition timing."
+    }
+  },
+  "placeholder": {
+    "kicker": "Mode status",
+    "title": "Coming soon",
+    "subtitle": "This timing mode is being prepared — analysis panels land in a later release.",
+    "loading": "Loading mode"
+  },
+  "hardware": {
+    "connectTitle": "Connect device",
+    "connectHint": "Connect your AUDAZ device via Bluetooth (BLE) or USB Serial",
+    "connectBle": "Connect via Bluetooth",
+    "connectUsb": "Connect via USB",
+    "connecting": "Connecting…",
+    "disconnect": "Disconnect",
+    "badge": {
+      "connected": "Connected: {{name}} ({{type}})",
+      "connecting": "Connecting…",
+      "offline": "Hardware offline — connect in Settings",
+      "lastTrigger": "Last trigger · LVL {{loud}} · flinch {{flinch}}",
+      "listening": "Listening · audio LVL {{lvl}}",
+      "linkLost": "Link lost"
+    },
+    "toast": {
+      "bleConnected": "Bluetooth connected",
+      "usbConnected": "USB Serial connected",
+      "linkLost": "Hardware link lost — audio/trigger listening stopped"
+    },
+    "error": {
+      "usbUnsupported": "Web Serial is unavailable in this browser (Chrome/Edge recommended)",
+      "bleUnsupported": "Web Bluetooth is unavailable in this browser (Chrome/Edge recommended)",
+      "usbFailed": "Could not open USB port. Check permissions or the cable.",
+      "bleFailed": "Bluetooth connection failed. Make sure the device is on and nearby.",
+      "linkLost": "Bluetooth/USB disconnected unexpectedly. Audio and trigger stream stopped — reconnect in Settings."
+    }
+  },
+  "calibration": {
+    "open": "Settings",
+    "openAria": "Open settings and calibration panel",
+    "close": "Close",
+    "kicker": "Settings & calibration",
+    "title": "Settings & Calibration",
+    "subtitle": "Acoustic threshold, NeoPixel, MPU-6050, screen simulation, and hardware",
+    "sound": {
+      "title": "Acoustic threshold",
+      "threshold": "Microphone sensitivity",
+      "thresholdAria": "Acoustic threshold slider",
+      "numeric": "Numeric value",
+      "save": "Save",
+      "savedToast": "Threshold saved",
+      "vuLabel": "VU",
+      "vuAria": "Live audio level VU meter"
+    },
+    "neopixel": {
+      "title": "Visual feedback (NeoPixel)",
+      "brightness": "Brightness",
+      "brightnessAria": "NeoPixel brightness slider",
+      "statusColor": "Status color",
+      "colors": {
+        "ready": "Ready",
+        "armed": "Armed",
+        "alert": "Alert",
+        "idle": "Idle"
+      }
+    },
+    "mpu": {
+      "title": "Accelerometer + gyroscope (MPU-6050)",
+      "gForce": "G-Force range",
+      "hint": "Sensor full-scale range — pick based on field vibration.",
+      "zeroCalibrate": "Zero / Calibrate",
+      "calibrating": "Calibrating",
+      "holdStill": "Keep the device still",
+      "locking": "Locking to zero-point…",
+      "zeroed": "Bullseye locked",
+      "offset": "Offset",
+      "yaw": "Yaw (Z)",
+      "targetAria": "MPU calibration target",
+      "awaitingHardware": "Awaiting hardware — dot centered",
+      "awaitingTelemetry": "Awaiting telemetry…",
+      "targetHintTitle": "Visual zeroing",
+      "targetHint": "When connected, the dot tracks live ax/ay; the reticle rotates with yaw (gyro Z). Zero stores ax/ay and yaw offsets.",
+      "lastCal": "Last zero · {{time}}",
+      "notCalibrated": "Not zeroed yet",
+      "guide": {
+        "kicker": "Status panel",
+        "title": "G-Force range guide",
+        "subtitle": "The selected range lights up in the list — tap a card to change it.",
+        "active": "Active",
+        "precision": {
+          "badge": "Precision mode",
+          "body": "High sensitivity for dry-fire and muzzle flinch analysis."
+        },
+        "balanced": {
+          "badge": "Balanced tactical",
+          "body": "Optimum balance for standard field drills and dynamic shooting."
+        },
+        "impact": {
+          "badge": "Heavy impact / blast",
+          "body": "Capture high recoil shock from live-fire ammunition."
+        }
+      }
+    },
+    "serial": {
+      "title": "Hardware link",
+      "connect": "Connect port",
+      "connecting": "Connecting…",
+      "disconnect": "Disconnect",
+      "statusConnected": "Connected",
+      "statusWaiting": "Waiting",
+      "webSerialOk": "Web Serial API ready",
+      "webSerialFallback": "No Web Serial — simulated link",
+      "cancelled": "Port selection cancelled.",
+      "failed": "Could not open port. Check permissions or cable."
+    },
+    "screen": {
+      "title": "Simulation & screen calibration",
+      "subtitle": "Screen orientation and physical diagonal drive target scale and circle roundness.",
+      "orientationLabel": "Screen orientation",
+      "orientation": {
+        "portrait": "Portrait / Vertical",
+        "landscape": "Landscape / Horizontal"
+      },
+      "diagonal": "Screen diagonal (inches)",
+      "diagonalAria": "Screen diagonal slider",
+      "diagonalNumeric": "Inch value",
+      "hint": "Enter your device’s real screen inches — the scale engine derives px/inch and aspect from it.",
+      "eyeDistance": "Eye–screen distance",
+      "eyeDistanceNumeric": "Manual (m)",
+      "eyeDistanceAria": "Distance from eye to screen",
+      "eyeHint": "Your physical viewing distance. Combined with engagement range and screen inches it builds the retinal-angle (MOA) Final Scale Matrix."
+    },
+    "actions": {
+      "saveSend": "Save / Send to device",
+      "reset": "Reset defaults"
+    },
+    "toast": {
+      "savedAndSent": "Settings saved and sent to device",
+      "savedLocal": "Settings saved (device waiting)",
+      "reset": "Default calibration loaded",
+      "connected": "Device port connected",
+      "simulatedConnect": "Simulated connection established",
+      "disconnected": "Device disconnected",
+      "zeroSuccess": "Zeroing successful",
+      "zeroSuccessSaved": "Zero saved — offsets persisted"
+    }
+  },
+  "standardShot": {
+    "armStart": "Arm / Start Timer",
+    "armHint": "Pick a delay mode, then arm. First bang after FIRE FREE is your reaction time.",
+    "thresholdHint": "Sound threshold · {{value}}",
+    "randomDelay": "Random delay · ~{{sec}}s",
+    "fixedDelay": "Fixed delay · {{sec}}s",
+    "delayMode": {
+      "label": "Start delay",
+      "random": "Random · 2–4s",
+      "fixed": "Manual / Fixed",
+      "randomHint": "On start, a random wait between 2–4 seconds is applied.",
+      "fixedValue": "Fixed duration",
+      "fixedRange": "{{min}}–{{max}} seconds",
+      "unit": "s"
+    },
+    "fireFree": "Fire free",
+    "chronoLabel": "Chronometer",
+    "reactionLabel": "First-shot reaction time",
+    "stringElapsed": "String time",
+    "unitSeconds": "seconds",
+    "manualBang": "Bang (manual)",
+    "manualHint": "No hardware? Use Space or manual bang to test",
+    "endTest": "End test",
+    "retry": "Retry / Reset",
+    "unsavedGuard": {
+      "title": "Warning — unsaved session",
+      "body": "You have an unsaved shot session. Starting a new test or resetting will discard the current data. Continue?",
+      "cancel": "Cancel",
+      "discard": "Continue without saving",
+      "closeAria": "Close warning"
+    },
+    "status": {
+      "idle": "Ready — arm system",
+      "waiting": "Waiting…",
+      "complete": "Test complete"
+    },
+    "serial": {
+      "connect": "Connect ESP32",
+      "connecting": "Connecting…",
+      "connected": "ESP32 linked",
+      "unsupported": "Web Serial unavailable — use manual trigger"
+    },
+    "splits": {
+      "title": "Split times",
+      "count": "{{count}} shots",
+      "reaction": "Reaction",
+      "item": "Split {{n}}",
+      "empty": "Later shots list here"
+    },
+    "summary": {
+      "kicker": "String summary",
+      "title": "Tactical summary",
+      "total": "Total time",
+      "avgSplit": "Average split",
+      "bestReaction": "Best reaction"
+    },
+    "tabs": {
+      "live": "Live test",
+      "history": "Past reports"
+    },
+    "save": {
+      "cta": "Save session",
+      "saving": "Writing to cloud…",
+      "saved": "Saved",
+      "toast": "Session saved to cloud",
+      "error": "Save failed — check that you are signed in"
+    },
+    "pdf": {
+      "title": "AUDAZ TACTICAL — STANDARD SHOT REPORT",
+      "download": "Download PDF report"
+    },
+    "analytics": {
+      "kicker": "Analytics charts",
+      "multiSelect": "Multi-shot selector",
+      "allShots": "All",
+      "range25": "Shots 2–5",
+      "splitTrend": "Split trend — shot dynamics",
+      "mpuScatter": "Muzzle deviation analysis",
+      "sec": "sec"
+    },
+    "history": {
+      "kicker": "Past sessions",
+      "loading": "Loading from cloud…",
+      "empty": "No saved sessions yet",
+      "compare": "Compare",
+      "compareHint": "{{count}} sessions selected (min 2)",
+      "compareTitle": "Session comparison",
+      "series": "Session {{n}}",
+      "delete": "Delete",
+      "rowMeta": "{{shots}} shots · R {{reaction}}s · {{g}}"
+    }
+  },
+  "dryFire": {
+    "arm": "Arm / Start listening",
+    "armShort": "Arm System",
+    "disarm": "Stop listening",
+    "disarmShort": "Stop",
+    "fire": "Dry fire (manual)",
+    "resetPaper": "Reset target paper",
+    "manualHint": "While armed: Space / Enter or manual trigger — hits accumulate",
+    "training": {
+      "restartSafety": "Safety screen",
+      "safety": {
+        "title": "Safety confirmation",
+        "subtitle": "Confirm all three items before starting dry-fire training.",
+        "hint": "Start stays disabled until every box is checked.",
+        "lockHint": "This screen cannot be dismissed — the timer will not start without safety confirmation.",
+        "start": "Start",
+        "statusPending": "Awaiting safety confirmation",
+        "items": {
+          "magazine": "Magazine removed — no live ammunition in the firearm",
+          "chamber": "Chamber empty — visually verified",
+          "muzzle": "Muzzle pointed in a safe direction — clear backstop"
+        }
+      },
+      "prep": {
+        "title": "Rack the slide",
+        "body": "Cycle the slide to set the firearm. Rack sounds in this phase are not scored as shots.",
+        "rackHeard": "Rack sound detected (ignored). Confirm when ready.",
+        "confirmRacked": "Firearm ready",
+        "ready": "Ready",
+        "armLocked": "In fullscreen, tap Beep & Start, rack the slide, then press READY.",
+        "status": "Prep — ignoring initial rack sound",
+        "steps": {
+          "one": "Keep the muzzle in a safe direction",
+          "two": "Fully cycle the slide to chamber / set",
+          "three": "Press READY when done — the session starts"
+        }
+      },
+      "cycle": {
+        "shotTitle": "Awaiting shot",
+        "shotBody": "The next trigger press is scored. After a shot, the rack sound is filtered automatically.",
+        "rackTitle": "Awaiting rack",
+        "rackBody": "Cycle the slide. This sound is not scored; then back to shot (Trigger → Rack).",
+        "rackStatus": "Awaiting rack — rack sound ignored"
+      }
+    },
+    "toolbar": {
+      "title": "Tactical tools",
+      "aria": "Fullscreen tactical toolbar",
+      "collapse": "Collapse toolbar",
+      "expand": "Expand toolbar"
+    },
+    "status": {
+      "idle": "Ready — tap Arm / Start",
+      "idleShort": "Ready",
+      "armed": "Listening",
+      "hits": "{{count}} hits"
+    },
+    "serial": {
+      "connect": "Connect ESP32",
+      "connecting": "Connecting…",
+      "connected": "ESP32 linked"
+    },
+    "target": {
+      "kicker": "Virtual target board",
+      "hint": "Calibration point stays hidden — only hits are shown",
+      "aria": "Dry-fire hit map",
+      "hitAria": "Hit {{n}}",
+      "empty": "No hits yet",
+      "vectorsToggle": "Vectors",
+      "vectorsShow": "Show shot vectors",
+      "vectorsHide": "Hide shot vectors"
+    },
+    "telemetry": {
+      "kicker": "Settings & Calibration Preview"
+    },
+    "fullscreen": {
+      "enter": "Fullscreen",
+      "exit": "Exit",
+      "exitEsc": "Exit / Close (ESC)",
+      "escHint": "Press ESC or the Exit button (top-right) to leave fullscreen",
+      "unsupported": "Fullscreen is not supported or was blocked by the browser",
+      "failed": "Could not enter fullscreen",
+      "protocol": {
+        "title": "Fullscreen protocol",
+        "body": "Tactical Timer operations run in fullscreen only. Settings, arming, and session controls stay locked until then.",
+        "reentryTitle": "Fullscreen interrupted",
+        "reentryBody": "Fullscreen was left during a session. Operations were stopped — re-enter fullscreen to continue.",
+        "hint": "Mandatory safety protocol · leaving fullscreen aborts the session",
+        "enter": "Enter fullscreen",
+        "entering": "Entering…"
+      }
+    },
+    "distance": {
+      "label": "Engagement distance",
+      "manual": "Manual",
+      "custom": "Custom",
+      "scale": "Scale {{scale}} · ref {{ref}}m / {{dist}}m"
+    },
+    "screen": {
+      "geoHint": "{{orient}} · {{inch}}″ · scale {{scale}}",
+      "matrixHint": "Eye {{eye}}m · outer ring {{moa}} MOA · final {{final}}"
+    },
+    "rings": {
+      "legendTitle": "Target paper dimensions",
+      "atDistance": "{{dist}} m · live",
+      "ringLabel": "Ring {{label}}",
+      "cm": "cm",
+      "paperRef": "paper {{cm}} cm",
+      "hint": "Ring diameters are physical paper sizes (X=5 cm, 10=10 cm, 9=20 cm…). Distance scale shrinks the face; cm values stay fixed.",
+      "hintLive": "On-screen equivalent diameters at {{dist}} m (live from scale matrix). Subline is paper reference.",
+      "screenFace": "On this screen, paper face ≈ {{cm}} cm"
+    },
+    "tooltip": {
+      "shot": "Shot {{n}}",
+      "trigger": "Trigger press",
+      "flinch": "Flinch score",
+      "deviation": "Deviation X,Y",
+      "magnitude": "Deviation magnitude",
+      "distance": "Distance"
+    },
+    "analytics": {
+      "kicker": "Flinch & vibration analysis",
+      "open": "Analysis charts",
+      "openAria": "Open or close analysis charts",
+      "close": "Close",
+      "modalHint": "Records keep collecting in the background until you Save Session",
+      "empty": "Record at least one hit for analysis",
+      "shots": "Hits",
+      "avgFlinch": "Avg flinch",
+      "avgTrigger": "Avg trigger",
+      "group": "Group radius",
+      "flinchTrend": "Flinch trend",
+      "scatter": "Hit dispersion",
+      "graphs": {
+        "section": "Chart pool",
+        "flinch": "Flinch Analysis",
+        "barrel": "Pre-Shot Barrel Stability",
+        "jerk": "Trigger Drop Speed / Jerk",
+        "split": "Split Consistency",
+        "axial": "Axial Dispersion",
+        "shotVectors": "Shot-to-Shot Distance Arrows",
+        "barrelMetric": "Stability",
+        "jerkMetric": "Jerk",
+        "splitMetric": "Split (ms)",
+        "distanceMetric": "Distance",
+        "needTwo": "At least two hits required",
+        "vectorTitle": "{{from}}→{{to}}: distance {{dist}}, split {{split}} ms",
+        "barrelTraceHint": "Muzzle sway path · helix trace"
+      },
+      "pool": {
+        "aria": "Analysis chart pool",
+        "title": "Chart pool",
+        "collapse": "Collapse chart pool",
+        "expand": "Expand chart pool",
+        "collapsedLabel": "{{n}} charts",
+        "closeGraph": "Close {{name}} chart"
+      }
+    },
+    "timer": {
+      "title": "Timer",
+      "on": "On",
+      "off": "Off",
+      "start": "Beep & Start",
+      "delaying": "Standing by…",
+      "cancelDelay": "Cancel delay",
+      "draw": "Draw / Split",
+      "freeHint": "Instant listen — no beep",
+      "par": "Par Time",
+      "parAria": "Par time seconds",
+      "parHint": "Red alert when over time",
+      "parOff": "0 = Par Time off",
+      "delay": {
+        "random": "Random Beep",
+        "fixed": "Fixed delay",
+        "randomHint": "Beep after random {{min}}–{{max}} s",
+        "fixedAria": "Fixed delay seconds"
+      }
+    },
+    "session": {
+      "save": "Save Session",
+      "saving": "Saving…",
+      "saved": "Session saved",
+      "saveError": "Could not save session",
+      "unsaved": "Unsaved session data"
+    },
+    "history": {
+      "kicker": "Past sessions & reports",
+      "loading": "Loading archive…",
+      "empty": "No saved sessions yet",
+      "emptyHint": "Use Save Session after shots to archive",
+      "report": "Session report",
+      "reportAction": "Report Session / PDF",
+      "shots": "shots",
+      "splits": "Reaction times",
+      "coords": "Hit coordinates",
+      "delete": "Delete",
+      "colShots": "Shots",
+      "rowMeta": "{{shots}} shots · Draw {{draw}} · Flinch {{flinch}}"
+    }
+  },
+  "fullscreen": {
+    "unsupported": "Fullscreen is not supported or was blocked by the browser",
+    "protocol": {
+      "title": "Enter Fullscreen",
+      "body": "Fullscreen is required to use this mode.",
+      "reentryTitle": "Fullscreen interrupted",
+      "reentryBody": "Fullscreen was left during a session. Operations were stopped — re-enter fullscreen to continue.",
+      "hint": "Click the button below to continue.",
+      "enter": "Enter Fullscreen",
+      "entering": "Entering…"
+    }
+  }
+}

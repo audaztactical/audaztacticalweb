@@ -66,13 +66,15 @@ export function isSidebarGroupOpen(state, groupId) {
 /**
  * @param {SidebarGroupStateMap | null | undefined} state
  * @param {SidebarNavGroupId} groupId
+ * Akordeon: bir grup açılınca diğerleri kapanır.
  */
 export function toggleSidebarGroupState(state, groupId) {
   const base = hasAnySavedSidebarGroupPreference(state)
     ? parseSidebarGroupState(state)
     : defaultSidebarGroupState()
-  return {
-    ...base,
-    [groupId]: !isSidebarGroupOpen(base, groupId),
+  const currentlyOpen = isSidebarGroupOpen(base, groupId)
+  if (currentlyOpen) {
+    return { ...base, [groupId]: false }
   }
+  return Object.fromEntries(SIDEBAR_NAV_GROUP_IDS.map((id) => [id, id === groupId]))
 }

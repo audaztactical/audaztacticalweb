@@ -5,6 +5,8 @@
     "fof": "FOF KUVVET KARŞILAŞMASI RAPORU",
     "vbss": "VBSS GEMİ OPERASYON RAPORU",
     "tccc": "TCCC TAKTİK SAĞLIK RAPORU",
+    "standardShot": "STANDART ATIŞ ZAMANLAMA RAPORU",
+    "dryFire": "KURU TETİK / SANAL HEDEF RAPORU",
     "vbssObsForm": "VBSS GÖZLEM FORMU",
     "tcccObsForm": "TCCC MARCH GÖZLEM FORMU"
   },
@@ -252,11 +254,69 @@
       "cqb": "CQB",
       "fof": "FOF",
       "vbss": "VBSS",
-      "tccc": "TCCC"
+      "tccc": "TCCC",
+      "standardShot": "Standart-Atis",
+      "dryFire": "Kuru-Tetik"
     },
     "obsForm": {
       "vbss": "VBSS-Gozlem-Formu",
       "tccc": "TCCC-Gozlem-Formu"
     }
+  },
+  "standardShot": {
+    "drillType": "Standart Atış (Shot Timer)",
+    "fields": {
+      "reaction": "Reaksiyon süresi",
+      "avgSplit": "Ortalama split",
+      "threshold": "Akustik eşik",
+      "gForce": "G-Force aralığı",
+      "delay": "Rastgele gecikme",
+      "zeroPoint": "Sıfır noktası (X/Y)",
+      "brightness": "Görsel geri bildirim parlaklığı"
+    },
+    "sections": {
+      "splitTimes": "Split Zamanları",
+      "splitTrend": "Split Trend · Atış Dinamiği",
+      "deviation": "Namlu Sapma Analizi",
+      "sensorMatrix": "Sensör Matrisi Değerleri"
+    },
+    "tables": {
+      "label": "Etiket",
+      "timeS": "Süre (s)",
+      "timeMs": "Süre (ms)",
+      "shotNo": "Atış no",
+      "sample": "Örnek",
+      "axisX": "Eksen X",
+      "axisY": "Eksen Y",
+      "magnitude": "Sapma |A|",
+      "timeIndex": "Zaman indeksi"
+    },
+    "evaluationDefault": "Standart atış dizisi tamamlandı. Atış sayısı: {{shots}}. Reaksiyon: {{reaction}} s. Toplam dizi süresi: {{total}} s."
+  },
+  "dryFire": {
+    "drillType": "Kuru Tetik (Sanal Hedef)",
+    "fields": {
+      "draw": "Draw / reaksiyon",
+      "avgSplit": "Ortalama split",
+      "avgFlinch": "Ortalama flinch",
+      "group": "Grup yarıçapı",
+      "delay": "Başlangıç gecikmesi",
+      "delayNone": "Yok (anında)",
+      "par": "Par Time"
+    },
+    "sections": {
+      "reactions": "Reaksiyon / Split Süreleri",
+      "flinchTrend": "Flinch Trendi",
+      "dispersion": "İsabet Dağılımı",
+      "coords": "İsabet Koordinatları"
+    },
+    "tables": {
+      "shot": "Atış",
+      "x": "X",
+      "y": "Y",
+      "flinch": "Flinch",
+      "reaction": "Reaksiyon"
+    },
+    "evaluationDefault": "Kuru tetik seansı tamamlandı. İsabet: {{shots}}. Draw: {{draw}}. Ort. flinch: {{flinch}}."
   }
 }

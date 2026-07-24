@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import './i18n'
 import LandingPage from './pages/LandingPage'
 import { AuthProvider } from './context/AuthContext'
+import { HardwareProvider } from './context/HardwareContext'
 import { LanguagePreferenceProvider } from './context/LanguagePreferenceContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { FirebaseErrorProvider } from './context/FirebaseErrorContext'
@@ -30,6 +31,7 @@ const IntelFeed = lazy(() => import('./pages/IntelFeed'))
 const Cephanelik = lazy(() => import('./pages/Cephanelik'))
 const Balistik = lazy(() => import('./pages/Balistik'))
 const Training = lazy(() => import('./pages/Training'))
+const TacticalTimer = lazy(() => import('./pages/TacticalTimer'))
 const TcccSuite = lazy(() => import('./pages/TcccSuite'))
 const ProgressTracker = lazy(() => import('./pages/ProgressTracker'))
 const InstructorDashboard = lazy(() => import('./pages/InstructorDashboard'))
@@ -42,6 +44,7 @@ const UsageGuide = lazy(() => import('./pages/UsageGuide'))
 export default function App() {
   return (
     <AuthProvider>
+      <HardwareProvider>
       <LanguagePreferenceProvider>
       <ThemeProvider>
       <FcmPushBootstrap />
@@ -69,6 +72,7 @@ export default function App() {
                   <Route path="cephanelik" element={<Cephanelik />} />
                   <Route path="balistik" element={<Balistik />} />
                   <Route path="antrenman" element={<Training />} />
+                  <Route path="taktik-timer" element={<TacticalTimer />} />
                   <Route path="tccc" element={<TcccSuite />} />
                   <Route path="basarilar" element={<ProgressTracker />} />
                   <Route path="kilavuz" element={<UsageGuide />} />
@@ -112,6 +116,7 @@ export default function App() {
       </NotificationProvider>
       </ThemeProvider>
       </LanguagePreferenceProvider>
+      </HardwareProvider>
     </AuthProvider>
   )
 }

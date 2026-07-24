@@ -17,6 +17,7 @@ import {
   Shield,
   ShieldAlert,
   Target,
+  Timer,
   User,
 } from 'lucide-react'
 
@@ -62,6 +63,7 @@ export const NAV_GROUP_DEFS = [
     titleKey: 'groups.operations',
     items: [
       { to: '/antrenman', labelKey: 'items.trainingOps', icon: Crosshair },
+      { to: '/taktik-timer', labelKey: 'items.tacticalTimer', icon: Timer },
       { to: '/tccc', labelKey: 'items.tccc', icon: HeartPulse },
       { to: '/cephanelik', labelKey: 'items.armory', icon: Shield },
       { to: '/balistik', labelKey: 'items.ballistics', icon: Target },

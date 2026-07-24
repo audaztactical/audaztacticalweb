@@ -1,0 +1,479 @@
+{
+  "page": {
+    "kicker": "Zamanlama terminali",
+    "title": "Audaz Tactical Timer",
+    "subtitle": "Mod seçin — saha zamanlama ve performans ölçümü",
+    "backToModes": "Mod seçimine dön"
+  },
+  "hub": {
+    "kicker": "Mod seçimi",
+    "title": "Çalışma prensibi",
+    "hint": "Bir zamanlama modu seçin"
+  },
+  "modes": {
+    "standard-shot": {
+      "title": "Standart Atış",
+      "description": "Klasik atış döngüsü için parça ve toplam süre ölçümü."
+    },
+    "dry-fire": {
+      "title": "Kuru Tetik Analizi",
+      "description": "Güvenlik onayı, kurulum filtresi ve atış→kurulum döngüsü ile kuru tetik antrenmanı."
+    },
+    "fof": {
+      "title": "FOF (Force-on-Force)",
+      "description": "Senaryo bazlı çatışma süreleri ve karar zamanları."
+    },
+    "structural-frame": {
+      "title": "Yapısal Çerçeve Testi",
+      "description": "Fazlı yapısal hareket ve çerçeve geçiş süreleri."
+    }
+  },
+  "placeholder": {
+    "kicker": "Mod durumu",
+    "title": "Yakında eklenecek",
+    "subtitle": "Bu zamanlama modu hazırlanıyor — analiz panelleri sonraki sürümde aktif olacak.",
+    "loading": "Mod yükleniyor"
+  },
+  "hardware": {
+    "connectTitle": "Cihazı bağla",
+    "connectHint": "Bluetooth (BLE) veya USB Serial ile AUDAZ cihazını bağlayın",
+    "connectBle": "Bluetooth ile bağlan",
+    "connectUsb": "USB ile bağlan",
+    "connecting": "Bağlanıyor…",
+    "disconnect": "Bağlantıyı kes",
+    "badge": {
+      "connected": "Bağlandı: {{name}} ({{type}})",
+      "connecting": "Bağlanıyor…",
+      "offline": "Donanım bağlı değil — Ayarlar’dan bağlayın",
+      "lastTrigger": "Son tetik · LVL {{loud}} · flinch {{flinch}}",
+      "listening": "Dinleniyor · ses LVL {{lvl}}",
+      "linkLost": "Bağlantı koptu"
+    },
+    "toast": {
+      "bleConnected": "Bluetooth bağlantısı kuruldu",
+      "usbConnected": "USB Serial bağlantısı kuruldu",
+      "linkLost": "Donanım bağlantısı koptu — ses/tetik dinleme durdu"
+    },
+    "error": {
+      "usbUnsupported": "Web Serial bu tarayıcıda yok (Chrome/Edge önerilir)",
+      "bleUnsupported": "Web Bluetooth bu tarayıcıda yok (Chrome/Edge önerilir)",
+      "usbFailed": "USB port açılamadı. İzinleri veya kabloyu kontrol edin.",
+      "bleFailed": "Bluetooth bağlantısı başarısız. Cihazın açık ve yakında olduğundan emin olun.",
+      "linkLost": "Bluetooth/USB bağlantısı beklenmedik şekilde koptu. Ses ve tetik akışı durdu — Ayarlar’dan yeniden bağlanın."
+    }
+  },
+  "calibration": {
+    "open": "Ayarlar",
+    "openAria": "Ayarlar ve kalibrasyon panelini aç",
+    "close": "Kapat",
+    "kicker": "Ayarlar ve kalibrasyon",
+    "title": "Ayarlar & Kalibrasyon",
+    "subtitle": "Akustik eşik, NeoPixel, MPU-6050, ekran simülasyonu ve donanım",
+    "sound": {
+      "title": "Akustik eşik",
+      "threshold": "Mikrofon hassasiyeti",
+      "thresholdAria": "Akustik eşik kaydırıcısı",
+      "numeric": "Sayısal değer",
+      "save": "Kaydet",
+      "savedToast": "Eşik kaydedildi",
+      "vuLabel": "VU",
+      "vuAria": "Canlı ses seviyesi VU ölçeri"
+    },
+    "neopixel": {
+      "title": "Görsel geri bildirim (NeoPixel)",
+      "brightness": "Parlaklık",
+      "brightnessAria": "NeoPixel parlaklık kaydırıcısı",
+      "statusColor": "Durum rengi",
+      "colors": {
+        "ready": "Hazır",
+        "armed": "Silahlı",
+        "alert": "Alarm",
+        "idle": "Boşta"
+      }
+    },
+    "mpu": {
+      "title": "İvmeölçer + jiroskop (MPU-6050)",
+      "gForce": "G-Force aralığı",
+      "hint": "Sensör tam ölçek aralığı — saha sarsıntısına göre seçin.",
+      "zeroCalibrate": "Sıfırla / Kalibre Et",
+      "calibrating": "Kalibre ediliyor",
+      "holdStill": "Cihazı sabit tutun",
+      "locking": "Sıfır noktasına kilitleniyor…",
+      "zeroed": "Bullseye kilitli",
+      "offset": "Offset",
+      "yaw": "Yaw (Z)",
+      "targetAria": "MPU kalibrasyon hedefi",
+      "awaitingHardware": "Donanım bekleniyor — nokta merkezde",
+      "awaitingTelemetry": "Telemetri bekleniyor…",
+      "targetHintTitle": "Görsel sıfırlama",
+      "targetHint": "Cihaz bağlıyken nokta canlı ax/ay ile hareket eder; nişangah yaw (gyro Z) ile döner. Sıfırla hem ax/ay hem yaw ofsetini kaydeder.",
+      "lastCal": "Son sıfırlama · {{time}}",
+      "notCalibrated": "Henüz sıfırlanmadı",
+      "guide": {
+        "kicker": "Durum paneli",
+        "title": "G-Force aralık rehberi",
+        "subtitle": "Seçilen aralık listede vurgulanır — kartlara dokunarak da değiştirebilirsiniz.",
+        "active": "Aktif",
+        "precision": {
+          "badge": "Hassas mod",
+          "body": "Kuru tetik ve namlu titreşimi (flinch) analizi için yüksek hassasiyet."
+        },
+        "balanced": {
+          "badge": "Dengeli taktiksel",
+          "body": "Standart saha drill'leri ve dinamik atışlar için optimum denge."
+        },
+        "impact": {
+          "badge": "Ağır darbe / patlama",
+          "body": "Gerçek mühimmat atışlarında yüksek geri tepme (recoil) şoklarını yakalamak için."
+        }
+      }
+    },
+    "serial": {
+      "title": "Donanım bağlantısı",
+      "connect": "Cihazı bağla",
+      "connecting": "Bağlanıyor…",
+      "disconnect": "Bağlantıyı kes",
+      "statusConnected": "Bağlandı",
+      "statusWaiting": "Bekliyor",
+      "webSerialOk": "Web Serial API hazır",
+      "webSerialFallback": "Web Serial yok — simüle bağlantı",
+      "cancelled": "Port seçimi iptal edildi.",
+      "failed": "Port açılamadı. İzinleri veya kabloyu kontrol edin."
+    },
+    "screen": {
+      "title": "Simülasyon ve ekran kalibrasyonu",
+      "subtitle": "Ekran yönü ve fiziksel diyagonal, hedef ölçeği ile daire yuvarlaklığını belirler.",
+      "orientationLabel": "Ekran yönü",
+      "orientation": {
+        "portrait": "Dikey / Portrait",
+        "landscape": "Yatay / Landscape"
+      },
+      "diagonal": "Ekran diyagonali (inç)",
+      "diagonalAria": "Ekran diyagonali kaydırıcısı",
+      "diagonalNumeric": "İnç değeri",
+      "hint": "Cihazınızın gerçek ekran inç değerini girin — ölçek motoru px/inç ve en-boy oranını buna göre hesaplar.",
+      "eyeDistance": "Göz – ekran mesafesi",
+      "eyeDistanceNumeric": "Manuel (m)",
+      "eyeDistanceAria": "Göz ile ekran arası mesafe",
+      "eyeHint": "Ekrana olan fiziksel uzaklığınız. Atış mesafesi ve ekran inç ile birleşerek retina açısı (MOA) Final Scale Matrix’ini oluşturur."
+    },
+    "actions": {
+      "saveSend": "Kaydet / Cihaza gönder",
+      "reset": "Varsayılana dön"
+    },
+    "toast": {
+      "savedAndSent": "Ayarlar kaydedildi ve cihaza gönderildi",
+      "savedLocal": "Ayarlar kaydedildi (cihaz bekliyor)",
+      "reset": "Varsayılan kalibrasyon yüklendi",
+      "connected": "Cihaz portu bağlandı",
+      "simulatedConnect": "Simüle bağlantı kuruldu",
+      "disconnected": "Cihaz bağlantısı kesildi",
+      "zeroSuccess": "Sıfırlama başarılı",
+      "zeroSuccessSaved": "Sıfırlama kaydedildi — offsetler kalıcı"
+    }
+  },
+  "standardShot": {
+    "armStart": "Sistemi Kur / Başlat",
+    "armHint": "Gecikme modunu seçin, sonra başlatın. ATEŞ SERBEST sonrası ilk patlama reaksiyon süresidir.",
+    "thresholdHint": "Akustik eşik · {{value}}",
+    "randomDelay": "Rastgele gecikme · ~{{sec}}s",
+    "fixedDelay": "Sabit gecikme · {{sec}}s",
+    "delayMode": {
+      "label": "Başlangıç gecikmesi",
+      "random": "Rastgele · 2–4s",
+      "fixed": "Manuel / Sabit",
+      "randomHint": "Başlatınca 2–4 saniye arasında rastgele bekleme uygulanır.",
+      "fixedValue": "Sabit süre",
+      "fixedRange": "{{min}}–{{max}} saniye",
+      "unit": "sn"
+    },
+    "fireFree": "Ateş serbest",
+    "chronoLabel": "Kronometre",
+    "reactionLabel": "İlk atış reaksiyon süresi",
+    "stringElapsed": "Dizi süresi",
+    "unitSeconds": "saniye",
+    "manualBang": "Patlama (manuel)",
+    "manualHint": "Donanım yoksa Space / manuel patlama ile test edin",
+    "endTest": "Testi bitir",
+    "retry": "Tekrar dene / Sıfırla",
+    "unsavedGuard": {
+      "title": "Dikkat — kaydedilmemiş oturum",
+      "body": "Kaydedilmemiş bir atış oturumu bulunuyor. Yeni teste başlarsanız veya sıfırlarsanız mevcut veriler kaybolacak. Devam etmek istiyor musunuz?",
+      "cancel": "İptal et",
+      "discard": "Kaydetmeden devam et",
+      "closeAria": "Uyarıyı kapat"
+    },
+    "status": {
+      "idle": "Hazır — sistemi kur",
+      "waiting": "Bekleniyor…",
+      "complete": "Test tamamlandı"
+    },
+    "serial": {
+      "connect": "ESP32 bağla",
+      "connecting": "Bağlanıyor…",
+      "connected": "ESP32 bağlı",
+      "unsupported": "Web Serial bu tarayıcıda yok — manuel tetik kullanın"
+    },
+    "splits": {
+      "title": "Split zamanları",
+      "count": "{{count}} atış",
+      "reaction": "Reaksiyon",
+      "item": "Split {{n}}",
+      "empty": "Sonraki atışlar burada listelenir"
+    },
+    "summary": {
+      "kicker": "Dizi özeti",
+      "title": "Taktiksel özet",
+      "total": "Toplam süre",
+      "avgSplit": "Ortalama split",
+      "bestReaction": "En iyi reaksiyon"
+    },
+    "tabs": {
+      "live": "Canlı test",
+      "history": "Geçmiş raporlar"
+    },
+    "save": {
+      "cta": "Oturumu kaydet",
+      "saving": "Buluta yazılıyor…",
+      "saved": "Kaydedildi",
+      "toast": "Oturum buluta kaydedildi",
+      "error": "Kayıt başarısız — oturum açık mı kontrol edin"
+    },
+    "pdf": {
+      "title": "AUDAZ TACTICAL — STANDART ATIŞ RAPORU",
+      "download": "PDF rapor indir"
+    },
+    "analytics": {
+      "kicker": "Analiz grafikleri",
+      "multiSelect": "Çoklu atış seçici",
+      "allShots": "Tümü",
+      "range25": "Atış 2–5",
+      "splitTrend": "Split trend — atış dinamiği",
+      "mpuScatter": "Namlu sapma analizi",
+      "sec": "sn"
+    },
+    "history": {
+      "kicker": "Geçmiş seanslar",
+      "loading": "Buluttan yükleniyor…",
+      "empty": "Henüz kayıtlı oturum yok",
+      "compare": "Karşılaştır",
+      "compareHint": "{{count}} seans seçili (en az 2)",
+      "compareTitle": "Seans karşılaştırması",
+      "series": "Seans {{n}}",
+      "delete": "Sil",
+      "rowMeta": "{{shots}} atış · R {{reaction}}s · {{g}}"
+    }
+  },
+  "dryFire": {
+    "arm": "Sistemi kur / Dinlemeye al",
+    "armShort": "Sistemi Kur",
+    "disarm": "Dinlemeyi kapat",
+    "disarmShort": "Kapat",
+    "fire": "Kuru tetik (manuel)",
+    "resetPaper": "Atış kağıdını sıfırla",
+    "manualHint": "Armed iken Space / Enter veya manuel tetik — isabetler birikir",
+    "training": {
+      "restartSafety": "Güvenlik ekranı",
+      "safety": {
+        "title": "Güvenlik onayı",
+        "subtitle": "Kuru tetik antrenmanına başlamadan önce üç maddeyi onaylayın.",
+        "hint": "Tüm kutular işaretlenmeden Başla aktif olmaz.",
+        "lockHint": "Bu ekran kapatılamaz — güvenlik onayı olmadan timer başlamaz.",
+        "start": "Başla",
+        "statusPending": "Güvenlik onayı bekleniyor",
+        "items": {
+          "magazine": "Şarjör sökülü — silahta canlı mühimmat yok",
+          "chamber": "Atım yatağı boş — kontrol edildi",
+          "muzzle": "Namlu güvenli yönde — güvenli bir hedef hattı"
+        }
+      },
+      "prep": {
+        "title": "Silahı kur",
+        "body": "Kapağı çekerek silahı kurun. Bu aşamadaki kurulum sesi atış sayılmaz.",
+        "rackHeard": "Kurulum sesi algılandı (yoksayıldı). Hazırsanız onaylayın.",
+        "confirmRacked": "Silah kurulu",
+        "ready": "Hazır",
+        "armLocked": "Tam ekranda Bip & Başlat ile silahı kurun, ardından HAZIR’a basın.",
+        "status": "Prep — ilk kurulum sesi yoksayılıyor",
+        "steps": {
+          "one": "Silahı güvenli yönde tutun",
+          "two": "Kapağı tam çekip bırakarak kurun",
+          "three": "Hazır olduğunuzda HAZIR’a basın — seans başlar"
+        }
+      },
+      "cycle": {
+        "shotTitle": "Atış beklemede",
+        "shotBody": "Sonraki tetik düşürme skora yazılır. Atıştan sonra kapak kurulum sesi otomatik filtrelenir.",
+        "rackTitle": "Kurulum beklemede",
+        "rackBody": "Kapağı çekin / kurun. Bu ses atış sayılmaz; ardından tekrar atışa geçilir (Tetik → Kapak).",
+        "rackStatus": "Kurulum bekleniyor — kapak sesi yoksayılır"
+      }
+    },
+    "toolbar": {
+      "title": "Taktik araçlar",
+      "aria": "Tam ekran taktiksel araç çubuğu",
+      "collapse": "Araç çubuğunu daralt",
+      "expand": "Araç çubuğunu aç"
+    },
+    "status": {
+      "idle": "Hazır — Sistemi Kur ile başla",
+      "idleShort": "Hazır",
+      "armed": "Dinleniyor",
+      "hits": "{{count}} isabet"
+    },
+    "serial": {
+      "connect": "ESP32 bağla",
+      "connecting": "Bağlanıyor…",
+      "connected": "ESP32 bağlı"
+    },
+    "target": {
+      "kicker": "Sanal hedef tahtası",
+      "hint": "Kalibrasyon noktası gizli — yalnızca isabetler görünür",
+      "aria": "Kuru tetik isabet haritası",
+      "hitAria": "İsabet {{n}}",
+      "empty": "Henüz isabet yok",
+      "vectorsToggle": "Vektörler",
+      "vectorsShow": "Atış vektörlerini göster",
+      "vectorsHide": "Atış vektörlerini gizle"
+    },
+    "telemetry": {
+      "kicker": "Ayarlar ve Kalibrasyon Önizleme"
+    },
+    "fullscreen": {
+      "enter": "Tam ekran",
+      "exit": "Çıkış",
+      "exitEsc": "Çıkış / Kapat (ESC)",
+      "escHint": "ESC veya sağ üstteki Çıkış ile tam ekrandan çıkın",
+      "unsupported": "Tarayıcı tam ekranı desteklemiyor veya izin verilmedi",
+      "failed": "Tam ekran açılamadı",
+      "protocol": {
+        "title": "Tam ekran protokolü",
+        "body": "Taktik Timer operasyonları yalnızca tam ekranda yürütülür. Ayarlar, başlatma ve seans işlemleri kilitli kalır.",
+        "reentryTitle": "Tam ekran kesildi",
+        "reentryBody": "Seans sırasında tam ekrandan çıkıldı. İşlemler durduruldu — devam için yeniden tam ekrana geçin.",
+        "hint": "Zorunlu güvenlik protokolü · ESC ile çıkış seansı keser",
+        "enter": "Tam ekrana geç",
+        "entering": "Geçiliyor…"
+      }
+    },
+    "distance": {
+      "label": "Atış mesafesi",
+      "manual": "Manuel",
+      "custom": "Özel",
+      "scale": "Ölçek {{scale}} · ref {{ref}}m / {{dist}}m"
+    },
+    "screen": {
+      "geoHint": "{{orient}} · {{inch}}″ · ölçek {{scale}}",
+      "matrixHint": "Göz {{eye}}m · dış halka {{moa}} MOA · final {{final}}"
+    },
+    "rings": {
+      "legendTitle": "Hedef kâğıdı ölçüleri",
+      "atDistance": "{{dist}} m · canlı",
+      "ringLabel": "{{label}} halkası",
+      "cm": "cm",
+      "paperRef": "kâğıt {{cm}} cm",
+      "hint": "Halka çapları fiziksel kâğıt ölçüleridir (X=5 cm, 10=10 cm, 9=20 cm…). Mesafe ölçeği hedefi küçültür; cm değerleri sabittir.",
+      "hintLive": "{{dist}} m mesafede ekranda görünen eşdeğer çaplar (ölçek matrisine göre anlık). Alt satır kâğıt referansıdır.",
+      "screenFace": "Bu ekranda kâğıt yüzeyi ≈ {{cm}} cm"
+    },
+    "tooltip": {
+      "shot": "Atış {{n}}",
+      "trigger": "Tetik baskı",
+      "flinch": "Flinch skoru",
+      "deviation": "Sapma X,Y",
+      "magnitude": "Sapma büyüklüğü",
+      "distance": "Mesafe"
+    },
+    "analytics": {
+      "kicker": "Flinch ve titreşim analizi",
+      "open": "Analiz grafikleri",
+      "openAria": "Analiz grafiklerini aç veya kapat",
+      "close": "Kapat",
+      "modalHint": "Kayıtlar Seansı Kaydet’e kadar arka planda toplanmaya devam eder",
+      "empty": "Analiz için en az bir isabet kaydedin",
+      "shots": "İsabet",
+      "avgFlinch": "Ort. flinch",
+      "avgTrigger": "Ort. tetik",
+      "group": "Grup yarıçapı",
+      "flinchTrend": "Flinch trendi",
+      "scatter": "İsabet dağılımı",
+      "graphs": {
+        "section": "Grafik havuzu",
+        "flinch": "Flinch Analizi",
+        "barrel": "Ön Atış Namlu Kararlılığı",
+        "jerk": "Tetik Düşüş Hızı / Jerk",
+        "split": "Split Tutarlılığı",
+        "axial": "Eksenel Dağılım",
+        "shotVectors": "Atışlar Arası Mesafe Okları",
+        "barrelMetric": "Kararlılık",
+        "jerkMetric": "Jerk",
+        "splitMetric": "Split (ms)",
+        "distanceMetric": "Mesafe",
+        "needTwo": "En az iki isabet gerekli",
+        "vectorTitle": "{{from}}→{{to}}: mesafe {{dist}}, split {{split}} ms",
+        "barrelTraceHint": "Namlu salınım izi · helezon trace"
+      },
+      "pool": {
+        "aria": "Analiz grafik havuzu",
+        "title": "Grafik havuzu",
+        "collapse": "Grafik havuzunu daralt",
+        "expand": "Grafik havuzunu genişlet",
+        "collapsedLabel": "{{n}} grafik",
+        "closeGraph": "{{name}} grafiğini kapat"
+      }
+    },
+    "timer": {
+      "title": "Zamanlayıcı",
+      "on": "Açık",
+      "off": "Kapalı",
+      "start": "Bip & Başlat",
+      "delaying": "Bekleniyor…",
+      "cancelDelay": "Gecikmeyi iptal",
+      "draw": "Draw / Split",
+      "freeHint": "Anında dinleme — bip yok",
+      "par": "Par Time",
+      "parAria": "Par time saniye",
+      "parHint": "Süre aşımında kırmızı uyarı",
+      "parOff": "0 = Par Time kapalı",
+      "delay": {
+        "random": "Random Beep",
+        "fixed": "Sabit gecikme",
+        "randomHint": "Rastgele {{min}}–{{max}} sn sonra bip",
+        "fixedAria": "Sabit gecikme saniye"
+      }
+    },
+    "session": {
+      "save": "Seansı Kaydet",
+      "saving": "Kaydediliyor…",
+      "saved": "Seans kaydedildi",
+      "saveError": "Seans kaydedilemedi",
+      "unsaved": "Kaydedilmemiş seans verisi var"
+    },
+    "history": {
+      "kicker": "Geçmiş seanslar & raporlar",
+      "loading": "Arşiv yükleniyor…",
+      "empty": "Henüz kayıtlı seans yok",
+      "emptyHint": "Atış sonrası Seansı Kaydet ile arşive ekleyin",
+      "report": "Seans raporu",
+      "reportAction": "Seansı Raporla / PDF",
+      "shots": "atış",
+      "splits": "Reaksiyon süreleri",
+      "coords": "İsabet koordinatları",
+      "delete": "Sil",
+      "colShots": "Atış",
+      "rowMeta": "{{shots}} atış · Draw {{draw}} · Flinch {{flinch}}"
+    }
+  },
+  "fullscreen": {
+    "unsupported": "Tarayıcı tam ekranı desteklemiyor veya izin verilmedi",
+    "protocol": {
+      "title": "Tam Ekrana Geç",
+      "body": "Bu modu kullanmak için tam ekran gereklidir.",
+      "reentryTitle": "Tam ekran kesildi",
+      "reentryBody": "Seans sırasında tam ekrandan çıkıldı. İşlemler durduruldu — devam için yeniden tam ekrana geçin.",
+      "hint": "Devam etmek için aşağıdaki butona tıklayın.",
+      "enter": "Tam Ekrana Geç",
+      "entering": "Geçiliyor…"
+    }
+  }
+}

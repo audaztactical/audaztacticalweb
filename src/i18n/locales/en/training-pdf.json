@@ -5,6 +5,8 @@
     "fof": "FOF FORCE-ON-FORCE REPORT",
     "vbss": "VBSS VESSEL OPERATION REPORT",
     "tccc": "TCCC TACTICAL MEDICAL REPORT",
+    "standardShot": "STANDARD SHOT TIMING REPORT",
+    "dryFire": "DRY FIRE / VIRTUAL TARGET REPORT",
     "vbssObsForm": "VBSS OBSERVATION FORM",
     "tcccObsForm": "TCCC MARCH OBSERVATION FORM"
   },
@@ -252,11 +254,69 @@
       "cqb": "CQB",
       "fof": "FOF",
       "vbss": "VBSS",
-      "tccc": "TCCC"
+      "tccc": "TCCC",
+      "standardShot": "Standard-Shot",
+      "dryFire": "Dry-Fire"
     },
     "obsForm": {
       "vbss": "VBSS-Observation-Form",
       "tccc": "TCCC-Observation-Form"
     }
+  },
+  "standardShot": {
+    "drillType": "Standard Shot (Shot Timer)",
+    "fields": {
+      "reaction": "Reaction time",
+      "avgSplit": "Average split",
+      "threshold": "Acoustic threshold",
+      "gForce": "G-Force range",
+      "delay": "Random delay",
+      "zeroPoint": "Zero point (X/Y)",
+      "brightness": "Visual feedback brightness"
+    },
+    "sections": {
+      "splitTimes": "Split Times",
+      "splitTrend": "Split Trend · Shot Dynamics",
+      "deviation": "Muzzle Deviation Analysis",
+      "sensorMatrix": "Sensor Matrix Values"
+    },
+    "tables": {
+      "label": "Label",
+      "timeS": "Time (s)",
+      "timeMs": "Time (ms)",
+      "shotNo": "Shot #",
+      "sample": "Sample",
+      "axisX": "Axis X",
+      "axisY": "Axis Y",
+      "magnitude": "Deviation |A|",
+      "timeIndex": "Time index"
+    },
+    "evaluationDefault": "Standard shot string completed. Shots: {{shots}}. Reaction: {{reaction}} s. Total string time: {{total}} s."
+  },
+  "dryFire": {
+    "drillType": "Dry Fire (Virtual Target)",
+    "fields": {
+      "draw": "Draw / reaction",
+      "avgSplit": "Average split",
+      "avgFlinch": "Average flinch",
+      "group": "Group radius",
+      "delay": "Start delay",
+      "delayNone": "None (instant)",
+      "par": "Par Time"
+    },
+    "sections": {
+      "reactions": "Reaction / Split Times",
+      "flinchTrend": "Flinch Trend",
+      "dispersion": "Hit Dispersion",
+      "coords": "Hit Coordinates"
+    },
+    "tables": {
+      "shot": "Shot",
+      "x": "X",
+      "y": "Y",
+      "flinch": "Flinch",
+      "reaction": "Reaction"
+    },
+    "evaluationDefault": "Dry-fire session completed. Hits: {{shots}}. Draw: {{draw}}. Avg flinch: {{flinch}}."
   }
 }
