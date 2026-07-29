@@ -53,7 +53,7 @@ export default function DryFireGraphPool({
         </button>
         <p
           className={[
-            'select-none font-mono-technical text-[8px] font-bold uppercase tracking-[0.28em] text-[#facc15]/70',
+            'select-none font-mono-technical text-xs font-bold uppercase tracking-[0.18em] text-[#facc15] sm:text-sm',
             'max-md:ml-2 max-md:flex-1',
             'md:mt-3 md:flex-1 md:[writing-mode:vertical-rl] md:[text-orientation:mixed]',
           ].join(' ')}
@@ -75,10 +75,10 @@ export default function DryFireGraphPool({
     >
       <div className="flex shrink-0 items-center justify-between gap-2 border-b border-[#facc15]/20 px-3 py-2.5">
         <div className="min-w-0">
-          <p className="truncate font-mono-technical text-[9px] font-bold uppercase tracking-[0.28em] text-[#facc15]">
+          <p className="truncate font-mono-technical text-sm font-bold uppercase tracking-[0.16em] text-[#facc15]">
             {t('dryFire.analytics.pool.title')}
           </p>
-          <p className="mt-0.5 truncate font-mono-technical text-[7px] uppercase tracking-[0.16em] text-zinc-600">
+          <p className="mt-1 truncate font-mono-technical text-xs uppercase tracking-[0.12em] text-zinc-400">
             {t('dryFire.analytics.modalHint')}
           </p>
         </div>
@@ -124,7 +124,7 @@ export default function DryFireGraphPool({
             />
 
             <div className="relative z-[2] flex shrink-0 items-center justify-between gap-2 border-b border-zinc-800/90 px-3 py-2 pr-2">
-              <p className="min-w-0 flex-1 truncate font-mono-technical text-[9px] font-bold uppercase tracking-[0.2em] text-[#facc15]">
+              <p className="min-w-0 flex-1 truncate font-mono-technical text-xs font-bold uppercase tracking-[0.14em] text-[#facc15] sm:text-sm">
                 {t(`dryFire.analytics.graphs.${id}`)}
               </p>
               <button
@@ -139,7 +139,7 @@ export default function DryFireGraphPool({
               </button>
             </div>
 
-            <div className="relative z-[2] min-h-0 flex-1 px-2 pb-2 pt-1">
+            <div className="relative z-[2] flex min-h-[300px] w-full flex-1 flex-col px-2 pb-2 pt-1">
               <DryFireGraphCharts graphId={id} hits={hits} />
             </div>
           </article>

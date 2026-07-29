@@ -2,15 +2,20 @@ import { useTranslation } from 'react-i18next'
 import { useHardware } from '../../context/HardwareContext'
 import AcousticVuMeter from './AcousticVuMeter'
 import MpuCalibrationTarget from './MpuCalibrationTarget'
+import DryFireShotAnalysisHud from './DryFireShotAnalysisHud'
 
 /**
- * Dry Fire yan paneli — kalibrasyon önizleme (VU + yaw nişangah).
+ * Dry Fire sensör paneli — VU + MPU (+ isteğe bağlı stack analiz).
  * @param {{
  *   soundThreshold: number
  *   offsetX?: number
  *   offsetY?: number
  *   offsetYaw?: number
+ *   offsetPitch?: number
+ *   offsetRoll?: number
  *   gForceRange?: string
+ *   showAnalysis?: boolean
+ *   className?: string
  * }} props
  */
 export default function DryFireLiveTelemetryPanel({
@@ -18,14 +23,21 @@ export default function DryFireLiveTelemetryPanel({
   offsetX = 0,
   offsetY = 0,
   offsetYaw = 0,
+  offsetPitch = 0,
+  offsetRoll = 0,
   gForceRange = '±8G',
+  showAnalysis = true,
+  className = '',
 }) {
   const { t } = useTranslation('timer')
   const { isConnected } = useHardware()
 
   return (
     <aside
-      className="relative flex w-full min-w-0 flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-950 p-3 sm:p-5"
+      className={[
+        'relative flex h-full w-full min-w-0 flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-950 p-3 sm:p-5',
+        className,
+      ].join(' ')}
       aria-label={t('dryFire.telemetry.kicker')}
     >
       <span
@@ -45,11 +57,11 @@ export default function DryFireLiveTelemetryPanel({
         aria-hidden
       />
 
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <p className="font-mono text-[8px] font-bold uppercase tracking-[0.28em] text-[#facc15]/80">
+      <div className="mb-3 flex flex-wrap items-start justify-between gap-2 sm:mb-4 sm:gap-3">
+        <p className="min-w-0 font-mono text-[9px] font-bold uppercase leading-snug tracking-[0.2em] text-[#facc15]/85 sm:text-[10px] sm:tracking-[0.24em]">
           {t('dryFire.telemetry.kicker')}
         </p>
-        <span className="rounded border border-slate-800 bg-slate-900 px-2 py-0.5 font-mono text-[8px] font-bold uppercase tracking-widest text-app-text/55">
+        <span className="shrink-0 rounded border border-slate-800 bg-slate-900 px-2 py-0.5 font-mono text-[8px] font-bold uppercase tracking-widest text-app-text/55">
           {isConnected ? t('calibration.serial.statusConnected') : t('calibration.serial.statusWaiting')}
         </span>
       </div>
@@ -58,7 +70,7 @@ export default function DryFireLiveTelemetryPanel({
         <p className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-[#facc15]/80">
           {t('calibration.sound.vuLabel')}
         </p>
-        <div className="mt-3">
+        <div className="mt-3 w-full min-h-[120px]">
           <AcousticVuMeter threshold={soundThreshold} orientation="horizontal" className="w-full" />
         </div>
       </div>
@@ -69,9 +81,20 @@ export default function DryFireLiveTelemetryPanel({
           offsetX={offsetX}
           offsetY={offsetY}
           offsetYaw={offsetYaw}
+          offsetPitch={offsetPitch}
+          offsetRoll={offsetRoll}
           gForceRange={gForceRange}
         />
       </div>
+
+      {showAnalysis ? (
+        <DryFireShotAnalysisHud
+          layout="stack"
+          referencePitch={offsetPitch}
+          referenceRoll={offsetRoll}
+          referenceYaw={offsetYaw}
+        />
+      ) : null}
     </aside>
   )
 }

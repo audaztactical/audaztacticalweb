@@ -20,14 +20,15 @@ function resolvePortalRoot() {
 
 /**
  * Kuru tetik güvenlik onayı — 3 zorunlu checkbox.
- * Kapatılamaz / atlanamaz; BAŞLA yalnızca tüm maddeler işaretliyken aktif.
+ * Onay sonrası seans boyunca hatırlanır; İptal ile mod seçimine dönülebilir.
  * Tam ekran öğesine portal eder (body dışı FS içeriği görünür kalsın).
  * @param {{
  *   open: boolean
  *   onConfirm: () => void
+ *   onCancel: () => void
  * }} props
  */
-export default function DryFireSafetyModal({ open, onConfirm }) {
+export default function DryFireSafetyModal({ open, onConfirm, onCancel }) {
   const { t } = useTranslation('timer')
   const panelRef = useRef(/** @type {HTMLDivElement | null} */ (null))
   const [checks, setChecks] = useState(() =>
@@ -75,11 +76,11 @@ export default function DryFireSafetyModal({ open, onConfirm }) {
   useEffect(() => {
     if (!open) return undefined
 
-    const blockKeys = (e) => {
-      // Escape modalı kapatmaz (FS çıkış ayrı buton / tarayıcı ESC).
+    const onKey = (e) => {
       if (e.key === 'Escape' || e.key === 'Esc') {
         e.preventDefault()
         e.stopPropagation()
+        onCancel()
       }
     }
 
@@ -106,7 +107,7 @@ export default function DryFireSafetyModal({ open, onConfirm }) {
       }
     }
 
-    window.addEventListener('keydown', blockKeys, true)
+    window.addEventListener('keydown', onKey, true)
     window.addEventListener('keydown', trapFocus, true)
     window.setTimeout(() => {
       const firstCb = panelRef.current?.querySelector('input[type="checkbox"]')
@@ -117,10 +118,10 @@ export default function DryFireSafetyModal({ open, onConfirm }) {
     }, 30)
 
     return () => {
-      window.removeEventListener('keydown', blockKeys, true)
+      window.removeEventListener('keydown', onKey, true)
       window.removeEventListener('keydown', trapFocus, true)
     }
-  }, [open])
+  }, [open, onCancel])
 
   const allChecked = useMemo(
     () => DRY_FIRE_SAFETY_ITEMS.every((id) => checks[id]),
@@ -171,7 +172,14 @@ export default function DryFireSafetyModal({ open, onConfirm }) {
         />
 
         <div className="relative z-[1] border-b border-amber-600/35 bg-amber-950/40 px-4 py-4 sm:px-5">
-          <div className="flex items-start gap-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="absolute right-3 top-3 z-[2] inline-flex min-h-9 items-center justify-center rounded-sm border border-zinc-600/60 bg-zinc-950/80 px-2.5 font-mono text-[8px] font-bold uppercase tracking-[0.18em] text-zinc-300 transition hover:border-amber-500/50 hover:text-amber-200"
+          >
+            {t('dryFire.training.safety.cancel')}
+          </button>
+          <div className="flex items-start gap-3 pr-16">
             <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-lg border border-amber-500/50 bg-amber-950/60">
               <ShieldAlert className="size-5 text-amber-400" strokeWidth={1.5} aria-hidden />
             </span>
@@ -231,25 +239,34 @@ export default function DryFireSafetyModal({ open, onConfirm }) {
             {t('dryFire.training.safety.hint')}
           </p>
 
-          <button
-            type="button"
-            disabled={!allChecked}
-            aria-disabled={!allChecked}
-            tabIndex={allChecked ? 0 : -1}
-            onClick={() => {
-              if (!allChecked) return
-              onConfirm()
-            }}
-            className={[
-              'mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-lg border px-3 font-mono text-[10px] font-bold uppercase tracking-[0.22em] transition',
-              'focus:outline-none focus-visible:ring-1 focus-visible:ring-[#facc15]/55',
-              allChecked
-                ? 'border-[#facc15]/55 bg-[#facc15] text-slate-950 hover:bg-[#facc15]/90'
-                : 'pointer-events-none cursor-not-allowed border-slate-800 bg-slate-900 text-app-text/35 opacity-60',
-            ].join(' ')}
-          >
-            {t('dryFire.training.safety.start')}
-          </button>
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row-reverse">
+            <button
+              type="button"
+              disabled={!allChecked}
+              aria-disabled={!allChecked}
+              tabIndex={allChecked ? 0 : -1}
+              onClick={() => {
+                if (!allChecked) return
+                onConfirm()
+              }}
+              className={[
+                'inline-flex min-h-11 w-full items-center justify-center rounded-lg border px-3 font-mono text-[10px] font-bold uppercase tracking-[0.22em] transition sm:flex-1',
+                'focus:outline-none focus-visible:ring-1 focus-visible:ring-[#facc15]/55',
+                allChecked
+                  ? 'border-[#facc15]/55 bg-[#facc15] text-slate-950 hover:bg-[#facc15]/90'
+                  : 'pointer-events-none cursor-not-allowed border-slate-800 bg-slate-900 text-app-text/35 opacity-60',
+              ].join(' ')}
+            >
+              {t('dryFire.training.safety.start')}
+            </button>
+            <button
+              type="button"
+              onClick={onCancel}
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-zinc-600/55 bg-zinc-900/80 px-3 font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-300 transition hover:border-zinc-500 hover:text-app-text sm:flex-1"
+            >
+              {t('dryFire.training.safety.cancel')}
+            </button>
+          </div>
         </div>
       </div>
     </div>,

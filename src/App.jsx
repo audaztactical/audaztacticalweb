@@ -32,6 +32,7 @@ const Cephanelik = lazy(() => import('./pages/Cephanelik'))
 const Balistik = lazy(() => import('./pages/Balistik'))
 const Training = lazy(() => import('./pages/Training'))
 const TacticalTimer = lazy(() => import('./pages/TacticalTimer'))
+const MicThresholdTest = lazy(() => import('./pages/MicThresholdTest'))
 const TcccSuite = lazy(() => import('./pages/TcccSuite'))
 const ProgressTracker = lazy(() => import('./pages/ProgressTracker'))
 const InstructorDashboard = lazy(() => import('./pages/InstructorDashboard'))
@@ -73,6 +74,14 @@ export default function App() {
                   <Route path="balistik" element={<Balistik />} />
                   <Route path="antrenman" element={<Training />} />
                   <Route path="taktik-timer" element={<TacticalTimer />} />
+                  <Route
+                    path="taktik-timer/mikrofon-test"
+                    element={
+                      <AdminRoute>
+                        <MicThresholdTest />
+                      </AdminRoute>
+                    }
+                  />
                   <Route path="tccc" element={<TcccSuite />} />
                   <Route path="basarilar" element={<ProgressTracker />} />
                   <Route path="kilavuz" element={<UsageGuide />} />

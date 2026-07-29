@@ -3,6 +3,8 @@
  * Kalibrasyon offset'i yalnızca hesapta kullanılır; hedef UI'da gösterilmez.
  */
 
+import { mapSensorToAimAxes } from './mpuAimAxes'
+
 /** @typedef {import('./timerCalibrationSettings').MpuGForceRange} MpuGForceRange */
 
 /**
@@ -145,8 +147,12 @@ export function gForceFullScale(range) {
   return Number.isFinite(n) && n > 0 ? n : 8
 }
 
+/** Yaw/Pitch ölçeği (isabet tahtası) — daha geniş = daha az sıkıştırma */
+export const YAW_AIM_FULL_SCALE_DEG = 90
+export const PITCH_AIM_FULL_SCALE_DEG = 90
+
 /**
- * realX/realY (g) → hedef düzlemi (−1…1) — Piksel/MOA ölçeği.
+ * realX/realY (g) → hedef düzlemi (−1…1) — recoil / flinch için.
  * @param {number} real
  * @param {number} fullScale
  */
@@ -156,56 +162,169 @@ function residualToPlane(real, fullScale) {
 }
 
 /**
- * Paketten accel oku; yoksa null (merkeze düşer).
  * @param {unknown} value
  * @returns {number | null}
  */
-function readAccel(value) {
+function readFiniteNumber(value) {
   if (value == null || value === '') return null
   const n = Number(value)
   return Number.isFinite(n) ? n : null
 }
 
 /**
- * Ateş anı nişan ivmesi — önce canlı telemetri, yoksa trigger paketi.
- * Manuel Fire / Space de telemetriden okur; null→merkez yalnızca veri yoksa.
- *
- * @param {{
- *   telemetry?: { ax?: number, ay?: number, fresh?: boolean } | null
- *   accelX?: number | null
- *   accelY?: number | null
- * }} input
- * @returns {{ accelX: number | null, accelY: number | null, source: 'telemetry' | 'trigger' | 'none' }}
+ * Açı farkını −180…180 aralığına sar (yaw / pitch).
+ * @param {number} angleDeg
+ * @param {number} [offsetDeg]
  */
-export function resolveDryFireShotAccel(input) {
-  const tel = input?.telemetry
-  if (tel && tel.fresh) {
-    const ax = Number(tel.ax)
-    const ay = Number(tel.ay)
-    if (Number.isFinite(ax) && Number.isFinite(ay)) {
-      return { accelX: ax, accelY: ay, source: 'telemetry' }
-    }
-  }
-  const ax = readAccel(input?.accelX)
-  const ay = readAccel(input?.accelY)
-  if (ax != null && ay != null) {
-    return { accelX: ax, accelY: ay, source: 'trigger' }
-  }
-  return { accelX: null, accelY: null, source: 'none' }
+export function normalizeAngleDeltaDeg(angleDeg, offsetDeg = 0) {
+  let d = (Number(angleDeg) || 0) - (Number(offsetDeg) || 0)
+  while (d > 180) d -= 360
+  while (d < -180) d += 360
+  return d
+}
+
+/** @deprecated normalizeAngleDeltaDeg kullanın */
+export function normalizeYawDeltaDeg(yawDeg, offsetYawDeg = 0) {
+  return normalizeAngleDeltaDeg(yawDeg, offsetYawDeg)
 }
 
 /**
- * Yeni kuru tetik isabeti — konum MPU ivmesinden; rastgele simülasyon yok.
- * realX = accel_x − zeroOffset.x → düzlem ölçeği → hedef x/y.
- * İvme yoksa tam merkez (0,0). Kaydedilen x/y kalıcıdır (sonradan merkeze çekilmez).
+ * Relatif yaw (°) → yatay nişan (−1…1). Pozitif → sağ.
+ * Yumuşak kenar; dar ±45 sıkıştırması yok.
+ * @param {number} yawRelDeg
+ * @param {number} [fullScaleDeg]
+ */
+export function yawToAimPlaneX(yawRelDeg, fullScaleDeg = YAW_AIM_FULL_SCALE_DEG) {
+  const raw = Number(yawRelDeg)
+  if (!Number.isFinite(raw)) return 0
+  const sens = Math.max(1, Number(fullScaleDeg) || YAW_AIM_FULL_SCALE_DEG)
+  return clamp(-1, 1, raw / sens)
+}
+
+/**
+ * Relatif pitch (°) → dikey nişan (−1…1).
+ * Pozitif elevation → ekranda yukarı (negatif planeY).
+ * @param {number} pitchRelDeg
+ * @param {number} [fullScaleDeg]
+ */
+export function pitchToAimPlaneY(pitchRelDeg, fullScaleDeg = PITCH_AIM_FULL_SCALE_DEG) {
+  const raw = Number(pitchRelDeg)
+  if (!Number.isFinite(raw)) return 0
+  const sens = Math.max(1, Number(fullScaleDeg) || PITCH_AIM_FULL_SCALE_DEG)
+  return clamp(-1, 1, -raw / sens)
+}
+
+/**
+ * Ateş anı nişan + sarsıntı örneklemesi.
+ * Konum: YALNIZCA aim.yaw (X) + aim.pitch (Y) — mapSensorToAimAxes sonrası.
+ * Roll/cant isabeti kaydırmaz.
+ * İvme: flinch / recoil için ayrı tutulur.
+ *
+ * @param {{
+ *   telemetry?: { ax?: number, ay?: number, yaw?: number, pitch?: number, roll?: number, fresh?: boolean } | null
+ *   yaw?: number | null
+ *   pitch?: number | null
+ *   roll?: number | null
+ *   accelX?: number | null
+ *   accelY?: number | null
+ * }} input
+ * @returns {{
+ *   yaw: number | null
+ *   pitch: number | null
+ *   accelX: number | null
+ *   accelY: number | null
+ *   source: 'telemetry' | 'trigger' | 'none'
+ * }}
+ */
+export function resolveDryFireShotAim(input) {
+  const tel = input?.telemetry
+  /** @type {number | null} */
+  let yaw = null
+  /** @type {number | null} */
+  let pitch = null
+  /** @type {number | null} */
+  let accelX = null
+  /** @type {number | null} */
+  let accelY = null
+  /** @type {'telemetry' | 'trigger' | 'none'} */
+  let source = 'none'
+
+  if (tel && tel.fresh) {
+    const aim = mapSensorToAimAxes(tel)
+    const hasYaw = Number.isFinite(Number(tel.yaw))
+    const hasPitch = Number.isFinite(Number(tel.pitch))
+    if (hasYaw) {
+      yaw = aim.yaw
+      source = 'telemetry'
+    }
+    // aim.pitch = sensör pitch (gy) → hedef dikey; roll yalnızca cant
+    if (hasPitch) pitch = aim.pitch
+    const ax = Number(tel.ax)
+    const ay = Number(tel.ay)
+    if (Number.isFinite(ax)) accelX = ax
+    if (Number.isFinite(ay)) accelY = ay
+  }
+
+  // Trigger fallback: ham sensör yaw/pitch/roll → aynı 1:1 map
+  if (yaw == null || pitch == null) {
+    const hasSensorAngles =
+      readFiniteNumber(input?.yaw) != null ||
+      readFiniteNumber(input?.pitch) != null ||
+      readFiniteNumber(input?.roll) != null
+    if (hasSensorAngles) {
+      const aim = mapSensorToAimAxes({
+        yaw: input?.yaw,
+        pitch: input?.pitch,
+        roll: input?.roll,
+      })
+      if (yaw == null && Number.isFinite(Number(input?.yaw))) {
+        yaw = aim.yaw
+        if (source === 'none') source = 'trigger'
+      }
+      if (pitch == null && Number.isFinite(Number(input?.pitch))) {
+        pitch = aim.pitch
+        if (source === 'none') source = 'trigger'
+      }
+    }
+  }
+
+  if (accelX == null) accelX = readFiniteNumber(input?.accelX)
+  if (accelY == null) accelY = readFiniteNumber(input?.accelY)
+
+  return { yaw, pitch, accelX, accelY, source }
+}
+
+/**
+ * @deprecated Nişan yaw/pitch tabanlı — resolveDryFireShotAim kullanın.
+ * @param {{
+ *   telemetry?: { ax?: number, ay?: number, yaw?: number, pitch?: number, fresh?: boolean } | null
+ *   accelX?: number | null
+ *   accelY?: number | null
+ *   yaw?: number | null
+ *   pitch?: number | null
+ * }} input
+ */
+export function resolveDryFireShotAccel(input) {
+  const aim = resolveDryFireShotAim(input)
+  return { accelX: aim.accelX, accelY: aim.accelY, source: aim.source }
+}
+
+/**
+ * Yeni kuru tetik isabeti — konum YALNIZCA yaw (X) + pitch (Y).
+ * Roll/cant isabet noktasını kaydırmaz (stabilite metriği ayrı).
+ * İvme yalnızca flinch/recoil. Açı yoksa merkez (0,0).
  * @param {{
  *   index: number
- *   offsetX?: number  zeroOffset.x (kalibrasyon)
- *   offsetY?: number  zeroOffset.y
+ *   offsetX?: number  accel zero (flinch)
+ *   offsetY?: number
+ *   offsetYaw?: number  yaw sıfır ofseti (°)
+ *   offsetPitch?: number  pitch sıfır ofseti (°)
  *   mpuGForceRange?: MpuGForceRange | string
  *   distanceM?: number
  *   reactionMs?: number
  *   flinchScore?: number
+ *   yaw?: number | null
+ *   pitch?: number | null
  *   accelX?: number | null
  *   accelY?: number | null
  * }} opts
@@ -215,26 +334,37 @@ export function createDryFireHit(opts) {
   const index = Math.max(0, Number(opts.index) || 0)
   const zeroX = Number(opts.offsetX) || 0
   const zeroY = Number(opts.offsetY) || 0
+  const zeroYaw = Number(opts.offsetYaw) || 0
+  const zeroPitch = Number(opts.offsetPitch) || 0
   const distanceM = clampDryFireDistanceM(opts.distanceM ?? DRY_FIRE_REF_DISTANCE_M)
   const fullScale = gForceFullScale(opts.mpuGForceRange)
 
-  const ax = readAccel(opts.accelX)
-  const ay = readAccel(opts.accelY)
-  const hasAccel = ax != null && ay != null
+  const yaw = readFiniteNumber(opts.yaw)
+  const pitch = readFiniteNumber(opts.pitch)
+  const ax = readFiniteNumber(opts.accelX)
+  const ay = readFiniteNumber(opts.accelY)
 
   let x = 0
   let y = 0
-  if (hasAccel) {
-    const realX = /** @type {number} */ (ax) - zeroX
-    const realY = /** @type {number} */ (ay) - zeroY
-    x = residualToPlane(realX, fullScale)
-    y = residualToPlane(realY, fullScale)
+  if (yaw != null) {
+    x = yawToAimPlaneX(normalizeAngleDeltaDeg(yaw, zeroYaw))
+  }
+  if (pitch != null) {
+    y = pitchToAimPlaneY(normalizeAngleDeltaDeg(pitch, zeroPitch))
   }
 
   const deviationX = Math.round(x * 1000) / 1000
   const deviationY = Math.round(y * 1000) / 1000
   const deviationMag = Math.round(Math.hypot(deviationX, deviationY) * 1000) / 1000
   const scaled = scaleHitCoordsForDistance(x, y, distanceM)
+
+  // İvme → sarsıntı / geri tepme (nişan konumundan bağımsız)
+  let recoilMag = 0
+  if (ax != null && ay != null) {
+    const realX = /** @type {number} */ (ax) - zeroX
+    const realY = /** @type {number} */ (ay) - zeroY
+    recoilMag = Math.hypot(residualToPlane(realX, fullScale), residualToPlane(realY, fullScale))
+  }
 
   const sensorFlinch =
     opts.flinchScore != null && Number.isFinite(Number(opts.flinchScore))
@@ -244,9 +374,20 @@ export function createDryFireHit(opts) {
   const flinchScore =
     sensorFlinch != null
       ? sensorFlinch
-      : clamp(0, 100, Math.round(deviationMag * 85 + Math.abs(y) * 10 + (1 - scaled.scale) * 8))
+      : clamp(
+          0,
+          100,
+          Math.round(
+            (recoilMag > 0 ? recoilMag * 90 : deviationMag * 85) +
+              Math.abs(x) * 6 +
+              Math.abs(y) * 6 +
+              (1 - scaled.scale) * 8,
+          ),
+        )
 
-  const triggerPressMs = Math.round(100 + deviationMag * 180 + Math.abs(x) * 40)
+  const triggerPressMs = Math.round(
+    100 + (recoilMag > 0 ? recoilMag : deviationMag) * 180 + Math.abs(x) * 30 + Math.abs(y) * 30,
+  )
 
   const reactionMs =
     opts.reactionMs != null && Number.isFinite(Number(opts.reactionMs))

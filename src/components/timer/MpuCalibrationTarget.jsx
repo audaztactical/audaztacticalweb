@@ -2,8 +2,17 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Crosshair } from 'lucide-react'
 import { useHardware } from '../../context/HardwareContext'
+import { mapSensorToAimAxes } from '../../lib/mpuAimAxes'
+import {
+  normalizeAngleDeltaDeg,
+  pitchToAimPlaneY,
+  yawToAimPlaneX,
+} from '../../lib/dryFireHits'
 
 /** @typedef {'idle' | 'locking' | 'locked'} MpuCalPhase */
+
+/** Paket gelmezse “telemetri bekleniyor” — Dry Fire / VU ile uyumlu */
+const TELEMETRY_STALE_MS = 800
 
 /**
  * @param {number} min
@@ -15,41 +24,34 @@ function clamp(min, max, n) {
 }
 
 /**
- * @param {string} [range]
- */
-function gForceFullScale(range) {
-  const m = String(range ?? '').match(/(\d+)/)
-  const n = m ? Number(m[1]) : 8
-  return Number.isFinite(n) && n > 0 ? n : 8
-}
-
-/**
- * @param {number} value
- * @param {number} zero
- * @param {number} fullScale
- */
-function residualToPlane(value, zero, fullScale) {
-  const sens = Math.max(0.5, fullScale * 0.5)
-  return clamp(-1, 1, (value - zero) / sens)
-}
-
-/**
- * MPU hedef — rAF doğrudan telemetryRef okur; yaw ile nişangah döner.
+ * MPU hedef — rAF ile telemetryRef okur.
+ * Nişan noktası: yaw (X) + pitch (Y) — Dry Fire isabet eksenleriyle aynı.
+ * Nişangah rotasyonu: relatif yaw (pusula).
  * @param {{
  *   offsetX?: number
  *   offsetY?: number
  *   offsetYaw?: number
+ *   offsetPitch?: number
+ *   offsetRoll?: number
  *   gForceRange?: string
- *   onZeroPointCommit?: (offset: { x: number, y: number, yaw: number }) => void
+ *   onZeroPointCommit?: (offset: {
+ *     x: number
+ *     y: number
+ *     yaw: number
+ *     pitch: number
+ *     roll: number
+ *   }) => void
  *   onSuccess?: () => void
- *   preview?: boolean  Dry Fire önizleme: ham veri + kalibre butonu yok
+ *   preview?: boolean
  * }} props
  */
 export default function MpuCalibrationTarget({
   offsetX = 0,
   offsetY = 0,
   offsetYaw = 0,
-  gForceRange = '±8G',
+  offsetPitch = 0,
+  offsetRoll = 0,
+  gForceRange: _gForceRange = '±8G',
   onZeroPointCommit,
   onSuccess,
   preview = false,
@@ -60,23 +62,33 @@ export default function MpuCalibrationTarget({
   const [phase, setPhase] = useState(/** @type {MpuCalPhase} */ ('idle'))
 
   const phaseRef = useRef(phase)
-  const zeroOffsetRef = useRef({ x: offsetX, y: offsetY, yaw: offsetYaw })
+  const zeroOffsetRef = useRef({
+    x: offsetX,
+    y: offsetY,
+    yaw: offsetYaw,
+    pitch: offsetPitch,
+    roll: offsetRoll,
+  })
   const displayRef = useRef({ x: 0, y: 0 })
-  const liveAxAyRef = useRef({ x: 0, y: 0, yaw: 0 })
+  const liveSampleRef = useRef({
+    x: 0,
+    y: 0,
+    yaw: 0,
+    pitch: 0,
+    roll: 0,
+  })
   const lockFromRef = useRef({ x: 0, y: 0 })
   const lockStartRef = useRef(0)
-  const fullScaleRef = useRef(gForceFullScale(gForceRange))
   const isConnectedRef = useRef(isConnected)
   const onZeroPointCommitRef = useRef(onZeroPointCommit)
   const onSuccessRef = useRef(onSuccess)
-  const lastDrawnSeqRef = useRef(-1)
   const lastLabelMsRef = useRef(0)
 
   const dotRef = useRef(/** @type {HTMLSpanElement | null} */ (null))
   const reticleRef = useRef(/** @type {SVGSVGElement | null} */ (null))
-  const axLabelRef = useRef(/** @type {HTMLParagraphElement | null} */ (null))
-  const ayLabelRef = useRef(/** @type {HTMLParagraphElement | null} */ (null))
   const yawLabelRef = useRef(/** @type {HTMLParagraphElement | null} */ (null))
+  const pitchLabelRef = useRef(/** @type {HTMLParagraphElement | null} */ (null))
+  const rollLabelRef = useRef(/** @type {HTMLParagraphElement | null} */ (null))
   const waitHwRef = useRef(/** @type {HTMLDivElement | null} */ (null))
   const waitTelRef = useRef(/** @type {HTMLDivElement | null} */ (null))
   const lockOverlayRef = useRef(/** @type {HTMLDivElement | null} */ (null))
@@ -87,12 +99,14 @@ export default function MpuCalibrationTarget({
   }, [phase])
 
   useEffect(() => {
-    zeroOffsetRef.current = { x: offsetX, y: offsetY, yaw: offsetYaw }
-  }, [offsetX, offsetY, offsetYaw])
-
-  useEffect(() => {
-    fullScaleRef.current = gForceFullScale(gForceRange)
-  }, [gForceRange])
+    zeroOffsetRef.current = {
+      x: offsetX,
+      y: offsetY,
+      yaw: offsetYaw,
+      pitch: offsetPitch,
+      roll: offsetRoll,
+    }
+  }, [offsetX, offsetY, offsetYaw, offsetPitch, offsetRoll])
 
   useEffect(() => {
     isConnectedRef.current = isConnected
@@ -107,7 +121,7 @@ export default function MpuCalibrationTarget({
   }, [onSuccess])
 
   /**
-   * Tek rAF döngüsü: ax/ay nokta + yaw ile nişangah rotasyonu.
+   * Tek rAF döngüsü: yaw/pitch nokta + yaw ile nişangah rotasyonu.
    */
   useEffect(() => {
     let raf = 0
@@ -127,12 +141,12 @@ export default function MpuCalibrationTarget({
       el.style.transform = `rotate(${yawDeg}deg)`
     }
 
-    const paintLabels = (ax, ay, yaw, now) => {
+    const paintLabels = (yaw, pitch, roll, now) => {
       if (now - lastLabelMsRef.current < 33) return
       lastLabelMsRef.current = now
-      if (axLabelRef.current) axLabelRef.current.textContent = ax.toFixed(3)
-      if (ayLabelRef.current) ayLabelRef.current.textContent = ay.toFixed(3)
       if (yawLabelRef.current) yawLabelRef.current.textContent = `${yaw.toFixed(1)}°`
+      if (pitchLabelRef.current) pitchLabelRef.current.textContent = `${pitch.toFixed(1)}°`
+      if (rollLabelRef.current) rollLabelRef.current.textContent = `${roll.toFixed(1)}°`
     }
 
     const setVisible = (/** @type {HTMLElement | null} */ el, on) => {
@@ -144,9 +158,14 @@ export default function MpuCalibrationTarget({
       const connected = isConnectedRef.current
       const snap = telemetryRef.current
       const p = phaseRef.current
+      const ageMs =
+        snap.fresh && snap.receivedAt > 0
+          ? Math.max(0, now - snap.receivedAt)
+          : Number.POSITIVE_INFINITY
+      const live = connected && snap.fresh && ageMs <= TELEMETRY_STALE_MS
 
       setVisible(waitHwRef.current, !connected)
-      setVisible(waitTelRef.current, connected && !snap.fresh)
+      setVisible(waitTelRef.current, connected && !live)
       setVisible(lockOverlayRef.current, p === 'locking')
       setVisible(lockedBadgeRef.current, p === 'locked')
 
@@ -184,29 +203,30 @@ export default function MpuCalibrationTarget({
         return
       }
 
-      if (!connected || !snap.fresh) {
-        liveAxAyRef.current = { x: 0, y: 0, yaw: 0 }
+      if (!live) {
         paintDot(0, 0)
         paintYaw(0)
         paintLabels(0, 0, 0, now)
-        lastDrawnSeqRef.current = snap.seq
         raf = requestAnimationFrame(tick)
         return
       }
 
-      const ax = snap.ax
-      const ay = snap.ay
-      const yawRaw = Number.isFinite(snap.yaw) ? snap.yaw : 0
+      const aim = mapSensorToAimAxes(snap)
       const off = zeroOffsetRef.current
-      let yawRel = yawRaw - (off.yaw || 0)
-      while (yawRel > 180) yawRel -= 360
-      while (yawRel < -180) yawRel += 360
+      const yawRel = normalizeAngleDeltaDeg(aim.yaw, off.yaw || 0)
+      const pitchRel = normalizeAngleDeltaDeg(aim.pitch, off.pitch || 0)
+      const rollRel = normalizeAngleDeltaDeg(aim.roll, off.roll || 0)
 
-      liveAxAyRef.current = { x: ax, y: ay, yaw: yawRaw }
-      paintLabels(ax, ay, yawRel, now)
-      lastDrawnSeqRef.current = snap.seq
-      const fs = fullScaleRef.current
-      paintDot(residualToPlane(ax, off.x, fs), residualToPlane(ay, off.y, fs))
+      liveSampleRef.current = {
+        x: Number.isFinite(snap.ax) ? snap.ax : 0,
+        y: Number.isFinite(snap.ay) ? snap.ay : 0,
+        yaw: aim.yaw,
+        pitch: aim.pitch,
+        roll: aim.roll,
+      }
+
+      paintLabels(yawRel, pitchRel, rollRel, now)
+      paintDot(yawToAimPlaneX(yawRel), pitchToAimPlaneY(pitchRel))
       paintYaw(yawRel)
 
       raf = requestAnimationFrame(tick)
@@ -219,15 +239,18 @@ export default function MpuCalibrationTarget({
   const startCalibration = useCallback(() => {
     if (phaseRef.current === 'locking') return
 
+    const live = liveSampleRef.current
+    // Firmware YAW_RESET → yaw≈0; pitch/roll zero-point olarak kaydedilir
+    void sendCommand('YAW_RESET')
     const sample = {
-      x: liveAxAyRef.current.x,
-      y: liveAxAyRef.current.y,
-      // Firmware YAW_RESET sonrası yaw=0 → ofset de 0
+      x: live.x,
+      y: live.y,
       yaw: 0,
+      pitch: live.pitch,
+      roll: live.roll,
     }
     zeroOffsetRef.current = sample
     onZeroPointCommitRef.current?.(sample)
-    void sendCommand('YAW_RESET')
 
     lockFromRef.current = { ...displayRef.current }
     lockStartRef.current = performance.now()
@@ -276,7 +299,6 @@ export default function MpuCalibrationTarget({
           <circle cx="100" cy="100" r="2.2" fill="#facc15" opacity="0.55" />
           <line x1="100" y1="8" x2="100" y2="192" stroke="rgba(250,204,21,0.45)" strokeWidth="0.9" />
           <line x1="8" y1="100" x2="192" y2="100" stroke="rgba(250,204,21,0.45)" strokeWidth="0.9" />
-          {/* Yaw yön işareti (üst) */}
           <polygon points="100,12 96,22 104,22" fill="#facc15" opacity="0.9" />
           {[20, 40, 60, 80, 120, 140, 160, 180].map((v) => (
             <g key={v}>
@@ -346,24 +368,6 @@ export default function MpuCalibrationTarget({
       {!preview ? (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <div className="rounded-sm border border-zinc-600/60 bg-zinc-900/50 px-2.5 py-2">
-            <p className="font-mono-technical text-[7px] uppercase tracking-[0.22em] text-zinc-500">AX</p>
-            <p
-              ref={axLabelRef}
-              className="mt-0.5 font-mono-technical text-[11px] tabular-nums text-[#facc15]/90"
-            >
-              0.000
-            </p>
-          </div>
-          <div className="rounded-sm border border-zinc-600/60 bg-zinc-900/50 px-2.5 py-2">
-            <p className="font-mono-technical text-[7px] uppercase tracking-[0.22em] text-zinc-500">AY</p>
-            <p
-              ref={ayLabelRef}
-              className="mt-0.5 font-mono-technical text-[11px] tabular-nums text-[#facc15]/90"
-            >
-              0.000
-            </p>
-          </div>
-          <div className="rounded-sm border border-zinc-600/60 bg-zinc-900/50 px-2.5 py-2">
             <p className="font-mono-technical text-[7px] uppercase tracking-[0.22em] text-zinc-500">
               {t('calibration.mpu.yaw')}
             </p>
@@ -376,10 +380,32 @@ export default function MpuCalibrationTarget({
           </div>
           <div className="rounded-sm border border-zinc-600/60 bg-zinc-900/50 px-2.5 py-2">
             <p className="font-mono-technical text-[7px] uppercase tracking-[0.22em] text-zinc-500">
+              {t('calibration.mpu.pitch')}
+            </p>
+            <p
+              ref={pitchLabelRef}
+              className="mt-0.5 font-mono-technical text-[11px] tabular-nums text-[#facc15]/90"
+            >
+              0.0°
+            </p>
+          </div>
+          <div className="rounded-sm border border-zinc-600/60 bg-zinc-900/50 px-2.5 py-2">
+            <p className="font-mono-technical text-[7px] uppercase tracking-[0.22em] text-zinc-500">
+              {t('calibration.mpu.roll')}
+            </p>
+            <p
+              ref={rollLabelRef}
+              className="mt-0.5 font-mono-technical text-[11px] tabular-nums text-[#facc15]/90"
+            >
+              0.0°
+            </p>
+          </div>
+          <div className="rounded-sm border border-zinc-600/60 bg-zinc-900/50 px-2.5 py-2">
+            <p className="font-mono-technical text-[7px] uppercase tracking-[0.22em] text-zinc-500">
               {t('calibration.mpu.offset')}
             </p>
             <p className="mt-0.5 font-mono-technical text-[10px] tabular-nums text-zinc-300">
-              {offsetX.toFixed(2)}, {offsetY.toFixed(2)} · {offsetYaw.toFixed(0)}°
+              Y{offsetYaw.toFixed(0)}° · P{offsetPitch.toFixed(0)}°
             </p>
           </div>
         </div>
@@ -404,4 +430,3 @@ export default function MpuCalibrationTarget({
     </div>
   )
 }
-

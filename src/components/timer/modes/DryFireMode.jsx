@@ -10,7 +10,7 @@ import {
   clampDryFireDistanceM,
   createDryFireHit,
   DRY_FIRE_REF_DISTANCE_M,
-  resolveDryFireShotAccel,
+  resolveDryFireShotAim,
 } from '../../../lib/dryFireHits'
 import {
   afterCountedShot,
@@ -21,7 +21,9 @@ import {
   DRY_FIRE_ARM_GUARD_MS,
   DRY_FIRE_RACK_WINDOW_MS,
   isDryFireTrainingLive,
+  readDryFireSafetyAck,
   resolveDryFireTriggerVerdict,
+  writeDryFireSafetyAck,
 } from '../../../lib/dryFireTrainingMachine'
 import {
   ARM_DELAY_FIXED_DEFAULT_SEC,
@@ -32,9 +34,12 @@ import {
 } from '../../../lib/dryFireTimer'
 import HardwareStatusBadge from '../../hardware/HardwareStatusBadge'
 import DryFireHistoryPanel from '../DryFireHistoryPanel'
-import DryFireLiveTelemetryPanel from '../DryFireLiveTelemetryPanel'
+import DryFireSessionDashboard from '../DryFireSessionDashboard'
+import DryFireShotAnalysisHud from '../DryFireShotAnalysisHud'
 import DryFireSafetyModal from '../DryFireSafetyModal'
 import DryFireTargetBoard from '../DryFireTargetBoard'
+import TimerActiveWeaponPanel from '../TimerActiveWeaponPanel'
+import { useTimerActiveWeapon } from '../../../hooks/useTimerActiveWeapon'
 
 /** @typedef {'idle' | 'delay' | 'running'} DryFirePhase */
 /** @typedef {import('../../../lib/dryFireTrainingMachine').DryFireScenarioPhase} DryFireScenarioPhase */
@@ -46,6 +51,7 @@ import DryFireTargetBoard from '../DryFireTargetBoard'
  *   opsCode?: string
  *   onSessionActiveChange?: (active: boolean) => void
  *   fsAbortToken?: number
+ *   onExitMode?: () => void
  * }} props
  */
 export default function DryFireMode({
@@ -53,6 +59,7 @@ export default function DryFireMode({
   opsCode = 'TMR-02',
   onSessionActiveChange,
   fsAbortToken = 0,
+  onExitMode,
 }) {
   const { t } = useTranslation('timer')
   const { user, userData } = useAuth()
@@ -65,14 +72,17 @@ export default function DryFireMode({
     saveSession,
     deleteSession,
   } = useDryFireSessions()
+  const activeWeaponCtrl = useTimerActiveWeapon()
+  const { hasActiveWeapon, activeWeapon } = activeWeaponCtrl
+  const hasActiveWeaponRef = useRef(hasActiveWeapon)
 
   const [phase, setPhase] = useState(/** @type {DryFirePhase} */ ('idle'))
   const [scenarioPhase, setScenarioPhase] = useState(
     /** @type {DryFireScenarioPhase} */ ('idle'),
   )
-  /** Güvenlik onayı bu seans için alındı mı — resize / FS flicker ile sıfırlanmaz */
-  const [safetyAcknowledged, setSafetyAcknowledged] = useState(false)
-  const safetyAcknowledgedRef = useRef(false)
+  /** Güvenlik onayı — sessionStorage ile sayfa ömrü boyunca hatırlanır */
+  const [safetyAcknowledged, setSafetyAcknowledged] = useState(() => readDryFireSafetyAck())
+  const safetyAcknowledgedRef = useRef(safetyAcknowledged)
   const [prepRackHeard, setPrepRackHeard] = useState(false)
   const [hits, setHits] = useState(/** @type {import('../../../lib/dryFireHits').DryFireHit[]} */ ([]))
   const [reactionTimesMs, setReactionTimesMs] = useState(/** @type {number[]} */ ([]))
@@ -112,11 +122,16 @@ export default function DryFireMode({
     safetyAcknowledgedRef.current = safetyAcknowledged
   }, [safetyAcknowledged])
 
+  useEffect(() => {
+    hasActiveWeaponRef.current = hasActiveWeapon
+  }, [hasActiveWeapon])
+
   const trainingLive = isDryFireTrainingLive(scenarioPhase)
-  const armed = phase === 'running' && trainingLive
-  /** Prep'te dinle (ilk kurulum sesini yoksaymak için); canlıda yalnızca running */
+  const armed = phase === 'running' && trainingLive && hasActiveWeapon
+  /** Prep'te dinle (ilk kurulum sesini yoksaymak için); canlıda yalnızca running + silah seçili */
   const listening =
-    scenarioPhase === 'prep' || (phase === 'running' && trainingLive)
+    hasActiveWeapon &&
+    (scenarioPhase === 'prep' || (phase === 'running' && trainingLive))
   const parTimeMs = clampParTimeSec(parTimeSec) * 1000
   const parOver = parTimeMs > 0 && liveMs > parTimeMs && phase === 'running'
   const dirty = hits.length > 0 && lastSavedId == null
@@ -165,8 +180,9 @@ export default function DryFireMode({
 
   const recordHit = useCallback(
     (
-      /** @type {{ flinch?: number, accelX?: number | null, accelY?: number | null } | void} */ payload,
+      /** @type {{ flinch?: number, yaw?: number | null, pitch?: number | null, roll?: number | null, accelX?: number | null, accelY?: number | null } | void} */ payload,
     ) => {
+      if (!hasActiveWeaponRef.current) return
       if (phaseRef.current !== 'running') return
       const absoluteMs = Math.max(0, Math.round(performance.now() - goAtRef.current))
       const flinchFromSensor =
@@ -174,9 +190,12 @@ export default function DryFireMode({
           ? Math.min(100, Math.max(0, Math.round(Number(payload.flinch))))
           : undefined
 
-      // Ateş anı nişanı: canlı MPU telemetrisi (manuel Fire dahil) — merkeze snap yok
-      const aim = resolveDryFireShotAccel({
+      // Ateş anı nişanı: yaw (X) + pitch (Y); ivme flinch/recoil için ayrı
+      const aim = resolveDryFireShotAim({
         telemetry: getTelemetry(),
+        yaw: payload?.yaw,
+        pitch: payload?.pitch,
+        roll: payload?.roll,
         accelX: payload?.accelX,
         accelY: payload?.accelY,
       })
@@ -186,9 +205,13 @@ export default function DryFireMode({
           index: prev.length,
           offsetX: settings.mpuOffsetX,
           offsetY: settings.mpuOffsetY,
+          offsetYaw: settings.mpuOffsetYaw,
+          offsetPitch: settings.mpuOffsetPitch,
           mpuGForceRange: settings.mpuGForceRange,
           distanceM,
           reactionMs: absoluteMs,
+          yaw: aim.yaw,
+          pitch: aim.pitch,
           accelX: aim.accelX,
           accelY: aim.accelY,
           ...(flinchFromSensor != null ? { flinchScore: flinchFromSensor } : {}),
@@ -208,6 +231,8 @@ export default function DryFireMode({
       settings.mpuGForceRange,
       settings.mpuOffsetX,
       settings.mpuOffsetY,
+      settings.mpuOffsetYaw,
+      settings.mpuOffsetPitch,
     ],
   )
 
@@ -218,8 +243,9 @@ export default function DryFireMode({
    */
   const handleIncomingTrigger = useCallback(
     (
-      /** @type {{ flinch?: number, accelX?: number | null, accelY?: number | null, source?: 'hw' | 'manual' } | void} */ payload,
+      /** @type {{ flinch?: number, yaw?: number | null, pitch?: number | null, roll?: number | null, accelX?: number | null, accelY?: number | null, source?: 'hw' | 'manual' } | void} */ payload,
     ) => {
+      if (!hasActiveWeaponRef.current) return
       const fromManual = payload?.source === 'manual'
       // Go bip / arm sonrası donanım yankısını yoksay (manuel Fire hariç)
       if (!fromManual && performance.now() < armGuardUntilRef.current) return
@@ -264,6 +290,9 @@ export default function DryFireMode({
       if (Number.isFinite(loud) && loud < thr) return
       handleIncomingTrigger({
         flinch: trigger.flinch,
+        yaw: trigger.yaw,
+        pitch: trigger.pitch,
+        roll: trigger.roll,
         accelX: trigger.accel_x,
         accelY: trigger.accel_y,
         source: 'hw',
@@ -347,6 +376,7 @@ export default function DryFireMode({
    * Bip & Başlat: güvenlik yoksa modal; onaylıysa FS prep kartı; canlıdaysa arm.
    */
   const armStart = useCallback(() => {
+    if (!hasActiveWeaponRef.current) return
     const sc = scenarioRef.current
     if (sc === 'safety' || sc === 'prep') return
     if (sc === 'idle') {
@@ -368,17 +398,16 @@ export default function DryFireMode({
   }, [beginArmedListening])
 
   /**
-   * Güvenlik modalını aç.
-   * @param {{ force?: boolean }} [opts] force=true → Tam Ekran butonu niyeti; ack yok sayılır
+   * Güvenlik modalını aç — yalnızca henüz onaylanmamışsa.
+   * Tam ekran girişi ack'i sıfırlamaz (session persistence).
    */
-  const requestSafetyPrompt = useCallback((opts = {}) => {
-    const force = Boolean(opts.force)
-    if (!force && safetyAcknowledgedRef.current) return
-    if (!force && scenarioRef.current === 'safety') return
-    if (force) {
-      safetyAcknowledgedRef.current = false
-      setSafetyAcknowledged(false)
+  const requestSafetyPrompt = useCallback(() => {
+    if (safetyAcknowledgedRef.current || readDryFireSafetyAck()) {
+      safetyAcknowledgedRef.current = true
+      setSafetyAcknowledged(true)
+      return
     }
+    if (scenarioRef.current === 'safety') return
     setPrepRackHeard(false)
     scenarioRef.current = 'safety'
     setScenarioPhase('safety')
@@ -461,7 +490,8 @@ export default function DryFireMode({
     setLastSavedId(null)
     setSaveError(null)
     setPrepRackHeard(false)
-    // Manuel sıfırlama → güvenlik onayı yeniden zorunlu
+    // Kağıt sıfırlama → güvenlik onayı yeniden zorunlu
+    writeDryFireSafetyAck(false)
     safetyAcknowledgedRef.current = false
     setSafetyAcknowledged(false)
     scenarioRef.current = 'safety'
@@ -470,12 +500,25 @@ export default function DryFireMode({
 
   const handleSafetyConfirm = useCallback(() => {
     setPrepRackHeard(false)
+    writeDryFireSafetyAck(true)
     safetyAcknowledgedRef.current = true
     setSafetyAcknowledged(true)
     const next = afterSafetyConfirmed()
     scenarioRef.current = next
     setScenarioPhase(next)
   }, [])
+
+  const handleSafetyCancel = useCallback(() => {
+    clearDelayTimer()
+    clearRackTimer()
+    cancelAnimationFrame(rafRef.current)
+    setPhase('idle')
+    setLiveMs(0)
+    setPrepRackHeard(false)
+    scenarioRef.current = 'idle'
+    setScenarioPhase('idle')
+    onExitMode?.()
+  }, [clearDelayTimer, clearRackTimer, onExitMode])
 
   const handleConfirmRacked = useCallback(() => {
     const next = afterPrepConfirmed()
@@ -493,7 +536,7 @@ export default function DryFireMode({
   )
 
   const handleSaveSession = useCallback(async () => {
-    if (hits.length === 0 || sessionSaving) return
+    if (!activeWeapon || hits.length === 0 || sessionSaving) return
     setSaveError(null)
     try {
       const saved = await saveSession({
@@ -507,6 +550,7 @@ export default function DryFireMode({
           callsign: userData?.callsign || user?.displayName || '',
           username: userData?.username || '',
         },
+        activeWeapon,
       })
       setLastSavedId(saved.id)
       setSavedFlash(true)
@@ -515,6 +559,7 @@ export default function DryFireMode({
       setSaveError(t('dryFire.session.saveError'))
     }
   }, [
+    activeWeapon,
     delayMode,
     delayTotalMs,
     distanceM,
@@ -556,19 +601,23 @@ export default function DryFireMode({
 
   return (
     <div className="flex w-full min-w-0 flex-col gap-5 overflow-x-hidden">
-      <DryFireSafetyModal open={scenarioPhase === 'safety'} onConfirm={handleSafetyConfirm} />
+      <DryFireSafetyModal
+        open={scenarioPhase === 'safety'}
+        onConfirm={handleSafetyConfirm}
+        onCancel={handleSafetyCancel}
+      />
 
       <div className="sticky top-0 z-20 -mx-0.5 border-b border-slate-800 bg-[#0a0a0b]/95 px-0.5 py-2.5 backdrop-blur-sm">
         <div className="flex w-full min-w-0 flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
           <div className="min-w-0 flex-1">
-            <p className="break-words font-mono text-[8px] font-bold uppercase leading-relaxed tracking-[0.22em] text-[#facc15]/90 sm:tracking-[0.28em]">
+            <p className="break-words font-mono text-sm font-bold uppercase leading-relaxed tracking-[0.14em] text-[#facc15] sm:text-base sm:tracking-[0.16em]">
               <span className="text-[#facc15]">{opsCode}</span>
-              <span className="mx-1.5 text-zinc-600">·</span>
-              <span className="text-app-text/90">
+              <span className="mx-1.5 text-zinc-500">·</span>
+              <span className="text-white">
                 {modeTitle || t('modes.dry-fire.title')}
               </span>
             </p>
-            <p className="mt-1.5 break-words font-mono text-[9px] leading-snug text-app-text/50">
+            <p className="mt-1.5 break-words font-mono text-xs leading-snug text-zinc-300 sm:text-sm">
               {statusLine}
             </p>
           </div>
@@ -578,7 +627,7 @@ export default function DryFireMode({
               type="button"
               disabled={hits.length === 0 || sessionSaving}
               onClick={() => void handleSaveSession()}
-              className="inline-flex min-h-11 touch-manipulation items-center gap-1.5 rounded-sm border border-[#facc15]/45 bg-[rgba(250,204,21,0.1)] px-3 py-2 font-mono text-[8px] font-bold uppercase tracking-[0.16em] text-[#facc15] transition hover:bg-[rgba(250,204,21,0.16)] focus:outline-none focus-visible:ring-1 focus-visible:ring-[#facc15]/55 disabled:opacity-40 sm:min-h-9 sm:px-2.5 sm:py-1.5"
+              className="inline-flex min-h-11 touch-manipulation items-center gap-1.5 rounded-sm border border-[#facc15]/45 bg-[rgba(250,204,21,0.1)] px-3 py-2 font-mono text-xs font-bold uppercase tracking-[0.14em] text-[#facc15] transition hover:bg-[rgba(250,204,21,0.16)] focus:outline-none focus-visible:ring-1 focus-visible:ring-[#facc15]/55 disabled:opacity-40 sm:min-h-9 sm:px-3 sm:py-2 sm:text-sm"
             >
               <Save className="size-3.5" strokeWidth={1.5} aria-hidden />
               {sessionSaving ? t('dryFire.session.saving') : t('dryFire.session.save')}
@@ -587,113 +636,114 @@ export default function DryFireMode({
         </div>
       </div>
 
+      <TimerActiveWeaponPanel controller={activeWeaponCtrl} />
+
       {scenarioPhase === 'safety' ? (
-        <p className="font-mono text-[8px] uppercase tracking-[0.16em] text-amber-500">
+        <p className="font-mono text-xs uppercase tracking-[0.14em] text-amber-400 sm:text-sm">
           {t('dryFire.training.safety.statusPending')}
         </p>
       ) : null}
 
       {savedFlash ? (
-        <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-emerald-400">
+        <p className="font-mono text-xs uppercase tracking-[0.14em] text-emerald-400 sm:text-sm">
           {t('dryFire.session.saved')}
         </p>
       ) : null}
       {saveError ? (
-        <p className="font-mono text-[9px] text-red-400">{saveError}</p>
+        <p className="font-mono text-xs text-red-400 sm:text-sm">{saveError}</p>
       ) : null}
       {dirty && !savedFlash ? (
-        <p className="font-mono text-[8px] uppercase tracking-[0.16em] text-zinc-500">
+        <p className="font-mono text-xs uppercase tracking-[0.14em] text-zinc-400 sm:text-sm">
           {t('dryFire.session.unsaved')}
         </p>
       ) : null}
 
-      <div className="flex w-full min-w-0 flex-col gap-6">
-        <div className="flex w-full min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:gap-5">
-          <div className="order-2 w-full min-w-0 lg:order-1 lg:w-[17.5rem] lg:shrink-0 xl:w-[19rem]">
-            <DryFireLiveTelemetryPanel
-              soundThreshold={settings.soundThreshold}
-              offsetX={settings.mpuOffsetX}
-              offsetY={settings.mpuOffsetY}
-              offsetYaw={settings.mpuOffsetYaw}
-              gForceRange={settings.mpuGForceRange}
+      <div className="flex w-full min-w-0 flex-col gap-5">
+        {/* Hedef — tam genişlik (telemetri önizleme yalnızca ayarlarda) */}
+        <section
+          className={[
+            'relative w-full min-w-0 overflow-hidden rounded-xl border border-slate-800 bg-slate-950 px-3 py-4 sm:px-5 sm:py-6',
+            'transition-all duration-200',
+            flash
+              ? 'border-red-500/70 shadow-[0_0_28px_-8px_rgba(239,68,68,0.55)]'
+              : phase === 'running'
+                ? 'border-[#facc15]/40'
+                : phase === 'delay'
+                  ? 'border-amber-500/45'
+                  : '',
+          ].join(' ')}
+        >
+          <span
+            className="pointer-events-none absolute left-2 top-2 h-3 w-3 border-l border-t border-slate-600/70"
+            aria-hidden
+          />
+          <span
+            className="pointer-events-none absolute right-2 top-2 h-3 w-3 border-r border-t border-slate-600/70"
+            aria-hidden
+          />
+          <span
+            className="pointer-events-none absolute bottom-2 left-2 h-3 w-3 border-b border-l border-slate-600/70"
+            aria-hidden
+          />
+          <span
+            className="pointer-events-none absolute bottom-2 right-2 h-3 w-3 border-b border-r border-slate-600/70"
+            aria-hidden
+          />
+          {flash ? (
+            <div className="pointer-events-none absolute inset-0 z-[2] bg-red-500/20" aria-hidden />
+          ) : null}
+          <div className="relative z-[1] mx-auto flex w-full max-w-3xl flex-col items-center gap-3">
+            <DryFireTargetBoard
+              hits={hits}
+              distanceM={distanceM}
+              onDistanceChange={handleDistanceChange}
+              screenOrientation={settings.screenOrientation}
+              screenDiagonalInches={settings.screenDiagonalInches}
+              eyeScreenDistanceM={settings.eyeScreenDistanceM}
+              onScreenOrientationChange={(o) => applyCal({ screenOrientation: o })}
+              onScreenDiagonalChange={(n) => applyCal({ screenDiagonalInches: n })}
+              onEyeDistanceChange={(n) => applyCal({ eyeScreenDistanceM: n })}
+              weaponReady={hasActiveWeapon}
+              armed={armed}
+              phase={phase}
+              liveMs={liveMs}
+              lastDrawMs={lastDrawMs}
+              parTimeMs={parTimeMs}
+              parOver={parOver}
+              timerEnabled={timerEnabled}
+              delayMode={delayMode}
+              fixedDelaySec={fixedDelaySec}
+              parTimeSec={parTimeSec}
+              onTimerEnabledChange={setTimerEnabled}
+              onDelayModeChange={setDelayMode}
+              onFixedDelaySecChange={(sec) => setFixedDelaySec(clampFixedDelaySec(sec))}
+              onParTimeSecChange={(sec) => setParTimeSec(clampParTimeSec(sec))}
+              onArm={armStart}
+              onDisarm={disarm}
+              onFire={() => handleIncomingTrigger({ flinch: 50, source: 'manual' })}
+              onResetPaper={resetPaper}
+              onSaveSession={() => void handleSaveSession()}
+              sessionSaving={sessionSaving}
+              canSave={hits.length > 0}
+              onEnterFullscreen={() => requestSafetyPrompt()}
+              scenarioPhase={scenarioPhase}
+              prepRackHeard={prepRackHeard}
+              onConfirmRacked={handleConfirmRacked}
             />
           </div>
+        </section>
 
-          <section
-            className={[
-              'order-1 relative w-full min-w-0 overflow-hidden rounded-xl border border-slate-800 bg-slate-950 px-2.5 py-4 sm:px-4 sm:py-6 lg:order-2 lg:flex-1',
-              'transition-all duration-200',
-              flash
-                ? 'border-red-500/70 shadow-[0_0_28px_-8px_rgba(239,68,68,0.55)]'
-                : phase === 'running'
-                  ? 'border-[#facc15]/40'
-                  : phase === 'delay'
-                    ? 'border-amber-500/45'
-                    : '',
-            ].join(' ')}
-          >
-            <span
-              className="pointer-events-none absolute left-2 top-2 h-3 w-3 border-l border-t border-slate-600/70"
-              aria-hidden
-            />
-            <span
-              className="pointer-events-none absolute right-2 top-2 h-3 w-3 border-r border-t border-slate-600/70"
-              aria-hidden
-            />
-            <span
-              className="pointer-events-none absolute bottom-2 left-2 h-3 w-3 border-b border-l border-slate-600/70"
-              aria-hidden
-            />
-            <span
-              className="pointer-events-none absolute bottom-2 right-2 h-3 w-3 border-b border-r border-slate-600/70"
-              aria-hidden
-            />
-            {flash ? (
-              <div className="pointer-events-none absolute inset-0 z-[2] bg-red-500/20" aria-hidden />
-            ) : null}
-            <div className="relative z-[1] mx-auto flex w-full max-w-[22rem] flex-col items-center gap-3">
-              <p className="w-full font-mono text-[8px] font-bold uppercase tracking-[0.28em] text-[#facc15]/80">
-                {t('dryFire.target.kicker')}
-              </p>
-              <DryFireTargetBoard
-                hits={hits}
-                distanceM={distanceM}
-                onDistanceChange={handleDistanceChange}
-                screenOrientation={settings.screenOrientation}
-                screenDiagonalInches={settings.screenDiagonalInches}
-                eyeScreenDistanceM={settings.eyeScreenDistanceM}
-                onScreenOrientationChange={(o) => applyCal({ screenOrientation: o })}
-                onScreenDiagonalChange={(n) => applyCal({ screenDiagonalInches: n })}
-                onEyeDistanceChange={(n) => applyCal({ eyeScreenDistanceM: n })}
-                armed={armed}
-                phase={phase}
-                liveMs={liveMs}
-                lastDrawMs={lastDrawMs}
-                parTimeMs={parTimeMs}
-                parOver={parOver}
-                timerEnabled={timerEnabled}
-                delayMode={delayMode}
-                fixedDelaySec={fixedDelaySec}
-                parTimeSec={parTimeSec}
-                onTimerEnabledChange={setTimerEnabled}
-                onDelayModeChange={setDelayMode}
-                onFixedDelaySecChange={(sec) => setFixedDelaySec(clampFixedDelaySec(sec))}
-                onParTimeSecChange={(sec) => setParTimeSec(clampParTimeSec(sec))}
-                onArm={armStart}
-                onDisarm={disarm}
-                onFire={() => handleIncomingTrigger({ flinch: 50, source: 'manual' })}
-                onResetPaper={resetPaper}
-                onSaveSession={() => void handleSaveSession()}
-                sessionSaving={sessionSaving}
-                canSave={hits.length > 0}
-                onEnterFullscreen={() => requestSafetyPrompt({ force: true })}
-                scenarioPhase={scenarioPhase}
-                prepRackHeard={prepRackHeard}
-                onConfirmRacked={handleConfirmRacked}
-              />
-            </div>
-          </section>
-        </div>
+        {/* Hold / Trace / Shot — tam genişlik dashboard */}
+        <DryFireShotAnalysisHud
+          layout="dashboard"
+          referencePitch={settings.mpuOffsetPitch}
+          referenceRoll={settings.mpuOffsetRoll}
+          referenceYaw={settings.mpuOffsetYaw}
+        />
+
+        <section className="w-full min-w-0 pb-2">
+          <DryFireSessionDashboard />
+        </section>
 
         <section className="w-full min-w-0 pb-2">
           <DryFireHistoryPanel

@@ -10,6 +10,12 @@
  * @property {number} accel_z
  * @property {number} timestamp
  * @property {number} [flinch]
+ * @property {number} [yaw] entegre yaw (derece) — yatay nişan (Z)
+ * @property {number} [pitch] entegre pitch (derece) — dikey nişan (Y)
+ * @property {number} [roll] entegre roll/cant (derece) — yatıklık; POA'ya etki etmez
+ * @property {number} [gyro_z]
+ * @property {number} [gyro_y]
+ * @property {number} [gyro_x]
  */
 
 /**
@@ -18,9 +24,14 @@
  * @property {number} ax
  * @property {number} ay
  * @property {number} az
+ * @property {number} [gx] gyro X (rad/s) — roll/cant oranı
+ * @property {number} [gy] gyro Y (rad/s) — pitch oranı
  * @property {number} [gz] gyro Z (rad/s)
  * @property {number} [yaw] entegre yaw açısı (derece)
+ * @property {number} [pitch] entegre pitch açısı (derece)
+ * @property {number} [roll] entegre roll/cant açısı (derece)
  * @property {number} [lvl] 0–100 ses/amplitüd
+ * @property {string} [mode] currentMode
  * @property {boolean} [levelOnly] yalnızca lvl güncelle
  * @property {number} timestamp
  * @property {number} [seq]
@@ -84,18 +95,19 @@ export function findBalancedJsonEnd(text, from = 0) {
 }
 
 /**
- * Tamamlanmış `T:ax,ay,az[,lvl[,gz[,yaw]]]` satırı mı?
+ * Tamamlanmış `T:ax,ay,az[,lvl[,gz[,yaw[,pitch[,roll[,mode]]]]]]` satırı mı?
  * @param {string} text
  */
 export function isCompleteTelemetryTLine(text) {
   const s = text.trim()
   if (!s || (s[0] !== 'T' && s[0] !== 't') || s[1] !== ':') return false
-  // ax,ay,az zorunlu; lvl / gz / yaw opsiyonel
-  return /^[Tt]:\s*-?\d+(?:\.\d+)?(?:\s*,\s*-?\d+(?:\.\d+)?){2,5}\s*$/.test(s)
+  return /^[Tt]:\s*-?\d+(?:\.\d+)?(?:\s*,\s*-?\d+(?:\.\d+)?){2,7}(?:\s*,\s*[-A-Za-z0-9_.]+)?\s*$/.test(
+    s,
+  )
 }
 
 /**
- * Hızlı satır parse: `T:ax,ay,az[,lvl[,gz[,yaw]]]` | `L:lvl` | JSON telemetry.
+ * Hızlı satır parse: `T:ax,ay,az[,lvl[,gz[,yaw[,pitch[,roll]]]]]` | `L:lvl` | JSON telemetry.
  * @param {unknown} raw
  * @returns {HardwareTelemetry | null}
  */
@@ -122,14 +134,14 @@ export function parseHardwareTelemetryPayload(raw) {
       }
     }
 
-    // T:ax,ay,az[,lvl[,gz[,yaw]]]
+    // T:ax,ay,az,loudness,gz,yaw[,pitch[,roll[,currentMode]]]
     if ((c0 === 84 || c0 === 116) && c1 === 58) {
       const body = text.slice(2).trim()
-      const parts = body.split(',')
+      const parts = body.split(',').map((p) => p.trim())
       if (parts.length < 3) return null
-      const ax = Number(parts[0].trim())
-      const ay = Number(parts[1].trim())
-      const az = Number(parts[2].trim())
+      const ax = Number(parts[0])
+      const ay = Number(parts[1])
+      const az = Number(parts[2])
       if (!Number.isFinite(ax) || !Number.isFinite(ay) || !Number.isFinite(az)) return null
       /** @type {HardwareTelemetry} */
       const packet = {
@@ -139,16 +151,40 @@ export function parseHardwareTelemetryPayload(raw) {
         az,
         timestamp: performance.now(),
       }
-      if (parts.length >= 4 && parts[3].trim() !== '') {
-        packet.lvl = normalizeTelemetryLevel(parts[3].trim())
+      if (parts.length >= 4 && parts[3] !== '') {
+        packet.lvl = normalizeTelemetryLevel(parts[3])
       }
-      if (parts.length >= 5 && parts[4].trim() !== '') {
-        const gz = Number(parts[4].trim())
+      if (parts.length >= 5 && parts[4] !== '') {
+        const gz = Number(parts[4])
         if (Number.isFinite(gz)) packet.gz = gz
       }
-      if (parts.length >= 6 && parts[5].trim() !== '') {
-        const yaw = Number(parts[5].trim())
+      if (parts.length >= 6 && parts[5] !== '') {
+        const yaw = Number(parts[5])
         if (Number.isFinite(yaw)) packet.yaw = yaw
+      }
+      // 7. alan: pitch (sayı) veya legacy mode (token)
+      if (parts.length >= 7 && parts[6] !== '') {
+        const pitchOrMode = parts[6]
+        const pitch = Number(pitchOrMode)
+        if (Number.isFinite(pitch)) {
+          packet.pitch = pitch
+        } else {
+          packet.mode = String(pitchOrMode)
+        }
+      }
+      // 8. alan: roll (sayı) veya legacy mode (pitch varken token)
+      if (parts.length >= 8 && parts[7] !== '') {
+        const rollOrMode = parts[7]
+        const roll = Number(rollOrMode)
+        if (Number.isFinite(roll)) {
+          packet.roll = roll
+        } else {
+          packet.mode = String(rollOrMode)
+        }
+      }
+      // 9. alan: currentMode
+      if (parts.length >= 9 && parts[8] !== '') {
+        packet.mode = String(parts[8])
       }
       return packet
     }
@@ -170,10 +206,15 @@ export function parseHardwareTelemetryPayload(raw) {
   const ay = Number(o.ay ?? o.accel_y ?? o.y)
   const az = Number(o.az ?? o.accel_z ?? o.z)
   const gz = Number(o.gz ?? o.gyro_z ?? o.gyroZ)
+  const gy = Number(o.gy ?? o.gyro_y ?? o.gyroY)
+  const gx = Number(o.gx ?? o.gyro_x ?? o.gyroX)
   const yaw = Number(o.yaw ?? o.yaw_deg ?? o.yawDeg)
+  const pitch = Number(o.pitch ?? o.pitch_deg ?? o.pitchDeg)
+  const roll = Number(o.roll ?? o.roll_deg ?? o.rollDeg ?? o.cant ?? o.cant_deg)
   const ts = Number(o.timestamp ?? o.ts ?? o.t)
   const hasLvl =
     o.lvl != null || o.loudness != null || o.amp != null || o.mic != null || o.level != null
+  const modeRaw = o.mode ?? o.currentMode ?? o.current_mode
 
   /** @type {HardwareTelemetry} */
   const packet = {
@@ -184,9 +225,16 @@ export function parseHardwareTelemetryPayload(raw) {
     timestamp: Number.isFinite(ts) ? ts : performance.now(),
   }
   if (Number.isFinite(gz)) packet.gz = gz
+  if (Number.isFinite(gy)) packet.gy = gy
+  if (Number.isFinite(gx)) packet.gx = gx
   if (Number.isFinite(yaw)) packet.yaw = yaw
+  if (Number.isFinite(pitch)) packet.pitch = pitch
+  if (Number.isFinite(roll)) packet.roll = roll
   if (hasLvl) {
     packet.lvl = normalizeTelemetryLevel(o.lvl ?? o.loudness ?? o.amp ?? o.mic ?? o.level)
+  }
+  if (modeRaw != null && String(modeRaw).trim() !== '') {
+    packet.mode = String(modeRaw).trim()
   }
   return packet
 }
@@ -237,6 +285,12 @@ export function parseHardwareTriggerPayload(raw) {
   const ax = Number(o.accel_x ?? o.ax ?? o.x)
   const ay = Number(o.accel_y ?? o.ay ?? o.y)
   const az = Number(o.accel_z ?? o.az ?? o.z)
+  const yaw = Number(o.yaw ?? o.yaw_deg ?? o.yawDeg)
+  const pitch = Number(o.pitch ?? o.pitch_deg ?? o.pitchDeg)
+  const roll = Number(o.roll ?? o.roll_deg ?? o.rollDeg ?? o.cant ?? o.cant_deg)
+  const gz = Number(o.gyro_z ?? o.gz ?? o.gyroZ)
+  const gy = Number(o.gyro_y ?? o.gy ?? o.gyroY)
+  const gx = Number(o.gyro_x ?? o.gx ?? o.gyroX)
   const ts = Number(o.timestamp ?? o.ts ?? o.t)
 
   return {
@@ -246,6 +300,12 @@ export function parseHardwareTriggerPayload(raw) {
     accel_z: Number.isFinite(az) ? az : 1,
     timestamp: Number.isFinite(ts) ? ts : Date.now(),
     flinch,
+    ...(Number.isFinite(yaw) ? { yaw } : {}),
+    ...(Number.isFinite(pitch) ? { pitch } : {}),
+    ...(Number.isFinite(roll) ? { roll } : {}),
+    ...(Number.isFinite(gz) ? { gyro_z: gz } : {}),
+    ...(Number.isFinite(gy) ? { gyro_y: gy } : {}),
+    ...(Number.isFinite(gx) ? { gyro_x: gx } : {}),
   }
 }
 

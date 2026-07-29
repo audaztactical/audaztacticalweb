@@ -1,5 +1,6 @@
 import { useId } from 'react'
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts'
+import { AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts'
+import SafeResponsiveContainer from '../ui/SafeResponsiveContainer'
 
 /**
  * @param {{ data: { gun: string; day: string; events: number }[], loading?: boolean }} props
@@ -16,14 +17,7 @@ export default function WeekActivityAreaChart({ data, loading }) {
       ) : null}
       {!loading && data.length > 0 ? (
       <div className="absolute inset-0 h-full w-full min-h-0 min-w-0">
-      <ResponsiveContainer
-        width="100%"
-        height="100%"
-        minWidth={0}
-        minHeight={188}
-        debounce={50}
-        initialDimension={{ width: 320, height: 188 }}
-      >
+      <SafeResponsiveContainer minHeight={188} initialHeight={188} initialWidth={320}>
         <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -16 }}>
           <defs>
             <linearGradient id={`actFill-${gid}`} x1="0" y1="0" x2="0" y2="1">
@@ -82,7 +76,7 @@ export default function WeekActivityAreaChart({ data, loading }) {
             activeDot={{ r: 3, fill: 'var(--accent-color)', stroke: 'var(--accent-color)' }}
           />
         </AreaChart>
-      </ResponsiveContainer>
+      </SafeResponsiveContainer>
       </div>
       ) : !loading ? (
         <div className="flex h-full items-center justify-center font-mono-technical text-[10px] uppercase text-app-text/45">

@@ -3,11 +3,33 @@
  * idle → güvenlik → prep (ilk kurulum yoksay) → atış/kurulum döngüsü.
  */
 
+/** Sayfa oturumu boyunca güvenlik onayı (sessionStorage) */
+export const DRY_FIRE_SAFETY_ACK_STORAGE_KEY = 'audaz.tactical-timer.dry-fire.safety-ack.v1'
+
 /**
- * Atış sonrası kısa refractory (ms) — donanım yankı / bip / kapak sesi.
- * Süre dolunca otomatik live_shot'a dönülür; kapak sesi gelirse erken temizlenir.
- * Önceden her ikinci trigger kalıcı live_rack'te yutuluyordu (simüle tetikte isabet yoktu).
+ * @returns {boolean}
  */
+export function readDryFireSafetyAck() {
+  try {
+    return sessionStorage.getItem(DRY_FIRE_SAFETY_ACK_STORAGE_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+/**
+ * @param {boolean} acknowledged
+ */
+export function writeDryFireSafetyAck(acknowledged) {
+  try {
+    if (acknowledged) sessionStorage.setItem(DRY_FIRE_SAFETY_ACK_STORAGE_KEY, '1')
+    else sessionStorage.removeItem(DRY_FIRE_SAFETY_ACK_STORAGE_KEY)
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Atış sonrası kısa refractory (ms) — donanım yankı / bip / kapak sesi. */
 export const DRY_FIRE_RACK_WINDOW_MS = 320
 
 /** Go bip / arm sonrası donanımdan gelen yanlış tetikleri yoksay (ms) */

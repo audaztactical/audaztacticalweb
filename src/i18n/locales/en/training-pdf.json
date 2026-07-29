@@ -272,7 +272,10 @@
       "gForce": "G-Force range",
       "delay": "Random delay",
       "zeroPoint": "Zero point (X/Y)",
-      "brightness": "Visual feedback brightness"
+      "brightness": "Visual feedback brightness",
+      "weaponBrand": "Weapon brand",
+      "weaponSerial": "Weapon serial no",
+      "weaponCategory": "Weapon type / category"
     },
     "sections": {
       "splitTimes": "Split Times",
@@ -302,7 +305,10 @@
       "group": "Group radius",
       "delay": "Start delay",
       "delayNone": "None (instant)",
-      "par": "Par Time"
+      "par": "Par Time",
+      "weaponBrand": "Weapon brand",
+      "weaponSerial": "Weapon serial no",
+      "weaponCategory": "Weapon type / category"
     },
     "sections": {
       "reactions": "Reaction / Split Times",

@@ -16,11 +16,11 @@ import {
   ComposedChart,
   Line,
   ReferenceLine,
-  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from 'recharts'
+import SafeResponsiveContainer from '../ui/SafeResponsiveContainer'
 
 /** @typedef {import('../../lib/ballisticsDisplayText.js').ChartMetricId} ChartMetricId */
 
@@ -120,7 +120,7 @@ function MetricChart({
         </p>
       ) : null}
       <div className={compact ? 'h-52 min-h-[12rem] w-full min-w-0 sm:h-56' : 'h-56 min-h-[13rem] w-full min-w-0 sm:h-64'}>
-        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={50}>
+        <SafeResponsiveContainer minHeight={112} initialHeight={208} initialWidth={480}>
           <ComposedChart
             data={chartData}
             margin={{ top: 8, right: 12, left: 4, bottom: 4 }}
@@ -160,7 +160,7 @@ function MetricChart({
               activeDot={metric.activeDot}
             />
           </ComposedChart>
-        </ResponsiveContainer>
+        </SafeResponsiveContainer>
       </div>
     </div>
   )

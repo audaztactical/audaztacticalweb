@@ -5,11 +5,11 @@ import {
   Area,
   AreaChart,
   CartesianGrid,
-  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from 'recharts'
+import SafeResponsiveContainer from '../ui/SafeResponsiveContainer'
 import { buildTcccReactionChartPoints } from '../../lib/tcccSimHudAnalytics'
 import { buildTacticalTooltipLines } from '../../lib/progressTacticalTooltip'
 import {
@@ -113,12 +113,10 @@ export default function TcccReactionWaveChart({
   return (
     <div className={`relative w-full min-w-0 ${chartHeight}`}>
       <div ref={chartRef} className="absolute inset-0 h-full w-full min-h-0 min-w-0">
-        <ResponsiveContainer
-          width="100%"
-          height="100%"
-          minWidth={0}
+        <SafeResponsiveContainer
           minHeight={expanded ? 260 : 192}
-          debounce={50}
+          initialHeight={expanded ? 260 : 192}
+          initialWidth={480}
         >
           <AreaChart data={series} margin={{ top: 12, right: expanded ? 20 : 12, bottom: 4, left: -8 }}>
             <defs>
@@ -161,7 +159,7 @@ export default function TcccReactionWaveChart({
               isAnimationActive={false}
             />
           </AreaChart>
-        </ResponsiveContainer>
+        </SafeResponsiveContainer>
       </div>
       <p
         className={`mt-1 text-center font-mono text-[8px] uppercase tracking-wider ${

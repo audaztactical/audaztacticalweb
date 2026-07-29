@@ -5,6 +5,72 @@
     "subtitle": "Select a mode — field timing and performance measurement",
     "backToModes": "Back to mode select"
   },
+  "micTest": {
+    "kicker": "Acoustic test",
+    "title": "Microphone threshold test monitor",
+    "subtitle": "Private lab — device threshold testing and sample waveforms. Values stay on this page; other users cannot see it.",
+    "open": "Mic test",
+    "openAria": "Open microphone threshold test page",
+    "back": "Back to timer",
+    "save": "Save",
+    "port": "Port / connection",
+    "threshold": "Threshold (0–100)",
+    "instant": "Instant amplitude",
+    "activeMode": "Active mode",
+    "detected": "Total detected",
+    "logsTitle": "Detection log",
+    "logsEmpty": "No detections yet — waiting for above-threshold audio or a hardware trigger.",
+    "clearLogs": "Clear",
+    "sourceCross": "threshold cross",
+    "sourceHw": "hardware trigger",
+    "waveStylesLabel": "Wave graph",
+    "waveStyles": {
+      "line": "Line",
+      "bars": "Bars",
+      "mirror": "Mirror",
+      "dots": "Dots",
+      "heatmap": "Heatmap",
+      "pulse": "Pulse"
+    },
+    "spectrum": {
+      "kicker": "Analysis",
+      "title": "Frequency response / spectrum",
+      "aria": "Frequency response curve and spectrum analyzer",
+      "hintDevice": "Spectral envelope derived from device LVL (mode-shaped). Firmware does not send FFT — lab visualization for threshold work.",
+      "hintBrowser": "True FFT spectrum from the browser mic (Web Audio). Not the same sensor as the ESP32.",
+      "sourceDevice": "Device envelope",
+      "sourceBrowser": "Browser FFT",
+      "browserDenied": "Microphone permission denied or unsupported",
+      "awaiting": "Connect the device for spectrum, or choose browser FFT",
+      "peak": "Peak {{hz}} Hz · {{db}} dB",
+      "legendFr": "FR curve",
+      "legendPeak": "Peak hold",
+      "legendThr": "Threshold"
+    },
+    "toast": {
+      "saved": "Thresholds saved — active value also written to main calibration"
+    },
+    "status": {
+      "idle": "Connect a port — waiting for data",
+      "connecting": "Connecting…",
+      "connected": "Connected ({{name}}) — listening",
+      "error": "Connection error — try again"
+    },
+    "modes": {
+      "dryFire": {
+        "title": "Dry fire",
+        "hint": "Low amplitude / click"
+      },
+      "airsoft": {
+        "title": "Airsoft",
+        "hint": "Medium amplitude burst"
+      },
+      "liveFire": {
+        "title": "Live fire",
+        "hint": "High amplitude / live round"
+      }
+    }
+  },
   "hub": {
     "kicker": "Mode select",
     "title": "Operating principle",
@@ -62,13 +128,30 @@
       "linkLost": "Bluetooth/USB disconnected unexpectedly. Audio and trigger stream stopped — reconnect in Settings."
     }
   },
+  "activeWeapon": {
+    "title": "Active weapon select",
+    "aria": "Active weapon selection panel",
+    "selectLabel": "Inventory weapon",
+    "placeholder": "Select a weapon…",
+    "empty": "No weapons saved — add one in Armory",
+    "fields": {
+      "brand": "Brand",
+      "serial": "Serial no",
+      "calibre": "Caliber",
+      "category": "Type / category"
+    },
+    "modeSent": "Sent to hardware · MODE:{{code}}",
+    "modePending": "MODE will send when hardware connects",
+    "requiredBanner": "Please select a weapon from the armory to begin the operation",
+    "historyLine": "Weapon · {{summary}}"
+  },
   "calibration": {
     "open": "Settings",
     "openAria": "Open settings and calibration panel",
     "close": "Close",
     "kicker": "Settings & calibration",
     "title": "Settings & Calibration",
-    "subtitle": "Acoustic threshold, NeoPixel, MPU-6050, screen simulation, and hardware",
+    "subtitle": "Acoustic threshold, visual feedback, inertial sensor, screen simulation, and link",
     "sound": {
       "title": "Acoustic threshold",
       "threshold": "Microphone sensitivity",
@@ -80,9 +163,9 @@
       "vuAria": "Live audio level VU meter"
     },
     "neopixel": {
-      "title": "Visual feedback (NeoPixel)",
+      "title": "Visual status feedback",
       "brightness": "Brightness",
-      "brightnessAria": "NeoPixel brightness slider",
+      "brightnessAria": "Visual feedback brightness slider",
       "statusColor": "Status color",
       "colors": {
         "ready": "Ready",
@@ -92,21 +175,26 @@
       }
     },
     "mpu": {
-      "title": "Accelerometer + gyroscope (MPU-6050)",
+      "title": "Optics / Inertial Module",
       "gForce": "G-Force range",
-      "hint": "Sensor full-scale range — pick based on field vibration.",
+      "hint": "Sensor unit full-scale range — pick based on field vibration.",
       "zeroCalibrate": "Zero / Calibrate",
       "calibrating": "Calibrating",
-      "holdStill": "Keep the device still",
+      "holdStill": "Hold the unit still",
       "locking": "Locking to zero-point…",
       "zeroed": "Bullseye locked",
+      "calibratingHold": "Sensor unit calibrating — telemetry may pause briefly",
+      "streamPaused": "Shot telemetry paused — waiting for stream",
+      "streamResuming": "Resuming shot telemetry…",
       "offset": "Offset",
       "yaw": "Yaw (Z)",
-      "targetAria": "MPU calibration target",
-      "awaitingHardware": "Awaiting hardware — dot centered",
-      "awaitingTelemetry": "Awaiting telemetry…",
+      "pitch": "Pitch (Y)",
+      "roll": "Roll (X)",
+      "targetAria": "Inertial module calibration target",
+      "awaitingHardware": "Awaiting sensor unit — dot centered",
+      "awaitingTelemetry": "Awaiting shot telemetry…",
       "targetHintTitle": "Visual zeroing",
-      "targetHint": "When connected, the dot tracks live ax/ay; the reticle rotates with yaw (gyro Z). Zero stores ax/ay and yaw offsets.",
+      "targetHint": "Main target: yaw (L/R) + pitch (up/down). Zero uses live yaw/pitch as the center reference.",
       "lastCal": "Last zero · {{time}}",
       "notCalibrated": "Not zeroed yet",
       "guide": {
@@ -209,9 +297,9 @@
       "complete": "Test complete"
     },
     "serial": {
-      "connect": "Connect ESP32",
+      "connect": "Connect sensor unit",
       "connecting": "Connecting…",
-      "connected": "ESP32 linked",
+      "connected": "Sensor unit linked",
       "unsupported": "Web Serial unavailable — use manual trigger"
     },
     "splits": {
@@ -278,8 +366,9 @@
         "title": "Safety confirmation",
         "subtitle": "Confirm all three items before starting dry-fire training.",
         "hint": "Start stays disabled until every box is checked.",
-        "lockHint": "This screen cannot be dismissed — the timer will not start without safety confirmation.",
+        "lockHint": "Confirm all three items before starting. Cancel returns you to mode selection.",
         "start": "Start",
+        "cancel": "Cancel / Back",
         "statusPending": "Awaiting safety confirmation",
         "items": {
           "magazine": "Magazine removed — no live ammunition in the firearm",
@@ -322,9 +411,9 @@
       "hits": "{{count}} hits"
     },
     "serial": {
-      "connect": "Connect ESP32",
+      "connect": "Connect sensor unit",
       "connecting": "Connecting…",
-      "connected": "ESP32 linked"
+      "connected": "Sensor unit linked"
     },
     "target": {
       "kicker": "Virtual target board",
@@ -334,10 +423,103 @@
       "empty": "No hits yet",
       "vectorsToggle": "Vectors",
       "vectorsShow": "Show shot vectors",
-      "vectorsHide": "Hide shot vectors"
+      "vectorsHide": "Hide shot vectors",
+      "vectorInfoAria": "Vector {{from}}→{{to}} details",
+      "vectorDist": "Dist",
+      "vectorSplit": "Split"
     },
     "telemetry": {
-      "kicker": "Settings & Calibration Preview"
+      "kicker": "Shot telemetry preview"
+    },
+    "liveAnalysis": {
+      "aria": "Live shot analysis panel",
+      "kicker": "Live shot analysis",
+      "offline": "Waiting",
+      "holdTitle": "Hold stability",
+      "traceTitle": "Muzzle Trace",
+      "shotTitle": "Shot Event",
+      "rms": "RMS (°)",
+      "std": "Std (°)",
+      "peak": "Peak (°)",
+      "radius": "Radius",
+      "avg": "Average",
+      "tracePath": "Path {{n}}°",
+      "traceLive": "Live trace",
+      "traceTime": "{{ms}} ms",
+      "traceModeLive": "Live",
+      "traceModePlayback": "Playback",
+      "traceAwaitHw": "Awaiting hardware",
+      "tracePlay": "Play",
+      "tracePause": "Pause",
+      "traceReplay": "Replay",
+      "traceGoLive": "Live",
+      "pre": "Pre 250 ms",
+      "trigger": "Trigger",
+      "post": "Post 100 ms",
+      "preSamples": "Pre samples",
+      "postSamples": "Post samples",
+      "shotIdle": "Awaiting trigger",
+      "shotCapturing": "Capturing post",
+      "shotReady": "Event ready",
+      "shotPartial": "Partial",
+      "band": {
+        "elite": "Rock solid",
+        "stable": "Stable",
+        "fair": "Fair",
+        "loose": "Loose"
+      },
+      "of100": "/100"
+    },
+    "sessionDash": {
+      "aria": "Session performance dashboard",
+      "kicker": "Session analytics",
+      "title": "Session dashboard",
+      "totalShots": "Total shots",
+      "avgScore": "Average score",
+      "bestScore": "Best",
+      "worstScore": "Worst",
+      "consistency": "Consistency",
+      "grade": "Grade",
+      "chartsTitle": "Trend charts",
+      "chartsEmpty": "Waiting for shots to chart",
+      "trendOverall": "Overall score",
+      "trendHold": "Hold trend",
+      "trendFlinch": "Flinch trend",
+      "trendFollow": "Follow-through",
+      "trendTrace": "Trace trend",
+      "shotList": "Shot list",
+      "listEmpty": "No session shots yet",
+      "colScore": "Score",
+      "colGrade": "Grade",
+      "colTime": "Time",
+      "colRec": "Recommendation",
+      "heatmapTitle": "POI heatmap",
+      "heatmapHint": "Heatmap coming soon — shot positions will cluster here.",
+      "gradeDist": "Grade distribution",
+      "trend5": "L5 {{n}}",
+      "trend10": "L10 {{n}}",
+      "trend20": "L20 {{n}}",
+      "pb": "PB {{n}}",
+      "detail": {
+        "kicker": "Shot detail",
+        "title": "Shot #{{n}}",
+        "close": "Close",
+        "overall": "Overall",
+        "grade": "Grade",
+        "hold": "Hold score",
+        "holdQuality": "Hold quality",
+        "flinch": "Flinch score",
+        "flinchDir": "Flinch direction",
+        "flinchSev": "Flinch severity",
+        "follow": "Follow score",
+        "followState": "Follow state",
+        "trace": "Trace score",
+        "tracePeak": "Trace peak",
+        "traceAvg": "Trace avg",
+        "consistency": "Consistency",
+        "recommendation": "Recommendation"
+      },
+      "shotNumber": "Shot #"
     },
     "fullscreen": {
       "enter": "Fullscreen",
@@ -462,6 +644,104 @@
       "delete": "Delete",
       "colShots": "Shots",
       "rowMeta": "{{shots}} shots · Draw {{draw}} · Flinch {{flinch}}"
+    },
+    "chartZoom": {
+      "chart": "Chart",
+      "maximize": "Maximize / fullscreen",
+      "exitFs": "Exit fullscreen",
+      "reset": "Reset zoom",
+      "zoomLevel": "{{n}}×",
+      "hint": "Wheel: zoom · drag: pan"
+    },
+    "compass": {
+      "N": "N",
+      "NE": "NE",
+      "E": "E",
+      "SE": "SE",
+      "S": "S",
+      "SW": "SW",
+      "W": "W",
+      "NW": "NW"
+    },
+    "units": {
+      "ms": "ms",
+      "m": "m",
+      "s": "s",
+      "of100": "/100",
+      "delta": "Δ",
+      "shotIndex": "#{{n}}",
+      "countN": "n={{n}}"
+    },
+    "feedback": {
+      "empty": "—",
+      "shotRec": {
+        "excellent": "Excellent trigger control.",
+        "flinchHigh": "Reduce pre-shot movement and preserve trigger surprise.",
+        "flinchMed": "Anticipation before the break — steady breath and wait time.",
+        "follow": "Weak follow-through — hold the sight picture after the break.",
+        "hold": "Hold stability is inconsistent — extend the lock-in.",
+        "trace": "Noisy aim path — tighten the path before the shot.",
+        "consistency": "Build more consistent shot-to-shot scores.",
+        "default": "Solid fundamentals — drill the weak link deliberately."
+      },
+      "hold": {
+        "statusIdle": "Hold: awaiting data",
+        "tipIdle": "Aim while connected; RMS and quality update here.",
+        "statusLoose": "Hold: high oscillation",
+        "tipLoose": "RMS {{rms}}° / Std {{std}}° — tighten wrist/shoulder lock and improve breath control.",
+        "statusFair": "Hold: moderate stability",
+        "tipFair": "RMS {{rms}}° — use a short breath hold and isolate the trigger finger.",
+        "statusStable": "Hold: stable",
+        "tipStable": "RMS {{rms}}° — solid lock; keep trigger tempo consistent.",
+        "statusElite": "Hold: elite",
+        "tipElite": "RMS {{rms}}° — very low wobble; make this your session standard."
+      },
+      "trace": {
+        "statusIdle": "Muzzle trace: idle",
+        "tipIdle": "The live path fills as you move the aim.",
+        "statusWide": "Muzzle trace: wide deviation",
+        "tipWide": "Peak {{peak}}° / radius {{radius}}° — shorten the aim path to tighten the group.",
+        "statusDrift": "Muzzle trace: drift",
+        "tipDrift": "Avg {{avg}}° — reduce off-target drift; balance shoulder pressure.",
+        "statusTight": "Muzzle trace: tight",
+        "tipTight": "Avg {{avg}}° — compact path; keep repeating the same procedure."
+      },
+      "shot": {
+        "statusIdle": "Shot event: waiting for trigger",
+        "tipIdle": "A pre/post window is captured when the trigger breaks.",
+        "statusCapturing": "Shot event: capturing post",
+        "tipCapturing": "Sampling 100 ms after break — keep the firearm still.",
+        "statusPartial": "Shot event: partial capture",
+        "tipPartial": "Pre {{pre}} / Post {{post}} — check link and sampling for a full window.",
+        "statusFlinchHold": "Trigger settle fault",
+        "tipFlinchHold": "Settle fault on the break observed — increase breath control and keep trigger surprise.",
+        "statusBreath": "Breath / tempo warning",
+        "tipBreath": "Mild wobble at break — equalize breath pause and trigger speed.",
+        "statusClean": "Clean break",
+        "tipClean": "Pre/post profile looks clean — repeat the same cadence."
+      },
+      "session": {
+        "statusIdle": "Session: no shots yet",
+        "tipIdle": "Trends and tips update after the first shot.",
+        "statusInconsistent": "Session: inconsistent grouping",
+        "tipInconsistent": "Consistency {{consistency}} — standardize tempo and aim lock (avg {{avg}}).",
+        "statusLow": "Session: low performance",
+        "tipLow": "Avg {{avg}} ({{grade}}) — return to hold and flinch drills.",
+        "statusStrong": "Session: strong level",
+        "tipStrong": "Avg {{avg}} / {{grade}} — progress by raising difficulty (tempo/distance).",
+        "statusBuilding": "Session: building",
+        "tipBuilding": "{{n}} shots · avg {{avg}} — keep targeting the weakest metric."
+      },
+      "group": {
+        "statusIdle": "Grouping: no hits",
+        "tipIdle": "Log at least one hit for radar and dispersion.",
+        "statusOpen": "Grouping: open / scattered",
+        "tipOpen": "Flinch {{flinch}} · radius {{radius}} — soften trigger press and extend aim lock.",
+        "statusModerate": "Grouping: moderate",
+        "tipModerate": "Flinch {{flinch}} — watch directional bias on the radar.",
+        "statusTight": "Grouping: tight",
+        "tipTight": "{{n}} hits — group is tight; keep the same procedure."
+      }
     }
   },
   "fullscreen": {

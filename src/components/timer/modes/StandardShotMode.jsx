@@ -18,7 +18,9 @@ import { useTacticalSessions } from '../../../hooks/useTacticalSessions'
 import HardwareStatusBadge from '../../hardware/HardwareStatusBadge'
 import StandardShotAnalytics from '../StandardShotAnalytics'
 import StandardShotHistory from '../StandardShotHistory'
+import TimerActiveWeaponPanel from '../TimerActiveWeaponPanel'
 import UnsavedSessionGuardModal from '../UnsavedSessionGuardModal'
+import { useTimerActiveWeapon } from '../../../hooks/useTimerActiveWeapon'
 import { createStandardShotSession, synthesizeMpuSamples } from '../../../lib/standardShotSessionStore'
 import { exportStandardShotSessionPdf } from '../../../lib/standardShotReportPdf'
 import {
@@ -64,6 +66,9 @@ export default function StandardShotMode({
     saveSession,
     deleteSession,
   } = useTacticalSessions()
+  const activeWeaponCtrl = useTimerActiveWeapon()
+  const { hasActiveWeapon, activeWeapon } = activeWeaponCtrl
+  const hasActiveWeaponRef = useRef(hasActiveWeapon)
 
   const [tab, setTab] = useState(/** @type {ShotTab} */ ('live'))
   const [phase, setPhase] = useState(/** @type {ShotPhase} */ ('idle'))
@@ -93,7 +98,11 @@ export default function StandardShotMode({
     phaseRef.current = phase
   }, [phase])
 
-  const listening = phase === 'running'
+  useEffect(() => {
+    hasActiveWeaponRef.current = hasActiveWeapon
+  }, [hasActiveWeapon])
+
+  const listening = phase === 'running' && hasActiveWeapon
   const { subscribeTrigger, triggerManual, error: hwError } = useHardware()
   const thresholdRef = useRef(settings.soundThreshold)
 
@@ -102,6 +111,7 @@ export default function StandardShotMode({
   }, [settings.soundThreshold])
 
   const handleBang = useCallback(() => {
+    if (!hasActiveWeaponRef.current) return
     if (phaseRef.current !== 'running') return
     const elapsed = performance.now() - goAtRef.current
     const next = [...shotTimesRef.current, elapsed]
@@ -153,6 +163,16 @@ export default function StandardShotMode({
     }
   }, [])
 
+  // Silah seçimi kaldırılırsa canlı oturumu kes
+  useEffect(() => {
+    if (hasActiveWeapon) return
+    if (phase !== 'delay' && phase !== 'running') return
+    clearDelayTimer()
+    cancelAnimationFrame(rafRef.current)
+    setPhase('idle')
+    setLiveMs(0)
+  }, [clearDelayTimer, hasActiveWeapon, phase])
+
   const resetAll = useCallback(() => {
     clearDelayTimer()
     cancelAnimationFrame(rafRef.current)
@@ -191,6 +211,7 @@ export default function StandardShotMode({
   }, [onSessionActiveChange, phase])
 
   const armStart = useCallback(() => {
+    if (!hasActiveWeaponRef.current) return
     clearDelayTimer()
     shotTimesRef.current = []
     setShotTimesMs([])
@@ -213,13 +234,14 @@ export default function StandardShotMode({
   }, [clearDelayTimer, delayMode, fixedDelaySec])
 
   const requestArmStart = useCallback(() => {
+    if (!hasActiveWeapon) return
     if (hasUnsavedChanges) {
       setPendingGuardAction('arm')
       setUnsavedGuardOpen(true)
       return
     }
     armStart()
-  }, [armStart, hasUnsavedChanges])
+  }, [armStart, hasActiveWeapon, hasUnsavedChanges])
 
   const requestReset = useCallback(() => {
     if (hasUnsavedChanges) {
@@ -261,8 +283,10 @@ export default function StandardShotMode({
         callsign: userData?.callsign || user?.displayName || '',
         username: userData?.username || '',
       },
+      activeWeapon,
     })
   }, [
+    activeWeapon,
     delayTotalMs,
     settings.mpuGForceRange,
     settings.mpuOffsetX,
@@ -276,7 +300,7 @@ export default function StandardShotMode({
   ])
 
   const handleSaveSession = useCallback(async () => {
-    if (shotTimesMs.length === 0 || sessionSaving) return
+    if (!activeWeapon || shotTimesMs.length === 0 || sessionSaving) return
     setSaveError(null)
     try {
       const session = buildLiveSessionPayload()
@@ -287,7 +311,7 @@ export default function StandardShotMode({
     } catch {
       setSaveError(t('standardShot.save.error'))
     }
-  }, [buildLiveSessionPayload, saveSession, sessionSaving, shotTimesMs.length, t])
+  }, [buildLiveSessionPayload, saveSession, sessionSaving, shotTimesMs.length, t, activeWeapon])
 
   const handlePdfActive = useCallback(async () => {
     if (shotTimesMs.length === 0) return
@@ -400,6 +424,8 @@ export default function StandardShotMode({
         </div>
         <HardwareStatusBadge className="max-w-full" />
       </div>
+
+      <TimerActiveWeaponPanel controller={activeWeaponCtrl} />
 
       {/* Ana HUD */}
       <div
@@ -527,11 +553,17 @@ export default function StandardShotMode({
               <button
                 type="button"
                 onClick={requestArmStart}
-                className="mt-2 inline-flex min-h-14 w-full max-w-md touch-manipulation items-center justify-center gap-2 rounded-sm border border-[#facc15]/55 bg-[#facc15]/12 px-6 py-4 font-display text-base font-bold uppercase tracking-[0.2em] text-[#facc15] transition hover:border-[#facc15]/80 hover:bg-[#facc15]/18 active:scale-[0.99] sm:text-lg"
+                disabled={!hasActiveWeapon}
+                className="mt-2 inline-flex min-h-14 w-full max-w-md touch-manipulation items-center justify-center gap-2 rounded-sm border border-[#facc15]/55 bg-[#facc15]/12 px-6 py-4 font-display text-base font-bold uppercase tracking-[0.2em] text-[#facc15] transition hover:border-[#facc15]/80 hover:bg-[#facc15]/18 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40 sm:text-lg"
               >
                 <Zap className="size-5" strokeWidth={1.5} aria-hidden />
                 {t('standardShot.armStart')}
               </button>
+              {!hasActiveWeapon ? (
+                <p className="mt-2 max-w-md font-mono-technical text-[9px] uppercase tracking-[0.14em] text-amber-300/90" role="alert">
+                  {t('activeWeapon.requiredBanner')}
+                </p>
+              ) : null}
             </>
           ) : null}
 

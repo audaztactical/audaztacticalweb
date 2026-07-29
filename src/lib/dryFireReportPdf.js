@@ -23,6 +23,7 @@ import {
   pdfTacticalReportFilename,
 } from './pdfReportText'
 import { buildSplitRows, formatShotMillis, formatShotSeconds } from './dryFireTimer'
+import { formatActiveWeaponSummary } from './timerActiveWeapon'
 
 /** @typedef {{ callsign?: string, username?: string, email?: string, bloodType?: string, displayName?: string }} OperatorInfo */
 
@@ -204,6 +205,11 @@ export async function exportDryFireSessionPdf(opts) {
   /** @type {[string, string][]} */
   const detailRows = [
     [pdfT('atis.fields.date'), when],
+    [pdfT('atis.fields.weapon'), formatActiveWeaponSummary(session.activeWeapon)],
+    [pdfT('atis.fields.caliber'), session.activeWeapon?.calibre || '—'],
+    [pdfT('dryFire.fields.weaponBrand'), session.activeWeapon?.brand || '—'],
+    [pdfT('dryFire.fields.weaponSerial'), session.activeWeapon?.serialNo || '—'],
+    [pdfT('dryFire.fields.weaponCategory'), session.activeWeapon?.categoryLabel || session.activeWeapon?.tacticalCategory || '—'],
     [pdfT('atis.fields.drillType'), pdfT('dryFire.drillType')],
     [pdfT('atis.fields.distance'), `${session.distanceM} m`],
     [pdfT('atis.fields.roundsHits'), `${session.shotCount}`],

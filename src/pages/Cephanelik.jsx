@@ -9,6 +9,7 @@ import {
   Scan,
   Shield,
   Target,
+  CircleDot,
 } from 'lucide-react'
 import { canikImg, muhimmatImg, optikImg, preloadArmoryHubImages } from './Armory'
 import HudFluffDecor from '../components/dashboard/HudFluffDecor'
@@ -81,6 +82,7 @@ const FILTER_ICONS = {
   P_TFK: Crosshair,
   T_TAB: Shield,
   KNT: Focus,
+  AIRSOFT: CircleDot,
   OPT: Scan,
   MHM: Target,
   AV_TFK: Target,

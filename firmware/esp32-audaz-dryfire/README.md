@@ -1,39 +1,55 @@
-# Audaz Dry Fire — Unique SoftAP + WebSocket
+# Audaz Dry Fire — BLE Nordic UART + USB Serial
 
-Arazi kullanımı: harici Wi-Fi **gerekmez**. Her cihaz kendi Access Point’ini açar.
+Saha / masaüstü: **Web Bluetooth** veya **Web Serial (USB)**. SoftAP / WebSocket yok.
 
 ## Kimlik
 
 | Alan | Örnek |
 |------|--------|
-| SERIAL | MAC son 6 hex → `A1B2C3` |
-| SSID | `AUDAZ-TACTICAL-A1B2C3` |
-| PASSWORD | `ATA1B2C3` + 2 hex checksum → örn. `ATA1B2C3F4` |
-| AP IP | `192.168.4.1` |
-| mDNS | `audaz.local` |
-| WebSocket | `ws://192.168.4.1:81/` veya `ws://audaz.local:81/` |
+| SERIAL | BT MAC son 6 hex → `A1B2C3` |
+| BLE NAME | `AUDAZ-A1B2C3` (web `namePrefix: AUDAZ`) |
+| USB | Serial **115200** |
+| FW | `1.6.6-S3-LOWLAT` |
 
-Checksum (firmware + web sihirbazı aynı): seri karakterlerinin toplamı × 17 + 0xA5 → düşük bayt.
+## BLE (Nordic UART)
+
+Web `HardwareContext` ile aynı UUID’ler:
+
+| Rol | UUID |
+|-----|------|
+| Service | `6e400001-b5a3-f393-e0a9-e50e24dcca9e` |
+| RX (web→cihaz write) | `6e400002-b5a3-f393-e0a9-e50e24dcca9e` |
+| TX (cihaz→web notify) | `6e400003-b5a3-f393-e0a9-e50e24dcca9e` |
 
 ## Kurulum
 
-1. Arduino IDE: ESP32 kartı, **WebSockets**, **ArduinoJson**.
-2. Yükle → Serial Monitor **115200**: SSID / PASSWORD / SERIAL yazdırılır (etiket için kopyala).
-3. Telefon/PC’yi cihazın Wi-Fi’sine bağla.
-4. Audaz web → Kuru Tetik → sihirbaz: seri gir veya **192.168.4.1** / **audaz.local** tek tık.
+1. Arduino IDE: kart **ESP32S3 Dev Module** (veya cihazınıza uygun S3).
+2. Kütüphaneler: **ArduinoJson**, **Adafruit MPU6050**, **Adafruit NeoPixel** (BLE çekirdek pakette).
+3. Yükle → Serial Monitor **115200**: BLE NAME / SERIAL yazdırılır.
+4. Audaz web → Ayarlar → **Bluetooth ile bağlan** veya **USB ile bağlan**.
 
-## JSON / Serial
+## Protokol (değişmez)
 
-Sürekli telemetri (USB Serial + WS, ~25 Hz):
+Telemetri (~25 Hz), USB + BLE:
 
 ```
-T:ax,ay,az,lvl,gz,yaw
+T:ax,ay,az,lvl,gz,yaw,pitch,roll
 ```
+
+Tetik:
 
 ```json
-{"event":"telemetry","ax":0.1,"ay":-0.2,"az":9.8,"lvl":12,"gz":0.01,"yaw":15.2}
-{"event":"trigger","loudness":1500000,"accel_x":0.1,"accel_y":-0.2,"accel_z":9.8,"gyro_z":0.05,"yaw":15.2,"timestamp":12345}
-{"event":"hello","serial":"A1B2C3","ssid":"AUDAZ-TACTICAL-A1B2C3","apIp":"192.168.4.1","mdns":"audaz.local","wsPort":81,"caps":"gyro,yaw"}
+{"event":"trigger","loudness":…,"accel_x":…,"yaw":…,"pitch":…,"roll":…,"timestamp":…}
 ```
 
-Komutlar: `THRESHOLD:<0-100|raw>`, `YAW_RESET`, `ping`
+Komutlar: `THRESHOLD:<0-100|raw>`, `SAVE_THRESHOLD:…`, `YAW_RESET` / `AIM_RESET`, `AIM_CALIBRATE_START`, `AIM_CALIBRATE_DONE`, `ping`
+
+## Korunan motorlar
+
+- IMU Pipeline (`ImuState`)
+- Complementary Filter (pitch/roll)
+- Aim Calibration Engine
+- Hold Analysis Engine v1 (firmware-internal; T:/JSON’a yazılmaz)
+- Muzzle Trace Engine v1 (firmware-internal; T:/JSON’a yazılmaz)
+- Shot Event Engine v1 (pre 250 ms + post 100 ms; firmware-internal)
+- I2S akustik tetik

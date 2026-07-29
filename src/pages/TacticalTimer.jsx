@@ -28,7 +28,13 @@ function ModeLoadingFallback() {
 
 /**
  * @param {TimerModeId} id
- * @param {{ modeTitle: string, opsCode: string, onSessionActiveChange?: (active: boolean) => void }} props
+ * @param {{
+ *   modeTitle: string
+ *   opsCode: string
+ *   onSessionActiveChange?: (active: boolean) => void
+ *   fsAbortToken?: number
+ *   onExitMode?: () => void
+ * }} props
  */
 function renderLazyMode(id, props) {
   switch (id) {
@@ -98,17 +104,17 @@ export default function TacticalTimer() {
       sessionActive={sessionActive}
       onFullscreenLost={handleFullscreenLost}
     >
-      <div className="ilws-shell relative mx-auto w-full min-w-0 max-w-[1480px] overflow-x-hidden px-2.5 py-4 pt-11 sm:px-4 sm:py-5 sm:pt-14 md:px-6">
+      <div className="ilws-shell relative mx-auto w-full min-w-0 max-w-[1680px] overflow-x-hidden px-2.5 py-4 pt-11 sm:px-4 sm:py-5 sm:pt-14 md:px-6">
         <div className="relative z-[2] flex w-full min-w-0 flex-col space-y-4 sm:space-y-5">
           <header className="flex w-full min-w-0 flex-col gap-3 border-b border-white/10 pb-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
             <div className="min-w-0 flex-1">
               <p className="font-mono-technical text-[9px] font-semibold uppercase tracking-[0.28em] text-accent/85 sm:text-[10px] sm:tracking-[0.32em]">
                 [ {showCalibration ? t('calibration.kicker') : t('page.kicker')} ]
               </p>
-              <h1 className="font-display mt-1 break-words text-base font-bold tracking-[0.08em] text-app-text sm:text-lg sm:tracking-[0.1em] md:text-xl">
+              <h1 className="font-display mt-1 break-words text-lg font-bold tracking-[0.06em] text-app-text sm:text-xl sm:tracking-[0.08em] md:text-2xl">
                 {headerTitle}
               </h1>
-              <p className="mt-1 max-w-2xl break-words font-mono-technical text-[8px] leading-snug text-app-text/55 sm:text-[9px]">
+              <p className="mt-1.5 max-w-2xl break-words font-mono-technical text-[9px] leading-snug text-app-text/55 sm:text-[10px]">
                 {headerSubtitle}
               </p>
             </div>
@@ -166,6 +172,7 @@ export default function TacticalTimer() {
                 opsCode: activeMode.opsCode,
                 onSessionActiveChange: setModeSessionActive,
                 fsAbortToken,
+                onExitMode: exitMode,
               })}
             </Suspense>
           )}

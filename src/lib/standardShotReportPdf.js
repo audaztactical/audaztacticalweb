@@ -19,7 +19,8 @@ import {
   pdfTacticalReportFilename,
 } from './pdfReportText'
 import { buildSplitTrendSeries } from './standardShotSessionStore'
-import { buildSplitRows, formatShotSeconds } from './standardShotTimer'
+import { buildSplitRows, formatShotMillis, formatShotSeconds } from './standardShotTimer'
+import { formatActiveWeaponSummary } from './timerActiveWeapon'
 
 /** @typedef {{ callsign?: string, username?: string, email?: string, bloodType?: string, displayName?: string }} OperatorInfo */
 
@@ -220,14 +221,17 @@ export async function exportStandardShotSessionPdf(opts) {
   /** @type {[string, string][]} */
   const detailRows = [
     [pdfT('atis.fields.date'), when],
-    [pdfT('atis.fields.weapon'), '—'],
+    [pdfT('atis.fields.weapon'), formatActiveWeaponSummary(session.activeWeapon)],
     [pdfT('atis.fields.drillType'), pdfT('standardShot.drillType')],
     [pdfT('atis.fields.distance'), '—'],
     [pdfT('atis.fields.roundsHits'), `${session.shotCount} / —`],
     [pdfT('atis.fields.accuracy'), '—'],
     [pdfT('atis.fields.duration'), `${total} s`],
-    [pdfT('atis.fields.caliber'), '—'],
+    [pdfT('atis.fields.caliber'), session.activeWeapon?.calibre || '—'],
     [pdfT('atis.fields.ammo'), '—'],
+    [pdfT('standardShot.fields.weaponBrand'), session.activeWeapon?.brand || '—'],
+    [pdfT('standardShot.fields.weaponSerial'), session.activeWeapon?.serialNo || '—'],
+    [pdfT('standardShot.fields.weaponCategory'), session.activeWeapon?.categoryLabel || session.activeWeapon?.tacticalCategory || '—'],
     [pdfT('standardShot.fields.reaction'), `${reaction} s`],
     [pdfT('standardShot.fields.avgSplit'), avgSplit === '—' ? '—' : `${avgSplit} s`],
     [pdfT('standardShot.fields.threshold'), String(session.calibration.soundThreshold)],

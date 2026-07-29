@@ -19,6 +19,13 @@ import {
   parseAndClassifyHardwareLine,
 } from '../lib/hardwareTrigger'
 import {
+  captureShotEventAnalysis,
+  createShotAnalysisState,
+  resetShotAnalysis,
+  setAnalysisReference,
+  tickShotAnalysis,
+} from '../lib/shotAnalysisEngines'
+import {
   isWebSerialSupported,
   SOUND_THRESHOLD_MAX,
   SOUND_THRESHOLD_MIN,
@@ -35,9 +42,15 @@ import {
  * @property {number} ay
  * @property {number} az
  * @property {number} gz  gyro Z rad/s
+ * @property {number} gy  gyro Y rad/s
+ * @property {number} gx  gyro X rad/s
  * @property {number} yaw  entegre yaw derece
+ * @property {number} pitch  entegre pitch derece
+ * @property {number} roll  entegre roll/cant derece
  * @property {number} lvl 0–100 ses seviyesi
+ * @property {string} mode  currentMode
  * @property {number} timestamp
+ * @property {number} receivedAt  performance.now() — paket alındığı an (stale için)
  * @property {number} seq  her yazımda artar
  * @property {boolean} fresh  en az bir paket geldi mi
  */
@@ -49,7 +62,11 @@ import {
  * @property {string} deviceName
  * @property {HardwareTrigger | null} lastTrigger
  * @property {import('react').MutableRefObject<TelemetrySnapshot>} telemetryRef
+ * @property {import('react').MutableRefObject<import('../lib/shotAnalysisEngines').ShotAnalysisState>} analysisRef
  * @property {() => TelemetrySnapshot} getTelemetry
+ * @property {() => import('../lib/shotAnalysisEngines').ShotAnalysisState} getAnalysis
+ * @property {(ref: Partial<{ pitch: number, roll: number, yaw: number }>) => void} setAimReference
+ * @property {() => void} resetAnalysis
  * @property {boolean} connecting
  * @property {string | null} error
  * @property {boolean} usbSupported
@@ -60,6 +77,7 @@ import {
  * @property {(val: number) => Promise<boolean>} sendThreshold
  * @property {(val: number) => Promise<boolean>} sendSaveThreshold
  * @property {(line: string) => Promise<boolean>} sendCommand
+ * @property {() => Promise<boolean>} resumeBleNotifications
  * @property {(cb: (t: HardwareTrigger) => void) => () => void} subscribeTrigger
  * @property {(cb: (t: HardwareTelemetry) => void) => () => void} subscribeTelemetry
  * @property {(partial?: Partial<HardwareTrigger>) => void} triggerManual
@@ -71,7 +89,23 @@ const TRIGGER_DEBOUNCE_MS = 80
 
 /** @returns {TelemetrySnapshot} */
 function createEmptyTelemetry() {
-  return { ax: 0, ay: 0, az: 0, gz: 0, yaw: 0, lvl: 0, timestamp: 0, seq: 0, fresh: false }
+  return {
+    ax: 0,
+    ay: 0,
+    az: 0,
+    gz: 0,
+    gy: 0,
+    gx: 0,
+    yaw: 0,
+    pitch: 0,
+    roll: 0,
+    lvl: 0,
+    mode: '',
+    timestamp: 0,
+    receivedAt: 0,
+    seq: 0,
+    fresh: false,
+  }
 }
 
 /**
@@ -98,6 +132,7 @@ export function HardwareProvider({ children }) {
   const [error, setError] = useState(/** @type {string | null} */ (null))
 
   const telemetryRef = useRef(createEmptyTelemetry())
+  const analysisRef = useRef(createShotAnalysisState())
 
   const portRef = useRef(
     /** @type {null | {
@@ -117,16 +152,24 @@ export function HardwareProvider({ children }) {
   /** RX = browser → device (write) */
   const bleRxCharRef = useRef(/** @type {BluetoothRemoteGATTCharacteristic | null} */ (null))
   const bleHandlerRef = useRef(/** @type {((ev: Event) => void) | null} */ (null))
+  /** GATT disconnect listener — aynı cihazda birikir diye saklanır */
+  const bleDisconnectHandlerRef = useRef(/** @type {((ev: Event) => void) | null} */ (null))
   const bleBufferRef = useRef('')
   const textEncoderRef = useRef(new TextEncoder())
+  /** Bağlantı oturumu — eski async zincir / StrictMode cleanup çakışmasını ezer */
+  const bleSessionRef = useRef(0)
 
   const triggerListenersRef = useRef(/** @type {Set<(t: HardwareTrigger) => void>} */ (new Set()))
   const telemetryListenersRef = useRef(
     /** @type {Set<(t: HardwareTelemetry) => void>} */ (new Set()),
   )
   const lastTriggerAtRef = useRef(0)
-  /** Kullanıcı disconnect() çağırdıysa link-lost uyarısı basma */
-  const userDisconnectRef = useRef(false)
+  /**
+   * Kasıtlı kopma (kullanıcı disconnect / reconnect hazırlığı / unmount).
+   * true iken gattserverdisconnected → link-lost uyarısı YOK.
+   */
+  const isIntentionalDisconnectRef = useRef(false)
+  const intentionalClearTimerRef = useRef(0)
 
   const clearTelemetry = useCallback(() => {
     const snap = telemetryRef.current
@@ -134,11 +177,18 @@ export function HardwareProvider({ children }) {
     snap.ay = 0
     snap.az = 0
     snap.gz = 0
+    snap.gy = 0
+    snap.gx = 0
     snap.yaw = 0
+    snap.pitch = 0
+    snap.roll = 0
     snap.lvl = 0
+    snap.mode = ''
     snap.timestamp = 0
+    snap.receivedAt = 0
     snap.seq += 1
     snap.fresh = false
+    resetShotAnalysis(analysisRef.current)
   }, [])
 
   const emitTrigger = useCallback((/** @type {HardwareTrigger} */ trigger) => {
@@ -149,9 +199,21 @@ export function HardwareProvider({ children }) {
     if (Number.isFinite(trigger.loudness)) {
       const snap = telemetryRef.current
       snap.lvl = normalizeTelemetryLevel(trigger.loudness)
+      snap.receivedAt = performance.now()
       snap.seq += 1
       snap.fresh = true
     }
+    const telem = telemetryRef.current
+    captureShotEventAnalysis(
+      analysisRef.current,
+      {
+        pitch: trigger.pitch ?? telem.pitch,
+        roll: trigger.roll ?? telem.roll,
+        yaw: trigger.yaw ?? telem.yaw,
+        timestamp: trigger.timestamp || performance.now(),
+      },
+      performance.now(),
+    )
     setLastTrigger(trigger)
     triggerListenersRef.current.forEach((cb) => {
       try {
@@ -172,12 +234,31 @@ export function HardwareProvider({ children }) {
       snap.ay = packet.ay
       snap.az = packet.az
       if (packet.gz != null && Number.isFinite(packet.gz)) snap.gz = packet.gz
+      if (packet.gy != null && Number.isFinite(packet.gy)) snap.gy = packet.gy
+      if (packet.gx != null && Number.isFinite(packet.gx)) snap.gx = packet.gx
       if (packet.yaw != null && Number.isFinite(packet.yaw)) snap.yaw = packet.yaw
+      if (packet.pitch != null && Number.isFinite(packet.pitch)) snap.pitch = packet.pitch
+      if (packet.roll != null && Number.isFinite(packet.roll)) snap.roll = packet.roll
       if (packet.lvl != null) snap.lvl = packet.lvl
+      if (packet.mode != null) snap.mode = String(packet.mode)
     }
     snap.timestamp = packet.timestamp
+    snap.receivedAt = performance.now()
     snap.seq += 1
     snap.fresh = true
+
+    if (!packet.levelOnly) {
+      tickShotAnalysis(
+        analysisRef.current,
+        {
+          pitch: snap.pitch,
+          roll: snap.roll,
+          yaw: snap.yaw,
+          timestamp: snap.receivedAt,
+        },
+        snap.receivedAt,
+      )
+    }
 
     if (telemetryListenersRef.current.size === 0) return
     telemetryListenersRef.current.forEach((cb) => {
@@ -246,6 +327,18 @@ export function HardwareProvider({ children }) {
     serialBufferRef.current = ''
   }, [])
 
+  const markIntentionalDisconnect = useCallback((holdMs = 1200) => {
+    isIntentionalDisconnectRef.current = true
+    if (intentionalClearTimerRef.current) {
+      window.clearTimeout(intentionalClearTimerRef.current)
+      intentionalClearTimerRef.current = 0
+    }
+    intentionalClearTimerRef.current = window.setTimeout(() => {
+      intentionalClearTimerRef.current = 0
+      isIntentionalDisconnectRef.current = false
+    }, holdMs)
+  }, [])
+
   const stopBle = useCallback(async () => {
     const char = bleCharRef.current
     const handler = bleHandlerRef.current
@@ -264,8 +357,22 @@ export function HardwareProvider({ children }) {
     bleHandlerRef.current = null
     bleCharRef.current = null
     bleRxCharRef.current = null
+
+    const device = bleDeviceRef.current
+    const onDisc = bleDisconnectHandlerRef.current
+    if (device && onDisc) {
+      try {
+        device.removeEventListener('gattserverdisconnected', onDisc)
+      } catch {
+        /* ignore */
+      }
+    }
+    bleDisconnectHandlerRef.current = null
+
     try {
-      bleDeviceRef.current?.gatt?.disconnect()
+      if (device?.gatt?.connected) {
+        device.gatt.disconnect()
+      }
     } catch {
       /* ignore */
     }
@@ -284,32 +391,69 @@ export function HardwareProvider({ children }) {
     const payload = text.endsWith('\n') ? text : `${text}\n`
     const bytes = textEncoderRef.current.encode(payload)
 
+    let ok = false
     const writer = writerRef.current
     if (writer) {
       try {
         await writer.write(bytes)
-        return true
+        ok = true
       } catch {
         return false
       }
-    }
-
-    const rx = bleRxCharRef.current
-    if (rx) {
-      try {
-        const props = rx.properties
-        if (props.writeWithoutResponse) {
-          await rx.writeValueWithoutResponse(bytes)
-        } else {
-          await rx.writeValue(bytes)
+    } else {
+      const rx = bleRxCharRef.current
+      if (rx) {
+        try {
+          const props = rx.properties
+          if (props.writeWithoutResponse) {
+            await rx.writeValueWithoutResponse(bytes)
+          } else {
+            await rx.writeValue(bytes)
+          }
+          ok = true
+        } catch {
+          return false
         }
-        return true
-      } catch {
-        return false
       }
     }
 
-    return false
+    if (ok) {
+      const cmd = text.trim().toUpperCase()
+      if (
+        cmd === 'AIM_RESET' ||
+        cmd === 'YAW_RESET' ||
+        cmd === 'RESET_YAW' ||
+        cmd === 'PITCH_RESET' ||
+        cmd === 'RESET_AIM'
+      ) {
+        resetShotAnalysis(analysisRef.current)
+      }
+    }
+    return ok
+  }, [])
+
+  /**
+   * BLE notify'ı yeniden aç — kalibrasyon/sessizlik sonrası akış toparlama.
+   * Bağlantıyı kesmez; yalnızca TX characteristic notifications.
+   * @returns {Promise<boolean>}
+   */
+  const resumeBleNotifications = useCallback(async () => {
+    const char = bleCharRef.current
+    const handler = bleHandlerRef.current
+    if (!char || !handler) return false
+    try {
+      try {
+        char.removeEventListener('characteristicvaluechanged', handler)
+      } catch {
+        /* ignore */
+      }
+      char.addEventListener('characteristicvaluechanged', handler)
+      await char.startNotifications()
+      return true
+    } catch (error) {
+      console.error('BLE Adım Hatası:', error)
+      return false
+    }
   }, [])
 
   /**
@@ -339,7 +483,7 @@ export function HardwareProvider({ children }) {
   )
 
   const markLinkLost = useCallback(() => {
-    if (userDisconnectRef.current) return
+    if (isIntentionalDisconnectRef.current) return
     clearTelemetry()
     setConnectionType('NONE')
     setDeviceName('')
@@ -347,7 +491,7 @@ export function HardwareProvider({ children }) {
   }, [clearTelemetry])
 
   const disconnect = useCallback(async () => {
-    userDisconnectRef.current = true
+    markIntentionalDisconnect(1500)
     try {
       await stopSerialReadLoop()
       await stopBle()
@@ -355,13 +499,20 @@ export function HardwareProvider({ children }) {
       setConnectionType('NONE')
       setDeviceName('')
       setError(null)
-    } finally {
-      // GATT disconnect event'i async gelebilir
-      window.setTimeout(() => {
-        userDisconnectRef.current = false
-      }, 400)
+    } catch (error) {
+      console.error('BLE Adım Hatası:', error)
     }
-  }, [clearTelemetry, stopBle, stopSerialReadLoop])
+  }, [clearTelemetry, markIntentionalDisconnect, stopBle, stopSerialReadLoop])
+
+  /** Yeniden bağlanmadan önce sessiz temizlik — link-lost basmaz */
+  const prepareReconnect = useCallback(async () => {
+    markIntentionalDisconnect(2500)
+    await stopSerialReadLoop()
+    await stopBle()
+    clearTelemetry()
+    setConnectionType('NONE')
+    setDeviceName('')
+  }, [clearTelemetry, markIntentionalDisconnect, stopBle, stopSerialReadLoop])
 
   const connectUSB = useCallback(async () => {
     setError(null)
@@ -371,7 +522,7 @@ export function HardwareProvider({ children }) {
     }
     setConnecting(true)
     try {
-      await disconnect()
+      await prepareReconnect()
       const port = await navigator.serial.requestPort()
       await port.open({ baudRate: 115200 })
       portRef.current = port
@@ -415,7 +566,7 @@ export function HardwareProvider({ children }) {
           writerRef.current = null
           if (portRef.current === port) {
             portRef.current = null
-            if (userDisconnectRef.current) {
+            if (isIntentionalDisconnectRef.current) {
               clearTelemetry()
               setConnectionType('NONE')
               setDeviceName('')
@@ -440,7 +591,7 @@ export function HardwareProvider({ children }) {
     } finally {
       setConnecting(false)
     }
-  }, [clearTelemetry, disconnect, ingestTextChunk, markLinkLost])
+  }, [clearTelemetry, ingestTextChunk, markLinkLost, prepareReconnect])
 
   const connectBLE = useCallback(async () => {
     setError(null)
@@ -449,46 +600,119 @@ export function HardwareProvider({ children }) {
       return false
     }
     setConnecting(true)
+    const session = ++bleSessionRef.current
+
+    /** El sıkışması bitene kadar disconnect handler state silmesin / link-lost basmasın */
+    let handshakeComplete = false
+
     try {
-      await disconnect()
-      const device = await navigator.bluetooth.requestDevice({
-        filters: [
-          { namePrefix: 'AUDAZ' },
-          { namePrefix: 'Audaz' },
-          { namePrefix: 'ESP' },
-          { services: [NORDIC_UART_SERVICE] },
-        ],
-        optionalServices: [NORDIC_UART_SERVICE],
-      })
+      // Tam disconnect() değil — StrictMode / reconnect sırasında yanlış link-lost engeli
+      await prepareReconnect()
+
+      let device
+      try {
+        device = await navigator.bluetooth.requestDevice({
+          filters: [
+            { namePrefix: 'AUDAZ' },
+            { namePrefix: 'Audaz' },
+            { namePrefix: 'ESP' },
+            { services: [NORDIC_UART_SERVICE] },
+          ],
+          optionalServices: [NORDIC_UART_SERVICE],
+        })
+      } catch (error) {
+        console.error('BLE Adım Hatası:', error)
+        throw error
+      }
+
+      if (session !== bleSessionRef.current) {
+        markIntentionalDisconnect(800)
+        try {
+          device.gatt?.disconnect()
+        } catch {
+          /* ignore */
+        }
+        return false
+      }
+
       bleDeviceRef.current = device
 
-      device.addEventListener('gattserverdisconnected', () => {
+      const onGattDisconnected = () => {
+        if (!handshakeComplete) {
+          console.warn('BLE: GATT kopması (el sıkışması)')
+          return
+        }
         if (bleDeviceRef.current !== device) return
         bleCharRef.current = null
         bleRxCharRef.current = null
         bleHandlerRef.current = null
         bleDeviceRef.current = null
         bleBufferRef.current = ''
-        if (userDisconnectRef.current) {
+        bleDisconnectHandlerRef.current = null
+        if (isIntentionalDisconnectRef.current) {
           clearTelemetry()
           setConnectionType('NONE')
           setDeviceName('')
-        } else {
-          markLinkLost()
+          return
         }
-      })
+        console.error('BLE Adım Hatası:', new Error('gattserverdisconnected (beklenmedik kopma)'))
+        markLinkLost()
+      }
+      bleDisconnectHandlerRef.current = onGattDisconnected
+      device.addEventListener('gattserverdisconnected', onGattDisconnected)
 
-      const server = await device.gatt?.connect()
+      // El sıkışması bitene kadar kasıtlı say — erken disconnect → link-lost olmasın
+      isIntentionalDisconnectRef.current = true
+      if (intentionalClearTimerRef.current) {
+        window.clearTimeout(intentionalClearTimerRef.current)
+        intentionalClearTimerRef.current = 0
+      }
+
+      let server
+      try {
+        server = await device.gatt?.connect()
+      } catch (error) {
+        console.error('BLE Adım Hatası:', error)
+        throw error
+      }
       if (!server) throw new Error('no-gatt')
-      const service = await server.getPrimaryService(NORDIC_UART_SERVICE)
-      const tx = await service.getCharacteristic(NORDIC_UART_TX_CHAR)
-      const rx = await service.getCharacteristic(NORDIC_UART_RX_CHAR)
+
+      if (session !== bleSessionRef.current) {
+        markIntentionalDisconnect(800)
+        await stopBle()
+        return false
+      }
+
+      let service
+      try {
+        service = await server.getPrimaryService(NORDIC_UART_SERVICE)
+      } catch (error) {
+        console.error('BLE Adım Hatası:', error)
+        throw error
+      }
+
+      let tx
+      let rx
+      try {
+        tx = await service.getCharacteristic(NORDIC_UART_TX_CHAR)
+        rx = await service.getCharacteristic(NORDIC_UART_RX_CHAR)
+      } catch (error) {
+        console.error('BLE Adım Hatası:', error)
+        throw error
+      }
+
+      if (session !== bleSessionRef.current) {
+        markIntentionalDisconnect(800)
+        await stopBle()
+        return false
+      }
 
       const decoder = new TextDecoder()
       const streamBag = bleBufferRef
 
       /**
        * Nordic UART TX notify — JSON trigger + T: telemetri.
+       * UUID: 6E400003-B5A3-F393-E0A9-E50E24DCCA9E
        * @param {Event} ev
        */
       const onCharacteristicValueChanged = (ev) => {
@@ -500,19 +724,37 @@ export function HardwareProvider({ children }) {
 
       bleHandlerRef.current = onCharacteristicValueChanged
       tx.addEventListener('characteristicvaluechanged', onCharacteristicValueChanged)
-      await tx.startNotifications()
+
+      try {
+        await tx.startNotifications()
+      } catch (error) {
+        console.error('BLE Adım Hatası:', error)
+        throw error
+      }
+
       bleCharRef.current = tx
       bleRxCharRef.current = rx
+      bleDeviceRef.current = device
 
+      if (session !== bleSessionRef.current) {
+        markIntentionalDisconnect(800)
+        await stopBle()
+        return false
+      }
+
+      handshakeComplete = true
       const label = device.name?.trim() || 'AUDAZ-DRYFIRE-S3'
       setConnectionType('BLUETOOTH')
       setDeviceName(`${label} (BLE)`)
+      isIntentionalDisconnectRef.current = false
       return true
     } catch (err) {
+      console.error('BLE Adım Hatası:', err)
       const name =
         err && typeof err === 'object' && 'name' in err
           ? String(/** @type {{ name?: string }} */ (err).name)
           : ''
+      markIntentionalDisconnect(1500)
       setError(name === 'NotFoundError' ? 'cancelled' : 'ble-failed')
       await stopBle()
       setConnectionType('NONE')
@@ -522,7 +764,14 @@ export function HardwareProvider({ children }) {
     } finally {
       setConnecting(false)
     }
-  }, [clearTelemetry, disconnect, ingestTextChunk, markLinkLost, stopBle])
+  }, [
+    clearTelemetry,
+    ingestTextChunk,
+    markIntentionalDisconnect,
+    markLinkLost,
+    prepareReconnect,
+    stopBle,
+  ])
 
   const subscribeTrigger = useCallback((/** @type {(t: HardwareTrigger) => void} */ cb) => {
     triggerListenersRef.current.add(cb)
@@ -540,6 +789,16 @@ export function HardwareProvider({ children }) {
 
   const getTelemetry = useCallback(() => telemetryRef.current, [])
 
+  const getAnalysis = useCallback(() => analysisRef.current, [])
+
+  const setAimReference = useCallback((/** @type {Partial<{ pitch: number, roll: number, yaw: number }>} */ ref) => {
+    setAnalysisReference(analysisRef.current, ref)
+  }, [])
+
+  const resetAnalysis = useCallback(() => {
+    resetShotAnalysis(analysisRef.current)
+  }, [])
+
   const triggerManual = useCallback(
     (/** @type {Partial<HardwareTrigger>} [partial] */ partial = {}) => {
       emitTrigger({
@@ -554,13 +813,24 @@ export function HardwareProvider({ children }) {
     [emitTrigger],
   )
 
+  // Unmount-only: stopBle deps değişince cleanup ÇALIŞMASIN (Strict Mode / HMR kopmaları)
+  const stopBleRef = useRef(stopBle)
+  const stopSerialRef = useRef(stopSerialReadLoop)
+  stopBleRef.current = stopBle
+  stopSerialRef.current = stopSerialReadLoop
+
   useEffect(() => {
     return () => {
-      void stopSerialReadLoop()
-      void stopBle()
+      bleSessionRef.current += 1
+      isIntentionalDisconnectRef.current = true
+      if (intentionalClearTimerRef.current) {
+        window.clearTimeout(intentionalClearTimerRef.current)
+        intentionalClearTimerRef.current = 0
+      }
+      void stopSerialRef.current()
+      void stopBleRef.current()
     }
-  }, [stopBle, stopSerialReadLoop])
-
+  }, [])
   const value = useMemo(
     () => ({
       isConnected: connectionType !== 'NONE',
@@ -568,7 +838,11 @@ export function HardwareProvider({ children }) {
       deviceName,
       lastTrigger,
       telemetryRef,
+      analysisRef,
       getTelemetry,
+      getAnalysis,
+      setAimReference,
+      resetAnalysis,
       connecting,
       error,
       usbSupported: isWebSerialSupported(),
@@ -577,6 +851,7 @@ export function HardwareProvider({ children }) {
       connectBLE,
       disconnect,
       sendCommand,
+      resumeBleNotifications,
       sendThreshold,
       sendSaveThreshold,
       subscribeTrigger,
@@ -588,12 +863,16 @@ export function HardwareProvider({ children }) {
       deviceName,
       lastTrigger,
       getTelemetry,
+      getAnalysis,
+      setAimReference,
+      resetAnalysis,
       connecting,
       error,
       connectUSB,
       connectBLE,
       disconnect,
       sendCommand,
+      resumeBleNotifications,
       sendThreshold,
       sendSaveThreshold,
       subscribeTrigger,

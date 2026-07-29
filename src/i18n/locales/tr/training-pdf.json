@@ -272,7 +272,10 @@
       "gForce": "G-Force aralığı",
       "delay": "Rastgele gecikme",
       "zeroPoint": "Sıfır noktası (X/Y)",
-      "brightness": "Görsel geri bildirim parlaklığı"
+      "brightness": "Görsel geri bildirim parlaklığı",
+      "weaponBrand": "Silah markası",
+      "weaponSerial": "Silah seri no",
+      "weaponCategory": "Silah tipi / kategori"
     },
     "sections": {
       "splitTimes": "Split Zamanları",
@@ -302,7 +305,10 @@
       "group": "Grup yarıçapı",
       "delay": "Başlangıç gecikmesi",
       "delayNone": "Yok (anında)",
-      "par": "Par Time"
+      "par": "Par Time",
+      "weaponBrand": "Silah markası",
+      "weaponSerial": "Silah seri no",
+      "weaponCategory": "Silah tipi / kategori"
     },
     "sections": {
       "reactions": "Reaksiyon / Split Süreleri",

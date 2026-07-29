@@ -10,6 +10,8 @@
  * @property {number} mpuOffsetX
  * @property {number} mpuOffsetY
  * @property {number} mpuOffsetYaw  yaw sıfır ofseti (derece)
+ * @property {number} mpuOffsetPitch  pitch sıfır ofseti (derece)
+ * @property {number} mpuOffsetRoll  roll/cant sıfır ofseti (derece)
  * @property {number | null} mpuCalibratedAt
  * @property {ScreenOrientationMode} screenOrientation
  * @property {number} screenDiagonalInches
@@ -43,6 +45,8 @@ export const DEFAULT_TIMER_CALIBRATION = {
   mpuOffsetX: 0,
   mpuOffsetY: 0,
   mpuOffsetYaw: 0,
+  mpuOffsetPitch: 0,
+  mpuOffsetRoll: 0,
   mpuCalibratedAt: null,
   screenOrientation: 'portrait',
   screenDiagonalInches: 6.5,
@@ -89,6 +93,8 @@ export function normalizeTimerCalibration(raw) {
   const ox = Number(src.mpuOffsetX)
   const oy = Number(src.mpuOffsetY)
   const oYaw = Number(src.mpuOffsetYaw)
+  const oPitch = Number(src.mpuOffsetPitch)
+  const oRoll = Number(src.mpuOffsetRoll)
   const calAt = Number(src.mpuCalibratedAt)
   const orientation =
     src.screenOrientation === 'landscape' || src.screenOrientation === 'portrait'
@@ -114,6 +120,8 @@ export function normalizeTimerCalibration(raw) {
     mpuOffsetX: Number.isFinite(ox) ? Math.min(16, Math.max(-16, ox)) : 0,
     mpuOffsetY: Number.isFinite(oy) ? Math.min(16, Math.max(-16, oy)) : 0,
     mpuOffsetYaw: Number.isFinite(oYaw) ? Math.min(180, Math.max(-180, oYaw)) : 0,
+    mpuOffsetPitch: Number.isFinite(oPitch) ? Math.min(180, Math.max(-180, oPitch)) : 0,
+    mpuOffsetRoll: Number.isFinite(oRoll) ? Math.min(180, Math.max(-180, oRoll)) : 0,
     mpuCalibratedAt: Number.isFinite(calAt) && calAt > 0 ? calAt : null,
     screenOrientation: orientation,
     screenDiagonalInches: Number.isFinite(diag)

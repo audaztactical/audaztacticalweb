@@ -126,7 +126,9 @@ export default function AcousticVuMeter({
     <div
       className={[
         'flex shrink-0',
-        isVertical ? 'flex-col items-center gap-1' : 'w-full flex-col gap-1',
+        isVertical
+          ? 'h-full min-h-[150px] w-full max-w-[3.5rem] flex-col items-center gap-1'
+          : 'w-full min-h-[2.5rem] flex-col gap-1',
         className,
       ].join(' ')}
       role="meter"
@@ -142,7 +144,9 @@ export default function AcousticVuMeter({
       <div
         className={[
           'relative overflow-hidden rounded-sm border border-zinc-600/60 bg-[#0a0a0b]',
-          isVertical ? 'h-[7.5rem] w-8 sm:w-7' : 'h-9 w-full sm:h-7',
+          isVertical
+            ? 'h-[min(100%,10rem)] min-h-[150px] w-10 flex-1 sm:w-9'
+            : 'h-10 w-full min-h-[2.5rem] sm:h-9',
         ].join(' ')}
       >
         <div

@@ -90,6 +90,7 @@ import { TOOLBAR_ACCENT } from '../../lib/dryFireToolbarThemes'
  *   onExitFullscreen: () => void
  *   openGraphIds?: import('../../lib/dryFireHits').DryFireGraphId[]
  *   onToggleGraph?: (id: import('../../lib/dryFireHits').DryFireGraphId) => void
+ *   controlsLocked?: boolean
  * }} props
  */
 export default function DryFireFullscreenToolbar({
@@ -132,10 +133,11 @@ export default function DryFireFullscreenToolbar({
   onExitFullscreen,
   openGraphIds = [],
   onToggleGraph,
+  controlsLocked = false,
 }) {
   const { t } = useTranslation('timer')
   const presetSet = new Set(DRY_FIRE_DISTANCE_PRESETS)
-  const busy = phase === 'delay' || phase === 'running'
+  const busy = phase === 'delay' || phase === 'running' || controlsLocked
   const openSet = new Set(openGraphIds)
 
   /** Varsayılan: tüm akordiyonlar kapalı */

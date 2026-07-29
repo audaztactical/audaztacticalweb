@@ -6,11 +6,11 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from 'recharts'
+import SafeResponsiveContainer from '../ui/SafeResponsiveContainer'
 import { buildTacticalTooltipLines } from '../../lib/progressTacticalTooltip'
 import {
   clampTooltipToViewport,
@@ -87,12 +87,10 @@ export default function PerformanceTrendChart({ series, barsAnimate = true, vari
   return (
     <div className={`relative w-full min-w-0 max-w-full overflow-x-hidden ${chartHeight}`}>
       <div ref={chartRef} className="absolute inset-0 h-full w-full min-h-0 min-w-0">
-        <ResponsiveContainer
-          width="100%"
-          height="100%"
-          minWidth={0}
+        <SafeResponsiveContainer
           minHeight={expanded ? 260 : 160}
-          debounce={50}
+          initialHeight={expanded ? 260 : 160}
+          initialWidth={480}
         >
           <BarChart
             data={chartData}
@@ -140,7 +138,7 @@ export default function PerformanceTrendChart({ series, barsAnimate = true, vari
               ))}
             </Bar>
           </BarChart>
-        </ResponsiveContainer>
+        </SafeResponsiveContainer>
       </div>
     </div>
   )

@@ -7,7 +7,8 @@ import {
   Map,
   Radio,
 } from 'lucide-react'
-import { Line, LineChart, ResponsiveContainer, Tooltip, YAxis } from 'recharts'
+import { Line, LineChart, Tooltip, YAxis } from 'recharts'
+import SafeResponsiveContainer from '../ui/SafeResponsiveContainer'
 import LocationSelector from './LocationSelector'
 import { useDefaultLocationSelection, useLocationWeather } from '../../hooks/useLocationWeather'
 import { formatDashboardPrecipitationRows } from '../../lib/dashboardWeatherDisplay'
@@ -217,7 +218,7 @@ export default function CommandSideWidgets({ signalSeries: _legacySignal }) {
                 {w.chart ? (
                   <div className="cmd-widget__chart-wrap mt-2 w-full min-w-0">
                     <div className="cmd-widget__chart h-28 w-full min-w-0 sm:h-32">
-                      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={112}>
+                      <SafeResponsiveContainer minHeight={112} initialHeight={128} initialWidth={280}>
                         <LineChart
                           data={windSeries}
                           margin={{ top: 10, right: 10, left: 4, bottom: 4 }}
@@ -243,7 +244,7 @@ export default function CommandSideWidgets({ signalSeries: _legacySignal }) {
                             style={{ filter: 'drop-shadow(0 0 6px rgba(0,255,65,0.45))' }}
                           />
                         </LineChart>
-                      </ResponsiveContainer>
+                      </SafeResponsiveContainer>
                     </div>
                     <p className="cmd-met-chart-caption break-words">
                       {windSeriesIsEstimated ? t('widgets.wind.chartEstimated') : t('widgets.wind.chartLive')}

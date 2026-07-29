@@ -53,6 +53,7 @@ import DryFireShotVectors from './DryFireShotVectors'
  *   scenarioPhase?: import('../../lib/dryFireTrainingMachine').DryFireScenarioPhase
  *   prepRackHeard?: boolean
  *   onConfirmRacked?: () => void
+ *   weaponReady?: boolean
  *   ariaLabel?: string
  * }} props
  */
@@ -91,6 +92,7 @@ export default function DryFireTargetBoard({
   scenarioPhase = 'idle',
   prepRackHeard = false,
   onConfirmRacked,
+  weaponReady = true,
   ariaLabel,
 }) {
   const { t } = useTranslation('timer')
@@ -245,7 +247,7 @@ export default function DryFireTargetBoard({
 
   const enterFullscreen = useCallback(async () => {
     setFsError(null)
-    // Kullanıcı "Tam Ekran" niyeti — güvenlik protokolünü her seferinde aç
+    // Kullanıcı "Tam Ekran" — güvenlik yalnızca henüz onaylanmamışsa açılır
     onEnterFullscreenRef.current?.()
     const el = fsRootRef.current
     if (!el) return
@@ -298,7 +300,12 @@ export default function DryFireTargetBoard({
     if (!activeId) return undefined
     const onPointerDown = (e) => {
       const el = /** @type {HTMLElement | null} */ (e.target)
-      if (el?.closest?.('[data-dry-hit]') || el?.closest?.('[data-dry-hit-tooltip]')) return
+      if (
+        el?.closest?.('[data-dry-hit]') ||
+        el?.closest?.('[data-dry-hit-tooltip]') ||
+        el?.closest?.('[data-dry-vec-labels]')
+      )
+        return
       clearActive()
     }
     window.addEventListener('pointerdown', onPointerDown)
@@ -339,7 +346,7 @@ export default function DryFireTargetBoard({
   const showShotVectors = vectorsVisible && hits.length >= 2
 
   const avail = Math.min(hostSize.w, hostSize.h) || geometry.boardPx
-  const boardSidePx = Math.max(120, Math.min(geometry.boardPx, avail))
+  const boardSidePx = Math.max(160, Math.min(geometry.boardPx, avail))
 
   const canvas = (
     <div
@@ -347,8 +354,8 @@ export default function DryFireTargetBoard({
       className={[
         'mx-auto flex w-full min-w-0 max-w-full items-center justify-center',
         isFullscreen
-          ? 'min-h-0 w-full flex-1'
-          : 'aspect-square max-h-[min(72vw,20rem)] sm:max-h-[min(100vw,22rem)]',
+          ? 'h-full min-h-0 w-full flex-1'
+          : 'aspect-square w-full max-w-[min(100%,min(94vw,44rem))]',
       ].join(' ')}
     >
       <div
@@ -359,7 +366,7 @@ export default function DryFireTargetBoard({
           height: boardSidePx,
           aspectRatio: '1 / 1',
           maxWidth: '100%',
-          maxHeight: isFullscreen ? '100%' : undefined,
+          maxHeight: '100%',
         }}
         role="img"
         aria-label={ariaLabel || t('dryFire.target.aria')}
@@ -535,50 +542,7 @@ export default function DryFireTargetBoard({
         <span className="pointer-events-none absolute bottom-1.5 left-1.5 z-[5] h-2.5 w-2.5 border-b border-l border-[#facc15]/50" />
         <span className="pointer-events-none absolute bottom-1.5 right-1.5 z-[5] h-2.5 w-2.5 border-b border-r border-[#facc15]/50" />
 
-        {!isFullscreen ? (
-          <div className="absolute right-1.5 top-1.5 z-30 flex flex-col items-end gap-1.5">
-            <button
-              type="button"
-              onClick={toggleFullscreen}
-              aria-label={t('dryFire.fullscreen.enter')}
-              title={t('dryFire.fullscreen.enter')}
-              className={[
-                'inline-flex size-11 touch-manipulation items-center justify-center rounded-md sm:size-8',
-                'border border-white/10 bg-black/55 text-[#facc15]/90 shadow-sm backdrop-blur-md',
-                'transition hover:border-[#facc15]/40 hover:bg-black/75 hover:text-[#facc15]',
-                'focus:outline-none focus-visible:ring-1 focus-visible:ring-[#facc15]/55',
-              ].join(' ')}
-            >
-              <Maximize2 className="size-4 sm:size-3.5" strokeWidth={1.75} aria-hidden />
-            </button>
-            <button
-              type="button"
-              onClick={() => setVectorsVisible((v) => !v)}
-              aria-pressed={vectorsVisible}
-              aria-label={
-                vectorsVisible ? t('dryFire.target.vectorsHide') : t('dryFire.target.vectorsShow')
-              }
-              title={
-                vectorsVisible ? t('dryFire.target.vectorsHide') : t('dryFire.target.vectorsShow')
-              }
-              className={[
-                'inline-flex min-h-11 touch-manipulation items-center gap-1.5 rounded-md border px-2.5 py-1.5 shadow-sm backdrop-blur-md sm:min-h-8 sm:px-2 sm:py-1',
-                'font-mono-technical text-[7px] font-bold uppercase tracking-[0.14em] transition',
-                'focus:outline-none focus-visible:ring-1 focus-visible:ring-teal-400/55',
-                vectorsVisible
-                  ? 'border-teal-400/45 bg-teal-950/70 text-teal-300'
-                  : 'border-white/10 bg-black/55 text-zinc-400 hover:border-teal-400/35 hover:text-teal-300/90',
-              ].join(' ')}
-            >
-              {vectorsVisible ? (
-                <Eye className="size-4 shrink-0 sm:size-3.5" strokeWidth={1.75} aria-hidden />
-              ) : (
-                <EyeOff className="size-4 shrink-0 sm:size-3.5" strokeWidth={1.75} aria-hidden />
-              )}
-              <span className="max-w-[4.5rem] leading-tight">{t('dryFire.target.vectorsToggle')}</span>
-            </button>
-          </div>
-        ) : (
+        {isFullscreen ? (
           <button
             type="button"
             onClick={() => setVectorsVisible((v) => !v)}
@@ -605,7 +569,7 @@ export default function DryFireTargetBoard({
             )}
             <span>{t('dryFire.target.vectorsToggle')}</span>
           </button>
-        )}
+        ) : null}
 
         {phase === 'delay' || phase === 'running' || lastDrawMs != null ? (
           <div
@@ -665,7 +629,7 @@ export default function DryFireTargetBoard({
               /* Mobil: dikey yığın; md+: toolbar | pool | hedef */
               'flex-col md:flex-row',
             ].join(' ')
-          : 'mx-auto w-full max-w-[min(100%,22rem)]',
+          : 'mx-auto w-full max-w-full',
       ].join(' ')}
       style={isFullscreen ? { pointerEvents: 'auto' } : undefined}
       data-dry-fs-interactive={isFullscreen ? '1' : undefined}
@@ -736,6 +700,7 @@ export default function DryFireTargetBoard({
           onSaveSession={() => onSaveSession?.()}
           sessionSaving={sessionSaving}
           canSave={canSave}
+          controlsLocked={!weaponReady}
           onExitFullscreen={() => void exitFullscreen()}
           openGraphIds={openGraphIds}
           onToggleGraph={toggleGraph}
@@ -758,13 +723,10 @@ export default function DryFireTargetBoard({
           isFullscreen
             ? [
                 'min-h-0 overflow-hidden p-2 sm:p-3 md:p-4',
-                /* Mobil: hedef üstte (order-1); md+: sağda (order-3) */
-                'order-1 flex-1 md:order-3',
-                openGraphIds.length > 0 && !poolCollapsed
-                  ? 'md:w-[min(42vh,22rem)] md:shrink-0 md:grow-0 md:flex-none'
-                  : 'md:flex-1',
+                /* Mobil: hedef üstte (order-1); md+: sağda (order-3) — alanı doldur */
+                'order-1 flex-1 md:order-3 md:min-w-0 md:flex-1',
               ].join(' ')
-            : '',
+            : 'w-full gap-0 overflow-hidden rounded-sm border border-slate-700/70 bg-slate-950',
         ].join(' ')}
       >
         {fsError ? (
@@ -773,7 +735,70 @@ export default function DryFireTargetBoard({
           </p>
         ) : null}
 
-        {canvas}
+        {!isFullscreen ? (
+          <div className="relative z-20 flex shrink-0 items-center justify-between gap-2 border-b border-slate-800/80 bg-slate-950 px-2.5 py-2 sm:px-3 sm:py-2.5">
+            <div className="min-w-0">
+              <p className="truncate font-mono text-sm font-bold uppercase leading-none tracking-[0.14em] text-[#facc15] sm:text-base sm:tracking-[0.16em]">
+                {t('dryFire.target.kicker')}
+              </p>
+              <p className="mt-1.5 hidden truncate font-mono text-xs text-zinc-400 sm:block">
+                {t('dryFire.target.hint')}
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setVectorsVisible((v) => !v)}
+                aria-pressed={vectorsVisible}
+                aria-label={
+                  vectorsVisible ? t('dryFire.target.vectorsHide') : t('dryFire.target.vectorsShow')
+                }
+                title={
+                  vectorsVisible ? t('dryFire.target.vectorsHide') : t('dryFire.target.vectorsShow')
+                }
+                className={[
+                  'inline-flex min-h-9 touch-manipulation items-center gap-1.5 rounded-sm border px-2.5 py-1.5',
+                  'font-mono text-[10px] font-bold uppercase tracking-[0.12em] transition sm:min-h-8 sm:text-xs',
+                  'focus:outline-none focus-visible:ring-1 focus-visible:ring-teal-400/55',
+                  vectorsVisible
+                    ? 'border-teal-400/45 bg-teal-950/70 text-teal-300'
+                    : 'border-slate-700 text-zinc-400 hover:border-teal-400/35 hover:text-teal-300/90',
+                ].join(' ')}
+              >
+                {vectorsVisible ? (
+                  <Eye className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden />
+                ) : (
+                  <EyeOff className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden />
+                )}
+                <span className="hidden xs:inline sm:inline">{t('dryFire.target.vectorsToggle')}</span>
+              </button>
+              <button
+                type="button"
+                onClick={toggleFullscreen}
+                aria-label={t('dryFire.fullscreen.enter')}
+                title={t('dryFire.fullscreen.enter')}
+                className={[
+                  'inline-flex size-9 touch-manipulation items-center justify-center rounded-sm sm:size-8',
+                  'border border-slate-700 text-[#facc15]/90 transition',
+                  'hover:border-[#facc15]/45 hover:bg-[#facc15]/10 hover:text-[#facc15]',
+                  'focus:outline-none focus-visible:ring-1 focus-visible:ring-[#facc15]/55',
+                ].join(' ')}
+              >
+                <Maximize2 className="size-3.5" strokeWidth={1.75} aria-hidden />
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        <div
+          className={
+            isFullscreen
+              ? 'flex min-h-0 w-full flex-1 flex-col'
+              : 'px-2 pb-2 pt-2 sm:px-3 sm:pb-3'
+          }
+        >
+          {canvas}
+        </div>
 
         {isFullscreen ? (
           <p className="mt-1.5 hidden shrink-0 text-center font-mono-technical text-[8px] uppercase tracking-[0.2em] text-zinc-600 md:mt-2 md:block">

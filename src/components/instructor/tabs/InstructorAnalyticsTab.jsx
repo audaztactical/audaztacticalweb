@@ -5,11 +5,11 @@ import {
   Area,
   AreaChart,
   CartesianGrid,
-  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from 'recharts'
+import SafeResponsiveContainer from '../../ui/SafeResponsiveContainer'
 import ProgressHudPanels from '../../progress/ProgressHudPanels'
 import GroupLeaderboard from '../GroupLeaderboard'
 import GroupOperatorSuccessChart from '../GroupOperatorSuccessChart'
@@ -305,13 +305,7 @@ export default function InstructorAnalyticsTab({ groups, operators, instructorNa
                 </p>
               ) : (
                 <div className="relative h-[280px] min-h-[280px] w-full min-w-0">
-                  <ResponsiveContainer
-                    width="100%"
-                    height={280}
-                    minWidth={0}
-                    debounce={50}
-                    initialDimension={{ width: 480, height: 280 }}
-                  >
+                  <SafeResponsiveContainer minHeight={112} initialHeight={280} initialWidth={480}>
                     <AreaChart data={aggregateTrend}>
                       <defs>
                         <linearGradient id="groupPerfFill" x1="0" y1="0" x2="0" y2="1">
@@ -331,7 +325,7 @@ export default function InstructorAnalyticsTab({ groups, operators, instructorNa
                         strokeWidth={2}
                       />
                     </AreaChart>
-                  </ResponsiveContainer>
+                  </SafeResponsiveContainer>
                 </div>
               )}
             </section>

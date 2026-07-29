@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
 import { Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Bar, BarChart, CartesianGrid, Cell, Tooltip, XAxis, YAxis } from 'recharts'
+import SafeResponsiveContainer from '../ui/SafeResponsiveContainer'
 import { buildLiveGroupLeaderboard } from '../../lib/instructorGroupAnalytics'
 import { instructorT } from '../../lib/instructorDisplayText'
 import { pdfFormatPercent } from '../../lib/pdfReportText'
@@ -49,13 +50,7 @@ export default function GroupOperatorSuccessChart({ group, operators, logs }) {
         </p>
       ) : (
         <div className="relative h-[240px] min-h-[240px] w-full min-w-0">
-          <ResponsiveContainer
-            width="100%"
-            height={240}
-            minWidth={0}
-            debounce={50}
-            initialDimension={{ width: 400, height: 240 }}
-          >
+          <SafeResponsiveContainer minHeight={112} initialHeight={240} initialWidth={400}>
             <BarChart data={chartData} layout="vertical" margin={{ left: 4, right: 12 }}>
               <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" horizontal={false} />
               <XAxis type="number" domain={[0, 100]} tick={{ fill: '#64748b', fontSize: 10 }} />
@@ -81,7 +76,7 @@ export default function GroupOperatorSuccessChart({ group, operators, logs }) {
                 ))}
               </Bar>
             </BarChart>
-          </ResponsiveContainer>
+          </SafeResponsiveContainer>
         </div>
       )}
     </section>

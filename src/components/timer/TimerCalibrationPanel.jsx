@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Bluetooth, Cable, CheckCircle2, Circle, Save, Send, SlidersHorizontal, Unplug } from 'lucide-react'
+import { AudioLines, Bluetooth, Cable, CheckCircle2, Circle, Save, Send, SlidersHorizontal, Unplug } from 'lucide-react'
 import AcousticVuMeter from './AcousticVuMeter'
 import MpuCalibrationTarget from './MpuCalibrationTarget'
 import MpuGForceGuidePanel from './MpuGForceGuidePanel'
 import TacticalPanel from '../ui/TacticalPanel'
 import { useHardware } from '../../context/HardwareContext'
+import { useAuth } from '../../context/AuthContext'
 import { useTimerCalibration } from '../../hooks/useTimerCalibration'
 import {
   MPU_G_FORCE_OPTIONS,
@@ -58,6 +60,8 @@ function CalibrationSection({ title, opsCode, children, className = '' }) {
  */
 export default function TimerCalibrationPanel() {
   const { t } = useTranslation('timer')
+  const { isAdmin, showAdminPanel } = useAuth()
+  const showMicLab = Boolean(isAdmin || showAdminPanel)
   const { settings, updateSettings, persistPatch, persistAndSync, resetDefaults } = useTimerCalibration()
   const {
     isConnected,
@@ -119,13 +123,20 @@ export default function TimerCalibrationPanel() {
     [clampThreshold, isConnected, sendThreshold, updateSettings],
   )
 
-  // Bağlantı kurulunca mevcut (varsayılan) eşiği donanıma fırlat
+  // Bağlantı kurulunca mevcut eşiği donanıma fırlat (BLE için kısa gecikme)
   useEffect(() => {
     if (isConnected && !wasConnectedRef.current) {
-      void sendThreshold(clampThreshold(settings.soundThreshold))
+      const n = clampThreshold(settings.soundThreshold)
+      const delay = connectionType === 'BLUETOOTH' ? 350 : 0
+      const id = window.setTimeout(() => {
+        void sendThreshold(n)
+      }, delay)
+      wasConnectedRef.current = true
+      return () => window.clearTimeout(id)
     }
     wasConnectedRef.current = isConnected
-  }, [clampThreshold, isConnected, sendThreshold, settings.soundThreshold])
+    return undefined
+  }, [clampThreshold, connectionType, isConnected, sendThreshold, settings.soundThreshold])
 
   useEffect(() => {
     if (hwError === 'link-lost') {
@@ -143,19 +154,15 @@ export default function TimerCalibrationPanel() {
     const ok = await connectBLE()
     if (ok) {
       pushToast(t('hardware.toast.bleConnected'))
-      const n = clampThreshold(settings.soundThreshold)
-      void sendThreshold(n)
     }
-  }, [clampThreshold, connectBLE, pushToast, sendThreshold, settings.soundThreshold, t])
+  }, [connectBLE, pushToast, t])
 
   const handleConnectUsb = useCallback(async () => {
     const ok = await connectUSB()
     if (ok) {
       pushToast(t('hardware.toast.usbConnected'))
-      const n = clampThreshold(settings.soundThreshold)
-      void sendThreshold(n)
     }
-  }, [clampThreshold, connectUSB, pushToast, sendThreshold, settings.soundThreshold, t])
+  }, [connectUSB, pushToast, t])
 
   const handleSaveAcousticThreshold = useCallback(async () => {
     const n = clampThreshold(settings.soundThreshold)
@@ -195,12 +202,14 @@ export default function TimerCalibrationPanel() {
   }, [pushToast, resetDefaults, t])
 
   const handleZeroPointCommit = useCallback(
-    (/** @type {{ x: number, y: number, yaw?: number }} */ offset) => {
+    (/** @type {{ x: number, y: number, yaw?: number, pitch?: number, roll?: number }} */ offset) => {
       // Sıfırla / Kalibre Et → localStorage'a anında yaz (sayfa değişince kaybolmasın)
       persistPatch({
         mpuOffsetX: offset.x,
         mpuOffsetY: offset.y,
         mpuOffsetYaw: offset.yaw ?? 0,
+        mpuOffsetPitch: offset.pitch ?? 0,
+        mpuOffsetRoll: offset.roll ?? 0,
         mpuCalibratedAt: Date.now(),
       })
     },
@@ -308,20 +317,33 @@ export default function TimerCalibrationPanel() {
                   <Save className="size-3.5 shrink-0" strokeWidth={1.5} aria-hidden />
                   {t('calibration.sound.save')}
                 </button>
+                {showMicLab ? (
+                  <Link
+                    to="/taktik-timer/mikrofon-test"
+                    className="inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 rounded-sm border border-accent/35 bg-accent/[0.08] px-3 font-mono-technical text-[9px] font-bold uppercase tracking-[0.18em] text-accent transition hover:border-accent/55 hover:bg-accent/15"
+                  >
+                    <AudioLines className="size-3.5 shrink-0" strokeWidth={1.5} aria-hidden />
+                    {t('micTest.open')}
+                  </Link>
+                ) : null}
               </div>
               {/* Mobil: yatay VU */}
-              <AcousticVuMeter
-                threshold={settings.soundThreshold}
-                orientation="horizontal"
-                className="mt-3 sm:hidden"
-              />
+              <div className="mt-3 w-full min-h-[150px] sm:hidden">
+                <AcousticVuMeter
+                  threshold={settings.soundThreshold}
+                  orientation="horizontal"
+                  className="w-full"
+                />
+              </div>
             </div>
             {/* Masaüstü: slider yanında dikey VU */}
-            <AcousticVuMeter
-              threshold={settings.soundThreshold}
-              orientation="vertical"
-              className="hidden sm:flex"
-            />
+            <div className="hidden min-h-[150px] w-12 shrink-0 sm:flex sm:flex-col">
+              <AcousticVuMeter
+                threshold={settings.soundThreshold}
+                orientation="vertical"
+                className="h-full w-full"
+              />
+            </div>
           </div>
         </CalibrationSection>
 
@@ -388,17 +410,28 @@ export default function TimerCalibrationPanel() {
         </CalibrationSection>
 
         <CalibrationSection title={t('calibration.mpu.title')} opsCode="CAL-IMU" className="lg:col-span-2">
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-stretch lg:gap-6">
-            <div className="flex w-full min-w-0 flex-col gap-4">
+          <div className="flex w-full min-w-0 flex-col gap-5">
+            <div className="mx-auto flex w-full min-w-0 max-w-lg flex-col gap-4">
               <MpuCalibrationTarget
                 offsetX={settings.mpuOffsetX}
                 offsetY={settings.mpuOffsetY}
                 offsetYaw={settings.mpuOffsetYaw}
+                offsetPitch={settings.mpuOffsetPitch}
+                offsetRoll={settings.mpuOffsetRoll}
                 gForceRange={settings.mpuGForceRange}
                 onZeroPointCommit={handleZeroPointCommit}
                 onSuccess={handleMpuCalSuccess}
               />
+            </div>
 
+            <div className="flex w-full min-w-0">
+              <MpuGForceGuidePanel
+                activeRange={settings.mpuGForceRange}
+                onSelectRange={(range) => updateSettings({ mpuGForceRange: range })}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <label htmlFor="timer-mpu-range" className={`${LABEL} mb-2 block`}>
                   {t('calibration.mpu.gForce')}
@@ -443,13 +476,6 @@ export default function TimerCalibrationPanel() {
                   </p>
                 )}
               </div>
-            </div>
-
-            <div className="flex w-full min-w-0">
-              <MpuGForceGuidePanel
-                activeRange={settings.mpuGForceRange}
-                onSelectRange={(range) => updateSettings({ mpuGForceRange: range })}
-              />
             </div>
           </div>
         </CalibrationSection>

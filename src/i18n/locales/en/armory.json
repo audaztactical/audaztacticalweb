@@ -29,6 +29,7 @@
     "T_TAB": "Tactical Pistol",
     "AV_TFK": "Shotgun",
     "KNT": "Sniper Rifle",
+    "AIRSOFT": "Airsoft",
     "OPT": "Accessory",
     "MHM": "Ammunition"
   },
@@ -37,6 +38,7 @@
     "T_TAB": "Tactical Pistol",
     "AV_TFK": "Shotgun",
     "KNT": "Sniper Rifle",
+    "AIRSOFT": "Airsoft",
     "OPT": "Optic / Sight",
     "MHM": "Ammunition"
   },

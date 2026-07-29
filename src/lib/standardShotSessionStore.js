@@ -5,6 +5,7 @@
  */
 
 import { buildSplitRows, computeShotSummary } from './standardShotTimer'
+import { normalizeActiveWeaponSnapshot } from './timerActiveWeapon'
 
 export const STANDARD_SHOT_SESSIONS_KEY = 'audaz.tactical-timer.standard-shot.sessions.v1'
 export const STANDARD_SHOT_SESSIONS_MAX = 80
@@ -38,6 +39,7 @@ export const STANDARD_SHOT_SESSIONS_MAX = 80
  * @property {number} delayMs
  * @property {number} shotCount
  * @property {{ callsign?: string, username?: string }} operator
+ * @property {import('./timerActiveWeapon').TimerActiveWeaponSnapshot | null} [activeWeapon]
  */
 
 /**
@@ -150,6 +152,7 @@ export function normalizeSession(raw) {
       callsign: typeof op.callsign === 'string' ? op.callsign : '',
       username: typeof op.username === 'string' ? op.username : '',
     },
+    activeWeapon: normalizeActiveWeaponSnapshot(s.activeWeapon),
   }
 }
 
@@ -198,6 +201,7 @@ export function synthesizeMpuSamples(seed, shotCount, cal = {}) {
  *   calibration: StandardShotCalibrationSnapshot
  *   delayMs?: number
  *   operator?: { callsign?: string, username?: string }
+ *   activeWeapon?: import('./timerActiveWeapon').TimerActiveWeaponSnapshot | null
  * }} input
  * @returns {StandardShotSession}
  */
@@ -222,6 +226,7 @@ export function createStandardShotSession(input) {
       callsign: input.operator?.callsign ?? '',
       username: input.operator?.username ?? '',
     },
+    activeWeapon: normalizeActiveWeaponSnapshot(input.activeWeapon) ?? null,
   }
 }
 

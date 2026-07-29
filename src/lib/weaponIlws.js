@@ -8,10 +8,10 @@ export const MAINTENANCE_TYPES = [
   'Sıfırlama / Atış Kontrolü',
 ]
 
-/** @typedef {'P_TFK' | 'T_TAB' | 'AV_TFK' | 'KNT'} WeaponTacticalCode */
+/** @typedef {'P_TFK' | 'T_TAB' | 'AV_TFK' | 'KNT' | 'AIRSOFT'} WeaponTacticalCode */
 
 export const WEAPON_TACTICAL_CODES = /** @type {WeaponTacticalCode[]} */ (
-  ['P_TFK', 'T_TAB', 'AV_TFK', 'KNT']
+  ['P_TFK', 'T_TAB', 'AV_TFK', 'KNT', 'AIRSOFT']
 )
 
 /** Kullanıcıya görünen silah tipi seçenekleri (enum kodu yalnızca value'da). */
@@ -20,6 +20,7 @@ export const WEAPON_CATEGORY_OPTIONS = [
   { value: 'P_TFK', label: 'Piyade Tüfeği' },
   { value: 'AV_TFK', label: 'Av Tüfeği' },
   { value: 'KNT', label: 'Keskin Nişancı Tüfeği' },
+  { value: 'AIRSOFT', label: 'Airsoft' },
 ]
 
 /** @returns {string} */
@@ -47,7 +48,7 @@ export function getWeaponCreatedAt(row) {
 /** @param {string} tc @returns {WeaponTacticalCode} */
 export function resolveWeaponTacticalCategory(tc) {
   const u = invStr(tc).toUpperCase()
-  if (u === 'T_TAB' || u === 'AV_TFK' || u === 'P_TFK' || u === 'KNT') return u
+  if (u === 'T_TAB' || u === 'AV_TFK' || u === 'P_TFK' || u === 'KNT' || u === 'AIRSOFT') return u
   return 'T_TAB'
 }
 
@@ -57,6 +58,7 @@ export function defaultMaxBarrelLifeForCategory(tc) {
   if (cat === 'T_TAB') return 15000
   if (cat === 'AV_TFK') return 30000
   if (cat === 'KNT') return 9000
+  if (cat === 'AIRSOFT') return 50000
   return 20000
 }
 
@@ -66,6 +68,7 @@ export function weaponTypeFromCategory(tc) {
   if (cat === 'T_TAB') return 't_tab'
   if (cat === 'AV_TFK') return 'av_tfk'
   if (cat === 'KNT') return 'knt'
+  if (cat === 'AIRSOFT') return 'airsoft'
   return 'p_tfk'
 }
 

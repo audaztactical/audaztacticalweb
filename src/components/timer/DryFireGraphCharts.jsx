@@ -20,7 +20,10 @@ import {
   YAxis,
 } from 'recharts'
 import { buildDryFireGraphSeries } from '../../lib/dryFireHits'
+import { resolveGroupingFeedback } from '../../lib/analysisFeedback'
+import AnalysisFeedbackBox from './AnalysisFeedbackBox'
 import ChartSafeFrame from './ChartSafeFrame'
+import ChartZoomFrame from './ChartZoomFrame'
 
 const GOLD = '#facc15'
 const MUTED = '#71717a'
@@ -35,7 +38,7 @@ const tipStyle = {
   background: 'rgba(10,10,11,0.96)',
   border: '1px solid rgba(250,204,21,0.4)',
   borderRadius: 2,
-  fontSize: 11,
+  fontSize: 13,
   fontFamily: 'ui-monospace, monospace',
   boxShadow: '0 8px 28px -12px rgba(0,0,0,0.85)',
 }
@@ -51,9 +54,36 @@ export default function DryFireGraphCharts({ graphId, hits }) {
   const uid = useId().replace(/:/g, '')
   const series = useMemo(() => buildDryFireGraphSeries(hits), [hits])
 
+  const radarData = useMemo(
+    () =>
+      series.flinchRadar.map((row) => ({
+        ...row,
+        dirLabel: t(`dryFire.compass.${row.dir}`, { defaultValue: row.dir }),
+      })),
+    [series.flinchRadar, t],
+  )
+
+  const groupFb = useMemo(() => {
+    const avgFlinch =
+      hits.length > 0
+        ? hits.reduce((s, h) => s + (Number(h.flinchScore) || 0), 0) / hits.length
+        : 0
+    const groupRadius =
+      hits.length > 0
+        ? Math.max(...hits.map((h) => Math.hypot(h.x || 0, h.y || 0)))
+        : 0
+    return resolveGroupingFeedback({
+      hitCount: hits.length,
+      avgFlinch,
+      groupRadius,
+    })
+  }, [hits])
+
+  const title = t(`dryFire.analytics.graphs.${graphId}`)
+
   if (!hits.length) {
     return (
-      <p className="flex h-full min-h-[8rem] items-center justify-center px-3 text-center font-mono-technical text-[9px] uppercase tracking-[0.2em] text-zinc-500">
+      <p className="flex h-full min-h-[8rem] items-center justify-center px-3 text-center font-mono-technical text-sm uppercase tracking-[0.16em] text-zinc-400">
         {t('dryFire.analytics.empty')}
       </p>
     )
@@ -61,31 +91,50 @@ export default function DryFireGraphCharts({ graphId, hits }) {
 
   const axisProps = {
     stroke: AXIS,
-    tick: { fill: MUTED, fontSize: 10, fontFamily: 'ui-monospace, monospace' },
+    tick: { fill: MUTED, fontSize: 12, fontFamily: 'ui-monospace, monospace' },
     tickLine: false,
     axisLine: { stroke: 'rgba(250,204,21,0.18)' },
   }
 
-  /* 1 — Flinch: radar */
+  const wrap = (body, feedback = null) => (
+    <ChartZoomFrame
+      title={title}
+      className="h-full min-h-[10rem]"
+      bodyClassName="min-h-[9rem]"
+      feedback={feedback}
+    >
+      {body}
+    </ChartZoomFrame>
+  )
+
+  const groupFeedback = (
+    <AnalysisFeedbackBox
+      statusKey={groupFb.statusKey}
+      tipKey={groupFb.tipKey}
+      severity={groupFb.severity}
+      params={groupFb.params}
+    />
+  )
+
   if (graphId === 'flinch') {
-    return (
+    return wrap(
       <ChartSafeFrame fill>
-        <RadarChart data={series.flinchRadar} margin={{ top: 8, right: 16, bottom: 8, left: 16 }}>
+        <RadarChart data={radarData} margin={{ top: 8, right: 16, bottom: 8, left: 16 }}>
           <PolarGrid stroke={GRID} />
           <PolarAngleAxis
-            dataKey="dir"
-            tick={{ fill: MUTED, fontSize: 10, fontFamily: 'ui-monospace, monospace' }}
+            dataKey="dirLabel"
+            tick={{ fill: MUTED, fontSize: 12, fontFamily: 'ui-monospace, monospace' }}
           />
           <PolarRadiusAxis
             angle={90}
             domain={[0, 100]}
-            tick={{ fill: MUTED, fontSize: 8 }}
+            tick={{ fill: MUTED, fontSize: 11 }}
             axisLine={false}
           />
           <Tooltip
             contentStyle={tipStyle}
             formatter={(value, _n, item) => [
-              `${value} · n=${item?.payload?.count ?? 0}`,
+              `${value} · ${t('dryFire.units.countN', { n: item?.payload?.count ?? 0 })}`,
               t('dryFire.tooltip.flinch'),
             ]}
           />
@@ -99,21 +148,17 @@ export default function DryFireGraphCharts({ graphId, hits }) {
             isAnimationActive
           />
         </RadarChart>
-      </ChartSafeFrame>
+      </ChartSafeFrame>,
+      groupFeedback,
     )
   }
 
-  /* 2 — Barrel: helix / trace view */
   if (graphId === 'barrel') {
     const pts = series.barrelTrace
     const pathD =
-      pts.length === 0
-        ? ''
-        : pts
-            .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`)
-            .join(' ')
+      pts.length === 0 ? '' : pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
     const gradId = `df-helix-${uid}`
-    return (
+    return wrap(
       <div className="flex h-full min-h-0 w-full flex-col">
         <svg
           viewBox="0 0 200 200"
@@ -129,7 +174,15 @@ export default function DryFireGraphCharts({ graphId, hits }) {
             </linearGradient>
           </defs>
           <circle cx="100" cy="100" r="78" fill="none" stroke="rgba(250,204,21,0.12)" strokeWidth="0.8" />
-          <circle cx="100" cy="100" r="48" fill="none" stroke="rgba(52,211,153,0.15)" strokeWidth="0.6" strokeDasharray="3 4" />
+          <circle
+            cx="100"
+            cy="100"
+            r="48"
+            fill="none"
+            stroke="rgba(52,211,153,0.15)"
+            strokeWidth="0.6"
+            strokeDasharray="3 4"
+          />
           <line x1="100" y1="22" x2="100" y2="178" stroke="rgba(250,204,21,0.12)" strokeWidth="0.5" />
           <line x1="22" y1="100" x2="178" y2="100" stroke="rgba(250,204,21,0.12)" strokeWidth="0.5" />
           {pathD ? (
@@ -150,7 +203,7 @@ export default function DryFireGraphCharts({ graphId, hits }) {
                 y={p.y - 5}
                 textAnchor="middle"
                 fill={MUTED}
-                fontSize="5.5"
+                fontSize="9"
                 fontFamily="ui-monospace, monospace"
               >
                 {p.index}
@@ -158,38 +211,32 @@ export default function DryFireGraphCharts({ graphId, hits }) {
             </g>
           ))}
         </svg>
-        <p className="shrink-0 px-1 pb-0.5 text-center font-mono-technical text-[7px] uppercase tracking-[0.14em] text-zinc-600">
+        <p className="shrink-0 px-1 pb-1 text-center font-mono-technical text-[11px] uppercase tracking-[0.12em] text-zinc-400 sm:text-xs">
           {t('dryFire.analytics.graphs.barrelTraceHint')}
         </p>
-      </div>
+      </div>,
     )
   }
 
-  /* 3 — Jerk: EKG spike */
   if (graphId === 'jerk') {
-    return (
+    return wrap(
       <ChartSafeFrame fill>
         <LineChart data={series.jerkEcg} margin={{ top: 10, right: 8, left: 0, bottom: 4 }}>
           <CartesianGrid stroke={ECG_GRID} strokeDasharray="2 6" />
-          <XAxis
-            type="number"
-            dataKey="t"
-            hide
-            domain={['dataMin', 'dataMax']}
-          />
+          <XAxis type="number" dataKey="t" hide domain={['dataMin', 'dataMax']} />
           <YAxis
             {...axisProps}
             width={28}
             domain={['auto', 'auto']}
-            tick={{ fill: ROSE, fontSize: 8, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: ROSE, fontSize: 11, fontFamily: 'ui-monospace, monospace' }}
           />
           <Tooltip
-            contentStyle={{
-              ...tipStyle,
-              border: '1px solid rgba(251,113,133,0.45)',
-            }}
+            contentStyle={{ ...tipStyle, border: '1px solid rgba(251,113,133,0.45)' }}
             labelFormatter={() => t('dryFire.analytics.graphs.jerkMetric')}
-            formatter={(v) => [typeof v === 'number' ? v.toFixed(1) : v, 'Δ']}
+            formatter={(v) => [
+              typeof v === 'number' ? v.toFixed(1) : v,
+              t('dryFire.units.delta'),
+            ]}
           />
           <ReferenceLine y={0} stroke="rgba(251,113,133,0.35)" strokeWidth={1} />
           <Line
@@ -203,25 +250,24 @@ export default function DryFireGraphCharts({ graphId, hits }) {
             activeDot={{ r: 3, fill: ROSE }}
           />
         </LineChart>
-      </ChartSafeFrame>
+      </ChartSafeFrame>,
     )
   }
 
-  /* 4 — Split: vertical bars */
   if (graphId === 'split') {
     if (!series.split.length) {
       return (
-        <p className="flex h-full min-h-[8rem] items-center justify-center px-3 text-center font-mono-technical text-[9px] uppercase tracking-[0.2em] text-zinc-500">
+        <p className="flex h-full min-h-[8rem] items-center justify-center px-3 text-center font-mono-technical text-sm uppercase tracking-[0.16em] text-zinc-400">
           {t('dryFire.analytics.graphs.needTwo')}
         </p>
       )
     }
-    return (
+    return wrap(
       <ChartSafeFrame fill>
         <BarChart data={series.split} margin={{ top: 10, right: 8, left: 0, bottom: 4 }}>
           <CartesianGrid stroke={GRID} strokeDasharray="4 6" vertical={false} />
-          <XAxis dataKey="name" {...axisProps} tick={{ ...axisProps.tick, fontSize: 8 }} />
-          <YAxis {...axisProps} width={36} unit="ms" />
+          <XAxis dataKey="name" {...axisProps} tick={{ ...axisProps.tick, fontSize: 11 }} />
+          <YAxis {...axisProps} width={36} unit={t('dryFire.units.ms')} />
           <Tooltip contentStyle={tipStyle} />
           <Bar
             dataKey="splitMs"
@@ -230,34 +276,30 @@ export default function DryFireGraphCharts({ graphId, hits }) {
             isAnimationActive
           >
             {series.split.map((row, i) => (
-              <Cell
-                key={`sp-${row.name}`}
-                fill={i % 2 === 0 ? SKY : 'rgba(96,165,250,0.55)'}
-              />
+              <Cell key={`sp-${row.name}`} fill={i % 2 === 0 ? SKY : 'rgba(96,165,250,0.55)'} />
             ))}
           </Bar>
         </BarChart>
-      </ChartSafeFrame>
+      </ChartSafeFrame>,
     )
   }
 
-  /* 5 — Axial: scatter / grouping cluster */
   if (graphId === 'axial') {
-    return (
+    return wrap(
       <ChartSafeFrame fill>
         <ScatterChart margin={{ top: 10, right: 10, left: 0, bottom: 4 }}>
           <CartesianGrid stroke={GRID} strokeDasharray="3 5" />
           <XAxis
             type="number"
             dataKey="x"
-            name="X"
+            name={t('dryFire.tooltip.deviation')}
             domain={[-1, 1]}
             {...axisProps}
           />
           <YAxis
             type="number"
             dataKey="y"
-            name="Y"
+            name={t('dryFire.tooltip.deviation')}
             domain={[-1, 1]}
             {...axisProps}
             width={34}
@@ -269,7 +311,7 @@ export default function DryFireGraphCharts({ graphId, hits }) {
             contentStyle={tipStyle}
             formatter={(value, name) => [
               typeof value === 'number' ? value.toFixed(3) : value,
-              String(name).toUpperCase(),
+              String(name),
             ]}
           />
           <Scatter data={series.axial} fill={GOLD}>
@@ -278,20 +320,20 @@ export default function DryFireGraphCharts({ graphId, hits }) {
             ))}
           </Scatter>
         </ScatterChart>
-      </ChartSafeFrame>
+      </ChartSafeFrame>,
+      groupFeedback,
     )
   }
 
-  /* 6 — Shot vectors: list / vector cards */
   if (graphId === 'shotVectors') {
     if (!series.shotVectors.length) {
       return (
-        <p className="flex h-full min-h-[8rem] items-center justify-center px-3 text-center font-mono-technical text-[9px] uppercase tracking-[0.2em] text-zinc-500">
+        <p className="flex h-full min-h-[8rem] items-center justify-center px-3 text-center font-mono-technical text-sm uppercase tracking-[0.16em] text-zinc-400">
           {t('dryFire.analytics.graphs.needTwo')}
         </p>
       )
     }
-    return (
+    return wrap(
       <ul className="flex h-full min-h-0 flex-col gap-1.5 overflow-y-auto overscroll-contain px-0.5 py-0.5">
         {series.shotVectors.map((row) => (
           <li
@@ -313,11 +355,12 @@ export default function DryFireGraphCharts({ graphId, hits }) {
                 <polygon points="28,4 34,8 28,12" fill="rgba(250,204,21,0.9)" />
                 <circle cx="32" cy="8" r="2.2" fill={row.toColor || SKY} opacity="0.9" />
               </svg>
-              <p className="min-w-0 flex-1 truncate font-mono-technical text-[9px] font-bold uppercase tracking-[0.14em] text-[#facc15]">
-                #{row.fromIndex} → #{row.toIndex}
+              <p className="min-w-0 flex-1 truncate font-mono-technical text-xs font-bold uppercase tracking-[0.12em] text-[#facc15] sm:text-sm">
+                {t('dryFire.units.shotIndex', { n: row.fromIndex })} →{' '}
+                {t('dryFire.units.shotIndex', { n: row.toIndex })}
               </p>
             </div>
-            <dl className="mt-1.5 grid grid-cols-2 gap-x-2 gap-y-0.5 font-mono-technical text-[8px]">
+            <dl className="mt-1.5 grid grid-cols-2 gap-x-2 gap-y-0.5 font-mono-technical text-[11px] sm:text-xs">
               <div className="flex justify-between gap-1">
                 <dt className="uppercase tracking-[0.1em] text-zinc-500">
                   {t('dryFire.analytics.graphs.distanceMetric')}
@@ -328,12 +371,14 @@ export default function DryFireGraphCharts({ graphId, hits }) {
                 <dt className="uppercase tracking-[0.1em] text-zinc-500">
                   {t('dryFire.analytics.graphs.splitMetric')}
                 </dt>
-                <dd className="tabular-nums text-sky-300">{row.splitMs} ms</dd>
+                <dd className="tabular-nums text-sky-300">
+                  {row.splitMs} {t('dryFire.units.ms')}
+                </dd>
               </div>
             </dl>
           </li>
         ))}
-      </ul>
+      </ul>,
     )
   }
 

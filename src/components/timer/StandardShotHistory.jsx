@@ -239,6 +239,24 @@ export default function StandardShotHistory({
                 <div className="min-h-0 overflow-hidden">
                   {open ? (
                   <div className="space-y-3 border-t border-zinc-700/50 px-3 py-3">
+                    {session.activeWeapon ? (
+                      <p className="font-mono-technical text-[8px] uppercase leading-relaxed tracking-[0.14em] text-[#facc15]/85">
+                        {t('activeWeapon.historyLine', {
+                          summary: [
+                            session.activeWeapon.name,
+                            session.activeWeapon.categoryLabel ||
+                              session.activeWeapon.tacticalCategory,
+                            session.activeWeapon.brand,
+                            session.activeWeapon.serialNo
+                              ? `S/N ${session.activeWeapon.serialNo}`
+                              : '',
+                            session.activeWeapon.calibre,
+                          ]
+                            .filter(Boolean)
+                            .join(' · '),
+                        })}
+                      </p>
+                    ) : null}
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"

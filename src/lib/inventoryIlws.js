@@ -1,4 +1,4 @@
-/** @typedef {'ALL' | 'P_TFK' | 'T_TAB' | 'AV_TFK' | 'KNT' | 'OPT' | 'MHM'} IlwsFilterId */
+/** @typedef {'ALL' | 'P_TFK' | 'T_TAB' | 'AV_TFK' | 'KNT' | 'AIRSOFT' | 'OPT' | 'MHM'} IlwsFilterId */
 
 /** `code` is TR fallback; prefer `labelFilter` / `ilwsFilterOptions` from armoryDisplayText at render. */
 export const ILWS_FILTERS = [
@@ -7,6 +7,7 @@ export const ILWS_FILTERS = [
   { id: 'T_TAB', code: 'Taktik Tabanca' },
   { id: 'AV_TFK', code: 'Av Tüfeği' },
   { id: 'KNT', code: 'Keskin Nişancı Tüfeği' },
+  { id: 'AIRSOFT', code: 'Airsoft' },
   { id: 'OPT', code: 'Aksesuar' },
   { id: 'MHM', code: 'Mühimmat' },
 ]
@@ -17,6 +18,7 @@ export const TACTICAL_CATEGORIES = [
   { value: 'T_TAB', label: 'Taktik Tabanca' },
   { value: 'AV_TFK', label: 'Av Tüfeği' },
   { value: 'KNT', label: 'Keskin Nişancı Tüfeği' },
+  { value: 'AIRSOFT', label: 'Airsoft' },
   { value: 'OPT', label: 'Optik / Nişangâh' },
   { value: 'MHM', label: 'Mühimmat' },
 ]
@@ -52,7 +54,7 @@ export function stokKodu(id) {
 /** @param {Record<string, unknown>} row */
 export function getTacticalCategory(row) {
   const tc = invStr(row.tacticalCategory).toUpperCase()
-  if (['P_TFK', 'T_TAB', 'AV_TFK', 'KNT', 'OPT', 'MHM'].includes(tc)) return tc
+  if (['P_TFK', 'T_TAB', 'AV_TFK', 'KNT', 'AIRSOFT', 'OPT', 'MHM'].includes(tc)) return tc
   const legacy = invStr(row.category)
   if (legacy === 'Mühimmat') return 'MHM'
   if (legacy === 'Optik') return 'OPT'
@@ -61,6 +63,7 @@ export function getTacticalCategory(row) {
     if (wt.includes('tabanca') || wt === 'pistol' || wt === 't_tab') return 'T_TAB'
     if (wt.includes('av') || wt === 'av_tfk') return 'AV_TFK'
     if (wt.includes('keskin') || wt === 'knt' || wt.includes('sniper') || wt.includes('dmr')) return 'KNT'
+    if (wt.includes('airsoft') || wt === 'airsoft') return 'AIRSOFT'
     return 'P_TFK'
   }
   if (legacy === 'Ekipman') return 'OPT'
@@ -69,14 +72,14 @@ export function getTacticalCategory(row) {
 
 /** @param {string} code */
 export function categoryRibbonLabel(code) {
-  const map = { P_TFK: 'Tfk', T_TAB: 'Tab', AV_TFK: 'AvT', KNT: 'Knt', OPT: 'Opt', MHM: 'Mhm' }
+  const map = { P_TFK: 'Tfk', T_TAB: 'Tab', AV_TFK: 'AvT', KNT: 'Knt', AIRSOFT: 'Air', OPT: 'Opt', MHM: 'Mhm' }
   return map[code] ?? code
 }
 
 /** @param {string} tc */
 export function isWeaponTacticalCategoryId(tc) {
   const c = invStr(tc).toUpperCase()
-  return c === 'P_TFK' || c === 'T_TAB' || c === 'AV_TFK' || c === 'KNT'
+  return c === 'P_TFK' || c === 'T_TAB' || c === 'AV_TFK' || c === 'KNT' || c === 'AIRSOFT'
 }
 
 /** @param {Record<string, unknown>} row */
@@ -167,10 +170,20 @@ export function buildWeaponSpecs(row) {
         ? '40M_ETKİLİ'
         : cat === 'KNT'
           ? '1000M_ETKİLİ'
-          : '300M_ETKİLİ')
+          : cat === 'AIRSOFT'
+            ? '50M_ETKİLİ'
+            : '300M_ETKİLİ')
   const weight =
     invStr(row.weight).trim() ||
-    (cat === 'T_TAB' ? '0.85KG' : cat === 'AV_TFK' ? '3.4KG' : cat === 'KNT' ? '6.0KG' : '3.2KG')
+    (cat === 'T_TAB'
+      ? '0.85KG'
+      : cat === 'AV_TFK'
+        ? '3.4KG'
+        : cat === 'KNT'
+          ? '6.0KG'
+          : cat === 'AIRSOFT'
+            ? '2.5KG'
+            : '3.2KG')
   return [
     { key: 'ETKİLİ_MENZİL', value: range },
     { key: 'AĞIRLIK', value: weight },
@@ -262,7 +275,7 @@ export function partitionInventoryBySector(items, filter) {
   for (const row of items) {
     if (!matchesIlwsFilter(filter, row)) continue
     const c = getTacticalCategory(row)
-    if (c === 'P_TFK' || c === 'T_TAB' || c === 'AV_TFK' || c === 'KNT') weapons.push(row)
+    if (c === 'P_TFK' || c === 'T_TAB' || c === 'AV_TFK' || c === 'KNT' || c === 'AIRSOFT') weapons.push(row)
     else if (c === 'OPT') optics.push(row)
     else if (c === 'MHM') ammo.push(row)
   }
