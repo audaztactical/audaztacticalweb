@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion as Motion } from 'framer-motion'
 import { signOut } from 'firebase/auth'
 import { Bug, ChevronLeft, ChevronRight, Menu, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { auth } from '../lib/firebase'
+import { isNeuralPreviewEnabled } from '../lib/neural/neuralPreview'
 import HudTicker from '../components/ui/HudTicker'
 import LanguageSwitcher from '../components/shared/LanguageSwitcher'
 import NotificationDropdown from '../components/notifications/NotificationDropdown'
@@ -18,6 +19,11 @@ export default function MainLayout() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
+  const chromeTopRef = useRef(/** @type {HTMLElement|null} */ (null))
+
+  const neuralOnly =
+    (location.pathname === '/dashboard' || location.pathname === '/dashboard/') &&
+    isNeuralPreviewEnabled()
 
   useEffect(() => {
     setMobileNavOpen(false)
@@ -44,6 +50,39 @@ export default function MainLayout() {
     }
   }, [mobileNavOpen])
 
+  /** Üst chrome yüksekliği → --ob-chrome-top (yalnızca neuralOnly) */
+  useEffect(() => {
+    if (!neuralOnly) {
+      document.documentElement.style.removeProperty('--ob-chrome-top')
+      return undefined
+    }
+    /** @type {ResizeObserver|null} */
+    let ro = null
+    const apply = () => {
+      const el = chromeTopRef.current
+      if (!el) return
+      const h = el.getBoundingClientRect().height
+      if (h > 0) {
+        document.documentElement.style.setProperty('--ob-chrome-top', `${Math.round(h)}px`)
+      }
+    }
+    const bind = () => {
+      const el = chromeTopRef.current
+      if (!el) return
+      apply()
+      ro?.disconnect()
+      ro = new ResizeObserver(apply)
+      ro.observe(el)
+    }
+    bind()
+    const raf = requestAnimationFrame(bind)
+    return () => {
+      cancelAnimationFrame(raf)
+      ro?.disconnect()
+      document.documentElement.style.removeProperty('--ob-chrome-top')
+    }
+  }, [neuralOnly, isDesktopSidebar])
+
   const closeMobileNav = () => setMobileNavOpen(false)
 
   const handleSignOut = async () => {
@@ -57,19 +96,31 @@ export default function MainLayout() {
   }
 
   return (
-    <div className="relative z-[1] flex h-dvh min-h-0 overflow-hidden text-slate-100" style={{ backgroundColor: '#0a0a0a' }}>
+    <div
+      className={[
+        'relative z-[1] flex h-dvh min-h-0 overflow-hidden text-slate-100',
+        neuralOnly ? 'ob-neural-mode' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      style={{ backgroundColor: '#0a0a0a' }}
+    >
       <div className="app-atmosphere" aria-hidden />
 
-      <Bug
-        className="corner-unit-mark right-4 top-6 size-14 sm:right-8 sm:top-8 sm:size-16"
-        strokeWidth={1}
-        aria-hidden
-      />
-      <Bug
-        className="corner-unit-mark bottom-8 right-6 size-14 sm:bottom-10 sm:right-10 sm:size-16"
-        strokeWidth={1}
-        aria-hidden
-      />
+      {!neuralOnly ? (
+        <>
+          <Bug
+            className="corner-unit-mark right-4 top-6 size-14 sm:right-8 sm:top-8 sm:size-16"
+            strokeWidth={1}
+            aria-hidden
+          />
+          <Bug
+            className="corner-unit-mark bottom-8 right-6 size-14 sm:bottom-10 sm:right-10 sm:size-16"
+            strokeWidth={1}
+            aria-hidden
+          />
+        </>
+      ) : null}
 
       {mobileNavOpen ? (
         <button
@@ -166,7 +217,15 @@ export default function MainLayout() {
       </aside>
 
       <div className="relative z-[1] flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-white/10 bg-app-bg/85 px-4 backdrop-blur-md lg:hidden">
+        <header
+          ref={!isDesktopSidebar ? chromeTopRef : undefined}
+          className={[
+            'sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 px-4 lg:hidden',
+            neuralOnly
+              ? 'ob-neural-chrome border-b border-white/10 bg-black/35 backdrop-blur-md'
+              : 'border-b border-white/10 bg-app-bg/85 backdrop-blur-md',
+          ].join(' ')}
+        >
           <button
             type="button"
             className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-accent"
@@ -190,22 +249,38 @@ export default function MainLayout() {
         </header>
 
         <main
-          className="relative flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto"
+          className={[
+            'relative flex min-h-0 flex-1 flex-col overflow-x-hidden',
+            neuralOnly ? 'overflow-hidden' : 'overflow-y-auto',
+          ].join(' ')}
           data-app-scroll-root
         >
-          <div className="relative z-[110] hidden border-b border-white/10 bg-black/20 px-4 py-2 backdrop-blur-md md:flex md:items-center md:justify-end md:gap-3 lg:px-8">
+          <div
+            ref={isDesktopSidebar ? chromeTopRef : undefined}
+            className={[
+              'relative z-[110] hidden px-4 py-2 md:flex md:items-center md:justify-end md:gap-3 lg:px-8',
+              neuralOnly
+                ? 'ob-neural-chrome border-b border-white/10 bg-black/30 backdrop-blur-md'
+                : 'border-b border-white/10 bg-black/20 backdrop-blur-md',
+            ].join(' ')}
+          >
             <LanguageSwitcher />
             <NotificationDropdown />
             <HudTicker />
           </div>
-          <div className="flex min-h-0 flex-1 flex-col p-4 sm:p-6 lg:p-8">
+          <div
+            className={[
+              'flex min-h-0 flex-1 flex-col',
+              neuralOnly ? 'p-0' : 'p-4 sm:p-6 lg:p-8',
+            ].join(' ')}
+          >
             <AnimatePresence mode="wait">
               <Motion.div
                 key={location.pathname}
                 className="flex min-h-0 flex-1 flex-col"
-                initial={{ opacity: 0, y: 10 }}
+                initial={neuralOnly ? false : { opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
+                exit={neuralOnly ? undefined : { opacity: 0, y: -8 }}
                 transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
               >
                 <Outlet />

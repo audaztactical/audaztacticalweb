@@ -341,6 +341,36 @@ service cloud.firestore {
     }
 
     /**
+     * Operatör Beyni — sunucu durumu (yalnızca sahip okur; istemci yazamaz).
+     * Eğitmen/admin ek erişimi YOK.
+     */
+    match /users/{userId}/neural/{docId} {
+      allow read: if isOwnerUid(userId);
+      allow write: if false;
+    }
+
+    match /users/{userId}/neural_events/{eventId} {
+      allow read: if isOwnerUid(userId);
+      allow write: if false;
+    }
+
+    /**
+     * Operatör Beyni — istemci activity olayları (INTEL_READ / GUIDE_READ / BALLISTIC_CALC).
+     * create-only; şema kilitli.
+     */
+    match /users/{userId}/activity_events/{eventId} {
+      allow read: if isOwnerUid(userId);
+      allow create: if isOwnerUid(userId)
+        && request.resource.data.keys().hasOnly(['type', 'refId', 'createdAt'])
+        && request.resource.data.type in ['INTEL_READ', 'GUIDE_READ', 'BALLISTIC_CALC']
+        && request.resource.data.refId is string
+        && request.resource.data.refId.size() > 0
+        && request.resource.data.refId.size() <= 128
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+
+    /**
      * usernames/{normalizedKey} — tek alan: uid (kayıt sırasında benzersiz kullanıcı adı).
      * get: kayıt öncesi müsaitlik kontrolü için herkese açık (yalnızca var/yok).
      * create: yalnızca kendi uid’si ile; silme: yalnızca sahibi (ileride kullanıcı adı değişiminde).

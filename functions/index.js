@@ -19,6 +19,18 @@ const { registerOperatorProfileHandler } = require('./lib/registerOperatorProfil
 const { syncMuhabereChannelSummary, syncMuhabereDmSummary } = require('./src/muhabereSync')
 const { resolveYoutubeChannelInputHandler } = require('./lib/youtubeChannelResolve')
 const { triggerVideoNewsIngestHandler } = require('./lib/videoNewsTrigger')
+const {
+  neuralOnRangeLogCreated,
+  neuralOnVbssLogCreated,
+  neuralOnTcccLogCreated,
+  neuralOnTacticalSessionWritten,
+  neuralOnTrainingCreated,
+  neuralOnBallisticProfileCreated,
+  neuralOnForumPostCreated,
+  neuralOnForumReplyCreated,
+  neuralOnActivityEventCreated,
+} = require('./lib/neuralTriggers')
+const { neuralBackfillUser } = require('./lib/neuralBackfill')
 
 initializeApp()
 
@@ -286,3 +298,15 @@ exports.onForumPostCreated = onDocumentCreated(
   },
   onForumPostCreatedHandler,
 )
+
+/* —— Operatör Beyni (yeni; mevcut fonksiyonlara dokunulmadı) —— */
+exports.neuralOnRangeLogCreated = neuralOnRangeLogCreated
+exports.neuralOnVbssLogCreated = neuralOnVbssLogCreated
+exports.neuralOnTcccLogCreated = neuralOnTcccLogCreated
+exports.neuralOnTacticalSessionWritten = neuralOnTacticalSessionWritten
+exports.neuralOnTrainingCreated = neuralOnTrainingCreated
+exports.neuralOnBallisticProfileCreated = neuralOnBallisticProfileCreated
+exports.neuralOnForumPostCreated = neuralOnForumPostCreated
+exports.neuralOnForumReplyCreated = neuralOnForumReplyCreated
+exports.neuralOnActivityEventCreated = neuralOnActivityEventCreated
+exports.neuralBackfillUser = neuralBackfillUser

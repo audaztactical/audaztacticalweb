@@ -25,6 +25,7 @@ import { angleTableCellsForRow, buildAngleTableColumns } from '../lib/clickUnitS
 import { buildArmorySessionFromArmoryFill } from '../lib/inventoryFillLocks'
 import { labelTableColumn } from '../lib/ballisticsDisplayText'
 import { weaponDisplayName } from '../lib/weaponIlws'
+import { logBallisticCalc } from '../lib/neural/activityEvents'
 
 /** @typedef {import('../lib/ballisticsEngine.js').BallisticsEngineOutput} BallisticsEngineOutput */
 
@@ -282,6 +283,7 @@ export default function Balistik() {
       })
       setOutput(result)
       setActiveDistance(targets[0] ?? 100)
+      logBallisticCalc()
     } catch (err) {
       setOutput(null)
       setCalcError(err instanceof Error ? err.message : t('errors.calcFailed'))

@@ -14,6 +14,7 @@ import {
   formatVideoOriginDisplay,
   INTEL_VIDEO_FILTER_ALL,
 } from '../../lib/intelDisplayText'
+import { logIntelRead } from '../../lib/neural/activityEvents'
 import i18n from '../../i18n'
 
 /** @typedef {import('../../lib/firestoreVideoNews').VideoNewsItem} VideoNewsItem */
@@ -338,7 +339,13 @@ export default function VideoNewsGrid() {
             >
               {videos.map((item, index) => (
                 <motion.div key={item.id} custom={index} variants={cardVariants}>
-                  <VideoNewsCard item={item} onOpen={setActiveVideo} />
+                  <VideoNewsCard
+                    item={item}
+                    onOpen={(v) => {
+                      setActiveVideo(v)
+                      logIntelRead(String(v.id || v.videoId || v.url || 'video'))
+                    }}
+                  />
                 </motion.div>
               ))}
             </motion.div>

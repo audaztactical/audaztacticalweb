@@ -42,6 +42,9 @@ const AdminPanel = lazy(() => import('./pages/AdminPanel'))
 const PremiumTransition = lazy(() => import('./pages/PremiumTransition'))
 const SiteMaintenance = lazy(() => import('./pages/SiteMaintenance'))
 const UsageGuide = lazy(() => import('./pages/UsageGuide'))
+const NeuralDebug = import.meta.env.DEV
+  ? lazy(() => import('./pages/dev/NeuralDebug'))
+  : null
 export default function App() {
   return (
     <AuthProvider>
@@ -61,6 +64,9 @@ export default function App() {
 
             <Route element={<ProtectedRoute />}>
               <Route path="verify-email" element={<VerifyEmail />} />
+              {NeuralDebug ? (
+                <Route path="dev/operator-beyni" element={<NeuralDebug />} />
+              ) : null}
               <Route element={<AccessGuard />}>
                 <Route element={<ResponsiveAppLayout />}>
                   <Route path="dashboard" element={<Dashboard />} />
