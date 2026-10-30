@@ -28,7 +28,8 @@
     },
     "brandAudaz": "AUDAZ",
     "brandTactical": "TACTICAL",
-    "tagline": "Sınırlarını Dijitalleştir"
+    "tagline": "Sınırlarını Dijitalleştir",
+    "ctaSignedIn": "Karargaha git →"
   },
   "marquee": {
     "items": {
@@ -233,7 +234,8 @@
     "eyebrow": "Operatör ol",
     "title": "Beynini bugün uyandır.",
     "lede": "İlk kaydını gir, sekiz bölgenin ilk ışıkları yansın. Erken erişim ücretsiz.",
-    "cta": "Hesap oluştur →"
+    "cta": "Hesap oluştur →",
+    "ctaSignedIn": "Karargaha git →"
   },
   "footer": {
     "line": "© 2026 AUDAZ TACTICAL · audazworks.com",
@@ -496,5 +498,30 @@
     "unmute": "Sesi aç",
     "mute": "Sesi kapat",
     "enterSystem": "Sisteme giriş"
+  },
+  "authNav": {
+    "menuAria": "Menüyü aç",
+    "hqCta": "Karargah →",
+    "soon": "Yakında",
+    "operatorBrain": "Operatör Beyni",
+    "operatorFallback": "Operatör",
+    "brainLevel": "Toplam seviye {{level}}",
+    "noroWhat": "NÖRO nedir?",
+    "menus": {
+      "training": "Eğitim",
+      "brain": "Beyin",
+      "ops": "Operasyon",
+      "network": "AUDAZ Ağı",
+      "explore": "Keşfet"
+    },
+    "explore": {
+      "how": "Nasıl çalışır",
+      "modules": "Modüller",
+      "privacy": "Gizlilik",
+      "guide": "Kullanım Kılavuzu"
+    },
+    "descs": {
+      "noro": "Asistan ve rehber"
+    }
   }
 }

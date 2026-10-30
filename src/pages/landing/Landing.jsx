@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import mark from '../../assets/landing-mark.png'
 import crest from '../../assets/landing-crest.png'
@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useLanguagePreference } from '../../context/LanguagePreferenceContext'
 import { beginLandingAuthFlow, endLandingAuthFlow } from '../../lib/landingAuthFlow'
 import AuthModal from './AuthModal'
+import LandingAuthNav from './LandingAuthNav'
 import LandingBrain from './LandingBrain'
 import {
   CHAT_LINES,
@@ -18,10 +19,14 @@ import {
 } from './landingData'
 import './landing.css'
 
+const CANONICAL_HREF = 'https://audazworks.com/'
+
 export default function Landing() {
   const { t, i18n } = useTranslation('landing')
   const { language, setLanguage } = useLanguagePreference()
   const { user, loading } = useAuth()
+  const location = useLocation()
+  const signedIn = Boolean(!loading && user)
 
   const [authOpen, setAuthOpen] = useState(false)
   const [authMode, setAuthMode] = useState(/** @type {'in'|'reg'} */ ('in'))
@@ -32,11 +37,27 @@ export default function Landing() {
     document.title = t('meta.title')
   }, [t, i18n.language])
 
+  useEffect(() => {
+    if (location.pathname !== '/ana-sayfa') return undefined
+    let link = document.querySelector('link[data-lp-canonical="1"]')
+    if (!link) {
+      link = document.createElement('link')
+      link.setAttribute('rel', 'canonical')
+      link.setAttribute('data-lp-canonical', '1')
+      document.head.appendChild(link)
+    }
+    link.setAttribute('href', CANONICAL_HREF)
+    return () => {
+      link?.remove()
+    }
+  }, [location.pathname])
+
   const openAuth = useCallback((mode = 'in') => {
+    if (user) return
     beginLandingAuthFlow()
     setAuthMode(mode)
     setAuthOpen(true)
-  }, [])
+  }, [user])
 
   const closeAuth = useCallback(() => {
     endLandingAuthFlow()
@@ -44,13 +65,14 @@ export default function Landing() {
   }, [])
 
   useEffect(() => {
+    if (signedIn) return undefined
     const onHash = () => {
       if (window.location.hash === '#giris') openAuth('in')
     }
     onHash()
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
-  }, [openAuth])
+  }, [openAuth, signedIn])
 
   useEffect(() => {
     const root = msgsRef.current
@@ -86,49 +108,51 @@ export default function Landing() {
               AUDAZ <b>TACTICAL</b>
             </span>
           </Link>
-          <div className="lp-links">
-            <a href="#nasil">{t('nav.how')}</a>
-            <a href="#beyin">{t('nav.brain')}</a>
-            <a href="#noro">{t('nav.noro')}</a>
-            <a href="#moduller">{t('nav.modules')}</a>
-            <a href="#gizlilik">{t('nav.privacy')}</a>
-          </div>
-          <div className="lp-act">
-            <div className="lp-lang" aria-label={t('nav.langAria')}>
-              <span
-                className={langIsTr ? 'lp-on' : ''}
-                role="button"
-                tabIndex={0}
-                onClick={() => void setLanguage('tr')}
-                onKeyDown={(e) => e.key === 'Enter' && void setLanguage('tr')}
-              >
-                TR
-              </span>
-              <span
-                className={!langIsTr ? 'lp-on' : ''}
-                role="button"
-                tabIndex={0}
-                onClick={() => void setLanguage('en')}
-                onKeyDown={(e) => e.key === 'Enter' && void setLanguage('en')}
-              >
-                EN
-              </span>
-            </div>
-            {!loading && user ? (
-              <Link className="lp-btn lp-gold" to="/dashboard">
-                {t('nav.goToPanel')}
-              </Link>
-            ) : (
-              <>
-                <button type="button" className="lp-btn" onClick={() => openAuth('in')}>
-                  {t('nav.signIn')}
-                </button>
-                <button type="button" className="lp-btn lp-gold" onClick={() => openAuth('reg')}>
-                  {t('nav.joinNow')}
-                </button>
-              </>
-            )}
-          </div>
+          {signedIn && !authOpen ? (
+            <LandingAuthNav />
+          ) : (
+            <>
+              <div className="lp-links">
+                <a href="#nasil">{t('nav.how')}</a>
+                <a href="#beyin">{t('nav.brain')}</a>
+                <a href="#noro">{t('nav.noro')}</a>
+                <a href="#moduller">{t('nav.modules')}</a>
+                <a href="#gizlilik">{t('nav.privacy')}</a>
+              </div>
+              <div className="lp-act">
+                <div className="lp-lang" aria-label={t('nav.langAria')}>
+                  <span
+                    className={langIsTr ? 'lp-on' : ''}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => void setLanguage('tr')}
+                    onKeyDown={(e) => e.key === 'Enter' && void setLanguage('tr')}
+                  >
+                    TR
+                  </span>
+                  <span
+                    className={!langIsTr ? 'lp-on' : ''}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => void setLanguage('en')}
+                    onKeyDown={(e) => e.key === 'Enter' && void setLanguage('en')}
+                  >
+                    EN
+                  </span>
+                </div>
+                {!signedIn ? (
+                  <>
+                    <button type="button" className="lp-btn" onClick={() => openAuth('in')}>
+                      {t('nav.signIn')}
+                    </button>
+                    <button type="button" className="lp-btn lp-gold" onClick={() => openAuth('reg')}>
+                      {t('nav.joinNow')}
+                    </button>
+                  </>
+                ) : null}
+              </div>
+            </>
+          )}
         </div>
       </nav>
 
@@ -139,9 +163,15 @@ export default function Landing() {
             <h1 dangerouslySetInnerHTML={{ __html: t('hero.headlineHtml') }} />
             <p className="lp-lede">{t('hero.lede')}</p>
             <div className="lp-cta">
-              <button type="button" className="lp-btn lp-gold lp-lg" onClick={() => openAuth('reg')}>
-                {t('hero.ctaPrimary')}
-              </button>
+              {signedIn ? (
+                <Link className="lp-btn lp-gold lp-lg" to="/dashboard">
+                  {t('hero.ctaSignedIn')}
+                </Link>
+              ) : (
+                <button type="button" className="lp-btn lp-gold lp-lg" onClick={() => openAuth('reg')}>
+                  {t('hero.ctaPrimary')}
+                </button>
+              )}
               <a className="lp-btn lp-lg" href="#beyin">
                 {t('hero.ctaSecondary')}
               </a>
@@ -331,9 +361,15 @@ export default function Landing() {
             <div className="lp-eyebrow">{t('final.eyebrow')}</div>
             <h2 style={{ marginTop: 16 }}>{t('final.title')}</h2>
             <p className="lp-lede">{t('final.lede')}</p>
-            <button type="button" className="lp-btn lp-gold lp-lg" onClick={() => openAuth('reg')}>
-              {t('final.cta')}
-            </button>
+            {signedIn ? (
+              <Link className="lp-btn lp-gold lp-lg" to="/dashboard">
+                {t('final.ctaSignedIn')}
+              </Link>
+            ) : (
+              <button type="button" className="lp-btn lp-gold lp-lg" onClick={() => openAuth('reg')}>
+                {t('final.cta')}
+              </button>
+            )}
           </div>
         </div>
       </section>

@@ -42,6 +42,7 @@ const AdminPanel = lazy(() => import('./pages/AdminPanel'))
 const PremiumTransition = lazy(() => import('./pages/PremiumTransition'))
 const SiteMaintenance = lazy(() => import('./pages/SiteMaintenance'))
 const UsageGuide = lazy(() => import('./pages/UsageGuide'))
+const Landing = lazy(() => import('./pages/landing/Landing'))
 const NeuralDebug = import.meta.env.DEV
   ? lazy(() => import('./pages/dev/NeuralDebug'))
   : null
@@ -61,6 +62,7 @@ export default function App() {
           <Suspense fallback={<TacticalLoader />}>
           <Routes>
             <Route path="/" element={<RootGate />} />
+            <Route path="/ana-sayfa" element={<Landing />} />
 
             <Route element={<ProtectedRoute />}>
               <Route path="verify-email" element={<VerifyEmail />} />

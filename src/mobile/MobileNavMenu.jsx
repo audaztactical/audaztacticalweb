@@ -13,6 +13,7 @@ import {
 } from '../hooks/useNavLabels'
 import { getNavGroupTheme, NAV_GROUP_THEMES } from '../lib/sidebarGroupColors'
 import { isSidebarGroupOpen } from '../lib/sidebarGroupState'
+import { applyInstructorNavVisibility } from '../lib/navStructure'
 import { auth } from '../lib/firebase'
 import { scheduleScrollAppToTop } from '../lib/scrollAppToTop'
 import { SidebarActionButton, SidebarLink } from '../components/navigation/Sidebar'
@@ -48,27 +49,16 @@ export default function MobileNavMenu({
   const systemTheme = NAV_GROUP_THEMES.system
 
   const extraGroups = useMemo(() => {
-    const isInstructorUser = role === 'instructor' || isInstructor
-    const commandTitle = navGroups.find((g) => g.id === 'command')?.title ?? ''
-    const next = navGroups
+    const withInstructor = applyInstructorNavVisibility(navGroups, instructorNavItem, {
+      role,
+      isInstructor,
+    })
+    return withInstructor
       .map((g) => ({
         ...g,
         items: g.items.filter((item) => !BOTTOM_TAB_ROUTES.has(item.to)),
       }))
-      .map((g) => ({ ...g, items: [...g.items] }))
-
-    if (isInstructorUser) {
-      let command = next.find((g) => g.id === 'command')
-      if (!command) {
-        command = { id: 'command', title: commandTitle, items: [] }
-        next.push(command)
-      }
-      if (!command.items.some((item) => item.to === instructorNavItem.to)) {
-        command.items.push(instructorNavItem)
-      }
-    }
-
-    return next.filter((g) => g.items.length > 0)
+      .filter((g) => g.items.length > 0)
   }, [navGroups, instructorNavItem, role, isInstructor])
 
   if (!open) return null

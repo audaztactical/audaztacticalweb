@@ -28,7 +28,8 @@
     },
     "brandAudaz": "AUDAZ",
     "brandTactical": "TACTICAL",
-    "tagline": "Digitize Your Edge"
+    "tagline": "Digitize Your Edge",
+    "ctaSignedIn": "Go to HQ →"
   },
   "marquee": {
     "items": {
@@ -233,7 +234,8 @@
     "eyebrow": "Become an operator",
     "title": "Wake your brain today.",
     "lede": "Log your first entry and light up all eight regions. Early access is free.",
-    "cta": "Create account →"
+    "cta": "Create account →",
+    "ctaSignedIn": "Go to HQ →"
   },
   "footer": {
     "line": "© 2026 AUDAZ TACTICAL · audazworks.com",
@@ -496,5 +498,30 @@
     "unmute": "Unmute",
     "mute": "Mute",
     "enterSystem": "Enter system"
+  },
+  "authNav": {
+    "menuAria": "Open menu",
+    "hqCta": "HQ →",
+    "soon": "Soon",
+    "operatorBrain": "Operator Brain",
+    "operatorFallback": "Operator",
+    "brainLevel": "Total level {{level}}",
+    "noroWhat": "What is NÖRO?",
+    "menus": {
+      "training": "Training",
+      "brain": "Brain",
+      "ops": "Operations",
+      "network": "AUDAZ Network",
+      "explore": "Explore"
+    },
+    "explore": {
+      "how": "How it works",
+      "modules": "Modules",
+      "privacy": "Privacy",
+      "guide": "Usage guide"
+    },
+    "descs": {
+      "noro": "Assistant and guide"
+    }
   }
 }
