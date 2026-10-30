@@ -17,7 +17,6 @@ import {
   saveUiPrefs,
 } from './lobeMeta'
 import NeuralNodeCard from './NeuralNodeCard'
-import NoroAssistant from './noro/NoroAssistant'
 import './operatorBrain.css'
 
 const MOBILE_TOP = MOBILE_ORDER.slice(0, 4)
@@ -74,7 +73,7 @@ function inflateRect(r, pad) {
  */
 export default function OperatorBrain({ fillViewport = false }) {
   const navigate = useNavigate()
-  const { state, loading, error, refresh, hasActivity, serverStored } = useNeuralState()
+  const { state, loading, error, refresh, hasActivity } = useNeuralState()
 
   const rootRef = useRef(/** @type {HTMLDivElement|null} */ (null))
   const stageRef = useRef(/** @type {HTMLDivElement|null} */ (null))
@@ -1057,14 +1056,6 @@ export default function OperatorBrain({ fillViewport = false }) {
       {flowMobile ? <div className="ob-mbar ob-mbar--sticky">{mbarContent}</div> : null}
 
       {!fillViewport ? <div className="ob-mbar">{mbarContent}</div> : null}
-
-      {/* Sahne overflow:hidden dışında — panel kesilmesin */}
-      <NoroAssistant
-        neuralState={state}
-        serverStored={serverStored}
-        hasActivity={hasActivity}
-        loading={loading}
-      />
     </div>
   )
 }

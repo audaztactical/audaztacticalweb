@@ -9,11 +9,15 @@ import FeedbackPanelModal from '../components/feedback/FeedbackPanelModal'
 import FeedbackToast from '../components/feedback/FeedbackToast'
 import SuspensionGate from '../components/auth/SuspensionGate'
 import { WelcomeOperatorProvider } from '../components/welcome/WelcomeOperatorProvider'
+import { isNeuralPreviewEnabled } from '../lib/neural/neuralPreview'
+import { NoroProvider } from '../components/neural/noro/NoroProvider'
+import NoroAssistant from '../components/neural/noro/NoroAssistant'
 
 /** Telefon / tablet tarayıcı + Capacitor — alt sekme çubuğu kabuğu; masaüstünde sidebar. */
 export default function ResponsiveAppLayout() {
   const compact = useCompactShell()
   const native = Capacitor.isNativePlatform()
+  const noro = isNeuralPreviewEnabled()
 
   useEffect(() => {
     document.documentElement.classList.toggle('compact-shell', compact)
@@ -34,6 +38,11 @@ export default function ResponsiveAppLayout() {
           <FeedbackBubble />
           <FeedbackPanelModal />
           <FeedbackToast />
+          {noro ? (
+            <NoroProvider>
+              <NoroAssistant />
+            </NoroProvider>
+          ) : null}
         </SuspensionGate>
       </WelcomeOperatorProvider>
     </FeedbackPanelProvider>
