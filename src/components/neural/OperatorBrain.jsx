@@ -283,12 +283,31 @@ export default function OperatorBrain({ fillViewport = false }) {
     if (!liveRef.current.loading) renderer.start()
     else renderer.drawSkeleton()
 
-    const ro = new ResizeObserver(() => {
-      renderer.layout()
-      setMobile(renderer.getMetrics().mobile || readMobileMq())
-      setPlaceTick((t) => t + 1)
-      invalidatePorts()
-    })
+    /** @type {ReturnType<typeof setTimeout>|null} */
+    let resizeTimer = null
+    let lastRoW = 0
+    let lastRoH = 0
+    const onRo = () => {
+      const el = stageRef.current
+      if (!el) return
+      const w = el.clientWidth
+      const h = el.clientHeight
+      const dw = Math.abs(w - lastRoW)
+      const dh = Math.abs(h - lastRoH)
+      const hRatio = dh / Math.max(lastRoH, 1)
+      if (lastRoW > 0 && dw < 1 && hRatio < 0.15) return
+      if (resizeTimer) window.clearTimeout(resizeTimer)
+      resizeTimer = window.setTimeout(() => {
+        resizeTimer = null
+        lastRoW = w
+        lastRoH = h
+        renderer.layout({ force: true })
+        setMobile(renderer.getMetrics().mobile || readMobileMq())
+        setPlaceTick((t) => t + 1)
+        invalidatePorts()
+      }, 150)
+    }
+    const ro = new ResizeObserver(onRo)
     if (stageRef.current) ro.observe(stageRef.current)
     if (rootRef.current) ro.observe(rootRef.current)
     if (stageViewRef.current) ro.observe(stageViewRef.current)
@@ -316,6 +335,7 @@ export default function OperatorBrain({ fillViewport = false }) {
 
     return () => {
       window.clearInterval(syncId)
+      if (resizeTimer) window.clearTimeout(resizeTimer)
       ro.disconnect()
       io.disconnect()
       document.removeEventListener('visibilitychange', onVis)
@@ -334,6 +354,7 @@ export default function OperatorBrain({ fillViewport = false }) {
       if (loading) r.drawSkeleton()
     } else {
       r.rebuildWires()
+      r.invalidateStatic?.()
       r.start()
     }
   }, [loading, visible, docHidden, levels])
@@ -353,14 +374,19 @@ export default function OperatorBrain({ fillViewport = false }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [zoom])
 
-  // Mobil sahne yüksekliği: max(360, kalan dvh payı)
+  // Mobil sahne yüksekliği: max(360, kalan görünür pay); adres çubuğu titremesini yoksay
   useEffect(() => {
     if (!flowMobile) return undefined
     const view = stageViewRef.current
     const root = rootRef.current
     if (!view || !root) return undefined
 
-    const apply = () => {
+    let lastAppliedH = 0
+    let lastAppliedW = 0
+    /** @type {ReturnType<typeof setTimeout>|null} */
+    let t = null
+
+    const measureAvail = () => {
       const stage = stageRef.current
       const used = [
         root.querySelector('.ob-mhead'),
@@ -369,21 +395,46 @@ export default function OperatorBrain({ fillViewport = false }) {
         stage?.querySelector('.ob-grid--top'),
         stage?.querySelector('.ob-grid--bot'),
       ].reduce((sum, el) => sum + (el ? /** @type {HTMLElement} */ (el).offsetHeight : 0), 0)
-      const avail = window.innerHeight - root.getBoundingClientRect().top - used - 8
+      const vh =
+        (typeof window !== 'undefined' && window.visualViewport?.height) || window.innerHeight
+      return Math.max(360, vh - root.getBoundingClientRect().top - used - 8)
+    }
+
+    const apply = (force = false) => {
+      const avail = measureAvail()
+      const w = root.clientWidth
+      const dw = Math.abs(w - lastAppliedW)
+      const dh = Math.abs(avail - lastAppliedH)
+      const hRatio = dh / Math.max(lastAppliedH, 1)
+      if (!force && lastAppliedH > 0 && dw < 1 && hRatio < 0.15) return
+      lastAppliedH = avail
+      lastAppliedW = w
       view.style.minHeight = '360px'
-      view.style.height = `${Math.max(360, avail)}px`
-      rendererRef.current?.layout()
+      view.style.height = `${avail}px`
+      rendererRef.current?.layout({ force: true })
       invalidatePorts()
     }
-    apply()
-    const ro = new ResizeObserver(apply)
-    ro.observe(root)
-    window.addEventListener('resize', apply)
-    return () => {
-      ro.disconnect()
-      window.removeEventListener('resize', apply)
+
+    const schedule = () => {
+      if (t) window.clearTimeout(t)
+      t = window.setTimeout(() => {
+        t = null
+        apply(false)
+      }, 150)
     }
-  }, [flowMobile, placeTick, showHint, invalidatePorts])
+
+    apply(true)
+    const ro = new ResizeObserver(schedule)
+    ro.observe(root)
+    window.addEventListener('resize', schedule)
+    window.visualViewport?.addEventListener('resize', schedule)
+    return () => {
+      if (t) window.clearTimeout(t)
+      ro.disconnect()
+      window.removeEventListener('resize', schedule)
+      window.visualViewport?.removeEventListener('resize', schedule)
+    }
+  }, [flowMobile, showHint, invalidatePorts])
 
   const placeStyle = useCallback(
     (id) => {

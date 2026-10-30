@@ -68,6 +68,8 @@ export function createBrainRenderer(opts) {
   let DPR = 1
   let base = 1
   let mobile = false
+  let lightMode = false
+  let frozen = false
   let S = 1
   let OX = 0
   let OY = 0
@@ -76,17 +78,29 @@ export function createBrainRenderer(opts) {
   let layoutDone = false
   let raf = 0
   let lastT = 0
+  let lastDrawMs = 0
   let running = false
   let portsDirty = true
+  let staticDirty = true
+  let lastLevelsKey = ''
+  let lastLayoutW = 0
+  let lastLayoutH = 0
+  let bootMs = 0
+  /** @type {number[]} */
+  const frameSamples = []
+  /** @type {HTMLCanvasElement|null} */
+  let offscreen = null
   /** @type {Record<string, number[][]>} */
   let portsCache = {}
+
+  const MAX_PIXELS = 1_200_000
+  const AB = 8
+  const SB = 5
 
   let G = buildCurlGrid(3.5)
   let NV = G.nx * G.ny
   let LVB = new Float32Array(NV)
   let SELB = new Float32Array(NV)
-  const AB = 8
-  const SB = 5
 
   /** @type {object[]} */
   let wires = []
@@ -98,6 +112,31 @@ export function createBrainRenderer(opts) {
   const flash = {}
 
   const NET = new Map()
+
+  function preferLightDevice() {
+    if (typeof window === 'undefined') return false
+    if (W > 0 && W < 768) return true
+    try {
+      return window.matchMedia('(pointer: coarse)').matches
+    } catch {
+      return false
+    }
+  }
+
+  function contourStep() {
+    if (lightMode || preferLightDevice()) return 8.5
+    if (mobile) return 5.5
+    return 3.5
+  }
+
+  function levelsKey() {
+    const L = levels()
+    return `${LOBES.map((l) => L[l.id] ?? 1).join(',')}|${opts.getSel()}|${opts.getZoom() ? 1 : 0}|${lightMode ? 1 : 0}|${Math.round(viewW)}x${Math.round(viewH)}`
+  }
+
+  function markStaticDirty() {
+    staticDirty = true
+  }
 
   function levels() {
     return opts.getLevels() || {}
@@ -727,7 +766,8 @@ export function createBrainRenderer(opts) {
     const r = rng(5)
     LOBES.forEach((L) => {
       const level = lvOf(L.id)
-      const per = 2 + Math.floor(level * 0.7)
+      const perBase = 2 + Math.floor(level * 0.7)
+      const per = lightMode ? Math.max(1, Math.floor(perBase * 0.45)) : perBase
       L.mods.forEach((_m, pi) => {
         for (let k = 0; k < per; k++) {
           wires.push({
@@ -742,7 +782,7 @@ export function createBrainRenderer(opts) {
       })
     })
     ambient = []
-    const nA = mobile ? 90 : 260
+    const nA = lightMode ? 36 : mobile ? 70 : 260
     for (let i = 0; i < nA; i++) {
       const L = LOBES[Math.floor(r() * 8)]
       const tl = LOBES[Math.floor(r() * 8)]
@@ -791,29 +831,71 @@ export function createBrainRenderer(opts) {
     }
   }
 
-  function layout() {
+  /**
+   * @param {{ force?: boolean }} [optsIn]
+   */
+  function layout(optsIn) {
+    const force = !!(optsIn && optsIn.force)
     const parent = cv.parentElement
     if (!parent) return
     const r = parent.getBoundingClientRect()
-    W = r.width
-    H = r.height
+    const nextW = Math.max(0, r.width)
+    const nextH = Math.max(0, r.height)
+    if (!force && lastLayoutW > 0) {
+      const dw = Math.abs(nextW - lastLayoutW)
+      const dh = Math.abs(nextH - lastLayoutH)
+      const hRatio = dh / Math.max(lastLayoutH, 1)
+      if (dw < 1 && hRatio < 0.15) {
+        W = nextW
+        H = nextH
+        resolveView()
+        camTarget()
+        return
+      }
+    }
+    W = nextW
+    H = nextH
+    lastLayoutW = W
+    lastLayoutH = H
     resolveView()
-    DPR = Math.min(2, window.devicePixelRatio || 1)
-    cv.width = W * DPR
-    cv.height = H * DPR
+
     const wasMobile = mobile
+    const wasLight = lightMode
     mobile = W < 760
-    if (wasMobile !== mobile || !layoutDone) {
-      const cs = mobile ? 5.5 : 3.5
-      G = buildCurlGrid(cs)
+    if (!lightMode && preferLightDevice()) lightMode = true
+
+    const rawDpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1
+    const dprCap = lightMode || mobile ? 1.5 : 2
+    let dpr = Math.min(dprCap, rawDpr)
+    let pw = Math.max(1, Math.floor(W * dpr))
+    let ph = Math.max(1, Math.floor(H * dpr))
+    if (pw * ph > MAX_PIXELS) {
+      const scale = Math.sqrt(MAX_PIXELS / (pw * ph))
+      dpr *= scale
+      pw = Math.max(1, Math.floor(W * dpr))
+      ph = Math.max(1, Math.floor(H * dpr))
+    }
+    DPR = dpr
+    if (cv.width !== pw || cv.height !== ph) {
+      cv.width = pw
+      cv.height = ph
+      markStaticDirty()
+    }
+
+    if (wasMobile !== mobile || wasLight !== lightMode || !layoutDone) {
+      G = buildCurlGrid(contourStep())
       NV = G.nx * G.ny
       LVB = new Float32Array(NV)
       SELB = new Float32Array(NV)
+      markStaticDirty()
     }
     // Beyin: masaüstü ~%48 / ~%62; mobilde sahne-view alanına sığdır
+    const safeW = Math.max(1, viewW)
+    const safeH = Math.max(1, viewH)
     base = mobile
-      ? Math.min((viewW - 24) / 470, (viewH - 16) / 380)
-      : Math.min((viewW * 0.48) / 470, (viewH * 0.62) / 380)
+      ? Math.min((safeW - 24) / 470, (safeH - 16) / 380)
+      : Math.min((safeW * 0.48) / 470, (safeH * 0.62) / 380)
+    if (!Number.isFinite(base) || base <= 0) base = 0.5
     camTarget()
     if (!layoutDone) {
       Object.assign(cam, camT)
@@ -823,6 +905,8 @@ export function createBrainRenderer(opts) {
     portsDirty = true
     updateBlend()
     syncNet()
+    lastLevelsKey = levelsKey()
+    markStaticDirty()
   }
 
   function refreshPorts() {
@@ -831,29 +915,50 @@ export function createBrainRenderer(opts) {
     portsDirty = false
   }
 
-  function frame(ms) {
-    if (!running) return
-    raf = requestAnimationFrame(frame)
-    if (opts.getPaused()) return
-
-    const time = ms / 1000
-    const dt = Math.min(0.05, time - lastT || 0.016)
-    lastT = time
-    const reduce = opts.getReduceMotion()
-    const k = reduce ? 1 : 1 - Math.pow(0.0025, dt)
-    cam.s += (camT.s - cam.s) * k
-    cam.cx += (camT.cx - cam.cx) * k
-    cam.cy += (camT.cy - cam.cy) * k
-    resolveView()
-    S = cam.s
-    OX = viewX + viewW / 2 - cam.cx * S
-    OY = viewY + viewH / 2 - cam.cy * S
-
-    refreshPorts()
-    camTarget()
-
+  function rebuildStaticLayer(time, reduce) {
+    if (!offscreen) offscreen = document.createElement('canvas')
+    if (offscreen.width !== cv.width || offscreen.height !== cv.height) {
+      offscreen.width = cv.width
+      offscreen.height = cv.height
+    }
+    const octx = offscreen.getContext('2d')
+    if (!octx) return
+    // drawBrain ana ctx kullanır — geçici olarak offscreen'e çiz
+    const prev = cv
+    // Ana tuvale çiz, sonra kopyala (tek ctx bağımlılığı)
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0)
     ctx.clearRect(0, 0, W, H)
+    drawBrain(time, true)
+    octx.setTransform(1, 0, 0, 1, 0, 0)
+    octx.clearRect(0, 0, offscreen.width, offscreen.height)
+    octx.drawImage(cv, 0, 0)
+    void prev
+    void reduce
+    staticDirty = false
+  }
+
+  function enterLightMode(reason) {
+    if (lightMode) return
+    lightMode = true
+    G = buildCurlGrid(contourStep())
+    NV = G.nx * G.ny
+    LVB = new Float32Array(NV)
+    SELB = new Float32Array(NV)
+    rebuildWires()
+    updateBlend()
+    markStaticDirty()
+    void reason
+  }
+
+  function paintDynamic(time, reduce) {
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0)
+    ctx.clearRect(0, 0, W, H)
+
+    if (offscreen && !staticDirty) {
+      ctx.setTransform(1, 0, 0, 1, 0, 0)
+      ctx.drawImage(offscreen, 0, 0)
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0)
+    }
 
     ctx.lineWidth = 0.6
     ctx.strokeStyle = 'rgba(255,255,255,.16)'
@@ -886,10 +991,11 @@ export function createBrainRenderer(opts) {
       ctx.stroke()
     })
 
-    if (!reduce && !document.hidden) {
+    if (!reduce && !document.hidden && !frozen) {
+      const pulseChance = lightMode ? 0.0015 : 0.004
       LOBES.forEach((L) => {
         const level = lvOf(L.id)
-        if ((portsCache[L.id] || []).length && Math.random() < (0.004 * level * level) / 3) {
+        if ((portsCache[L.id] || []).length && Math.random() < (pulseChance * level * level) / 3) {
           const ws = wires.filter((w) => w.L === L)
           if (ws.length) pulses.push({ w: ws[Math.floor(Math.random() * ws.length)], t: 0, sp: 0.006 + Math.random() * 0.008 })
         }
@@ -900,7 +1006,8 @@ export function createBrainRenderer(opts) {
       p.t += p.sp
       if (!p.w.b || p.t < 0) return
       const sel = p.w.L.id === selId
-      for (let k2 = 0; k2 < 5; k2++) {
+      const trail = lightMode ? 3 : 5
+      for (let k2 = 0; k2 < trail; k2++) {
         const q = bpt(p.w.b, Math.max(0, p.t - k2 * 0.012))
         ctx.fillStyle = sel ? `rgba(242,194,48,${0.9 - k2 * 0.17})` : `rgba(255,255,255,${0.85 - k2 * 0.16})`
         ctx.beginPath()
@@ -909,17 +1016,151 @@ export function createBrainRenderer(opts) {
       }
       if (p.t >= 0.97) flash[p.w.L.id] = Math.min(1, (flash[p.w.L.id] || 0) + 0.12)
     })
-
-    updateBlend()
-    syncNet()
-    drawBrain(time, reduce)
     for (const f in flash) flash[f] *= 0.94
+  }
+
+  function frame(ms) {
+    if (!running) return
+    raf = requestAnimationFrame(frame)
+    if (opts.getPaused() || frozen) return
+
+    if (!bootMs) bootMs = ms
+    const minFrameGap = lightMode || preferLightDevice() ? 33 : 0
+    if (minFrameGap && ms - lastDrawMs < minFrameGap) return
+    const frameCostStart = performance.now()
+    lastDrawMs = ms
+
+    const time = ms / 1000
+    const dt = Math.min(0.05, time - lastT || 0.016)
+    lastT = time
+    const reduce = opts.getReduceMotion() || lightMode
+    // Mobil/hafif: kamerayı anında oturt (önbellek OX/OY ile uyumlu)
+    const k = lightMode || mobile || reduce ? 1 : 1 - Math.pow(0.0025, dt)
+    camTarget()
+    cam.s += (camT.s - cam.s) * k
+    cam.cx += (camT.cx - cam.cx) * k
+    cam.cy += (camT.cy - cam.cy) * k
+    resolveView()
+    S = cam.s
+    OX = viewX + viewW / 2 - cam.cx * S
+    OY = viewY + viewH / 2 - cam.cy * S
+
+    refreshPorts()
+
+    const lk = levelsKey()
+    if (lk !== lastLevelsKey) {
+      lastLevelsKey = lk
+      updateBlend()
+      syncNet()
+      markStaticDirty()
+    }
+
+    const useCache = lightMode || mobile
+    if (useCache) {
+      if (staticDirty || !offscreen) rebuildStaticLayer(time, reduce)
+      paintDynamic(time, reduce)
+    } else {
+      // Masaüstü: tam kalite her kare (görünüm değişmesin)
+      updateBlend()
+      syncNet()
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0)
+      ctx.clearRect(0, 0, W, H)
+      ctx.lineWidth = 0.6
+      ctx.strokeStyle = 'rgba(255,255,255,.16)'
+      ctx.beginPath()
+      ambient.forEach((w) => {
+        const b = bez(w, time, reduce)
+        if (!b) return
+        ctx.moveTo(b[0], b[1])
+        ctx.bezierCurveTo(b[2], b[3], b[4], b[5], b[6], b[7])
+      })
+      ctx.stroke()
+      const selId = opts.getSel()
+      LOBES.forEach((L) => {
+        const ports = portsCache[L.id]
+        if (!ports?.length) return
+        const level = lvOf(L.id)
+        const sel = L.id === selId
+        ctx.lineWidth = sel ? 1.1 : 0.5 + level * 0.06
+        ctx.strokeStyle = sel ? 'rgba(242,194,48,.6)' : `rgba(255,255,255,${0.18 + level * 0.05})`
+        ctx.beginPath()
+        wires.forEach((w) => {
+          if (w.L !== L) return
+          const b = bez(w, time, reduce)
+          w.b = b
+          if (!b) return
+          ctx.moveTo(b[0], b[1])
+          ctx.bezierCurveTo(b[2], b[3], b[4], b[5], b[6], b[7])
+        })
+        ctx.stroke()
+      })
+      if (!reduce && !document.hidden) {
+        LOBES.forEach((L) => {
+          const level = lvOf(L.id)
+          if ((portsCache[L.id] || []).length && Math.random() < (0.004 * level * level) / 3) {
+            const ws = wires.filter((w) => w.L === L)
+            if (ws.length)
+              pulses.push({
+                w: ws[Math.floor(Math.random() * ws.length)],
+                t: 0,
+                sp: 0.006 + Math.random() * 0.008,
+              })
+          }
+        })
+      }
+      pulses = pulses.filter((p) => p.t < 1)
+      pulses.forEach((p) => {
+        p.t += p.sp
+        if (!p.w.b || p.t < 0) return
+        const sel = p.w.L.id === selId
+        for (let k2 = 0; k2 < 5; k2++) {
+          const q = bpt(p.w.b, Math.max(0, p.t - k2 * 0.012))
+          ctx.fillStyle = sel
+            ? `rgba(242,194,48,${0.9 - k2 * 0.17})`
+            : `rgba(255,255,255,${0.85 - k2 * 0.16})`
+          ctx.beginPath()
+          ctx.arc(q[0], q[1], 1.9 - k2 * 0.25, 0, 7)
+          ctx.fill()
+        }
+        if (p.t >= 0.97) flash[p.w.L.id] = Math.min(1, (flash[p.w.L.id] || 0) + 0.12)
+      })
+      drawBrain(time, reduce)
+      for (const f in flash) flash[f] *= 0.94
+    }
+
+    const cost = performance.now() - frameCostStart
+    frameSamples.push(cost)
+    if (frameSamples.length > 45) frameSamples.shift()
+    if (ms - bootMs > 2000 && frameSamples.length >= 20) {
+      const avg = frameSamples.reduce((a, b) => a + b, 0) / frameSamples.length
+      if (!lightMode && avg > 40) {
+        enterLightMode('auto')
+        frameSamples.length = 0
+      } else if (lightMode && avg > 40) {
+        frozen = true
+        running = false
+        if (raf) cancelAnimationFrame(raf)
+        raf = 0
+      }
+    }
   }
 
   return {
     start() {
+      if (frozen) {
+        // statik kareyi bir kez çiz
+        layout({ force: false })
+        resolveView()
+        S = cam.s
+        OX = viewX + viewW / 2 - cam.cx * S
+        OY = viewY + viewH / 2 - cam.cy * S
+        if (staticDirty || !offscreen) rebuildStaticLayer(0, true)
+        paintDynamic(0, true)
+        return
+      }
       if (running) return
       running = true
+      bootMs = 0
       lastT = performance.now() / 1000
       raf = requestAnimationFrame(frame)
     },
@@ -933,16 +1174,37 @@ export function createBrainRenderer(opts) {
     invalidatePorts() {
       portsDirty = true
     },
+    invalidateStatic: markStaticDirty,
     drawSkeleton,
     screenToBrain(clientX, clientY) {
       const r = cv.getBoundingClientRect()
       return lobeAt((clientX - r.left - OX) / S, (clientY - r.top - OY) / S)
     },
     getMetrics() {
-      return { W, H, mobile, base, camS: cam.s, zoomTag: opts.getZoom() ? `${(BY[opts.getSel()] || BY.motor).name} · ${(cam.s / base).toFixed(1)}x` : '' }
+      const avg =
+        frameSamples.length > 0
+          ? frameSamples.reduce((a, b) => a + b, 0) / frameSamples.length
+          : 0
+      return {
+        W,
+        H,
+        mobile,
+        lightMode,
+        frozen,
+        dpr: DPR,
+        canvasCss: { w: W, h: H },
+        canvasBuf: { w: cv.width, h: cv.height },
+        avgFrameMs: avg,
+        base,
+        camS: cam.s,
+        zoomTag: opts.getZoom()
+          ? `${(BY[opts.getSel()] || BY.motor).name} · ${(cam.s / base).toFixed(1)}x`
+          : '',
+      }
     },
     destroy() {
       this.stop()
+      offscreen = null
     },
   }
 }

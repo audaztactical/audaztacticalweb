@@ -116,8 +116,20 @@ function safeInsets() {
 
 function feedbackClearance() {
   const compact = document.documentElement.classList.contains('compact-shell')
-  const tab = compact ? 64 : 0
-  return 72 + tab
+  const tabCss = parseFloat(
+    getComputedStyle(document.documentElement).getPropertyValue('--mobile-tab-bar-h'),
+  )
+  const tab = compact ? (Number.isFinite(tabCss) && tabCss > 0 ? tabCss : 64) : 0
+  const bubble = document.querySelector('.feedback-floating-bubble')
+  if (bubble instanceof HTMLElement) {
+    const r = bubble.getBoundingClientRect()
+    if (r.height > 0 && r.top < window.innerHeight) {
+      // Balonun üst kenarına kadar boşluk + pay
+      return Math.max(96 + tab, window.innerHeight - r.top + 12)
+    }
+  }
+  // Sarı geri-bildirim düğmesi (~52) + dismiss + boşluk
+  return 96 + tab
 }
 
 /** Görünür alan — üst bar / sol menü altına girmesin */
@@ -1185,7 +1197,7 @@ export default function NoroAssistant() {
         ]
           .filter(Boolean)
           .join(' ')}
-        style={{ left: px.x, top: px.y }}
+        style={{ left: Math.round(px.x), top: Math.round(px.y) }}
         aria-label="NÖRO asistanı"
         onPointerDown={onPtrDown}
         onPointerMove={onPtrMove}
