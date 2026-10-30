@@ -1,6 +1,7 @@
 /**
  * Operatör Beyni — ortak olay işleyici (Admin SDK).
  * Kayıt silinince puan geri alınmaz (bilinçli).
+ * State yok / fullBuild değilse tam kurulum (lazy init).
  */
 
 const { getFirestore, FieldValue } = require('firebase-admin/firestore')
@@ -88,7 +89,6 @@ function eventsFromDocs(docs, extra) {
   for (const d of docs) {
     const data = d.data()
     if (!data?.type || !Number.isFinite(data.ts)) continue
-    // eventKey = source__docId → id kısmı
     const parts = String(d.id).split('__')
     const id = parts.length > 1 ? parts.slice(1).join('__') : d.id
     out.push({
@@ -134,7 +134,28 @@ async function processNeuralEvent(uid, source, docId, data) {
   const eventsCol = db.collection('users').doc(uid).collection('neural_events')
 
   try {
+    const {
+      needsFullBuild,
+      ensureFullUserState,
+      withFullBuildPreserved,
+    } = require('./neuralBuild')
+
+    const pre = await stateRef.get()
+    if (needsFullBuild(pre.exists ? pre.data() : null)) {
+      // Tetikleyen kayıt kaynaklarda; tam kurulum geçmişi de alır
+      const ensured = await ensureFullUserState(uid)
+      logger.info('neural_lazy_init', {
+        source,
+        status: ensured.status,
+        eventCount: ensured.eventCount,
+      })
+      return { ok: true, mode: 'full_build', ...ensured }
+    }
+
     let outOfOrder = false
+    let racedNeedsBuild = false
+    /** @type {FirebaseFirestore.DocumentData|null} */
+    let prevStateData = null
 
     await db.runTransaction(async (tx) => {
       const evSnap = await tx.get(eventRef)
@@ -143,24 +164,38 @@ async function processNeuralEvent(uid, source, docId, data) {
       }
 
       const stSnap = await tx.get(stateRef)
-      const stored = hydrateStored(stSnap.exists ? stSnap.data() : null)
+      prevStateData = stSnap.exists ? stSnap.data() || null : null
+      if (needsFullBuild(prevStateData)) {
+        racedNeedsBuild = true
+        return
+      }
+
+      const stored = hydrateStored(prevStateData)
       const lastTs = Number(stored.lastEventTs) || 0
 
       if (event.ts >= lastTs) {
         const { state, logEntry } = applyEvent(stored, event)
         tx.set(eventRef, toEventDoc(event, logEntry))
-        tx.set(stateRef, toStateDoc(state), { merge: false })
+        tx.set(
+          stateRef,
+          withFullBuildPreserved(toStateDoc(state), prevStateData),
+          { merge: false },
+        )
         return
       }
 
       outOfOrder = true
     })
 
+    if (racedNeedsBuild) {
+      const ensured = await ensureFullUserState(uid)
+      return { ok: true, mode: 'full_build', ...ensured }
+    }
+
     if (!outOfOrder) {
       return { ok: true, mode: 'incremental' }
     }
 
-    // Geç gelen olay: tüm event'leri oku + rebuild (idempotent)
     const allSnap = await eventsCol.get()
     const already = allSnap.docs.some((d) => d.id === eventKey)
     if (already) return { ok: true, mode: 'duplicate' }
@@ -175,9 +210,13 @@ async function processNeuralEvent(uid, source, docId, data) {
       streakBonus: 0,
     }
 
+    const stSnap2 = await stateRef.get()
     const batch = db.batch()
     batch.set(eventRef, toEventDoc(event, logEntry))
-    batch.set(stateRef, toStateDoc(state))
+    batch.set(
+      stateRef,
+      withFullBuildPreserved(toStateDoc(state), stSnap2.exists ? stSnap2.data() : null),
+    )
     await batch.commit()
     logger.info('neural_rebuild', { source, reason: 'out_of_order' })
     return { ok: true, mode: 'rebuild' }

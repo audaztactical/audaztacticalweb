@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   collection,
   doc,
@@ -9,7 +9,9 @@ import {
   query,
   where,
 } from 'firebase/firestore'
+import { httpsCallable } from 'firebase/functions'
 import { useAuth } from '../context/AuthContext'
+import { getAudazFunctions } from '../lib/cloudFunctions'
 import { db, isFirebaseConfigured } from '../lib/firebase'
 import { NEURAL_SOURCES } from '../lib/neural/neuralConfig'
 import {
@@ -68,6 +70,7 @@ export function useNeuralState(opts = {}) {
   const [serverStored, setServerStored] = useState(/** @type {object|null|undefined} */ (undefined))
   const [serverLoading, setServerLoading] = useState(true)
   const [clockMs, setClockMs] = useState(() => Date.now())
+  const ensureOnceRef = useRef(false)
 
   const nowMs = optsNow ?? clockMs
 
@@ -77,6 +80,11 @@ export function useNeuralState(opts = {}) {
     const id = window.setInterval(() => setClockMs(Date.now()), 60_000)
     return () => window.clearInterval(id)
   }, [optsNow])
+
+  // uid değişince ensure tekrar denenebilir
+  useEffect(() => {
+    ensureOnceRef.current = false
+  }, [uid])
 
   // Sunucu state dinle
   useEffect(() => {
@@ -100,6 +108,21 @@ export function useNeuralState(opts = {}) {
     )
     return () => unsub()
   }, [uid])
+
+  // State yok veya fullBuild değil → bir kez neuralEnsureState (sessiz)
+  useEffect(() => {
+    if (!uid || serverLoading || serverStored === undefined) return
+    const needs =
+      serverStored == null || /** @type {{ fullBuild?: boolean }} */ (serverStored).fullBuild !== true
+    if (!needs || ensureOnceRef.current) return
+    ensureOnceRef.current = true
+    const functions = getAudazFunctions()
+    if (!functions) return
+    const fn = httpsCallable(functions, 'neuralEnsureState')
+    void fn({}).catch(() => {
+      /* network / permission — client-fallback sürer */
+    })
+  }, [uid, serverLoading, serverStored])
 
   const loadExtras = useCallback(async () => {
     if (!uid || !isFirebaseConfigured() || !db) {

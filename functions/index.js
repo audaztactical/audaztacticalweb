@@ -31,6 +31,7 @@ const {
   neuralOnActivityEventCreated,
 } = require('./lib/neuralTriggers')
 const { neuralBackfillUser } = require('./lib/neuralBackfill')
+const { neuralEnsureState } = require('./lib/neuralEnsureState')
 
 initializeApp()
 
@@ -310,3 +311,4 @@ exports.neuralOnForumPostCreated = neuralOnForumPostCreated
 exports.neuralOnForumReplyCreated = neuralOnForumReplyCreated
 exports.neuralOnActivityEventCreated = neuralOnActivityEventCreated
 exports.neuralBackfillUser = neuralBackfillUser
+exports.neuralEnsureState = neuralEnsureState

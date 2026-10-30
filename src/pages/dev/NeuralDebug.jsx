@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
+import { httpsCallable } from 'firebase/functions'
 import { useAuth } from '../../context/AuthContext'
+import { getAudazFunctions } from '../../lib/cloudFunctions'
 import { computeORS } from '../../lib/orsEngine'
 import { REGIONS, REGION_IDS, NEURAL_SOURCES } from '../../lib/neural/neuralConfig'
 import {
@@ -11,11 +13,31 @@ import { NEURAL_READ_LIMIT, useNeuralState } from '../../hooks/useNeuralState'
 
 const DAY_MS = 86_400_000
 
+/**
+ * @param {unknown} raw
+ */
+function summarizeBackfillResult(raw) {
+  const r = /** @type {Record<string, unknown>} */ (raw && typeof raw === 'object' ? raw : {})
+  const levels = r.levels && typeof r.levels === 'object' ? r.levels : {}
+  return {
+    dryRun: r.dryRun === true,
+    eventCount: Number(r.eventCount) || 0,
+    totalLevel: Number(r.totalLevel) || 0,
+    streak: Number(r.streak) || 0,
+    bySource: r.bySource && typeof r.bySource === 'object' ? r.bySource : {},
+    levels,
+  }
+}
+
 export default function NeuralDebug() {
-  const { user, userData } = useAuth()
+  const { user, userData, isAdmin } = useAuth()
   const uid = user?.uid ?? null
   const [nowOffsetDays, setNowOffsetDays] = useState(0)
   const nowMs = Date.now() + nowOffsetDays * DAY_MS
+  const [backfillBusy, setBackfillBusy] = useState(false)
+  const [backfillConfirmWrite, setBackfillConfirmWrite] = useState(false)
+  const [backfillMsg, setBackfillMsg] = useState(/** @type {string|null} */ (null))
+  const [backfillErr, setBackfillErr] = useState(/** @type {string|null} */ (null))
 
   const {
     state: neural,
@@ -81,6 +103,49 @@ export default function NeuralDebug() {
 
   const recentLog = useMemo(() => [...neural.eventLog].reverse().slice(0, 50), [neural.eventLog])
 
+  /**
+   * @param {boolean} dryRun
+   */
+  async function runBackfill(dryRun) {
+    if (!uid || !isAdmin || backfillBusy) return
+    setBackfillBusy(true)
+    setBackfillErr(null)
+    setBackfillMsg(null)
+    try {
+      const functions = getAudazFunctions()
+      if (!functions) throw new Error('Firebase Functions yok')
+      const fn = httpsCallable(functions, 'neuralBackfillUser')
+      const res = await fn({ uid, dryRun })
+      const s = summarizeBackfillResult(res.data)
+      const levelParts = Object.entries(s.levels)
+        .map(([k, v]) => `${k}:${v}`)
+        .join(' ')
+      const srcParts = Object.entries(s.bySource)
+        .map(([k, v]) => `${k}=${v}`)
+        .join(' · ')
+      setBackfillMsg(
+        [
+          s.dryRun ? 'DRY-RUN' : 'YAZILDI',
+          `eventCount=${s.eventCount}`,
+          `totalLevel=${s.totalLevel}`,
+          `streak=${s.streak}`,
+          levelParts ? `levels ${levelParts}` : null,
+          srcParts ? `bySource ${srcParts}` : null,
+        ]
+          .filter(Boolean)
+          .join(' · '),
+      )
+      setBackfillConfirmWrite(false)
+      if (!dryRun) refresh()
+    } catch (err) {
+      const code = String(/** @type {{ code?: string }} */ (err)?.code ?? '')
+      const message = String(/** @type {{ message?: string }} */ (err)?.message ?? err ?? '')
+      setBackfillErr([code, message].filter(Boolean).join(' — ') || 'Backfill hatası')
+    } finally {
+      setBackfillBusy(false)
+    }
+  }
+
   if (!uid) {
     return (
       <div className="p-6 font-mono-technical text-sm text-slate-400">
@@ -113,6 +178,71 @@ export default function NeuralDebug() {
           Yenile
         </button>
       </header>
+
+      {isAdmin ? (
+        <section className="rounded-lg border border-[#ffb400]/25 bg-[#ffb400]/5 p-4">
+          <h2 className="font-display text-sm font-bold uppercase tracking-widest text-[#d4af37]">
+            Admin · neuralBackfillUser
+          </h2>
+          <p className="mt-1 font-mono-technical text-[11px] text-slate-500">
+            Oturumdaki uid için callable · önce deneme, sonra yaz (canlı Firestore).
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={backfillBusy}
+              onClick={() => void runBackfill(true)}
+              className="rounded border border-sky-500/40 bg-sky-950/40 px-3 py-1.5 font-mono-technical text-xs text-sky-200 hover:bg-sky-900/50 disabled:opacity-40"
+            >
+              Backfill — deneme (dry-run)
+            </button>
+            {!backfillConfirmWrite ? (
+              <button
+                type="button"
+                disabled={backfillBusy}
+                onClick={() => {
+                  setBackfillConfirmWrite(true)
+                  setBackfillErr(null)
+                }}
+                className="rounded border border-orange-500/40 bg-orange-950/40 px-3 py-1.5 font-mono-technical text-xs text-orange-200 hover:bg-orange-900/50 disabled:opacity-40"
+              >
+                Backfill — yaz
+              </button>
+            ) : (
+              <div className="flex flex-wrap items-center gap-2 rounded border border-orange-500/50 bg-black/50 px-3 py-2">
+                <span className="font-mono-technical text-[11px] text-orange-200">
+                  Canlı yazma onaylansın mı? (neural_events + neural/state)
+                </span>
+                <button
+                  type="button"
+                  disabled={backfillBusy}
+                  onClick={() => void runBackfill(false)}
+                  className="rounded border border-red-500/50 bg-red-950/60 px-3 py-1 font-mono-technical text-xs text-red-100 hover:bg-red-900/60 disabled:opacity-40"
+                >
+                  Evet, yaz
+                </button>
+                <button
+                  type="button"
+                  disabled={backfillBusy}
+                  onClick={() => setBackfillConfirmWrite(false)}
+                  className="rounded border border-white/15 px-3 py-1 font-mono-technical text-xs text-slate-400 hover:bg-white/5 disabled:opacity-40"
+                >
+                  İptal
+                </button>
+              </div>
+            )}
+          </div>
+          {backfillBusy ? (
+            <p className="mt-2 font-mono-technical text-xs text-slate-500">Backfill çalışıyor…</p>
+          ) : null}
+          {backfillMsg ? (
+            <p className="mt-2 break-all font-mono-technical text-[11px] text-emerald-300/90">{backfillMsg}</p>
+          ) : null}
+          {backfillErr ? (
+            <p className="mt-2 break-all font-mono-technical text-[11px] text-red-300">{backfillErr}</p>
+          ) : null}
+        </section>
+      ) : null}
 
       {truncateWarn.length > 0 ? (
         <p className="rounded-lg border border-orange-500/40 bg-orange-950/30 px-3 py-2 font-mono-technical text-xs text-orange-200">
