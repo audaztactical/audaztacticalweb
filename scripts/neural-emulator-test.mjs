@@ -293,6 +293,78 @@ async function main() {
     }
     assert('activity_events yanlış tip reddedilir', badTypeDenied)
 
+    // AAR_ENTRY tipi kabul
+    let aarTypeOk = false
+    try {
+      await setDoc(doc(cDb, 'users', otherUid, 'activity_events', 'AAR_rules_ok'), {
+        type: 'AAR_ENTRY',
+        refId: 'ev_rules_ok',
+        createdAt: serverTimestamp(),
+      })
+      aarTypeOk = true
+    } catch {
+      aarTypeOk = false
+    }
+    assert('activity_events AAR_ENTRY kabul', aarTypeOk)
+
+    // aar_notes — sahip yazabilir; yabancı okuyamaz; şema/update/delete reddi
+    await signOut(cAuth)
+    await signInWithEmailAndPassword(cAuth, SEED_EMAIL, 'neural-seed-pass-1')
+    const aarKey = `aar_rule_${Date.now()}`
+    let aarWriteOk = false
+    try {
+      await setDoc(doc(cDb, 'users', uid, 'aar_notes', aarKey), {
+        eventKey: aarKey,
+        region: 'motor',
+        good: 'Tutuş iyiydi',
+        change: 'Nefes kontrolü',
+        createdAt: serverTimestamp(),
+      })
+      aarWriteOk = true
+    } catch (e) {
+      aarWriteOk = false
+      console.error('    aar write err', e?.message || e)
+    }
+    assert('sahip aar_notes yazabilir', aarWriteOk)
+
+    let aarBadSchema = false
+    try {
+      await setDoc(doc(cDb, 'users', uid, 'aar_notes', `${aarKey}_bad`), {
+        eventKey: `${aarKey}_bad`,
+        region: 'motor',
+        good: 'x',
+        change: 'y',
+        createdAt: serverTimestamp(),
+        extra: 'nope',
+      })
+    } catch {
+      aarBadSchema = true
+    }
+    assert('aar_notes ekstra alan reddedilir', aarBadSchema)
+
+    let aarUpdateDenied = false
+    try {
+      await setDoc(
+        doc(cDb, 'users', uid, 'aar_notes', aarKey),
+        { good: 'hack' },
+        { merge: true },
+      )
+    } catch {
+      aarUpdateDenied = true
+    }
+    assert('aar_notes update reddedilir', aarUpdateDenied)
+
+    await signOut(cAuth)
+    await signInWithEmailAndPassword(cAuth, otherEmail, 'other-pass-123')
+    let aarForeignDenied = false
+    try {
+      const snap = await getDoc(doc(cDb, 'users', uid, 'aar_notes', aarKey))
+      aarForeignDenied = !snap.exists()
+    } catch {
+      aarForeignDenied = true
+    }
+    assert('başkasının aar_notes okunamaz', aarForeignDenied)
+
     // instructor role user cannot read owner's neural
     await db.collection('users').doc(otherUid).set({ role: 'instructor', email: otherEmail }, { merge: true })
     let instructorDenied = false
@@ -305,6 +377,145 @@ async function main() {
     assert('eğitmen başkasının beynini okuyamaz', instructorDenied)
 
     await delClient(app)
+  }
+
+  console.log('\n(5b) AAR_ENTRY güvenlik: not kapısı + günlük tip tavanı')
+  {
+    const stamp = Date.now()
+
+    // (a) aar_notes yok → puan yok
+    const orphanId = `aar_orphan_${stamp}`
+    const orphanPayload = {
+      type: 'AAR_ENTRY',
+      refId: orphanId,
+      createdAt: Timestamp.now(),
+    }
+    await db
+      .collection('users')
+      .doc(uid)
+      .collection('activity_events')
+      .doc(`AAR_${orphanId}`)
+      .set(orphanPayload)
+    const orphanRes = await processNeuralEvent(
+      uid,
+      NEURAL_SOURCES.ACTIVITY_EVENTS,
+      `AAR_${orphanId}`,
+      orphanPayload,
+    )
+    assert('a) notsuz AAR skip', orphanRes.ok === false && orphanRes.reason === 'aar_note_missing')
+    const orphanEv = await db
+      .collection('users')
+      .doc(uid)
+      .collection('neural_events')
+      .doc(eventKeyFor(NEURAL_SOURCES.ACTIVITY_EVENTS, `AAR_${orphanId}`))
+      .get()
+    assert('a) notsuz AAR event yok', !orphanEv.exists)
+
+    // (b) geçerli not → frontal puan
+    const before = await db.collection('users').doc(uid).collection('neural').doc('state').get()
+    const countBefore = Number(before.data()?.eventCount || 0)
+    const aarEvId = `aar_e2e_${stamp}`
+    await db
+      .collection('users')
+      .doc(uid)
+      .collection('aar_notes')
+      .doc(aarEvId)
+      .set({
+        eventKey: aarEvId,
+        region: 'motor',
+        good: 'Tutuş',
+        change: 'Nefes',
+        createdAt: Timestamp.now(),
+      })
+    const payload = {
+      type: 'AAR_ENTRY',
+      refId: aarEvId,
+      createdAt: Timestamp.now(),
+    }
+    await db.collection('users').doc(uid).collection('activity_events').doc(`AAR_${aarEvId}`).set(payload)
+    const res = await processNeuralEvent(uid, NEURAL_SOURCES.ACTIVITY_EVENTS, `AAR_${aarEvId}`, payload)
+    assert('b) geçerli AAR işlendi', res.ok === true, JSON.stringify(res))
+    const nev = await db
+      .collection('users')
+      .doc(uid)
+      .collection('neural_events')
+      .doc(eventKeyFor(NEURAL_SOURCES.ACTIVITY_EVENTS, `AAR_${aarEvId}`))
+      .get()
+    assert('b) AAR neural_event yazıldı', nev.exists)
+    assert('b) AAR frontal > 0', Number(nev.data()?.gains?.frontal) > 0, JSON.stringify(nev.data()?.gains))
+    const afterB = await db.collection('users').doc(uid).collection('neural').doc('state').get()
+    assert(
+      'b) eventCount arttı',
+      Number(afterB.data()?.eventCount || 0) > countBefore,
+      `${countBefore} → ${afterB.data()?.eventCount}`,
+    )
+
+    // (c) aynı gün 4. AAR → tip tavanı, puan yok
+    // (b) zaten 1 AAR saydı → 2 daha doldur, 4. capped
+    const dayBase = stamp + 1
+    for (let i = 0; i < 2; i += 1) {
+      const id = `aar_cap_${dayBase}_${i}`
+      await db
+        .collection('users')
+        .doc(uid)
+        .collection('aar_notes')
+        .doc(id)
+        .set({
+          eventKey: id,
+          region: 'motor',
+          good: 'g',
+          change: 'c',
+          createdAt: Timestamp.now(),
+        })
+      const p = { type: 'AAR_ENTRY', refId: id, createdAt: Timestamp.now() }
+      await db.collection('users').doc(uid).collection('activity_events').doc(`AAR_${id}`).set(p)
+      await processNeuralEvent(uid, NEURAL_SOURCES.ACTIVITY_EVENTS, `AAR_${id}`, p)
+    }
+    const fourthId = `aar_cap_${dayBase}_3`
+    await db
+      .collection('users')
+      .doc(uid)
+      .collection('aar_notes')
+      .doc(fourthId)
+      .set({
+        eventKey: fourthId,
+        region: 'motor',
+        good: 'g',
+        change: 'c',
+        createdAt: Timestamp.now(),
+      })
+    const fourthPayload = {
+      type: 'AAR_ENTRY',
+      refId: fourthId,
+      createdAt: Timestamp.now(),
+    }
+    await db
+      .collection('users')
+      .doc(uid)
+      .collection('activity_events')
+      .doc(`AAR_${fourthId}`)
+      .set(fourthPayload)
+    const fourthRes = await processNeuralEvent(
+      uid,
+      NEURAL_SOURCES.ACTIVITY_EVENTS,
+      `AAR_${fourthId}`,
+      fourthPayload,
+    )
+    assert('c) 4. AAR process ok', fourthRes.ok === true, JSON.stringify(fourthRes))
+    const fourthEv = await db
+      .collection('users')
+      .doc(uid)
+      .collection('neural_events')
+      .doc(eventKeyFor(NEURAL_SOURCES.ACTIVITY_EVENTS, `AAR_${fourthId}`))
+      .get()
+    const fg = fourthEv.data()?.gains || {}
+    const frontalGain = Number(fg.frontal) || 0
+    assert(
+      'c) 4. AAR puan almaz (typeCap)',
+      fourthEv.exists &&
+        (fourthEv.data()?.flags?.typeCap === true || frontalGain === 0),
+      JSON.stringify(fourthEv.data()),
+    )
   }
 
   console.log('\n(6) Backfill dry-run / write idempotent')

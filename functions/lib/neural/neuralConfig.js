@@ -205,7 +205,7 @@ const ACTIVITY_RULES = Object.freeze({
   AAR_ENTRY: {
     baseXp: 15,
     weights: { frontal: 0.8, hippocampus: 0.2 },
-    futureOnly: true,
+    perDayTypeCap: 3,
   },
 })
 

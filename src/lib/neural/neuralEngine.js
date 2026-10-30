@@ -300,8 +300,14 @@ export function normalizeEvent(source, doc) {
     type = 'FORUM_REPLY'
   } else if (source === NEURAL_SOURCES.ACTIVITY_EVENTS) {
     const t = String(doc.type ?? '')
-    if (t === 'INTEL_READ' || t === 'GUIDE_READ' || t === 'BALLISTIC_CALC') type = t
-    else return ignore('unmapped_activity_event')
+    if (
+      t === 'INTEL_READ' ||
+      t === 'GUIDE_READ' ||
+      t === 'BALLISTIC_CALC' ||
+      t === 'AAR_ENTRY'
+    ) {
+      type = t
+    } else return ignore('unmapped_activity_event')
   } else {
     return ignore('unknown_source')
   }

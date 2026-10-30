@@ -333,6 +333,31 @@ console.log('\n(e) applyEvent · rebuildState · applyDecay')
   )
 }
 
+// --- (e2) AAR_ENTRY tip tavanı ---
+console.log('\n(e2) AAR_ENTRY perDayTypeCap')
+{
+  assert('AAR_ENTRY perDayTypeCap=3', ACTIVITY_RULES.AAR_ENTRY?.perDayTypeCap === 3)
+  const t0 = Date.parse('2026-10-30T10:00:00+03:00')
+  let st = emptyStoredState()
+  const gains = []
+  for (let i = 0; i < 4; i += 1) {
+    const r = applyEvent(st, {
+      id: `aar_${i}`,
+      source: NEURAL_SOURCES.ACTIVITY_EVENTS,
+      type: 'AAR_ENTRY',
+      ts: t0 + i * 1000,
+      score: null,
+    })
+    st = r.state
+    gains.push({
+      frontal: Number(r.logEntry.gains?.frontal) || 0,
+      capped: r.logEntry.cappedType === true,
+    })
+  }
+  assert('ilk 3 AAR frontal > 0', gains[0].frontal > 0 && gains[1].frontal > 0 && gains[2].frontal > 0)
+  assert('4. AAR capped / puan 0', gains[3].capped === true && gains[3].frontal === 0)
+}
+
 // --- (f) functions kopyası eşliği ---
 console.log('\n(f) src ↔ functions/lib/neural kopya eşliği')
 {

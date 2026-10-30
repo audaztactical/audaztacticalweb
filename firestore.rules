@@ -355,17 +355,38 @@ service cloud.firestore {
     }
 
     /**
-     * Operatör Beyni — istemci activity olayları (INTEL_READ / GUIDE_READ / BALLISTIC_CALC).
-     * create-only; şema kilitli.
+     * Operatör Beyni — istemci activity olayları (INTEL_READ / GUIDE_READ / BALLISTIC_CALC / AAR_ENTRY).
+     * create-only; şema kilitli. Eğitmen/admin ek erişimi YOK.
      */
     match /users/{userId}/activity_events/{eventId} {
       allow read: if isOwnerUid(userId);
       allow create: if isOwnerUid(userId)
         && request.resource.data.keys().hasOnly(['type', 'refId', 'createdAt'])
-        && request.resource.data.type in ['INTEL_READ', 'GUIDE_READ', 'BALLISTIC_CALC']
+        && request.resource.data.type in ['INTEL_READ', 'GUIDE_READ', 'BALLISTIC_CALC', 'AAR_ENTRY']
         && request.resource.data.refId is string
         && request.resource.data.refId.size() > 0
         && request.resource.data.refId.size() <= 128
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+
+    /**
+     * Operatör Beyni — AAR notları (NÖRO). create-only; noteId == eventKey.
+     * Eğitmen/admin erişimi YOK.
+     */
+    match /users/{userId}/aar_notes/{noteId} {
+      allow read: if isOwnerUid(userId);
+      allow create: if isOwnerUid(userId)
+        && request.resource.data.keys().hasOnly(['eventKey', 'region', 'good', 'change', 'createdAt'])
+        && request.resource.data.eventKey is string
+        && request.resource.data.eventKey == noteId
+        && request.resource.data.region in ['frontal', 'motor', 'parietal', 'occipital', 'temporal', 'hippocampus', 'cerebellum', 'stem']
+        && request.resource.data.good is string
+        && request.resource.data.good.size() >= 1
+        && request.resource.data.good.size() <= 400
+        && request.resource.data.change is string
+        && request.resource.data.change.size() >= 1
+        && request.resource.data.change.size() <= 400
         && request.resource.data.createdAt == request.time;
       allow update, delete: if false;
     }

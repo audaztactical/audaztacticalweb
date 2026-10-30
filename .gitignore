@@ -22,6 +22,8 @@ dist-ssr
 *.local
 # inject-firestore-admin.mjs çıktısı (VITE_ADMIN_EMAIL ile üretilir)
 firestore.deploy.rules
+# noro-selftest geçici ESM kopyaları
+scripts/.noro-selftest-tmp/
 # Operatör Beyni — functions kopyası sync:neural ile üretilir (isteğe bağlı commit; yoksaymak için aç)
 # functions/lib/neural/
 # Capacitor â€” native projeler web kaynaÄŸÄ±ndan (src/) ayrÄ± tutulur

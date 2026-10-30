@@ -13,7 +13,7 @@ const {
   normalizeEvent,
   isTacticalSessionComplete,
 } = require('./neural/neuralEngine')
-const { NEURAL_SOURCES } = require('./neural/neuralConfig')
+const { NEURAL_SOURCES, REGION_IDS } = require('./neural/neuralConfig')
 
 /**
  * @param {string} source
@@ -112,6 +112,30 @@ function eventsFromDocs(docs, extra) {
  * @param {string} docId
  * @param {Record<string, unknown>} data
  */
+/**
+ * AAR_ENTRY: puan vermeden önce aar_notes/{refId} var + region geçerli olmalı.
+ * Transaction dışı tek okuma. PII yazılmaz.
+ * @param {FirebaseFirestore.Firestore} db
+ * @param {string} uid
+ * @param {Record<string, unknown>} data
+ * @returns {Promise<{ ok: true } | { ok: false; reason: string }>}
+ */
+async function assertAarNoteExists(db, uid, data) {
+  const refId = String(data.refId || '').slice(0, 128)
+  if (!refId) {
+    return { ok: false, reason: 'aar_note_missing' }
+  }
+  const noteSnap = await db.collection('users').doc(uid).collection('aar_notes').doc(refId).get()
+  if (!noteSnap.exists) {
+    return { ok: false, reason: 'aar_note_missing' }
+  }
+  const region = String(noteSnap.data()?.region || '')
+  if (!REGION_IDS.includes(region)) {
+    return { ok: false, reason: 'aar_note_invalid_region' }
+  }
+  return { ok: true }
+}
+
 async function processNeuralEvent(uid, source, docId, data) {
   if (!uid || !source || !docId) return { ok: false, reason: 'missing_args' }
 
@@ -128,6 +152,15 @@ async function processNeuralEvent(uid, source, docId, data) {
   }
 
   const db = getFirestore()
+
+  if (source === NEURAL_SOURCES.ACTIVITY_EVENTS && event.type === 'AAR_ENTRY') {
+    const gate = await assertAarNoteExists(db, uid, data)
+    if (!gate.ok) {
+      logger.info('neural_skip', { source, reason: gate.reason, type: 'AAR_ENTRY' })
+      return { ok: false, reason: gate.reason }
+    }
+  }
+
   const eventKey = eventKeyFor(source, docId)
   const eventRef = db.collection('users').doc(uid).collection('neural_events').doc(eventKey)
   const stateRef = db.collection('users').doc(uid).collection('neural').doc('state')

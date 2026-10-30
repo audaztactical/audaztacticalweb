@@ -1,0 +1,350 @@
+/* NÖRO asistan — prototip .asst/.abtn/.orb… (noro- öneki) */
+
+.noro-asst {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  pointer-events: none;
+}
+.ob-root--fill > .noro-asst {
+  position: fixed;
+  right: 14px;
+  bottom: 14px;
+}
+.noro-asst > * {
+  pointer-events: auto;
+}
+
+@media (max-width: 759px) {
+  .noro-asst,
+  .ob-root--fill > .noro-asst {
+    bottom: calc(104px + env(safe-area-inset-bottom, 0px));
+    right: 12px;
+  }
+}
+
+.noro-abtn {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: radial-gradient(circle at 35% 30%, #1c2a23, #050706 72%);
+  box-shadow:
+    0 12px 30px -6px rgba(0, 0, 0, 0.9),
+    0 0 26px rgba(95, 227, 154, 0.22);
+  transition: transform 0.2s;
+  cursor: pointer;
+}
+.noro-abtn:hover {
+  transform: scale(1.05);
+}
+.noro-orb {
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(95, 227, 154, 0.35);
+  animation: noro-spin 8s linear infinite;
+}
+.noro-core {
+  position: absolute;
+  inset: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #9dffc4, #2a9a5c 55%, #0a2a18);
+  box-shadow: 0 0 16px rgba(95, 227, 154, 0.55);
+  animation: noro-pulse 2.4s ease-in-out infinite;
+}
+.noro-abtn.noro-talk .noro-orb {
+  animation-duration: 1s;
+}
+.noro-abtn.noro-talk .noro-core {
+  animation-duration: 0.5s;
+}
+.noro-abadge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #ffb400;
+  color: #111;
+  font: 700 10px/18px ui-monospace, monospace;
+  text-align: center;
+}
+
+.noro-apeek {
+  max-width: 310px;
+  background: rgba(13, 17, 15, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(95, 227, 154, 0.25);
+  border-radius: 16px 16px 4px 16px;
+  padding: 11px 13px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #e2e8e4;
+  box-shadow: 0 14px 36px -10px rgba(0, 0, 0, 0.9);
+  cursor: pointer;
+  animation: noro-pop 0.3s ease;
+}
+.noro-apeek .noro-who {
+  display: block;
+  font-family: ui-monospace, monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  color: #5fe39a;
+  margin-bottom: 3px;
+}
+
+.noro-apanel {
+  width: min(360px, calc(100vw - 28px));
+  max-height: min(520px, 70vh);
+  display: flex;
+  flex-direction: column;
+  background: rgba(10, 14, 12, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.85);
+}
+.noro-ahead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.noro-ahead h3 {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: #f2c230;
+  font-family: ui-monospace, monospace;
+}
+.noro-ahead p {
+  margin: 2px 0 0;
+  font-size: 10px;
+  color: #77827c;
+  font-family: ui-monospace, monospace;
+}
+.noro-aclose {
+  border: 0;
+  background: transparent;
+  color: #77827c;
+  font-size: 18px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.noro-atone {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  color: #77827c;
+}
+.noro-atone span {
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-right: 4px;
+}
+.noro-atone button {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: #aab3ad;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font: 500 11px ui-monospace, monospace;
+  cursor: pointer;
+}
+.noro-atone button[aria-checked='true'] {
+  border-color: #f2c230;
+  background: rgba(242, 194, 48, 0.14);
+  color: #f2c230;
+}
+
+.noro-alist {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 180px;
+}
+.noro-msg {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-width: 95%;
+}
+.noro-msg.noro-me {
+  align-self: flex-end;
+}
+.noro-bub {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px 14px 14px 4px;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #e2e8e4;
+  white-space: pre-wrap;
+}
+.noro-msg.noro-me .noro-bub {
+  border-radius: 14px 14px 4px 14px;
+  background: rgba(242, 194, 48, 0.1);
+  border-color: rgba(242, 194, 48, 0.2);
+}
+.noro-msg time {
+  font-family: ui-monospace, monospace;
+  font-size: 9px;
+  color: #5a635e;
+  letter-spacing: 0.06em;
+}
+.noro-rt {
+  color: var(--noro-c, #5fe39a);
+  font-weight: 600;
+}
+.noro-plus {
+  color: #5fe39a;
+}
+.noro-qrs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.noro-qr {
+  border: 1px solid rgba(95, 227, 154, 0.35);
+  background: rgba(95, 227, 154, 0.08);
+  color: #cfead9;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font: 500 11px ui-monospace, monospace;
+  cursor: pointer;
+}
+.noro-qr:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.noro-aar-card {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.25);
+  font-size: 12px;
+  line-height: 1.4;
+  color: #c8d0cb;
+}
+.noro-aar-card div + div {
+  margin-top: 4px;
+}
+.noro-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.noro-link {
+  font: 500 10px ui-monospace, monospace;
+  color: #f2c230;
+  text-decoration: none;
+  border: 0;
+  border-bottom: 1px solid rgba(242, 194, 48, 0.35);
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+.noro-achips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.noro-achips button {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #c8d0cb;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font: 500 11px ui-monospace, monospace;
+  cursor: pointer;
+}
+.noro-ain {
+  padding: 8px 12px 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.noro-ain input {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.35);
+  color: #e2e8e4;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+.noro-soon {
+  padding: 8px 14px 12px;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  color: #5a635e;
+  letter-spacing: 0.04em;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+.noro-anote {
+  padding: 0 14px 10px;
+  font-family: ui-monospace, monospace;
+  font-size: 9px;
+  color: #5a635e;
+  letter-spacing: 0.04em;
+  line-height: 1.35;
+}
+
+@keyframes noro-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes noro-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.92);
+    opacity: 0.85;
+  }
+}
+@keyframes noro-pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .noro-orb,
+  .noro-core {
+    animation: none;
+  }
+}

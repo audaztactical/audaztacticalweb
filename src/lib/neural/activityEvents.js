@@ -7,7 +7,7 @@ import { auth, db, isFirebaseConfigured } from '../firebase'
 import { istanbulDayKey } from './neuralEngine'
 
 /**
- * @param {'INTEL_READ'|'GUIDE_READ'|'BALLISTIC_CALC'} type
+ * @param {'INTEL_READ'|'GUIDE_READ'|'BALLISTIC_CALC'|'AAR_ENTRY'} type
  * @param {string} refId
  * @param {string} [docId] — verilirse setDoc id (idempotent create-only)
  */
@@ -18,7 +18,7 @@ export async function logActivityEvent(type, refId, docId) {
     if (!uid) return
     const rid = String(refId || '').slice(0, 128)
     if (!rid) return
-    if (!['INTEL_READ', 'GUIDE_READ', 'BALLISTIC_CALC'].includes(type)) return
+    if (!['INTEL_READ', 'GUIDE_READ', 'BALLISTIC_CALC', 'AAR_ENTRY'].includes(type)) return
 
     const id =
       docId ||
@@ -58,6 +58,15 @@ const BCALC_KEY = 'audaz-neural-bcalc'
 /**
  * BALLISTIC_CALC — günde en fazla 3 (localStorage sayaç).
  */
+/**
+ * AAR_ENTRY — eventKey başına bir kez (frontal puanı tetikleyici ile).
+ * @param {string} eventKey
+ */
+export function logAarEntry(eventKey) {
+  const id = `AAR_${String(eventKey)}`.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 700)
+  void logActivityEvent('AAR_ENTRY', eventKey, id)
+}
+
 export function logBallisticCalc() {
   try {
     const day = istanbulDayKey(Date.now())

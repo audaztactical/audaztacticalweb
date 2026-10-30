@@ -113,11 +113,27 @@ async function collectUserSourceEvents(db, uid) {
   }
 
   const actSnap = await db.collection('users').doc(uid).collection('activity_events').get()
-  ingest(NEURAL_SOURCES.ACTIVITY_EVENTS, actSnap, (raw, id) => ({
+  const { REGION_IDS } = require('./neural/neuralConfig')
+  /** AAR_ENTRY için not kapısı: not yok/region geçersiz → backfill'e alma */
+  /** @type {FirebaseFirestore.QueryDocumentSnapshot[]} */
+  const actDocs = []
+  for (const d of actSnap.docs) {
+    const raw = d.data() || {}
+    if (String(raw.type || '') === 'AAR_ENTRY') {
+      const refId = String(raw.refId || '').slice(0, 128)
+      if (!refId) continue
+      const noteSnap = await db.collection('users').doc(uid).collection('aar_notes').doc(refId).get()
+      const region = noteSnap.exists ? String(noteSnap.data()?.region || '') : ''
+      if (!noteSnap.exists || !REGION_IDS.includes(region)) continue
+    }
+    actDocs.push(d)
+  }
+  ingest(NEURAL_SOURCES.ACTIVITY_EVENTS, { docs: actDocs }, (raw, id) => ({
     id,
     type: raw.type,
     createdAt: raw.createdAt,
     timestamp: raw.createdAt,
+    refId: raw.refId,
   }))
 
   const byKey = new Map()

@@ -1,5 +1,6 @@
 /* Operatör Beyni — prototip stilleri (ob- öneki) */
 .ob-root {
+  position: relative;
   --ob-bg: #040504;
   --ob-panel: #0b0d0c;
   --ob-line: #1e2421;
@@ -20,6 +21,7 @@
 }
 
 .ob-root--fill {
+  position: relative;
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
@@ -1276,13 +1278,33 @@
   text-align: center;
   padding: 24px;
 }
+.ob-empty-glow {
+  position: absolute;
+  width: min(420px, 78vw);
+  height: min(280px, 42vh);
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(15, 28, 20, 0.92) 0%,
+    rgba(8, 14, 11, 0.72) 42%,
+    rgba(4, 5, 4, 0) 72%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+.ob-empty p,
+.ob-empty .ob-act {
+  position: relative;
+  z-index: 1;
+}
 .ob-empty p {
   font-family: var(--ob-f-display);
   font-size: 16px;
   letter-spacing: 0.06em;
-  color: var(--ob-muted);
+  color: var(--ob-fg);
   margin: 0;
   max-width: 28ch;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.85);
 }
 .ob-empty .ob-act {
   pointer-events: auto;

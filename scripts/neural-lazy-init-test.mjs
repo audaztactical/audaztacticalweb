@@ -298,6 +298,60 @@ async function main() {
     assert('son fullBuild', st.data()?.fullBuild === true)
   }
 
+  console.log('\n(aar-gate) AAR_ENTRY notsuz skip')
+  {
+    const orphanRef = `lazy_aar_orphan_${Date.now()}`
+    const payload = {
+      type: 'AAR_ENTRY',
+      refId: orphanRef,
+      createdAt: Timestamp.now(),
+    }
+    await db
+      .collection('users')
+      .doc(uid)
+      .collection('activity_events')
+      .doc(`AAR_${orphanRef}`)
+      .set(payload)
+    const skip = await processNeuralEvent(
+      uid,
+      NEURAL_SOURCES.ACTIVITY_EVENTS,
+      `AAR_${orphanRef}`,
+      payload,
+    )
+    assert('notsuz AAR skip', skip.ok === false && skip.reason === 'aar_note_missing')
+    const goodRef = `lazy_aar_ok_${Date.now()}`
+    await db
+      .collection('users')
+      .doc(uid)
+      .collection('aar_notes')
+      .doc(goodRef)
+      .set({
+        eventKey: goodRef,
+        region: 'motor',
+        good: 'ok',
+        change: 'ok',
+        createdAt: Timestamp.now(),
+      })
+    const goodPayload = {
+      type: 'AAR_ENTRY',
+      refId: goodRef,
+      createdAt: Timestamp.now(),
+    }
+    await db
+      .collection('users')
+      .doc(uid)
+      .collection('activity_events')
+      .doc(`AAR_${goodRef}`)
+      .set(goodPayload)
+    const ok = await processNeuralEvent(
+      uid,
+      NEURAL_SOURCES.ACTIVITY_EVENTS,
+      `AAR_${goodRef}`,
+      goodPayload,
+    )
+    assert('notlu AAR işlenir', ok.ok === true, JSON.stringify(ok))
+  }
+
   console.log(`\n=== Sonuç: ${passed} geçti, ${failed} kaldı ===\n`)
   process.exit(failed > 0 ? 1 : 0)
 }
