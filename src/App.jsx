@@ -1,7 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import './i18n'
-import LandingPage from './pages/LandingPage'
 import { AuthProvider } from './context/AuthContext'
 import { HardwareProvider } from './context/HardwareContext'
 import { LanguagePreferenceProvider } from './context/LanguagePreferenceContext'
@@ -42,6 +41,7 @@ const AdminPanel = lazy(() => import('./pages/AdminPanel'))
 const PremiumTransition = lazy(() => import('./pages/PremiumTransition'))
 const SiteMaintenance = lazy(() => import('./pages/SiteMaintenance'))
 const UsageGuide = lazy(() => import('./pages/UsageGuide'))
+const Landing = lazy(() => import('./pages/landing/Landing'))
 const NeuralDebug = import.meta.env.DEV
   ? lazy(() => import('./pages/dev/NeuralDebug'))
   : null
@@ -60,7 +60,7 @@ export default function App() {
           <MuhabereNotifyProvider>
           <Suspense fallback={<TacticalLoader />}>
           <Routes>
-            <Route path="/" element={<LandingPage />} />
+            <Route path="/" element={<Landing />} />
 
             <Route element={<ProtectedRoute />}>
               <Route path="verify-email" element={<VerifyEmail />} />
