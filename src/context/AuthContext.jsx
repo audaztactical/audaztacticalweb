@@ -2,40 +2,29 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
   EmailAuthProvider,
-  createUserWithEmailAndPassword,
-  deleteUser,
   linkWithCredential,
   onAuthStateChanged,
   reauthenticateWithPopup,
   reload,
-  sendEmailVerification,
   signInWithEmailAndPassword,
   signOut,
-  updateProfile,
   GoogleAuthProvider,
 } from 'firebase/auth'
 import { auth, db, isFirebaseConfigured } from '../lib/firebase'
 import { callEnsureAdminClaim, isCloudFunctionUnavailableError, isEnsureAdminClaimDenied } from '../lib/cloudFunctions'
-import { isPlatformInBetaPeriod } from '../lib/registrationPolicy'
 import { isInstructorRole, isPremiumMemberRole, normalizeAccountStatus, normalizeUserRole } from '../lib/authRoles'
 import {
-  createOperatorProfile,
   fetchUserProfile,
   GUEST_PROFILE,
   subscribeUserProfile,
   completePremiumUpgrade,
   updateUserAgreedToTerms,
   updateUserRegistrationConsents,
-  normalizeUsername,
-  releaseUsernameIfOrphaned,
   repairPendingOperatorProfile,
 } from '../lib/firestoreUsers'
 import { AGE_DECLARATION_VERSION } from '../data/legalProtocols'
 import { WELCOME_MODAL_VERSION } from '../lib/welcomeModal'
-import {
-  clearPendingOperatorProfile,
-  savePendingOperatorProfile,
-} from '../lib/pendingOperatorProfile'
+import { registerOperatorAccount } from '../lib/registerOperatorAccount'
 import { usePresenceHeartbeat } from '../hooks/usePresenceHeartbeat'
 import {
   resolveUserIsAdmin,
@@ -292,62 +281,22 @@ export function AuthProvider({ children }) {
       role = 'member',
       accountStatus = 'active',
       premiumPaymentId = '',
+      onStep,
     }) => {
-      if (!isFirebaseConfigured() || !auth) throw new Error('Firebase yapılandırılmadı')
-
-      let credUser = null
       setRegistrationInProgress(true)
       try {
-        const cred = await createUserWithEmailAndPassword(auth, email.trim(), password)
-        credUser = cred.user
-        const display = callsign.trim()
-        await updateProfile(credUser, { displayName: display })
-        await credUser.getIdToken(true)
-        savePendingOperatorProfile({
-          email: email.trim(),
-          username: normalizeUsername(username),
-          callsign: display,
-          bloodType,
-          status,
-          role,
-          accountStatus,
-        })
-        await createOperatorProfile(credUser.uid, {
-          email: email.trim(),
+        return await registerOperatorAccount({
+          email,
+          password,
           username,
-          callsign: display,
+          callsign,
           bloodType,
           status,
           role,
           accountStatus,
           premiumPaymentId,
+          onStep,
         })
-        clearPendingOperatorProfile()
-        if (!isPlatformInBetaPeriod()) {
-          await sendEmailVerification(credUser)
-        }
-        return cred
-      } catch (err) {
-        if (credUser) {
-          try {
-            const profile = await fetchUserProfile(credUser.uid)
-            if (profile?.username) {
-              clearPendingOperatorProfile()
-              return { user: credUser }
-            }
-            await releaseUsernameIfOrphaned(credUser.uid, normalizeUsername(username))
-            await deleteUser(credUser)
-          } catch {
-            /* ignore */
-          }
-          clearPendingOperatorProfile()
-          try {
-            await signOut(auth)
-          } catch {
-            /* ignore */
-          }
-        }
-        throw err
       } finally {
         setRegistrationInProgress(false)
       }

@@ -1,15 +1,387 @@
 {
+  "meta": {
+    "title": "AUDAZ TACTICAL — Operator Training Platform"
+  },
   "nav": {
     "homeAria": "Home",
+    "how": "How it works",
+    "brain": "Operator Brain",
+    "noro": "NÖRO",
+    "modules": "Modules",
+    "privacy": "Privacy",
+    "langAria": "Language",
     "goToPanel": "Go to panel",
     "signIn": "Sign in",
-    "joinNow": "Join now"
+    "joinNow": "Register"
   },
   "hero": {
-    "eyebrow": "OPERATIONAL PLATFORM",
+    "eyebrow": "Operator training platform",
+    "headlineHtml": "Every shot<br><em>writes to your brain.</em>",
+    "lede": "Shooting, CQB, TCCC, timer sessions, and ballistic calculations in one place. Every log grows a region in your Operator Brain; neglected skills visibly fade. NÖRO tells you what to do next.",
+    "ctaPrimary": "Free early access →",
+    "ctaSecondary": "Explore the brain",
+    "trust": {
+      "0": "Free early access",
+      "1": "Turkish / English",
+      "2": "Web and mobile",
+      "3": "Your data stays yours"
+    },
     "brandAudaz": "AUDAZ",
     "brandTactical": "TACTICAL",
-    "tagline": "Digitize Your Edge"
+    "tagline": "Digitize Your Edge",
+    "ctaSignedIn": "Go to HQ →"
+  },
+  "marquee": {
+    "items": {
+      "shooting": "SHOOTING",
+      "cqb": "CQB",
+      "fof": "FOF",
+      "vbss": "VBSS",
+      "tccc": "TCCC",
+      "ballistics": "BALLISTICS",
+      "dryFire": "DRY FIRE",
+      "timer": "TACTICAL TIMER",
+      "aar": "AAR",
+      "armory": "ARMORY"
+    }
+  },
+  "how": {
+    "eyebrow": "How it works",
+    "title": "Log it. Grow it. Don't let it fade.",
+    "steps": {
+      "1": {
+        "label": "01 · LOG",
+        "title": "Enter your training",
+        "body": "Shooting strings, CQB drills, TCCC assessments, timer or dry-fire sessions. Log the work — the system handles the rest."
+      },
+      "2": {
+        "label": "02 · GROW",
+        "title": "Your brain levels up",
+        "body": "Each entry scores the relevant regions. Higher scores mean more growth. Neurons connect as regions level and neighbors link up."
+      },
+      "3": {
+        "label": "03 · PROTECT",
+        "title": "Keep skills alive",
+        "body": "Regions you neglect fade slowly, based on skill-decay research. NÖRO nudges you when it's time to refresh."
+      }
+    }
+  },
+  "brain": {
+    "eyebrow": "Operator Brain",
+    "titleHtml": "Eight regions.<br>One glance at readiness.",
+    "lede": "Each region maps to modules by real brain function. One activity can feed multiple regions: CQB grows movement, spatial awareness, and decision-making together.",
+    "stageAria": "Live Operator Brain simulation",
+    "hudTotalLabel": "total level",
+    "hudTotalValue": "8 / 80",
+    "hudSample": "simulation · sample operator",
+    "facts": {
+      "1": {
+        "key": "10",
+        "html": "<b>Levels per region.</b> Early levels come fast; the summit takes consistent work."
+      },
+      "2": {
+        "key": "40%",
+        "html": "<b>Decay floor.</b> Even after a break you won't drop below 40% of your peak. Return visits earn 1.5× points."
+      },
+      "3": {
+        "key": "7–45",
+        "html": "<b>Day thresholds.</b> Knowledge fades faster than reflexes. Each region has its own timer."
+      }
+    },
+    "regions": {
+      "frontal": {
+        "name": "Frontal lobe",
+        "short": "frontal",
+        "func": "Decision, planning",
+        "modules": "FOF · Training plan · AAR"
+      },
+      "motor": {
+        "name": "Motor cortex",
+        "short": "motor",
+        "func": "Movement",
+        "modules": "Shooting · CQB · VBSS"
+      },
+      "parietal": {
+        "name": "Parietal lobe",
+        "short": "parietal",
+        "func": "Spatial reasoning",
+        "modules": "Ballistics · CQB"
+      },
+      "occipital": {
+        "name": "Occipital lobe",
+        "short": "occipital",
+        "func": "Vision",
+        "modules": "News feed · Dry fire"
+      },
+      "temporal": {
+        "name": "Temporal lobe",
+        "short": "temporal",
+        "func": "Memory, language",
+        "modules": "Guide · Forum · Academy"
+      },
+      "hippocampus": {
+        "name": "Hippocampus",
+        "short": "hippocampus",
+        "func": "Encoding, recall",
+        "modules": "Streak · Repetition"
+      },
+      "cerebellum": {
+        "name": "Cerebellum",
+        "short": "cerebellum",
+        "func": "Coordination, reflex",
+        "modules": "Timer · Dry fire"
+      },
+      "stem": {
+        "name": "Brain stem",
+        "short": "stem",
+        "func": "Vital functions",
+        "modules": "TCCC"
+      }
+    }
+  },
+  "noro": {
+    "eyebrow": "NÖRO",
+    "titleHtml": "A coach at your side.<br>With a sense of humor.",
+    "lede": "After every log, NÖRO explains what's growing and what's fading. Stuck on the UI? Ask how the site works. Drag the panel anywhere on screen.",
+    "name": "NÖRO",
+    "status": "online",
+    "chatAria": "Sample NÖRO chat",
+    "chatNote": "Sample conversation",
+    "features": {
+      "1": {
+        "title": "Post-log debrief",
+        "body": "Score breakdown, commentary, level-ups, and streak tracking."
+      },
+      "2": {
+        "title": "AAR helper",
+        "body": "Two-question after-action review. Reminds you on the next log."
+      },
+      "3": {
+        "title": "Site guide",
+        "body": "Ask \"How do I save a ballistic profile?\" — step-by-step help and navigation."
+      }
+    },
+    "chat": {
+      "lines": {
+        "0": "Trigger finger's warm! Shooting log hit <span class=\"lp-rt\" style=\"--c:#3fbf6f\">Motor cortex</span> <span class=\"plus\">+34</span>. Score 92% — with grouping like that you'd thread a coin slot.",
+        "1": "Side effects: <span class=\"lp-rt\" style=\"--c:#f0a53a\">Cerebellum</span> <span class=\"plus\">+5</span>, <span class=\"lp-rt\" style=\"--c:#e8862a\">Occipital lobe</span> <span class=\"plus\">+5</span>. Meanwhile <span class=\"lp-rt\" style=\"--c:#e5534b\">Brain stem</span> has been quiet 26 days — fade starts in 4.",
+        "2": "How do I save a ballistic profile?",
+        "3": "In Ballistics Terminal enter bullet and weapon data, set distance and wind, then tap \"Save profile\". <span class=\"lp-rt\" style=\"--c:#c9b52c\">Parietal lobe</span> scores too.<br><span class=\"chip\">Go to page →</span>"
+      }
+    }
+  },
+  "modules": {
+    "eyebrow": "Modules",
+    "title": "Everything you need in the field.",
+    "soonTag": "SOON",
+    "items": {
+      "training": {
+        "title": "Training",
+        "desc": "Shooting, CQB, FOF, and VBSS logs with score, accuracy, and time tracking."
+      },
+      "timer": {
+        "title": "Tactical Timer",
+        "desc": "Live-fire and dry-fire analysis; split times and flinch measurement."
+      },
+      "ballistics": {
+        "title": "Ballistics Terminal",
+        "desc": "G7 BC, MRAD clicks, wind and Coriolis corrections for profile solves."
+      },
+      "armory": {
+        "title": "Armory",
+        "desc": "Weapons, ammo, and optics inventory; round counts and maintenance alerts."
+      },
+      "tccc": {
+        "title": "TCCC & Health",
+        "desc": "MARCH assessment, MEDEVAC 9-line simulation, IFAK tracking."
+      },
+      "news": {
+        "title": "Global News Network",
+        "desc": "Tactical and security news with translation and video feed."
+      },
+      "comms": {
+        "title": "Comms & Forum",
+        "desc": "Team channels, direct messages, and briefing rooms."
+      },
+      "aar": {
+        "title": "AAR Terminal",
+        "desc": "After-action review — capture what worked."
+      }
+    }
+  },
+  "privacy": {
+    "eyebrow": "Privacy & security",
+    "title": "Your data, your brain.",
+    "cards": {
+      "1": {
+        "k": "OWNERSHIP",
+        "title": "Only you can see it",
+        "body": "Your brain map, logs, and NÖRO chats are private. Instructors can't view your brain."
+      },
+      "2": {
+        "k": "OPSEC",
+        "title": "No operational details",
+        "body": "NÖRO blocks messages with location, coordinates, plates, or mission specifics."
+      },
+      "3": {
+        "k": "IDENTITY",
+        "title": "Use a callsign",
+        "body": "No real name, rank, or unit required. Operate under a callsign."
+      }
+    }
+  },
+  "final": {
+    "eyebrow": "Become an operator",
+    "title": "Wake your brain today.",
+    "lede": "Log your first entry and light up all eight regions. Early access is free.",
+    "cta": "Create account →",
+    "ctaSignedIn": "Go to HQ →"
+  },
+  "footer": {
+    "line": "© 2026 AUDAZ TACTICAL · audazworks.com",
+    "terms": "Terms of use",
+    "privacy": "Privacy",
+    "contact": "Contact",
+    "copyright": "© AUDAZ TACTICAL – AUTHORIZED USE ONLY"
+  },
+  "auth": {
+    "dialogAria": "Sign in",
+    "close": "Close",
+    "motto": {
+      "loginTitle": "Verify identity, operator.",
+      "loginSub": "YOUR BRAIN IS WAITING",
+      "registerTitle": "A new operator is born.",
+      "registerSub": "EIGHT REGIONS · ONE BRAIN"
+    },
+    "ticker": {
+      "encrypted": "channel: encrypted",
+      "owned": "data: yours only",
+      "noroOnline": "NÖRO: online"
+    },
+    "cardTitleLogin": "Welcome back",
+    "cardTitleRegister": "Join us",
+    "secureLink": "secure connection",
+    "tabLogin": "Sign in",
+    "tabRegister": "Create account",
+    "togglePassword": "Show password",
+    "fields": {
+      "email": "Email",
+      "password": "Password",
+      "passwordRepeat": "Confirm password",
+      "callsign": "Callsign"
+    },
+    "login": {
+      "remember": "Remember me",
+      "forgot": "Forgot password",
+      "forgotSent": "If that address is registered, we sent a reset link. Check your inbox (and spam folder)."
+    },
+    "submitLogin": "Sign in →",
+    "submitContinue": "Continue →",
+    "submitCreate": "Create account →",
+    "footer": "AUDAZ Tactical · secure session",
+    "errors": {
+      "invalidEmail": "Enter a valid email address.",
+      "passwordMinLogin": "Password must be at least 6 characters.",
+      "callsignFormat": "After normalization, callsign must be 3–24 characters (a–z, 0–9, _). Turkish letters and hyphens are stripped.",
+      "callsignTaken": "That callsign is taken — try another.",
+      "passwordWeak": "Password must reach at least Strong level.",
+      "passwordMismatch": "Passwords do not match.",
+      "ageRequired": "Check the box to continue.",
+      "badCredentials": "Email or password is incorrect.",
+      "tooManyRequests": "Too many attempts. Try again later.",
+      "network": "Network error. Check your connection and try again.",
+      "generic": "Something went wrong. Try again shortly.",
+      "emailInUse": "This email is already registered. Try signing in.",
+      "switchToLogin": "Sign in",
+      "weakPassword": "Password is too weak. Choose a stronger one.",
+      "forgotNeedEmail": "Enter your email first.",
+      "forgotCooldown": "A reset link was just sent. Try again in 60 seconds."
+    },
+    "register": {
+      "steps": {
+        "1": "Identity",
+        "2": "Security",
+        "3": "Profile"
+      },
+      "step1Sub": "Your callsign is your name on the platform. Real name not required.",
+      "step2Sub": "Choose a strong password. Your logs and brain live in this account.",
+      "step3Sub": "Optional — helps NÖRO tailor suggestions.",
+      "callsignHint": "3–24 chars (normalized); letters, digits, _ · Turkish letters and - are stripped",
+      "verifyHint": "Verification link will be sent here.",
+      "availChecking": "checking…",
+      "availOk": "available ✓",
+      "availTaken": "taken",
+      "strengthEmpty": "Password strength",
+      "strengthLabel": "Password strength: {{label}}",
+      "strength": {
+        "0": "Very weak",
+        "1": "Weak",
+        "2": "Fair",
+        "3": "Strong",
+        "4": "Steel-grade"
+      },
+      "crit": {
+        "len": "At least 8 characters",
+        "up": "Upper and lower case",
+        "num": "At least one number",
+        "sym": "At least one symbol"
+      },
+      "matchOk": "match ✓",
+      "matchNo": "no match",
+      "focusTitle": "What are you training most?",
+      "focusMaxHint": "up to 3",
+      "focusMax": "You can pick up to 3 areas.",
+      "focusGlow": "First lights in your brain will glow in {{areas}}.",
+      "focus": {
+        "shooting": "Shooting",
+        "cqb": "CQB",
+        "tccc": "TCCC",
+        "ballistics": "Ballistics",
+        "dryFire": "Dry fire",
+        "fof": "FOF"
+      },
+      "agePrefix": "I am 18 or older.",
+      "ageAnd": "and",
+      "ageSuffix": "I have read and accept.",
+      "termsLink": "Terms of use",
+      "kvkkLink": "Privacy notice (KVKK)",
+      "back": "← Back",
+      "availInvalid": "invalid",
+      "availOffline": "Couldn't check now — will recheck on submit",
+      "professionTitle": "What do you do?",
+      "professionHint": "optional · self-declared",
+      "profession": {
+        "military": "Military",
+        "police": "Police",
+        "security": "Private security",
+        "sport": "Sport shooter",
+        "instructor": "Instructor",
+        "other": "Other"
+      }
+    },
+    "progress": {
+      "login": {
+        "0": "Encrypting channel…",
+        "1": "Verifying identity…",
+        "2": "Syncing Operator Brain…",
+        "3": "Waking NÖRO…"
+      },
+      "register": {
+        "0": "Registering callsign…",
+        "1": "Building encrypted vault…",
+        "2": "Booting eight brain regions…",
+        "3": "Assigning NÖRO…",
+        "4": "Sending verification email…"
+      }
+    },
+    "success": {
+      "loginTitle": "Welcome, operator.",
+      "loginBody": "Brain synced. NÖRO is waiting on your dashboard.",
+      "registerTitle": "Welcome aboard, {{callsign}}.",
+      "registerBody": "Brain created. Verify via the email link, then log your first entry.",
+      "goDashboard": "Go to dashboard →",
+      "firstLog": "Log my first entry →"
+    }
   },
   "news": {
     "title": "NEWS FEED / DOCTRINE",
@@ -37,9 +409,6 @@
       "source": "NEWS · Maritime Watch",
       "body": "Preview compiled from satellite and AIS sources. Full route reconstruction and operational briefing require membership."
     }
-  },
-  "footer": {
-    "copyright": "© AUDAZ TACTICAL – AUTHORIZED USE ONLY"
   },
   "hud": {
     "topologyTitle": "AUDAZ · TACTICAL DATA TOPOLOGY",
@@ -69,20 +438,56 @@
       "armoryValue": "87%"
     },
     "nodes": {
-      "siber_savunma": { "label": "Cyber Defense", "sub": "Threat shield" },
-      "istihbarat": { "label": "Global News", "sub": "Live feed" },
-      "muhabere": { "label": "Comms", "sub": "Encrypted" },
-      "task_matrix": { "label": "Mission Center", "sub": "Tasks · sync" },
-      "cephanelik": { "label": "Armory", "sub": "Inventory · 87%" },
-      "tccc": { "label": "TCCC", "sub": "Evac" },
-      "ors": { "label": "ORS", "sub": "Risk Score" }
+      "siber_savunma": {
+        "label": "Cyber Defense",
+        "sub": "Threat shield"
+      },
+      "istihbarat": {
+        "label": "Global News",
+        "sub": "Live feed"
+      },
+      "muhabere": {
+        "label": "Comms",
+        "sub": "Encrypted"
+      },
+      "task_matrix": {
+        "label": "Mission Center",
+        "sub": "Tasks · sync"
+      },
+      "cephanelik": {
+        "label": "Armory",
+        "sub": "Inventory · 87%"
+      },
+      "tccc": {
+        "label": "TCCC",
+        "sub": "Evac"
+      },
+      "ors": {
+        "label": "ORS",
+        "sub": "Risk Score"
+      }
     },
     "tiles": {
-      "dashboard": { "label": "Home", "sub": "ORS · inventory · readiness" },
-      "training": { "label": "Training", "sub": "Range · CQB · FoF" },
-      "comms": { "label": "Comms", "sub": "Tactical channels" },
-      "tccc": { "label": "TCCC · Health", "sub": "Evac · IFAK" },
-      "armory": { "label": "Armory", "sub": "Weapons · ammo" }
+      "dashboard": {
+        "label": "Home",
+        "sub": "ORS · inventory · readiness"
+      },
+      "training": {
+        "label": "Training",
+        "sub": "Range · CQB · FoF"
+      },
+      "comms": {
+        "label": "Comms",
+        "sub": "Tactical channels"
+      },
+      "tccc": {
+        "label": "TCCC · Health",
+        "sub": "Evac · IFAK"
+      },
+      "armory": {
+        "label": "Armory",
+        "sub": "Weapons · ammo"
+      }
     }
   },
   "intro": {
@@ -93,5 +498,30 @@
     "unmute": "Unmute",
     "mute": "Mute",
     "enterSystem": "Enter system"
+  },
+  "authNav": {
+    "menuAria": "Open menu",
+    "hqCta": "HQ →",
+    "soon": "Soon",
+    "operatorBrain": "Operator Brain",
+    "operatorFallback": "Operator",
+    "brainLevel": "Total level {{level}}",
+    "noroWhat": "What is NÖRO?",
+    "menus": {
+      "training": "Training",
+      "brain": "Brain",
+      "ops": "Operations",
+      "network": "AUDAZ Network",
+      "explore": "Explore"
+    },
+    "explore": {
+      "how": "How it works",
+      "modules": "Modules",
+      "privacy": "Privacy",
+      "guide": "Usage guide"
+    },
+    "descs": {
+      "noro": "Assistant and guide"
+    }
   }
 }

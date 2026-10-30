@@ -1,7 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import './i18n'
-import LandingPage from './pages/LandingPage'
 import { AuthProvider } from './context/AuthContext'
 import { HardwareProvider } from './context/HardwareContext'
 import { LanguagePreferenceProvider } from './context/LanguagePreferenceContext'
@@ -14,6 +13,7 @@ import AdminRoute from './components/auth/AdminRoute'
 import AccessGuard from './components/auth/AccessGuard'
 import InstructorRoute from './components/auth/InstructorRoute'
 import ProtectedRoute from './components/auth/ProtectedRoute'
+import RootGate from './components/auth/RootGate'
 import ResponsiveAppLayout from './layouts/ResponsiveAppLayout'
 import TacticalLoader from './components/TacticalLoader'
 import FcmPushBootstrap from './components/notifications/FcmPushBootstrap'
@@ -42,6 +42,10 @@ const AdminPanel = lazy(() => import('./pages/AdminPanel'))
 const PremiumTransition = lazy(() => import('./pages/PremiumTransition'))
 const SiteMaintenance = lazy(() => import('./pages/SiteMaintenance'))
 const UsageGuide = lazy(() => import('./pages/UsageGuide'))
+const Landing = lazy(() => import('./pages/landing/Landing'))
+const NeuralDebug = import.meta.env.DEV
+  ? lazy(() => import('./pages/dev/NeuralDebug'))
+  : null
 export default function App() {
   return (
     <AuthProvider>
@@ -57,10 +61,14 @@ export default function App() {
           <MuhabereNotifyProvider>
           <Suspense fallback={<TacticalLoader />}>
           <Routes>
-            <Route path="/" element={<LandingPage />} />
+            <Route path="/" element={<RootGate />} />
+            <Route path="/ana-sayfa" element={<Landing />} />
 
             <Route element={<ProtectedRoute />}>
               <Route path="verify-email" element={<VerifyEmail />} />
+              {NeuralDebug ? (
+                <Route path="dev/operator-beyni" element={<NeuralDebug />} />
+              ) : null}
               <Route element={<AccessGuard />}>
                 <Route element={<ResponsiveAppLayout />}>
                   <Route path="dashboard" element={<Dashboard />} />

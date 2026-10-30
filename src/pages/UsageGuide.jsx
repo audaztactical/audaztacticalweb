@@ -8,6 +8,7 @@ import GuideSection from '../components/guide/GuideSection'
 import GuideInfoNote from '../components/guide/GuideInfoNote'
 import { GUIDE_SECTIONS } from '../data/guideContent'
 import { flattenGuideNavIds } from '../data/guideNavTree'
+import { logGuideRead } from '../lib/neural/activityEvents'
 
 export default function UsageGuide() {
   const { t } = useTranslation('guide')
@@ -40,6 +41,13 @@ export default function UsageGuide() {
 
     if (!elements.length) return undefined
 
+    /** @type {Record<string, number>} */
+    const visibleSince = {}
+    /** @type {Record<string, ReturnType<typeof setTimeout>>} */
+    const timers = {}
+    /** @type {Set<string>} */
+    const logged = new Set()
+
     const observer = new IntersectionObserver(
       (entries) => {
         const visible = entries
@@ -49,12 +57,40 @@ export default function UsageGuide() {
         if (top?.target?.id) {
           setActiveId(top.target.id)
         }
+
+        for (const entry of entries) {
+          const id = entry.target.id
+          if (!id) continue
+          if (entry.isIntersecting) {
+            if (!visibleSince[id]) {
+              visibleSince[id] = Date.now()
+              if (!logged.has(id) && !timers[id]) {
+                timers[id] = setTimeout(() => {
+                  if (visibleSince[id] && Date.now() - visibleSince[id] >= 14_500) {
+                    logged.add(id)
+                    logGuideRead(id)
+                  }
+                  delete timers[id]
+                }, 15_000)
+              }
+            }
+          } else {
+            delete visibleSince[id]
+            if (timers[id]) {
+              clearTimeout(timers[id])
+              delete timers[id]
+            }
+          }
+        }
       },
       { rootMargin: '-20% 0px -55% 0px', threshold: [0, 0.25, 0.5] },
     )
 
     for (const el of elements) observer.observe(el)
-    return () => observer.disconnect()
+    return () => {
+      observer.disconnect()
+      for (const t of Object.values(timers)) clearTimeout(t)
+    }
   }, [sectionIds])
 
   return (

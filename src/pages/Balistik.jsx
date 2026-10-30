@@ -1,6 +1,7 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { createValidationStuckCounter, emitNoroStuck } from '../lib/noroStuck'
 import { Download, Package, Target } from 'lucide-react'
 import HudFluffDecor from '../components/dashboard/HudFluffDecor'
 import TacticalPanel from '../components/ui/TacticalPanel'
@@ -25,6 +26,7 @@ import { angleTableCellsForRow, buildAngleTableColumns } from '../lib/clickUnitS
 import { buildArmorySessionFromArmoryFill } from '../lib/inventoryFillLocks'
 import { labelTableColumn } from '../lib/ballisticsDisplayText'
 import { weaponDisplayName } from '../lib/weaponIlws'
+import { logBallisticCalc } from '../lib/neural/activityEvents'
 
 /** @typedef {import('../lib/ballisticsEngine.js').BallisticsEngineOutput} BallisticsEngineOutput */
 
@@ -271,6 +273,9 @@ export default function Balistik() {
     [inventoryItems, t],
   )
 
+  const stuckRef = useRef(createValidationStuckCounter('balistik'))
+  const focusTimerRef = useRef(/** @type {ReturnType<typeof setTimeout>|null} */ (null))
+
   const handleCalculate = useCallback(() => {
     setCalcError('')
     setCalculating(true)
@@ -282,9 +287,12 @@ export default function Balistik() {
       })
       setOutput(result)
       setActiveDistance(targets[0] ?? 100)
+      logBallisticCalc()
+      stuckRef.current.reset()
     } catch (err) {
       setOutput(null)
       setCalcError(err instanceof Error ? err.message : t('errors.calcFailed'))
+      stuckRef.current.bump()
     } finally {
       setCalculating(false)
     }
@@ -316,7 +324,19 @@ export default function Balistik() {
     ].join(' ')
 
   return (
-    <div className="relative mx-auto flex min-h-0 w-full max-w-[1600px] flex-col gap-4">
+    <div
+      className="relative mx-auto flex min-h-0 w-full max-w-[1600px] flex-col gap-4"
+      onFocusCapture={() => {
+        if (focusTimerRef.current) clearTimeout(focusTimerRef.current)
+        focusTimerRef.current = setTimeout(() => emitNoroStuck('balistik'), 90_000)
+      }}
+      onBlurCapture={() => {
+        if (focusTimerRef.current) {
+          clearTimeout(focusTimerRef.current)
+          focusTimerRef.current = null
+        }
+      }}
+    >
       <BallisticDisclaimerModal open={disclaimerOpen} onConfirm={() => setDisclaimerOpen(false)} />
 
       <div

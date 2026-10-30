@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { trainingNumberInputProps } from '../../lib/trainingNumberInput'
+import { createValidationStuckCounter, emitNoroStuck } from '../../lib/noroStuck'
 import { AlertTriangle, ChevronLeft } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import atisImg from '../../assets/atis.png'
@@ -98,6 +99,8 @@ export default function AtisShootingTerminal({
   const [hitsCapped, setHitsCapped] = useState(false)
   const [stockError, setStockError] = useState(/** @type {string | null} */ (null))
   const [submitError, setSubmitError] = useState(/** @type {string | null} */ (null))
+  const stuckRef = useRef(createValidationStuckCounter('atis'))
+  const focusTimerRef = useRef(/** @type {ReturnType<typeof setTimeout>|null} */ (null))
 
   const selectedWeapon = useMemo(
     () => weapons.find((w) => String(w.id) === form.weaponId) ?? null,
@@ -243,11 +246,20 @@ export default function AtisShootingTerminal({
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!canSubmit || !uid || !selectedWeapon || !selectedAmmo) return
+    if (!canSubmit || !uid || !selectedWeapon || !selectedAmmo) {
+      stuckRef.current.bump()
+      return
+    }
 
     const drillKey = form.drillKey
-    if (!drillKey) return
-    if (drillKey === ATIS_DRILL_CUSTOM && !form.customDrillName.trim()) return
+    if (!drillKey) {
+      stuckRef.current.bump()
+      return
+    }
+    if (drillKey === ATIS_DRILL_CUSTOM && !form.customDrillName.trim()) {
+      stuckRef.current.bump()
+      return
+    }
 
     const counts = sanitizeShotCounts(form.roundsFired, form.hits)
     if (counts.totalRoundsFired > getCurrentStock(selectedAmmo)) {
@@ -257,8 +269,10 @@ export default function AtisShootingTerminal({
           rounds: counts.totalRoundsFired,
         }),
       )
+      stuckRef.current.bump()
       return
     }
+    stuckRef.current.reset()
 
     setSaving(true)
     setSubmitOk(false)
@@ -429,7 +443,20 @@ export default function AtisShootingTerminal({
               {t('sectors.atis.validation.channelDisconnected')}
             </p>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4 p-4 sm:p-5">
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-4 p-4 sm:p-5"
+              onFocus={() => {
+                if (focusTimerRef.current) clearTimeout(focusTimerRef.current)
+                focusTimerRef.current = setTimeout(() => emitNoroStuck('atis'), 90_000)
+              }}
+              onBlur={() => {
+                if (focusTimerRef.current) {
+                  clearTimeout(focusTimerRef.current)
+                  focusTimerRef.current = null
+                }
+              }}
+            >
               <fieldset className="space-y-2">
                 <legend className={labelClass}>{t('sectors.atis.form.weaponSelect')}</legend>
                 {weapons.length === 0 ? (

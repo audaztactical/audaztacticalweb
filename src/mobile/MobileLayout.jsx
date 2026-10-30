@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion as Motion } from 'framer-motion'
 import { signOut } from 'firebase/auth'
@@ -17,6 +17,9 @@ export default function MobileLayout() {
   const location = useLocation()
   const [navMenuOpen, setNavMenuOpen] = useState(false)
   const [signingOut, setSigningOut] = useState(false)
+  const chromeTopRef = useRef(/** @type {HTMLElement|null} */ (null))
+
+  const neuralOnly = location.pathname === '/dashboard' || location.pathname === '/dashboard/'
 
   useEffect(() => {
     setNavMenuOpen(false)
@@ -31,6 +34,27 @@ export default function MobileLayout() {
     }
   }, [navMenuOpen])
 
+  useEffect(() => {
+    const el = chromeTopRef.current
+    if (!neuralOnly || !el) {
+      document.documentElement.style.removeProperty('--ob-chrome-top')
+      return undefined
+    }
+    const apply = () => {
+      document.documentElement.style.setProperty(
+        '--ob-chrome-top',
+        `${Math.round(el.getBoundingClientRect().height)}px`,
+      )
+    }
+    apply()
+    const ro = new ResizeObserver(apply)
+    ro.observe(el)
+    return () => {
+      ro.disconnect()
+      document.documentElement.style.removeProperty('--ob-chrome-top')
+    }
+  }, [neuralOnly])
+
   const handleSignOut = async () => {
     if (!auth) return
     setSigningOut(true)
@@ -43,12 +67,25 @@ export default function MobileLayout() {
 
   return (
     <div
-      className="mobile-app-shell native-layout relative z-[1] flex h-dvh min-h-0 flex-col overflow-hidden text-slate-100"
+      className={[
+        'mobile-app-shell native-layout relative z-[1] flex h-dvh min-h-0 flex-col overflow-hidden text-slate-100',
+        neuralOnly ? 'ob-neural-mode' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
       style={{ backgroundColor: '#0a0a0a' }}
     >
       <div className="app-atmosphere" aria-hidden />
 
-      <header className="mobile-app-header sticky top-0 z-40 flex h-14 shrink-0 items-center gap-2 border-b border-white/10 bg-app-bg/90 px-3 backdrop-blur-md">
+      <header
+        ref={chromeTopRef}
+        className={[
+          'mobile-app-header sticky top-0 z-40 flex h-14 shrink-0 items-center gap-2 px-3',
+          neuralOnly
+            ? 'ob-neural-chrome border-b border-white/10 bg-black/35 backdrop-blur-md'
+            : 'border-b border-white/10 bg-app-bg/90 backdrop-blur-md',
+        ].join(' ')}
+      >
         <button
           type="button"
           className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-white/10 bg-white/5 text-accent"
@@ -78,16 +115,20 @@ export default function MobileLayout() {
       />
 
       <main
-        className="mobile-app-main relative flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain"
+        className={[
+          'mobile-app-main relative flex min-h-0 flex-1 flex-col overflow-x-hidden overscroll-y-contain',
+          neuralOnly ? 'overflow-hidden' : 'overflow-y-auto',
+        ].join(' ')}
         data-app-scroll-root
       >
-        <div className="flex-1 p-4">
+        <div className={['flex min-h-0 flex-1 flex-col', neuralOnly ? 'p-0' : 'p-4'].join(' ')}>
           <AnimatePresence mode="wait">
             <Motion.div
               key={location.pathname}
-              initial={{ opacity: 0, y: 8 }}
+              className="flex min-h-0 flex-1 flex-col"
+              initial={neuralOnly ? false : { opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
+              exit={neuralOnly ? undefined : { opacity: 0, y: -6 }}
               transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             >
               <Outlet />
@@ -96,7 +137,7 @@ export default function MobileLayout() {
         </div>
       </main>
 
-      <BottomTabBar />
+      {neuralOnly ? null : <BottomTabBar />}
     </div>
   )
 }

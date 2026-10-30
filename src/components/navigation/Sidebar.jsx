@@ -14,6 +14,7 @@ import { useSidebarGroupState } from '../../hooks/useSidebarGroupState'
 import { useInstructorNavItem, useNavGroups, useNavItemLabels, useNavUi, useSystemGroupTitle } from '../../hooks/useNavLabels'
 import { getNavGroupTheme, NAV_GROUP_THEMES } from '../../lib/sidebarGroupColors'
 import { isSidebarGroupOpen } from '../../lib/sidebarGroupState'
+import { applyInstructorNavVisibility } from '../../lib/navStructure'
 import { auth } from '../../lib/firebase'
 import { scheduleScrollAppToTop } from '../../lib/scrollAppToTop'
 import { SidebarGroupAccordion } from './SidebarNavParts'
@@ -211,15 +212,10 @@ export default function Sidebar({
   const navItems = useNavItemLabels()
   const navUi = useNavUi()
 
-  const groups = useMemo(() => {
-    const isInstructorUser = role === 'instructor' || isInstructor
-    const next = navGroups.map((g) => ({ ...g, items: [...g.items] }))
-    if (isInstructorUser) {
-      const command = next.find((g) => g.id === 'command')
-      if (command) command.items.push(instructorNavItem)
-    }
-    return next
-  }, [navGroups, instructorNavItem, role, isInstructor])
+  const groups = useMemo(
+    () => applyInstructorNavVisibility(navGroups, instructorNavItem, { role, isInstructor }),
+    [navGroups, instructorNavItem, role, isInstructor],
+  )
 
   return (
     <>

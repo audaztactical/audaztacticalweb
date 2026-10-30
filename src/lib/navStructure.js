@@ -43,8 +43,8 @@ export const NAV_GROUP_DEFS = [
     id: 'personal',
     titleKey: 'groups.personal',
     items: [
-      { to: '/', end: true, labelKey: 'items.hqReturn', icon: Landmark, state: { skipIntro: true } },
-      { to: '/dashboard', end: true, labelKey: 'items.home', icon: Home },
+      { to: '/ana-sayfa', end: true, labelKey: 'items.home', icon: Home },
+      { to: '/dashboard', end: true, labelKey: 'items.hqReturn', icon: Landmark },
       { to: '/profil', labelKey: 'items.profile', icon: User },
       { to: '/mesajlar', labelKey: 'items.tacticalComms', icon: MessageSquare },
     ],
@@ -118,8 +118,30 @@ export function buildNavGroups(t) {
       state: item.state,
       icon: item.icon,
       label: t(item.labelKey),
+      labelKey: item.labelKey,
     })),
   }))
+}
+
+/**
+ * Sol menüyle aynı görünürlük: eğitmen paneli yalnızca eğitmene.
+ * @param {ReturnType<typeof buildNavGroups>} navGroups
+ * @param {{ to: string, icon: import('lucide-react').LucideIcon, label: string }} instructorNavItem
+ * @param {{ role?: string | null, isInstructor?: boolean }} auth
+ */
+export function applyInstructorNavVisibility(navGroups, instructorNavItem, { role, isInstructor }) {
+  const isInstructorUser = role === 'instructor' || isInstructor
+  const next = navGroups.map((g) => ({ ...g, items: [...g.items] }))
+  if (isInstructorUser && instructorNavItem) {
+    const command = next.find((g) => g.id === 'command')
+    if (command) {
+      command.items.push({
+        ...instructorNavItem,
+        labelKey: INSTRUCTOR_NAV_DEF.labelKey,
+      })
+    }
+  }
+  return next
 }
 
 /**
@@ -130,6 +152,7 @@ export function buildInstructorNavItem(t) {
     to: INSTRUCTOR_NAV_DEF.to,
     icon: INSTRUCTOR_NAV_DEF.icon,
     label: t(INSTRUCTOR_NAV_DEF.labelKey),
+    labelKey: INSTRUCTOR_NAV_DEF.labelKey,
   }
 }
 

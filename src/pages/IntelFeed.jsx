@@ -14,6 +14,7 @@ import {
   shouldShowIntelTranslationToggle,
 } from '../lib/intelDisplayText'
 import { subscribeIntelFeed } from '../lib/firestoreIntelFeed'
+import { logIntelRead } from '../lib/neural/activityEvents'
 import i18n from '../i18n'
 
 /** @typedef {import('../lib/firestoreIntelFeed').IntelFeedItem} IntelFeedItem */
@@ -137,6 +138,9 @@ function IntelCard({ item }) {
               href={item.url}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => {
+                logIntelRead(String(item.id || item.url))
+              }}
               className="inline-flex items-center gap-1.5 font-mono-technical text-[8px] font-bold uppercase tracking-wider text-gray-500 transition hover:text-[#ffaa00]"
             >
               <ExternalLink className="size-3 shrink-0" aria-hidden />

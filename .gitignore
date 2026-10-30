@@ -6,14 +6,26 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+database-debug.log*
+pubsub-debug.log*
+# Firebase emulator export / local data
+.emulator-data/
+firebase-export-*/
 node_modules
 dist
 dist-ssr
 .env
 .env.local
 *.local
-# inject-firestore-admin.mjs Ã§Ä±ktÄ±sÄ± (VITE_ADMIN_EMAIL ile Ã¼retilir)
+# inject-firestore-admin.mjs çıktısı (VITE_ADMIN_EMAIL ile üretilir)
 firestore.deploy.rules
+# noro-selftest geçici ESM kopyaları
+scripts/.noro-selftest-tmp/
+# Operatör Beyni — functions kopyası sync:neural ile üretilir (isteğe bağlı commit; yoksaymak için aç)
+# functions/lib/neural/
 # Capacitor â€” native projeler web kaynaÄŸÄ±ndan (src/) ayrÄ± tutulur
 # Yeniden Ã¼retim: npm run build && npx cap add android && npx cap add ios
 android/

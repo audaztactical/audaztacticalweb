@@ -9,6 +9,8 @@ import FeedbackPanelModal from '../components/feedback/FeedbackPanelModal'
 import FeedbackToast from '../components/feedback/FeedbackToast'
 import SuspensionGate from '../components/auth/SuspensionGate'
 import { WelcomeOperatorProvider } from '../components/welcome/WelcomeOperatorProvider'
+import { NoroProvider } from '../components/neural/noro/NoroProvider'
+import NoroAssistant from '../components/neural/noro/NoroAssistant'
 
 /** Telefon / tablet tarayıcı + Capacitor — alt sekme çubuğu kabuğu; masaüstünde sidebar. */
 export default function ResponsiveAppLayout() {
@@ -34,6 +36,9 @@ export default function ResponsiveAppLayout() {
           <FeedbackBubble />
           <FeedbackPanelModal />
           <FeedbackToast />
+          <NoroProvider>
+            <NoroAssistant />
+          </NoroProvider>
         </SuspensionGate>
       </WelcomeOperatorProvider>
     </FeedbackPanelProvider>

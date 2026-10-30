@@ -395,6 +395,17 @@
   }
 }
 
+/* Operatör Beyni neuralOnly — kabuk ile sahne bütünleşmesi */
+.ob-neural-mode .app-atmosphere {
+  opacity: 0.25;
+}
+.ob-neural-mode .ob-neural-chrome {
+  background: rgb(0 0 0 / 0.32);
+  border-bottom-color: rgb(255 255 255 / 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
 /* Dashboard için ek sıkı taktik ızgara katmanı */
 .dashboard-hud-shell {
   isolation: isolate;
