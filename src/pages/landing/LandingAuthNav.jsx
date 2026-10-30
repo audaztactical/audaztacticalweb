@@ -9,7 +9,6 @@ import { useInstructorNavItem, useNavGroups } from '../../hooks/useNavLabels'
 import { useNeuralState } from '../../hooks/useNeuralState'
 import { auth } from '../../lib/firebase'
 import { applyInstructorNavVisibility } from '../../lib/navStructure'
-import { isNeuralPreviewEnabled } from '../../lib/neural/neuralPreview'
 import {
   buildLandingAuthMenus,
   findInstructorNavItem,
@@ -30,7 +29,6 @@ export default function LandingAuthNav({ onNavigate }) {
   const { user, userData, role, isInstructor } = useAuth()
   const navGroups = useNavGroups()
   const instructorNavItem = useInstructorNavItem()
-  const neuralOn = isNeuralPreviewEnabled()
   const neural = useNeuralState()
 
   const [openId, setOpenId] = useState(/** @type {string | null} */ (null))
@@ -53,7 +51,7 @@ export default function LandingAuthNav({ onNavigate }) {
     (typeof userData?.callsign === 'string' && userData.callsign.trim()) ||
     user?.displayName ||
     t('authNav.operatorFallback')
-  const totalLevel = neuralOn && neural?.state?.totalLevel != null ? neural.state.totalLevel : null
+  const totalLevel = neural?.state?.totalLevel != null ? neural.state.totalLevel : null
 
   const langIsTr = (language || i18n.language || 'tr').startsWith('tr')
 

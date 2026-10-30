@@ -1,12 +1,8 @@
 /**
- * Operatör Beyni Dashboard önizlemesi.
- * DEV'de her zaman açık; production'da localStorage "audaz-neural-preview"="1".
+ * Eski Operatör Beyni / NÖRO önizleme kapısı.
+ * Lansman sonrası kullanıcı yüzeyi herkese açık; localStorage bayrağı kaldırıldı.
+ * Geliştirici araçları için tutulan stub — her zaman true.
  */
 export function isNeuralPreviewEnabled() {
-  if (import.meta.env.DEV) return true
-  try {
-    return localStorage.getItem('audaz-neural-preview') === '1'
-  } catch {
-    return false
-  }
+  return true
 }

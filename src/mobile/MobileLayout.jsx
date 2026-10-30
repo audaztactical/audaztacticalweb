@@ -5,7 +5,6 @@ import { signOut } from 'firebase/auth'
 import { Menu } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { auth } from '../lib/firebase'
-import { isNeuralPreviewEnabled } from '../lib/neural/neuralPreview'
 import NotificationDropdown from '../components/notifications/NotificationDropdown'
 import LanguageSwitcher from '../components/shared/LanguageSwitcher'
 import BottomTabBar from './BottomTabBar'
@@ -20,9 +19,7 @@ export default function MobileLayout() {
   const [signingOut, setSigningOut] = useState(false)
   const chromeTopRef = useRef(/** @type {HTMLElement|null} */ (null))
 
-  const neuralOnly =
-    (location.pathname === '/dashboard' || location.pathname === '/dashboard/') &&
-    isNeuralPreviewEnabled()
+  const neuralOnly = location.pathname === '/dashboard' || location.pathname === '/dashboard/'
 
   useEffect(() => {
     setNavMenuOpen(false)
