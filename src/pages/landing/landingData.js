@@ -55,6 +55,16 @@ export const CHAT_LINES = /** @type {LandingChatLine[]} */ ([
   { me: false, htmlKey: 'noro.chat.lines.3' },
 ])
 
+/** Kullanıcı beyanı — profil role/yetkiye ASLA yazılmaz; yalnızca audaz-onboarding. */
+export const PROFESSION_CHIPS = [
+  { id: 'military', key: 'auth.register.profession.military' },
+  { id: 'police', key: 'auth.register.profession.police' },
+  { id: 'security', key: 'auth.register.profession.security' },
+  { id: 'sport', key: 'auth.register.profession.sport' },
+  { id: 'instructor', key: 'auth.register.profession.instructor' },
+  { id: 'other', key: 'auth.register.profession.other' },
+]
+
 export const FOCUS_CHIPS = [
   { key: 'auth.register.focus.shooting', color: '#3fbf6f' },
   { key: 'auth.register.focus.cqb', color: '#3fbf6f' },
@@ -63,5 +73,39 @@ export const FOCUS_CHIPS = [
   { key: 'auth.register.focus.dryFire', color: '#f0a53a' },
   { key: 'auth.register.focus.fof', color: '#5b8def' },
 ]
+
+export const ONBOARDING_STORAGE_KEY = 'audaz-onboarding'
+
+/**
+ * @param {{ profession: string | null, focus: string[] }} data
+ */
+export function writeLandingOnboarding(data) {
+  try {
+    localStorage.setItem(
+      ONBOARDING_STORAGE_KEY,
+      JSON.stringify({
+        v: 1,
+        profession: data.profession,
+        focus: data.focus,
+        at: new Date().toISOString(),
+      }),
+    )
+  } catch {
+    /* ignore quota / private mode */
+  }
+}
+
+/** @returns {{ v: number, profession: string | null, focus: string[], at: string } | null} */
+export function readLandingOnboarding() {
+  try {
+    const raw = localStorage.getItem(ONBOARDING_STORAGE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (!parsed || parsed.v !== 1) return null
+    return parsed
+  } catch {
+    return null
+  }
+}
 
 export const REGIONS_BY_ID = Object.fromEntries(REGIONS.map((r) => [r.id, r]))

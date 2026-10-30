@@ -1,12 +1,30 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import {
+  browserLocalPersistence,
+  browserSessionPersistence,
+  sendPasswordResetEmail,
+  setPersistence,
+} from 'firebase/auth'
 import mark from '../../assets/landing-mark.png'
 import crest from '../../assets/landing-crest.png'
-import { FOCUS_CHIPS } from './landingData'
-
-// L2: gerçek kontrol
-const TAKEN = ['audaz', 'admin', 'operator', 'test', 'nöro', 'noro', 'delta', 'alpha']
+import { useAuth } from '../../context/AuthContext'
+import { auth } from '../../lib/firebase'
+import { userRequiresEmailVerification } from '../../lib/authEmailVerification'
+import { resolveAuthErrorKey } from '../../lib/authErrorDisplay'
+import { isPlatformInBetaPeriod } from '../../lib/registrationPolicy'
+import {
+  isUsernameAvailable,
+  isValidUsernameNormalized,
+  normalizeUsername,
+} from '../../lib/firestoreUsers'
+import { registerSendsEmailVerification } from '../../lib/registerOperatorAccount'
+import {
+  FOCUS_CHIPS,
+  PROFESSION_CHIPS,
+  writeLandingOnboarding,
+} from './landingData'
 
 const RULES = {
   len: (p) => p.length >= 8,
@@ -15,20 +33,35 @@ const RULES = {
   sym: (p) => /[^A-Za-z0-9ÇĞİÖŞÜçğıöşü]/.test(p),
 }
 
-const STRENGTH_KEYS = ['auth.register.strength.0', 'auth.register.strength.1', 'auth.register.strength.2', 'auth.register.strength.3', 'auth.register.strength.4']
+const STRENGTH_KEYS = [
+  'auth.register.strength.0',
+  'auth.register.strength.1',
+  'auth.register.strength.2',
+  'auth.register.strength.3',
+  'auth.register.strength.4',
+]
 const STRENGTH_COLORS = ['#ff5a4e', '#ff8a3d', '#f2c230', '#7fe0a6', '#5fe39a']
 
 const mailOk = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
-const callOk = (v) => /^[A-Za-z0-9ÇĞİÖŞÜçğıöşü_-]{3,20}$/.test(v)
+
+/** Çağrı işareti → username; normalize sonrası 3–24 a-z0-9_ */
+function callsignUsernameOk(raw) {
+  const key = normalizeUsername(raw)
+  return isValidUsernameNormalized(key)
+}
 
 /**
  * @param {{ open: boolean, initialMode?: 'in'|'reg', onClose: () => void }} props
  */
 export default function AuthModal({ open, initialMode = 'in', onClose }) {
-  const { t } = useTranslation('landing')
+  const { t, i18n } = useTranslation('landing')
+  const navigate = useNavigate()
+  const { signInWithEmailPassword, registerWithEmailPassword, recordRegistrationConsents } = useAuth()
   const dialogRef = useRef(null)
   const returnFocusRef = useRef(/** @type {HTMLElement | null} */ (null))
   const availTimer = useRef(/** @type {ReturnType<typeof setTimeout> | null} */ (null))
+  const resetCooldownUntil = useRef(0)
+  const submitLock = useRef(false)
 
   const [mounted, setMounted] = useState(open)
   const [animOn, setAnimOn] = useState(false)
@@ -39,10 +72,14 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
   const [done, setDone] = useState(false)
   const [shake, setShake] = useState(false)
   const [err, setErr] = useState('')
-  const [seqLines, setSeqLines] = useState(/** @type {number} */ (0))
+  const [errAction, setErrAction] = useState(/** @type {null | 'switch-login'} */ (null))
+  const [seqLines, setSeqLines] = useState(0)
+  const [seqFailAt, setSeqFailAt] = useState(/** @type {number | null} */ (null))
+  const [postAuthPath, setPostAuthPath] = useState('/dashboard')
 
   const [fMail, setFMail] = useState('')
   const [fPass, setFPass] = useState('')
+  const [remember, setRemember] = useState(true)
   const [showLoginPass, setShowLoginPass] = useState(false)
 
   const [rCall, setRCall] = useState('')
@@ -51,13 +88,14 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
   const [rPass2, setRPass2] = useState('')
   const [showRegPass, setShowRegPass] = useState(false)
   const [showRegPass2, setShowRegPass2] = useState(false)
-  const [avail, setAvail] = useState(/** @type {''|'wait'|'ok'|'no'} */ (''))
+  const [avail, setAvail] = useState(/** @type {''|'wait'|'ok'|'no'|'invalid'|'offline'} */ (''))
   const [callHintBad, setCallHintBad] = useState(false)
   const [strength, setStrength] = useState(0)
   const [strengthColor, setStrengthColor] = useState('')
   const [matchMsg, setMatchMsg] = useState('')
   const [matchOk, setMatchOk] = useState(false)
   const [crit, setCrit] = useState({ len: false, up: false, num: false, sym: false })
+  const [professionId, setProfessionId] = useState(/** @type {string | null} */ (null))
   const [focusSel, setFocusSel] = useState(/** @type {number[]} */ ([]))
   const [glowNote, setGlowNote] = useState('')
   const [rAge, setRAge] = useState(false)
@@ -65,15 +103,56 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
 
   const reduce = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
   const formId = useId()
+  const sendVerify = registerSendsEmailVerification()
+  const betaMode = isPlatformInBetaPeriod()
+
+  const mapLoginError = useCallback(
+    (error) => {
+      const key = resolveAuthErrorKey(error)
+      if (key === 'wrongPassword' || key === 'userNotFound' || key === 'invalidCredential' || key === 'authFailCredential') {
+        return t('auth.errors.badCredentials')
+      }
+      if (key === 'tooManyRequests') return t('auth.errors.tooManyRequests')
+      if (key === 'network') return t('auth.errors.network')
+      if (key === 'invalidEmail') return t('auth.errors.invalidEmail')
+      return t('auth.errors.generic')
+    },
+    [t],
+  )
+
+  const mapRegisterError = useCallback(
+    (error) => {
+      const code = error && typeof error === 'object' && 'code' in error ? String(error.code) : ''
+      const key = resolveAuthErrorKey(error)
+      if (code === 'auth/email-already-in-use' || key === 'emailInUse') {
+        return { msg: t('auth.errors.emailInUse'), action: /** @type {const} */ ('switch-login') }
+      }
+      if (key === 'weakPassword') return { msg: t('auth.errors.weakPassword'), action: null }
+      if (key === 'invalidEmail') return { msg: t('auth.errors.invalidEmail'), action: null }
+      if (key === 'network') return { msg: t('auth.errors.network'), action: null }
+      if (key === 'usernameTaken' || code === 'username-already-in-use') {
+        return { msg: t('auth.errors.callsignTaken'), action: null, usernameTaken: true }
+      }
+      if (key === 'usernameInvalid' || code === 'username-invalid') {
+        return { msg: t('auth.errors.callsignFormat'), action: null }
+      }
+      if (key === 'tooManyRequests') return { msg: t('auth.errors.tooManyRequests'), action: null }
+      return { msg: t('auth.errors.generic'), action: null }
+    },
+    [t],
+  )
 
   const resetForm = useCallback(() => {
     setStep(1)
     setBusy(false)
     setDone(false)
     setErr('')
+    setErrAction(null)
     setSeqLines(0)
+    setSeqFailAt(null)
     setFMail('')
     setFPass('')
+    setRemember(true)
     setRCall('')
     setRMail('')
     setRPass('')
@@ -82,10 +161,13 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
     setCallHintBad(false)
     setStrength(0)
     setMatchMsg('')
+    setProfessionId(null)
     setFocusSel([])
     setGlowNote('')
     setRAge(false)
     setOkChips([])
+    setPostAuthPath('/dashboard')
+    submitLock.current = false
   }, [])
 
   useEffect(() => {
@@ -155,8 +237,9 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [mounted, animOn, handleClose])
 
-  const fail = (msg) => {
+  const fail = (msg, action = null) => {
     setErr(msg)
+    setErrAction(action)
     setShake(false)
     requestAnimationFrame(() => setShake(true))
   }
@@ -196,17 +279,19 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
       setCallHintBad(false)
       return
     }
-    if (!callOk(v)) {
-      setAvail('')
+    if (!callsignUsernameOk(v)) {
+      setAvail('invalid')
       setCallHintBad(true)
       return
     }
     setCallHintBad(false)
     setAvail('wait')
     availTimer.current = setTimeout(() => {
-      const taken = TAKEN.includes(v.toLocaleLowerCase('tr'))
-      setAvail(taken ? 'no' : 'ok')
-    }, 500)
+      const key = normalizeUsername(v)
+      void isUsernameAvailable(key)
+        .then((free) => setAvail(free ? 'ok' : 'no'))
+        .catch(() => setAvail('offline'))
+    }, 400)
   }, [rCall])
 
   const goStep = (s, silent = false) => {
@@ -214,6 +299,7 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
     setBackAnim(back)
     setStep(s)
     setErr('')
+    setErrAction(null)
     if (!silent) {
       window.setTimeout(() => {
         dialogRef.current?.querySelector(`.lp-stp[data-s="${s}"] input`)?.focus()
@@ -225,6 +311,7 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
     setMode(m)
     if (m === 'reg') setStep(1)
     setErr('')
+    setErrAction(null)
   }
 
   const toggleFocus = (index) => {
@@ -247,57 +334,134 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
     setGlowNote(t('auth.register.focusGlow', { areas: labels.join(', ') }))
   }, [focusSel, t])
 
-  const runProgress = async () => {
-    setErr('')
-    setBusy(true)
-    const keys =
-      mode === 'in'
-        ? ['auth.progress.login.0', 'auth.progress.login.1', 'auth.progress.login.2', 'auth.progress.login.3']
-        : [
-            'auth.progress.register.0',
-            'auth.progress.register.1',
-            'auth.progress.register.2',
-            'auth.progress.register.3',
-            'auth.progress.register.4',
-          ]
-    const stepMs = reduce ? 120 : 620
-    setSeqLines(0)
-    for (let i = 0; i < keys.length; i += 1) {
-      await new Promise((r) => setTimeout(r, stepMs))
-      setSeqLines(i + 1)
-    }
-    await new Promise((r) => setTimeout(r, 500))
+  const finishSuccessNav = useCallback(() => {
+    handleClose()
+    navigate(postAuthPath, { replace: true })
+  }, [handleClose, navigate, postAuthPath])
 
-    if (mode === 'in') {
-      await onLoginSubmit({ email: fMail.trim(), password: fPass })
-    } else {
-      await onRegisterSubmit({
-        callsign: rCall.trim(),
+  const runLogin = async () => {
+    setErr('')
+    setErrAction(null)
+    setSeqFailAt(null)
+    setBusy(true)
+    setSeqLines(1)
+    try {
+      if (!auth) throw new Error('Firebase yapılandırılmadı')
+      await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence)
+      setSeqLines(2)
+      const cred = await signInWithEmailPassword(fMail.trim(), fPass)
+      setSeqLines(3)
+      const needsVerify = userRequiresEmailVerification(cred.user)
+      const next = needsVerify ? '/verify-email' : '/dashboard'
+      setPostAuthPath(next)
+      setSeqLines(4)
+      await new Promise((r) => setTimeout(r, reduce ? 80 : 280))
+      setDone(true)
+    } catch (error) {
+      setSeqFailAt(Math.max(1, seqLines || 2))
+      setSeqLines(0)
+      fail(mapLoginError(error))
+    } finally {
+      setBusy(false)
+      submitLock.current = false
+    }
+  }
+
+  const runRegister = async () => {
+    setErr('')
+    setErrAction(null)
+    setSeqFailAt(null)
+    setBusy(true)
+    const callsign = rCall.trim()
+    const username = normalizeUsername(callsign)
+    const focusIds = focusSel.map((i) => FOCUS_CHIPS[i].key.replace('auth.register.focus.', ''))
+
+    try {
+      setSeqLines(1)
+      let free = false
+      try {
+        free = await isUsernameAvailable(username)
+      } catch {
+        free = true
+      }
+      if (!free) {
+        setSeqFailAt(1)
+        setAvail('no')
+        goStep(1)
+        fail(t('auth.errors.callsignTaken'))
+        return
+      }
+
+      await registerWithEmailPassword({
         email: rMail.trim(),
         password: rPass,
-        focus: focusSel.map((i) => t(FOCUS_CHIPS[i].key)),
+        username,
+        callsign,
+        bloodType: '',
+        status: betaMode ? 'Beta' : 'Sivil',
+        role: 'member',
+        accountStatus: 'active',
+        onStep: (s) => {
+          if (s === 'auth') setSeqLines(2)
+          if (s === 'profile') setSeqLines(3)
+          if (s === 'verify') setSeqLines(5)
+        },
       })
+
+      setSeqLines(4)
+      writeLandingOnboarding({
+        profession: professionId,
+        focus: focusIds,
+      })
+
+      if (sendVerify) setSeqLines(5)
+      else setSeqLines(4)
+
+      try {
+        await recordRegistrationConsents?.()
+      } catch {
+        /* Kayıt tamam; protokol onayı ayarlardan tekrarlanabilir */
+      }
+
       setOkChips(focusSel.map((i) => ({ label: t(FOCUS_CHIPS[i].key), color: FOCUS_CHIPS[i].color })))
+      const needsVerify = sendVerify
+      setPostAuthPath(needsVerify ? '/verify-email' : '/dashboard')
+      await new Promise((r) => setTimeout(r, reduce ? 80 : 280))
+      setDone(true)
+    } catch (error) {
+      const mapped = mapRegisterError(error)
+      if (mapped.usernameTaken) {
+        setSeqFailAt(1)
+        setAvail('no')
+        goStep(1)
+      } else {
+        setSeqFailAt(Math.max(1, seqLines || 2))
+      }
+      setSeqLines(0)
+      fail(mapped.msg, mapped.action)
+    } finally {
+      setBusy(false)
+      submitLock.current = false
     }
-    setDone(true)
-    setBusy(false)
   }
 
   const onSubmit = (e) => {
     e.preventDefault()
-    if (busy || done) return
+    if (busy || done || submitLock.current) return
 
     if (mode === 'in') {
       if (!mailOk(fMail.trim())) return fail(t('auth.errors.invalidEmail'))
       if (fPass.length < 6) return fail(t('auth.errors.passwordMinLogin'))
-      void runProgress()
+      submitLock.current = true
+      void runLogin()
       return
     }
 
     if (step === 1) {
       const v = rCall.trim()
-      if (!callOk(v)) return fail(t('auth.errors.callsignFormat'))
+      if (!callsignUsernameOk(v)) return fail(t('auth.errors.callsignFormat'))
       if (avail === 'no') return fail(t('auth.errors.callsignTaken'))
+      if (avail === 'invalid') return fail(t('auth.errors.callsignFormat'))
       if (!mailOk(rMail.trim())) return fail(t('auth.errors.invalidEmail'))
       goStep(2)
       return
@@ -312,12 +476,34 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
     }
 
     if (!rAge) return fail(t('auth.errors.ageRequired'))
-    void runProgress()
+    submitLock.current = true
+    void runRegister()
   }
 
-  const forgot = (e) => {
+  const forgot = async (e) => {
     e.preventDefault()
-    setErr(t('auth.login.forgotDemo'))
+    const email = fMail.trim()
+    if (!email) {
+      fail(t('auth.errors.forgotNeedEmail'))
+      dialogRef.current?.querySelector('#fMail')?.focus()
+      return
+    }
+    if (!mailOk(email)) return fail(t('auth.errors.invalidEmail'))
+    const now = Date.now()
+    if (now < resetCooldownUntil.current) {
+      fail(t('auth.errors.forgotCooldown'))
+      return
+    }
+    try {
+      if (!auth) throw new Error('Firebase yapılandırılmadı')
+      auth.languageCode = (i18n.language || 'tr').startsWith('en') ? 'en' : 'tr'
+      await sendPasswordResetEmail(auth, email)
+    } catch {
+      /* Aynı genel mesaj — kullanıcı numaralandırma yok */
+    }
+    resetCooldownUntil.current = now + 60_000
+    setErr(t('auth.login.forgotSent'))
+    setErrAction(null)
   }
 
   if (!mounted) return null
@@ -336,13 +522,33 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
   const progressKeys =
     mode === 'in'
       ? ['auth.progress.login.0', 'auth.progress.login.1', 'auth.progress.login.2', 'auth.progress.login.3']
-      : [
-          'auth.progress.register.0',
-          'auth.progress.register.1',
-          'auth.progress.register.2',
-          'auth.progress.register.3',
-          'auth.progress.register.4',
-        ]
+      : sendVerify
+        ? [
+            'auth.progress.register.0',
+            'auth.progress.register.1',
+            'auth.progress.register.2',
+            'auth.progress.register.3',
+            'auth.progress.register.4',
+          ]
+        : [
+            'auth.progress.register.0',
+            'auth.progress.register.1',
+            'auth.progress.register.2',
+            'auth.progress.register.3',
+          ]
+
+  const availLabel =
+    avail === 'wait'
+      ? t('auth.register.availChecking')
+      : avail === 'ok'
+        ? t('auth.register.availOk')
+        : avail === 'no'
+          ? t('auth.register.availTaken')
+          : avail === 'invalid'
+            ? t('auth.register.availInvalid')
+            : avail === 'offline'
+              ? t('auth.register.availOffline')
+              : ''
 
   return (
     <div
@@ -379,7 +585,7 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
         <button type="button" className="x" aria-label={t('auth.close')} onClick={handleClose}>
           ×
         </button>
-        <div className={cardClass} id="card">
+        <div className={cardClass}>
           <div className="lp-hd">
             <img src={mark} alt="" />
             <div>
@@ -388,27 +594,17 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
             </div>
           </div>
 
-          <div className={`lp-tabs${mode === 'reg' ? ' lp-isreg' : ''}`} role="tablist">
-            <span className="lp-pill" />
-            <button
-              type="button"
-              role="tab"
-              aria-selected={mode === 'in'}
-              onClick={() => setModeAndReset('in')}
-            >
+          <div className="lp-tabs" role="tablist">
+            <span className="lp-pill" style={{ transform: mode === 'reg' ? 'translateX(100%)' : 'none' }} />
+            <button type="button" role="tab" aria-selected={mode === 'in'} onClick={() => setModeAndReset('in')}>
               {t('auth.tabLogin')}
             </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={mode === 'reg'}
-              onClick={() => setModeAndReset('reg')}
-            >
+            <button type="button" role="tab" aria-selected={mode === 'reg'} onClick={() => setModeAndReset('reg')}>
               {t('auth.tabRegister')}
             </button>
           </div>
 
-          <form id={formId} noValidate onSubmit={onSubmit}>
+          <form id={formId} onSubmit={onSubmit} noValidate>
             <div className="lp-login-only">
               <div className="lp-fld">
                 <input
@@ -453,9 +649,14 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
               </div>
               <div className="lp-row2">
                 <label>
-                  <input type="checkbox" defaultChecked /> {t('auth.login.remember')}
+                  <input
+                    type="checkbox"
+                    checked={remember}
+                    onChange={(e) => setRemember(e.target.checked)}
+                  />{' '}
+                  {t('auth.login.remember')}
                 </label>
-                <a href="#" onClick={forgot}>
+                <a href="#forgot" onClick={forgot}>
                   {t('auth.login.forgot')}
                 </a>
               </div>
@@ -478,7 +679,7 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
                     id="rCall"
                     placeholder=" "
                     autoComplete="nickname"
-                    maxLength={20}
+                    maxLength={24}
                     value={rCall}
                     onChange={(e) => setRCall(e.target.value)}
                   />
@@ -487,15 +688,17 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
                     <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0" />
                   </svg>
                   <span
-                    className={`lp-avail${avail === 'ok' ? ' lp-a-ok' : avail === 'no' ? ' lp-a-no' : avail === 'wait' ? ' lp-a-wait' : ''}`}
+                    className={`lp-avail${
+                      avail === 'ok'
+                        ? ' lp-a-ok'
+                        : avail === 'no' || avail === 'invalid'
+                          ? ' lp-a-no'
+                          : avail === 'wait' || avail === 'offline'
+                            ? ' lp-a-wait'
+                            : ''
+                    }`}
                   >
-                    {avail === 'wait'
-                      ? t('auth.register.availChecking')
-                      : avail === 'ok'
-                        ? t('auth.register.availOk')
-                        : avail === 'no'
-                          ? t('auth.register.availTaken')
-                          : ''}
+                    {availLabel}
                   </span>
                 </div>
                 <div className={`lp-hint${callHintBad ? ' lp-bad' : ''}`}>{t('auth.register.callsignHint')}</div>
@@ -594,6 +797,22 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
               <div className={`lp-stp${step === 3 ? ' lp-on' : ''}${backAnim && step === 3 ? ' lp-bk' : ''}`} data-s="3">
                 <p className="lp-sub">{t('auth.register.step3Sub')}</p>
                 <p className="lp-glbl">
+                  {t('auth.register.professionTitle')}{' '}
+                  <em>{t('auth.register.professionHint')}</em>
+                </p>
+                <div className="lp-chips" data-max="1">
+                  {PROFESSION_CHIPS.map((chip) => (
+                    <button
+                      key={chip.id}
+                      type="button"
+                      aria-pressed={professionId === chip.id}
+                      onClick={() => setProfessionId((prev) => (prev === chip.id ? null : chip.id))}
+                    >
+                      {t(chip.key)}
+                    </button>
+                  ))}
+                </div>
+                <p className="lp-glbl">
                   {t('auth.register.focusTitle')}{' '}
                   <em>{t('auth.register.focusMaxHint')}</em>
                 </p>
@@ -628,17 +847,25 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
               </div>
             </div>
 
-            <div className="lp-err" style={err.includes('Demo') || err.includes('demo') ? { color: 'var(--lp-green)' } : undefined}>
+            <div className="lp-err">
               {err}
+              {errAction === 'switch-login' ? (
+                <>
+                  {' '}
+                  <button type="button" className="lp-err-link" onClick={() => setModeAndReset('in')}>
+                    {t('auth.errors.switchToLogin')}
+                  </button>
+                </>
+              ) : null}
             </div>
 
             <div className="lp-btns">
               {mode === 'reg' && step > 1 ? (
-                <button type="button" className="lp-btn lp-back" onClick={() => goStep(step - 1)}>
+                <button type="button" className="lp-btn lp-back" disabled={busy} onClick={() => goStep(step - 1)}>
                   {t('auth.register.back')}
                 </button>
               ) : null}
-              <button type="submit" className="lp-btn lp-gold lp-go">
+              <button type="submit" className="lp-btn lp-gold lp-go" disabled={busy}>
                 {mode === 'in'
                   ? t('auth.submitLogin')
                   : step < 3
@@ -652,7 +879,15 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
             {progressKeys.map((key, i) => (
               <div
                 key={key}
-                className={`l${seqLines > i + 1 ? ' lp-done' : seqLines === i + 1 ? ' lp-on' : ''}`}
+                className={`l${
+                  seqFailAt === i + 1
+                    ? ' lp-fail'
+                    : seqLines > i + 1
+                      ? ' lp-done'
+                      : seqLines === i + 1
+                        ? ' lp-on'
+                        : ''
+                }`}
               >
                 <i />
                 {t(key)}
@@ -662,7 +897,11 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
 
           <div className="lp-ok">
             <img src={mark} alt="" />
-            <b>{mode === 'in' ? t('auth.success.loginTitle') : t('auth.success.registerTitle', { callsign: rCall.trim() })}</b>
+            <b>
+              {mode === 'in'
+                ? t('auth.success.loginTitle')
+                : t('auth.success.registerTitle', { callsign: rCall.trim() })}
+            </b>
             <p>{mode === 'in' ? t('auth.success.loginBody') : t('auth.success.registerBody')}</p>
             <div className="lp-okchips">
               {okChips.map((c) => (
@@ -671,7 +910,7 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
                 </span>
               ))}
             </div>
-            <button type="button" className="lp-btn lp-gold lp-go" onClick={handleClose}>
+            <button type="button" className="lp-btn lp-gold lp-go" onClick={finishSuccessNav}>
               {mode === 'in' ? t('auth.success.goDashboard') : t('auth.success.firstLog')}
             </button>
           </div>
@@ -681,14 +920,4 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
       </div>
     </div>
   )
-}
-
-/** @param {{ email: string, password: string }} _payload */
-export async function onLoginSubmit(_payload) {
-  // L2: Firebase sign-in
-}
-
-/** @param {{ callsign: string, email: string, password: string, focus: string[] }} _payload */
-export async function onRegisterSubmit(_payload) {
-  // L2: Firebase register + profile seed
 }

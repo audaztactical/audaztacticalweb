@@ -271,20 +271,29 @@
     "login": {
       "remember": "Remember me",
       "forgot": "Forgot password",
-      "forgotDemo": "Demo: a reset link would be emailed to you."
+      "forgotSent": "If that address is registered, we sent a reset link. Check your inbox (and spam folder)."
     },
     "submitLogin": "Sign in →",
     "submitContinue": "Continue →",
     "submitCreate": "Create account →",
-    "footer": "Demo · form does not sign you in",
+    "footer": "AUDAZ Tactical · secure session",
     "errors": {
       "invalidEmail": "Enter a valid email address.",
       "passwordMinLogin": "Password must be at least 6 characters.",
-      "callsignFormat": "Callsign must be 3–20 characters; letters, numbers, - and _ allowed.",
+      "callsignFormat": "After normalization, callsign must be 3–24 characters (a–z, 0–9, _). Turkish letters and hyphens are stripped.",
       "callsignTaken": "That callsign is taken — try another.",
       "passwordWeak": "Password must reach at least Strong level.",
       "passwordMismatch": "Passwords do not match.",
-      "ageRequired": "Check the box to continue."
+      "ageRequired": "Check the box to continue.",
+      "badCredentials": "Email or password is incorrect.",
+      "tooManyRequests": "Too many attempts. Try again later.",
+      "network": "Network error. Check your connection and try again.",
+      "generic": "Something went wrong. Try again shortly.",
+      "emailInUse": "This email is already registered. Try signing in.",
+      "switchToLogin": "Sign in",
+      "weakPassword": "Password is too weak. Choose a stronger one.",
+      "forgotNeedEmail": "Enter your email first.",
+      "forgotCooldown": "A reset link was just sent. Try again in 60 seconds."
     },
     "register": {
       "steps": {
@@ -295,7 +304,7 @@
       "step1Sub": "Your callsign is your name on the platform. Real name not required.",
       "step2Sub": "Choose a strong password. Your logs and brain live in this account.",
       "step3Sub": "Optional — helps NÖRO tailor suggestions.",
-      "callsignHint": "3–20 characters · letters, numbers, - and _",
+      "callsignHint": "3–24 chars (normalized); letters, digits, _ · Turkish letters and - are stripped",
       "verifyHint": "Verification link will be sent here.",
       "availChecking": "checking…",
       "availOk": "available ✓",
@@ -334,7 +343,19 @@
       "ageSuffix": "I have read and accept.",
       "termsLink": "Terms of use",
       "kvkkLink": "Privacy notice (KVKK)",
-      "back": "← Back"
+      "back": "← Back",
+      "availInvalid": "invalid",
+      "availOffline": "Couldn't check now — will recheck on submit",
+      "professionTitle": "What do you do?",
+      "professionHint": "optional · self-declared",
+      "profession": {
+        "military": "Military",
+        "police": "Police",
+        "security": "Private security",
+        "sport": "Sport shooter",
+        "instructor": "Instructor",
+        "other": "Other"
+      }
     },
     "progress": {
       "login": {
@@ -415,20 +436,56 @@
       "armoryValue": "87%"
     },
     "nodes": {
-      "siber_savunma": { "label": "Cyber Defense", "sub": "Threat shield" },
-      "istihbarat": { "label": "Global News", "sub": "Live feed" },
-      "muhabere": { "label": "Comms", "sub": "Encrypted" },
-      "task_matrix": { "label": "Mission Center", "sub": "Tasks · sync" },
-      "cephanelik": { "label": "Armory", "sub": "Inventory · 87%" },
-      "tccc": { "label": "TCCC", "sub": "Evac" },
-      "ors": { "label": "ORS", "sub": "Risk Score" }
+      "siber_savunma": {
+        "label": "Cyber Defense",
+        "sub": "Threat shield"
+      },
+      "istihbarat": {
+        "label": "Global News",
+        "sub": "Live feed"
+      },
+      "muhabere": {
+        "label": "Comms",
+        "sub": "Encrypted"
+      },
+      "task_matrix": {
+        "label": "Mission Center",
+        "sub": "Tasks · sync"
+      },
+      "cephanelik": {
+        "label": "Armory",
+        "sub": "Inventory · 87%"
+      },
+      "tccc": {
+        "label": "TCCC",
+        "sub": "Evac"
+      },
+      "ors": {
+        "label": "ORS",
+        "sub": "Risk Score"
+      }
     },
     "tiles": {
-      "dashboard": { "label": "Home", "sub": "ORS · inventory · readiness" },
-      "training": { "label": "Training", "sub": "Range · CQB · FoF" },
-      "comms": { "label": "Comms", "sub": "Tactical channels" },
-      "tccc": { "label": "TCCC · Health", "sub": "Evac · IFAK" },
-      "armory": { "label": "Armory", "sub": "Weapons · ammo" }
+      "dashboard": {
+        "label": "Home",
+        "sub": "ORS · inventory · readiness"
+      },
+      "training": {
+        "label": "Training",
+        "sub": "Range · CQB · FoF"
+      },
+      "comms": {
+        "label": "Comms",
+        "sub": "Tactical channels"
+      },
+      "tccc": {
+        "label": "TCCC · Health",
+        "sub": "Evac · IFAK"
+      },
+      "armory": {
+        "label": "Armory",
+        "sub": "Weapons · ammo"
+      }
     }
   },
   "intro": {

@@ -271,20 +271,29 @@
     "login": {
       "remember": "Beni hatırla",
       "forgot": "Şifremi unuttum",
-      "forgotDemo": "Demo: şifre sıfırlama bağlantısı e-postana gönderilecek."
+      "forgotSent": "Bu adres kayıtlıysa sıfırlama bağlantısını gönderdik. Gelen kutunu (ve spam klasörünü) kontrol et."
     },
     "submitLogin": "Giriş yap →",
     "submitContinue": "Devam →",
     "submitCreate": "Hesabı oluştur →",
-    "footer": "Demo · form gerçek giriş yapmaz",
+    "footer": "AUDAZ Tactical · güvenli oturum",
     "errors": {
       "invalidEmail": "Geçerli bir e-posta adresi gir.",
       "passwordMinLogin": "Şifre en az 6 karakter olmalı.",
-      "callsignFormat": "Çağrı işareti 3–20 karakter olmalı; harf, rakam, - ve _ kullanılabilir.",
+      "callsignFormat": "Çağrı işareti normalize edilince 3–24 karakter olmalı (a–z, 0–9, _). Türkçe harfler ve tire düşer.",
       "callsignTaken": "Bu çağrı işareti alınmış, başka bir tane dene.",
       "passwordWeak": "Şifre en az 'Güçlü' seviyede olmalı.",
       "passwordMismatch": "Şifreler eşleşmiyor.",
-      "ageRequired": "Devam etmek için onay kutusunu işaretle."
+      "ageRequired": "Devam etmek için onay kutusunu işaretle.",
+      "badCredentials": "E-posta veya şifre hatalı.",
+      "tooManyRequests": "Çok fazla deneme. Bir süre sonra tekrar dene.",
+      "network": "Ağ bağlantısı kurulamadı. Bağlantını kontrol edip tekrar dene.",
+      "generic": "İşlem tamamlanamadı. Biraz sonra tekrar dene.",
+      "emailInUse": "Bu e-posta zaten kayıtlı. Giriş yapmayı dene.",
+      "switchToLogin": "Giriş yap",
+      "weakPassword": "Şifre çok zayıf. Daha güçlü bir şifre seç.",
+      "forgotNeedEmail": "Önce e-posta adresini gir.",
+      "forgotCooldown": "Sıfırlama bağlantısı az önce gönderildi. 60 saniye sonra tekrar dene."
     },
     "register": {
       "steps": {
@@ -295,7 +304,7 @@
       "step1Sub": "Çağrı işaretin platformdaki adın olacak. Gerçek adını kullanmak zorunda değilsin.",
       "step2Sub": "Güçlü bir şifre seç. Hesabında eğitim kayıtların ve beynin duruyor.",
       "step3Sub": "İsteğe bağlı. Sadece NÖRO'nun önerilerini sana göre ayarlamak için.",
-      "callsignHint": "3–20 karakter · harf, rakam, - ve _",
+      "callsignHint": "3–24 karakter (normalize); harf, rakam ve _ · Türkçe harfler ve - düşer",
       "verifyHint": "Doğrulama bağlantısı bu adrese gelecek.",
       "availChecking": "kontrol…",
       "availOk": "uygun ✓",
@@ -334,7 +343,19 @@
       "ageSuffix": "okudum, kabul ediyorum.",
       "termsLink": "Kullanım koşullarını",
       "kvkkLink": "KVKK aydınlatma metnini",
-      "back": "← Geri"
+      "back": "← Geri",
+      "availInvalid": "geçersiz",
+      "availOffline": "Şu an kontrol edemedim, kayıtta tekrar bakacağım",
+      "professionTitle": "Ne yapıyorsun?",
+      "professionHint": "isteğe bağlı · beyan",
+      "profession": {
+        "military": "Asker",
+        "police": "Polis",
+        "security": "Özel güvenlik",
+        "sport": "Sporcu atıcı",
+        "instructor": "Eğitmen",
+        "other": "Diğer"
+      }
     },
     "progress": {
       "login": {
@@ -415,20 +436,56 @@
       "armoryValue": "%87"
     },
     "nodes": {
-      "siber_savunma": { "label": "Siber Savunma", "sub": "Tehdit kalkanı" },
-      "istihbarat": { "label": "Küresel Haber", "sub": "Canlı akış" },
-      "muhabere": { "label": "Muhabere", "sub": "Şifreli" },
-      "task_matrix": { "label": "Görev Merkezi", "sub": "Görev · senkron" },
-      "cephanelik": { "label": "Cephanelik", "sub": "Envanter · %87" },
-      "tccc": { "label": "TCCC", "sub": "Tahliye" },
-      "ors": { "label": "ORS", "sub": "Risk Skoru" }
+      "siber_savunma": {
+        "label": "Siber Savunma",
+        "sub": "Tehdit kalkanı"
+      },
+      "istihbarat": {
+        "label": "Küresel Haber",
+        "sub": "Canlı akış"
+      },
+      "muhabere": {
+        "label": "Muhabere",
+        "sub": "Şifreli"
+      },
+      "task_matrix": {
+        "label": "Görev Merkezi",
+        "sub": "Görev · senkron"
+      },
+      "cephanelik": {
+        "label": "Cephanelik",
+        "sub": "Envanter · %87"
+      },
+      "tccc": {
+        "label": "TCCC",
+        "sub": "Tahliye"
+      },
+      "ors": {
+        "label": "ORS",
+        "sub": "Risk Skoru"
+      }
     },
     "tiles": {
-      "dashboard": { "label": "Ana Sayfa", "sub": "ORS · envanter · hazırlık" },
-      "training": { "label": "Antrenman", "sub": "Atış · CQB · FoF" },
-      "comms": { "label": "Muhabere", "sub": "Taktik kanallar" },
-      "tccc": { "label": "TCCC · Sağlık", "sub": "Tahliye · IFAK" },
-      "armory": { "label": "Cephanelik", "sub": "Silah · mühimmat" }
+      "dashboard": {
+        "label": "Ana Sayfa",
+        "sub": "ORS · envanter · hazırlık"
+      },
+      "training": {
+        "label": "Antrenman",
+        "sub": "Atış · CQB · FoF"
+      },
+      "comms": {
+        "label": "Muhabere",
+        "sub": "Taktik kanallar"
+      },
+      "tccc": {
+        "label": "TCCC · Sağlık",
+        "sub": "Tahliye · IFAK"
+      },
+      "armory": {
+        "label": "Cephanelik",
+        "sub": "Silah · mühimmat"
+      }
     }
   },
   "intro": {

@@ -188,3 +188,7 @@ nav.lp-top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;backdrop-
   .landing-root .lp-side .lp-ticker { display: none; }
   .landing-root .lp-side .lp-motto b { font-size: 20px; }
 }
+
+.landing-root .lp-seq .l.lp-fail i{background:var(--lp-red);box-shadow:0 0 0 2px rgba(229,83,75,.25)}
+.landing-root .lp-seq .l.lp-fail{color:var(--lp-red)}
+.landing-root .lp-err-link{background:none;border:0;padding:0;color:var(--lp-gold);text-decoration:underline;cursor:pointer;font:inherit}
