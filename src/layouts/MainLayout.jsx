@@ -149,8 +149,7 @@ export default function MainLayout() {
             ].join(' ')}
           >
             <Link
-              to="/"
-              state={{ skipIntro: true }}
+              to="/dashboard"
               onClick={closeMobileNav}
               className={[
                 'flex min-w-0 items-center gap-3 transition-opacity hover:opacity-90',
@@ -236,7 +235,7 @@ export default function MainLayout() {
           >
             <Menu className="size-5" strokeWidth={1.75} aria-hidden />
           </button>
-          <Link to="/" state={{ skipIntro: true }} className="flex flex-1 justify-center" aria-label={navUi.homeAria}>
+          <Link to="/dashboard" className="flex flex-1 justify-center" aria-label={navUi.homeAria}>
             <img
               src="/logo.png"
               alt="AUDAZ Tactical"

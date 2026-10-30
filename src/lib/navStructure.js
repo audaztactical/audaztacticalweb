@@ -43,7 +43,7 @@ export const NAV_GROUP_DEFS = [
     id: 'personal',
     titleKey: 'groups.personal',
     items: [
-      { to: '/', end: true, labelKey: 'items.hqReturn', icon: Landmark, state: { skipIntro: true } },
+      { to: '/dashboard', end: true, labelKey: 'items.hqReturn', icon: Landmark },
       { to: '/dashboard', end: true, labelKey: 'items.home', icon: Home },
       { to: '/profil', labelKey: 'items.profile', icon: User },
       { to: '/mesajlar', labelKey: 'items.tacticalComms', icon: MessageSquare },

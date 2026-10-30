@@ -13,6 +13,7 @@ import AdminRoute from './components/auth/AdminRoute'
 import AccessGuard from './components/auth/AccessGuard'
 import InstructorRoute from './components/auth/InstructorRoute'
 import ProtectedRoute from './components/auth/ProtectedRoute'
+import RootGate from './components/auth/RootGate'
 import ResponsiveAppLayout from './layouts/ResponsiveAppLayout'
 import TacticalLoader from './components/TacticalLoader'
 import FcmPushBootstrap from './components/notifications/FcmPushBootstrap'
@@ -41,7 +42,6 @@ const AdminPanel = lazy(() => import('./pages/AdminPanel'))
 const PremiumTransition = lazy(() => import('./pages/PremiumTransition'))
 const SiteMaintenance = lazy(() => import('./pages/SiteMaintenance'))
 const UsageGuide = lazy(() => import('./pages/UsageGuide'))
-const Landing = lazy(() => import('./pages/landing/Landing'))
 const NeuralDebug = import.meta.env.DEV
   ? lazy(() => import('./pages/dev/NeuralDebug'))
   : null
@@ -60,7 +60,7 @@ export default function App() {
           <MuhabereNotifyProvider>
           <Suspense fallback={<TacticalLoader />}>
           <Routes>
-            <Route path="/" element={<Landing />} />
+            <Route path="/" element={<RootGate />} />
 
             <Route element={<ProtectedRoute />}>
               <Route path="verify-email" element={<VerifyEmail />} />

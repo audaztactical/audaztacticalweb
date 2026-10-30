@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import mark from '../../assets/landing-mark.png'
 import crest from '../../assets/landing-crest.png'
 import { useAuth } from '../../context/AuthContext'
 import { useLanguagePreference } from '../../context/LanguagePreferenceContext'
+import { beginLandingAuthFlow, endLandingAuthFlow } from '../../lib/landingAuthFlow'
 import AuthModal from './AuthModal'
 import LandingBrain from './LandingBrain'
 import {
@@ -20,8 +21,7 @@ import './landing.css'
 export default function Landing() {
   const { t, i18n } = useTranslation('landing')
   const { language, setLanguage } = useLanguagePreference()
-  const { user, loading, profileLoading, userData, registrationInProgress } = useAuth()
-  const navigate = useNavigate()
+  const { user, loading } = useAuth()
 
   const [authOpen, setAuthOpen] = useState(false)
   const [authMode, setAuthMode] = useState(/** @type {'in'|'reg'} */ ('in'))
@@ -32,15 +32,15 @@ export default function Landing() {
     document.title = t('meta.title')
   }, [t, i18n.language])
 
-  useEffect(() => {
-    if (loading || registrationInProgress || !user) return
-    if (profileLoading || !userData?.username?.trim()) return
-    navigate('/dashboard', { replace: true })
-  }, [user, loading, registrationInProgress, profileLoading, userData?.username, navigate])
-
   const openAuth = useCallback((mode = 'in') => {
+    beginLandingAuthFlow()
     setAuthMode(mode)
     setAuthOpen(true)
+  }, [])
+
+  const closeAuth = useCallback(() => {
+    endLandingAuthFlow()
+    setAuthOpen(false)
   }, [])
 
   useEffect(() => {
@@ -355,7 +355,7 @@ export default function Landing() {
         </div>
       </footer>
 
-      <AuthModal open={authOpen} initialMode={authMode} onClose={() => setAuthOpen(false)} />
+      <AuthModal open={authOpen} initialMode={authMode} onClose={closeAuth} />
     </div>
   )
 }
