@@ -194,13 +194,13 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
   }, [open])
 
   useEffect(() => {
-    if (!open || !animOn) return undefined
+    if (!open || !animOn || busy || done) return undefined
     const tId = window.setTimeout(() => {
       const sel = mode === 'reg' ? 'input#rCall' : 'input#fMail'
       dialogRef.current?.querySelector(sel)?.focus()
     }, 250)
     return () => clearTimeout(tId)
-  }, [open, animOn, mode])
+  }, [open, animOn, mode, busy, done])
 
   const handleClose = useCallback(() => {
     if (window.location.hash === '#giris') {
@@ -209,6 +209,22 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
     onClose()
     window.setTimeout(() => returnFocusRef.current?.focus?.(), 360)
   }, [onClose])
+
+  useEffect(() => {
+    if (!busy || done) return undefined
+    const id = window.requestAnimationFrame(() => {
+      dialogRef.current?.querySelector('.lp-seq')?.focus?.()
+    })
+    return () => window.cancelAnimationFrame(id)
+  }, [busy, done])
+
+  useEffect(() => {
+    if (!done) return undefined
+    const id = window.requestAnimationFrame(() => {
+      dialogRef.current?.querySelector('.lp-ok .lp-go')?.focus?.()
+    })
+    return () => window.cancelAnimationFrame(id)
+  }, [done])
 
   useEffect(() => {
     if (!mounted || !animOn) return undefined
@@ -220,7 +236,11 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
       if (e.key === 'Tab' && dialogRef.current) {
         const nodes = [...dialogRef.current.querySelectorAll(
           'button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])',
-        )].filter((el) => el instanceof HTMLElement && el.offsetParent !== null)
+        )].filter((el) => {
+          if (!(el instanceof HTMLElement)) return false
+          if (el.closest('[hidden]')) return false
+          return el.offsetParent !== null || el === document.activeElement
+        })
         if (!nodes.length) return
         const first = nodes[0]
         const last = nodes[nodes.length - 1]
@@ -235,7 +255,7 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [mounted, animOn, handleClose])
+  }, [mounted, animOn, handleClose, busy, done])
 
   const fail = (msg, action = null) => {
     setErr(msg)
@@ -359,6 +379,7 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
       setDone(true)
     } catch (error) {
       setSeqFailAt(Math.max(1, seqLines || 2))
+      await new Promise((r) => setTimeout(r, reduce ? 160 : 480))
       setSeqLines(0)
       fail(mapLoginError(error))
     } finally {
@@ -387,7 +408,8 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
       if (!free) {
         setSeqFailAt(1)
         setAvail('no')
-        goStep(1)
+        await new Promise((r) => setTimeout(r, reduce ? 160 : 480))
+        goStep(1, true)
         fail(t('auth.errors.callsignTaken'))
         return
       }
@@ -433,10 +455,11 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
       if (mapped.usernameTaken) {
         setSeqFailAt(1)
         setAvail('no')
-        goStep(1)
       } else {
         setSeqFailAt(Math.max(1, seqLines || 2))
       }
+      await new Promise((r) => setTimeout(r, reduce ? 160 : 480))
+      if (mapped.usernameTaken) goStep(1, true)
       setSeqLines(0)
       fail(mapped.msg, mapped.action)
     } finally {
@@ -582,18 +605,72 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
         </div>
       </div>
       <div className="lp-main">
-        <button type="button" className="x" aria-label={t('auth.close')} onClick={handleClose}>
+        <button
+          type="button"
+          className="x"
+          aria-label={t('auth.close')}
+          tabIndex={done ? -1 : undefined}
+          onClick={handleClose}
+        >
           ×
         </button>
         <div className={cardClass}>
-          <div className="lp-hd">
-            <img src={mark} alt="" />
-            <div>
-              <b>{mode === 'in' ? t('auth.cardTitleLogin') : t('auth.cardTitleRegister')}</b>
-              <span>{t('auth.secureLink')}</span>
+          {done ? null : (
+            <div className="lp-hd">
+              <img src={mark} alt="" />
+              <div>
+                <b>{mode === 'in' ? t('auth.cardTitleLogin') : t('auth.cardTitleRegister')}</b>
+                <span>{t('auth.secureLink')}</span>
+              </div>
             </div>
-          </div>
+          )}
 
+          {done ? (
+            <div className="lp-ok">
+              <img src={mark} alt="" />
+              <b>
+                {mode === 'in'
+                  ? t('auth.success.loginTitle')
+                  : t('auth.success.registerTitle', { callsign: rCall.trim() })}
+              </b>
+              <p>{mode === 'in' ? t('auth.success.loginBody') : t('auth.success.registerBody')}</p>
+              <div className="lp-okchips">
+                {okChips.map((c) => (
+                  <span key={c.label} style={{ '--c': c.color }}>
+                    {c.label}
+                  </span>
+                ))}
+              </div>
+              <button type="button" className="lp-btn lp-gold lp-go" onClick={finishSuccessNav}>
+                {mode === 'in' ? t('auth.success.goDashboard') : t('auth.success.firstLog')}
+              </button>
+            </div>
+          ) : null}
+
+          {busy && !done ? (
+            <div className="lp-seq" tabIndex={-1} aria-live="polite" aria-busy="true">
+              {progressKeys.map((key, i) => (
+                <div
+                  key={key}
+                  className={`l${
+                    seqFailAt === i + 1
+                      ? ' lp-fail'
+                      : seqLines > i + 1
+                        ? ' lp-done'
+                        : seqLines === i + 1
+                          ? ' lp-on'
+                          : ''
+                  }`}
+                >
+                  <i />
+                  {t(key)}
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          {!busy && !done ? (
+            <>
           <div className="lp-tabs" role="tablist">
             <span className="lp-pill" style={{ transform: mode === 'reg' ? 'translateX(100%)' : 'none' }} />
             <button type="button" role="tab" aria-selected={mode === 'in'} onClick={() => setModeAndReset('in')}>
@@ -875,47 +952,9 @@ export default function AuthModal({ open, initialMode = 'in', onClose }) {
             </div>
           </form>
 
-          <div className="lp-seq">
-            {progressKeys.map((key, i) => (
-              <div
-                key={key}
-                className={`l${
-                  seqFailAt === i + 1
-                    ? ' lp-fail'
-                    : seqLines > i + 1
-                      ? ' lp-done'
-                      : seqLines === i + 1
-                        ? ' lp-on'
-                        : ''
-                }`}
-              >
-                <i />
-                {t(key)}
-              </div>
-            ))}
-          </div>
-
-          <div className="lp-ok">
-            <img src={mark} alt="" />
-            <b>
-              {mode === 'in'
-                ? t('auth.success.loginTitle')
-                : t('auth.success.registerTitle', { callsign: rCall.trim() })}
-            </b>
-            <p>{mode === 'in' ? t('auth.success.loginBody') : t('auth.success.registerBody')}</p>
-            <div className="lp-okchips">
-              {okChips.map((c) => (
-                <span key={c.label} style={{ '--c': c.color }}>
-                  {c.label}
-                </span>
-              ))}
-            </div>
-            <button type="button" className="lp-btn lp-gold lp-go" onClick={finishSuccessNav}>
-              {mode === 'in' ? t('auth.success.goDashboard') : t('auth.success.firstLog')}
-            </button>
-          </div>
-
           <div className="lp-foot">{t('auth.footer')}</div>
+            </>
+          ) : null}
         </div>
       </div>
     </div>
