@@ -18,7 +18,17 @@ import ResponsiveAppLayout from './layouts/ResponsiveAppLayout'
 import TacticalLoader from './components/TacticalLoader'
 import FcmPushBootstrap from './components/notifications/FcmPushBootstrap'
 import ScrollToTop from './components/navigation/ScrollToTop'
-import MaintenanceGate from './pages/maintenance/MaintenanceGate'
+
+/**
+ * Build-time constant fold: use exact === 'on' (no String/toLowerCase) so Vite drops the
+ * maintenance chunk when the env is not literally "on". Runtime Gate still normalizes case.
+ */
+const MaintenanceGate =
+  import.meta.env.VITE_MAINTENANCE_MODE === 'on'
+    ? lazy(() => import('./pages/maintenance/MaintenanceGate'))
+    : function MaintenancePassthrough({ children }) {
+        return children
+      }
 
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
@@ -60,8 +70,8 @@ export default function App() {
           <BrowserRouter>
           <ScrollToTop />
           <MuhabereNotifyProvider>
-          <MaintenanceGate>
           <Suspense fallback={<TacticalLoader />}>
+          <MaintenanceGate>
           <Routes>
             <Route path="/" element={<RootGate />} />
             <Route path="/ana-sayfa" element={<Landing />} />
@@ -127,8 +137,8 @@ export default function App() {
               </Route>
             </Route>
           </Routes>
-          </Suspense>
           </MaintenanceGate>
+          </Suspense>
           </MuhabereNotifyProvider>
           </BrowserRouter>
         </FirebaseErrorProvider>

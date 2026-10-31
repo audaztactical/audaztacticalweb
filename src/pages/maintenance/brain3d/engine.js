@@ -357,7 +357,7 @@ function size(){const r=stage.getBoundingClientRect();if(r.width<2||r.height<2)r
 /* ================= Çipler ================= */
 const chips=LOBES.map((L,i)=>{const d=document.createElement("button");d.type="button";d.className="bchip";d.style.setProperty("--c",L.col);
   d.innerHTML=`<i class="dot"></i><span class="nm">${L.name}</span><span class="sh">${L.sh}</span><b class="lvn">1</b><i class="pt"></i>`;d.setAttribute("aria-label",L.name+" bölgesini seç");
-  d.addEventListener("click",e=>{e.stopPropagation();select(i,true)});stage.appendChild(d);return d});
+  __on(d,"click",e=>{e.stopPropagation();select(i,true)});stage.appendChild(d);return d});
 let ports=[];
 function placeChips(){LAY=layoutMode();stage.classList.toggle("lay-rows",LAY==="rows");stage.classList.toggle("lay-cols",LAY==="cols");
   const hud=$("hud").getBoundingClientRect(),visH=Math.min(H,window.innerHeight||H);
@@ -377,7 +377,7 @@ function placeChips(){LAY=layoutMode();stage.classList.toggle("lay-rows",LAY==="
     LEFT.forEach((ri,k)=>{const d=chips[ri];d.style.left="12px";d.style.top=(y0+k*step)+"px";d.style.width=cw+"px"});
     RIGHT.forEach((ri,k)=>{const d=chips[ri];d.style.left=(W-12-cw)+"px";d.style.top=Math.min(y0+k*step,visH-96-ch)+"px";d.style.width=cw+"px";d.classList.add("r")});
     FREE={top:y0,bottom:y1,left:12+cw+14,right:W-12-cw-14}}
-  requestAnimationFrame(()=>{const sr=stage.getBoundingClientRect();ports=chips.map(d=>{const p=d.querySelector(".pt").getBoundingClientRect();return[p.left-sr.left+p.width/2,p.top-sr.top+p.height/2]})})}
+  requestAnimationFrame(()=>{if(__disposed)return;const sr=stage.getBoundingClientRect();ports=chips.map(d=>{const p=d.querySelector(".pt").getBoundingClientRect();return[p.left-sr.left+p.width/2,p.top-sr.top+p.height/2]})})}
 
 /* ================= Seçim ve kart ================= */
 function select(i,fly){state.sel=i;chips.forEach((c,k)=>c.classList.toggle("sel",k===i));
@@ -404,10 +404,10 @@ function pick(mx,my){if(!BASIS)return-1;const {o,d}=rayAt(mx,my);let best=1e9,re
 const PTR=new Map();let pinch=null,lastTap=0;
 const zoomMax=()=>Math.max(680,HOME.dist*1.35),zoomMin=()=>HOME.dist*.55;
 function zoomTalk(dir){if(cam.td<=zoomMin()+12)NORO.cat("zmax",8000);else if(cam.td>=zoomMax()-15)NORO.cat("zmin",8000);else NORO.cat(dir<0?"zin":"zout",9000)}
-stage.addEventListener("pointerdown",e=>{if(e.target.closest(".bchip"))return;PTR.set(e.pointerId,{x:e.clientX,y:e.clientY});try{stage.setPointerCapture(e.pointerId)}catch(_){}lastInput=performance.now();
+__on(stage,"pointerdown",e=>{if(__disposed)return;if(e.target.closest(".bchip"))return;PTR.set(e.pointerId,{x:e.clientX,y:e.clientY});try{stage.setPointerCapture(e.pointerId)}catch(_){}lastInput=performance.now();
   if(PTR.size===2){const [p,q]=[...PTR.values()];pinch={d0:Math.max(30,Math.hypot(p.x-q.x,p.y-q.y)),td0:cam.td,said:0};drag=null;return}
   if(PTR.size===1){drag={x:e.clientX,y:e.clientY,t:performance.now(),moved:0,id:e.pointerId};stage.classList.add("drag")}});
-stage.addEventListener("pointermove",e=>{const r=stage.getBoundingClientRect(),pp=PTR.get(e.pointerId);if(pp){pp.x=e.clientX;pp.y=e.clientY}
+__on(stage,"pointermove",e=>{if(__disposed)return;const r=stage.getBoundingClientRect(),pp=PTR.get(e.pointerId);if(pp){pp.x=e.clientX;pp.y=e.clientY}
   if(pinch&&PTR.size>=2){const [p,q]=[...PTR.values()],d=Math.max(30,Math.hypot(p.x-q.x,p.y-q.y));const prev=cam.td;cam.td=Math.max(zoomMin(),Math.min(zoomMax(),pinch.td0*pinch.d0/d));cam.dist+=(cam.td-cam.dist)*.5;lastInput=performance.now();
     if(!pinch.said&&Math.abs(cam.td-pinch.td0)>40){pinch.said=1;zoomTalk(cam.td-pinch.td0)}return}
   if(drag&&e.pointerId===drag.id){const dx=e.clientX-drag.x,dy=e.clientY-drag.y,sen=e.pointerType==="touch"?.0072:.0055;drag.moved+=Math.abs(dx)+Math.abs(dy);drag.x=e.clientX;drag.y=e.clientY;
@@ -421,10 +421,10 @@ function endPtr(e,cancel){const had=PTR.has(e.pointerId);PTR.delete(e.pointerId)
   const r=stage.getBoundingClientRect(),now=performance.now(),quick=now-drag.t<350&&drag.moved<8;
   if(quick&&!cancel){if(e.pointerType!=="mouse"&&now-lastTap<320){lastTap=0;stage.dispatchEvent(new Event("dblclick"))}else{lastTap=now;const h=pick(e.clientX-r.left,e.clientY-r.top);if(h>=0)select(h,true)}}
   drag=null}
-stage.addEventListener("pointerup",e=>endPtr(e,false));
-stage.addEventListener("pointercancel",e=>endPtr(e,true));
-stage.addEventListener("wheel",e=>{e.preventDefault();cam.td=Math.max(zoomMin(),Math.min(zoomMax(),cam.td*(1+e.deltaY*.0011)));lastInput=performance.now();zoomTalk(e.deltaY)},{passive:false});
-stage.addEventListener("dblclick",()=>{cam.ty=HOME.yaw+Math.round((cam.yaw-HOME.yaw)/(Math.PI*2))*Math.PI*2;cam.tp=HOME.pitch;cam.td=HOME.dist;state.sel=-1;chips.forEach(c=>c.classList.remove("sel"));lastInput=performance.now();NORO.cat("reset",3000)});
+__on(stage,"pointerup",e=>endPtr(e,false));
+__on(stage,"pointercancel",e=>endPtr(e,true));
+__on(stage,"wheel",e=>{e.preventDefault();cam.td=Math.max(zoomMin(),Math.min(zoomMax(),cam.td*(1+e.deltaY*.0011)));lastInput=performance.now();zoomTalk(e.deltaY)},{passive:false});
+__on(stage,"dblclick",()=>{cam.ty=HOME.yaw+Math.round((cam.yaw-HOME.yaw)/(Math.PI*2))*Math.PI*2;cam.tp=HOME.pitch;cam.td=HOME.dist;state.sel=-1;chips.forEach(c=>c.classList.remove("sel"));lastInput=performance.now();NORO.cat("reset",3000)});
 __on(window,"keydown",e=>{if(e.key==="ArrowLeft"){cam.ty-=.25;lastInput=performance.now()}if(e.key==="ArrowRight"){cam.ty+=.25;lastInput=performance.now()}if(e.key==="ArrowUp"){cam.tp=Math.min(.95,cam.tp+.15)}if(e.key==="ArrowDown"){cam.tp=Math.max(-.7,cam.tp-.15)}if(e.key==="Escape")stage.dispatchEvent(new Event("dblclick"))});
 if(coarse){$("legend").style.display="none"}
 
@@ -497,7 +497,7 @@ const sigs=[],growHeads=[];
 let vis=true;{const __io=new IntersectionObserver(e=>{vis=e[0].isIntersecting});__io.observe(stage);__disposers.push(()=>__io.disconnect());}
 let lastFrame=0;
 let emaDt=16,fcount=0,lastMs=0,wasIdle=false,oscBase=0,oscP=0,oscT0=0;
-function frame(ms){__raf=requestAnimationFrame(frame);if(__disposed)return;if(!vis||document.hidden){lastMs=0;return}
+function frame(ms){if(__disposed){__raf=0;return}__raf=requestAnimationFrame(frame);if(!vis||document.hidden){lastMs=0;return}
   const busyNow=performance.now()-lastInput<2500||PTR.size>0;const cap=QUAL===0?100:(coarse&&!busyNow?32:0);if(cap&&ms-lastFrame<cap)return;lastFrame=ms;
   if(lastMs){const dt=Math.min(250,ms-lastMs);emaDt=emaDt*.94+dt*.06;fcount++;
     if(fcount>90&&QUAL>0&&!TOUR.busy()){const lim=QUAL===2?(coarse?55:42):75;if(emaDt>lim){QUAL--;fcount=0;emaDt=QUAL===0?100:30;size()}}}
@@ -584,19 +584,19 @@ const NORO=(()=>{
   const stamp=()=>new Date().toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"});
   const prune=()=>{while(list.children.length>80)list.firstChild.remove()};
   function bubble(html,me){prune();const m=document.createElement("div");m.className="msg"+(me?" me":"");m.innerHTML=`<div class="bub">${html}</div><time>${me?"sen":"NÖRO"} · ${stamp()}</time>`;list.appendChild(m);list.scrollTop=1e9;return m}
-  function peekSay(h,{hold=8000,delay=420}={}){if(AS.open)return;lastSay=performance.now();talking=true;btn.classList.add("talk");
+  function peekSay(h,{hold=8000,delay=420}={}){if(AS.open||__disposed)return;lastSay=performance.now();talking=true;btn.classList.add("talk");
     peek.hidden=false;peek.innerHTML='<span class="who">NÖRO</span><span class="typing"><span></span><span></span><span></span></span>';place();clearTimeout(AS.t);
-    setTimeout(()=>{btn.classList.remove("talk");talking=false;peek.innerHTML=`<span class="who">NÖRO</span>${h}`;place();clearTimeout(AS.t);AS.t=setTimeout(()=>{peek.hidden=true},hold)},reduce?0:delay)}
-  function chatSay(h,{delay=650}={}){prune();lastSay=performance.now();talking=true;btn.classList.add("talk");
+    __later(()=>{if(__disposed)return;btn.classList.remove("talk");talking=false;peek.innerHTML=`<span class="who">NÖRO</span>${h}`;place();clearTimeout(AS.t);AS.t=__later(()=>{peek.hidden=true},hold)},reduce?0:delay)}
+  function chatSay(h,{delay=650}={}){if(__disposed)return;prune();lastSay=performance.now();talking=true;btn.classList.add("talk");
     const m=document.createElement("div");m.className="msg";m.innerHTML='<div class="bub"><span class="typing"><span></span><span></span><span></span></span></div><time>NÖRO · '+stamp()+'</time>';list.appendChild(m);list.scrollTop=1e9;
-    setTimeout(()=>{m.innerHTML=`<div class="bub">${h}</div><time>NÖRO · ${stamp()}</time>`;list.scrollTop=1e9;btn.classList.remove("talk");talking=false},reduce?0:delay)}
+    __later(()=>{if(__disposed)return;m.innerHTML=`<div class="bub">${h}</div><time>NÖRO · ${stamp()}</time>`;list.scrollTop=1e9;btn.classList.remove("talk");talking=false},reduce?0:delay)}
   const say=chatSay;let chatNext=false;
   function cat(c,cd=2000){const now=performance.now();if(cool[c]&&now-cool[c]<cd)return;cool[c]=now;const a=LINES[c];idx[c]=((idx[c]??-1)+1)%a.length;peekSay(a[idx[c]])}
   function rcard(i){const L=LOBES[i],l=levelOf(i);return`<div class="rcard" style="--c:${L.col}"><div class="rh"><i></i>${L.name}<em>${l} / 10</em></div><div class="rb"><i style="width:${l*10}%"></i></div><div class="rs">${L.func.toUpperCase()} · Kaynak: <b>${L.src}</b> · Öneri: <b>${L.act}</b></div></div>`}
   function region(i){const extra=DIM[i]<.8?' <br><span style="color:#e9b35a">Bu bölge bir süredir kayıtsız, ışığı azalıyor. Tek bir kayıt yeter, hızla toparlanır.</span>':'';const h=rcard(i)+REG[i](levelOf(i))+extra;if(chatNext){chatNext=false;chatSay(h,{delay:500})}else peekSay(h,{hold:11000})}
   function levelUp(){}
-  function setOpen(o){AS.open=o;panel.hidden=!o;if(o){peek.hidden=true;list.scrollTop=1e9;setTimeout(()=>$("aText").focus(),60)}place()}
-  $("aClose").onclick=()=>setOpen(false);peek.onclick=()=>setOpen(true);
+  function setOpen(o){AS.open=o;panel.hidden=!o;if(o){peek.hidden=true;list.scrollTop=1e9;__later(()=>$("aText")?.focus(),60)}place()}
+  __on($("aClose"),"click",()=>setOpen(false));__on(peek,"click",()=>setOpen(true));
   // serbest yazı: demo içi yerel cevaplar
   // ======== NÖRO bilgi bankası: hazırlık safhası ========
   const fold=t=>t.toLocaleLowerCase("tr-TR").replace(/[çğıöşüâîû]/g,c=>({"ç":"c","ğ":"g","ı":"i","ö":"o","ş":"s","ü":"u","â":"a","î":"i","û":"u"})[c]).replace(/[^a-z0-9\s]/g," ").replace(/\s+/g," ").trim();
@@ -702,53 +702,54 @@ const NORO=(()=>{
     if(/\b\d{2}[ .,]\d{3,}\b/.test(t)||KB[0].k.some(k=>q.includes(k))){lastIntent=KB[0];say(pick(KB[0]));return}
     const reg=findRegion(q);
     const it=match(q);
-    if(reg>=0&&it&&it.id==="decay"){lastIntent=it;chatNext=true;select(reg,true);setTimeout(()=>say(`${LOBES[reg].name} için tolerans süresi yaklaşık <b>${GRACE[reg]} gün</b>. Bu süre boyunca kayıt girmesen de sönmez; sonra yavaşça düşer, ama zirvenin %40'ının altına inmez. Öneri: <b>${LOBES[reg].act}</b>.`),700);return}
+    if(reg>=0&&it&&it.id==="decay"){lastIntent=it;chatNext=true;select(reg,true);__later(()=>say(`${LOBES[reg].name} için tolerans süresi yaklaşık <b>${GRACE[reg]} gün</b>. Bu süre boyunca kayıt girmesen de sönmez; sonra yavaşça düşer, ama zirvenin %40'ının altına inmez. Öneri: <b>${LOBES[reg].act}</b>.`),700);return}
     if(reg>=0){lastIntent=null;chatNext=true;select(reg,true);return}
     const rest=q.replace(/\b(neden|niye|nicin|peki|nasil yani|yani|devam|daha|baska|detay|aciklar misin|anlat|mesela|ornek|ve|ki|mi|mu|o|bu|soyle)\b/g," ").trim();
     if(FOLLOW.test(q)&&lastIntent&&(!rest||!it)){if(lastIntent.m){say(lastIntent.m);lastIntent=null}else if(lastIntent.a&&lastIntent.a.length>1)say(pick(lastIntent));else say("Daha fazlasını şu an bilmiyorum; hazırlık modundayım. Başka bir şey sor ya da bir bölgeye tıkla.");return}
     if(it){lastIntent=it;say(it.a?pick(it):dynamic(it.id));return}
     if(/\?$/.test(t.trim())||q.split(" ").length>2){say("Bunu henüz bilmiyorum; hazırlık modundayım ve sadece sitenin hazırlığı, beyin ve verilerin hakkında konuşabiliyorum. Şunları sorabilirsin: <b>ne zaman açılıyor</b>, <b>verilerim güvende mi</b>, <b>beyin nasıl büyür</b>, <b>neden söner</b>, <b>telefonda çalışacak mı</b>. Ya da bir bölgenin adını yaz.");return}
     say("Tam anlayamadım. Bir bölgenin adını yaz ya da <b>ne zaman açılıyor</b>, <b>en zayıf yerim</b>, <b>verilerim güvende mi</b> gibi bir soru sor.")}
-  $("ain").addEventListener("submit",e=>{e.preventDefault();const inp=$("aText"),t=inp.value.trim();if(!t)return;inp.value="";bubble(t.replace(/[<>&]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;"})[c]),true);setTimeout(()=>reply(t),250)});
+  __on($("ain"),"submit",e=>{e.preventDefault();const inp=$("aText"),t=inp.value.trim();if(!t)return;inp.value="";bubble(t.replace(/[<>&]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;"})[c]),true);__later(()=>reply(t),250)});
   // konum ve sürükleme
   function place(){const r=btn.getBoundingClientRect();box.classList.toggle("below",r.top<(AS.open?560:300));box.classList.toggle("lft",r.left+r.width/2<innerWidth/2)}
   let saved=null;try{saved=JSON.parse(localStorage.getItem("noro3d-pos")||"null")}catch(e){}
   function setPos(x,y){const w=60,mx=Math.max(8,Math.min(innerWidth-w-8,x)),my=Math.max(8,Math.min(innerHeight-w-8,y));
     box.style.right="auto";box.style.bottom="auto";box.style.left=mx+"px";box.style.top=my+"px";place()}
   function reflow(){if(!box.dataset.x)return;setPos(+box.dataset.x*innerWidth,+box.dataset.y*innerHeight)}
-  if(saved&&typeof saved.x==="number"){box.dataset.x=saved.x;box.dataset.y=saved.y;requestAnimationFrame(reflow)}
-  let rq=0;const onRs=()=>{cancelAnimationFrame(rq);rq=requestAnimationFrame(()=>{if(box.dataset.x)reflow();else place()})};
+  if(saved&&typeof saved.x==="number"){box.dataset.x=saved.x;box.dataset.y=saved.y;requestAnimationFrame(()=>{if(!__disposed)reflow()})}
+  let rq=0;const onRs=()=>{cancelAnimationFrame(rq);rq=requestAnimationFrame(()=>{if(__disposed)return;if(box.dataset.x)reflow();else place()})};
   __on(window,"resize",onRs);
   let d=null;
-  btn.addEventListener("pointerdown",e=>{e.stopPropagation();const r=btn.getBoundingClientRect();d={ox:e.clientX-r.left,oy:e.clientY-r.top,sx:e.clientX,sy:e.clientY,moved:0};btn.setPointerCapture(e.pointerId)});
-  btn.addEventListener("pointermove",e=>{if(!d)return;d.moved=Math.max(d.moved,Math.hypot(e.clientX-d.sx,e.clientY-d.sy));if(d.moved>5){box.classList.add("drag");const x=e.clientX-d.ox,y=e.clientY-d.oy;box.dataset.x=x/innerWidth;box.dataset.y=y/innerHeight;setPos(x,y)}});
-  btn.addEventListener("pointerup",()=>{if(!d)return;const moved=d.moved>5;box.classList.remove("drag");d=null;
+  __on(btn,"pointerdown",e=>{e.stopPropagation();const r=btn.getBoundingClientRect();d={ox:e.clientX-r.left,oy:e.clientY-r.top,sx:e.clientX,sy:e.clientY,moved:0};btn.setPointerCapture(e.pointerId)});
+  __on(btn,"pointermove",e=>{if(!d)return;d.moved=Math.max(d.moved,Math.hypot(e.clientX-d.sx,e.clientY-d.sy));if(d.moved>5){box.classList.add("drag");const x=e.clientX-d.ox,y=e.clientY-d.oy;box.dataset.x=x/innerWidth;box.dataset.y=y/innerHeight;setPos(x,y)}});
+  __on(btn,"pointerup",()=>{if(!d)return;const moved=d.moved>5;box.classList.remove("drag");d=null;
     if(moved){try{localStorage.setItem("noro3d-pos",JSON.stringify({x:+box.dataset.x,y:+box.dataset.y}))}catch(e){}
       cat(talking||(!peek.hidden&&performance.now()-lastSay<2500)?"busy":"drag",2000)}
     else setOpen(!AS.open)});
-  ["click","dblclick","wheel","pointerdown"].forEach(t=>box.addEventListener(t,e=>e.stopPropagation()));
+  ["click","dblclick","wheel","pointerdown"].forEach(t=>__on(box,t,e=>e.stopPropagation()));
 
-  return{cat,region,levelUp,say,peekSay,show(v){box.classList.toggle("hide",!v)},rect:()=>btn.getBoundingClientRect()}})();
+  return{cat,region,levelUp,say,peekSay,show(v){box.classList.toggle("hide",!v)},rect:()=>btn.getBoundingClientRect(),kill(){clearTimeout(AS.t);peek.hidden=true;panel.hidden=true;AS.open=false}}})();
 
 /* ---- Yakında: kalibrasyon ve haber ver ---- */
 (()=>{let p=87;const P=$("calP"),B=$("calB");
   __every(()=>{if(document.hidden)return;if(p>=99){p=92+Math.floor(Math.random()*4);P.textContent="%"+p;B.style.width=p+"%";return}
     p=Math.min(99,p+(Math.random()<.65?1:0));P.textContent="%"+p;B.style.width=p+"%"},5200);
-  $("soonTog").addEventListener("click",()=>{const o=$("soon").classList.toggle("open");$("soonTog").setAttribute("aria-expanded",o);requestAnimationFrame(()=>size())});
-  $("notify").addEventListener("click",e=>{e.currentTarget.textContent="Listeye yazıldın ✓";e.currentTarget.classList.add("done");NORO.cat("notify",4000);try{opts.onNotify&&opts.onNotify()}catch(_){}})})();
+  __on($("soonTog"),"click",()=>{const o=$("soon").classList.toggle("open");$("soonTog").setAttribute("aria-expanded",o);requestAnimationFrame(()=>{if(!__disposed)size()})});
+  __on($("notify"),"click",e=>{e.currentTarget.textContent="Listeye yazıldın ✓";e.currentTarget.classList.add("done");NORO.cat("notify",4000);try{opts.onNotify&&opts.onNotify()}catch(_){}})})();
 
 /* ================= Tanıtım ================= */
 const TOUR=(()=>{
   const el=$("intro"),cv2=$("ic"),orb=$("iorb"),card=$("icard"),ttl=$("ittl"),txt=$("itxt"),stepEl=$("istep"),dots=$("idots"),next=$("inext"),skip=$("iskip");
   const KEY="noro3d-intro-v1";let i=0,running=false,timers=[];
-  const later=(f,ms)=>{const t=setTimeout(f,ms);timers.push(t)};
+  const later=(f,ms)=>{const t=setTimeout((...a)=>{if(__disposed)return;f(...a)},ms);timers.push(t);__timers.push(t);return t};
+  const everyTour=(f,ms)=>{const t=setInterval((...a)=>{if(__disposed){clearInterval(t);return}f(...a)},ms);timers.push(t);__intervals.push(t);return t};
   const STEPS=[
     {t:"Merhaba, ben NÖRO.",h:()=>`<p>Bu sitede yanında duracak <b>kişisel asistanınım</b>. Gelişimini takip eder; neyin büyüdüğünü, neyin unutulmaya yüz tuttuğunu söylerim.</p><p>Arada espri de yaparım. Elimde değil, öyle kodlanmışım.</p>`},
     {t:"AUDAZ TACTICAL ne işe yarar?",h:()=>`<p>Atış, CQB, ilk yardım (TCCC), timer seansları, balistik hesaplar… Yaptığın her çalışmayı <b>tek yerde kayda geçirirsin</b>.</p><p>Site bu kayıtları senin gelişim haritana dönüştürür: neyi iyi yaptığını, neyi ihmal ettiğini bir bakışta görürsün.</p>`},
     {t:"Beyin nasıl çalışır?",h:()=>`<p>Arkadaki beynin <b>sekiz bölgesi</b> var; her biri bir beceriyi temsil ediyor. Kayıt girdikçe ilgili bölge puan toplar, seviye atlar; yeni nöronlar doğar, bağlantılar kurulur. Şimdi <b>oksipital loba</b> bak.</p><p class="late" id="late1">Kullanmadığın beceri ise zamanla <b>söner</b>. Temporal lob bir süredir kayıtsız; ışığı azalıyor. Ama merak etme: asla sıfırlanmaz, döndüğünde hızla toparlanır.</p>`,
      run(){const before=levelOf(RI.occipital);later(()=>{state.xp.occipital=Math.max(state.xp.occipital,590);flash[RI.occipital]=1;refresh();
         toast.innerHTML=`Video analizi · Oksipital lob <i>+40</i> · <b>seviye ${levelOf(RI.occipital)}</b>`;toast.classList.add("on");later(()=>toast.classList.remove("on"),2600)},1300);
-       later(()=>{const l=$("late1");if(l)l.classList.add("on");let k=0;const iv=setInterval(()=>{DIM[RI.temporal]=Math.max(.3,DIM[RI.temporal]-.02);if(++k>10)clearInterval(iv)},90);timers.push(iv)},3600)}},
+       later(()=>{const l=$("late1");if(l)l.classList.add("on");let k=0;const iv=everyTour(()=>{DIM[RI.temporal]=Math.max(.3,DIM[RI.temporal]-.02);if(++k>10)clearInterval(iv)},90)},3600)}},
     {t:"Neler yapabileceksin?",h:()=>`<p>Antrenmanlarını kaydet, beyninin büyümesini izle, zayıf kalan bölgeler için önerimi al. Hangi sayfada takılırsan <b>oradayım</b>.</p><p>Verilerin sadece sana ait: eğitmenin ya da başkası beynini, notlarını ve benimle konuşmalarını göremez.</p>`},
     {t:"Bu sayfada ne yapabilirsin?",h:()=>coarse?`<p>Beyni <b>parmağınla çevir</b>, iki parmakla yakınlaş, <b>bir bölgeye ya da karta dokun</b>; sana onu anlatayım. Çift dokunuş başa döndürür. Aklına takılan bir şey olursa bana yaz.</p><p>Site açıldığında haberin olsun istersen üstteki <b>"Haber ver"</b> düğmesi senin.</p>`:`<p>Beyni fareyle <b>sürükleyip çevir</b>, tekerlekle yakınlaş, <b>bir bölgeye tıkla</b>; sana onu anlatayım. Aklına takılan bir şey olursa bana yaz.</p><p>Site açıldığında haberin olsun istersen sağ üstteki <b>"Açılınca bana haber ver"</b> düğmesi senin.</p>`,last:true},
   ];
@@ -765,28 +766,33 @@ const TOUR=(()=>{
       const pos=P.map(p=>{let u=Math.max(0,Math.min(1,(t-p.d)/(1-p.d)));u=1-Math.pow(1-u,3);return[p.sx+(p.tx-p.sx)*u,p.sy+(p.ty-p.sy)*u,u,p.col]});
       c.lineWidth=.6;for(let a=0;a<N;a++)for(let b=a+1;b<N;b++){const dx=pos[a][0]-pos[b][0],dy=pos[a][1]-pos[b][1],d2=dx*dx+dy*dy;if(d2<4200){const al=(1-d2/4200)*.35*Math.min(pos[a][2],pos[b][2]);c.strokeStyle=`rgba(150,240,200,${al})`;c.beginPath();c.moveTo(pos[a][0],pos[a][1]);c.lineTo(pos[b][0],pos[b][1]);c.stroke()}}
       pos.forEach(([x,y,u,col])=>{c.fillStyle=`rgba(${col[0]*255|0},${col[1]*255|0},${col[2]*255|0},${.35+.6*u})`;c.beginPath();c.arc(x,y,1.4+u*.8,0,7);c.fill()});
-      if(t<1.08)requestAnimationFrame(step);else{orb.classList.add("on");let f=1;(function fade(){f-=.06;c.clearRect(0,0,w,h);if(f>0){c.globalAlpha=f;pos.forEach(([x,y,,col])=>{c.fillStyle=`rgba(${col[0]*255|0},${col[1]*255|0},${col[2]*255|0},.9)`;c.beginPath();c.arc(x,y,2,0,7);c.fill()});c.globalAlpha=1;requestAnimationFrame(fade)}})();later(done,700)}})()}
-  function start(){timers.forEach(clearTimeout);timers=[];running=true;state.xp={...START};DIM.set([1,1,1,1,.5,1,1,1]);refresh();state.sel=-1;
+      if(__disposed)return;if(t<1.08)requestAnimationFrame(step);else{orb.classList.add("on");let f=1;(function fade(){if(__disposed)return;f-=.06;c.clearRect(0,0,w,h);if(f>0){c.globalAlpha=f;pos.forEach(([x,y,,col])=>{c.fillStyle=`rgba(${col[0]*255|0},${col[1]*255|0},${col[2]*255|0},.9)`;c.beginPath();c.arc(x,y,2,0,7);c.fill()});c.globalAlpha=1;requestAnimationFrame(fade)}})();later(done,700)}})()}
+  function clearTourTimers(){timers.forEach((id)=>{clearTimeout(id);clearInterval(id)});timers=[]}
+  function start(){if(__disposed)return;clearTourTimers();running=true;state.xp={...START};DIM.set([1,1,1,1,.5,1,1,1]);refresh();state.sel=-1;
     NORO.show(false);el.hidden=false;el.classList.remove("out");orb.className="iorb";orb.style.transform="";card.classList.remove("on");
-    if(reduce){orb.classList.add("on");show(0)}else{requestAnimationFrame(()=>assemble(()=>show(0)))}}
-  function finish(){if(!running)return;running=false;timers.forEach(clearTimeout);timers=[];try{localStorage.setItem(KEY,"1")}catch(e){}
+    if(reduce){orb.classList.add("on");show(0)}else{requestAnimationFrame(()=>{if(!__disposed)assemble(()=>show(0))})}}
+  function finish(){if(!running)return;running=false;clearTourTimers();try{localStorage.setItem(KEY,"1")}catch(e){}
     card.classList.remove("on");const a=orb.getBoundingClientRect();NORO.show(true);const b=NORO.rect();NORO.show(false);
     const dx=(b.left+b.width/2)-(a.left+a.width/2),dy=(b.top+b.height/2)-(a.top+a.height/2),sc=b.width/a.width;
-    orb.classList.add("fly");requestAnimationFrame(()=>{orb.style.transform=`translate(${dx}px,${dy}px) scale(${sc})`});el.classList.add("out");
-    setTimeout(()=>{el.hidden=true;NORO.show(true);NORO.peekSay(coarse?"Ben buradayım. Bir bölgeye dokun ya da bana yaz.":"Ben buradayım. Bir bölgeye tıkla ya da bana yaz; istediğin zaman beni sürükleyebilirsin.",{hold:7000})},reduce?0:820);lastInput=performance.now()}
-  next.onclick=()=>{if(STEPS[i].last)finish();else show(i+1)};skip.onclick=finish;
+    orb.classList.add("fly");requestAnimationFrame(()=>{if(!__disposed)orb.style.transform=`translate(${dx}px,${dy}px) scale(${sc})`});el.classList.add("out");
+    __later(()=>{if(__disposed)return;el.hidden=true;NORO.show(true);NORO.peekSay(coarse?"Ben buradayım. Bir bölgeye dokun ya da bana yaz.":"Ben buradayım. Bir bölgeye tıkla ya da bana yaz; istediğin zaman beni sürükleyebilirsin.",{hold:7000})},reduce?0:820);lastInput=performance.now()}
+  function abort(){running=false;clearTourTimers();el.hidden=true;el.classList.add("out");card.classList.remove("on")}
+  const onNext=()=>{if(STEPS[i].last)finish();else show(i+1)};
+  __on(next,"click",onNext);__on(skip,"click",finish);
   __on(window,"keydown",e=>{if(!running)return;if(e.key==="Enter"||e.key==="ArrowRight"){e.preventDefault();e.stopImmediatePropagation();next.click()}else if(e.key==="Escape"){e.stopImmediatePropagation();finish()}else if(/^Arrow/.test(e.key))e.stopImmediatePropagation()},true);
-  $("replay").onclick=start;
-  return{busy:()=>running,boot(){let seen=false;try{seen=localStorage.getItem(KEY)==="1"}catch(e){}if(!seen)start()}}})();
+  __on($("replay"),"click",start);
+  return{busy:()=>running,boot(){let seen=false;try{seen=localStorage.getItem(KEY)==="1"}catch(e){}if(!seen)start()},abort}})();
 
 /* ================= Başlat ================= */
 let srq=0;{const __ro=new ResizeObserver(()=>{cancelAnimationFrame(srq);srq=requestAnimationFrame(()=>size())});__ro.observe(stage);__disposers.push(()=>__ro.disconnect());}
 size();
 requestAnimationFrame(()=>__later(async()=>{
+  if(__disposed)return;
   if(!NOGL){try{await buildChunked()}catch(err){console.error(err);NOGL=true}}
+  if(__disposed)return;
   if(NOGL){$("nogl").style.display="grid";stage.style.cursor="default"}
-  refresh();started=true;$("loading").classList.add("done");if(!NOGL)__raf=requestAnimationFrame(frame);
-  TOUR.boot();
+  refresh();started=true;$("loading").classList.add("done");if(!NOGL&&!__disposed)__raf=requestAnimationFrame(frame);
+  if(!__disposed)TOUR.boot();
 },30));
 
 
@@ -794,11 +800,35 @@ requestAnimationFrame(()=>__later(async()=>{
     if(__disposed)return;
     __disposed=true;
     cancelAnimationFrame(__raf);__raf=0;
+    cancelAnimationFrame(srq);srq=0;
+    try{TOUR.abort()}catch(_){}
+    try{NORO.kill()}catch(_){}
     __timers.forEach(clearTimeout);
     __intervals.forEach(clearInterval);
+    __timers.length=0;__intervals.length=0;
     __disposers.forEach(fn=>{try{fn()}catch(_){}});
+    __disposers.length=0;
+    try{if(typeof chips!=="undefined")chips.forEach(c=>c.remove())}catch(_){}
     try{
-      if(typeof chips!=="undefined")chips.forEach(c=>c.remove());
+      if(gl){
+        const lose=gl.getExtension("WEBGL_lose_context");
+        MESHES.forEach(m=>{
+          try{if(m.vao)gl.deleteVertexArray(m.vao);if(m.hvao)gl.deleteVertexArray(m.hvao)}catch(_){}
+        });
+        [PTS,LNS,XR,XRP].forEach(d=>{
+          if(!d)return;
+          try{if(d.vao)gl.deleteVertexArray(d.vao);if(d.b)gl.deleteBuffer(d.b)}catch(_){}
+        });
+        [SP,PP,LP].forEach(progObj=>{
+          if(!progObj?.p)return;
+          try{
+            const shaders=gl.getAttachedShaders(progObj.p)||[];
+            shaders.forEach(s=>gl.deleteShader(s));
+            gl.deleteProgram(progObj.p);
+          }catch(_){}
+        });
+        if(lose)try{lose.loseContext()}catch(_){}
+      }
     }catch(_){}
   }
 
