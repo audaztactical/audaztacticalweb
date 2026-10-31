@@ -1,0 +1,56 @@
+{
+  "meta": {
+    "title": "AUDAZ TACTICAL — Opening Soon"
+  },
+  "stage": {
+    "label": "Operator Brain 3D view"
+  },
+  "brand": {
+    "title": "OPERATOR BRAIN",
+    "sub": "3D PREVIEW · SAMPLE PROFILE",
+    "total": "/ 80 TOTAL LEVEL"
+  },
+  "legend": {
+    "dragKey": "Drag",
+    "drag": "rotate",
+    "wheelKey": "Wheel",
+    "wheel": "zoom",
+    "clickKey": "Click",
+    "click": "select region",
+    "dblKey": "Double-click",
+    "dbl": "reset"
+  },
+  "soon": {
+    "tag": "OPENING SOON",
+    "toggle": "Notify me",
+    "title": "The brain is going 3D.",
+    "body": "You're on a secret test drive. Buckle up — the brakes are still with engineering.",
+    "hookLead": "Be first when the doors open:",
+    "hookRest": "one tap puts you on the list; launch day you get a single ping. No spam — promise.",
+    "cal": "CALIBRATION",
+    "notify": "Notify me when it opens",
+    "done": "You're on the list ✓"
+  },
+  "noro": {
+    "dialogLabel": "NÖRO assistant",
+    "status": "your personal assistant · online",
+    "close": "Close",
+    "placeholder": "Write to NÖRO… (e.g. how does my cerebellum grow?)",
+    "inputLabel": "Message to NÖRO",
+    "send": "Send",
+    "note": "Don't write operational info, location, unit, or personal names. NÖRO is an AI assistant and can make mistakes.",
+    "open": "Open NÖRO assistant",
+    "teamOnly": "During maintenance only the team can get in. Your account is fine; when the doors open, you'll be among the first to know."
+  },
+  "tour": {
+    "skip": "Skip intro",
+    "next": "Continue →",
+    "replay": "Replay intro"
+  },
+  "loading": "BUILDING BRAIN…",
+  "nogl": {
+    "title": "3D brain couldn't open on this device.",
+    "body": "Your browser doesn't support 3D drawing or it's disabled. NÖRO and everything else still work — ask NÖRO about a region by name."
+  },
+  "teamLogin": "Team login"
+}

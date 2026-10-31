@@ -18,6 +18,7 @@ import ResponsiveAppLayout from './layouts/ResponsiveAppLayout'
 import TacticalLoader from './components/TacticalLoader'
 import FcmPushBootstrap from './components/notifications/FcmPushBootstrap'
 import ScrollToTop from './components/navigation/ScrollToTop'
+import MaintenanceGate from './pages/maintenance/MaintenanceGate'
 
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
@@ -59,6 +60,7 @@ export default function App() {
           <BrowserRouter>
           <ScrollToTop />
           <MuhabereNotifyProvider>
+          <MaintenanceGate>
           <Suspense fallback={<TacticalLoader />}>
           <Routes>
             <Route path="/" element={<RootGate />} />
@@ -126,6 +128,7 @@ export default function App() {
             </Route>
           </Routes>
           </Suspense>
+          </MaintenanceGate>
           </MuhabereNotifyProvider>
           </BrowserRouter>
         </FirebaseErrorProvider>
