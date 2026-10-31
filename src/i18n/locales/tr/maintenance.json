@@ -1,0 +1,56 @@
+{
+  "meta": {
+    "title": "AUDAZ TACTICAL — Yakında Açılıyor"
+  },
+  "stage": {
+    "label": "Operatör Beyni 3B görünüm"
+  },
+  "brand": {
+    "title": "OPERATÖR BEYNİ",
+    "sub": "3B ÖNİZLEME · ÖRNEK PROFİL",
+    "total": "/ 80 TOPLAM SEVİYE"
+  },
+  "legend": {
+    "dragKey": "Sürükle",
+    "drag": "döndür",
+    "wheelKey": "Tekerlek",
+    "wheel": "yakınlaş",
+    "clickKey": "Tıkla",
+    "click": "bölge seç",
+    "dblKey": "Çift tıkla",
+    "dbl": "sıfırla"
+  },
+  "soon": {
+    "tag": "YAKINDA AÇILIYOR",
+    "toggle": "Haber ver",
+    "title": "Beynin üçüncü boyuta geçiyor.",
+    "body": "Şu an gizli test sürüşündesin. Kemerini tak; frenler hâlâ yazılımcıda.",
+    "hookLead": "Kapılar açıldığı an ilk sen bil:",
+    "hookRest": "tek dokunuşla listeye gir, açılış günü sana tek bir haber gelsin. Spam yok, söz.",
+    "cal": "KALİBRASYON",
+    "notify": "Açılınca bana haber ver",
+    "done": "Listeye yazıldın ✓"
+  },
+  "noro": {
+    "dialogLabel": "NÖRO asistan",
+    "status": "kişisel asistanın · çevrimiçi",
+    "close": "Kapat",
+    "placeholder": "NÖRO'ya yaz… (ör. beyinciğim nasıl büyür?)",
+    "inputLabel": "NÖRO'ya mesaj",
+    "send": "Gönder",
+    "note": "Operasyonel bilgi, konum, birlik ve kişi adı yazma. NÖRO bir yapay zekâ asistanıdır, hata yapabilir.",
+    "open": "NÖRO asistanı aç",
+    "teamOnly": "Bakım sırasında yalnızca ekip içeri girebiliyor. Hesabın yerinde; kapılar açılınca ilk sen bileceksin."
+  },
+  "tour": {
+    "skip": "Tanıtımı atla",
+    "next": "Devam →",
+    "replay": "Tanıtımı tekrar izle"
+  },
+  "loading": "BEYİN İNŞA EDİLİYOR…",
+  "nogl": {
+    "title": "3B beyin bu cihazda açılamadı.",
+    "body": "Tarayıcın 3B çizimi desteklemiyor ya da kapalı. NÖRO ve diğer her şey çalışıyor; bir bölgeyi NÖRO'ya yazarak sorabilirsin."
+  },
+  "teamLogin": "Ekip girişi"
+}

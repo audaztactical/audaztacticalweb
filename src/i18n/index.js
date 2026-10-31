@@ -71,6 +71,7 @@ i18n.use(initReactI18next).init({
   fallbackLng: 'en',
   supportedLngs: [...SUPPORTED_LANGUAGES],
   defaultNS: 'common',
+  // `maintenance` NS is registered lazily by MaintenancePage (keeps main chunk lean when mode=off)
   ns: ['common', 'dashboard', 'nav', 'profile', 'messages', 'academy', 'forum', 'intel', 'training', 'training-pdf', 'health', 'health-pdf', 'armory', 'ballistics', 'ballistics-pdf', 'progress', 'progress-pdf', 'instructor', 'instructor-pdf', 'guide', 'landing', 'auth', 'welcome', 'timer'],
   interpolation: { escapeValue: false },
   ...(isDev

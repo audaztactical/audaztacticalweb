@@ -19,6 +19,17 @@ import TacticalLoader from './components/TacticalLoader'
 import FcmPushBootstrap from './components/notifications/FcmPushBootstrap'
 import ScrollToTop from './components/navigation/ScrollToTop'
 
+/**
+ * Build-time constant fold: use exact === 'on' (no String/toLowerCase) so Vite drops the
+ * maintenance chunk when the env is not literally "on". Runtime Gate still normalizes case.
+ */
+const MaintenanceGate =
+  import.meta.env.VITE_MAINTENANCE_MODE === 'on'
+    ? lazy(() => import('./pages/maintenance/MaintenanceGate'))
+    : function MaintenancePassthrough({ children }) {
+        return children
+      }
+
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Profile = lazy(() => import('./pages/Profile'))
@@ -60,6 +71,7 @@ export default function App() {
           <ScrollToTop />
           <MuhabereNotifyProvider>
           <Suspense fallback={<TacticalLoader />}>
+          <MaintenanceGate>
           <Routes>
             <Route path="/" element={<RootGate />} />
             <Route path="/ana-sayfa" element={<Landing />} />
@@ -125,6 +137,7 @@ export default function App() {
               </Route>
             </Route>
           </Routes>
+          </MaintenanceGate>
           </Suspense>
           </MuhabereNotifyProvider>
           </BrowserRouter>
