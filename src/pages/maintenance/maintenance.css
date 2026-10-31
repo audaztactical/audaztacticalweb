@@ -147,10 +147,11 @@
 .mnt-root .stage.lay-rows .bchip .dot,.stage.lay-cols .bchip .dot{width:6px;height:6px}
 .mnt-root .bchip.pb .pt{right:auto;left:50%;top:auto;bottom:-5px;margin:0 0 0 -4px}
 .mnt-root .bchip.ptp .pt{right:auto;left:50%;top:-5px;margin:0 0 0 -4px}
-.mnt-root .bchip.pb.decay::after,.bchip.ptp.decay::after{left:50%;transform:translateX(-50%);bottom:auto;top:-13px}
+.mnt-root .bchip.pb.decay::after,.mnt-root .bchip.ptp.decay::after{left:50%;transform:translateX(-50%);bottom:auto;top:-13px}
 .mnt-root .bchip.pb.decay::after{top:auto;bottom:-24px}
 .mnt-root .bchip.decay{border-style:dashed;border-color:rgba(233,179,90,.45)}
 .mnt-root .bchip.decay::after{content:"sönüyor";position:absolute;left:10px;bottom:-15px;font:500 9px/1 var(--f-mono);letter-spacing:.14em;color:#e9b35a;text-transform:uppercase}
+.mnt-root .bchip.pb.decay::after,.mnt-root .bchip.ptp.decay::after{left:4px;transform:none}
 .mnt-root .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:6;font:400 12px/1 var(--f-mono);background:rgba(13,17,15,.92);border:1px solid rgba(95,227,154,.3);border-radius:999px;padding:8px 15px;color:#cfeedd;white-space:nowrap;opacity:0;transition:opacity .4s;pointer-events:none}
 .mnt-root .toast.on{opacity:1}.toast i{color:var(--green);font-style:normal}.toast b{color:var(--fg)}
 .mnt-root .loading{position:fixed;inset:0;display:grid;place-items:center;z-index:9;font:500 12px/1 var(--f-mono);letter-spacing:.3em;color:var(--dim);transition:opacity .6s}
@@ -167,7 +168,8 @@
  .mnt-root .ttl{margin-top:12px;font-size:19px;letter-spacing:.12em}
  .mnt-root .sub{margin-top:6px;font-size:9.5px;letter-spacing:.2em}
  .mnt-root .tot{margin-top:8px}.tot b{font-size:24px}.tot span{font-size:10px;letter-spacing:.16em}
- .mnt-root .replay{position:absolute;right:0;top:-2px;margin:0;padding:6px 10px;font-size:10px}
+ .mnt-root .replay{position:static;margin-top:6px;padding:6px 10px;font-size:10px}
+ .mnt-root .team-login{font-size:9.5px;letter-spacing:.04em}
  .mnt-root .soon{width:100%;padding:10px 12px 10px}
  .mnt-root .stog{display:inline-block}
  .mnt-root .soon .hook,.soon button#notify{display:none}
@@ -197,7 +199,17 @@
 .mnt-root.touch .soon{background:rgba(16,15,9,.95)}.mnt-root.touch .apeek{background:rgba(13,17,15,.98)}.mnt-root.touch .apanel{background:rgb(12,16,14)}
 .mnt-root.touch .intro{background:radial-gradient(ellipse at 50% 40%,rgba(3,6,5,.5),rgba(3,6,5,.88) 70%)}
 .mnt-root .icard{max-height:min(70dvh,560px);overflow:auto}
+/* ---- dar ekran: NÖRO köşeye sabit, balon/panel ekran içinde ---- */
+.mnt-root.cmp .asst{left:auto;top:auto;right:max(16px,calc(env(safe-area-inset-right) + 10px));bottom:max(14px,calc(env(safe-area-inset-bottom) + 10px))}
+.mnt-root.cmp .asst.snapL{right:auto;left:max(16px,calc(env(safe-area-inset-left) + 10px))}
+.mnt-root.cmp .asst .apeek{position:fixed;left:var(--pl,12px);right:var(--pr,12px);top:auto;bottom:var(--pk,150px);width:auto;max-width:none;max-height:calc(100dvh - var(--pk,150px) - 16px);overflow:auto;border-radius:14px}
+.mnt-root.cmp .asst .apanel{position:fixed;left:12px;right:12px;top:max(12px,env(safe-area-inset-top));bottom:calc(max(14px,env(safe-area-inset-bottom) + 10px) + 72px);width:auto;height:auto;max-width:none;max-height:none}
+.mnt-root.cmp.cols .asst .apanel{left:auto;right:88px;bottom:10px;width:min(440px,calc(100vw - 112px))}
+@media (max-width:900px){.mnt-root .iorb{width:84px;height:84px;margin:-42px 0 0 -42px}.mnt-root .iorb .orb{inset:9px}.mnt-root .iorb .core{inset:30px}.mnt-root .iorb.anch{transition:opacity .6s,transform .8s cubic-bezier(.2,.9,.25,1.15),top .45s ease}}
 @media (prefers-reduced-motion:reduce){.toast,.bchip{transition:none}.orb,.core,.typing span,.soon .tag i,.apanel,.apeek,.msg{animation:none}}
 
-.mnt-root .team-login{position:fixed;left:50%;bottom:max(10px,calc(env(safe-area-inset-bottom)+6px));transform:translateX(-50%);z-index:8;font:500 11px/1 var(--f-mono,monospace);letter-spacing:.08em;color:var(--dim,#5d6862);background:none;border:0;cursor:pointer;padding:8px 12px;pointer-events:auto}
+.mnt-root .logo-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;pointer-events:none}
+.mnt-root .logo-row .logo{min-width:0}
+.mnt-root .team-login{position:static;transform:none;left:auto;bottom:auto;z-index:auto;flex:none;font:500 10px/1 var(--f-mono,monospace);letter-spacing:.06em;color:var(--dim,#5d6862);background:none;border:0;cursor:pointer;padding:4px 0;pointer-events:auto;white-space:nowrap}
 .mnt-root .team-login:hover{color:var(--muted,#8a968f)}
+.mnt-root .replay{margin-top:6px}

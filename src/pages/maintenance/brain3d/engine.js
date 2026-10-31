@@ -359,7 +359,8 @@ const chips=LOBES.map((L,i)=>{const d=document.createElement("button");d.type="b
   d.innerHTML=`<i class="dot"></i><span class="nm">${L.name}</span><span class="sh">${L.sh}</span><b class="lvn">1</b><i class="pt"></i>`;d.setAttribute("aria-label",L.name+" bölgesini seç");
   __on(d,"click",e=>{e.stopPropagation();select(i,true)});stage.appendChild(d);return d});
 let ports=[];
-function placeChips(){LAY=layoutMode();stage.classList.toggle("lay-rows",LAY==="rows");stage.classList.toggle("lay-cols",LAY==="cols");
+function setPk(b,l,r){const R=root.style;R.setProperty("--pk",Math.round(b)+"px");R.setProperty("--pl",Math.round(l)+"px");R.setProperty("--pr",Math.round(r)+"px")}
+function placeChips(){LAY=layoutMode();root.classList.toggle("cmp",LAY!=="ring");root.classList.toggle("cols",LAY==="cols");stage.classList.toggle("lay-rows",LAY==="rows");stage.classList.toggle("lay-cols",LAY==="cols");
   const hud=$("hud").getBoundingClientRect(),visH=Math.min(H,window.innerHeight||H);
   chips.forEach(d=>{d.classList.remove("pb","ptp","r");d.style.width="";d.style.transform=""});
   if(LAY==="ring"){LOBES.forEach((L,i)=>{const d=chips[i],[fx,fy]=L.chip;d.style.left=fx*100+"%";d.style.top=fy*100+"%";d.style.transform=`translate(${fx>.5?"0":"-100%"},-50%)`;d.classList.toggle("r",fx>.5)});FREE={top:0,bottom:visH,left:0,right:W}}
@@ -372,11 +373,12 @@ function placeChips(){LAY=layoutMode();stage.classList.toggle("lay-rows",LAY==="
       const extra=Math.max(0,avail-sum)/ids.length;let x=pad;
       ids.forEach((ri,k)=>{const d=chips[ri],wv=sum>avail?nat[k]*avail/sum:nat[k]+extra;d.style.left=x+"px";d.style.width=wv+"px";x+=wv+g})};
     row(TOPR,y0,"pb");row(BOTR,y1,"ptp");if(stage.classList.contains("tight")){row(TOPR,y0,"pb");row(BOTR,y1,"ptp")}
-    FREE={top:y0+ch+16,bottom:y1-14,left:0,right:W}}
+    FREE={top:y0+ch+16,bottom:y1-14,left:0,right:W};setPk(visH-y1+22,12,12)}
   else{const cw=Math.min(150,W*.2),ch=30,y0=hud.bottom+6,y1=visH-10,LEFT=[0,1,4,5],RIGHT=[2,3,6,7],step=(y1-y0-ch)/3;
     LEFT.forEach((ri,k)=>{const d=chips[ri];d.style.left="12px";d.style.top=(y0+k*step)+"px";d.style.width=cw+"px"});
     RIGHT.forEach((ri,k)=>{const d=chips[ri];d.style.left=(W-12-cw)+"px";d.style.top=Math.min(y0+k*step,visH-96-ch)+"px";d.style.width=cw+"px";d.classList.add("r")});
-    FREE={top:y0,bottom:y1,left:12+cw+14,right:W-12-cw-14}}
+    FREE={top:y0,bottom:y1,left:12+cw+14,right:W-12-cw-14};setPk(10,FREE.left,W-FREE.right+60)}
+  try{NORO.relayout()}catch(e){}
   requestAnimationFrame(()=>{if(__disposed)return;const sr=stage.getBoundingClientRect();ports=chips.map(d=>{const p=d.querySelector(".pt").getBoundingClientRect();return[p.left-sr.left+p.width/2,p.top-sr.top+p.height/2]})})}
 
 /* ================= Seçim ve kart ================= */
@@ -711,24 +713,34 @@ const NORO=(()=>{
     say("Tam anlayamadım. Bir bölgenin adını yaz ya da <b>ne zaman açılıyor</b>, <b>en zayıf yerim</b>, <b>verilerim güvende mi</b> gibi bir soru sor.")}
   __on($("ain"),"submit",e=>{e.preventDefault();const inp=$("aText"),t=inp.value.trim();if(!t)return;inp.value="";bubble(t.replace(/[<>&]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;"})[c]),true);__later(()=>reply(t),250)});
   // konum ve sürükleme
-  function place(){const r=btn.getBoundingClientRect();box.classList.toggle("below",r.top<(AS.open?560:300));box.classList.toggle("lft",r.left+r.width/2<innerWidth/2)}
+  const cmp=()=>LAY!=="ring";
+  function clampIn(el){el.style.translate="";if(el.hidden||cmp())return;const r=el.getBoundingClientRect(),m=12;let dx=0,dy=0;
+    if(r.left<m)dx=m-r.left;else if(r.right>innerWidth-m)dx=innerWidth-m-r.right;
+    if(r.top<m)dy=m-r.top;else if(r.bottom>innerHeight-m)dy=innerHeight-m-r.bottom;
+    if(dx||dy)el.style.translate=`${Math.round(dx)}px ${Math.round(dy)}px`}
+  function place(){const r=btn.getBoundingClientRect();box.classList.toggle("below",!cmp()&&r.top<(AS.open?560:300));box.classList.toggle("lft",!cmp()&&r.left+r.width/2<innerWidth/2);clampIn(peek);clampIn(panel)}
+  let side="R";try{side=localStorage.getItem("noro3d-side")==="L"?"L":"R"}catch(e){}
+  function relayout(){if(cmp()){box.style.left=box.style.top=box.style.right=box.style.bottom="";box.classList.toggle("snapL",LAY==="rows"&&side==="L");place()}
+    else{box.classList.remove("snapL");if(box.dataset.x)reflow();else{box.style.left=box.style.top=box.style.right=box.style.bottom="";place()}}}
   let saved=null;try{saved=JSON.parse(localStorage.getItem("noro3d-pos")||"null")}catch(e){}
   function setPos(x,y){const w=60,mx=Math.max(8,Math.min(innerWidth-w-8,x)),my=Math.max(8,Math.min(innerHeight-w-8,y));
     box.style.right="auto";box.style.bottom="auto";box.style.left=mx+"px";box.style.top=my+"px";place()}
-  function reflow(){if(!box.dataset.x)return;setPos(+box.dataset.x*innerWidth,+box.dataset.y*innerHeight)}
-  if(saved&&typeof saved.x==="number"){box.dataset.x=saved.x;box.dataset.y=saved.y;requestAnimationFrame(()=>{if(!__disposed)reflow()})}
-  let rq=0;const onRs=()=>{cancelAnimationFrame(rq);rq=requestAnimationFrame(()=>{if(__disposed)return;if(box.dataset.x)reflow();else place()})};
+  function reflow(){if(!box.dataset.x||cmp())return;setPos(+box.dataset.x*innerWidth,+box.dataset.y*innerHeight)}
+  if(saved&&typeof saved.x==="number"){box.dataset.x=saved.x;box.dataset.y=saved.y}
+  requestAnimationFrame(()=>{if(!__disposed)relayout()});
+  let rq=0;const onRs=()=>{cancelAnimationFrame(rq);rq=requestAnimationFrame(()=>{if(__disposed)return;relayout()})};
   __on(window,"resize",onRs);
   let d=null;
-  __on(btn,"pointerdown",e=>{e.stopPropagation();const r=btn.getBoundingClientRect();d={ox:e.clientX-r.left,oy:e.clientY-r.top,sx:e.clientX,sy:e.clientY,moved:0};btn.setPointerCapture(e.pointerId)});
-  __on(btn,"pointermove",e=>{if(!d)return;d.moved=Math.max(d.moved,Math.hypot(e.clientX-d.sx,e.clientY-d.sy));if(d.moved>5){box.classList.add("drag");const x=e.clientX-d.ox,y=e.clientY-d.oy;box.dataset.x=x/innerWidth;box.dataset.y=y/innerHeight;setPos(x,y)}});
+  __on(btn,"pointerdown",e=>{e.stopPropagation();const r=btn.getBoundingClientRect();d={ox:e.clientX-r.left,oy:e.clientY-r.top,sx:e.clientX,sy:e.clientY,moved:0};try{btn.setPointerCapture(e.pointerId)}catch(_){}});
+  __on(btn,"pointermove",e=>{if(!d)return;d.moved=Math.max(d.moved,Math.hypot(e.clientX-d.sx,e.clientY-d.sy));if(d.moved>5){box.classList.add("drag");box.classList.remove("snapL");const x=e.clientX-d.ox,y=e.clientY-d.oy;if(!cmp()){box.dataset.x=x/innerWidth;box.dataset.y=y/innerHeight}setPos(x,y)}});
   __on(btn,"pointerup",()=>{if(!d)return;const moved=d.moved>5;box.classList.remove("drag");d=null;
-    if(moved){try{localStorage.setItem("noro3d-pos",JSON.stringify({x:+box.dataset.x,y:+box.dataset.y}))}catch(e){}
+    if(moved){if(cmp()){const r=btn.getBoundingClientRect();side=r.left+r.width/2<innerWidth/2?"L":"R";try{localStorage.setItem("noro3d-side",side)}catch(e){}relayout()}
+      else try{localStorage.setItem("noro3d-pos",JSON.stringify({x:+box.dataset.x,y:+box.dataset.y}))}catch(e){}
       cat(talking||(!peek.hidden&&performance.now()-lastSay<2500)?"busy":"drag",2000)}
     else setOpen(!AS.open)});
   ["click","dblclick","wheel","pointerdown"].forEach(t=>__on(box,t,e=>e.stopPropagation()));
 
-  return{cat,region,levelUp,say,peekSay,show(v){box.classList.toggle("hide",!v)},rect:()=>btn.getBoundingClientRect(),kill(){clearTimeout(AS.t);peek.hidden=true;panel.hidden=true;AS.open=false}}})();
+  return{cat,region,levelUp,say,peekSay,relayout,show(v){box.classList.toggle("hide",!v)},rect:()=>btn.getBoundingClientRect(),kill(){clearTimeout(AS.t);peek.hidden=true;panel.hidden=true;AS.open=false;box.classList.remove("snapL")}}})();
 
 /* ---- Yakında: kalibrasyon ve haber ver ---- */
 (()=>{let p=87;const P=$("calP"),B=$("calB");
@@ -754,8 +766,11 @@ const TOUR=(()=>{
     {t:"Bu sayfada ne yapabilirsin?",h:()=>coarse?`<p>Beyni <b>parmağınla çevir</b>, iki parmakla yakınlaş, <b>bir bölgeye ya da karta dokun</b>; sana onu anlatayım. Çift dokunuş başa döndürür. Aklına takılan bir şey olursa bana yaz.</p><p>Site açıldığında haberin olsun istersen üstteki <b>"Haber ver"</b> düğmesi senin.</p>`:`<p>Beyni fareyle <b>sürükleyip çevir</b>, tekerlekle yakınlaş, <b>bir bölgeye tıkla</b>; sana onu anlatayım. Aklına takılan bir şey olursa bana yaz.</p><p>Site açıldığında haberin olsun istersen sağ üstteki <b>"Açılınca bana haber ver"</b> düğmesi senin.</p>`,last:true},
   ];
   dots.innerHTML=STEPS.map(()=>"<i></i>").join("");
+  const narrow=()=>innerWidth<=900&&!(innerHeight<=520&&innerWidth>innerHeight);
+  function fill(k){const S=STEPS[k];ttl.textContent=S.t;txt.innerHTML=S.h();next.textContent=S.last?"Başlayalım":"Devam →"}
+  function anchor(){if(!narrow()){orb.style.top="";return}const top=card.offsetTop,oh=orb.offsetHeight;orb.style.top=Math.max(oh/2+12,top-oh/2-14)+"px"}
   function show(k){i=k;const S=STEPS[k];stepEl.textContent=`${k+1} / ${STEPS.length}`;[...dots.children].forEach((d,j)=>d.classList.toggle("on",j===k));
-    el.classList.toggle("lite",!!S.run);card.classList.remove("on");later(()=>{ttl.textContent=S.t;txt.innerHTML=S.h();next.textContent=S.last?"Başlayalım":"Devam →";card.classList.add("on");orb.classList.add("talk");later(()=>orb.classList.remove("talk"),900);next.focus({preventScroll:true});if(S.run)S.run()},k===0?0:220)}
+    el.classList.toggle("lite",!!S.run);card.classList.remove("on");later(()=>{fill(k);anchor();card.classList.add("on");orb.classList.add("talk");later(()=>orb.classList.remove("talk"),900);next.focus({preventScroll:true});if(S.run)S.run()},k===0?0:220)}
   // açılış: dağınık nöronlar bir araya gelip NÖRO'yu oluşturur
   function assemble(done){const c=cv2.getContext("2d"),dpr=Math.min(2,devicePixelRatio||1);let w=innerWidth,h=innerHeight;cv2.width=w*dpr;cv2.height=h*dpr;c.setTransform(dpr,0,0,dpr,0,0);
     const r0=orb.getBoundingClientRect(),cx=r0.left+r0.width/2,cy=r0.top+r0.height/2,R=r0.width*.42;const N=coarse?64:110,P=[];
@@ -769,7 +784,8 @@ const TOUR=(()=>{
       if(__disposed)return;if(t<1.08)requestAnimationFrame(step);else{orb.classList.add("on");let f=1;(function fade(){if(__disposed)return;f-=.06;c.clearRect(0,0,w,h);if(f>0){c.globalAlpha=f;pos.forEach(([x,y,,col])=>{c.fillStyle=`rgba(${col[0]*255|0},${col[1]*255|0},${col[2]*255|0},.9)`;c.beginPath();c.arc(x,y,2,0,7);c.fill()});c.globalAlpha=1;requestAnimationFrame(fade)}})();later(done,700)}})()}
   function clearTourTimers(){timers.forEach((id)=>{clearTimeout(id);clearInterval(id)});timers=[]}
   function start(){if(__disposed)return;clearTourTimers();running=true;state.xp={...START};DIM.set([1,1,1,1,.5,1,1,1]);refresh();state.sel=-1;
-    NORO.show(false);el.hidden=false;el.classList.remove("out");orb.className="iorb";orb.style.transform="";card.classList.remove("on");
+    NORO.show(false);el.hidden=false;el.classList.remove("out");orb.style.transition="none";orb.className="iorb";orb.style.transform="";card.classList.remove("on");
+    fill(0);anchor();void orb.offsetWidth;orb.style.transition="";if(narrow())orb.classList.add("anch");
     if(reduce){orb.classList.add("on");show(0)}else{requestAnimationFrame(()=>{if(!__disposed)assemble(()=>show(0))})}}
   function finish(){if(!running)return;running=false;clearTourTimers();try{localStorage.setItem(KEY,"1")}catch(e){}
     card.classList.remove("on");const a=orb.getBoundingClientRect();NORO.show(true);const b=NORO.rect();NORO.show(false);
@@ -803,6 +819,12 @@ requestAnimationFrame(()=>__later(async()=>{
     cancelAnimationFrame(srq);srq=0;
     try{TOUR.abort()}catch(_){}
     try{NORO.kill()}catch(_){}
+    try{
+      root.classList.remove("cmp","cols");
+      root.style.removeProperty("--pk");
+      root.style.removeProperty("--pl");
+      root.style.removeProperty("--pr");
+    }catch(_){}
     __timers.forEach(clearTimeout);
     __intervals.forEach(clearInterval);
     __timers.length=0;__intervals.length=0;

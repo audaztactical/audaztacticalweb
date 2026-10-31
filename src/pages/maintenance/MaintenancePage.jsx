@@ -93,11 +93,16 @@ export default function MaintenancePage({ onTeamLogin, nonAdminHint = false }) {
       <Brain3DStage label={t('stage.label')} />
       <div className="hud" id="mnt-hud">
         <div className="brand">
-          <div className="logo">
-            <img src={logoUrl} alt="" />
-            <span>
-              AUDAZ <b>TACTICAL</b>
-            </span>
+          <div className="logo-row">
+            <div className="logo">
+              <img src={logoUrl} alt="" />
+              <span>
+                AUDAZ <b>TACTICAL</b>
+              </span>
+            </div>
+            <button type="button" className="team-login" onClick={() => onTeamLogin?.()}>
+              {t('teamLogin')}
+            </button>
           </div>
           <div className="ttl">{t('brand.title')}</div>
           <div className="sub">{t('brand.sub')}</div>
@@ -138,9 +143,6 @@ export default function MaintenancePage({ onTeamLogin, nonAdminHint = false }) {
           {t('nogl.body')}
         </div>
       </div>
-      <button type="button" className="team-login" onClick={() => onTeamLogin?.()}>
-        {t('teamLogin')}
-      </button>
     </div>
   )
 }
